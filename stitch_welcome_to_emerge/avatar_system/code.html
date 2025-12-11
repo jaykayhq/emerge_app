@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Character Sheet</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Spline+Sans:wght@300..700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script>
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            "primary": "#2bee79",
+            "background-light": "#f6f8f7",
+            "background-dark": "#102217",
+          },
+          fontFamily: {
+            "display": ["Spline Sans", "sans-serif"]
+          },
+          borderRadius: {
+            "DEFAULT": "1rem",
+            "lg": "2rem",
+            "xl": "3rem",
+            "full": "9999px"
+          },
+        },
+      },
+    }
+  </script>
+<style>
+    .material-symbols-outlined {
+      font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24
+    }
+  </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background-light dark:bg-background-dark font-display">
+<div class="relative flex h-auto min-h-screen w-full flex-col overflow-x-hidden">
+<!-- Top App Bar -->
+<div class="flex items-center bg-background-light dark:bg-background-dark p-4 pb-2 justify-between sticky top-0 z-10">
+<div class="flex size-12 shrink-0 items-center justify-start">
+<span class="material-symbols-outlined text-zinc-800 dark:text-white" style="font-size: 28px;">arrow_back</span>
+</div>
+<h2 class="text-zinc-800 dark:text-white text-lg font-bold leading-tight tracking-[-0.015em] flex-1 text-center">Character Sheet</h2>
+<div class="flex w-12 items-center justify-end">
+<button class="flex max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-full h-12 bg-transparent text-zinc-800 dark:text-white gap-2 text-base font-bold leading-normal tracking-[0.015em] min-w-0 p-0">
+<span class="material-symbols-outlined" style="font-size: 24px;">ios_share</span>
+</button>
+</div>
+</div>
+<div class="flex flex-col p-4 space-y-6">
+<!-- Profile Header -->
+<div class="flex w-full flex-col gap-4 items-center">
+<div class="flex gap-4 flex-col items-center">
+<div class="bg-center bg-no-repeat aspect-square bg-cover rounded-xl w-48 h-48" data-alt="3D render of a stylized fantasy character with glowing green highlights." style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuDy8eVmEb8xYXLB9hVBf_Nmi9Z-0ALmPfxfCAizIDmCEGntniTIaHNSJGzR0zrOWCqvTYo6XOJJi83UylzMosJLUbVVZ0rv_5sRwm0kAwz6_dct8NpCFu9yOcSe12k_E61oiIdlCXqWts9BuiwBajf8u3Ia0VKtOGhLIjHnjXdmVeDTnOrVcWZQT0nwDvfgwLy8Zd2-4HuPkSXqvOMmntrFc0Vk5UJRo6o0nSbO1VAcD0XOkt1P1K9B-lDhoNwodw64N825jNuHXHY");'></div>
+<div class="flex flex-col items-center justify-center">
+<p class="text-zinc-800 dark:text-white text-[22px] font-bold leading-tight tracking-[-0.015em] text-center">Alex, Level 15 Scribe</p>
+<p class="text-zinc-600 dark:text-[#92c9a8] text-base font-normal leading-normal text-center">The Pen is Mightier</p>
+</div>
+</div>
+<button class="flex min-w-[84px] cursor-pointer items-center justify-center overflow-hidden rounded-full h-10 px-4 bg-primary/20 dark:bg-[#234832] text-primary dark:text-white text-sm font-bold leading-normal tracking-[0.015em] w-full max-w-sm">
+<span class="truncate">Customize Wardrobe</span>
+</button>
+</div>
+<!-- XP Bar -->
+<div class="flex flex-col gap-3">
+<div class="flex gap-6 justify-between">
+<p class="text-zinc-800 dark:text-white text-base font-medium leading-normal">Experience</p>
+<p class="text-zinc-800 dark:text-white text-sm font-normal leading-normal">1300/2000 XP</p>
+</div>
+<div class="rounded bg-primary/30 dark:bg-[#326747]">
+<div class="h-2 rounded bg-primary" style="width: 65%;"></div>
+</div>
+</div>
+<!-- Core Attributes Section -->
+<div>
+<h3 class="text-zinc-800 dark:text-white text-lg font-bold leading-tight tracking-[-0.015em] pb-2 pt-4">Core Attributes</h3>
+<div class="flex flex-col gap-4">
+<div class="flex flex-col gap-3">
+<div class="flex gap-6 justify-between">
+<p class="text-zinc-800 dark:text-white text-base font-medium leading-normal">Strength</p>
+</div>
+<div class="rounded bg-primary/30 dark:bg-[#326747]">
+<div class="h-2 rounded bg-primary" style="width: 80%;"></div>
+</div>
+<p class="text-zinc-600 dark:text-[#92c9a8] text-sm font-normal leading-normal">Level 8</p>
+</div>
+<div class="flex flex-col gap-3">
+<div class="flex gap-6 justify-between">
+<p class="text-zinc-800 dark:text-white text-base font-medium leading-normal">Intellect</p>
+</div>
+<div class="rounded bg-primary/30 dark:bg-[#326747]">
+<div class="h-2 rounded bg-primary" style="width: 95%;"></div>
+</div>
+<p class="text-zinc-600 dark:text-[#92c9a8] text-sm font-normal leading-normal">Level 9</p>
+</div>
+<div class="flex flex-col gap-3">
+<div class="flex gap-6 justify-between">
+<p class="text-zinc-800 dark:text-white text-base font-medium leading-normal">Creativity</p>
+</div>
+<div class="rounded bg-primary/30 dark:bg-[#326747]">
+<div class="h-2 rounded bg-primary" style="width: 60%;"></div>
+</div>
+<p class="text-zinc-600 dark:text-[#92c9a8] text-sm font-normal leading-normal">Level 6</p>
+</div>
+</div>
+</div>
+<!-- Equipment Section -->
+<div>
+<h3 class="text-zinc-800 dark:text-white text-lg font-bold leading-tight tracking-[-0.015em] pb-2 pt-4">Equipment</h3>
+<div class="grid grid-cols-3 gap-4">
+<div class="flex flex-col items-center gap-2">
+<div class="flex items-center justify-center bg-zinc-200 dark:bg-[#234832] w-full aspect-square rounded">
+<span class="material-symbols-outlined text-zinc-400 dark:text-primary" style="font-size: 36px;">self_improvement</span>
+</div>
+<p class="text-zinc-600 dark:text-[#92c9a8] text-xs text-center font-medium">Head</p>
+</div>
+<div class="flex flex-col items-center gap-2">
+<div class="flex items-center justify-center bg-zinc-200 dark:bg-[#234832] w-full aspect-square rounded">
+<span class="material-symbols-outlined text-zinc-400 dark:text-primary" style="font-size: 36px;">apparel</span>
+</div>
+<p class="text-zinc-600 dark:text-[#92c9a8] text-xs text-center font-medium">Body</p>
+</div>
+<div class="flex flex-col items-center gap-2">
+<div class="flex items-center justify-center bg-zinc-200 dark:bg-[#234832] w-full aspect-square rounded">
+<span class="material-symbols-outlined text-zinc-400 dark:text-primary" style="font-size: 36px;">palette</span>
+</div>
+<p class="text-zinc-600 dark:text-[#92c9a8] text-xs text-center font-medium">Accessory</p>
+</div>
+</div>
+</div>
+<!-- Milestones Section -->
+<div>
+<h3 class="text-zinc-800 dark:text-white text-lg font-bold leading-tight tracking-[-0.015em] pb-2 pt-4">Unlocked Milestones</h3>
+<div class="flex flex-col gap-3">
+<div class="flex items-center gap-4 rounded bg-zinc-100 dark:bg-[#1a3827] p-4">
+<div class="flex items-center justify-center bg-zinc-200 dark:bg-[#234832] p-3 rounded-full">
+<span class="material-symbols-outlined text-primary" style="font-size: 24px;">edit</span>
+</div>
+<div class="flex-1">
+<p class="font-bold text-zinc-800 dark:text-white">Writer's Quill</p>
+<p class="text-sm text-zinc-600 dark:text-gray-400">Wrote for 7 days straight.</p>
+</div>
+<span class="text-sm text-zinc-500">Equipped</span>
+</div>
+<div class="flex items-center gap-4 rounded bg-zinc-100 dark:bg-[#1a3827] p-4">
+<div class="flex items-center justify-center bg-zinc-200 dark:bg-[#234832] p-3 rounded-full">
+<span class="material-symbols-outlined text-primary" style="font-size: 24px;">visibility</span>
+</div>
+<div class="flex-1">
+<p class="font-bold text-zinc-800 dark:text-white">Scholar's Spectacles</p>
+<p class="text-sm text-zinc-600 dark:text-gray-400">Read 10 books.</p>
+</div>
+<button class="text-sm font-bold text-primary">Equip</button>
+</div>
+<div class="flex items-center gap-4 rounded bg-zinc-100 dark:bg-[#1a3827] p-4">
+<div class="flex items-center justify-center bg-zinc-200 dark:bg-[#234832] p-3 rounded-full">
+<span class="material-symbols-outlined text-primary" style="font-size: 24px;">directions_run</span>
+</div>
+<div class="flex-1">
+<p class="font-bold text-zinc-800 dark:text-white">Runner's Medallion</p>
+<p class="text-sm text-zinc-600 dark:text-gray-400">Completed a 5k run.</p>
+</div>
+<button class="text-sm font-bold text-primary">Equip</button>
+</div>
+</div>
+</div>
+</div>
+</div>
+</body></html>

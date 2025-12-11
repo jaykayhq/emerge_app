@@ -1,0 +1,22 @@
+{
+    "parameters": {
+        "onboarding_archetypes": {
+            "defaultValue": {
+                "value": "[{\"id\":\"athlete\",\"title\":\"The Athlete\",\"description\":\"Physical discipline, resilience, and vitality.\",\"imageUrl\":\"assets/images/archetype_athlete.png\"},{\"id\":\"creator\",\"title\":\"The Creator\",\"description\":\"Imagination, expression, and bringing ideas to life.\",\"imageUrl\":\"assets/images/archetype_creator.png\"},{\"id\":\"scholar\",\"title\":\"The Scholar\",\"description\":\"Knowledge, curiosity, and intellectual growth.\",\"imageUrl\":\"assets/images/archetype_scholar.png\"},{\"id\":\"stoic\",\"title\":\"The Stoic\",\"description\":\"Mindfulness, emotional control, and inner peace.\",\"imageUrl\":\"assets/images/archetype_stoic.png\"}]"
+            },
+            "description": "List of available user archetypes for onboarding."
+        },
+        "onboarding_attributes": {
+            "defaultValue": {
+                "value": "[{\"id\":\"vitality\",\"title\":\"Vitality\",\"description\":\"For a life of energy and boundless health.\",\"icon\":\"favorite\",\"color\":\"#EF4444\"},{\"id\":\"focus\",\"title\":\"Focus\",\"description\":\"For a mind that is clear, present, and sharp.\",\"icon\":\"psychology\",\"color\":\"#06B6D4\"},{\"id\":\"creativity\",\"title\":\"Creativity\",\"description\":\"For a spark of imagination and endless ideas.\",\"icon\":\"brush\",\"color\":\"#A855F7\"},{\"id\":\"strength\",\"title\":\"Strength\",\"description\":\"For a body that is resilient and powerful.\",\"icon\":\"fitness_center\",\"color\":\"#F59E0B\"}]"
+            },
+            "description": "List of identity attributes for point allocation."
+        },
+        "onboarding_habit_suggestions": {
+            "defaultValue": {
+                "value": "[{\"id\":\"brush_teeth\",\"title\":\"Brush Teeth\",\"icon\":\"oral_disease\"},{\"id\":\"shower\",\"title\":\"Shower\",\"icon\":\"shower\"},{\"id\":\"get_dressed\",\"title\":\"Get Dressed\",\"icon\":\"checkroom\"},{\"id\":\"walk_dog\",\"title\":\"Walk the Dog\",\"icon\":\"pets\"},{\"id\":\"check_emails\",\"title\":\"Check Emails\",\"icon\":\"mail\"},{\"id\":\"make_coffee\",\"title\":\"Make Coffee\",\"icon\":\"coffee\"}]"
+            },
+            "description": "List of suggested anchor habits."
+        }
+    }
+}

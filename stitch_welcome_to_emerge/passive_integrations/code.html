@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Passive Integrations</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#8A4FFF",
+                        "background-light": "#f7f6f8",
+                        "background-dark": "#1A1D2E",
+                        "surface-dark": "#25283D",
+                        "surface-light": "#ffffff",
+                        "text-light-primary": "#1A1D2E",
+                        "text-light-secondary": "#6b6f8a",
+                        "text-dark-primary": "#f7f6f8",
+                        "text-dark-secondary": "#9a9db7",
+                    },
+                    fontFamily: {
+                        "display": ["Manrope", "sans-serif"]
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.5rem",
+                        "lg": "0.75rem",
+                        "xl": "1rem",
+                        "full": "9999px"
+                    },
+                },
+            },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            font-size: 24px;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background-light dark:bg-background-dark font-display">
+<div class="relative flex h-auto min-h-screen w-full flex-col bg-background-light dark:bg-background-dark">
+<!-- Top App Bar -->
+<div class="flex items-center p-4 pb-2 bg-background-light dark:bg-background-dark sticky top-0 z-10">
+<div class="text-text-light-primary dark:text-text-dark-primary flex size-12 shrink-0 items-center justify-start">
+<span class="material-symbols-outlined">arrow_back_ios_new</span>
+</div>
+<h2 class="text-text-light-primary dark:text-text-dark-primary text-lg font-bold leading-tight tracking-[-0.015em] flex-1 text-center -ml-12">Passive Integrations</h2>
+</div>
+<!-- Body Text -->
+<p class="text-text-light-secondary dark:text-text-dark-secondary text-base font-normal leading-normal pb-3 pt-1 px-4">
+            Connect your favorite apps and devices to automatically track your habits and earn XP without manual entry.
+        </p>
+<!-- Section Header: Health & Fitness -->
+<h3 class="text-text-light-primary dark:text-text-dark-primary text-lg font-bold leading-tight tracking-[-0.015em] px-4 pb-2 pt-6">Health &amp; Fitness</h3>
+<!-- List Item: Apple Health -->
+<div class="flex items-center gap-4 bg-surface-light dark:bg-surface-dark px-4 min-h-[72px] py-2 rounded-lg mx-4 mb-3 shadow-sm">
+<div class="flex items-center gap-4 flex-grow">
+<div class="bg-center bg-no-repeat aspect-square bg-cover rounded-lg size-14" data-alt="Apple Health app logo" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuA8zX2fbIZguomdqC-8Cdh7D5kwXOj2t7fIBckYpLImr4lRyJb_WqybBT2P3d4ewRSzhC_b7gclXJ9pj-vtKDOyc5x9VFuxhPYLoHYGtBqTWjC4lt4pHmr-HUTZC_DskxvHt7gzMiugkuaAhDlFRUKJAk-FiD5tdOB-dkptE7sWmd_SkGuRd9vs7VJnEAQLTwz6clq0lskEHeuRUlKLLI7Av4Jyl13m8ahzsSL65hOo51xqjOSCR99OLLh0ft6Y97nxNFUQFndn0b0");'></div>
+<div class="flex flex-col justify-center">
+<p class="text-text-light-primary dark:text-text-dark-primary text-base font-medium leading-normal line-clamp-1">Apple Health</p>
+<p class="text-text-light-secondary dark:text-text-dark-secondary text-sm font-normal leading-normal line-clamp-2">Steps, Sleep, Workouts</p>
+</div>
+</div>
+<div class="shrink-0">
+<label class="relative flex h-[31px] w-[51px] cursor-pointer items-center rounded-full border-none bg-background-light dark:bg-background-dark p-0.5 has-[:checked]:bg-primary">
+<div class="h-full w-[27px] rounded-full bg-white transition-transform duration-200 ease-in-out" style="box-shadow: rgba(0, 0, 0, 0.15) 0px 3px 8px, rgba(0, 0, 0, 0.06) 0px 3px 1px;"></div>
+<input checked="" class="invisible absolute" type="checkbox"/>
+</label>
+</div>
+</div>
+<!-- List Item: Google Fit -->
+<div class="flex items-center gap-4 bg-surface-light dark:bg-surface-dark px-4 min-h-[72px] py-2 rounded-lg mx-4 mb-3 shadow-sm">
+<div class="flex items-center gap-4 flex-grow">
+<div class="bg-center bg-no-repeat aspect-square bg-cover rounded-lg size-14" data-alt="Google Fit app logo" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuA6FNj_HR-aJvoNfIdKFn9X44FbiPNd-qWCWwErRKqmgMFGSeqSh356QdvCegP-JZJJnMeEzHtqHG03BSbzrdzmvju0cr2joWm4kcTGOjutcqRAMGtU_Ryi6IgjkiHJEXmzU9llFCb8u0bBSAaafjvx-ZWQiE1quDP_gsraOaz5fVTVY7mOSsRVUvwCwVmj939ho2s8rdIZRAlyJUJ37Cjl9nftnS2kywlD_zkEXSDWFo3MGcLNpi1Hn6_MjFzV78ILLIPY7PVzJT0");'></div>
+<div class="flex flex-col justify-center">
+<p class="text-text-light-primary dark:text-text-dark-primary text-base font-medium leading-normal line-clamp-1">Google Fit</p>
+<p class="text-text-light-secondary dark:text-text-dark-secondary text-sm font-normal leading-normal line-clamp-2">Steps, Sleep, Workouts</p>
+</div>
+</div>
+<div class="shrink-0">
+<label class="relative flex h-[31px] w-[51px] cursor-pointer items-center rounded-full border-none bg-background-light dark:bg-background-dark p-0.5 has-[:checked]:bg-primary">
+<div class="h-full w-[27px] rounded-full bg-white transition-transform duration-200 ease-in-out" style="box-shadow: rgba(0, 0, 0, 0.15) 0px 3px 8px, rgba(0, 0, 0, 0.06) 0px 3px 1px;"></div>
+<input class="invisible absolute" type="checkbox"/>
+</label>
+</div>
+</div>
+<!-- List Item: Oura Ring -->
+<div class="flex items-center gap-4 bg-surface-light dark:bg-surface-dark px-4 min-h-[72px] py-2 rounded-lg mx-4 mb-3 shadow-sm">
+<div class="flex items-center gap-4 flex-grow">
+<div class="bg-center bg-no-repeat aspect-square bg-cover rounded-lg size-14" data-alt="Oura Ring product image" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuC37uC_9aKLZiwS_CCuBkUvby1FbbrWGs1Eljv5qGIdyvgi1R7PCekGgS8hs_hPmpcZJIbDk-U2Lj7h_M7zXXzkIsguiU7zFWGmm8GgA4aN5BrNHGiEmZ69BO4ShUGMtpDdNp3T5CIM-IAM599y0HsLQSDUQfoY6bPoxhnPwnz-CTmjBFw6aCzh7AeE8BBoHoqO_hJTdy2Z6sZtzTlVfceXprZUy1HOhzG_TULQFFB492hWBBxHFFvNS8qIVwRPSbLFiHMp6R3YqPw");'></div>
+<div class="flex flex-col justify-center">
+<p class="text-text-light-primary dark:text-text-dark-primary text-base font-medium leading-normal line-clamp-1">Oura Ring</p>
+<p class="text-text-light-secondary dark:text-text-dark-secondary text-sm font-normal leading-normal line-clamp-2">Sleep Score, Readiness, Activity</p>
+</div>
+</div>
+<div class="shrink-0">
+<label class="relative flex h-[31px] w-[51px] cursor-pointer items-center rounded-full border-none bg-background-light dark:bg-background-dark p-0.5 has-[:checked]:bg-primary">
+<div class="h-full w-[27px] rounded-full bg-white transition-transform duration-200 ease-in-out" style="box-shadow: rgba(0, 0, 0, 0.15) 0px 3px 8px, rgba(0, 0, 0, 0.06) 0px 3px 1px;"></div>
+<input class="invisible absolute" type="checkbox"/>
+</label>
+</div>
+</div>
+<!-- Section Header: Digital Wellness -->
+<h3 class="text-text-light-primary dark:text-text-dark-primary text-lg font-bold leading-tight tracking-[-0.015em] px-4 pb-2 pt-6">Digital Wellness</h3>
+<!-- List Item: Screen Time -->
+<div class="flex items-center gap-4 bg-surface-light dark:bg-surface-dark px-4 min-h-[72px] py-2 rounded-lg mx-4 mb-3 shadow-sm">
+<div class="flex items-center gap-4 flex-grow">
+<div class="bg-center bg-no-repeat aspect-square bg-cover rounded-lg size-14" data-alt="Apple Screen Time logo" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuBA54_Eh_PXdjZVMFZp6I5K2Wgr_GoDq8MNj6wIWGIs8Fl9Whj5PjU4aav9yZhYmgrxKhbMpifK7jIFZVTusgYgrjwPgiij057rKkEV8dilztMNxbbgiXzTPtr3SJ4UHMyahgbq_ykcR4kGPMdIIHtAOv2v-oli6t-cVa9EvmMuzKMlMro4ujiiIGGwpuW3kzHYBAFWd_ZcEDMh-GXs0HV9g60HS9dwfmZMy9YwGrYUYxduZzGe2phA1mJHBECeP3GpuWQ-xVIuxFg");'></div>
+<div class="flex flex-col justify-center">
+<p class="text-text-light-primary dark:text-text-dark-primary text-base font-medium leading-normal line-clamp-1">Screen Time</p>
+<p class="text-text-light-secondary dark:text-text-dark-secondary text-sm font-normal leading-normal line-clamp-2">Time spent on device</p>
+</div>
+</div>
+<div class="shrink-0">
+<label class="relative flex h-[31px] w-[51px] cursor-pointer items-center rounded-full border-none bg-background-light dark:bg-background-dark p-0.5 has-[:checked]:bg-primary">
+<div class="h-full w-[27px] rounded-full bg-white transition-transform duration-200 ease-in-out" style="box-shadow: rgba(0, 0, 0, 0.15) 0px 3px 8px, rgba(0, 0, 0, 0.06) 0px 3px 1px;"></div>
+<input class="invisible absolute" type="checkbox"/>
+</label>
+</div>
+</div>
+<!-- Section Header: Mindfulness -->
+<h3 class="text-text-light-primary dark:text-text-dark-primary text-lg font-bold leading-tight tracking-[-0.015em] px-4 pb-2 pt-6">Mindfulness</h3>
+<!-- List Item: Headspace -->
+<div class="flex items-center gap-4 bg-surface-light dark:bg-surface-dark px-4 min-h-[72px] py-2 rounded-lg mx-4 mb-3 shadow-sm">
+<div class="flex items-center gap-4 flex-grow">
+<div class="bg-center bg-no-repeat aspect-square bg-cover rounded-lg size-14" data-alt="Headspace app logo" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuAHucYtC7Ld_s0lbGYycQ7Fh7bDN5YsLCMbzb2IBc2LHTOyTL8EmmL8UJe-K67U59E6Ul7KG0UXeUOTjSVVP9bloIxDUAPT1aZrQ5JcKNzyhjcz2B-TWZnPZDOQFHRxzF8JN_VlEdjs4K3gkkel7TYClHf6bv07MGq1YOxke709QxvKmTS867FZdIFlD1GFZI86JxbS7ZbWiPR6eltKwEspjgJGlfuQA4ZNjBH6u1_X0aS_dx_XhBu17gBlfk-71EHk0vsrTGzmUG4");'></div>
+<div class="flex flex-col justify-center">
+<p class="text-text-light-primary dark:text-text-dark-primary text-base font-medium leading-normal line-clamp-1">Headspace</p>
+<p class="text-text-light-secondary dark:text-text-dark-secondary text-sm font-normal leading-normal line-clamp-2">Mindful Minutes via Health</p>
+</div>
+</div>
+<div class="shrink-0">
+<label class="relative flex h-[31px] w-[51px] cursor-pointer items-center rounded-full border-none bg-background-light dark:bg-background-dark p-0.5 has-[:checked]:bg-primary">
+<div class="h-full w-[27px] rounded-full bg-white transition-transform duration-200 ease-in-out" style="box-shadow: rgba(0, 0, 0, 0.15) 0px 3px 8px, rgba(0, 0, 0, 0.06) 0px 3px 1px;"></div>
+<input class="invisible absolute" type="checkbox"/>
+</label>
+</div>
+</div>
+</div>
+</body></html>

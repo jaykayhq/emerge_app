@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Notification Customization</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Lexend:wght@400;500;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+<script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#2bee79",
+                        "background-light": "#f6f8f7",
+                        "background-dark": "#102217",
+                    },
+                    fontFamily: {
+                        "display": ["Lexend", "sans-serif"]
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                },
+            },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            font-size: 24px;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background-light dark:bg-background-dark font-display">
+<div class="relative flex h-auto min-h-screen w-full flex-col">
+<!-- Top App Bar -->
+<div class="flex items-center gap-2 p-4 pb-2 bg-background-light dark:bg-background-dark sticky top-0 z-10 border-b border-white/5">
+<div class="text-slate-800 dark:text-white flex size-10 shrink-0 items-center justify-center">
+<span class="material-symbols-outlined">arrow_back_ios_new</span>
+</div>
+<h1 class="flex-1 text-lg font-bold leading-tight tracking-tight text-slate-900 dark:text-white">Notification Settings</h1>
+<div class="size-10"></div>
+</div>
+<main class="flex-1 px-4 py-6">
+<div class="flex flex-col gap-8">
+<!-- Master Control Section -->
+<div class="flex items-center gap-4 rounded-xl bg-white/5 p-4 min-h-14 justify-between">
+<div class="flex items-center gap-4">
+<div class="text-white flex items-center justify-center rounded-lg bg-primary/20 shrink-0 size-10">
+<span class="material-symbols-outlined">notifications</span>
+</div>
+<p class="text-slate-900 dark:text-white text-base font-medium leading-normal flex-1 truncate">Allow All Notifications</p>
+</div>
+<div class="shrink-0">
+<label class="relative flex h-[31px] w-[51px] cursor-pointer items-center rounded-full border-none bg-slate-200 dark:bg-slate-700 p-0.5 has-[:checked]:justify-end has-[:checked]:bg-primary">
+<div class="h-full w-[27px] rounded-full bg-white shadow-sm"></div>
+<input checked="" class="invisible absolute" type="checkbox"/>
+</label>
+</div>
+</div>
+<!-- Notification Types Section -->
+<div class="flex flex-col gap-3">
+<h3 class="text-sm font-bold uppercase leading-tight tracking-widest text-slate-500 dark:text-slate-400 px-2">Notification Types</h3>
+<div class="flex flex-col overflow-hidden rounded-xl bg-white/5">
+<!-- Habit Reminders -->
+<div class="flex items-center gap-4 px-4 min-h-[72px] py-2 justify-between border-b border-white/5">
+<div class="flex items-center gap-4">
+<div class="text-white flex items-center justify-center rounded-lg bg-primary/20 shrink-0 size-12">
+<span class="material-symbols-outlined">alarm</span>
+</div>
+<div class="flex flex-col justify-center">
+<p class="text-slate-900 dark:text-white text-base font-medium leading-normal line-clamp-1">Habit Reminders</p>
+<p class="text-slate-500 dark:text-slate-400 text-sm font-normal leading-normal line-clamp-2">Timely prompts to complete your habits.</p>
+</div>
+</div>
+<div class="shrink-0">
+<label class="relative flex h-[31px] w-[51px] cursor-pointer items-center rounded-full border-none bg-slate-200 dark:bg-slate-700 p-0.5 has-[:checked]:justify-end has-[:checked]:bg-primary">
+<div class="h-full w-[27px] rounded-full bg-white shadow-sm"></div>
+<input checked="" class="invisible absolute" type="checkbox"/>
+</label>
+</div>
+</div>
+<!-- Streak Warnings -->
+<div class="flex items-center gap-4 px-4 min-h-[72px] py-2 justify-between border-b border-white/5">
+<div class="flex items-center gap-4">
+<div class="text-white flex items-center justify-center rounded-lg bg-primary/20 shrink-0 size-12">
+<span class="material-symbols-outlined">local_fire_department</span>
+</div>
+<div class="flex flex-col justify-center">
+<p class="text-slate-900 dark:text-white text-base font-medium leading-normal line-clamp-1">Streak Warnings</p>
+<p class="text-slate-500 dark:text-slate-400 text-sm font-normal leading-normal line-clamp-2">Get an alert before your streak is lost.</p>
+</div>
+</div>
+<div class="shrink-0">
+<label class="relative flex h-[31px] w-[51px] cursor-pointer items-center rounded-full border-none bg-slate-200 dark:bg-slate-700 p-0.5 has-[:checked]:justify-end has-[:checked]:bg-primary">
+<div class="h-full w-[27px] rounded-full bg-white shadow-sm"></div>
+<input checked="" class="invisible absolute" type="checkbox"/>
+</label>
+</div>
+</div>
+<!-- AI-Powered Insights -->
+<div class="flex items-center gap-4 px-4 min-h-[72px] py-2 justify-between border-b border-white/5">
+<div class="flex items-center gap-4">
+<div class="text-white flex items-center justify-center rounded-lg bg-primary/20 shrink-0 size-12">
+<span class="material-symbols-outlined">auto_awesome</span>
+</div>
+<div class="flex flex-col justify-center">
+<p class="text-slate-900 dark:text-white text-base font-medium leading-normal line-clamp-1">AI-Powered Insights</p>
+<p class="text-slate-500 dark:text-slate-400 text-sm font-normal leading-normal line-clamp-2">Personalized tips to improve your habits.</p>
+</div>
+</div>
+<div class="shrink-0">
+<label class="relative flex h-[31px] w-[51px] cursor-pointer items-center rounded-full border-none bg-slate-200 dark:bg-slate-700 p-0.5 has-[:checked]:justify-end has-[:checked]:bg-primary">
+<div class="h-full w-[27px] rounded-full bg-white shadow-sm"></div>
+<input class="invisible absolute" type="checkbox"/>
+</label>
+</div>
+</div>
+<!-- Community Updates -->
+<div class="flex items-center gap-4 px-4 min-h-[72px] py-2 justify-between border-b border-white/5">
+<div class="flex items-center gap-4">
+<div class="text-white flex items-center justify-center rounded-lg bg-primary/20 shrink-0 size-12">
+<span class="material-symbols-outlined">group</span>
+</div>
+<div class="flex flex-col justify-center">
+<p class="text-slate-900 dark:text-white text-base font-medium leading-normal line-clamp-1">Community Updates</p>
+<p class="text-slate-500 dark:text-slate-400 text-sm font-normal leading-normal line-clamp-2">Friend activity and group challenges.</p>
+</div>
+</div>
+<div class="shrink-0">
+<label class="relative flex h-[31px] w-[51px] cursor-pointer items-center rounded-full border-none bg-slate-200 dark:bg-slate-700 p-0.5 has-[:checked]:justify-end has-[:checked]:bg-primary">
+<div class="h-full w-[27px] rounded-full bg-white shadow-sm"></div>
+<input class="invisible absolute" type="checkbox"/>
+</label>
+</div>
+</div>
+<!-- Rewards & Achievements -->
+<div class="flex items-center gap-4 px-4 min-h-[72px] py-2 justify-between">
+<div class="flex items-center gap-4">
+<div class="text-white flex items-center justify-center rounded-lg bg-primary/20 shrink-0 size-12">
+<span class="material-symbols-outlined">military_tech</span>
+</div>
+<div class="flex flex-col justify-center">
+<p class="text-slate-900 dark:text-white text-base font-medium leading-normal line-clamp-1">Rewards &amp; Achievements</p>
+<p class="text-slate-500 dark:text-slate-400 text-sm font-normal leading-normal line-clamp-2">Alerts for new unlocks and milestones.</p>
+</div>
+</div>
+<div class="shrink-0">
+<label class="relative flex h-[31px] w-[51px] cursor-pointer items-center rounded-full border-none bg-slate-200 dark:bg-slate-700 p-0.5 has-[:checked]:justify-end has-[:checked]:bg-primary">
+<div class="h-full w-[27px] rounded-full bg-white shadow-sm"></div>
+<input checked="" class="invisible absolute" type="checkbox"/>
+</label>
+</div>
+</div>
+</div>
+</div>
+<!-- General Settings Section -->
+<div class="flex flex-col gap-3">
+<h3 class="text-sm font-bold uppercase leading-tight tracking-widest text-slate-500 dark:text-slate-400 px-2">General Settings</h3>
+<div class="flex flex-col overflow-hidden rounded-xl bg-white/5">
+<!-- Notification Sound -->
+<div class="flex items-center gap-4 px-4 min-h-14 py-2 justify-between border-b border-white/5">
+<p class="text-slate-900 dark:text-white text-base font-normal leading-normal flex-1 truncate">Notification Sound</p>
+<div class="flex items-center gap-2">
+<p class="text-slate-500 dark:text-slate-400">Default</p>
+<span class="material-symbols-outlined text-slate-400 dark:text-slate-500 text-base">arrow_forward_ios</span>
+</div>
+</div>
+<!-- Vibration -->
+<div class="flex items-center gap-4 px-4 min-h-14 py-2 justify-between border-b border-white/5">
+<p class="text-slate-900 dark:text-white text-base font-normal leading-normal flex-1 truncate">Vibration</p>
+<div class="shrink-0">
+<label class="relative flex h-[31px] w-[51px] cursor-pointer items-center rounded-full border-none bg-slate-200 dark:bg-slate-700 p-0.5 has-[:checked]:justify-end has-[:checked]:bg-primary">
+<div class="h-full w-[27px] rounded-full bg-white shadow-sm"></div>
+<input checked="" class="invisible absolute" type="checkbox"/>
+</label>
+</div>
+</div>
+<!-- Do Not Disturb -->
+<div class="flex items-center gap-4 px-4 min-h-14 py-2 justify-between">
+<p class="text-slate-900 dark:text-white text-base font-normal leading-normal flex-1 truncate">Do Not Disturb</p>
+<div class="flex items-center gap-2">
+<p class="text-slate-500 dark:text-slate-400">Off</p>
+<span class="material-symbols-outlined text-slate-400 dark:text-slate-500 text-base">arrow_forward_ios</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+</main>
+</div>
+</body></html>

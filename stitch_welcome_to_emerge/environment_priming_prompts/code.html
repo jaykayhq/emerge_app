@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Prepare for Tomorrow</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Lexend:wght@400;500;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            "primary": "#8b5cf6", // Lavender from user request
+            "background-light": "#f6f6f8",
+            "background-dark": "#101622",
+            "card-dark": "#182131",
+            "card-light": "#ffffff",
+            "subtle-dark": "#333c4a",
+            "subtle-light": "#e5e7eb",
+          },
+          fontFamily: {
+            "display": ["Lexend", "sans-serif"]
+          },
+          borderRadius: {
+            "DEFAULT": "1rem",
+            "lg": "1.5rem",
+            "xl": "2rem",
+            "full": "9999px"
+          },
+        },
+      },
+    }
+  </script>
+<style>.material-symbols-outlined {
+    font-variation-settings: "FILL" 0, "wght" 300, "GRAD" 0, "opsz" 24
+    }
+input[type="checkbox"] {
+    -webkit-appearance: none;
+    appearance: none;
+    background-color: transparent;
+    margin: 0
+    }
+input[type="checkbox"]:checked {
+    background-image: url(https://lh3.googleusercontent.com/aida-public/AB6AXuB8WDLF-fImmfb87lxy2Q4Cln_KesVbGqMjewnIfwr012sTx6XEkSlE7BGMXJXYloDafqfUPbm8Ed0hLscTFCDtn2WB5m9C6TydndcS1cqaa9T5-KFe110NZ64GoTR19OIJFbnv3FMSLqVvyggvdGU_EWKxKEjeu4c5ad5kU8amjWN3PGSXNINsANrnzHU7Gnfn1Zp3AQi0bYoILgv59pScP52_2ZhvMMsuCK59rV-B6rT7po26Ncc4J-524xxTy7wCex6NqqqFdGY)
+    }</style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background-light dark:bg-background-dark font-display">
+<div class="relative flex min-h-screen w-full flex-col group/design-root overflow-x-hidden">
+<!-- Top App Bar -->
+<header class="flex items-center p-4 pb-2 justify-between sticky top-0 bg-background-light/80 dark:bg-background-dark/80 backdrop-blur-sm z-10">
+<div class="flex size-12 shrink-0 items-center justify-start">
+<span class="material-symbols-outlined text-gray-500 dark:text-gray-400 text-2xl">arrow_back</span>
+</div>
+<h1 class="text-gray-900 dark:text-white text-lg font-bold leading-tight tracking-[-0.015em] flex-1 text-center">Prepare for Tomorrow</h1>
+<div class="flex w-12 items-center justify-end">
+<button class="flex cursor-pointer items-center justify-center rounded-full h-12 text-gray-500 dark:text-gray-400 gap-2 text-base font-bold min-w-0 p-0">
+<span class="material-symbols-outlined text-2xl">nightlight</span>
+</button>
+</div>
+</header>
+<main class="flex-1 px-4">
+<!-- Body Text -->
+<p class="text-gray-600 dark:text-gray-400 text-base font-normal leading-normal pb-3 pt-1 text-center">Set up your future self for an easy win.</p>
+<!-- Progress Bar -->
+<div class="flex flex-col gap-3 py-4">
+<div class="flex gap-6 justify-between items-center">
+<p class="text-gray-800 dark:text-white text-base font-medium leading-normal">Evening Quest Progress</p>
+<p class="text-gray-500 dark:text-gray-400 text-sm font-normal leading-normal">3/5 tasks complete</p>
+</div>
+<div class="rounded-full bg-subtle-light dark:bg-subtle-dark h-2 w-full"><div class="h-2 rounded-full bg-primary" style="width: 60%;"></div></div>
+</div>
+<!-- Checklists (Prompt Cards) -->
+<div class="flex flex-col gap-3 py-4">
+<label class="flex items-center gap-x-4 p-4 rounded-lg bg-card-light dark:bg-card-dark cursor-pointer has-[:checked]:bg-primary/10 dark:has-[:checked]:bg-primary/20 has-[:checked]:ring-2 has-[:checked]:ring-primary/50">
+<div class="flex items-center justify-center size-10 rounded-full bg-primary/10 dark:bg-primary/20 text-primary">
+<span class="material-symbols-outlined">fitness_center</span>
+</div>
+<p class="text-gray-800 dark:text-gray-200 text-base font-normal leading-normal flex-1">Lay out workout clothes</p>
+<input checked="" class="h-6 w-6 rounded-md border-subtle-dark dark:border-subtle-dark border-2 bg-transparent text-primary checked:bg-primary checked:border-primary focus:ring-0 focus:ring-offset-0" type="checkbox"/>
+</label>
+<label class="flex items-center gap-x-4 p-4 rounded-lg bg-card-light dark:bg-card-dark cursor-pointer has-[:checked]:bg-primary/10 dark:has-[:checked]:bg-primary/20 has-[:checked]:ring-2 has-[:checked]:ring-primary/50">
+<div class="flex items-center justify-center size-10 rounded-full bg-primary/10 dark:bg-primary/20 text-primary">
+<span class="material-symbols-outlined">menu_book</span>
+</div>
+<p class="text-gray-800 dark:text-gray-200 text-base font-normal leading-normal flex-1">Place a book on your nightstand</p>
+<input checked="" class="h-6 w-6 rounded-md border-subtle-dark dark:border-subtle-dark border-2 bg-transparent text-primary checked:bg-primary checked:border-primary focus:ring-0 focus:ring-offset-0" type="checkbox"/>
+</label>
+<label class="flex items-center gap-x-4 p-4 rounded-lg bg-card-light dark:bg-card-dark cursor-pointer has-[:checked]:bg-primary/10 dark:has-[:checked]:bg-primary/20 has-[:checked]:ring-2 has-[:checked]:ring-primary/50">
+<div class="flex items-center justify-center size-10 rounded-full bg-primary/10 dark:bg-primary/20 text-primary">
+<span class="material-symbols-outlined">water_drop</span>
+</div>
+<p class="text-gray-800 dark:text-gray-200 text-base font-normal leading-normal flex-1">Fill your water bottle</p>
+<input checked="" class="h-6 w-6 rounded-md border-subtle-dark dark:border-subtle-dark border-2 bg-transparent text-primary checked:bg-primary checked:border-primary focus:ring-0 focus:ring-offset-0" type="checkbox"/>
+</label>
+<label class="flex items-center gap-x-4 p-4 rounded-lg bg-card-light dark:bg-card-dark cursor-pointer has-[:checked]:bg-primary/10 dark:has-[:checked]:bg-primary/20 has-[:checked]:ring-2 has-[:checked]:ring-primary/50">
+<div class="flex items-center justify-center size-10 rounded-full bg-primary/10 dark:bg-primary/20 text-primary">
+<span class="material-symbols-outlined">phone_in_talk_watchface_indicator</span>
+</div>
+<p class="text-gray-800 dark:text-gray-200 text-base font-normal leading-normal flex-1">Charge phone in another room</p>
+<input class="h-6 w-6 rounded-md border-subtle-dark dark:border-subtle-dark border-2 bg-transparent text-primary checked:bg-primary checked:border-primary focus:ring-0 focus:ring-offset-0" type="checkbox"/>
+</label>
+<label class="flex items-center gap-x-4 p-4 rounded-lg bg-card-light dark:bg-card-dark cursor-pointer has-[:checked]:bg-primary/10 dark:has-[:checked]:bg-primary/20 has-[:checked]:ring-2 has-[:checked]:ring-primary/50">
+<div class="flex items-center justify-center size-10 rounded-full bg-primary/10 dark:bg-primary/20 text-primary">
+<span class="material-symbols-outlined">coffee_maker</span>
+</div>
+<p class="text-gray-800 dark:text-gray-200 text-base font-normal leading-normal flex-1">Prepare coffee or tea station</p>
+<input class="h-6 w-6 rounded-md border-subtle-dark dark:border-subtle-dark border-2 bg-transparent text-primary checked:bg-primary checked:border-primary focus:ring-0 focus:ring-offset-0" type="checkbox"/>
+</label>
+</div>
+</main>
+<!-- FAB and Completion Button Section -->
+<footer class="sticky bottom-0 w-full p-4 bg-gradient-to-t from-background-light to-transparent dark:from-background-dark dark:to-transparent">
+<div class="flex flex-col gap-4">
+<button class="flex w-full cursor-pointer items-center justify-center overflow-hidden rounded-full h-14 px-5 bg-primary/10 dark:bg-primary/20 text-primary text-base font-bold leading-normal tracking-[0.015em] min-w-0 gap-3">
+<span class="material-symbols-outlined">add</span>
+<span class="truncate">Add Custom Prompt</span>
+</button>
+<button class="flex w-full cursor-pointer items-center justify-center overflow-hidden rounded-full h-14 px-5 bg-primary text-white text-base font-bold leading-normal tracking-[0.015em] min-w-0 gap-3 opacity-50 cursor-not-allowed">
+<span class="truncate">Evening Routine Complete</span>
+</button>
+</div>
+</footer>
+</div>
+</body></html>

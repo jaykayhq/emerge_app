@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Emerge - Settings</title>
+<link href="https://fonts.googleapis.com/css2?family=Lexend:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<style type="text/tailwindcss">
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+    </style>
+<script>
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              "primary": "#8A4FFF",
+              "background-light": "#f6f6f8",
+              "background-dark": "#1A1D2A",
+              "text-light-primary": "#1A1D2A",
+              "text-light-secondary": "#888B9A",
+              "text-dark-primary": "#EAEAEA",
+              "text-dark-secondary": "#888B9A",
+              "card-light": "#FFFFFF",
+              "card-dark": "#242838",
+              "icon-bg-light": "#F0F0F2",
+              "icon-bg-dark": "#31364A",
+              "action-red": "#FF453A",
+              "action-red-hover": "#E0342A"
+            },
+            fontFamily: {
+              "display": ["Lexend", "sans-serif"]
+            },
+            borderRadius: {"DEFAULT": "1rem", "lg": "1.25rem", "xl": "2rem", "full": "9999px"},
+          },
+        },
+      }
+    </script>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background-light dark:bg-background-dark font-display">
+<div class="relative flex h-auto min-h-screen w-full flex-col group/design-root overflow-x-hidden">
+<!-- Top App Bar -->
+<div class="flex items-center p-4 pb-2 sticky top-0 z-10 bg-background-light/80 dark:bg-background-dark/80 backdrop-blur-sm">
+<div class="flex size-10 shrink-0 items-center justify-center text-text-light-primary dark:text-text-dark-primary">
+<span class="material-symbols-outlined text-3xl">arrow_back</span>
+</div>
+<h1 class="text-xl font-bold leading-tight tracking-tight flex-1 text-center text-text-light-primary dark:text-text-dark-primary">Settings</h1>
+<div class="size-10 shrink-0"></div> <!-- Spacer -->
+</div>
+<main class="flex-1 px-4 pt-4 pb-8 space-y-8">
+<!-- Profile Header -->
+<div class="flex w-full flex-col gap-4 @[520px]:flex-row @[520px]:justify-between @[520px]:items-center">
+<div class="flex items-center gap-4">
+<div class="bg-center bg-no-repeat aspect-square bg-cover rounded-full h-20 w-20 shrink-0" data-alt="User's RPG-style avatar with purple glowing background" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuDXX4DMI3PNwoIobdv3M0kHgySqlyZuCXQEGQUgdJXpA5mwbsKHJvmSF_b8U0bSP4T7IS2zTiDIyJ9gCSiF0SkdVecWazlJDsnOAPPdyk9lJCVmrLkFLcrTworovRjgOLzyIAZjjoovH_YzaJ70lURVr4scEgCe07BzXocj2ilEZVNMjQWyTtI4NEauhJcPqduprhFz6Y_sThtXB6SxzHb50w1-mQLsQpJV7Mu5oJ195vsfhJsynTZuOFfzHPu1JDpmL_r2-5RENX0");'></div>
+<div class="flex flex-col justify-center">
+<p class="text-text-light-primary dark:text-text-dark-primary text-[22px] font-bold leading-tight tracking-[-0.015em]">Aveline</p>
+<p class="text-text-light-secondary dark:text-text-dark-secondary text-base font-normal leading-normal">Level 12 Paladin</p>
+</div>
+</div>
+</div>
+<!-- Account Section -->
+<div class="space-y-3">
+<h3 class="text-text-light-secondary dark:text-text-dark-secondary text-sm font-semibold uppercase tracking-wider px-2">Account</h3>
+<div class="bg-card-light dark:bg-card-dark rounded-lg overflow-hidden divide-y divide-white/5 dark:divide-black/5">
+<div class="flex items-center gap-4 px-4 min-h-16 justify-between">
+<div class="flex items-center gap-4">
+<div class="text-primary flex items-center justify-center rounded-lg bg-icon-bg-light dark:bg-icon-bg-dark shrink-0 size-10">
+<span class="material-symbols-outlined">person</span>
+</div>
+<p class="text-text-light-primary dark:text-text-dark-primary text-base font-normal leading-normal flex-1 truncate">Manage Profile</p>
+</div>
+<div class="shrink-0">
+<div class="text-text-light-secondary dark:text-text-dark-secondary flex size-7 items-center justify-center">
+<span class="material-symbols-outlined">chevron_right</span>
+</div>
+</div>
+</div>
+<div class="flex items-center gap-4 px-4 min-h-[72px] py-2 justify-between">
+<div class="flex items-center gap-4 w-full">
+<div class="text-primary flex items-center justify-center rounded-lg bg-icon-bg-light dark:bg-icon-bg-dark shrink-0 size-10">
+<span class="material-symbols-outlined">mail</span>
+</div>
+<div class="flex flex-col justify-center flex-1 min-w-0">
+<p class="text-text-light-primary dark:text-text-dark-primary text-base font-medium leading-normal line-clamp-1">Email</p>
+<p class="text-text-light-secondary dark:text-text-dark-secondary text-sm font-normal leading-normal truncate">user@emergeapp.com</p>
+</div>
+<div class="shrink-0">
+<div class="text-text-light-secondary dark:text-text-dark-secondary flex size-7 items-center justify-center">
+<span class="material-symbols-outlined">chevron_right</span>
+</div>
+</div>
+</div>
+</div>
+<div class="flex items-center gap-4 px-4 min-h-16 justify-between">
+<div class="flex items-center gap-4">
+<div class="text-primary flex items-center justify-center rounded-lg bg-icon-bg-light dark:bg-icon-bg-dark shrink-0 size-10">
+<span class="material-symbols-outlined">lock</span>
+</div>
+<p class="text-text-light-primary dark:text-text-dark-primary text-base font-normal leading-normal flex-1 truncate">Change Password</p>
+</div>
+<div class="shrink-0">
+<div class="text-text-light-secondary dark:text-text-dark-secondary flex size-7 items-center justify-center">
+<span class="material-symbols-outlined">chevron_right</span>
+</div>
+</div>
+</div>
+<div class="flex items-center gap-4 px-4 min-h-16 justify-between">
+<div class="flex items-center gap-4">
+<div class="text-primary flex items-center justify-center rounded-lg bg-icon-bg-light dark:bg-icon-bg-dark shrink-0 size-10">
+<span class="material-symbols-outlined">workspace_premium</span>
+</div>
+<p class="text-text-light-primary dark:text-text-dark-primary text-base font-normal leading-normal flex-1 truncate">Manage Subscription</p>
+</div>
+<div class="shrink-0">
+<div class="text-text-light-secondary dark:text-text-dark-secondary flex size-7 items-center justify-center">
+<span class="material-symbols-outlined">chevron_right</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Notifications Section -->
+<div class="space-y-3">
+<h3 class="text-text-light-secondary dark:text-text-dark-secondary text-sm font-semibold uppercase tracking-wider px-2">Notifications</h3>
+<div class="bg-card-light dark:bg-card-dark rounded-lg overflow-hidden divide-y divide-white/5 dark:divide-black/5">
+<div class="flex items-center gap-4 px-4 min-h-16 justify-between">
+<div class="flex items-center gap-4">
+<div class="text-primary flex items-center justify-center rounded-lg bg-icon-bg-light dark:bg-icon-bg-dark shrink-0 size-10">
+<span class="material-symbols-outlined">task_alt</span>
+</div>
+<p class="text-text-light-primary dark:text-text-dark-primary text-base font-normal leading-normal">Habit Reminders</p>
+</div>
+<label class="relative inline-flex cursor-pointer items-center">
+<input checked="" class="peer sr-only" type="checkbox" value=""/>
+<div class="peer h-7 w-12 rounded-full bg-gray-200 after:absolute after:top-1 after:left-1 after:h-5 after:w-5 after:rounded-full after:border after:border-gray-300 after:bg-white after:transition-all after:content-[''] peer-checked:bg-primary peer-checked:after:translate-x-full peer-checked:after:border-white dark:border-gray-600 dark:bg-gray-700"></div>
+</label>
+</div>
+<div class="flex items-center gap-4 px-4 min-h-16 justify-between">
+<div class="flex items-center gap-4">
+<div class="text-primary flex items-center justify-center rounded-lg bg-icon-bg-light dark:bg-icon-bg-dark shrink-0 size-10">
+<span class="material-symbols-outlined">calendar_view_week</span>
+</div>
+<p class="text-text-light-primary dark:text-text-dark-primary text-base font-normal leading-normal">Weekly Progress</p>
+</div>
+<label class="relative inline-flex cursor-pointer items-center">
+<input checked="" class="peer sr-only" type="checkbox" value=""/>
+<div class="peer h-7 w-12 rounded-full bg-gray-200 after:absolute after:top-1 after:left-1 after:h-5 after:w-5 after:rounded-full after:border after:border-gray-300 after:bg-white after:transition-all after:content-[''] peer-checked:bg-primary peer-checked:after:translate-x-full peer-checked:after:border-white dark:border-gray-600 dark:bg-gray-700"></div>
+</label>
+</div>
+<div class="flex items-center gap-4 px-4 min-h-16 justify-between">
+<div class="flex items-center gap-4">
+<div class="text-primary flex items-center justify-center rounded-lg bg-icon-bg-light dark:bg-icon-bg-dark shrink-0 size-10">
+<span class="material-symbols-outlined">groups</span>
+</div>
+<p class="text-text-light-primary dark:text-text-dark-primary text-base font-normal leading-normal">Community Alerts</p>
+</div>
+<label class="relative inline-flex cursor-pointer items-center">
+<input class="peer sr-only" type="checkbox" value=""/>
+<div class="peer h-7 w-12 rounded-full bg-gray-200 after:absolute after:top-1 after:left-1 after:h-5 after:w-5 after:rounded-full after:border after:border-gray-300 after:bg-white after:transition-all after:content-[''] peer-checked:bg-primary peer-checked:after:translate-x-full peer-checked:after:border-white dark:border-gray-600 dark:bg-gray-700"></div>
+</label>
+</div>
+</div>
+</div>
+<!-- Integrations & Data Section -->
+<div class="space-y-3">
+<h3 class="text-text-light-secondary dark:text-text-dark-secondary text-sm font-semibold uppercase tracking-wider px-2">Integrations &amp; Data</h3>
+<div class="bg-card-light dark:bg-card-dark rounded-lg overflow-hidden divide-y divide-white/5 dark:divide-black/5">
+<div class="flex items-center gap-4 px-4 min-h-16 justify-between">
+<div class="flex items-center gap-4">
+<div class="text-primary flex items-center justify-center rounded-lg bg-icon-bg-light dark:bg-icon-bg-dark shrink-0 size-10">
+<span class="material-symbols-outlined">health_and_safety</span>
+</div>
+<p class="text-text-light-primary dark:text-text-dark-primary text-base font-normal leading-normal">Connect to HealthKit</p>
+</div>
+<div class="shrink-0">
+<div class="text-text-light-secondary dark:text-text-dark-secondary flex size-7 items-center justify-center">
+<span class="material-symbols-outlined">chevron_right</span>
+</div>
+</div>
+</div>
+<div class="flex items-center gap-4 px-4 min-h-16 justify-between">
+<div class="flex items-center gap-4">
+<div class="text-primary flex items-center justify-center rounded-lg bg-icon-bg-light dark:bg-icon-bg-dark shrink-0 size-10">
+<span class="material-symbols-outlined">screen_share</span>
+</div>
+<p class="text-text-light-primary dark:text-text-dark-primary text-base font-normal leading-normal">Connect Screen Time</p>
+</div>
+<div class="shrink-0">
+<div class="text-text-light-secondary dark:text-text-dark-secondary flex size-7 items-center justify-center">
+<span class="material-symbols-outlined">chevron_right</span>
+</div>
+</div>
+</div>
+<div class="flex items-center gap-4 px-4 min-h-16 justify-between">
+<div class="flex items-center gap-4">
+<div class="text-primary flex items-center justify-center rounded-lg bg-icon-bg-light dark:bg-icon-bg-dark shrink-0 size-10">
+<span class="material-symbols-outlined">download_for_offline</span>
+</div>
+<p class="text-text-light-primary dark:text-text-dark-primary text-base font-normal leading-normal">Export Your Data</p>
+</div>
+<div class="shrink-0">
+<div class="text-text-light-secondary dark:text-text-dark-secondary flex size-7 items-center justify-center">
+<span class="material-symbols-outlined">chevron_right</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- General Settings Section -->
+<div class="space-y-3">
+<h3 class="text-text-light-secondary dark:text-text-dark-secondary text-sm font-semibold uppercase tracking-wider px-2">General</h3>
+<div class="bg-card-light dark:bg-card-dark rounded-lg overflow-hidden divide-y divide-white/5 dark:divide-black/5">
+<div class="flex items-center gap-4 px-4 min-h-16 justify-between">
+<div class="flex items-center gap-4">
+<div class="text-primary flex items-center justify-center rounded-lg bg-icon-bg-light dark:bg-icon-bg-dark shrink-0 size-10">
+<span class="material-symbols-outlined">contrast</span>
+</div>
+<p class="text-text-light-primary dark:text-text-dark-primary text-base font-normal leading-normal flex-1 truncate">Appearance</p>
+</div>
+<div class="flex items-center gap-2">
+<p class="text-text-light-secondary dark:text-text-dark-secondary text-base font-normal leading-normal">Dark</p>
+<div class="text-text-light-secondary dark:text-text-dark-secondary flex size-7 items-center justify-center">
+<span class="material-symbols-outlined">chevron_right</span>
+</div>
+</div>
+</div>
+<div class="flex items-center gap-4 px-4 min-h-16 justify-between">
+<div class="flex items-center gap-4">
+<div class="text-primary flex items-center justify-center rounded-lg bg-icon-bg-light dark:bg-icon-bg-dark shrink-0 size-10">
+<span class="material-symbols-outlined">vibration</span>
+</div>
+<p class="text-text-light-primary dark:text-text-dark-primary text-base font-normal leading-normal flex-1 truncate">Sounds &amp; Haptics</p>
+</div>
+<div class="shrink-0">
+<div class="text-text-light-secondary dark:text-text-dark-secondary flex size-7 items-center justify-center">
+<span class="material-symbols-outlined">chevron_right</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Support & Legal Section -->
+<div class="space-y-3">
+<h3 class="text-text-light-secondary dark:text-text-dark-secondary text-sm font-semibold uppercase tracking-wider px-2">Support &amp; Legal</h3>
+<div class="bg-card-light dark:bg-card-dark rounded-lg overflow-hidden divide-y divide-white/5 dark:divide-black/5">
+<div class="flex items-center gap-4 px-4 min-h-16 justify-between">
+<div class="flex items-center gap-4">
+<div class="text-primary flex items-center justify-center rounded-lg bg-icon-bg-light dark:bg-icon-bg-dark shrink-0 size-10">
+<span class="material-symbols-outlined">help</span>
+</div>
+<p class="text-text-light-primary dark:text-text-dark-primary text-base font-normal leading-normal">Help &amp; FAQ</p>
+</div>
+<div class="shrink-0">
+<div class="text-text-light-secondary dark:text-text-dark-secondary flex size-7 items-center justify-center">
+<span class="material-symbols-outlined">chevron_right</span>
+</div>
+</div>
+</div>
+<div class="flex items-center gap-4 px-4 min-h-16 justify-between">
+<div class="flex items-center gap-4">
+<div class="text-primary flex items-center justify-center rounded-lg bg-icon-bg-light dark:bg-icon-bg-dark shrink-0 size-10">
+<span class="material-symbols-outlined">support_agent</span>
+</div>
+<p class="text-text-light-primary dark:text-text-dark-primary text-base font-normal leading-normal">Contact Support</p>
+</div>
+<div class="shrink-0">
+<div class="text-text-light-secondary dark:text-text-dark-secondary flex size-7 items-center justify-center">
+<span class="material-symbols-outlined">chevron_right</span>
+</div>
+</div>
+</div>
+<div class="flex items-center gap-4 px-4 min-h-16 justify-between">
+<div class="flex items-center gap-4">
+<div class="text-primary flex items-center justify-center rounded-lg bg-icon-bg-light dark:bg-icon-bg-dark shrink-0 size-10">
+<span class="material-symbols-outlined">shield</span>
+</div>
+<p class="text-text-light-primary dark:text-text-dark-primary text-base font-normal leading-normal">Privacy Policy</p>
+</div>
+<div class="shrink-0">
+<div class="text-text-light-secondary dark:text-text-dark-secondary flex size-7 items-center justify-center">
+<span class="material-symbols-outlined">chevron_right</span>
+</div>
+</div>
+</div>
+<div class="flex items-center gap-4 px-4 min-h-16 justify-between">
+<div class="flex items-center gap-4">
+<div class="text-primary flex items-center justify-center rounded-lg bg-icon-bg-light dark:bg-icon-bg-dark shrink-0 size-10">
+<span class="material-symbols-outlined">gavel</span>
+</div>
+<p class="text-text-light-primary dark:text-text-dark-primary text-base font-normal leading-normal">Terms of Service</p>
+</div>
+<div class="shrink-0">
+<div class="text-text-light-secondary dark:text-text-dark-secondary flex size-7 items-center justify-center">
+<span class="material-symbols-outlined">chevron_right</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Action Buttons -->
+<div class="pt-4 space-y-4">
+<button class="flex h-12 w-full items-center justify-center rounded-lg bg-card-light dark:bg-card-dark px-4 text-base font-semibold text-primary transition-colors hover:bg-primary/10 dark:hover:bg-primary/20">Log Out</button>
+<button class="flex h-12 w-full items-center justify-center rounded-lg bg-transparent px-4 text-base font-semibold text-action-red transition-colors hover:bg-action-red/10">Delete Account</button>
+</div>
+</main>
+</div>
+</body></html>

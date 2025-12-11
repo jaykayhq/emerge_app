@@ -1,0 +1,142 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Helper function to check if user is authenticated
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    // Helper function to check if the user owns the document
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    // Helper function to sanitize and validate strings
+    function sanitizeString(input) {
+      return input is string &&
+             input.size() > 0 &&
+             input.size() <= 1000 &&
+             !input.matches('.*[<>&"\'].*');
+    }
+
+    // Helper function to validate email format
+    function isValidEmail(email) {
+      return email is string &&
+             email.matches('^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$');
+    }
+
+    // Helper function to rate limit writes (max 5 writes per minute per user)
+    function rateLimited() {
+      return request.time < resource.data.timestamp + duration.value(1, 'm')
+             ? request.auth.token.writes_per_minute < 5
+             : true;
+    }
+
+    // Helper function to validate user data with enhanced security
+    function isValidUser() {
+      let user = request.resource.data;
+      return user.keys().hasAll(['email', 'displayName', 'createdAt']) &&
+             user.keys().size() <= 10 && // Limit number of fields
+             isValidEmail(user.email) &&
+             sanitizeString(user.displayName) &&
+             user.displayName.size() <= 50 &&
+             user.createdAt is timestamp &&
+             !user.keys().hasAny(['isAdmin', 'role', 'permissions']); // Prevent privilege escalation
+    }
+
+    // Helper function to validate habit data with enhanced security
+    function isValidHabit() {
+      let habit = request.resource.data;
+      return habit.keys().hasAll(['title', 'userId', 'frequency']) &&
+             habit.keys().size() <= 8 && // Limit number of fields
+             sanitizeString(habit.title) &&
+             habit.title.size() <= 100 &&
+             habit.userId == request.auth.uid &&
+             habit.frequency in ['daily', 'weekly', 'monthly'] &&
+             (!habit.keys().hasAll(['description']) ||
+              (sanitizeString(habit.description) && habit.description.size() <= 500));
+    }
+
+    // Helper function to validate post content
+    function isValidPost() {
+      let post = request.resource.data;
+      return post.keys().hasAll(['content', 'userId', 'createdAt']) &&
+             post.keys().size() <= 10 &&
+             sanitizeString(post.content) &&
+             post.content.size() <= 2000 &&
+             post.userId == request.auth.uid &&
+             post.createdAt is timestamp;
+    }
+
+    // User Stats / Profile (Gamification & Identity)
+    match /user_stats/{userId} {
+      allow read: if isOwner(userId);
+      allow write: if isOwner(userId);
+    }
+
+    // User Profiles (Archetype, Attributes, etc.)
+    match /users/{userId} {
+      allow read, write: if isOwner(userId);
+    }
+
+    // Habits (Top-level collection) - Enhanced security
+    match /habits/{habitId} {
+      allow create: if isAuthenticated() && isValidHabit() && rateLimited();
+      allow read: if isAuthenticated() && resource.data.userId == request.auth.uid;
+      allow update: if isAuthenticated() && resource.data.userId == request.auth.uid && isValidHabit() && rateLimited();
+      allow delete: if isAuthenticated() && resource.data.userId == request.auth.uid;
+    }
+
+    // Habit Contracts
+    match /contracts/{contractId} {
+      allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid;
+      allow read, update, delete: if isAuthenticated() && resource.data.userId == request.auth.uid;
+    }
+
+    // Tribes (Community)
+    match /tribes/{tribeId} {
+      allow read: if isAuthenticated();
+      // Only allow admins to create/update tribes for now (or via Cloud Functions)
+      allow write: if false; 
+      
+      // Allow users to join tribes (add themselves to members subcollection)
+      match /members/{memberId} {
+        allow read: if isAuthenticated();
+        allow write: if isOwner(memberId);
+      }
+    }
+
+    // Challenges
+    match /challenges/{challengeId} {
+      allow read: if isAuthenticated();
+      allow write: if false; // Admin only
+
+      // Allow users to join challenges
+      match /participants/{participantId} {
+        allow read: if isAuthenticated();
+        allow write: if isOwner(participantId);
+      }
+    }
+
+    // Social Posts (Feed) - Enhanced security
+    match /posts/{postId} {
+      allow read: if isAuthenticated() && resource.data.status != 'deleted';
+      allow create: if isAuthenticated() && isValidPost() && rateLimited();
+      allow update: if isOwner(resource.data.userId) && isValidPost() && rateLimited();
+      allow delete: if isOwner(resource.data.userId);
+    }
+
+    // Insights (Recaps & Reflections)
+    match /user_stats/{userId}/recaps/{recapId} {
+      allow read: if isOwner(userId);
+      allow write: if false; // Generated by backend functions usually
+    }
+
+    match /user_stats/{userId}/reflections/{reflectionId} {
+      allow read: if isOwner(userId);
+      allow write: if false; // Generated by backend functions usually
+    }
+  }
+}

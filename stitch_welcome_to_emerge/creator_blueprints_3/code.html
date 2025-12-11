@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Creator Blueprints</title>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<style>
+    .material-symbols-outlined {
+      font-variation-settings:
+        'FILL' 0,
+        'wght' 400,
+        'GRAD' 0,
+        'opsz' 24;
+    }
+  </style>
+<script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            "primary": "#7f13ec",
+            "background-light": "#f7f6f8",
+            "background-dark": "#191022",
+          },
+          fontFamily: {
+            "display": ["Plus Jakarta Sans", "sans-serif"]
+          },
+          borderRadius: {
+            "DEFAULT": "0.25rem",
+            "lg": "0.5rem",
+            "xl": "0.75rem",
+            "full": "9999px"
+          },
+        },
+      },
+    }
+  </script>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background-light dark:bg-background-dark font-display">
+<div class="relative flex h-auto min-h-screen w-full flex-col">
+<header class="sticky top-0 z-10 bg-background-light/80 dark:bg-background-dark/80 backdrop-blur-sm">
+<div class="flex items-center p-4">
+<div class="flex size-12 shrink-0 items-center justify-start">
+<span class="material-symbols-outlined text-gray-800 dark:text-white">menu</span>
+</div>
+<h1 class="flex-1 text-center text-lg font-bold leading-tight tracking-[-0.015em] text-gray-900 dark:text-white">Creator Blueprints</h1>
+<div class="flex w-12 items-center justify-end">
+<button class="flex max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-full h-10 w-10 bg-transparent text-gray-800 dark:text-white">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+</div>
+</div>
+</header>
+<main class="flex flex-col gap-4 pb-8">
+<div class="px-4">
+<div class="relative flex w-full items-center">
+<span class="material-symbols-outlined absolute left-4 text-gray-500 dark:text-primary/70">search</span>
+<input class="form-input h-12 w-full min-w-0 flex-1 resize-none overflow-hidden rounded-lg border-none bg-gray-200/60 dark:bg-white/5 pl-12 pr-4 text-base font-normal leading-normal text-gray-800 placeholder:text-gray-500 dark:text-white dark:placeholder:text-primary/70 focus:outline-0 focus:ring-2 focus:ring-primary/50" placeholder="Search for creators or habits..." value=""/>
+</div>
+</div>
+<div class="flex gap-3 overflow-x-auto px-4 pb-2 [&amp;::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+<div class="flex h-10 shrink-0 cursor-pointer items-center justify-center gap-x-2 rounded-lg bg-primary pl-4 pr-4">
+<span class="material-symbols-outlined text-white text-base">star</span>
+<p class="text-white text-sm font-medium leading-normal">Featured</p>
+</div>
+<div class="flex h-10 shrink-0 cursor-pointer items-center justify-center gap-x-2 rounded-lg bg-gray-200/60 dark:bg-white/5 pl-4 pr-4">
+<span class="material-symbols-outlined text-gray-800 dark:text-primary/70 text-base">bookmark</span>
+<p class="text-gray-800 dark:text-white text-sm font-medium leading-normal">Saved</p>
+</div>
+<div class="flex h-10 shrink-0 cursor-pointer items-center justify-center gap-x-2 rounded-lg bg-gray-200/60 dark:bg-white/5 pl-4 pr-4">
+<span class="material-symbols-outlined text-gray-800 dark:text-primary/70 text-base">bolt</span>
+<p class="text-gray-800 dark:text-white text-sm font-medium leading-normal">Productivity</p>
+</div>
+<div class="flex h-10 shrink-0 cursor-pointer items-center justify-center gap-x-2 rounded-lg bg-gray-200/60 dark:bg-white/5 pl-4 pr-4">
+<span class="material-symbols-outlined text-gray-800 dark:text-primary/70 text-base">pool</span>
+<p class="text-gray-800 dark:text-white text-sm font-medium leading-normal">Fitness</p>
+</div>
+<div class="flex h-10 shrink-0 cursor-pointer items-center justify-center gap-x-2 rounded-lg bg-gray-200/60 dark:bg-white/5 pl-4 pr-4">
+<span class="material-symbols-outlined text-gray-800 dark:text-primary/70 text-base">palette</span>
+<p class="text-gray-800 dark:text-white text-sm font-medium leading-normal">Creative</p>
+</div>
+</div>
+<div class="flex flex-col gap-6 px-4">
+<div class="flex flex-col overflow-hidden rounded-xl bg-gray-200/60 dark:bg-white/5 @container">
+<div class="relative w-full bg-center bg-no-repeat aspect-video bg-cover" data-alt="A stylized, glowing digital art piece representing an advanced city of discipline" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuD_357wWxUMnRri8nImd1s-eIliBpp3eF_CaZECldc5HtSN5UM48aZ2YkyT6TW65D-c82YI066ifv7q9xHkZXLj4kImgFqZ1FtG3sLiJSLzYZsJ_-HouaUF5sqwuyYaC91L4LCd5wAu0N5zN9cXK55ra_l4jARjWNVwzljZ260VNZc9nxLDyfu2y5-w3nmVEDQpjkWjRMZKkC2TIcrtndLsYH2yu7J6107haz1nZTdZhuC6xvepDx5YaVzvg5d7AYIojci-TJqup-M");'>
+<div class="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
+<div class="absolute bottom-4 left-4 flex items-center gap-3">
+<img class="h-10 w-10 rounded-full border-2 border-white/50 object-cover" data-alt="Profile picture of James Clear" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBXRYtZjkkPb9bF9Csl9a-cmuKHoMRruFkungWlnmFAbTtNmpEKnbP6HXvCr3GRQ_B-yXxbNpFnQYjJ85OOZXjPuA4Cxl_3rIqQnTNq7Gau3bJGpZWCOa_jtbsJAgc600WGDQCBGlFN5ZktVhkotTHgX_C-fLIffExwXHqAycFG_UU4mByAFE9dGPtWZbnpENx2xdhWda5aq83RXgoPPRiGTQh029amLQ7Ek9oHlAvVx4R7XMdyhHZZzDwhRSQWAfNTOaeytffaz2k"/>
+<div>
+<p class="text-white text-sm font-bold leading-tight">James Clear</p>
+<p class="text-white/80 text-xs font-normal">Author</p>
+</div>
+</div>
+</div>
+<div class="flex w-full flex-col items-stretch justify-center gap-3 p-4">
+<p class="text-gray-900 dark:text-white text-lg font-bold leading-tight tracking-[-0.015em]">The Atomic Habits Starter Kit</p>
+<p class="text-gray-600 dark:text-primary/70 text-sm font-normal leading-normal">Build the systems that fuel creative output and make good habits inevitable.</p>
+<div class="flex items-center justify-between gap-4 mt-2">
+<div class="flex items-center gap-4">
+<div class="flex items-center gap-1.5 text-gray-600 dark:text-primary/70">
+<span class="material-symbols-outlined text-base">group</span>
+<p class="text-xs font-medium">12,405</p>
+</div>
+<div class="flex items-center gap-1.5 text-gray-600 dark:text-primary/70">
+<span class="material-symbols-outlined text-base">shield</span>
+<p class="text-xs font-medium">Epic</p>
+</div>
+</div>
+<div class="flex items-center gap-2">
+<button class="flex h-10 w-10 cursor-pointer items-center justify-center overflow-hidden rounded-lg bg-gray-300/60 text-gray-800 dark:bg-white/10 dark:text-white">
+<span class="material-symbols-outlined">bookmark</span>
+</button>
+<button class="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-lg h-10 px-4 bg-primary text-white text-sm font-medium leading-normal shadow-lg shadow-primary/30">
+<span class="truncate">Adopt</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+<div class="flex flex-col overflow-hidden rounded-xl bg-gray-200/60 dark:bg-white/5 @container">
+<div class="relative w-full bg-center bg-no-repeat aspect-video bg-cover" data-alt="Digital art of a legendary warrior avatar with glowing armor" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuAfCNp1icRBAU8hg03pn5bQWXoBFEuaIz-ZFfUPXOh56xerlnlYitA0if4Yc5mPo2938KAYn8mxC25rkiXWhXcYFz9SfaZXyRbkgQzUjyo5Lbu0wgeu2-f88hbgcI2LmQwu7y8HtduqEUdr1X4wZjJLQ4nTwXeshkcfus-M2KwANVbUrrVVdmH0O96ujwECYbjBx9-QgoR4v3d59g8vui_2fJyHpXZs4iPsgZaO0Ql6gjPS-wyfvwQ_v_T_7Cmulv-_P9IlhJ9Tqp4");'>
+<div class="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
+<div class="absolute bottom-4 left-4 flex items-center gap-3">
+<img class="h-10 w-10 rounded-full border-2 border-white/50 object-cover" data-alt="Profile picture of Dr. Andrew Huberman" src="https://lh3.googleusercontent.com/aida-public/AB6AXuC94qmsOI1YKYB2g74vJVwr0Vh9VlkCBAUs23iuXf_ZMyP-oPHFK1hWtdc0RgqN1NFKABBayKG08sropAPD53qYavwdP_wnkjtB0Ct2vCXWR31s1wUuVjAWvhtYLIVova6ENGSfP-PS72sJpHdZRlFF7K-zKCvsI8BEZwt0Rk57dHd4kfshachLHvCdyquthAiRmELPLzUYafrZFDW2BOdFBoAGdCUOLQADPktapw9LdoUxBADgHu4O4-rNOnttz7ahhxruOhpenqo"/>
+<div>
+<p class="text-white text-sm font-bold leading-tight">Dr. Andrew Huberman</p>
+<p class="text-white/80 text-xs font-normal">Neuroscientist</p>
+</div>
+</div>
+</div>
+<div class="flex w-full flex-col items-stretch justify-center gap-3 p-4">
+<p class="text-gray-900 dark:text-white text-lg font-bold leading-tight tracking-[-0.015em]">The Optimal Morning Routine</p>
+<p class="text-gray-600 dark:text-primary/70 text-sm font-normal leading-normal">Leverage neuroscience to maximize your focus and energy every single day.</p>
+<div class="flex items-center justify-between gap-4 mt-2">
+<div class="flex items-center gap-4">
+<div class="flex items-center gap-1.5 text-gray-600 dark:text-primary/70">
+<span class="material-symbols-outlined text-base">group</span>
+<p class="text-xs font-medium">9,872</p>
+</div>
+<div class="flex items-center gap-1.5 text-gray-600 dark:text-primary/70">
+<span class="material-symbols-outlined text-base">shield</span>
+<p class="text-xs font-medium">Rare</p>
+</div>
+</div>
+<div class="flex items-center gap-2">
+<button class="flex h-10 w-10 cursor-pointer items-center justify-center overflow-hidden rounded-lg bg-gray-300/60 text-gray-800 dark:bg-white/10 dark:text-white">
+<span class="material-symbols-outlined">bookmark</span>
+</button>
+<button class="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-lg h-10 px-4 bg-primary text-white text-sm font-medium leading-normal shadow-lg shadow-primary/30">
+<span class="truncate">Adopt</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+<div class="flex flex-col overflow-hidden rounded-xl bg-gray-200/60 dark:bg-white/5 @container">
+<div class="relative w-full bg-center bg-no-repeat aspect-video bg-cover" data-alt="A tranquil, futuristic scene of a personal library in a biomechanical environment" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuCpEenasQ2PiqC-P3Gs1VE6p_G5LmQroYE6D9kN-T-Qylz96aFWrFzZ_bIZ2PrFy13J56PkwnkoSo8oz8eS_NVcesKqRSKMCFnLK1kgxSCaKfW3-25G5nbgYlXTeDDsHNhDsZ18pyYAwsk1r4K_BKKy_CO3fOseW0zgKn5XsawJlgcahei0SNdIAVYW8jLmmPZGLQpXP1whzb-H_a3hr31ax_rDUa5S6R3VNTzwHCqCDtFrJ0wtCyUxZPMA3UUxTbkvE8E8NpsnoQo");'>
+<div class="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
+<div class="absolute bottom-4 left-4 flex items-center gap-3">
+<img class="h-10 w-10 rounded-full border-2 border-white/50 object-cover" data-alt="Profile picture of Alex Hormozi" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDocGa4Ya0LttpQGZI5hn_lrbKVzmKI5IOzqSZjYXp_EwoI6uJf5rDg-mFj8L9tu2PilvgcvdxNSGgBiXznNDNCQrv40xZj00WWAwc_BnZMkeWKH7CFmpiRpBXWTf4FKv-eGKlLDocgcDq-5RvvCEh55XsRnfqVymPOaSD6U9vAgY-OwHDFKQql8Exa0RL4dqKxFKp4XXFG_hCIdbxSnIncUAuAcK5vcCOo8pH3FMjoJuhYd2dk4ZjoocWv87Av-S_umaLn1mCUlqI"/>
+<div>
+<p class="text-white text-sm font-bold leading-tight">Alex Hormozi</p>
+<p class="text-white/80 text-xs font-normal">Entrepreneur</p>
+</div>
+</div>
+</div>
+<div class="flex w-full flex-col items-stretch justify-center gap-3 p-4">
+<p class="text-gray-900 dark:text-white text-lg font-bold leading-tight tracking-[-0.015em]">$100M Offer Productivity Stack</p>
+<p class="text-gray-600 dark:text-primary/70 text-sm font-normal leading-normal">The daily non-negotiables required to build a high-leverage business.</p>
+<div class="flex items-center justify-between gap-4 mt-2">
+<div class="flex items-center gap-4">
+<div class="flex items-center gap-1.5 text-gray-600 dark:text-primary/70">
+<span class="material-symbols-outlined text-base">group</span>
+<p class="text-xs font-medium">15,102</p>
+</div>
+<div class="flex items-center gap-1.5 text-gray-600 dark:text-primary/70">
+<span class="material-symbols-outlined text-base">shield</span>
+<p class="text-xs font-medium">Legendary</p>
+</div>
+</div>
+<div class="flex items-center gap-2">
+<button class="flex h-10 w-10 cursor-pointer items-center justify-center overflow-hidden rounded-lg bg-gray-300/60 text-gray-800 dark:bg-white/10 dark:text-white">
+<span class="material-symbols-outlined">bookmark</span>
+</button>
+<button class="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-lg h-10 px-4 bg-primary text-white text-sm font-medium leading-normal shadow-lg shadow-primary/30">
+<span class="truncate">Adopt</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+</div>
+</main>
+</div>
+
+</body></html>

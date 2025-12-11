@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Emerge - Habit Tracker</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Spline+Sans:wght@400;500;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+<script>
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              "primary": "#2bee79",
+              "background-light": "#f6f8f7",
+              "background-dark": "#112218",
+              "surface-dark": "#193324",
+              "text-muted-dark": "#92c9a8",
+              "border-dark": "#326747"
+            },
+            fontFamily: {
+              "display": ["Spline Sans", "sans-serif"]
+            },
+            borderRadius: {
+              "DEFAULT": "0.5rem",
+              "lg": "0.75rem",
+              "xl": "1rem",
+              "full": "9999px"
+            },
+          },
+        },
+      }
+    </script>
+<style>
+      .material-symbols-outlined {
+        font-variation-settings:
+        'FILL' 0,
+        'wght' 400,
+        'GRAD' 0,
+        'opsz' 24
+      }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background-dark font-display text-white">
+<div class="relative flex h-auto min-h-screen w-full flex-col bg-background-dark group/design-root overflow-x-hidden">
+<!-- Top App Bar -->
+<div class="sticky top-0 z-10 flex items-center bg-background-dark/80 p-4 pb-2 justify-between backdrop-blur-sm">
+<div class="flex size-12 shrink-0 items-center">
+<div class="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-10 ring-2 ring-primary/50" data-alt="User avatar with a glowing green ring" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuAU79lazy7ci5QElHYfDPHjUDIwvdYgO0c2QNU-vvzBSDTocTfjeTfMRZtilXY2zf5g0vO_kiOVorCW7oWFn_z_BX9_Er37fuqMowxhC71H2sCJN3ZEgpDKYi7_aVtdh75jbXWidmBxlok0c9arpzBzcQyMxYwWUoJvBQTnsi2ctMMZab5Vs05cx1Syba6cb4Kx6l4bHhqKWWC1cLk0VEY-h7Oi2uR6DkaSKT3PPtJ_SHWpd9M-n6RU8eGfBfXCXG6MQ5gd81XI3aQ");'></div>
+</div>
+<h2 class="text-white text-xl font-bold leading-tight tracking-[-0.015em] flex-1 text-center">Emerge</h2>
+<div class="flex w-12 items-center justify-end">
+<button class="flex max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-lg h-12 bg-transparent text-white gap-2 text-base font-bold leading-normal tracking-[0.015em] min-w-0 p-0">
+<span class="material-symbols-outlined text-3xl">settings</span>
+</button>
+</div>
+</div>
+<div class="flex flex-col gap-4 p-4 pt-2">
+<!-- Progress Bar -->
+<div class="flex flex-col gap-2">
+<div class="flex gap-6 justify-between items-center">
+<p class="text-white text-base font-medium leading-normal">Lvl. 5 Life-Shaper</p>
+<p class="text-text-muted-dark text-sm font-normal leading-normal">150/600 XP</p>
+</div>
+<div class="rounded-full bg-border-dark h-2"><div class="h-2 rounded-full bg-primary" style="width: 25%;"></div></div>
+</div>
+</div>
+<!-- Section Header -->
+<h3 class="text-white text-lg font-bold leading-tight tracking-[-0.015em] px-4 pb-2 pt-4">Next Action</h3>
+<!-- Card: Next Action -->
+<div class="p-4 pt-0 @container">
+<div class="flex flex-col items-stretch justify-start rounded-xl @xl:flex-row @xl:items-start shadow-lg shadow-primary/10 bg-surface-dark border border-border-dark">
+<div class="w-full bg-center bg-no-repeat aspect-video bg-cover rounded-t-xl @xl:rounded-l-xl @xl:rounded-r-none" data-alt="A serene image of a misty forest at dawn, representing meditation." style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuB7vvlopJkR4rgsae5H2MI2s3F4-79z1kHlY0_9fnL3AlwO9_S_Nf1T3yQ0y9o4iErmVjo95wmXqQIcn5fGSRg-sqWbOQD2dnX-y_7ESMCuf6PYzRI85AumRdQItGd8Z2o7GXtSkMKQH-SrF9mks_CpRy7WFVTEXM5LDJPaqY-de95hWsH2Pa9AQZrIjYs_AdHsDPw1I9Tt90Q-tm59XRtJb3RUYYPqP1mtlBOx8jbrF3IHdOZk8cN5Po_RsZ-HaVWUzdkTCM5KFj0");'></div>
+<div class="flex w-full min-w-72 grow flex-col items-stretch justify-center gap-2 p-4">
+<p class="text-white text-xl font-bold leading-tight tracking-[-0.015em]">Meditate for 5 minutes</p>
+<div class="flex items-end gap-3 justify-between">
+<div class="flex flex-col gap-1">
+<p class="text-text-muted-dark text-base font-normal leading-normal">After Waking Up</p>
+<p class="text-text-muted-dark text-sm font-normal leading-normal">Focus on your breath and start the day with clarity.</p>
+</div>
+<button class="flex min-w-[96px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-lg h-10 px-4 bg-primary text-background-dark text-base font-bold leading-normal gap-2">
+<span class="material-symbols-outlined">done</span>
+<span class="truncate">Complete</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+<!-- Section Header -->
+<h3 class="text-white text-lg font-bold leading-tight tracking-[-0.015em] px-4 pb-2 pt-4">Today's Timeline</h3>
+<!-- Timeline -->
+<div class="grid grid-cols-[40px_1fr] gap-x-4 px-4 pb-24">
+<div class="flex flex-col items-center gap-1 pt-3">
+<div class="flex items-center justify-center size-8 rounded-full bg-primary/20 text-primary">
+<span class="material-symbols-outlined">wb_sunny</span>
+</div>
+<div class="w-[2px] bg-border-dark h-full grow"></div>
+</div>
+<div class="flex flex-1 flex-col pt-3 pb-4">
+<p class="text-white text-lg font-bold leading-normal">Morning Stack</p>
+<p class="text-text-muted-dark text-base font-normal leading-normal">Completed 3/3</p>
+<div class="flex flex-col gap-2 mt-3 opacity-60">
+<!-- Habit Item - Completed -->
+<div class="flex items-center gap-3 p-3 rounded-lg bg-surface-dark/50">
+<span class="material-symbols-outlined text-primary">check_circle</span>
+<p class="text-white/80 line-through">Drink Water</p>
+</div>
+<div class="flex items-center gap-3 p-3 rounded-lg bg-surface-dark/50">
+<span class="material-symbols-outlined text-primary">check_circle</span>
+<p class="text-white/80 line-through">Stretch for 10 minutes</p>
+</div>
+<div class="flex items-center gap-3 p-3 rounded-lg bg-surface-dark/50">
+<span class="material-symbols-outlined text-primary">check_circle</span>
+<p class="text-white/80 line-through">Review daily goals</p>
+</div>
+</div>
+</div>
+<div class="flex flex-col items-center gap-1">
+<div class="w-[2px] bg-border-dark h-4"></div>
+<div class="flex items-center justify-center size-8 rounded-full bg-surface-dark border-2 border-border-dark text-white">
+<span class="material-symbols-outlined">hourglass_top</span>
+</div>
+<div class="w-[2px] bg-border-dark h-full grow"></div>
+</div>
+<div class="flex flex-1 flex-col py-3 pb-4">
+<p class="text-white text-lg font-bold leading-normal">Mid-day Reset</p>
+<p class="text-text-muted-dark text-base font-normal leading-normal">1/2 remaining</p>
+<div class="flex flex-col gap-2 mt-3">
+<!-- Habit Item - Upcoming -->
+<div class="flex items-center gap-3 p-3 rounded-lg bg-surface-dark">
+<span class="material-symbols-outlined text-white/50">radio_button_unchecked</span>
+<p class="text-white">Mindful Lunch</p>
+</div>
+</div>
+</div>
+<div class="flex flex-col items-center gap-1">
+<div class="w-[2px] bg-border-dark h-4"></div>
+<div class="flex items-center justify-center size-8 rounded-full bg-surface-dark border-2 border-border-dark text-white">
+<span class="material-symbols-outlined">work</span>
+</div>
+<div class="w-[2px] bg-border-dark h-full grow"></div>
+</div>
+<div class="flex flex-1 flex-col py-3 pb-4">
+<p class="text-white text-lg font-bold leading-normal">After Work Routine</p>
+<p class="text-text-muted-dark text-base font-normal leading-normal">0/4 remaining</p>
+</div>
+<div class="flex flex-col items-center gap-1 pb-3">
+<div class="w-[2px] bg-border-dark h-4"></div>
+<div class="flex items-center justify-center size-8 rounded-full bg-surface-dark border-2 border-border-dark text-white">
+<span class="material-symbols-outlined">dark_mode</span>
+</div>
+</div>
+<div class="flex flex-1 flex-col py-3">
+<p class="text-white text-lg font-bold leading-normal">Shutdown Ritual</p>
+<p class="text-text-muted-dark text-base font-normal leading-normal">0/3 remaining</p>
+</div>
+</div>
+<!-- Floating Action Button -->
+<div class="fixed bottom-6 right-6">
+<button class="flex size-16 cursor-pointer items-center justify-center overflow-hidden rounded-full bg-primary text-background-dark shadow-lg shadow-primary/20">
+<span class="material-symbols-outlined text-4xl">add</span>
+</button>
+</div>
+</div>
+</body></html>

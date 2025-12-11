@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Map Your Day's Anchors</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Spline+Sans:wght@400;500;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<style>
+    .material-symbols-outlined {
+      font-variation-settings:
+        'FILL' 0,
+        'wght' 400,
+        'GRAD' 0,
+        'opsz' 24
+    }
+  </style>
+<script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            "primary": "#2bee79",
+            "background-light": "#f6f8f7",
+            "background-dark": "#102217",
+          },
+          fontFamily: {
+            "display": ["Spline Sans", "sans-serif"]
+          },
+          borderRadius: {
+            "DEFAULT": "1rem",
+            "lg": "2rem",
+            "xl": "3rem",
+            "full": "9999px"
+          },
+        },
+      },
+    }
+  </script>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background-light dark:bg-background-dark font-display">
+<div class="relative flex h-auto min-h-screen w-full flex-col bg-background-light dark:bg-background-dark group/design-root overflow-x-hidden">
+<!-- Top App Bar -->
+<header class="flex items-center bg-background-light dark:bg-background-dark p-4 pb-2 justify-between sticky top-0 z-10">
+<div class="flex size-12 shrink-0 items-center justify-center text-slate-800 dark:text-white">
+<span class="material-symbols-outlined text-2xl">arrow_back</span>
+</div>
+<h1 class="text-slate-900 dark:text-white text-lg font-bold leading-tight tracking-[-0.015em] flex-1 text-center">Map Your Day's Anchors</h1>
+<div class="flex size-12 shrink-0 items-center"></div>
+</header>
+<!-- Progress Bar -->
+<div class="flex flex-col gap-3 px-4 pt-2 pb-4">
+<div class="flex gap-6 justify-between">
+<p class="text-slate-600 dark:text-slate-300 text-base font-medium leading-normal">Step 2 of 5</p>
+</div>
+<div class="rounded-full bg-primary/20">
+<div class="h-2 rounded-full bg-primary" style="width: 40%;"></div>
+</div>
+</div>
+<!-- Body Text -->
+<p class="text-slate-700 dark:text-slate-200 text-base font-normal leading-normal pb-3 pt-1 px-4">
+      These are the solid routines you already do every day without thinking. Drag them onto your timeline.
+    </p>
+<!-- Vertical Timeline -->
+<main class="flex-grow px-4">
+<div class="grid grid-cols-[40px_1fr] gap-x-2">
+<!-- Morning Section -->
+<div class="flex flex-col items-center gap-1 pt-3">
+<div class="text-slate-600 dark:text-primary" data-alt="Sun icon">
+<span class="material-symbols-outlined text-2xl">light_mode</span>
+</div>
+<div class="w-[1.5px] bg-primary/30 h-2 grow"></div>
+</div>
+<div class="flex flex-1 flex-col py-3">
+<p class="text-slate-800 dark:text-white text-base font-medium leading-normal">Wake Up</p>
+<p class="text-slate-500 dark:text-slate-400 text-base font-normal leading-normal">Morning</p>
+</div>
+<div class="flex flex-col items-center gap-1">
+<div class="w-[1.5px] bg-primary/30 h-2"></div>
+<div class="text-slate-600 dark:text-primary" data-alt="Coffee icon">
+<span class="material-symbols-outlined text-2xl">coffee</span>
+</div>
+<div class="w-[1.5px] bg-primary/30 h-2 grow"></div>
+</div>
+<div class="flex flex-1 flex-col py-3">
+<p class="text-slate-800 dark:text-white text-base font-medium leading-normal">Morning Coffee</p>
+<p class="text-slate-500 dark:text-slate-400 text-base font-normal leading-normal">Morning</p>
+</div>
+<div class="flex flex-col items-center gap-1">
+<div class="w-[1.5px] bg-primary/30 h-2"></div>
+<div class="text-slate-600 dark:text-primary" data-alt="Commute icon">
+<span class="material-symbols-outlined text-2xl">directions_car</span>
+</div>
+<div class="w-[1.5px] bg-primary/30 h-2 grow"></div>
+</div>
+<div class="flex flex-1 flex-col py-3">
+<p class="text-slate-800 dark:text-white text-base font-medium leading-normal">Commute to Work</p>
+<p class="text-slate-500 dark:text-slate-400 text-base font-normal leading-normal">Morning</p>
+</div>
+<!-- Midday Section -->
+<div class="flex flex-col items-center gap-1 pt-3">
+<div class="w-[1.5px] bg-primary/30 h-2"></div>
+<div class="text-slate-600 dark:text-primary" data-alt="Lunch icon">
+<span class="material-symbols-outlined text-2xl">lunch_dining</span>
+</div>
+<div class="w-[1.5px] bg-primary/30 h-2 grow"></div>
+</div>
+<div class="flex flex-1 flex-col py-3">
+<p class="text-slate-800 dark:text-white text-base font-medium leading-normal">Eat Lunch</p>
+<p class="text-slate-500 dark:text-slate-400 text-base font-normal leading-normal">Midday</p>
+</div>
+<!-- Evening Section -->
+<div class="flex flex-col items-center gap-1 pt-3">
+<div class="w-[1.5px] bg-primary/30 h-2"></div>
+<div class="text-slate-600 dark:text-primary" data-alt="Dinner icon">
+<span class="material-symbols-outlined text-2xl">dinner_dining</span>
+</div>
+<div class="w-[1.5px] bg-primary/30 h-2 grow"></div>
+</div>
+<div class="flex flex-1 flex-col py-3">
+<p class="text-slate-800 dark:text-white text-base font-medium leading-normal">Evening Meal</p>
+<p class="text-slate-500 dark:text-slate-400 text-base font-normal leading-normal">Evening</p>
+</div>
+<!-- Night Section -->
+<div class="flex flex-col items-center gap-1 pt-3 pb-3">
+<div class="w-[1.5px] bg-primary/30 h-2"></div>
+<div class="text-slate-600 dark:text-primary" data-alt="Bed icon">
+<span class="material-symbols-outlined text-2xl">bed</span>
+</div>
+</div>
+<div class="flex flex-1 flex-col py-3">
+<p class="text-slate-800 dark:text-white text-base font-medium leading-normal">Go to Sleep</p>
+<p class="text-slate-500 dark:text-slate-400 text-base font-normal leading-normal">Night</p>
+</div>
+</div>
+</main>
+<!-- Bottom Sticky Area -->
+<div class="sticky bottom-0 bg-gradient-to-t from-background-light dark:from-background-dark from-70% to-transparent pt-8 pb-4">
+<!-- Suggestion Chips -->
+<div class="px-3 mb-4">
+<div class="flex gap-3 overflow-x-auto pb-2 [-ms-overflow-style:none] [scrollbar-width:none] [&amp;::-webkit-scrollbar]:hidden">
+<div class="flex h-8 shrink-0 cursor-grab items-center justify-center gap-x-2 rounded-full bg-green-900/80 pl-3 pr-4">
+<span class="material-symbols-outlined text-white text-base" data-alt="Tooth icon">oral_disease</span>
+<p class="text-white text-sm font-medium leading-normal">Brush Teeth</p>
+</div>
+<div class="flex h-8 shrink-0 cursor-grab items-center justify-center gap-x-2 rounded-full bg-green-900/80 pl-3 pr-4">
+<span class="material-symbols-outlined text-white text-base" data-alt="Shower icon">shower</span>
+<p class="text-white text-sm font-medium leading-normal">Shower</p>
+</div>
+<div class="flex h-8 shrink-0 cursor-grab items-center justify-center gap-x-2 rounded-full bg-green-900/80 pl-3 pr-4">
+<span class="material-symbols-outlined text-white text-base" data-alt="T-Shirt icon">checkroom</span>
+<p class="text-white text-sm font-medium leading-normal">Get Dressed</p>
+</div>
+<div class="flex h-8 shrink-0 cursor-grab items-center justify-center gap-x-2 rounded-full bg-green-900/80 pl-3 pr-4">
+<span class="material-symbols-outlined text-white text-base" data-alt="Dog icon">pets</span>
+<p class="text-white text-sm font-medium leading-normal">Walk the Dog</p>
+</div>
+<div class="flex h-8 shrink-0 cursor-grab items-center justify-center gap-x-2 rounded-full bg-green-900/80 pl-3 pr-4">
+<span class="material-symbols-outlined text-white text-base" data-alt="Email icon">mail</span>
+<p class="text-white text-sm font-medium leading-normal">Check Emails</p>
+</div>
+</div>
+</div>
+<!-- Action Buttons -->
+<div class="flex items-center gap-4 px-4">
+<button class="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-primary/20 text-slate-800 dark:text-primary">
+<span class="material-symbols-outlined text-3xl">add</span>
+</button>
+<button class="flex h-14 flex-1 items-center justify-center rounded-full bg-primary text-background-dark text-lg font-bold">
+          Set My Foundation
+        </button>
+</div>
+</div>
+</div>
+</body></html>
