@@ -3,8 +3,7 @@ import 'package:emerge_app/core/presentation/widgets/responsive_layout.dart';
 import 'package:emerge_app/core/theme/app_theme.dart';
 import 'package:emerge_app/core/utils/app_toast.dart';
 import 'package:emerge_app/features/auth/domain/entities/user_extension.dart';
-import 'package:emerge_app/features/gamification/presentation/providers/user_stats_providers.dart';
-import 'package:emerge_app/features/gamification/presentation/widgets/world_view.dart';
+import 'package:emerge_app/features/gamification/presentation/widgets/gamification_world_section.dart';
 import 'package:emerge_app/features/habits/domain/entities/habit.dart';
 import 'package:emerge_app/features/habits/presentation/providers/habit_providers.dart';
 import 'package:emerge_app/features/habits/presentation/widgets/onboarding_milestone_card.dart';
@@ -39,28 +38,7 @@ class HabitDashboardScreen extends ConsumerWidget {
       body: Column(
         children: [
           // Gamification World View
-          Consumer(
-            builder: (context, ref, child) {
-              final userStatsAsync = ref.watch(userStatsStreamProvider);
-              return userStatsAsync.when(
-                data: (profile) => Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: WorldView(
-                    worldState: profile.worldState,
-                    isCity:
-                        profile.archetype == UserArchetype.creator ||
-                        profile.archetype ==
-                            UserArchetype.scholar, // Example logic
-                  ),
-                ),
-                loading: () => const SizedBox(
-                  height: 200,
-                  child: Center(child: CircularProgressIndicator()),
-                ),
-                error: (err, stack) => const SizedBox.shrink(),
-              );
-            },
-          ),
+          const GamificationWorldSection(),
           Expanded(
             child: habitsAsync.when(
               data: (habits) {
