@@ -10,6 +10,7 @@ class UserAvatarStats {
   final int creativityXp;
   final int focusXp;
   final int level;
+  final int streak;
 
   const UserAvatarStats({
     this.strengthXp = 0,
@@ -18,6 +19,7 @@ class UserAvatarStats {
     this.creativityXp = 0,
     this.focusXp = 0,
     this.level = 1,
+    this.streak = 0,
   });
 
   Map<String, dynamic> toMap() {
@@ -28,6 +30,7 @@ class UserAvatarStats {
       'creativityXp': creativityXp,
       'focusXp': focusXp,
       'level': level,
+      'streak': streak,
     };
   }
 
@@ -39,6 +42,7 @@ class UserAvatarStats {
       creativityXp: map['creativityXp'] as int? ?? 0,
       focusXp: map['focusXp'] as int? ?? 0,
       level: map['level'] as int? ?? 1,
+      streak: map['streak'] as int? ?? 0,
     );
   }
   int get totalXp =>

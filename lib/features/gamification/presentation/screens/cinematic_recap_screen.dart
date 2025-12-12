@@ -236,7 +236,7 @@ class _CinematicRecapScreenState extends ConsumerState<CinematicRecapScreen> {
             const Gap(40),
             _buildStatRow('Total XP', '${profile.avatarStats.totalXp}'),
             const Gap(20),
-            _buildStatRow('Streak', 'TODO days'), // Need streak from stats
+            _buildStatRow('Streak', '${profile.avatarStats.streak} days'),
           ],
         ),
       ),
