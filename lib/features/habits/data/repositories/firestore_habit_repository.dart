@@ -285,4 +285,65 @@ class FirestoreHabitRepository implements HabitRepository {
       return null;
     }
   }
+
+  @override
+  Future<List<Habit>> getHabitsByAnchor(String anchorHabitId) async {
+    try {
+      final snapshot = await _firestore
+          .collection('habits')
+          .where('anchorHabitId', isEqualTo: anchorHabitId)
+          .get();
+
+      return snapshot.docs.map((doc) {
+        final data = doc.data();
+        return Habit(
+          id: doc.id,
+          userId: data['userId'] as String,
+          title: data['title'] as String,
+          cue: data['cue'] as String,
+          routine: data['routine'] as String,
+          reward: data['reward'] as String,
+          frequency: HabitFrequency.values.firstWhere(
+            (e) => e.toString() == data['frequency'],
+            orElse: () => HabitFrequency.daily,
+          ),
+          specificDays:
+              (data['specificDays'] as List<dynamic>?)
+                  ?.map((e) => e as int)
+                  .toList() ??
+              [],
+          difficulty: HabitDifficulty.values.firstWhere(
+            (e) => e.name == data['difficulty'],
+            orElse: () => HabitDifficulty.medium,
+          ),
+          isArchived: data['isArchived'] as bool,
+          createdAt: (data['createdAt'] as Timestamp).toDate(),
+          currentStreak: data['currentStreak'] as int? ?? 0,
+          lastCompletedDate: data['lastCompletedDate'] != null
+              ? (data['lastCompletedDate'] as Timestamp).toDate()
+              : null,
+          attribute: HabitAttribute.values.firstWhere(
+            (e) => e.name == data['attribute'],
+            orElse: () => HabitAttribute.vitality,
+          ),
+          imageUrl: data['imageUrl'] as String?,
+          timeOfDayPreference: data['timeOfDayPreference'] != null
+              ? TimeOfDayPreference.values.firstWhere(
+                  (e) => e.name == data['timeOfDayPreference'],
+                  orElse: () => TimeOfDayPreference.anytime,
+                )
+              : null,
+          anchorHabitId: data['anchorHabitId'] as String?,
+          identityTags:
+              (data['identityTags'] as List<dynamic>?)
+                  ?.map((e) => e as String)
+                  .toList() ??
+              [],
+        );
+      }).toList();
+    } catch (e, s) {
+      AppLogger.e('Get habits by anchor failed', e, s);
+      return [];
+    }
+  }
 }

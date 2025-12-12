@@ -6,6 +6,7 @@ class UserStats extends Equatable {
   final int currentLevel;
   final int currentStreak; // Global streak
   final List<String> unlockedBadges;
+  final Map<String, int> identityVotes;
 
   const UserStats({
     required this.userId,
@@ -13,6 +14,7 @@ class UserStats extends Equatable {
     this.currentLevel = 1,
     this.currentStreak = 0,
     this.unlockedBadges = const [],
+    this.identityVotes = const {},
   });
 
   static const empty = UserStats(userId: '');
@@ -23,6 +25,7 @@ class UserStats extends Equatable {
     int? currentLevel,
     int? currentStreak,
     List<String>? unlockedBadges,
+    Map<String, int>? identityVotes,
   }) {
     return UserStats(
       userId: userId ?? this.userId,
@@ -30,6 +33,7 @@ class UserStats extends Equatable {
       currentLevel: currentLevel ?? this.currentLevel,
       currentStreak: currentStreak ?? this.currentStreak,
       unlockedBadges: unlockedBadges ?? this.unlockedBadges,
+      identityVotes: identityVotes ?? this.identityVotes,
     );
   }
 
@@ -40,5 +44,6 @@ class UserStats extends Equatable {
     currentLevel,
     currentStreak,
     unlockedBadges,
+    identityVotes,
   ];
 }
