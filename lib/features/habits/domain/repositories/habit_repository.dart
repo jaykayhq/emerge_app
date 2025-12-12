@@ -14,4 +14,7 @@ abstract class HabitRepository {
   Future<Either<Failure, bool>> completeHabit(String habitId, DateTime date);
 
   Future<Habit?> getHabit(String habitId);
+
+  // Verifies that habit stacking logic is supported by the repository
+  Future<List<Habit>> getHabitsByAnchor(String anchorHabitId);
 }

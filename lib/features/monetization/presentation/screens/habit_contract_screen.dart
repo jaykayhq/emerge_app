@@ -2,15 +2,11 @@ import 'package:emerge_app/features/habits/presentation/providers/habit_provider
 import 'package:emerge_app/features/auth/presentation/providers/auth_providers.dart';
 import 'package:emerge_app/features/monetization/data/repositories/habit_contract_repository.dart';
 import 'package:emerge_app/features/monetization/domain/entities/habit_contract.dart';
+import 'package:emerge_app/features/monetization/presentation/providers/subscription_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
 import 'package:go_router/go_router.dart';
-
-// Mock provider for Premium status
-final isPremiumProvider = Provider<bool>(
-  (ref) => false,
-); // Default to false for testing
 
 class HabitContractScreen extends ConsumerStatefulWidget {
   const HabitContractScreen({super.key});
@@ -34,8 +30,12 @@ class _HabitContractScreenState extends ConsumerState<HabitContractScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final isPremium = ref.watch(isPremiumProvider);
+    // Watch the AsyncValue from subscription_provider.dart
+    final isPremiumAsync = ref.watch(isPremiumProvider);
     final habitsAsync = ref.watch(habitsProvider);
+
+    // Default to false while loading or if null
+    final isPremium = isPremiumAsync.valueOrNull ?? false;
 
     if (!isPremium) {
       return Scaffold(

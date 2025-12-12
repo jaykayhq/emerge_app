@@ -5,6 +5,7 @@ import 'package:emerge_app/core/theme/theme_provider.dart';
 import 'package:emerge_app/features/onboarding/data/services/remote_config_service.dart';
 import 'package:emerge_app/core/services/notification_service.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
@@ -13,6 +14,9 @@ import 'package:google_mobile_ads/google_mobile_ads.dart';
 
 void main() async {
   await initApp();
+
+  // Initialize Environment Variables
+  await dotenv.load(fileName: ".env");
 
   // Initialize Remote Config
   final container = ProviderContainer();

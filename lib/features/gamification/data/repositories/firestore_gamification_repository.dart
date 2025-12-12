@@ -29,6 +29,11 @@ class FirestoreGamificationRepository implements GamificationRepository {
                 ?.map((e) => e as String)
                 .toList() ??
             [],
+        identityVotes:
+            (data['identityVotes'] as Map<String, dynamic>?)?.map(
+              (key, value) => MapEntry(key, value as int),
+            ) ??
+            const {},
       );
     }).distinct();
   }
@@ -41,6 +46,7 @@ class FirestoreGamificationRepository implements GamificationRepository {
         'currentLevel': stats.currentLevel,
         'currentStreak': stats.currentStreak,
         'unlockedBadges': stats.unlockedBadges,
+        'identityVotes': stats.identityVotes,
       }, SetOptions(merge: true));
       return const Right(unit);
     } catch (e, s) {
