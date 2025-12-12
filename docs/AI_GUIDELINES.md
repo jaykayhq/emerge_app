@@ -5,10 +5,10 @@ This document provides specific instructions for AI agents and human developers 
 ## 1. Do's and Don'ts
 
 ### Architecture & State Management
-*   **DO** use **Flutter Bloc** for state management. Every screen should have a corresponding `Page` (UI), `View` (Layout), `Bloc`, `Event`, and `State`.
-*   **DO** follow **Clean Architecture**. Logic must flow: UI -> Bloc -> Use Case -> Repository -> Data Source.
-*   **DO NOT** use `GetX` or `Provider` (except for simple DI).
-*   **DO NOT** place business logic inside UI widgets (e.g., `onTap: () { firestore.update(...) }`). Always dispatch an event to the Bloc.
+*   **DO** use **Riverpod** for state management (specifically `riverpod_generator` and `flutter_riverpod`).
+*   **DO** follow **Clean Architecture**. Logic must flow: UI -> Provider/Notifier -> Use Case -> Repository -> Data Source.
+*   **DO NOT** use `GetX` or `Bloc` (legacy).
+*   **DO NOT** place business logic inside UI widgets (e.g., `onTap: () { firestore.update(...) }`). Always call a method on the Provider/Notifier.
 
 ### UI & Design System
 *   **DO** use the `Spline Sans` font family as defined in `app_theme.dart`.
@@ -16,7 +16,7 @@ This document provides specific instructions for AI agents and human developers 
 *   **DO NOT** hardcode colors or text styles. Use `Theme.of(context).colorScheme` and `Theme.of(context).textTheme`.
 
 ### Code Quality & Testing
-*   **DO** write unit tests for all **Blocs** and **Use Cases**.
+*   **DO** write unit tests for all **Providers/Notifiers** and **Use Cases**.
 *   **DO** use `mocktail` for mocking dependencies in tests.
 *   **DO NOT** commit commented-out code.
 *   **DO** run `flutter analyze` before finishing a task to ensure no linting errors.

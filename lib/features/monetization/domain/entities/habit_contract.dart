@@ -7,6 +7,8 @@ class HabitContract extends Equatable {
   final String partnerEmail;
   final double penaltyAmount;
   final bool isActive;
+  final String? signatureUrl;
+  final DateTime? signedAt;
 
   const HabitContract({
     required this.id,
@@ -15,6 +17,8 @@ class HabitContract extends Equatable {
     required this.partnerEmail,
     required this.penaltyAmount,
     this.isActive = true,
+    this.signatureUrl,
+    this.signedAt,
   });
 
   Map<String, dynamic> toMap() {
@@ -25,6 +29,8 @@ class HabitContract extends Equatable {
       'partnerEmail': partnerEmail,
       'penaltyAmount': penaltyAmount,
       'isActive': isActive,
+      'signatureUrl': signatureUrl,
+      'signedAt': signedAt?.toIso8601String(),
     };
   }
 
@@ -36,6 +42,11 @@ class HabitContract extends Equatable {
       partnerEmail: map['partnerEmail'] ?? '',
       penaltyAmount: (map['penaltyAmount'] ?? 0.0).toDouble(),
       isActive: map['isActive'] ?? false,
+      signatureUrl: map['signatureUrl'] as String?,
+      signedAt:
+          map['signedAt'] != null
+              ? DateTime.tryParse(map['signedAt'] as String)
+              : null,
     );
   }
 
@@ -47,5 +58,7 @@ class HabitContract extends Equatable {
     partnerEmail,
     penaltyAmount,
     isActive,
+    signatureUrl,
+    signedAt,
   ];
 }
