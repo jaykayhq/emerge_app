@@ -20,6 +20,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   final _passwordController = TextEditingController(text: 'password');
   final _formKey = GlobalKey<FormState>();
   bool _isLoading = false;
+  bool _obscurePassword = true;
 
   @override
   void dispose() {
@@ -154,11 +155,25 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   // Password Field
                   TextFormField(
                     controller: _passwordController,
-                    obscureText: true,
-                    decoration: const InputDecoration(
+                    obscureText: _obscurePassword,
+                    decoration: InputDecoration(
                       labelText: 'Password',
-                      border: OutlineInputBorder(),
-                      prefixIcon: Icon(Icons.lock_outline),
+                      border: const OutlineInputBorder(),
+                      prefixIcon: const Icon(Icons.lock_outline),
+                      suffixIcon: IconButton(
+                        icon: Icon(
+                          _obscurePassword
+                              ? Icons.visibility_outlined
+                              : Icons.visibility_off_outlined,
+                        ),
+                        onPressed: () {
+                          setState(() {
+                            _obscurePassword = !_obscurePassword;
+                          });
+                        },
+                        tooltip:
+                            _obscurePassword ? 'Show password' : 'Hide password',
+                      ),
                     ),
                     validator: (value) {
                       if (value == null || value.isEmpty) {
@@ -296,11 +311,27 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                               // Password Field
                               TextFormField(
                                 controller: _passwordController,
-                                obscureText: true,
-                                decoration: const InputDecoration(
+                                obscureText: _obscurePassword,
+                                decoration: InputDecoration(
                                   labelText: 'Password',
-                                  border: OutlineInputBorder(),
-                                  prefixIcon: Icon(Icons.lock_outline),
+                                  border: const OutlineInputBorder(),
+                                  prefixIcon: const Icon(Icons.lock_outline),
+                                  suffixIcon: IconButton(
+                                    icon: Icon(
+                                      _obscurePassword
+                                          ? Icons.visibility_outlined
+                                          : Icons.visibility_off_outlined,
+                                    ),
+                                    onPressed: () {
+                                      setState(() {
+                                        _obscurePassword = !_obscurePassword;
+                                      });
+                                    },
+                                    tooltip:
+                                        _obscurePassword
+                                            ? 'Show password'
+                                            : 'Hide password',
+                                  ),
                                 ),
                                 validator: (value) {
                                   if (value == null || value.isEmpty) {
