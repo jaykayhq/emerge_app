@@ -1,4 +1,5 @@
 import 'package:emerge_app/features/gamification/domain/models/avatar.dart';
+import 'package:emerge_app/features/gamification/presentation/widgets/ready_player_me_avatar.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
@@ -10,6 +11,14 @@ class AvatarDisplay extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    if (avatar.modelUrl != null && avatar.modelUrl!.isNotEmpty) {
+      return ReadyPlayerMeAvatar(
+        modelUrl: avatar.modelUrl!,
+        height: size,
+        width: size,
+      );
+    }
+
     return SizedBox(
       width: size,
       height: size,
@@ -42,7 +51,7 @@ class AvatarDisplay extends StatelessWidget {
             child: Icon(
               _getFaceIcon(avatar.faceShape),
               size: size * 0.2,
-              color: Colors.black.withValues(alpha: 0.5),
+              color: Colors.black.withOpacity(0.5),
             ),
           ),
         ],
