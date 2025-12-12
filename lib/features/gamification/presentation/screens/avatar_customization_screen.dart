@@ -2,6 +2,7 @@ import 'package:emerge_app/core/theme/app_theme.dart';
 import 'package:emerge_app/features/gamification/data/repositories/user_stats_repository.dart';
 import 'package:emerge_app/features/gamification/domain/models/avatar.dart';
 import 'package:emerge_app/features/gamification/presentation/providers/user_stats_providers.dart';
+import 'package:emerge_app/features/gamification/presentation/screens/avatar_creator_webview.dart';
 import 'package:emerge_app/features/gamification/presentation/widgets/avatar_display.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -63,6 +64,24 @@ class _AvatarCustomizationScreenState
         backgroundColor: Colors.transparent,
         actions: [
           TextButton(
+            onPressed: () async {
+              final url = await Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (context) => const AvatarCreatorWebView(),
+                ),
+              );
+              if (url != null && url is String) {
+                setState(() {
+                  _currentAvatar = _currentAvatar.copyWith(modelUrl: url);
+                });
+              }
+            },
+            child: const Text(
+              'Create 3D',
+              style: TextStyle(color: AppTheme.primary),
+            ),
+          ),
+          TextButton(
             onPressed: _saveAvatar,
             child: const Text(
               'Save',
@@ -83,7 +102,7 @@ class _AvatarCustomizationScreenState
                 borderRadius: BorderRadius.circular(24),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.3),
+                    color: Colors.black.withOpacity(0.3),
                     blurRadius: 20,
                   ),
                 ],
@@ -145,7 +164,7 @@ class _AvatarCustomizationScreenState
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
           decoration: BoxDecoration(
-            color: Colors.white.withValues(alpha: 0.1),
+            color: Colors.white.withOpacity(0.1),
             borderRadius: BorderRadius.circular(20),
           ),
           child: Text(
@@ -231,7 +250,8 @@ class _AvatarCustomizationScreenState
                   boxShadow: isSelected
                       ? [
                           BoxShadow(
-                            color: AppTheme.primary.withValues(alpha: 0.4),
+                            color: AppTheme.primary.withOpacity(0.4),
+                            color: AppTheme.primary.withOpacity(0.4),
                             blurRadius: 12,
                             spreadRadius: 2,
                           ),
