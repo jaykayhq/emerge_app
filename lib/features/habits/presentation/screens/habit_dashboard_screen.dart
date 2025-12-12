@@ -8,6 +8,7 @@ import 'package:emerge_app/features/gamification/presentation/widgets/world_view
 import 'package:emerge_app/features/habits/domain/entities/habit.dart';
 import 'package:emerge_app/features/habits/presentation/providers/habit_providers.dart';
 import 'package:emerge_app/features/habits/presentation/widgets/onboarding_milestone_card.dart';
+import 'package:emerge_app/features/monetization/presentation/providers/subscription_provider.dart';
 import 'package:emerge_app/features/monetization/presentation/widgets/ad_banner_widget.dart';
 import 'package:emerge_app/features/onboarding/domain/entities/onboarding_milestone.dart';
 import 'package:emerge_app/features/onboarding/presentation/providers/onboarding_provider.dart';
@@ -115,7 +116,15 @@ class HabitDashboardScreen extends ConsumerWidget {
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () {
-          context.push('/create-habit');
+          // Check limits before navigating
+          final isPremium = ref.read(isPremiumProvider).valueOrNull ?? false;
+          final habitCount = habitsAsync.valueOrNull?.length ?? 0;
+
+          if (!isPremium && habitCount >= 3) {
+            context.push('/paywall');
+          } else {
+            context.push('/create-habit');
+          }
         },
         label: const Text('New Habit'),
         icon: const Icon(Icons.add),
