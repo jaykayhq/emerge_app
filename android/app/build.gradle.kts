@@ -8,6 +8,15 @@ plugins {
     id("dev.flutter.flutter-gradle-plugin")
 }
 
+import java.util.Properties
+import java.io.FileInputStream
+
+val keystoreProperties = Properties()
+val keystorePropertiesFile = rootProject.file("key.properties")
+if (keystorePropertiesFile.exists()) {
+    keystoreProperties.load(FileInputStream(keystorePropertiesFile))
+}
+
 android {
     namespace = "com.emerge.emerge_app"
     compileSdk = flutter.compileSdkVersion
@@ -35,6 +44,15 @@ android {
     //     }
     // }
 
+    signingConfigs {
+        create("release") {
+            keyAlias = keystoreProperties["keyAlias"] as String?
+            keyPassword = keystoreProperties["keyPassword"] as String?
+            storeFile = keystoreProperties["storeFile"]?.let { file(it) }
+            storePassword = keystoreProperties["storePassword"] as String?
+        }
+    }
+
     defaultConfig {
         // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
         applicationId = "com.emerge.emerge_app"
@@ -49,7 +67,7 @@ android {
     buildTypes {
         release {
             // IMPORTANT: Use production signing keys for release builds
-            // signingConfig = signingConfigs.getByName("release") // TODO: Configure release signing
+            signingConfig = signingConfigs.getByName("release")
 
             // Enable code shrinking and resource shrinking for maximum performance and security
             isMinifyEnabled = true
