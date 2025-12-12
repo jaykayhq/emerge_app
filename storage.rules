@@ -39,7 +39,7 @@ service firebase.storage {
     // Tribe/community images (public read, controlled write)
     match /tribes/{tribeId}/{fileName} {
       allow read: if isAuthenticated();
-      allow write: if isAuthenticated(); // TODO: Add tribe membership check
+      allow write: if false; // Admin only for now (aligned with firestore rules)
     }
 
     // Challenge images (public read, controlled write)

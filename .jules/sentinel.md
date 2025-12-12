@@ -1,0 +1,4 @@
+## 2024-05-23 - Inconsistent Access Control in Firebase Storage
+**Vulnerability:** Insecure Direct Object Reference / Authorization Bypass in `storage.rules`. The `/tribes/{tribeId}/{fileName}` path allowed any authenticated user to overwrite tribe images, whereas `firestore.rules` correctly restricted tribe modification to admins.
+**Learning:** Firebase Storage rules and Firestore rules are distinct and must be kept in sync regarding access control policies. Developers often restrict one (the database) but forget the other (file storage), leaving a backdoor for attackers to modify assets associated with protected entities.
+**Prevention:** When defining access control for an entity, always audit both data (Firestore) and assets (Storage) rules simultaneously. Use comments to explicitly cross-reference the corresponding rule in the other service.
