@@ -25,6 +25,8 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
   final _confirmPasswordController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
   bool _isLoading = false;
+  bool _obscurePassword = true;
+  bool _obscureConfirmPassword = true;
 
   @override
   void dispose() {
@@ -234,10 +236,24 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
                   // Password Field
                   TextFormField(
                     controller: _passwordController,
-                    obscureText: true,
-                    decoration: const InputDecoration(
+                    obscureText: _obscurePassword,
+                    decoration: InputDecoration(
                       labelText: 'Password',
-                      prefixIcon: Icon(Icons.lock_outline),
+                      prefixIcon: const Icon(Icons.lock_outline),
+                      suffixIcon: IconButton(
+                        icon: Icon(
+                          _obscurePassword
+                              ? Icons.visibility_outlined
+                              : Icons.visibility_off_outlined,
+                        ),
+                        onPressed: () {
+                          setState(() {
+                            _obscurePassword = !_obscurePassword;
+                          });
+                        },
+                        tooltip:
+                            _obscurePassword ? 'Show password' : 'Hide password',
+                      ),
                     ),
                     validator: AppValidators.validatePassword,
                   ),
@@ -246,12 +262,32 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
                   // Confirm Password Field
                   TextFormField(
                     controller: _confirmPasswordController,
-                    obscureText: true,
-                    decoration: const InputDecoration(
+                    obscureText: _obscureConfirmPassword,
+                    decoration: InputDecoration(
                       labelText: 'Confirm Password',
-                      prefixIcon: Icon(Icons.lock_outline),
+                      prefixIcon: const Icon(Icons.lock_outline),
+                      suffixIcon: IconButton(
+                        icon: Icon(
+                          _obscureConfirmPassword
+                              ? Icons.visibility_outlined
+                              : Icons.visibility_off_outlined,
+                        ),
+                        onPressed: () {
+                          setState(() {
+                            _obscureConfirmPassword = !_obscureConfirmPassword;
+                          });
+                        },
+                        tooltip:
+                            _obscureConfirmPassword
+                                ? 'Show password'
+                                : 'Hide password',
+                      ),
                     ),
-                    validator: (value) => AppValidators.validateConfirmPassword(value, _passwordController.text),
+                    validator:
+                        (value) => AppValidators.validateConfirmPassword(
+                          value,
+                          _passwordController.text,
+                        ),
                   ),
                   const Gap(24),
 
@@ -412,10 +448,26 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
                               // Password Field
                               TextFormField(
                                 controller: _passwordController,
-                                obscureText: true,
-                                decoration: const InputDecoration(
+                                obscureText: _obscurePassword,
+                                decoration: InputDecoration(
                                   labelText: 'Password',
-                                  prefixIcon: Icon(Icons.lock_outline),
+                                  prefixIcon: const Icon(Icons.lock_outline),
+                                  suffixIcon: IconButton(
+                                    icon: Icon(
+                                      _obscurePassword
+                                          ? Icons.visibility_outlined
+                                          : Icons.visibility_off_outlined,
+                                    ),
+                                    onPressed: () {
+                                      setState(() {
+                                        _obscurePassword = !_obscurePassword;
+                                      });
+                                    },
+                                    tooltip:
+                                        _obscurePassword
+                                            ? 'Show password'
+                                            : 'Hide password',
+                                  ),
                                 ),
                                 validator: (value) {
                                   if (value == null || value.isEmpty) {
@@ -432,10 +484,27 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
                               // Confirm Password Field
                               TextFormField(
                                 controller: _confirmPasswordController,
-                                obscureText: true,
-                                decoration: const InputDecoration(
+                                obscureText: _obscureConfirmPassword,
+                                decoration: InputDecoration(
                                   labelText: 'Confirm Password',
-                                  prefixIcon: Icon(Icons.lock_outline),
+                                  prefixIcon: const Icon(Icons.lock_outline),
+                                  suffixIcon: IconButton(
+                                    icon: Icon(
+                                      _obscureConfirmPassword
+                                          ? Icons.visibility_outlined
+                                          : Icons.visibility_off_outlined,
+                                    ),
+                                    onPressed: () {
+                                      setState(() {
+                                        _obscureConfirmPassword =
+                                            !_obscureConfirmPassword;
+                                      });
+                                    },
+                                    tooltip:
+                                        _obscureConfirmPassword
+                                            ? 'Show password'
+                                            : 'Hide password',
+                                  ),
                                 ),
                                 validator: (value) {
                                   if (value != _passwordController.text) {
