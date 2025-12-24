@@ -71,6 +71,22 @@ class FakeAuthRepository implements AuthRepository {
     _controller.add(_currentUser);
   }
 
+  @override
+  Future<Either<Failure, void>> updateDisplayName(String displayName) async {
+    await Future.delayed(const Duration(milliseconds: 500));
+    if (_currentUser == AuthUser.empty) {
+      return const Left(AuthFailure('User not logged in'));
+    }
+    _currentUser = AuthUser(
+      id: _currentUser.id,
+      email: _currentUser.email,
+      displayName: displayName,
+      photoUrl: _currentUser.photoUrl,
+    );
+    _controller.add(_currentUser);
+    return const Right(null);
+  }
+
   void dispose() {
     _controller.close();
   }

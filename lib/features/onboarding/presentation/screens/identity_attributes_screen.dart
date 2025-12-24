@@ -29,7 +29,7 @@ class IdentityAttributesScreen extends ConsumerWidget {
           onPressed: () => context.pop(),
         ),
         title: Text(
-          'Shape Your Identity',
+          'Step 2 of 5: Shape Your Identity',
           style: GoogleFonts.splineSans(
             fontSize: 18,
             fontWeight: FontWeight.bold,
@@ -37,6 +37,16 @@ class IdentityAttributesScreen extends ConsumerWidget {
           ),
         ),
         centerTitle: true,
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(4),
+          child: LinearProgressIndicator(
+            value: 2 / 5, // Step 2 of 5
+            backgroundColor: AppTheme.surfaceDark,
+            valueColor: const AlwaysStoppedAnimation<Color>(
+              AppTheme.vitalityGreen,
+            ),
+          ),
+        ),
       ),
       body: Column(
         children: [
@@ -53,6 +63,22 @@ class IdentityAttributesScreen extends ConsumerWidget {
                     width: 200,
                     height: 200,
                     fit: BoxFit.contain,
+                    errorBuilder: (context, error, stackTrace) {
+                      // Fallback to an icon if the asset fails
+                      return Container(
+                        width: 200,
+                        height: 200,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          gradient: RadialGradient(
+                            colors: [
+                              AppTheme.primary.withValues(alpha: 0.5),
+                              AppTheme.primary.withValues(alpha: 0.1),
+                            ],
+                          ),
+                        ),
+                      );
+                    },
                   ),
                   Column(
                     mainAxisSize: MainAxisSize.min,
@@ -243,9 +269,14 @@ class IdentityAttributesScreen extends ConsumerWidget {
                 color: Colors.transparent,
                 child: InkWell(
                   onTap: remainingPoints == 0
-                      ? () {
-                          // Navigate to next screen (Integrate Your Why)
-                          context.push('/onboarding/why');
+                      ? () async {
+                          // Complete milestone and go to next step
+                          await ref
+                              .read(onboardingControllerProvider.notifier)
+                              .completeMilestone(1);
+                          if (context.mounted) {
+                            context.push('/onboarding/why');
+                          }
                         }
                       : null,
                   borderRadius: BorderRadius.circular(28),

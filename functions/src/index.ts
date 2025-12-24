@@ -48,3 +48,5 @@ export const onUserCreated = functions.auth.user().onCreate(async (user) => {
     console.error(`Error initializing user_stats for user ${user.uid}:`, error);
   }
 });
+
+export * from "./triggers/activity_triggers";

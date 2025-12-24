@@ -1,3 +1,4 @@
+import 'package:emerge_app/core/presentation/widgets/emerge_branding.dart';
 import 'package:emerge_app/core/presentation/widgets/responsive_layout.dart';
 import 'package:emerge_app/core/theme/app_theme.dart';
 
@@ -163,7 +164,7 @@ class UserProfileScreen extends ConsumerWidget {
                 SizedBox(
                   height: 250,
                   width: 250,
-                  child: AvatarDisplay(avatar: profile.avatar),
+                  child: AvatarDisplay(avatar: profile.avatar, size: 250),
                 ),
 
                 // Edit Badge
@@ -314,7 +315,7 @@ class UserProfileScreen extends ConsumerWidget {
           label: 'Strength',
           value: stats.strengthXp,
           icon: Icons.fitness_center,
-          color: Colors.redAccent,
+          color: EmergeColors.coral,
           theme: theme,
         ).animate().fadeIn(delay: 300.ms).slideX(),
         const Gap(12),
@@ -322,7 +323,7 @@ class UserProfileScreen extends ConsumerWidget {
           label: 'Intellect',
           value: stats.intellectXp,
           icon: Icons.auto_stories,
-          color: Colors.blueAccent,
+          color: EmergeColors.violet,
           theme: theme,
         ).animate().fadeIn(delay: 400.ms).slideX(),
         const Gap(12),
@@ -330,7 +331,7 @@ class UserProfileScreen extends ConsumerWidget {
           label: 'Vitality',
           value: stats.vitalityXp,
           icon: Icons.favorite,
-          color: Colors.greenAccent,
+          color: EmergeColors.teal,
           theme: theme,
         ).animate().fadeIn(delay: 500.ms).slideX(),
       ],

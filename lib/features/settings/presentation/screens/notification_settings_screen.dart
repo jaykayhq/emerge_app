@@ -1,130 +1,195 @@
+import 'package:emerge_app/core/presentation/widgets/emerge_branding.dart';
 import 'package:emerge_app/core/theme/app_theme.dart';
+import 'package:emerge_app/features/auth/domain/entities/user_extension.dart';
+import 'package:emerge_app/features/gamification/data/repositories/user_stats_repository.dart';
+import 'package:emerge_app/features/gamification/presentation/providers/user_stats_providers.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
 
-class NotificationSettingsScreen extends StatefulWidget {
+class NotificationSettingsScreen extends ConsumerWidget {
   const NotificationSettingsScreen({super.key});
 
   @override
-  State<NotificationSettingsScreen> createState() =>
-      _NotificationSettingsScreenState();
-}
+  Widget build(BuildContext context, WidgetRef ref) {
+    final userProfileAsync = ref.watch(userStatsStreamProvider);
+    final userProfile = userProfileAsync.value;
+    final settings = userProfile?.settings ?? const UserSettings();
 
-class _NotificationSettingsScreenState
-    extends State<NotificationSettingsScreen> {
-  bool _allowAll = true;
-  bool _habitReminders = true;
-  bool _streakWarnings = true;
-  bool _aiInsights = true;
-  bool _communityUpdates = false;
-  bool _rewards = true;
-  bool _sound = true;
-  bool _vibration = true;
-  bool _dnd = false;
+    // Use settings from profile
+    final allowAll = settings.notificationsEnabled;
+    final habitReminders = settings.habitReminders;
+    final streakWarnings = settings.streakWarnings;
+    final aiInsights = settings.aiInsights;
+    final communityUpdates = settings.communityUpdates;
+    final rewards = settings.rewardsUpdates;
+    final sound = settings.soundsEnabled; // Shared with general settings
+    final vibration = settings.hapticsEnabled; // Shared with general settings
+    final dnd = settings.doNotDisturb;
 
-  @override
-  Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppTheme.backgroundDark,
+      backgroundColor: EmergeColors.background,
       appBar: AppBar(
-        title: const Text('Notifications'),
+        title: Text(
+          'Notifications',
+          style: Theme.of(context).textTheme.titleLarge?.copyWith(
+            color: AppTheme.textMainDark,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
         backgroundColor: Colors.transparent,
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: AppTheme.textMainDark),
+          onPressed: () => Navigator.of(context).pop(),
+        ),
       ),
-      body: ListView(
-        padding: const EdgeInsets.all(16),
+      body: Stack(
         children: [
-          // Master Toggle
-          Container(
+          const Positioned.fill(child: HexMeshBackground()),
+          ListView(
             padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: AppTheme.primary.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(
-                color: AppTheme.primary.withValues(alpha: 0.3),
+            children: [
+              // Master Toggle
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: AppTheme.surfaceDark,
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: EmergeColors.hexLine),
+                ),
+                child: Row(
+                  children: [
+                    Icon(Icons.notifications_active, color: EmergeColors.teal),
+                    const Gap(16),
+                    const Expanded(
+                      child: Text(
+                        'Allow All Notifications',
+                        style: TextStyle(
+                          color: AppTheme.textMainDark,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                        ),
+                      ),
+                    ),
+                    Switch(
+                      value: allowAll,
+                      onChanged: (val) => _updateSettings(
+                        context,
+                        ref,
+                        userProfile,
+                        settings.copyWith(notificationsEnabled: val),
+                      ),
+                      activeThumbColor: EmergeColors.teal,
+                      activeTrackColor: EmergeColors.teal.withValues(
+                        alpha: 0.5,
+                      ),
+                    ),
+                  ],
+                ),
               ),
-            ),
-            child: Row(
-              children: [
-                Icon(Icons.notifications_active, color: AppTheme.primary),
-                const Gap(16),
-                const Expanded(
-                  child: Text(
-                    'Allow All Notifications',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 16,
+              const Gap(24),
+
+              if (allowAll) ...[
+                _buildSectionHeader('Notification Types'),
+                _buildSectionContainer([
+                  _buildSwitchTile(
+                    'Habit Reminders',
+                    'Get nudged to complete your daily tasks',
+                    habitReminders,
+                    (val) => _updateSettings(
+                      context,
+                      ref,
+                      userProfile,
+                      settings.copyWith(habitReminders: val),
                     ),
                   ),
-                ),
-                Switch(
-                  value: _allowAll,
-                  onChanged: (val) => setState(() => _allowAll = val),
-                  activeThumbColor: AppTheme.primary,
-                ),
+                  _buildSwitchTile(
+                    'Streak Warnings',
+                    'Alerts when you\'re about to lose a streak',
+                    streakWarnings,
+                    (val) => _updateSettings(
+                      context,
+                      ref,
+                      userProfile,
+                      settings.copyWith(streakWarnings: val),
+                    ),
+                  ),
+                  _buildSwitchTile(
+                    'AI-Powered Insights',
+                    'Daily analysis and coaching tips',
+                    aiInsights,
+                    (val) => _updateSettings(
+                      context,
+                      ref,
+                      userProfile,
+                      settings.copyWith(aiInsights: val),
+                    ),
+                  ),
+                  _buildSwitchTile(
+                    'Community Updates',
+                    'Friend activity and challenge alerts',
+                    communityUpdates,
+                    (val) => _updateSettings(
+                      context,
+                      ref,
+                      userProfile,
+                      settings.copyWith(communityUpdates: val),
+                    ),
+                  ),
+                  _buildSwitchTile(
+                    'Rewards & Achievements',
+                    'Level ups and badge unlocks',
+                    rewards,
+                    (val) => _updateSettings(
+                      context,
+                      ref,
+                      userProfile,
+                      settings.copyWith(rewardsUpdates: val),
+                    ),
+                  ),
+                ]),
+                const Gap(24),
+
+                _buildSectionHeader('General Settings'),
+                _buildSectionContainer([
+                  _buildSwitchTile(
+                    'Notification Sound',
+                    null,
+                    sound,
+                    (val) => _updateSettings(
+                      context,
+                      ref,
+                      userProfile,
+                      settings.copyWith(soundsEnabled: val),
+                    ),
+                  ),
+                  _buildSwitchTile(
+                    'Vibration',
+                    null,
+                    vibration,
+                    (val) => _updateSettings(
+                      context,
+                      ref,
+                      userProfile,
+                      settings.copyWith(hapticsEnabled: val),
+                    ),
+                  ),
+                  _buildSwitchTile(
+                    'Do Not Disturb',
+                    'Silence notifications during sleep hours',
+                    dnd,
+                    (val) => _updateSettings(
+                      context,
+                      ref,
+                      userProfile,
+                      settings.copyWith(doNotDisturb: val),
+                    ),
+                  ),
+                ]),
               ],
-            ),
+            ],
           ),
-          const Gap(24),
-
-          if (_allowAll) ...[
-            _buildSectionHeader('Notification Types'),
-            _buildSectionContainer([
-              _buildSwitchTile(
-                'Habit Reminders',
-                'Get nudged to complete your daily tasks',
-                _habitReminders,
-                (val) => setState(() => _habitReminders = val),
-              ),
-              _buildSwitchTile(
-                'Streak Warnings',
-                'Alerts when you\'re about to lose a streak',
-                _streakWarnings,
-                (val) => setState(() => _streakWarnings = val),
-              ),
-              _buildSwitchTile(
-                'AI-Powered Insights',
-                'Daily analysis and coaching tips',
-                _aiInsights,
-                (val) => setState(() => _aiInsights = val),
-              ),
-              _buildSwitchTile(
-                'Community Updates',
-                'Friend activity and challenge alerts',
-                _communityUpdates,
-                (val) => setState(() => _communityUpdates = val),
-              ),
-              _buildSwitchTile(
-                'Rewards & Achievements',
-                'Level ups and badge unlocks',
-                _rewards,
-                (val) => setState(() => _rewards = val),
-              ),
-            ]),
-            const Gap(24),
-
-            _buildSectionHeader('General Settings'),
-            _buildSectionContainer([
-              _buildSwitchTile(
-                'Notification Sound',
-                null,
-                _sound,
-                (val) => setState(() => _sound = val),
-              ),
-              _buildSwitchTile(
-                'Vibration',
-                null,
-                _vibration,
-                (val) => setState(() => _vibration = val),
-              ),
-              _buildSwitchTile(
-                'Do Not Disturb',
-                'Silence notifications during sleep hours',
-                _dnd,
-                (val) => setState(() => _dnd = val),
-              ),
-            ]),
-          ],
         ],
       ),
     );
@@ -136,7 +201,7 @@ class _NotificationSettingsScreenState
       child: Text(
         title.toUpperCase(),
         style: TextStyle(
-          color: Colors.grey[500],
+          color: AppTheme.textSecondaryDark,
           fontSize: 12,
           fontWeight: FontWeight.bold,
           letterSpacing: 1.2,
@@ -150,6 +215,7 @@ class _NotificationSettingsScreenState
       decoration: BoxDecoration(
         color: AppTheme.surfaceDark,
         borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: EmergeColors.hexLine),
       ),
       child: Column(children: children),
     );
@@ -165,24 +231,35 @@ class _NotificationSettingsScreenState
       title: Text(
         title,
         style: const TextStyle(
-          color: Colors.white,
+          color: AppTheme.textMainDark,
           fontWeight: FontWeight.w500,
         ),
       ),
       subtitle: subtitle != null
           ? Text(
               subtitle,
-              style: TextStyle(color: Colors.white.withValues(alpha: 0.6)),
+              style: const TextStyle(color: AppTheme.textSecondaryDark),
             )
           : null,
       trailing: Switch(
         value: value,
         onChanged: onChanged,
-        activeThumbColor: AppTheme.primary,
-        activeTrackColor: AppTheme.primary.withValues(alpha: 0.3),
+        activeThumbColor: EmergeColors.teal,
+        activeTrackColor: EmergeColors.teal.withValues(alpha: 0.5),
         inactiveThumbColor: Colors.grey,
         inactiveTrackColor: Colors.grey.withValues(alpha: 0.3),
       ),
     );
+  }
+
+  Future<void> _updateSettings(
+    BuildContext context,
+    WidgetRef ref,
+    UserProfile? profile,
+    UserSettings settings,
+  ) async {
+    if (profile == null) return;
+    final updatedProfile = profile.copyWith(settings: settings);
+    await ref.read(userStatsRepositoryProvider).saveUserStats(updatedProfile);
   }
 }

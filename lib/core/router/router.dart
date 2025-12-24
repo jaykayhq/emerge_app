@@ -5,24 +5,30 @@ import 'package:emerge_app/features/auth/presentation/screens/login_screen.dart'
 import 'package:emerge_app/features/auth/presentation/screens/signup_screen.dart';
 import 'package:emerge_app/features/gamification/presentation/providers/user_stats_providers.dart';
 import 'package:emerge_app/features/gamification/presentation/screens/creator_blueprints_screen.dart';
-import 'package:emerge_app/features/gamification/presentation/screens/evolving_forest_screen.dart';
+import 'package:emerge_app/features/gamification/presentation/screens/growing_world_screen.dart';
 import 'package:emerge_app/features/ai/presentation/screens/goldilocks_screen.dart';
 import 'package:emerge_app/features/gamification/presentation/screens/leveling_screen.dart';
 import 'package:emerge_app/features/gamification/presentation/screens/avatar_customization_screen.dart';
 import 'package:emerge_app/features/gamification/presentation/screens/user_profile_screen.dart';
+import 'package:emerge_app/features/gamification/presentation/widgets/level_up_listener.dart';
 import 'package:emerge_app/features/habits/presentation/screens/advanced_create_habit_screen.dart';
 import 'package:emerge_app/features/habits/presentation/screens/habit_builder_screen.dart';
 import 'package:emerge_app/features/habits/presentation/screens/environment_priming_screen.dart';
 import 'package:emerge_app/features/home/presentation/screens/gatekeeper_screen.dart';
 import 'package:emerge_app/features/home/presentation/screens/home_screen.dart';
 import 'package:emerge_app/features/home/presentation/screens/two_minute_timer_screen.dart';
-import 'package:emerge_app/features/gamification/presentation/screens/cinematic_recap_screen.dart';
+import 'package:emerge_app/features/gamification/presentation/screens/weekly_recap_screen.dart';
+import 'package:emerge_app/features/gamification/presentation/screens/daily_report_screen.dart';
+import 'package:emerge_app/features/gamification/presentation/screens/building_placement_screen.dart';
+import 'package:emerge_app/features/gamification/presentation/screens/land_expansion_screen.dart';
 import 'package:emerge_app/features/insights/presentation/screens/recap_screen.dart';
 import 'package:emerge_app/features/ai/presentation/screens/ai_reflections_screen.dart';
 import 'package:emerge_app/features/monetization/presentation/screens/paywall_screen.dart';
 import 'package:emerge_app/features/onboarding/presentation/providers/onboarding_provider.dart';
 import 'package:emerge_app/features/onboarding/presentation/screens/habit_anchors_screen.dart';
 import 'package:emerge_app/features/onboarding/presentation/screens/habit_stacking_screen.dart';
+import 'package:emerge_app/features/onboarding/presentation/screens/identity_attributes_screen.dart';
+import 'package:emerge_app/features/onboarding/presentation/screens/integrate_why_screen.dart';
 import 'package:emerge_app/features/onboarding/presentation/screens/onboarding_archetype_screen.dart';
 import 'package:emerge_app/features/onboarding/presentation/screens/onboarding_screen.dart';
 import 'package:emerge_app/features/onboarding/presentation/screens/welcome_screen.dart';
@@ -38,6 +44,9 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'router.g.dart';
 
+// Global navigator key - must be defined outside the provider to prevent duplication
+final _rootNavigatorKey = GlobalKey<NavigatorState>(debugLabel: 'root');
+
 @riverpod
 GoRouter router(Ref ref) {
   // Create a ValueNotifier to trigger router refreshes
@@ -51,11 +60,8 @@ GoRouter router(Ref ref) {
   // Dispose the notifier when the provider is disposed
   ref.onDispose(refreshNotifier.dispose);
 
-  // Define the navigator keys
-  final rootNavigatorKey = GlobalKey<NavigatorState>();
-
   return GoRouter(
-    navigatorKey: rootNavigatorKey,
+    navigatorKey: _rootNavigatorKey,
     initialLocation: '/splash',
     refreshListenable: refreshNotifier,
     redirect: (context, state) {
@@ -68,6 +74,7 @@ GoRouter router(Ref ref) {
       final isSigningUp = state.uri.path == '/signup';
       final isWelcome = state.uri.path == '/welcome';
       final isSplash = state.uri.path == '/splash';
+      final isOnboardingPath = state.uri.path.startsWith('/onboarding');
 
       debugPrint(
         'Router Redirect: path=${state.uri.path}, isLoggedIn=$isLoggedIn, isFirstLaunch=$isFirstLaunch',
@@ -75,8 +82,21 @@ GoRouter router(Ref ref) {
 
       if (isSplash) return null; // Allow splash to run its course
 
-      // 1. First Launch: Force Welcome Screen
-      if (isFirstLaunch) {
+      // 1. Handle onboarding paths - always allow if user is logged in
+      if (isOnboardingPath) {
+        if (isLoggedIn) {
+          debugPrint('Router: Allowing onboarding path for logged in user');
+          return null;
+        }
+        // If not logged in, redirect to welcome/login
+        if (!isLoggedIn) {
+          debugPrint('Router: Redirecting to /welcome (need to login first)');
+          return '/welcome';
+        }
+      }
+
+      // 2. First Launch (not logged in): Force Welcome Screen
+      if (isFirstLaunch && !isLoggedIn) {
         // Allow access to welcome, login, and signup pages
         if (isWelcome || isLoggingIn || isSigningUp) {
           debugPrint(
@@ -88,7 +108,7 @@ GoRouter router(Ref ref) {
         return '/welcome';
       }
 
-      // 2. Not Logged In: Force Login (or Signup/Welcome if they are navigating there)
+      // 3. Not Logged In: Force Login
       if (!isLoggedIn) {
         if (isLoggingIn || isSigningUp || isWelcome) {
           return null;
@@ -97,31 +117,54 @@ GoRouter router(Ref ref) {
         return '/login';
       }
 
-      // 3. Logged In: Check Profile
+      // 4. Logged In: Check if onboarding is complete
       if (isLoggedIn) {
-        final userProfileAsync = ref.read(userStatsStreamProvider);
-
-        // If profile is loading, wait
-        if (userProfileAsync.isLoading) {
-          debugPrint('Router: Profile loading, staying put');
-          return null;
-        }
-
-        final userProfile = userProfileAsync.valueOrNull;
-
-        debugPrint(
-          'Router: userProfile=${userProfile != null}, onboardingProgress=${userProfile?.onboardingProgress}',
-        );
-
-        // Allow dashboard access for all authenticated users
-        // Onboarding milestones will appear in the timeline
-        // No forced redirect - users can access dashboard regardless of onboarding status
-
-        // If user is authenticated but trying to access auth/welcome screens, go home
+        // If user is authenticated but trying to access auth/welcome screens, check onboarding
         if (isLoggingIn || isSigningUp || isWelcome) {
+          // Redirect to onboarding if not complete, otherwise home
+          final userProfileAsync = ref.read(userStatsStreamProvider);
+          final userProfile = userProfileAsync.valueOrNull;
+          final onboardingProgress = userProfile?.onboardingProgress ?? 0;
+
+          if (onboardingProgress < 5) {
+            final nextStep = _getOnboardingRouteForProgress(onboardingProgress);
+            debugPrint(
+              'Router: Redirecting to $nextStep (Incomplete onboarding)',
+            );
+            return nextStep;
+          }
+
           debugPrint('Router: Redirecting to / (Home) from ${state.uri.path}');
           return '/';
         }
+
+        // If trying to access home/dashboard but onboarding is incomplete, redirect to onboarding
+        if (state.uri.path == '/' || state.uri.path.isEmpty) {
+          final userProfileAsync = ref.read(userStatsStreamProvider);
+
+          // If profile is still loading, allow access (we'll redirect later when loaded)
+          if (userProfileAsync.isLoading) {
+            debugPrint('Router: Profile loading, allowing temporary access');
+            return null;
+          }
+
+          final userProfile = userProfileAsync.valueOrNull;
+          final onboardingProgress = userProfile?.onboardingProgress ?? 0;
+
+          debugPrint('Router: onboardingProgress=$onboardingProgress');
+
+          // If onboarding is not complete (progress < 5), redirect to the next step
+          if (onboardingProgress < 5) {
+            final nextStep = _getOnboardingRouteForProgress(onboardingProgress);
+            debugPrint(
+              'Router: Redirecting to $nextStep (Incomplete onboarding)',
+            );
+            return nextStep;
+          }
+        }
+
+        // Allow all other paths for authenticated users who completed onboarding
+        return null;
       }
 
       return null;
@@ -143,8 +186,14 @@ GoRouter router(Ref ref) {
             path: 'archetype',
             builder: (context, state) => const OnboardingArchetypeScreen(),
           ),
-          // Removed: attributes route (streamlined flow)
-          // Removed: why route (streamlined flow)
+          GoRoute(
+            path: 'attributes',
+            builder: (context, state) => const IdentityAttributesScreen(),
+          ),
+          GoRoute(
+            path: 'why',
+            builder: (context, state) => const IntegrateWhyScreen(),
+          ),
           GoRoute(
             path: 'anchors',
             builder: (context, state) => const HabitAnchorsScreen(),
@@ -163,7 +212,9 @@ GoRouter router(Ref ref) {
       // ShellRoute for Bottom Navigation
       StatefulShellRoute.indexedStack(
         builder: (context, state, navigationShell) {
-          return ScaffoldWithNavBar(navigationShell: navigationShell);
+          return LevelUpListener(
+            child: ScaffoldWithNavBar(navigationShell: navigationShell),
+          );
         },
         branches: [
           // Branch 1: Habits (Home)
@@ -175,33 +226,33 @@ GoRouter router(Ref ref) {
                 routes: [
                   GoRoute(
                     path: 'create-habit',
-                    parentNavigatorKey: rootNavigatorKey, // Hide bottom nav
+                    parentNavigatorKey: _rootNavigatorKey, // Hide bottom nav
                     builder: (context, state) =>
                         const AdvancedCreateHabitScreen(),
                   ),
                   GoRoute(
                     path: 'two-minute-timer',
-                    parentNavigatorKey: rootNavigatorKey,
+                    parentNavigatorKey: _rootNavigatorKey,
                     builder: (context, state) => const TwoMinuteTimerScreen(),
                   ),
                   GoRoute(
                     path: 'gatekeeper',
-                    parentNavigatorKey: rootNavigatorKey,
+                    parentNavigatorKey: _rootNavigatorKey,
                     builder: (context, state) => const GatekeeperScreen(),
                   ),
                   GoRoute(
                     path: 'paywall',
-                    parentNavigatorKey: rootNavigatorKey,
+                    parentNavigatorKey: _rootNavigatorKey,
                     builder: (context, state) => const PaywallScreen(),
                   ),
                   GoRoute(
                     path: 'habit-builder',
-                    parentNavigatorKey: rootNavigatorKey,
+                    parentNavigatorKey: _rootNavigatorKey,
                     builder: (context, state) => const HabitBuilderScreen(),
                   ),
                   GoRoute(
                     path: 'blueprints',
-                    parentNavigatorKey: rootNavigatorKey,
+                    parentNavigatorKey: _rootNavigatorKey,
                     builder: (context, state) =>
                         const CreatorBlueprintsScreen(),
                   ),
@@ -214,12 +265,28 @@ GoRouter router(Ref ref) {
             routes: [
               GoRoute(
                 path: '/world',
-                builder: (context, state) => const EvolvingForestScreen(),
+                builder: (context, state) => const GrowingWorldScreen(),
                 routes: [
                   GoRoute(
                     path: 'recap',
-                    parentNavigatorKey: rootNavigatorKey,
-                    builder: (context, state) => const CinematicRecapScreen(),
+                    parentNavigatorKey: _rootNavigatorKey,
+                    builder: (context, state) => const WeeklyRecapScreen(),
+                  ),
+                  GoRoute(
+                    path: 'daily-report',
+                    parentNavigatorKey: _rootNavigatorKey,
+                    builder: (context, state) => const DailyReportScreen(),
+                  ),
+                  GoRoute(
+                    path: 'build',
+                    parentNavigatorKey: _rootNavigatorKey,
+                    builder: (context, state) =>
+                        const BuildingPlacementScreen(),
+                  ),
+                  GoRoute(
+                    path: 'expand',
+                    parentNavigatorKey: _rootNavigatorKey,
+                    builder: (context, state) => const LandExpansionScreen(),
                   ),
                 ],
               ),
@@ -254,18 +321,18 @@ GoRouter router(Ref ref) {
                 routes: [
                   GoRoute(
                     path: 'settings',
-                    parentNavigatorKey: rootNavigatorKey,
+                    parentNavigatorKey: _rootNavigatorKey,
                     builder: (context, state) => const SettingsScreen(),
                   ),
                   GoRoute(
                     path: 'notifications',
-                    parentNavigatorKey: rootNavigatorKey,
+                    parentNavigatorKey: _rootNavigatorKey,
                     builder: (context, state) =>
                         const NotificationSettingsScreen(),
                   ),
                   GoRoute(
                     path: 'priming',
-                    parentNavigatorKey: rootNavigatorKey,
+                    parentNavigatorKey: _rootNavigatorKey,
                     builder: (context, state) =>
                         const EnvironmentPrimingScreen(),
                   ),
@@ -298,4 +365,22 @@ GoRouter router(Ref ref) {
       ),
     ],
   );
+}
+
+/// Helper function to get the onboarding route for a given progress level
+String _getOnboardingRouteForProgress(int progress) {
+  switch (progress) {
+    case 0:
+      return '/onboarding/archetype';
+    case 1:
+      return '/onboarding/attributes';
+    case 2:
+      return '/onboarding/why';
+    case 3:
+      return '/onboarding/anchors';
+    case 4:
+      return '/onboarding/stacking';
+    default:
+      return '/'; // All onboarding complete, go to dashboard
+  }
 }

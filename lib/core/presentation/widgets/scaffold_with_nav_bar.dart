@@ -1,5 +1,5 @@
 import 'package:emerge_app/core/presentation/widgets/growth_background.dart';
-import 'package:emerge_app/core/theme/app_theme.dart';
+import 'package:emerge_app/core/presentation/widgets/emerge_branding.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -14,26 +14,42 @@ class ScaffoldWithNavBar extends StatelessWidget {
       bottomNavigationBar: NavigationBar(
         selectedIndex: navigationShell.currentIndex,
         onDestinationSelected: _goBranch,
-        indicatorColor: AppTheme.primary.withValues(alpha: 0.2),
-        destinations: const [
+        indicatorColor: Colors.transparent,
+        backgroundColor: EmergeColors.background.withValues(alpha: 0.95),
+        destinations: [
           NavigationDestination(
-            icon: Icon(Icons.check_circle_outline),
-            selectedIcon: Icon(Icons.check_circle, color: AppTheme.primary),
+            icon: Icon(
+              Icons.check_circle_outline,
+              color: EmergeColors.teal.withValues(alpha: 0.5),
+            ),
+            selectedIcon: const Icon(
+              Icons.check_circle,
+              color: EmergeColors.teal,
+            ),
             label: 'Habits',
           ),
           NavigationDestination(
-            icon: Icon(Icons.public),
-            selectedIcon: Icon(Icons.public, color: AppTheme.primary),
+            icon: Icon(
+              Icons.public,
+              color: EmergeColors.violet.withValues(alpha: 0.5),
+            ),
+            selectedIcon: const Icon(Icons.public, color: EmergeColors.violet),
             label: 'World',
           ),
           NavigationDestination(
-            icon: Icon(Icons.groups_outlined),
-            selectedIcon: Icon(Icons.groups, color: AppTheme.accent),
+            icon: Icon(
+              Icons.groups_outlined,
+              color: EmergeColors.coral.withValues(alpha: 0.5),
+            ),
+            selectedIcon: const Icon(Icons.groups, color: EmergeColors.coral),
             label: 'Tribes',
           ),
           NavigationDestination(
-            icon: Icon(Icons.person_outline),
-            selectedIcon: Icon(Icons.person, color: AppTheme.secondary),
+            icon: Icon(
+              Icons.person_outline,
+              color: EmergeColors.yellow.withValues(alpha: 0.5),
+            ),
+            selectedIcon: const Icon(Icons.person, color: EmergeColors.yellow),
             label: 'Profile',
           ),
         ],

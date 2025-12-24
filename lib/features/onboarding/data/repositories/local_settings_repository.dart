@@ -55,6 +55,13 @@ class LocalSettingsRepository {
     await box.put(_keyIsFirstLaunch, false);
   }
 
+  /// Resets the onboarding state to allow re-triggering the flow.
+  /// Used for testing or if user wants to redo onboarding.
+  Future<void> resetOnboarding() async {
+    final box = Hive.box(_boxName);
+    await box.put(_keyIsFirstLaunch, true);
+  }
+
   String get themeMode {
     final box = Hive.box(_boxName);
     return box.get(_keyThemeMode, defaultValue: 'system');

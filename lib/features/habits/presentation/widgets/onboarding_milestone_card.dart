@@ -273,11 +273,19 @@ class OnboardingMilestoneCard extends StatelessWidget {
             ),
       child: AspectRatio(
         aspectRatio: 16 / 9,
-        child: milestone.backgroundImageUrl != null
+        child:
+            milestone.backgroundImageUrl != null &&
+                milestone.backgroundImageUrl!.isNotEmpty
             ? Image.network(
                 milestone.backgroundImageUrl!,
                 fit: BoxFit.cover,
+                loadingBuilder: (context, child, loadingProgress) {
+                  if (loadingProgress == null) return child;
+                  return _buildImagePlaceholder(isLoading: true);
+                },
                 errorBuilder: (context, error, stackTrace) {
+                  // Gracefully handle network image errors
+                  debugPrint('Milestone image load error: $error');
                   return _buildImagePlaceholder();
                 },
               )
@@ -286,7 +294,7 @@ class OnboardingMilestoneCard extends StatelessWidget {
     );
   }
 
-  Widget _buildImagePlaceholder() {
+  Widget _buildImagePlaceholder({bool isLoading = false}) {
     return Container(
       decoration: BoxDecoration(
         gradient: LinearGradient(
@@ -299,11 +307,16 @@ class OnboardingMilestoneCard extends StatelessWidget {
         ),
       ),
       child: Center(
-        child: Icon(
-          milestone.icon,
-          size: 64,
-          color: AppTheme.vitalityGreen.withValues(alpha: 0.5),
-        ),
+        child: isLoading
+            ? const CircularProgressIndicator(
+                color: AppTheme.vitalityGreen,
+                strokeWidth: 2,
+              )
+            : Icon(
+                milestone.icon,
+                size: 64,
+                color: AppTheme.vitalityGreen.withValues(alpha: 0.5),
+              ),
       ),
     );
   }
@@ -356,4 +369,3 @@ class OnboardingMilestoneCard extends StatelessWidget {
     );
   }
 }
-

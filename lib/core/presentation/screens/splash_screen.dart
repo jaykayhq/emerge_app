@@ -1,5 +1,6 @@
 import 'package:emerge_app/core/presentation/widgets/growth_background.dart';
-import 'package:emerge_app/core/theme/app_theme.dart';
+import 'package:emerge_app/core/presentation/widgets/emerge_branding.dart';
+
 import 'package:emerge_app/features/auth/presentation/providers/auth_providers.dart';
 import 'package:emerge_app/features/onboarding/presentation/providers/onboarding_provider.dart';
 import 'package:flutter/material.dart';
@@ -58,37 +59,17 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
   @override
   Widget build(BuildContext context) {
     return GrowthBackground(
+      overrideGradient: const [
+        Color(0xFF2A1B4E), // Deep Violet to match icon background
+        Color(0xFF20153B),
+      ],
       showPattern: false,
       child: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             // Logo / Icon
-            Container(
-                  padding: const EdgeInsets.all(24),
-                  decoration: BoxDecoration(
-                    color: AppTheme.primary,
-                    shape: BoxShape.circle,
-                    boxShadow: [
-                      BoxShadow(
-                        color: AppTheme.deepSunriseOrange.withValues(
-                          alpha: 0.4,
-                        ),
-                        blurRadius: 20,
-                        spreadRadius: 5,
-                      ),
-                    ],
-                  ),
-                  child: const Icon(
-                    Icons.trending_up,
-                    size: 64,
-                    color: Colors.white,
-                  ),
-                )
-                .animate()
-                .scale(duration: 1.seconds, curve: Curves.elasticOut)
-                .then()
-                .shimmer(duration: 2.seconds),
+            const EmergeLogoWidget(size: 140, animate: true),
 
             const Gap(24),
 
@@ -97,7 +78,8 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
                   'EMERGE',
                   style: Theme.of(context).textTheme.displayMedium?.copyWith(
                     letterSpacing: 4,
-                    color: AppTheme.slateBlue,
+                    color: Colors.white, // White text for dark background
+                    fontWeight: FontWeight.bold,
                   ),
                 )
                 .animate()
@@ -110,7 +92,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
             Text(
               'Build Your Future Self',
               style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                color: Colors.grey[600],
+                color: Colors.white70, // White text
                 letterSpacing: 1.2,
               ),
             ).animate().fadeIn(duration: 800.ms, delay: 1000.ms),

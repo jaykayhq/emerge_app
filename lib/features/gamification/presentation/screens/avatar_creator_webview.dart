@@ -1,3 +1,5 @@
+import 'package:emerge_app/core/presentation/widgets/emerge_branding.dart';
+import 'package:emerge_app/core/theme/app_theme.dart';
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:webview_flutter/webview_flutter.dart';
@@ -49,28 +51,39 @@ class _AvatarCreatorWebViewState extends State<AvatarCreatorWebView> {
             final eventName = data['eventName'] ?? data['type'];
 
             if (eventName == 'v1.avatar.exported') {
-               final url = data['data']?['url'];
-               if (url != null) {
-                 if (mounted) {
-                   Navigator.of(context).pop(url);
-                 }
-               }
+              final url = data['data']?['url'];
+              if (url != null) {
+                if (mounted) {
+                  Navigator.of(context).pop(url);
+                }
+              }
             }
           } catch (e) {
             debugPrint('Error parsing message: $e');
           }
         },
       )
-      ..loadRequest(Uri.parse('https://demo.readyplayer.me/avatar?frameApi'));
+      ..loadRequest(
+        Uri.parse('https://emerge-gq7t9u.readyplayer.me/avatar?frameApi'),
+      );
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: EmergeColors.background,
       appBar: AppBar(
-        title: const Text('Create Avatar'),
+        title: Text(
+          'Create Avatar',
+          style: Theme.of(context).textTheme.titleLarge?.copyWith(
+            color: AppTheme.textMainDark,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.close),
+          icon: const Icon(Icons.close, color: AppTheme.textMainDark),
           onPressed: () => Navigator.of(context).pop(), // Return null on cancel
         ),
       ),

@@ -14,7 +14,7 @@ class FirestoreUserProfileRepository implements UserProfileRepository {
       await _firestore
           .collection('users')
           .doc(profile.uid)
-          .set(profile.toMap());
+          .set(profile.toMap(), SetOptions(merge: true));
       return const Right(unit);
     } catch (e) {
       return Left(e.toString());

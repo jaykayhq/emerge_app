@@ -49,7 +49,7 @@ class _OnboardingArchetypeScreenState
           onPressed: () => context.pop(),
         ),
         title: Text(
-          'Step 1 of 3: Choose Your North Star',
+          'Step 1 of 5: Choose Your North Star',
           style: GoogleFonts.splineSans(
             fontSize: 18,
             fontWeight: FontWeight.bold,
@@ -80,7 +80,7 @@ class _OnboardingArchetypeScreenState
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(4),
           child: LinearProgressIndicator(
-            value: 1 / 3, // Step 1 of 3
+            value: 1 / 5, // Step 1 of 5
             backgroundColor: AppTheme.surfaceDark,
             valueColor: const AlwaysStoppedAnimation<Color>(
               AppTheme.vitalityGreen,
@@ -243,7 +243,7 @@ class _OnboardingArchetypeScreenState
                               .completeMilestone(0);
                           if (context.mounted) {
                             context.push(
-                              '/onboarding/anchors',
+                              '/onboarding/attributes',
                             ); // Go to next step
                           }
                         }

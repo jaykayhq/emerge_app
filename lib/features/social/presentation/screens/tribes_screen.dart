@@ -1,11 +1,16 @@
 import 'package:emerge_app/core/theme/app_theme.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:emerge_app/features/auth/presentation/providers/auth_providers.dart';
+import 'package:emerge_app/features/gamification/data/repositories/user_stats_repository.dart';
+import 'package:emerge_app/features/gamification/presentation/providers/user_stats_providers.dart';
+
 import 'package:emerge_app/features/social/domain/models/tribe.dart';
 import 'package:emerge_app/features/social/presentation/providers/tribes_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
 import 'package:go_router/go_router.dart';
-import 'package:google_fonts/google_fonts.dart';
+import 'package:emerge_app/features/social/presentation/screens/create_tribe_screen.dart';
 
 class TribesScreen extends ConsumerStatefulWidget {
   const TribesScreen({super.key});
@@ -33,10 +38,11 @@ class _TribesScreenState extends ConsumerState<TribesScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.transparent,
       appBar: AppBar(
         title: Text(
           'Tribes Community',
-          style: GoogleFonts.outfit(fontWeight: FontWeight.bold),
+          style: const TextStyle(fontWeight: FontWeight.bold),
         ),
         centerTitle: false,
         actions: [
@@ -51,7 +57,7 @@ class _TribesScreenState extends ConsumerState<TribesScreen>
           labelColor: AppTheme.primary,
           unselectedLabelColor: Colors.grey,
           indicatorColor: AppTheme.primary,
-          labelStyle: GoogleFonts.outfit(fontWeight: FontWeight.bold),
+          labelStyle: const TextStyle(fontWeight: FontWeight.bold),
           tabs: const [
             Tab(text: 'Discover'),
             Tab(text: 'My Tribes'),
@@ -67,72 +73,130 @@ class _TribesScreenState extends ConsumerState<TribesScreen>
           _buildWorldMapTab(),
         ],
       ),
+
+      floatingActionButton: FloatingActionButton.extended(
+        heroTag: 'tribes_fab',
+        onPressed: () {
+          final user = ref.read(authStateChangesProvider).value;
+          if (user == null) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Please sign in to create a tribe.'),
+              ),
+            );
+            return;
+          }
+
+          final userStatsAsync = ref.read(userStatsStreamProvider);
+
+          userStatsAsync.when(
+            data: (stats) {
+              if (stats.avatarStats.level >= 5) {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const CreateTribeScreen(),
+                  ),
+                );
+              } else {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(
+                      'Level 5 required to create a Tribe. Current: ${stats.avatarStats.level}',
+                    ),
+                    backgroundColor: Colors.redAccent,
+                  ),
+                );
+              }
+            },
+            loading: () => ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Checking level requirement...')),
+            ),
+            error: (e, s) => ScaffoldMessenger.of(
+              context,
+            ).showSnackBar(SnackBar(content: Text('Error checking level: $e'))),
+          );
+        },
+        label: const Text('Create Tribe'),
+        icon: const Icon(Icons.add),
+        backgroundColor: AppTheme.primary,
+      ),
     );
   }
 
   Widget _buildDiscoverTab() {
-    final tribes = ref.watch(tribesProvider);
-    final featuredTribes = tribes.take(5).toList();
-    final leaderboardTribes = List<Tribe>.from(tribes)
-      ..sort((a, b) => b.totalXp.compareTo(a.totalXp));
-    final topTribes = leaderboardTribes.take(10).toList();
+    final tribesAsync = ref.watch(tribesProvider);
 
-    return ListView(
-      padding: const EdgeInsets.all(16),
-      children: [
-        // Quick Actions
-        Row(
+    return tribesAsync.when(
+      data: (tribes) {
+        final featuredTribes = tribes.take(5).toList();
+        final leaderboardTribes = List<Tribe>.from(tribes)
+          ..sort((a, b) => b.totalXp.compareTo(a.totalXp));
+        final topTribes = leaderboardTribes.take(10).toList();
+
+        return ListView(
+          padding: const EdgeInsets.all(16),
           children: [
-            Expanded(
-              child: _QuickActionButton(
-                icon: Icons.emoji_events,
-                label: 'Challenges',
-                color: Colors.amber,
-                onTap: () => context.push('/tribes/challenges'),
+            // Quick Actions
+            Row(
+              children: [
+                Expanded(
+                  child: _QuickActionButton(
+                    icon: Icons.emoji_events,
+                    label: 'Challenges',
+                    color: Colors.amber,
+                    onTap: () => context.push('/tribes/challenges'),
+                  ),
+                ),
+                const Gap(16),
+                Expanded(
+                  child: _QuickActionButton(
+                    icon: Icons.handshake,
+                    label: 'Accountability',
+                    color: Colors.blue,
+                    onTap: () => context.push('/tribes/accountability'),
+                  ),
+                ),
+              ],
+            ),
+            const Gap(24),
+
+            // Featured Tribes Carousel
+            _SectionHeader(title: 'Featured Tribes', onSeeAll: () {}),
+            const Gap(12),
+            SizedBox(
+              height: 220,
+              child: ListView.separated(
+                scrollDirection: Axis.horizontal,
+                itemCount: featuredTribes.length,
+                separatorBuilder: (context, index) => const Gap(16),
+                itemBuilder: (context, index) {
+                  return _FeaturedTribeCard(tribe: featuredTribes[index]);
+                },
               ),
             ),
-            const Gap(16),
-            Expanded(
-              child: _QuickActionButton(
-                icon: Icons.handshake,
-                label: 'Accountability',
-                color: Colors.blue,
-                onTap: () => context.push('/tribes/accountability'),
-              ),
+            const Gap(24),
+
+            // Leaderboard
+            _SectionHeader(title: 'Top Tribes Leaderboard', onSeeAll: () {}),
+            const Gap(12),
+            ListView.separated(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              itemCount: topTribes.length,
+              separatorBuilder: (context, index) => const Gap(12),
+              itemBuilder: (context, index) {
+                return _LeaderboardItem(
+                  rank: index + 1,
+                  tribe: topTribes[index],
+                );
+              },
             ),
           ],
-        ),
-        const Gap(24),
-
-        // Featured Tribes Carousel
-        _SectionHeader(title: 'Featured Tribes', onSeeAll: () {}),
-        const Gap(12),
-        SizedBox(
-          height: 220,
-          child: ListView.separated(
-            scrollDirection: Axis.horizontal,
-            itemCount: featuredTribes.length,
-            separatorBuilder: (context, index) => const Gap(16),
-            itemBuilder: (context, index) {
-              return _FeaturedTribeCard(tribe: featuredTribes[index]);
-            },
-          ),
-        ),
-        const Gap(24),
-
-        // Leaderboard
-        _SectionHeader(title: 'Top Tribes Leaderboard', onSeeAll: () {}),
-        const Gap(12),
-        ListView.separated(
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          itemCount: topTribes.length,
-          separatorBuilder: (context, index) => const Gap(12),
-          itemBuilder: (context, index) {
-            return _LeaderboardItem(rank: index + 1, tribe: topTribes[index]);
-          },
-        ),
-      ],
+        );
+      },
+      loading: () => const Center(child: CircularProgressIndicator()),
+      error: (error, stack) => Center(child: Text('Error: $error')),
     );
   }
 
@@ -141,11 +205,17 @@ class _TribesScreenState extends ConsumerState<TribesScreen>
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.groups_outlined, size: 64, color: Colors.grey[400]),
+          Icon(
+            Icons.groups_outlined,
+            size: 64,
+            color: AppTheme.textSecondaryDark,
+          ),
           const Gap(16),
           Text(
             'You haven\'t joined any tribes yet.',
-            style: GoogleFonts.outfit(fontSize: 18, color: Colors.grey[600]),
+            style: Theme.of(
+              context,
+            ).textTheme.titleMedium?.copyWith(color: Colors.grey[600]),
           ),
           const Gap(24),
           ElevatedButton(
@@ -168,7 +238,9 @@ class _TribesScreenState extends ConsumerState<TribesScreen>
       child: Text(
         'Community World Map\n(Coming Soon)',
         textAlign: TextAlign.center,
-        style: GoogleFonts.outfit(fontSize: 18, color: Colors.grey),
+        style: Theme.of(
+          context,
+        ).textTheme.titleMedium?.copyWith(color: Colors.grey),
       ),
     );
   }
@@ -242,13 +314,13 @@ class _SectionHeader extends StatelessWidget {
   }
 }
 
-class _FeaturedTribeCard extends StatelessWidget {
+class _FeaturedTribeCard extends ConsumerWidget {
   final Tribe tribe;
 
   const _FeaturedTribeCard({required this.tribe});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return Container(
       width: 200,
       decoration: BoxDecoration(
@@ -260,53 +332,117 @@ class _FeaturedTribeCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Cover Image
-          Container(
-            height: 100,
-            decoration: BoxDecoration(
+          ClipRRect(
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+            child: Container(
+              height: 100,
               color: AppTheme.primary.withValues(alpha: 0.2),
-              borderRadius: const BorderRadius.vertical(
-                top: Radius.circular(16),
-              ),
-              image: DecorationImage(
-                image: NetworkImage(tribe.imageUrl),
+              child: Image.network(
+                tribe.imageUrl,
                 fit: BoxFit.cover,
+                width: double.infinity,
+                height: 100,
+                errorBuilder: (context, error, stackTrace) => Container(
+                  color: AppTheme.primary.withValues(alpha: 0.2),
+                  child: Icon(Icons.groups, size: 40, color: AppTheme.primary),
+                ),
+                loadingBuilder: (context, child, loadingProgress) {
+                  if (loadingProgress == null) return child;
+                  return Center(
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      valueColor: AlwaysStoppedAnimation(AppTheme.primary),
+                    ),
+                  );
+                },
               ),
             ),
           ),
-          Padding(
-            padding: const EdgeInsets.all(12),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  tribe.name,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: GoogleFonts.outfit(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 16,
-                    color: AppTheme.textMainDark,
-                  ),
-                ),
-                const Gap(4),
-                Text(
-                  '${tribe.memberCount} Members',
-                  style: GoogleFonts.outfit(fontSize: 12, color: Colors.grey),
-                ),
-                const Gap(12),
-                SizedBox(
-                  width: double.infinity,
-                  child: OutlinedButton(
-                    onPressed: () {},
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: AppTheme.primary,
-                      side: BorderSide(color: AppTheme.primary),
-                      padding: const EdgeInsets.symmetric(vertical: 0),
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.all(12),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    tribe.name,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: AppTheme.textMainDark,
                     ),
-                    child: const Text('Join'),
                   ),
-                ),
-              ],
+                  const Gap(4),
+                  Text(
+                    '${tribe.memberCount} Members',
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: AppTheme.textSecondaryDark,
+                    ),
+                  ),
+                  const Spacer(),
+                  SizedBox(
+                    width: double.infinity,
+                    child: OutlinedButton(
+                      onPressed: () async {
+                        try {
+                          final userAsync = ref.read(authStateChangesProvider);
+                          final user = userAsync.value;
+
+                          if (user != null) {
+                            final repo = ref.read(tribeRepositoryProvider);
+                            // 1. Join Tribe
+                            await repo.joinTribe(user.id, tribe.id);
+
+                            // Log Activity for XP
+                            final userStatsRepo = ref.read(
+                              userStatsRepositoryProvider,
+                            );
+                            await userStatsRepo.logActivity(
+                              userId: user.id,
+                              sourceId: tribe.id,
+                              type: 'joined_tribe',
+                              date: DateTime.now(),
+                            );
+
+                            if (context.mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text(
+                                    'Joined ${tribe.name}! (+50 XP)',
+                                  ),
+                                ),
+                              );
+                            }
+                          } else {
+                            if (context.mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text(
+                                    'Please sign in to join tribes.',
+                                  ),
+                                ),
+                              );
+                            }
+                          }
+                        } catch (e) {
+                          if (context.mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(content: Text('Failed to join: $e')),
+                            );
+                          }
+                        }
+                      },
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: AppTheme.primary,
+                        side: BorderSide(color: AppTheme.primary),
+                        padding: const EdgeInsets.symmetric(vertical: 0),
+                      ),
+                      child: const Text('Join'),
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
         ],
@@ -338,11 +474,13 @@ class _LeaderboardItem extends StatelessWidget {
             alignment: Alignment.center,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              color: rank <= 3 ? Colors.amber : Colors.grey[800],
+              color: rank <= 3
+                  ? Colors.amber
+                  : AppTheme.surfaceDark.withValues(alpha: 0.8),
             ),
             child: Text(
               '#$rank',
-              style: GoogleFonts.outfit(
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                 fontWeight: FontWeight.bold,
                 color: rank <= 3 ? Colors.black : Colors.white,
               ),
@@ -350,8 +488,17 @@ class _LeaderboardItem extends StatelessWidget {
           ),
           const Gap(16),
           CircleAvatar(
-            backgroundColor: Colors.grey[800],
-            backgroundImage: NetworkImage(tribe.imageUrl),
+            backgroundColor: AppTheme.surfaceDark.withValues(alpha: 0.5),
+            child: ClipOval(
+              child: Image.network(
+                tribe.imageUrl,
+                fit: BoxFit.cover,
+                width: 40,
+                height: 40,
+                errorBuilder: (context, error, stackTrace) =>
+                    Icon(Icons.groups, color: AppTheme.textSecondaryDark),
+              ),
+            ),
           ),
           const Gap(12),
           Expanded(
@@ -360,17 +507,16 @@ class _LeaderboardItem extends StatelessWidget {
               children: [
                 Text(
                   tribe.name,
-                  style: GoogleFonts.outfit(
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
                     fontWeight: FontWeight.bold,
                     color: AppTheme.textMainDark,
                   ),
                 ),
                 Text(
                   '${tribe.totalXp} XP',
-                  style: GoogleFonts.outfit(
-                    fontSize: 12,
-                    color: AppTheme.primary,
-                  ),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.bodySmall?.copyWith(color: AppTheme.primary),
                 ),
               ],
             ),
