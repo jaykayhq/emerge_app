@@ -119,6 +119,10 @@ class FirestoreHabitRepository implements HabitRepository {
         'anchorHabitId': habit.anchorHabitId,
         'identityTags': habit.identityTags,
       });
+
+      // Log success for debugging
+      AppLogger.i('Successfully created habit: ${habit.id} for user: ${habit.userId}');
+
       return const Right(unit);
     } catch (e, s) {
       AppLogger.e('Create habit failed', e, s);
@@ -219,8 +223,32 @@ class FirestoreHabitRepository implements HabitRepository {
         EventBus().fire(
           HabitCompleted(habitId: habitId, userId: userId!, date: date),
         );
+
+        // Log activity for XP calculation (handled by Cloud Function)
+        // Note: Ideally, we should inject UserStatsRepository, but for now we'll use a direct provider reference or similar if possible.
+        // However, since we are in a Repository, we shouldn't depend on other Repositories directly if possible to avoid circular deps.
+        // Given the architecture, the 'HabitCompleted' event might should be listened to by a controller that logs the activity?
+        // OR we can just add to 'user_activity' collection directly here since it's a simple write.
+        // Let's do the direct write to 'user_activity' here to ensure atomicity/success correlation,
+        // OR refactor to use a service.
+        // The secure loop requires the activity to be logged.
+
+        // Let's assume we can access firestore here.
+        try {
+          await _firestore.collection('user_activity').add({
+            'userId': userId,
+            'habitId': habitId,
+            'date': Timestamp.fromDate(date),
+            'type': 'habit_completion',
+            'createdAt': FieldValue.serverTimestamp(),
+          });
+        } catch (activityError, activityStack) {
+          // Don't fail the habit completion if activity logging fails
+          AppLogger.e('Failed to log activity for habit completion', activityError, activityStack);
+        }
       }
 
+      AppLogger.i('Successfully completed habit: $habitId for user: $userId');
       return Right(result);
     } catch (e, s) {
       AppLogger.e('Complete habit failed', e, s);

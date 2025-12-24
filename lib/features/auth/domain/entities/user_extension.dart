@@ -49,22 +49,66 @@ class UserAvatarStats {
       strengthXp + intellectXp + vitalityXp + creativityXp + focusXp;
 }
 
+/// Seasonal states for the world based on streak
+enum WorldSeason { spring, summer, autumn, winter }
+
+/// Available world themes
+enum WorldTheme { sanctuary, island, settlement, floatingRealm }
+
 class UserWorldState {
   final int cityLevel;
   final int forestLevel;
   final double entropy; // 0.0 to 1.0 (0 = pristine, 1 = decayed)
 
+  // Growing World fields
+  final int worldAge; // Days since world creation
+  final Map<String, Map<String, dynamic>> zones; // Zone states by ID
+  final List<String> unlockedBuildings; // Building IDs
+  final List<Map<String, dynamic>> buildingPlacements; // Placement data
+  final List<String> unlockedLandPlots; // Land expansion IDs
+  final int totalBuildingsConstructed;
+  final DateTime? lastActiveDate; // For decay calculation
+  final WorldTheme worldTheme;
+  final WorldSeason seasonalState;
+
   const UserWorldState({
     this.cityLevel = 1,
     this.forestLevel = 1,
     this.entropy = 0.0,
+    this.worldAge = 0,
+    this.zones = const {},
+    this.unlockedBuildings = const [],
+    this.buildingPlacements = const [],
+    this.unlockedLandPlots = const [],
+    this.totalBuildingsConstructed = 0,
+    this.lastActiveDate,
+    this.worldTheme = WorldTheme.sanctuary,
+    this.seasonalState = WorldSeason.spring,
   });
+
+  /// Calculate overall world health (inverse of entropy)
+  double get worldHealth => 1.0 - entropy;
+
+  /// Check if world is in decay state
+  bool get isDecaying => entropy > 0.3;
+
+  /// Check if world is thriving
+  bool get isThriving => entropy < 0.1;
 
   Map<String, dynamic> toMap() {
     return {
       'cityLevel': cityLevel,
       'forestLevel': forestLevel,
       'entropy': entropy,
+      'worldAge': worldAge,
+      'zones': zones,
+      'unlockedBuildings': unlockedBuildings,
+      'buildingPlacements': buildingPlacements,
+      'unlockedLandPlots': unlockedLandPlots,
+      'totalBuildingsConstructed': totalBuildingsConstructed,
+      'lastActiveDate': lastActiveDate?.toIso8601String(),
+      'worldTheme': worldTheme.name,
+      'seasonalState': seasonalState.name,
     };
   }
 
@@ -73,6 +117,107 @@ class UserWorldState {
       cityLevel: map['cityLevel'] as int? ?? 1,
       forestLevel: map['forestLevel'] as int? ?? 1,
       entropy: (map['entropy'] as num?)?.toDouble() ?? 0.0,
+      worldAge: map['worldAge'] as int? ?? 0,
+      zones:
+          (map['zones'] as Map<String, dynamic>?)?.map(
+            (key, value) =>
+                MapEntry(key, Map<String, dynamic>.from(value as Map)),
+          ) ??
+          {},
+      unlockedBuildings: List<String>.from(map['unlockedBuildings'] ?? []),
+      buildingPlacements:
+          (map['buildingPlacements'] as List<dynamic>?)
+              ?.map((e) => Map<String, dynamic>.from(e as Map))
+              .toList() ??
+          [],
+      unlockedLandPlots: List<String>.from(map['unlockedLandPlots'] ?? []),
+      totalBuildingsConstructed: map['totalBuildingsConstructed'] as int? ?? 0,
+      lastActiveDate: map['lastActiveDate'] != null
+          ? DateTime.tryParse(map['lastActiveDate'] as String)
+          : null,
+      worldTheme: WorldTheme.values.firstWhere(
+        (t) => t.name == map['worldTheme'],
+        orElse: () => WorldTheme.sanctuary,
+      ),
+      seasonalState: WorldSeason.values.firstWhere(
+        (s) => s.name == map['seasonalState'],
+        orElse: () => WorldSeason.spring,
+      ),
+    );
+  }
+
+  UserWorldState copyWith({
+    int? cityLevel,
+    int? forestLevel,
+    double? entropy,
+    int? worldAge,
+    Map<String, Map<String, dynamic>>? zones,
+    List<String>? unlockedBuildings,
+    List<Map<String, dynamic>>? buildingPlacements,
+    List<String>? unlockedLandPlots,
+    int? totalBuildingsConstructed,
+    DateTime? lastActiveDate,
+    WorldTheme? worldTheme,
+    WorldSeason? seasonalState,
+  }) {
+    return UserWorldState(
+      cityLevel: cityLevel ?? this.cityLevel,
+      forestLevel: forestLevel ?? this.forestLevel,
+      entropy: entropy ?? this.entropy,
+      worldAge: worldAge ?? this.worldAge,
+      zones: zones ?? this.zones,
+      unlockedBuildings: unlockedBuildings ?? this.unlockedBuildings,
+      buildingPlacements: buildingPlacements ?? this.buildingPlacements,
+      unlockedLandPlots: unlockedLandPlots ?? this.unlockedLandPlots,
+      totalBuildingsConstructed:
+          totalBuildingsConstructed ?? this.totalBuildingsConstructed,
+      lastActiveDate: lastActiveDate ?? this.lastActiveDate,
+      worldTheme: worldTheme ?? this.worldTheme,
+      seasonalState: seasonalState ?? this.seasonalState,
+    );
+  }
+
+  /// Create initial world state with default zones
+  factory UserWorldState.initial() {
+    return UserWorldState(
+      zones: {
+        'garden': {
+          'zoneId': 'garden',
+          'level': 1,
+          'health': 1.0,
+          'milestone': 0,
+          'activeElements': <String>[],
+        },
+        'library': {
+          'zoneId': 'library',
+          'level': 1,
+          'health': 1.0,
+          'milestone': 0,
+          'activeElements': <String>[],
+        },
+        'forge': {
+          'zoneId': 'forge',
+          'level': 1,
+          'health': 1.0,
+          'milestone': 0,
+          'activeElements': <String>[],
+        },
+        'studio': {
+          'zoneId': 'studio',
+          'level': 1,
+          'health': 1.0,
+          'milestone': 0,
+          'activeElements': <String>[],
+        },
+        'shrine': {
+          'zoneId': 'shrine',
+          'level': 1,
+          'health': 1.0,
+          'milestone': 0,
+          'activeElements': <String>[],
+        },
+      },
+      lastActiveDate: DateTime.now(),
     );
   }
 }
@@ -122,6 +267,7 @@ class UserProfile {
   final String? worldTheme; // 'forest', 'city', or null (default/archetype)
   final String? characterClass;
   final Avatar avatar;
+  final UserSettings settings;
 
   const UserProfile({
     required this.uid,
@@ -142,6 +288,7 @@ class UserProfile {
     this.characterClass,
     this.avatar = const Avatar(),
     this.worldTheme,
+    this.settings = const UserSettings(),
   });
 
   Map<String, dynamic> toMap() {
@@ -164,6 +311,7 @@ class UserProfile {
       'characterClass': characterClass,
       'avatar': avatar.toMap(),
       'worldTheme': worldTheme,
+      'settings': settings.toMap(),
     };
   }
 
@@ -202,6 +350,9 @@ class UserProfile {
           ? Avatar.fromMap(map['avatar'] as Map<String, dynamic>)
           : const Avatar(),
       worldTheme: map['worldTheme'] as String?,
+      settings: map['settings'] != null
+          ? UserSettings.fromMap(map['settings'] as Map<String, dynamic>)
+          : const UserSettings(),
     );
   }
 
@@ -224,6 +375,7 @@ class UserProfile {
     String? characterClass,
     Avatar? avatar,
     String? worldTheme,
+    UserSettings? settings,
   }) {
     return UserProfile(
       uid: uid ?? this.uid,
@@ -246,6 +398,97 @@ class UserProfile {
       characterClass: characterClass ?? this.characterClass,
       avatar: avatar ?? this.avatar,
       worldTheme: worldTheme ?? this.worldTheme,
+      settings: settings ?? this.settings,
+    );
+  }
+}
+
+class UserSettings {
+  final bool notificationsEnabled;
+  final bool healthKitConnected;
+  final bool screenTimeConnected;
+  final bool soundsEnabled;
+  final bool hapticsEnabled;
+
+  // Detailed Notification Settings
+  final bool habitReminders;
+  final bool streakWarnings;
+  final bool aiInsights;
+  final bool communityUpdates;
+  final bool rewardsUpdates;
+  final bool doNotDisturb;
+
+  const UserSettings({
+    this.notificationsEnabled = true,
+    this.healthKitConnected = false,
+    this.screenTimeConnected = false,
+    this.soundsEnabled = true,
+    this.hapticsEnabled = true,
+    this.habitReminders = true,
+    this.streakWarnings = true,
+    this.aiInsights = true,
+    this.communityUpdates = false,
+    this.rewardsUpdates = true,
+    this.doNotDisturb = false,
+  });
+
+  Map<String, dynamic> toMap() {
+    return {
+      'notificationsEnabled': notificationsEnabled,
+      'healthKitConnected': healthKitConnected,
+      'screenTimeConnected': screenTimeConnected,
+      'soundsEnabled': soundsEnabled,
+      'hapticsEnabled': hapticsEnabled,
+      'habitReminders': habitReminders,
+      'streakWarnings': streakWarnings,
+      'aiInsights': aiInsights,
+      'communityUpdates': communityUpdates,
+      'rewardsUpdates': rewardsUpdates,
+      'doNotDisturb': doNotDisturb,
+    };
+  }
+
+  factory UserSettings.fromMap(Map<String, dynamic> map) {
+    return UserSettings(
+      notificationsEnabled: map['notificationsEnabled'] as bool? ?? true,
+      healthKitConnected: map['healthKitConnected'] as bool? ?? false,
+      screenTimeConnected: map['screenTimeConnected'] as bool? ?? false,
+      soundsEnabled: map['soundsEnabled'] as bool? ?? true,
+      hapticsEnabled: map['hapticsEnabled'] as bool? ?? true,
+      habitReminders: map['habitReminders'] as bool? ?? true,
+      streakWarnings: map['streakWarnings'] as bool? ?? true,
+      aiInsights: map['aiInsights'] as bool? ?? true,
+      communityUpdates: map['communityUpdates'] as bool? ?? false,
+      rewardsUpdates: map['rewardsUpdates'] as bool? ?? true,
+      doNotDisturb: map['doNotDisturb'] as bool? ?? false,
+    );
+  }
+
+  UserSettings copyWith({
+    bool? notificationsEnabled,
+    bool? healthKitConnected,
+    bool? screenTimeConnected,
+    bool? soundsEnabled,
+    bool? hapticsEnabled,
+    bool? habitReminders,
+    bool? streakWarnings,
+    bool? aiInsights,
+    bool? communityUpdates,
+    bool? rewardsUpdates,
+    bool? doNotDisturb,
+  }) {
+    return UserSettings(
+      notificationsEnabled: notificationsEnabled ?? this.notificationsEnabled,
+      healthKitConnected: healthKitConnected ?? this.healthKitConnected,
+      screenTimeConnected: screenTimeConnected ?? this.screenTimeConnected,
+      soundsEnabled: soundsEnabled ?? this.soundsEnabled,
+      hapticsEnabled: hapticsEnabled ?? this.hapticsEnabled,
+      habitReminders: habitReminders ?? this.habitReminders,
+      streakWarnings: streakWarnings ?? this.streakWarnings,
+      aiInsights: aiInsights ?? this.aiInsights,
+      communityUpdates: communityUpdates ?? this.communityUpdates,
+      rewardsUpdates: rewardsUpdates ?? this.rewardsUpdates,
+      doNotDisturb: doNotDisturb ?? this.doNotDisturb,
     );
   }
 }

@@ -2,7 +2,8 @@ import 'package:emerge_app/core/presentation/widgets/app_error_widget.dart';
 import 'package:emerge_app/core/presentation/widgets/responsive_layout.dart';
 import 'package:emerge_app/core/theme/app_theme.dart';
 import 'package:emerge_app/core/utils/app_toast.dart';
-import 'package:emerge_app/features/auth/domain/entities/user_extension.dart';
+import 'package:emerge_app/core/presentation/widgets/emerge_branding.dart';
+
 import 'package:emerge_app/features/gamification/presentation/widgets/gamification_world_section.dart';
 import 'package:emerge_app/features/habits/domain/entities/habit.dart';
 import 'package:emerge_app/features/habits/presentation/providers/habit_providers.dart';
@@ -27,7 +28,13 @@ class HabitDashboardScreen extends ConsumerWidget {
     return Scaffold(
       backgroundColor: Colors.transparent,
       appBar: AppBar(
-        title: const Text('Today'),
+        title: Text(
+          'Today',
+          style: theme.textTheme.headlineMedium?.copyWith(
+            fontWeight: FontWeight.bold,
+            color: AppTheme.textMainDark,
+          ),
+        ),
         backgroundColor: Colors.transparent,
         actions: [
           IconButton(
@@ -40,6 +47,32 @@ class HabitDashboardScreen extends ConsumerWidget {
         children: [
           // Gamification World View
           const GamificationWorldSection(),
+          // AI Tools Section
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16.0),
+            child: Row(
+              children: [
+                Expanded(
+                  child: _AiToolCard(
+                    title: 'Goldilocks',
+                    icon: Icons.auto_awesome,
+                    color: EmergeColors.yellow,
+                    onTap: () => context.push('/profile/goldilocks'),
+                  ),
+                ),
+                const Gap(8),
+                Expanded(
+                  child: _AiToolCard(
+                    title: 'Reflections',
+                    icon: Icons.psychology,
+                    color: EmergeColors.violet,
+                    onTap: () => context.push('/profile/reflections'),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const Gap(8),
           Expanded(
             child: habitsAsync.when(
               data: (habits) {
@@ -53,21 +86,23 @@ class HabitDashboardScreen extends ConsumerWidget {
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Icon(
+                        const Icon(
                           Icons.eco_outlined,
                           size: 64,
-                          color: AppTheme.vitalityGreen,
+                          color: EmergeColors.teal,
                         ),
                         const Gap(16),
                         Text(
                           'No habits yet',
-                          style: theme.textTheme.headlineSmall,
+                          style: theme.textTheme.headlineSmall?.copyWith(
+                            color: AppTheme.textMainDark,
+                          ),
                         ),
                         const Gap(8),
                         Text(
                           'Start by adding a new habit',
                           style: theme.textTheme.bodyMedium?.copyWith(
-                            color: AppTheme.slateBlue,
+                            color: AppTheme.textSecondaryDark,
                           ),
                         ),
                       ],
@@ -82,7 +117,9 @@ class HabitDashboardScreen extends ConsumerWidget {
                   desktop: _buildDesktopGrid(milestones, habits, ref),
                 );
               },
-              loading: () => const Center(child: CircularProgressIndicator()),
+              loading: () => const Center(
+                child: CircularProgressIndicator(color: EmergeColors.teal),
+              ),
               error: (error, stack) => AppErrorWidget(
                 message: error.toString(),
                 onRetry: () => ref.refresh(habitsProvider),
@@ -93,6 +130,7 @@ class HabitDashboardScreen extends ConsumerWidget {
         ],
       ),
       floatingActionButton: FloatingActionButton.extended(
+        heroTag: 'habit_dashboard_fab',
         onPressed: () {
           // Check limits before navigating
           final isPremium = ref.read(isPremiumProvider).valueOrNull ?? false;
@@ -104,9 +142,15 @@ class HabitDashboardScreen extends ConsumerWidget {
             context.push('/create-habit');
           }
         },
-        label: const Text('New Habit'),
-        icon: const Icon(Icons.add),
-        backgroundColor: AppTheme.deepSunriseOrange,
+        label: Text(
+          'New Habit',
+          style: theme.textTheme.labelLarge?.copyWith(
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+          ),
+        ),
+        icon: const Icon(Icons.add, color: Colors.white),
+        backgroundColor: EmergeColors.coral,
         foregroundColor: Colors.white,
       ),
     );
@@ -257,7 +301,11 @@ class _HabitCard extends ConsumerWidget {
           ? const EdgeInsets.only(bottom: 12)
           : EdgeInsets.zero,
       elevation: 2,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      color: AppTheme.surfaceDark,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+        side: const BorderSide(color: EmergeColors.hexLine),
+      ),
       child: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Row(
@@ -268,21 +316,21 @@ class _HabitCard extends ConsumerWidget {
               height: 48,
               decoration: BoxDecoration(
                 color: isCompletedToday
-                    ? AppTheme.vitalityGreen.withValues(alpha: 0.1)
-                    : AppTheme.offWhite,
+                    ? EmergeColors.teal.withValues(alpha: 0.2)
+                    : EmergeColors.background,
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(
                   color: isCompletedToday
-                      ? AppTheme.vitalityGreen
-                      : Colors.grey.shade300,
+                      ? EmergeColors.teal
+                      : AppTheme.textSecondaryDark.withValues(alpha: 0.5),
                 ),
               ),
               child: IconButton(
                 icon: Icon(
                   Icons.check,
                   color: isCompletedToday
-                      ? AppTheme.vitalityGreen
-                      : Colors.grey,
+                      ? EmergeColors.teal
+                      : AppTheme.textSecondaryDark,
                 ),
                 onPressed: () {
                   ref.read(completeHabitProvider(habit.id));
@@ -311,7 +359,9 @@ class _HabitCard extends ConsumerWidget {
                       decoration: isCompletedToday
                           ? TextDecoration.lineThrough
                           : null,
-                      color: isCompletedToday ? Colors.grey : null,
+                      color: isCompletedToday
+                          ? AppTheme.textSecondaryDark
+                          : AppTheme.textMainDark,
                     ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
@@ -321,7 +371,7 @@ class _HabitCard extends ConsumerWidget {
                     Text(
                       habit.cue,
                       style: theme.textTheme.bodySmall?.copyWith(
-                        color: Colors.grey.shade600,
+                        color: AppTheme.textSecondaryDark,
                       ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
@@ -337,18 +387,66 @@ class _HabitCard extends ConsumerWidget {
               children: [
                 const Icon(
                   Icons.local_fire_department,
-                  color: Colors.orange,
+                  color: EmergeColors.coral,
                   size: 20,
                 ),
                 Text(
                   '${habit.currentStreak}',
                   style: theme.textTheme.labelSmall?.copyWith(
                     fontWeight: FontWeight.bold,
+                    color: EmergeColors.coral,
                   ),
                 ),
               ],
             ),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+class _AiToolCard extends StatelessWidget {
+  final String title;
+  final IconData icon;
+  final Color color;
+  final VoidCallback onTap;
+
+  const _AiToolCard({
+    required this.title,
+    required this.icon,
+    required this.color,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      elevation: 0,
+      color: AppTheme.surfaceDark,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+        side: BorderSide(color: color.withValues(alpha: 0.2)),
+      ),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(12),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(icon, size: 20, color: color),
+              const Gap(8),
+              Text(
+                title,
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  fontWeight: FontWeight.bold,
+                  color: color,
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

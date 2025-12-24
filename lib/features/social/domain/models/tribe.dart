@@ -3,9 +3,12 @@ class Tribe {
   final String name;
   final String description;
   final String imageUrl;
-  final int memberCount;
+  final String ownerId;
+  final List<String> tags;
+  final int levelRequirement;
   final int rank;
   final int totalXp;
+  final int memberCount;
 
   const Tribe({
     required this.id,
@@ -13,7 +16,40 @@ class Tribe {
     required this.description,
     required this.imageUrl,
     required this.memberCount,
+    required this.ownerId,
+    required this.tags,
+    required this.levelRequirement,
     required this.rank,
     required this.totalXp,
   });
+
+  Map<String, dynamic> toMap() {
+    return {
+      'id': id,
+      'name': name,
+      'description': description,
+      'imageUrl': imageUrl,
+      'memberCount': memberCount,
+      'ownerId': ownerId,
+      'tags': tags,
+      'levelRequirement': levelRequirement,
+      'rank': rank,
+      'totalXp': totalXp,
+    };
+  }
+
+  factory Tribe.fromMap(Map<String, dynamic> map) {
+    return Tribe(
+      id: map['id'] ?? '',
+      name: map['name'] ?? '',
+      description: map['description'] ?? '',
+      imageUrl: map['imageUrl'] ?? '',
+      memberCount: map['memberCount']?.toInt() ?? 0,
+      ownerId: map['ownerId'] ?? '',
+      tags: List<String>.from(map['tags'] ?? []),
+      levelRequirement: map['levelRequirement']?.toInt() ?? 0,
+      rank: map['rank']?.toInt() ?? 0,
+      totalXp: map['totalXp']?.toInt() ?? 0,
+    );
+  }
 }

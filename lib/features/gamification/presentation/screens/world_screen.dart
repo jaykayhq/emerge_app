@@ -1,4 +1,5 @@
 import 'package:emerge_app/core/presentation/widgets/growth_background.dart';
+import 'package:go_router/go_router.dart';
 import 'package:emerge_app/core/theme/app_theme.dart';
 import 'package:emerge_app/features/gamification/presentation/providers/user_stats_providers.dart';
 import 'package:flutter/material.dart';
@@ -44,6 +45,19 @@ class WorldScreen extends ConsumerWidget {
                   right: 16,
                   child: _buildGoldilocksSuggestion(context),
                 ),
+
+              // Daily Recap Button (Bottom Part of Screen)
+              Positioned(
+                bottom: 16,
+                right: 16,
+                child: FloatingActionButton.extended(
+                  heroTag: 'world_recap_fab',
+                  onPressed: () => context.go('/world/recap'),
+                  label: const Text('Daily Recap'),
+                  icon: const Icon(Icons.movie_filter),
+                  backgroundColor: AppTheme.primary,
+                ),
+              ),
             ],
           );
         },

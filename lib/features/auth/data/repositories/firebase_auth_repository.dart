@@ -82,10 +82,12 @@ class FirebaseAuthRepository implements AuthRepository {
 
       // Create UserProfile in Firestore
       final userProfile = UserProfile(uid: updatedUser?.uid ?? user.uid);
-      await _firestore
-          .collection('users')
-          .doc(userProfile.uid)
-          .set(userProfile.toMap());
+      final profileMap = userProfile.toMap();
+      profileMap['email'] = updatedUser?.email ?? user.email ?? '';
+      profileMap['displayName'] = updatedUser?.displayName ?? username;
+      profileMap['createdAt'] = FieldValue.serverTimestamp();
+
+      await _firestore.collection('users').doc(userProfile.uid).set(profileMap);
 
       // Create UserStats in Firestore (using UserProfile structure as expected by UserStatsRepository)
       await _firestore
@@ -168,5 +170,24 @@ class FirebaseAuthRepository implements AuthRepository {
   Future<void> signOut() async {
     await GoogleSignIn().signOut();
     await _firebaseAuth.signOut();
+  }
+
+  @override
+  Future<Either<Failure, void>> updateDisplayName(String displayName) async {
+    try {
+      final user = _firebaseAuth.currentUser;
+      if (user == null) {
+        return const Left(AuthFailure('User not logged in'));
+      }
+      await user.updateDisplayName(displayName);
+      await user.reload();
+      return const Right(null);
+    } on FirebaseAuthException catch (e) {
+      AppLogger.e('Update display name failed', e);
+      return Left(AuthFailure(e.message ?? 'Update failed'));
+    } catch (e, s) {
+      AppLogger.e('Update display name failed', e, s);
+      return Left(ServerFailure(e.toString()));
+    }
   }
 }

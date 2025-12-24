@@ -121,4 +121,10 @@ class FakeHabitRepository implements HabitRepository {
       return null;
     }
   }
+
+  @override
+  Future<List<Habit>> getHabitsByAnchor(String anchorHabitId) async {
+    await Future.delayed(const Duration(milliseconds: 100));
+    return [];
+  }
 }

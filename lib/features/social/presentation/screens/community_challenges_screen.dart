@@ -1,4 +1,7 @@
 import 'package:emerge_app/core/theme/app_theme.dart';
+import 'package:emerge_app/features/auth/presentation/providers/auth_providers.dart';
+import 'package:emerge_app/features/gamification/data/repositories/user_stats_repository.dart';
+
 import 'package:emerge_app/features/social/domain/models/challenge.dart';
 import 'package:emerge_app/features/social/presentation/providers/challenge_provider.dart';
 import 'package:emerge_app/features/social/presentation/screens/challenge_detail_screen.dart';
@@ -9,6 +12,9 @@ import 'package:gap/gap.dart';
 
 class CommunityChallengesScreen extends ConsumerStatefulWidget {
   const CommunityChallengesScreen({super.key});
+  // ... (rest of class)
+
+  // ... (skip to _ChallengeCard)
 
   @override
   ConsumerState<CommunityChallengesScreen> createState() =>
@@ -19,6 +25,25 @@ class _CommunityChallengesScreenState
     extends ConsumerState<CommunityChallengesScreen>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
+  String _selectedCategory = 'All';
+
+  static const List<String> _categories = [
+    'All',
+    'Fitness',
+    'Mindfulness',
+    'Learning',
+    'Nutrition',
+    'Productivity',
+  ];
+
+  static const Map<String, IconData> _categoryIcons = {
+    'All': Icons.star,
+    'Fitness': Icons.fitness_center,
+    'Mindfulness': Icons.self_improvement,
+    'Learning': Icons.menu_book,
+    'Nutrition': Icons.restaurant,
+    'Productivity': Icons.bolt,
+  };
 
   @override
   void initState() {
@@ -51,12 +76,66 @@ class _CommunityChallengesScreenState
           ],
         ),
       ),
-      body: TabBarView(
-        controller: _tabController,
+      body: Column(
         children: [
-          _ChallengeList(status: ChallengeStatus.featured),
-          _ChallengeList(status: ChallengeStatus.active),
-          _ChallengeList(status: ChallengeStatus.completed),
+          // Horizontal Category Filter Chips
+          SizedBox(
+            height: 56,
+            child: ListView.separated(
+              scrollDirection: Axis.horizontal,
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              itemCount: _categories.length,
+              separatorBuilder: (_, __) => const Gap(8),
+              itemBuilder: (context, index) {
+                final category = _categories[index];
+                final isSelected = _selectedCategory == category;
+                return FilterChip(
+                  selected: isSelected,
+                  showCheckmark: false,
+                  avatar: Icon(
+                    _categoryIcons[category],
+                    size: 18,
+                    color: isSelected ? Colors.white : AppTheme.primary,
+                  ),
+                  label: Text(category),
+                  labelStyle: TextStyle(
+                    color: isSelected ? Colors.white : Colors.white70,
+                    fontWeight: isSelected
+                        ? FontWeight.bold
+                        : FontWeight.normal,
+                  ),
+                  backgroundColor: AppTheme.surfaceDark,
+                  selectedColor: AppTheme.primary,
+                  side: BorderSide(
+                    color: isSelected ? AppTheme.primary : Colors.white24,
+                  ),
+                  onSelected: (_) {
+                    setState(() => _selectedCategory = category);
+                  },
+                );
+              },
+            ),
+          ),
+          // Challenge List
+          Expanded(
+            child: TabBarView(
+              controller: _tabController,
+              children: [
+                _ChallengeList(
+                  status: ChallengeStatus.featured,
+                  categoryFilter: _selectedCategory,
+                ),
+                _ChallengeList(
+                  status: ChallengeStatus.active,
+                  categoryFilter: _selectedCategory,
+                ),
+                _ChallengeList(
+                  status: ChallengeStatus.completed,
+                  categoryFilter: _selectedCategory,
+                ),
+              ],
+            ),
+          ),
         ],
       ),
     );
@@ -65,51 +144,69 @@ class _CommunityChallengesScreenState
 
 class _ChallengeList extends ConsumerWidget {
   final ChallengeStatus status;
+  final String categoryFilter;
 
-  const _ChallengeList({required this.status});
+  const _ChallengeList({required this.status, this.categoryFilter = 'All'});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final challenges = ref.watch(filteredChallengesProvider(status));
+    final challengesAsync = ref.watch(filteredChallengesProvider(status));
 
-    if (challenges.isEmpty) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.emoji_events_outlined, size: 64, color: Colors.white24),
-            const Gap(16),
-            Text(
-              'No challenges found',
-              style: TextStyle(color: Colors.white54),
+    return challengesAsync.when(
+      data: (challenges) {
+        // Apply category filter
+        final filteredChallenges = categoryFilter == 'All'
+            ? challenges
+            : challenges.where((c) => c.category == categoryFilter).toList();
+
+        if (filteredChallenges.isEmpty) {
+          return Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  Icons.emoji_events_outlined,
+                  size: 64,
+                  color: Colors.white24,
+                ),
+                const Gap(16),
+                Text(
+                  categoryFilter == 'All'
+                      ? 'No ${status.name} challenges found'
+                      : 'No $categoryFilter challenges found',
+                  style: const TextStyle(color: Colors.white54),
+                ),
+              ],
             ),
-          ],
-        ),
-      );
-    }
+          );
+        }
 
-    return ListView.separated(
-      padding: const EdgeInsets.all(16),
-      itemCount: challenges.length,
-      separatorBuilder: (context, index) => const Gap(16),
-      itemBuilder: (context, index) {
-        final challenge = challenges[index];
-        return _ChallengeCard(challenge: challenge)
-            .animate()
-            .fadeIn(delay: (100 * index).ms)
-            .slideY(begin: 0.1, end: 0);
+        return ListView.separated(
+          padding: const EdgeInsets.all(16),
+          itemCount: filteredChallenges.length,
+          separatorBuilder: (context, index) => const Gap(16),
+          itemBuilder: (context, index) {
+            final challenge = filteredChallenges[index];
+            return _ChallengeCard(challenge: challenge)
+                .animate()
+                .fadeIn(delay: (100 * index).ms)
+                .slideY(begin: 0.1, end: 0);
+          },
+        );
       },
+      loading: () => const Center(child: CircularProgressIndicator()),
+      error: (error, stack) => Center(child: Text('Error: $error')),
     );
   }
 }
 
-class _ChallengeCard extends StatelessWidget {
+class _ChallengeCard extends ConsumerWidget {
   final Challenge challenge;
 
   const _ChallengeCard({required this.challenge});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return GestureDetector(
       onTap: () {
         Navigator.push(
@@ -158,11 +255,25 @@ class _ChallengeCard extends StatelessWidget {
                         color: Colors.white.withValues(alpha: 0.9),
                         shape: BoxShape.circle,
                       ),
-                      child: Icon(
-                        Icons.local_fire_department,
-                        color: Colors.orange,
-                        size: 20,
-                      ),
+                      child: challenge.sponsorLogoUrl != null
+                          ? ClipOval(
+                              child: Image.network(
+                                challenge.sponsorLogoUrl!,
+                                width: 24,
+                                height: 24,
+                                fit: BoxFit.cover,
+                                errorBuilder: (_, __, ___) => const Icon(
+                                  Icons.local_fire_department,
+                                  color: Colors.orange,
+                                  size: 20,
+                                ),
+                              ),
+                            )
+                          : const Icon(
+                              Icons.local_fire_department,
+                              color: Colors.orange,
+                              size: 20,
+                            ),
                     ),
                   ),
                 ],
@@ -185,31 +296,34 @@ class _ChallengeCard extends StatelessWidget {
                   const Gap(4),
                   Text(
                     'Reward: ${challenge.reward}',
-                    style: TextStyle(
-                      color: Colors.white70,
-                      fontSize: 14,
-                    ),
+                    style: const TextStyle(color: Colors.white70, fontSize: 14),
                   ),
                   const Gap(12),
-                  // Progress Bar
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(4),
-                    child: LinearProgressIndicator(
-                      value: challenge.currentDay / challenge.totalDays,
-                      backgroundColor: Colors.white10,
-                      valueColor: AlwaysStoppedAnimation<Color>(AppTheme.primary),
-                      minHeight: 6,
+                  // Progress UI only for Active/Completed
+                  if (challenge.status != ChallengeStatus.featured) ...[
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(4),
+                      child: LinearProgressIndicator(
+                        value: challenge.totalDays > 0
+                            ? challenge.currentDay / challenge.totalDays
+                            : 0,
+                        backgroundColor: Colors.white10,
+                        valueColor: AlwaysStoppedAnimation<Color>(
+                          AppTheme.primary,
+                        ),
+                        minHeight: 6,
+                      ),
                     ),
-                  ),
-                  const Gap(8),
-                  Text(
-                    'Day ${challenge.currentDay} of ${challenge.totalDays}',
-                    style: TextStyle(
-                      color: Colors.white54,
-                      fontSize: 12,
+                    const Gap(8),
+                    Text(
+                      'Day ${challenge.currentDay} of ${challenge.totalDays}',
+                      style: const TextStyle(
+                        color: Colors.white54,
+                        fontSize: 12,
+                      ),
                     ),
-                  ),
-                  const Gap(16),
+                    const Gap(16),
+                  ],
                   const Divider(color: Colors.white10),
                   const Gap(8),
                   Row(
@@ -217,50 +331,177 @@ class _ChallengeCard extends StatelessWidget {
                     children: [
                       Row(
                         children: [
-                          Icon(Icons.groups, size: 16, color: Colors.white54),
+                          const Icon(
+                            Icons.groups,
+                            size: 16,
+                            color: Colors.white54,
+                          ),
                           const Gap(4),
                           Text(
                             '${challenge.participants} Adventurers',
-                            style: TextStyle(
+                            style: const TextStyle(
                               color: Colors.white54,
                               fontSize: 12,
                             ),
                           ),
                         ],
                       ),
-                      Row(
-                        children: [
-                          Icon(Icons.timer, size: 16, color: Colors.white54),
-                          const Gap(4),
-                          Text(
-                            'Ends in ${challenge.daysLeft} days',
-                            style: TextStyle(
+                      if (challenge.status == ChallengeStatus.featured)
+                        Row(
+                          children: [
+                            const Icon(
+                              Icons.timer,
+                              size: 16,
                               color: Colors.white54,
-                              fontSize: 12,
                             ),
-                          ),
-                        ],
-                      ),
+                            const Gap(4),
+                            Text(
+                              '${challenge.totalDays} Days',
+                              style: const TextStyle(
+                                color: Colors.white54,
+                                fontSize: 12,
+                              ),
+                            ),
+                          ],
+                        )
+                      else
+                        Row(
+                          children: [
+                            const Icon(
+                              Icons.timer,
+                              size: 16,
+                              color: Colors.white54,
+                            ),
+                            const Gap(4),
+                            Text(
+                              'Ends in ${challenge.daysLeft} days',
+                              style: const TextStyle(
+                                color: Colors.white54,
+                                fontSize: 12,
+                              ),
+                            ),
+                          ],
+                        ),
                     ],
                   ),
                   const Gap(16),
-                  SizedBox(
-                    width: double.infinity,
-                    child: OutlinedButton.icon(
-                      onPressed: () {
-                        // Share logic placeholder
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Sharing Challenge...')),
-                        );
-                      },
-                      icon: const Icon(Icons.share, size: 16),
-                      label: const Text('Share Challenge'),
-                      style: OutlinedButton.styleFrom(
-                        foregroundColor: AppTheme.primary,
-                        side: BorderSide(color: AppTheme.primary),
+                  // Action Buttons based on status
+                  if (challenge.status == ChallengeStatus.featured)
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton(
+                        onPressed: () async {
+                          try {
+                            final userAsync = ref.read(
+                              authStateChangesProvider,
+                            );
+                            final user = userAsync.value;
+
+                            if (user != null) {
+                              final repo = ref.read(
+                                challengeRepositoryProvider,
+                              );
+                              // Log Activity for XP
+                              final userStatsRepo = ref.read(
+                                userStatsRepositoryProvider,
+                              );
+
+                              // 1. Join Challenge
+                              await repo.joinChallenge(user.id, challenge.id);
+
+                              await userStatsRepo.logActivity(
+                                userId: user.id,
+                                type: 'joined_challenge',
+                                sourceId: challenge.id,
+                                date: DateTime.now(),
+                              );
+
+                              if (context.mounted) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                    content: Text(
+                                      'Joined challenge! Check Active tab.',
+                                    ),
+                                  ),
+                                );
+                              }
+                              // Invalidate providers to refresh
+                              ref.invalidate(userChallengesProvider);
+                              ref.invalidate(filteredChallengesProvider);
+                            } else {
+                              if (context.mounted) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                    content: Text(
+                                      'Please sign in to join challenges.',
+                                    ),
+                                  ),
+                                );
+                              }
+                            }
+                          } catch (e) {
+                            if (context.mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(content: Text('Failed to join: $e')),
+                              );
+                            }
+                          }
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppTheme.primary,
+                          foregroundColor: AppTheme.backgroundDark,
+                        ),
+                        child: const Text('Join Challenge'),
+                      ),
+                    )
+                  else if (challenge.status == ChallengeStatus.completed)
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton.icon(
+                        onPressed: () {
+                          // Affiliate Link Logic
+                          if (challenge.affiliateUrl != null) {
+                            // Launch URL
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text(
+                                  'Opening reward: ${challenge.affiliateUrl}',
+                                ),
+                              ),
+                            );
+                          } else {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(content: Text('Reward claimed!')),
+                            );
+                          }
+                        },
+                        icon: const Icon(Icons.redeem),
+                        label: const Text('Claim Reward'),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.amber,
+                          foregroundColor: Colors.black,
+                        ),
+                      ),
+                    )
+                  else
+                    SizedBox(
+                      width: double.infinity,
+                      child: OutlinedButton.icon(
+                        onPressed: () {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('Sharing Challenge...'),
+                            ),
+                          );
+                        },
+                        icon: const Icon(Icons.share, size: 16),
+                        label: const Text('Share Progress'),
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: AppTheme.primary,
+                          side: BorderSide(color: AppTheme.primary),
+                        ),
                       ),
                     ),
-                  ),
                 ],
               ),
             ),

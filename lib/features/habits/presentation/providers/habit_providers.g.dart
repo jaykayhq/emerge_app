@@ -40,7 +40,7 @@ final habitsProvider = AutoDisposeStreamProvider<List<Habit>>.internal(
 @Deprecated('Will be removed in 3.0. Use Ref instead')
 // ignore: unused_element
 typedef HabitsRef = AutoDisposeStreamProviderRef<List<Habit>>;
-String _$createHabitHash() => r'272e5a04c2991012a8995ac4f351f59d79e0960c';
+String _$createHabitHash() => r'80934ee259dcb053f2a3516fa5803fdad787b820';
 
 /// Copied from Dart SDK
 class _SystemHash {
@@ -179,7 +179,7 @@ class _CreateHabitProviderElement extends AutoDisposeFutureProviderElement<void>
   Habit get habit => (origin as CreateHabitProvider).habit;
 }
 
-String _$completeHabitHash() => r'430050be6e8025a6cba05e27a1c162391398e070';
+String _$completeHabitHash() => r'4460a70b5e5ca6c22249f7c4b2e76e46ab751d30';
 
 /// See also [completeHabit].
 @ProviderFor(completeHabit)

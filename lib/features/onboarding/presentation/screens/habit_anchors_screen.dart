@@ -30,7 +30,7 @@ class _HabitAnchorsScreenState extends ConsumerState<HabitAnchorsScreen> {
           onPressed: () => context.pop(),
         ),
         title: Text(
-          'Step 2 of 3: Map Your Day\'s Anchors',
+          'Step 4 of 5: Map Your Day\'s Anchors',
           style: GoogleFonts.splineSans(
             fontSize: 18,
             fontWeight: FontWeight.bold,
@@ -44,7 +44,7 @@ class _HabitAnchorsScreenState extends ConsumerState<HabitAnchorsScreen> {
               // Skip this milestone and go to next
               await ref
                   .read(onboardingControllerProvider.notifier)
-                  .skipMilestone(1);
+                  .skipMilestone(3);
               if (context.mounted) {
                 context.go('/'); // Return to timeline
               }
@@ -61,7 +61,7 @@ class _HabitAnchorsScreenState extends ConsumerState<HabitAnchorsScreen> {
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(4),
           child: LinearProgressIndicator(
-            value: 2 / 3, // Step 2 of 3
+            value: 4 / 5, // Step 4 of 5
             backgroundColor: AppTheme.surfaceDark,
             valueColor: const AlwaysStoppedAnimation<Color>(
               AppTheme.vitalityGreen,
@@ -260,7 +260,7 @@ class _HabitAnchorsScreenState extends ConsumerState<HabitAnchorsScreen> {
                               // Complete milestone and go to next step
                               await ref
                                   .read(onboardingControllerProvider.notifier)
-                                  .completeMilestone(1);
+                                  .completeMilestone(3);
                               if (context.mounted) {
                                 context.push(
                                   '/onboarding/stacking',

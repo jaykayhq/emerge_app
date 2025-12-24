@@ -18,7 +18,8 @@ service cloud.firestore {
       return input is string &&
              input.size() > 0 &&
              input.size() <= 1000 &&
-             !input.matches('.*[<>&"\'].*');
+             !input.matches('.*[<>].*'); // Only ban < and > to prevent basic HTML injection
+             // !input.matches('.*[<>&"\'].*'); // OLD: overly aggressive
     }
 
     // Helper function to validate email format
@@ -27,41 +28,66 @@ service cloud.firestore {
              email.matches('^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$');
     }
 
-    // Helper function to rate limit writes (max 5 writes per minute per user)
+    // Helper function to rate limit writes (currently disabled - custom claims not set up)
+    // Note: To enable rate limiting, you need to set up custom claims via Cloud Functions.
     function rateLimited() {
-      return request.time < resource.data.timestamp + duration.value(1, 'm')
-             ? request.auth.token.writes_per_minute < 5
-             : true;
+      return true; // Disabled - custom claims not configured
+      // Original implementation (requires custom claims):
+      // return resource == null 
+      //        || (request.time < resource.data.timestamp + duration.value(1, 'm')
+      //            ? request.auth.token.writes_per_minute < 5
+      //            : true);
     }
 
     // Helper function to validate user data with enhanced security
-    function isValidUser() {
-      let user = request.resource.data;
-      return user.keys().hasAll(['email', 'displayName', 'createdAt']) &&
-             user.keys().size() <= 10 && // Limit number of fields
-             isValidEmail(user.email) &&
-             sanitizeString(user.displayName) &&
-             user.displayName.size() <= 50 &&
-             user.createdAt is timestamp &&
+    function isValidUser(user) {
+      return user.keys().size() <= 60 && // Expanded limit to accommodate profile fields
+             (!user.keys().hasAny(['email']) || isValidEmail(user.email)) &&
+             (!user.keys().hasAny(['displayName']) || (sanitizeString(user.displayName) && user.displayName.size() <= 50)) &&
+             (!user.keys().hasAny(['createdAt']) || user.createdAt is timestamp) &&
              !user.keys().hasAny(['isAdmin', 'role', 'permissions']); // Prevent privilege escalation
     }
 
     // Helper function to validate habit data with enhanced security
-    function isValidHabit() {
-      let habit = request.resource.data;
-      return habit.keys().hasAll(['title', 'userId', 'frequency']) &&
-             habit.keys().size() <= 8 && // Limit number of fields
+    function isValidHabit(habit) {
+      // Essential fields that must be present
+      return habit.keys().hasAll(['title', 'userId']) &&
+             habit.keys().size() <= 30 && // Increased limit for full feature set
              sanitizeString(habit.title) &&
              habit.title.size() <= 100 &&
              habit.userId == request.auth.uid &&
-             habit.frequency in ['daily', 'weekly', 'monthly'] &&
-             (!habit.keys().hasAll(['description']) ||
-              (sanitizeString(habit.description) && habit.description.size() <= 500));
+             
+             // Optional fields validation (allow empty strings for optional text fields)
+             (!habit.keys().hasAny(['cue']) || habit.cue is string) &&
+             (!habit.keys().hasAny(['routine']) || habit.routine is string) &&
+             (!habit.keys().hasAny(['reward']) || habit.reward is string) &&
+             (!habit.keys().hasAny(['location']) || habit.location == null || habit.location is string) &&
+             (!habit.keys().hasAny(['anchorHabitId']) || (habit.anchorHabitId is string)) &&
+             (!habit.keys().hasAny(['imageUrl']) || (habit.imageUrl is string)) &&
+             
+             // Enums and constrained strings (accept both formats: 'daily' and 'HabitFrequency.daily')
+             (!habit.keys().hasAny(['frequency']) || habit.frequency in ['daily', 'weekly', 'specificDays', 'HabitFrequency.daily', 'HabitFrequency.weekly', 'HabitFrequency.specificDays']) &&
+             (!habit.keys().hasAny(['difficulty']) || habit.difficulty in ['easy', 'medium', 'hard']) &&
+             (!habit.keys().hasAny(['impact']) || habit.impact in ['positive', 'negative', 'neutral']) &&
+             (!habit.keys().hasAny(['attribute']) || habit.attribute in ['vitality', 'focus', 'strength', 'creativity', 'intellect']) &&
+             
+             // Boolean flags
+             (!habit.keys().hasAny(['isArchived']) || habit.isArchived is bool) &&
+             (!habit.keys().hasAny(['contractActive']) || habit.contractActive is bool) &&
+             
+             // Lists and Maps
+             (!habit.keys().hasAny(['specificDays']) || habit.specificDays is list) && 
+             (!habit.keys().hasAny(['identityTags']) || habit.identityTags is list) &&
+             (!habit.keys().hasAny(['reminderTime']) || habit.reminderTime == null || (habit.reminderTime.keys().hasAll(['hour', 'minute']))) &&
+             
+             // Numbers and Dates
+             (!habit.keys().hasAny(['order']) || habit.order is int) &&
+             (!habit.keys().hasAny(['currentStreak']) || habit.currentStreak is int) &&
+             (!habit.keys().hasAny(['createdAt']) || habit.createdAt is timestamp);
     }
 
     // Helper function to validate post content
-    function isValidPost() {
-      let post = request.resource.data;
+    function isValidPost(post) {
       return post.keys().hasAll(['content', 'userId', 'createdAt']) &&
              post.keys().size() <= 10 &&
              sanitizeString(post.content) &&
@@ -73,19 +99,42 @@ service cloud.firestore {
     // User Stats / Profile (Gamification & Identity)
     match /user_stats/{userId} {
       allow read: if isOwner(userId);
-      allow write: if isOwner(userId);
+      // Deny client-side updates to XP and Level. These must be updated by backend functions.
+      // We allow create for initialization (handled by client or auth trigger), but updates should be restricted.
+      // Actually, let's lock it down further.
+      allow write: if false; // Only backend admin SDK can write to user_stats mostly. 
+      // Exception: if client needs to update 'unlockedBadges' or similar non-secure fields? 
+      // For now, blocking all writes is safest for the "Secure Loop". 
+      // If client needs to init, handle via onUserCreated trigger.
     }
 
     // User Profiles (Archetype, Attributes, etc.)
     match /users/{userId} {
-      allow read, write: if isOwner(userId);
+      allow read: if isOwner(userId);
+      allow create: if isOwner(userId) && isValidUser(request.resource.data);
+      allow update: if isOwner(userId) && (
+        isValidUser(request.resource.data) || 
+        // Allow updating specific technical fields without full validation of the entire object
+        (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['fcmToken']))
+      );
+      allow delete: if isOwner(userId);
+
+      // User Challenges Subcollection
+      match /challenges/{challengeId} {
+        allow read, write: if isOwner(userId);
+      }
+
+      // User Tribes Subcollection
+      match /tribes/{tribeId} {
+        allow read, write: if isOwner(userId);
+      }
     }
 
     // Habits (Top-level collection) - Enhanced security
     match /habits/{habitId} {
-      allow create: if isAuthenticated() && isValidHabit() && rateLimited();
+      allow create: if isAuthenticated() && isValidHabit(request.resource.data) && rateLimited();
       allow read: if isAuthenticated() && resource.data.userId == request.auth.uid;
-      allow update: if isAuthenticated() && resource.data.userId == request.auth.uid && isValidHabit() && rateLimited();
+      allow update: if isAuthenticated() && resource.data.userId == request.auth.uid && isValidHabit(request.resource.data) && rateLimited();
       allow delete: if isAuthenticated() && resource.data.userId == request.auth.uid;
     }
 
@@ -98,8 +147,9 @@ service cloud.firestore {
     // Tribes (Community)
     match /tribes/{tribeId} {
       allow read: if isAuthenticated();
-      // Only allow admins to create/update tribes for now (or via Cloud Functions)
-      allow write: if false; 
+      // Allow authenticated users to create and update tribes (e.g. joining/leaving)
+      allow create: if isAuthenticated(); 
+      allow update: if isAuthenticated();
       
       // Allow users to join tribes (add themselves to members subcollection)
       match /members/{memberId} {
@@ -111,7 +161,9 @@ service cloud.firestore {
     // Challenges
     match /challenges/{challengeId} {
       allow read: if isAuthenticated();
-      allow write: if false; // Admin only
+      // Allow authenticated users to create/update for seeding (consider restricting in production)
+      allow create, update: if isAuthenticated();
+      allow delete: if false; // Admin only
 
       // Allow users to join challenges
       match /participants/{participantId} {
@@ -120,11 +172,19 @@ service cloud.firestore {
       }
     }
 
+    // Blueprints (Creator Blueprints)
+    match /blueprints/{blueprintId} {
+      allow read: if isAuthenticated();
+      // Allow authenticated users to create/update for seeding (consider restricting in production)
+      allow create, update: if isAuthenticated();
+      allow delete: if false; // Admin only
+    }
+
     // Social Posts (Feed) - Enhanced security
     match /posts/{postId} {
       allow read: if isAuthenticated() && resource.data.status != 'deleted';
-      allow create: if isAuthenticated() && isValidPost() && rateLimited();
-      allow update: if isOwner(resource.data.userId) && isValidPost() && rateLimited();
+      allow create: if isAuthenticated() && isValidPost(request.resource.data) && rateLimited();
+      allow update: if isOwner(resource.data.userId) && isValidPost(request.resource.data) && rateLimited();
       allow delete: if isOwner(resource.data.userId);
     }
 
@@ -137,6 +197,14 @@ service cloud.firestore {
     match /user_stats/{userId}/reflections/{reflectionId} {
       allow read: if isOwner(userId);
       allow write: if false; // Generated by backend functions usually
+    }
+
+    // User Activity (Logs) - For XP and Habit tracking
+    match /user_activity/{activityId} {
+      // Allow reading logs for the authenticated user
+      allow read: if isAuthenticated() && resource.data.userId == request.auth.uid;
+      // Allow creating logs if the userId matches the authenticated user
+      allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid;
     }
   }
 }

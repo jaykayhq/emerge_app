@@ -27,7 +27,12 @@ void main() async {
   // We just ensure Firebase is ready (which initApp does).
 
   // Initialize Notification Service
-  await container.read(notificationServiceProvider).initialize();
+  final notificationService = container.read(notificationServiceProvider);
+  await notificationService.initialize();
+  await notificationService.scheduleWeeklyRecap();
+
+  // Seed data is now handled by Firebase Admin SDK (functions/src/seed.ts)
+  // Run: cd functions && npm run seed
 
   // Initialize AdMob
   if (!kIsWeb) {

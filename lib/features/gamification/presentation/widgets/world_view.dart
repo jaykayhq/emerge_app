@@ -36,6 +36,21 @@ class WorldView extends StatelessWidget {
               child: Image.asset(
                 'assets/images/dashboard_card_bg.png',
                 fit: BoxFit.cover,
+                errorBuilder: (context, error, stackTrace) {
+                  // Fallback to a gradient if the asset fails to load
+                  return Container(
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: [
+                          isCity ? Colors.blueGrey[800]! : Colors.green[800]!,
+                          isCity ? Colors.blueGrey[900]! : Colors.green[900]!,
+                        ],
+                      ),
+                    ),
+                  );
+                },
               ),
             ),
           ),

@@ -1,0 +1,82 @@
+{
+  "tech_stack": [
+    "Dart",
+    "Flutter",
+    "Firebase",
+    "Riverpod",
+    "GoRouter",
+    "Hive"
+  ],
+  "features": [
+    {
+      "name": "ai",
+      "description": "AI integration features",
+      "files": [
+        "lib/features/ai"
+      ]
+    },
+    {
+      "name": "auth",
+      "description": "Authentication features",
+      "files": [
+        "lib/features/auth"
+      ]
+    },
+    {
+      "name": "gamification",
+      "description": "Gamification features",
+      "files": [
+        "lib/features/gamification"
+      ]
+    },
+    {
+      "name": "habits",
+      "description": "Habit tracking features",
+      "files": [
+        "lib/features/habits"
+      ]
+    },
+    {
+      "name": "home",
+      "description": "Home screen features",
+      "files": [
+        "lib/features/home"
+      ]
+    },
+    {
+      "name": "insights",
+      "description": "Insights features",
+      "files": [
+        "lib/features/insights"
+      ]
+    },
+    {
+      "name": "monetization",
+      "description": "Monetization features",
+      "files": [
+        "lib/features/monetization"
+      ]
+    },
+    {
+      "name": "onboarding",
+      "description": "Onboarding features",
+      "files": [
+        "lib/features/onboarding"
+      ]
+    },
+    {
+      "name": "settings",
+      "description": "Settings features",
+      "files": [
+        "lib/features/settings"
+      ]
+    },
+    {
+      "name": "social",
+      "description": "Social features",
+      "files": [
+        "lib/features/social"
+      ]
+    }
+  ]
+}

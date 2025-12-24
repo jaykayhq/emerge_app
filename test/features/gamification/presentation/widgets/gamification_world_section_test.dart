@@ -7,15 +7,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
-  testWidgets('GamificationWorldSection renders loading state initially',
-      (tester) async {
+  testWidgets('GamificationWorldSection renders loading state initially', (
+    tester,
+  ) async {
     await tester.pumpWidget(
       const ProviderScope(
-        child: MaterialApp(
-          home: Scaffold(
-            body: GamificationWorldSection(),
-          ),
-        ),
+        child: MaterialApp(home: Scaffold(body: GamificationWorldSection())),
       ),
     );
 
@@ -23,33 +20,34 @@ void main() {
     expect(find.byType(CircularProgressIndicator), findsOneWidget);
   });
 
-  testWidgets('GamificationWorldSection renders WorldView when data is loaded',
-      (tester) async {
-    final mockUser = UserExtension(
-      id: '1',
-      email: 'test@test.com',
-      worldState: const UserWorldState(),
-      archetype: UserArchetype.creator,
-    );
+  testWidgets(
+    'GamificationWorldSection renders WorldView when data is loaded',
+    (tester) async {
+      final mockUser = UserProfile(
+        uid: '1',
+        worldState: const UserWorldState(),
+        archetype: UserArchetype.creator,
+      );
 
-    await tester.pumpWidget(
-      ProviderScope(
-        overrides: [
-          userStatsStreamProvider.overrideWith((ref) => Stream.value(mockUser)),
-        ],
-        child: const MaterialApp(
-          home: Scaffold(
-            body: GamificationWorldSection(),
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            userStatsStreamProvider.overrideWith(
+              (ref) => Stream.value(mockUser),
+            ),
+          ],
+          child: const MaterialApp(
+            home: Scaffold(body: GamificationWorldSection()),
           ),
         ),
-      ),
-    );
+      );
 
-    // Pump to settle the stream
-    await tester.pump();
+      // Pump to settle the stream
+      await tester.pump();
 
-    // Should show WorldView
-    expect(find.byType(WorldView), findsOneWidget);
-    expect(find.byType(CircularProgressIndicator), findsNothing);
-  });
+      // Should show WorldView
+      expect(find.byType(WorldView), findsOneWidget);
+      expect(find.byType(CircularProgressIndicator), findsNothing);
+    },
+  );
 }

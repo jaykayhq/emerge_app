@@ -94,7 +94,7 @@ class _HabitStackingScreenState extends ConsumerState<HabitStackingScreen> {
           onPressed: () => context.pop(),
         ),
         title: Text(
-          'Step 3 of 3: Build Your Habit Chains',
+          'Step 5 of 5: Build Your Habit Chains',
           style: GoogleFonts.splineSans(
             fontSize: 18,
             fontWeight: FontWeight.bold,
@@ -105,7 +105,7 @@ class _HabitStackingScreenState extends ConsumerState<HabitStackingScreen> {
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(4),
           child: LinearProgressIndicator(
-            value: 3 / 3, // Step 3 of 3 (complete)
+            value: 5 / 5, // Step 5 of 5 (complete)
             backgroundColor: AppTheme.surfaceDark,
             valueColor: const AlwaysStoppedAnimation<Color>(
               AppTheme.vitalityGreen,
@@ -124,13 +124,23 @@ class _HabitStackingScreenState extends ConsumerState<HabitStackingScreen> {
                   .read(onboardingStateProvider.notifier)
                   .update((state) => state.copyWith(habitStacks: habitStacks));
 
-              // Complete milestone 3 and save onboarding data
+              // Create actual habits from the defined stacks
               await ref
                   .read(onboardingControllerProvider.notifier)
-                  .completeMilestone(2);
+                  .createOnboardingHabits();
+
+              // Complete milestone 5 and save onboarding data
+              await ref
+                  .read(onboardingControllerProvider.notifier)
+                  .completeMilestone(4);
+
+              // Mark onboarding as complete (so router allows dashboard access)
+              await ref
+                  .read(onboardingControllerProvider.notifier)
+                  .completeOnboarding();
 
               if (context.mounted) {
-                context.go('/'); // Return to timeline
+                context.go('/'); // Go to dashboard
               }
             },
             child: Text(

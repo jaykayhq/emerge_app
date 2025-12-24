@@ -12,6 +12,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
 import 'package:go_router/go_router.dart';
 
+import 'package:emerge_app/core/presentation/widgets/emerge_branding.dart';
 import 'package:confetti/confetti.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
@@ -94,7 +95,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       },
                       loading: () => const SizedBox(
                         height: 200,
-                        child: Center(child: CircularProgressIndicator()),
+                        child: Center(
+                          child: CircularProgressIndicator(
+                            color: EmergeColors.teal,
+                          ),
+                        ),
                       ),
                       error: (err, stack) => const SizedBox.shrink(),
                     ),
@@ -143,8 +148,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                 Icon(
                                   Icons.eco_outlined,
                                   size: 48,
-                                  color: AppTheme.textSecondaryDark.withOpacity(
-                                    0.5,
+                                  color: AppTheme.textSecondaryDark.withValues(
+                                    alpha: 0.5,
                                   ),
                                 ),
                                 const Gap(16),
@@ -171,7 +176,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     );
                   },
                   loading: () => const SliverToBoxAdapter(
-                    child: Center(child: CircularProgressIndicator()),
+                    child: Center(
+                      child: CircularProgressIndicator(
+                        color: EmergeColors.teal,
+                      ),
+                    ),
                   ),
                   error: (error, stack) => SliverToBoxAdapter(
                     child: AppErrorWidget(message: error.toString()),
@@ -197,11 +206,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               blastDirectionality: BlastDirectionality.explosive,
               shouldLoop: false,
               colors: const [
-                Colors.green,
-                Colors.blue,
-                Colors.pink,
-                Colors.orange,
-                Colors.purple,
+                EmergeColors.teal,
+                EmergeColors.violet,
+                EmergeColors.coral,
+                EmergeColors.yellow,
               ],
             ),
           ),
@@ -210,10 +218,16 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       floatingActionButton: FloatingActionButton.extended(
         heroTag: 'home_fab',
         onPressed: () => context.push('/create-habit'),
-        label: const Text('New Quest'),
-        icon: const Icon(Icons.add),
-        backgroundColor: AppTheme.primary,
-        foregroundColor: AppTheme.backgroundDark,
+        label: Text(
+          'New Quest',
+          style: theme.textTheme.labelLarge?.copyWith(
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+          ),
+        ),
+        icon: const Icon(Icons.add, color: Colors.white),
+        backgroundColor: EmergeColors.coral,
+        foregroundColor: Colors.white,
       ),
     );
   }
@@ -246,13 +260,16 @@ class _NextActionHero extends ConsumerWidget {
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 colors: [
-                  AppTheme.secondary,
-                  AppTheme.secondary.withOpacity(0.7),
+                  EmergeColors.violet,
+                  EmergeColors.violet.withValues(alpha: 0.7),
                 ],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               ),
               borderRadius: BorderRadius.circular(24),
+              border: Border.all(
+                color: EmergeColors.violet.withValues(alpha: 0.5),
+              ),
             ),
             child: Row(
               children: [
@@ -276,7 +293,7 @@ class _NextActionHero extends ConsumerWidget {
                       Text(
                         'Rest and recover for tomorrow.',
                         style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: Colors.white.withOpacity(0.8),
+                          color: Colors.white.withValues(alpha: 0.8),
                         ),
                       ),
                     ],
@@ -292,8 +309,8 @@ class _NextActionHero extends ConsumerWidget {
           decoration: BoxDecoration(
             gradient: LinearGradient(
               colors: [
-                AppTheme.primary,
-                AppTheme.primary.withOpacity(0.7),
+                EmergeColors.teal,
+                EmergeColors.teal.withValues(alpha: 0.7),
               ],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
@@ -301,11 +318,12 @@ class _NextActionHero extends ConsumerWidget {
             borderRadius: BorderRadius.circular(24),
             boxShadow: [
               BoxShadow(
-                color: AppTheme.primary.withOpacity(0.3),
+                color: EmergeColors.teal.withValues(alpha: 0.3),
                 blurRadius: 20,
                 offset: const Offset(0, 10),
               ),
             ],
+            border: Border.all(color: EmergeColors.teal.withValues(alpha: 0.5)),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -318,10 +336,10 @@ class _NextActionHero extends ConsumerWidget {
                       vertical: 6,
                     ),
                     decoration: BoxDecoration(
-                      color: Colors.black.withOpacity(0.2),
+                      color: Colors.black.withValues(alpha: 0.2),
                       borderRadius: BorderRadius.circular(20),
                       border: Border.all(
-                        color: Colors.white.withOpacity(0.2),
+                        color: Colors.white.withValues(alpha: 0.2),
                         width: 1,
                       ),
                     ),
@@ -354,17 +372,17 @@ class _NextActionHero extends ConsumerWidget {
                     vertical: 12,
                   ),
                   decoration: BoxDecoration(
-                    color: Colors.black.withOpacity(0.05),
+                    color: Colors.black.withValues(alpha: 0.05),
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(
-                      color: Colors.black.withOpacity(0.1),
+                      color: Colors.black.withValues(alpha: 0.1),
                     ),
                   ),
                   child: Row(
                     children: [
                       Icon(
                         Icons.access_time_filled,
-                        color: AppTheme.backgroundDark.withOpacity(0.7),
+                        color: AppTheme.backgroundDark.withValues(alpha: 0.7),
                         size: 20,
                       ),
                       const Gap(12),
@@ -374,12 +392,11 @@ class _NextActionHero extends ConsumerWidget {
                           children: [
                             Text(
                               'WHEN',
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .labelSmall
+                              style: Theme.of(context).textTheme.labelSmall
                                   ?.copyWith(
-                                    color: AppTheme.backgroundDark
-                                        .withOpacity(0.6),
+                                    color: AppTheme.backgroundDark.withValues(
+                                      alpha: 0.6,
+                                    ),
                                     fontWeight: FontWeight.bold,
                                     letterSpacing: 1.0,
                                   ),
@@ -387,9 +404,7 @@ class _NextActionHero extends ConsumerWidget {
                             const Gap(2),
                             Text(
                               nextHabit.cue,
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .bodyMedium
+                              style: Theme.of(context).textTheme.bodyMedium
                                   ?.copyWith(
                                     color: AppTheme.backgroundDark,
                                     fontWeight: FontWeight.w600,
@@ -417,7 +432,7 @@ class _NextActionHero extends ConsumerWidget {
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(
                             content: Text('Completed ${nextHabit.title}!'),
-                            backgroundColor: AppTheme.vitalityGreen,
+                            backgroundColor: EmergeColors.teal,
                           ),
                         );
                       }
@@ -426,24 +441,27 @@ class _NextActionHero extends ConsumerWidget {
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(
                             content: Text('Error: $e'),
-                            backgroundColor: Colors.red,
+                            backgroundColor: EmergeColors.coral,
                           ),
                         );
                       }
                     }
                   },
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: AppTheme.backgroundDark,
-                    foregroundColor: AppTheme.primary,
+                    backgroundColor: Colors.white,
+                    foregroundColor: EmergeColors.teal,
                     padding: const EdgeInsets.symmetric(vertical: 16),
                     elevation: 0,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
                     ),
                   ),
-                  child: const Text(
+                  child: Text(
                     'Complete Now',
-                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: EmergeColors.teal,
+                    ),
                   ),
                 ),
               ),
@@ -523,11 +541,11 @@ class _TimelineItem extends StatelessWidget {
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     color: isCompletedToday
-                        ? AppTheme.primary
+                        ? EmergeColors.teal
                         : AppTheme.surfaceDark,
                     border: Border.all(
                       color: isCompletedToday
-                          ? AppTheme.primary
+                          ? EmergeColors.teal
                           : AppTheme.textSecondaryDark,
                       width: 2,
                     ),
@@ -544,7 +562,7 @@ class _TimelineItem extends StatelessWidget {
                   Expanded(
                     child: Container(
                       width: 2,
-                      color: AppTheme.textSecondaryDark.withOpacity(0.2),
+                      color: AppTheme.textSecondaryDark.withValues(alpha: 0.2),
                     ),
                   ),
               ],
@@ -561,7 +579,7 @@ class _TimelineItem extends StatelessWidget {
                   color: AppTheme.surfaceDark,
                   borderRadius: BorderRadius.circular(16),
                   border: Border.all(
-                    color: AppTheme.textSecondaryDark.withOpacity(0.1),
+                    color: AppTheme.textSecondaryDark.withValues(alpha: 0.1),
                   ),
                 ),
                 child: Column(
@@ -586,17 +604,15 @@ class _TimelineItem extends StatelessWidget {
                           Icon(
                             Icons.subdirectory_arrow_right,
                             size: 14,
-                            color: AppTheme.textSecondaryDark.withOpacity(
-                              0.7,
+                            color: AppTheme.textSecondaryDark.withValues(
+                              alpha: 0.7,
                             ),
                           ),
                           const Gap(4),
                           Expanded(
                             child: Text(
                               habit.cue,
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .bodySmall
+                              style: Theme.of(context).textTheme.bodySmall
                                   ?.copyWith(
                                     color: AppTheme.textSecondaryDark,
                                     fontStyle: FontStyle.italic,

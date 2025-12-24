@@ -1,3 +1,4 @@
+import 'package:emerge_app/core/utils/app_logger.dart';
 import 'package:emerge_app/features/habits/domain/entities/habit.dart';
 import 'package:emerge_app/features/habits/presentation/providers/habit_providers.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -82,9 +83,11 @@ class _AdvancedCreateHabitScreenState
     if (_formKey.currentState!.validate()) {
       final user = FirebaseAuth.instance.currentUser;
       if (user == null) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text('User not logged in')));
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('User not logged in')),
+          );
+        }
         return;
       }
 
@@ -105,16 +108,33 @@ class _AdvancedCreateHabitScreenState
         difficulty: HabitDifficulty.medium,
       );
 
-      final result = await ref
-          .read(habitRepositoryProvider)
-          .createHabit(newHabit);
+      try {
+        // Use the createHabit provider which connects to gamification system
+        await ref.read(createHabitProvider(newHabit).future);
 
-      result.fold(
-        (failure) => ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Error: ${failure.message}'))),
-        (_) => context.pop(),
-      );
+        AppLogger.i('Successfully created habit from Advanced Create: ${newHabit.id}');
+
+        // Store context reference to avoid async gap issues
+        if (context.mounted) {
+          final contextRef = context;
+
+          // Show success toast
+          if (contextRef.mounted) {
+            ScaffoldMessenger.of(contextRef).showSnackBar(
+              const SnackBar(content: Text('Habit created successfully!')),
+            );
+          }
+          contextRef.pop(); // Return to previous screen
+        }
+      } catch (e, s) {
+        AppLogger.e('Error creating habit from Advanced Create', e, s);
+        if (context.mounted) {
+          final contextRef = context;
+          ScaffoldMessenger.of(contextRef).showSnackBar(
+            SnackBar(content: Text('Error creating habit: $e')),
+          );
+        }
+      }
     }
   }
 
