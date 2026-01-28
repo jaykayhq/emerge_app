@@ -1,4 +1,5 @@
 import 'package:emerge_app/core/presentation/widgets/emerge_branding.dart';
+import 'package:emerge_app/core/presentation/widgets/emerge_hex_logo.dart';
 import 'package:emerge_app/core/presentation/widgets/responsive_layout.dart';
 import 'package:emerge_app/core/theme/app_theme.dart';
 import 'package:emerge_app/features/auth/presentation/providers/auth_providers.dart';
@@ -140,7 +141,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
                       // Logo / Branding
-                      const Center(child: EmergeLogoWidget(size: 100)),
+                      const Center(child: EmergeHexLogo(size: 80)),
                       const Gap(16),
                       Text(
                         'Emerge',
@@ -372,7 +373,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           child: Column(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              const EmergeLogoWidget(size: 150),
+                              const EmergeHexLogo(size: 100),
                               const Gap(24),
                               Text(
                                 'Emerge',

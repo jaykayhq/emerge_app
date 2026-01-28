@@ -46,52 +46,65 @@ class NotificationService {
       },
     );
 
-    // Request permissions
-    NotificationSettings settings = await _firebaseMessaging.requestPermission(
-      alert: true,
-      badge: true,
-      sound: true,
-    );
+    // Request permissions and initialize FCM with error handling
+    try {
+      NotificationSettings settings = await _firebaseMessaging.requestPermission(
+        alert: true,
+        badge: true,
+        sound: true,
+      );
 
-    if (settings.authorizationStatus == AuthorizationStatus.authorized) {
-      if (kDebugMode) {
-        print('User granted permission');
-      }
-
-      // Get token
-      String? token = await _firebaseMessaging.getToken();
-      if (kDebugMode) {
-        print('FCM Token: $token');
-      }
-
-      // Save token to Firestore User document
-      final user = FirebaseAuth.instance.currentUser;
-      if (user != null && token != null) {
-        await FirebaseFirestore.instance.collection('users').doc(user.uid).set({
-          'fcmToken': token,
-        }, SetOptions(merge: true));
-      }
-
-      // Handle foreground messages
-      FirebaseMessaging.onMessage.listen((RemoteMessage message) {
+      if (settings.authorizationStatus == AuthorizationStatus.authorized) {
         if (kDebugMode) {
-          print('Got a message whilst in the foreground!');
-          print('Message data: ${message.data}');
+          print('User granted permission');
         }
 
-        if (message.notification != null) {
+        // Get token with error handling
+        try {
+          String? token = await _firebaseMessaging.getToken();
           if (kDebugMode) {
-            print(
-              'Message also contained a notification: ${message.notification}',
-            );
+            print('FCM Token: $token');
           }
-          // Show local notification here if needed
+
+          // Save token to Firestore User document
+          final user = FirebaseAuth.instance.currentUser;
+          if (user != null && token != null) {
+            await FirebaseFirestore.instance
+                .collection('users')
+                .doc(user.uid)
+                .set({
+              'fcmToken': token,
+            }, SetOptions(merge: true));
+          }
+        } catch (e) {
+          // FCM not available on this device, continue without it
+          debugPrint('FCM get token failed: $e');
         }
-      });
-    } else {
-      if (kDebugMode) {
-        print('User declined or has not accepted permission');
+
+        // Handle foreground messages
+        FirebaseMessaging.onMessage.listen((RemoteMessage message) {
+          if (kDebugMode) {
+            print('Got a message whilst in the foreground!');
+            print('Message data: ${message.data}');
+          }
+
+          if (message.notification != null) {
+            if (kDebugMode) {
+              print(
+                'Message also contained a notification: ${message.notification}',
+              );
+            }
+            // Show local notification here if needed
+          }
+        });
+      } else {
+        if (kDebugMode) {
+          print('User declined or has not accepted permission');
+        }
       }
+    } catch (e) {
+      // FCM initialization failed, but continue without notifications
+      debugPrint('FCM initialization failed: $e');
     }
   }
 

@@ -8,6 +8,7 @@ import 'package:emerge_app/features/insights/data/repositories/firestore_insight
 abstract class InsightsRepository {
   Future<Recap> getLatestRecap(String userId);
   Future<List<Reflection>> getReflections(String userId);
+  Future<void> saveReflection(String userId, Reflection reflection);
 }
 
 final insightsRepositoryProvider = Provider<InsightsRepository>((ref) {

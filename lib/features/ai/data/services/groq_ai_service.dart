@@ -1,53 +1,28 @@
 import 'dart:convert';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'package:http/http.dart' as http;
+import 'package:cloud_functions/cloud_functions.dart';
 import 'package:emerge_app/core/utils/app_logger.dart';
 
 class GroqAiService {
-  final String _baseUrl = 'https://api.groq.com/openai/v1/chat/completions';
-  final String _modelId = 'llama-3.1-8b-instant';
+  final FirebaseFunctions _functions;
 
-  String get _apiKey => dotenv.env['GROQ_API_KEY'] ?? '';
+  GroqAiService({FirebaseFunctions? functions})
+    : _functions = functions ?? FirebaseFunctions.instance;
 
   Future<String> getCoachAdvice(String userContext, String userMessage) async {
-    if (_apiKey.isEmpty) {
-      AppLogger.w('GROQ_API_KEY is missing. Returning fallback advice.');
-      return "Keep going! Consistency is key.";
-    }
-
     try {
-      final response = await http.post(
-        Uri.parse(_baseUrl),
-        headers: {
-          'Authorization': 'Bearer $_apiKey',
-          'Content-Type': 'application/json',
-        },
-        body: jsonEncode({
-          'model': _modelId,
-          'messages': [
-            {
-              'role': 'system',
-              'content': 'You are an expert Habit Coach based on Atomic Habits principles. '
-                         'Keep your answers short (under 2 sentences) and motivating. '
-                         'Context: $userContext'
-            },
-            {
-              'role': 'user',
-              'content': userMessage
-            }
-          ],
-          'temperature': 0.7,
-          'max_tokens': 150,
-        }),
-      );
+      final result = await _functions.httpsCallable('getGroqCoachAdvice').call({
+        'userContext': userContext,
+        'userMessage': userMessage,
+      });
 
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        return data['choices'][0]['message']['content'].toString().trim();
-      } else {
-        AppLogger.e('Groq API Error: ${response.statusCode} - ${response.body}');
-        return "I'm having trouble connecting to your inner coach right now. Keep pushing!";
+      if (result.data != null && result.data['advice'] != null) {
+        return result.data['advice'].toString().trim();
       }
+
+      return "Keep going! Consistency is key.";
+    } on FirebaseFunctionsException catch (e) {
+      AppLogger.e('AI Coach Service Error: ${e.code} - ${e.message}');
+      return "I'm having trouble connecting to your inner coach right now. Keep pushing!";
     } catch (e, s) {
       AppLogger.e('Groq Exception', e, s);
       return "You're doing great. Stay focused!";
@@ -87,8 +62,10 @@ class GroqAiService {
 
     try {
       // Attempt to parse the JSON response
-      // This is risky with LLMs, so we need a fallback
-      final cleanJson = response.replaceAll('```json', '').replaceAll('```', '').trim();
+      final cleanJson = response
+          .replaceAll('```json', '')
+          .replaceAll('```', '')
+          .trim();
       final List<dynamic> parsed = jsonDecode(cleanJson);
       return parsed.map((e) => e.toString()).toList();
     } catch (e) {

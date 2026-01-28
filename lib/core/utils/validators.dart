@@ -9,7 +9,9 @@ class AppValidators {
     final email = value.trim();
 
     // Basic format validation
-    final emailRegex = RegExp(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$');
+    final emailRegex = RegExp(
+      r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$',
+    );
     if (!emailRegex.hasMatch(email)) {
       return 'Please enter a valid email address';
     }
@@ -28,7 +30,11 @@ class AppValidators {
     }
 
     // Block suspicious domains
-    final suspiciousDomains = ['tempmail.com', '10minutemail.com', 'guerrillamail.com'];
+    final suspiciousDomains = [
+      'tempmail.com',
+      '10minutemail.com',
+      'guerrillamail.com',
+    ];
     final domain = email.split('@').last.toLowerCase();
     if (suspiciousDomains.any((suspicious) => domain.contains(suspicious))) {
       return 'Please use a legitimate email address';
@@ -43,9 +49,9 @@ class AppValidators {
       return 'Password is required';
     }
 
-    // Minimum length requirement
-    if (value.length < 8) {
-      return 'Password must be at least 8 characters long';
+    // ENHANCED: Minimum 12 characters (NIST guidelines - up from 8)
+    if (value.length < 12) {
+      return 'Password must be at least 12 characters long';
     }
 
     // Maximum length requirement
@@ -53,18 +59,18 @@ class AppValidators {
       return 'Password is too long';
     }
 
-    // Check for common weak patterns
-    if (value.toLowerCase().contains('password') ||
-        value.toLowerCase().contains('123456') ||
-        value.toLowerCase().contains('qwerty')) {
-      return 'Password cannot contain common patterns';
+    // ENHANCED: Check for common weak passwords from leaked databases
+    if (_isCommonPassword(value)) {
+      return 'This password is too common. Please choose a stronger one.';
     }
 
     // Check for character variety
     bool hasUppercase = value.contains(RegExp(r'[A-Z]'));
     bool hasLowercase = value.contains(RegExp(r'[a-z]'));
     bool hasDigits = value.contains(RegExp(r'[0-9]'));
-    bool hasSpecialCharacters = value.contains(RegExp(r'[!@#$%^&*(),.?":{}|<>]'));
+    bool hasSpecialCharacters = value.contains(
+      RegExp(r'[!@#$%^&*(),.?":{}|<>]'),
+    );
 
     int strengthScore = 0;
     if (hasUppercase) strengthScore++;
@@ -73,12 +79,17 @@ class AppValidators {
     if (hasSpecialCharacters) strengthScore++;
 
     if (strengthScore < 3) {
-      return 'Password must include uppercase, lowercase, numbers, and special characters';
+      return 'Password must include at least 3 of: uppercase, lowercase, numbers, special characters';
     }
 
-    // Check for sequential characters
+    // Check for sequential characters (e.g., "abc", "123")
     if (_hasSequentialChars(value)) {
-      return 'Password cannot contain sequential characters';
+      return 'Password cannot contain sequential characters (e.g., "abc", "123")';
+    }
+
+    // ENHANCED: Check for repeated characters (e.g., "aaa", "111")
+    if (_hasRepeatedChars(value)) {
+      return 'Password cannot contain repeated characters (e.g., "aaa", "111")';
     }
 
     return null;
@@ -108,9 +119,22 @@ class AppValidators {
 
     // Block inappropriate usernames
     final blockedUsernames = [
-      'admin', 'administrator', 'root', 'system', 'moderator',
-      'support', 'help', 'info', 'contact', 'api', 'test',
-      'user', 'guest', 'anonymous', 'null', 'undefined'
+      'admin',
+      'administrator',
+      'root',
+      'system',
+      'moderator',
+      'support',
+      'help',
+      'info',
+      'contact',
+      'api',
+      'test',
+      'user',
+      'guest',
+      'anonymous',
+      'null',
+      'undefined',
     ];
 
     if (blockedUsernames.contains(username.toLowerCase())) {
@@ -118,8 +142,10 @@ class AppValidators {
     }
 
     // Block usernames that start with special patterns
-    if (username.startsWith('_') || username.startsWith('-') ||
-        username.endsWith('_') || username.endsWith('-')) {
+    if (username.startsWith('_') ||
+        username.startsWith('-') ||
+        username.endsWith('_') ||
+        username.endsWith('-')) {
       return 'Username cannot start or end with underscore or hyphen';
     }
 
@@ -140,7 +166,8 @@ class AppValidators {
   }
 
   // General text validation with security
-  static String? validateText(String? value, {
+  static String? validateText(
+    String? value, {
     required String fieldName,
     int minLength = 1,
     int maxLength = 1000,
@@ -161,7 +188,9 @@ class AppValidators {
     }
 
     // Check for potentially dangerous content
-    if (text.contains(RegExp(r'<script|javascript:|onload=|onerror=', caseSensitive: false))) {
+    if (text.contains(
+      RegExp(r'<script|javascript:|onload=|onerror=', caseSensitive: false),
+    )) {
       return 'Invalid content detected';
     }
 
@@ -171,6 +200,40 @@ class AppValidators {
     }
 
     return null;
+  }
+
+  // ENHANCED: Check against common password database (top 100 from leaked databases)
+  static bool _isCommonPassword(String password) {
+    final normalizedPassword = password.toLowerCase();
+
+    final commonPasswords = {
+      'password', '123456', '12345678', 'qwerty', 'abc123',
+      'password1', '123456789', '1234567', '12345', '1234567890',
+      'iloveyou', 'princess', 'admin', 'welcome', '666666',
+      'football', '111111', '123123', '654321', 'password123',
+      'qwerty123', 'qwertyuiop', 'asdfgh', 'zxcvbnm', 'letmein',
+      'monkey', 'dragon', 'baseball', 'superman', 'master',
+      '2019', '2020', '2021', '2022', '2023', '2024', '2025',
+      '11111111', '00000000', 'aaaaaaaa', 'passw0rd', 'admin123',
+    };
+
+    if (commonPasswords.contains(normalizedPassword)) {
+      return true;
+    }
+
+    for (final common in commonPasswords.take(50)) {
+      if (normalizedPassword.contains(common) &&
+          common.length >= normalizedPassword.length * 0.5) {
+        return true;
+      }
+    }
+
+    return false;
+  }
+
+  // ENHANCED: Check for repeated characters (e.g., "aaa", "111")
+  static bool _hasRepeatedChars(String password) {
+    return RegExp(r'(.)\1{2,}').hasMatch(password);
   }
 
   // Check for sequential characters in password
@@ -208,7 +271,9 @@ class AppValidators {
     final words = text.toLowerCase().split(RegExp(r'\s+'));
     if (words.length >= 3) {
       for (int i = 0; i <= words.length - 3; i++) {
-        if (words[i] == words[i + 1] && words[i] == words[i + 2] && words[i].length > 2) {
+        if (words[i] == words[i + 1] &&
+            words[i] == words[i + 2] &&
+            words[i].length > 2) {
           return true;
         }
       }
@@ -222,8 +287,14 @@ class AppValidators {
     return input
         .trim()
         .replaceAll(RegExp(r'<[^>]*>'), '') // Remove HTML tags
-        .replaceAll(RegExp(r'javascript:', caseSensitive: false), '') // Remove javascript protocol
-        .replaceAll(RegExp(r'on\w+\s*=', caseSensitive: false), ''); // Remove event handlers
+        .replaceAll(
+          RegExp(r'javascript:', caseSensitive: false),
+          '',
+        ) // Remove javascript protocol
+        .replaceAll(
+          RegExp(r'on\w+\s*=', caseSensitive: false),
+          '',
+        ); // Remove event handlers
   }
 
   // Validate URL format

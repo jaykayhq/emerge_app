@@ -1,29 +1,16 @@
 {
-    "parameters": {
-        "onboarding_archetypes": {
-            "defaultValue": {
-                "value": "[{\"id\":\"athlete\",\"title\":\"The Warrior\",\"description\":\"Forged in fire, you seek strength and resilience.\",\"imageUrl\":\"assets/images/archetypes/warrior.png\"},{\"id\":\"scholar\",\"title\":\"The Sage\",\"description\":\"You seek wisdom, clarity, and focus.\",\"imageUrl\":\"assets/images/archetypes/sage.png\"},{\"id\":\"creator\",\"title\":\"The Creator\",\"description\":\"You bring new ideas and beauty into the world.\",\"imageUrl\":\"assets/images/archetypes/creator.png\"}]"
-            },
-            "description": "List of available user archetypes for onboarding."
-        },
-        "onboarding_attributes": {
-            "defaultValue": {
-                "value": "[{\"id\":\"vitality\",\"title\":\"Vitality\",\"description\":\"Energy and Health\",\"icon\":\"heart\",\"color\":\"0xFF4CAF50\"},{\"id\":\"focus\",\"title\":\"Focus\",\"description\":\"Clarity and Concentration\",\"icon\":\"brain\",\"color\":\"0xFF2196F3\"},{\"id\":\"strength\",\"title\":\"Strength\",\"description\":\"Power and Resilience\",\"icon\":\"gym\",\"color\":\"0xFFF44336\"}]"
-            },
-            "description": "List of identity attributes for point allocation."
-        },
-        "onboarding_habit_suggestions": {
-            "defaultValue": {
-                "value": "[{\"id\":\"wake_up\",\"title\":\"Wake Up\",\"icon\":\"wb_sunny\"},{\"id\":\"brush_teeth\",\"title\":\"Brush Teeth\",\"icon\":\"oral_disease\"},{\"id\":\"coffee\",\"title\":\"Drink Coffee\",\"icon\":\"coffee\"},{\"id\":\"shower\",\"title\":\"Shower\",\"icon\":\"shower\"},{\"id\":\"commute\",\"title\":\"Commute\",\"icon\":\"train\"},{\"id\":\"work_start\",\"title\":\"Start Work\",\"icon\":\"work\"},{\"id\":\"lunch\",\"title\":\"Eat Lunch\",\"icon\":\"restaurant\"},{\"id\":\"work_end\",\"title\":\"End Work\",\"icon\":\"home\"},{\"id\":\"dinner\",\"title\":\"Eat Dinner\",\"icon\":\"dining\"},{\"id\":\"sleep\",\"title\":\"Go to Sleep\",\"icon\":\"bed\"}]"
-            },
-            "description": "List of suggested anchor habits."
-        }
+  "parameters": {
+    "revenuecat_google_api_key": {
+      "defaultValue": {
+        "value": ""
+      },
+      "description": "RevenueCat API key for Android - fetched from Google Cloud Secret Manager"
     },
-    "xp_config": {
-        "defaultValue": {
-            "value": "{\"base_habit_xp\": 50, \"level_formula_constant\": 100, \"attribute_bonus_multiplier\": 1.1}"
-        },
-        "description": "Configuration for XP values and Level calculation."
+    "revenuecat_apple_api_key": {
+      "defaultValue": {
+        "value": ""
+      },
+      "description": "RevenueCat API key for iOS - fetched from Google Cloud Secret Manager"
     }
-}
+  }
 }

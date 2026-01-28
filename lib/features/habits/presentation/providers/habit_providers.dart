@@ -2,7 +2,6 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:emerge_app/core/utils/app_logger.dart';
 import 'package:emerge_app/features/habits/data/repositories/firestore_habit_repository.dart';
 import 'package:emerge_app/features/auth/presentation/providers/auth_providers.dart';
-import 'package:emerge_app/features/onboarding/presentation/providers/onboarding_provider.dart';
 
 import 'package:emerge_app/features/habits/domain/entities/habit.dart';
 import 'package:emerge_app/features/habits/domain/repositories/habit_repository.dart';
@@ -48,12 +47,21 @@ Future<void> createHabit(Ref ref, Habit habit) async {
 
     if (!isPremium) {
       // Check current habit count
-      final habitsAsync = ref.read(habitsProvider);
-      final currentHabits = habitsAsync.valueOrNull ?? [];
-      if (currentHabits.length >= 3) {
-        throw const SubscriptionLimitReachedException(
-          'You have reached the limit of 3 active habits on the free tier. Upgrade to add more.',
-        );
+      // BUT: Allow creation if this is an onboarding habit (bypass limit)
+      final isOnboarding =
+          habit.identityTags.contains('onboarding') ||
+          habit.identityTags.contains(
+            'anchor',
+          ); // Anchors are also part of onboarding flow
+
+      if (!isOnboarding) {
+        final habitsAsync = ref.read(habitsProvider);
+        final currentHabits = habitsAsync.valueOrNull ?? [];
+        if (currentHabits.length >= 3) {
+          throw const SubscriptionLimitReachedException(
+            'You have reached the limit of 3 active habits on the free tier. Upgrade to add more.',
+          );
+        }
       }
     }
 
@@ -67,29 +75,7 @@ Future<void> createHabit(Ref ref, Habit habit) async {
       },
       (_) {
         AppLogger.i('Successfully created habit: ${habit.id}');
-
-        // Add to onboarding completion if this is during onboarding
-        // This connects the habit creation to the onboarding flow
-        final currentOnboardingState = ref.read(onboardingStateProvider);
-        final hasCompletedMilestone4 = currentOnboardingState.completedMilestones.length > 4
-            ? currentOnboardingState.completedMilestones[4]
-            : false;
-        if (hasCompletedMilestone4 && currentOnboardingState.completedMilestones.length < 6) {  // If we're past habit creation milestone
-          // Update onboarding state to reflect that first habit was created
-          ref.read(onboardingStateProvider.notifier).update((state) {
-            final updatedMilestones = List<bool>.from(state.completedMilestones);
-            // Ensure the list has enough elements
-            while (updatedMilestones.length <= 5) {
-              updatedMilestones.add(false);
-            }
-            updatedMilestones[5] = true; // Mark milestone 5 as completed
-
-            return state.copyWith(
-              completedMilestones: updatedMilestones,
-            );
-          });
-        }
-      }
+      },
     );
   } catch (e, s) {
     AppLogger.e('Error in createHabit provider', e, s);
@@ -124,6 +110,6 @@ Future<void> completeHabit(Ref ref, String habitId) async {
       } else {
         AppLogger.i('Habit completion undone: $habitId');
       }
-    }
+    },
   );
 }

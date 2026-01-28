@@ -14,10 +14,14 @@ class FirestoreHabitRepository implements HabitRepository {
 
   @override
   Stream<List<Habit>> watchHabits(String userId) {
+    // ENHANCED: Optimized query with better filtering and ordering
     return _firestore
         .collection('habits')
         .where('userId', isEqualTo: userId)
-        .limit(100)
+        .where('isArchived', isEqualTo: false) // Filter at source for efficiency
+        .orderBy('order') // Order by custom sort field
+        .orderBy('createdAt', descending: true) // Secondary sort
+        .limit(50) // Reduced limit for better performance
         .snapshots()
         .map((snapshot) {
           return snapshot.docs.map((doc) {
@@ -121,7 +125,9 @@ class FirestoreHabitRepository implements HabitRepository {
       });
 
       // Log success for debugging
-      AppLogger.i('Successfully created habit: ${habit.id} for user: ${habit.userId}');
+      AppLogger.i(
+        'Successfully created habit: ${habit.id} for user: ${habit.userId}',
+      );
 
       return const Right(unit);
     } catch (e, s) {
@@ -244,7 +250,11 @@ class FirestoreHabitRepository implements HabitRepository {
           });
         } catch (activityError, activityStack) {
           // Don't fail the habit completion if activity logging fails
-          AppLogger.e('Failed to log activity for habit completion', activityError, activityStack);
+          AppLogger.e(
+            'Failed to log activity for habit completion',
+            activityError,
+            activityStack,
+          );
         }
       }
 

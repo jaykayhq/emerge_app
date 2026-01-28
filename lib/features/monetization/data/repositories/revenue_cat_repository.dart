@@ -21,10 +21,14 @@ class RevenueCatRepository implements MonetizationRepository {
 
     // Validate configuration
     if (AppConfig.isProduction && !_validateProductionConfig()) {
-      throw Exception('Invalid RevenueCat configuration for production environment');
+      throw Exception(
+        'Invalid RevenueCat configuration for production environment',
+      );
     }
 
-    await Purchases.setLogLevel(AppConfig.isDevelopment ? LogLevel.debug : LogLevel.error);
+    await Purchases.setLogLevel(
+      AppConfig.isDevelopment ? LogLevel.debug : LogLevel.error,
+    );
 
     PurchasesConfiguration configuration;
     if (Platform.isAndroid) {
@@ -40,9 +44,14 @@ class RevenueCatRepository implements MonetizationRepository {
 
   bool _validateProductionConfig() {
     return _googleApiKey.isNotEmpty &&
-           !_googleApiKey.startsWith('test_') &&
-           _appleApiKey.isNotEmpty &&
-           _appleApiKey != 'YOUR_REVENUECAT_APPLE_API_KEY';
+        !_googleApiKey.startsWith('test_') &&
+        _appleApiKey.isNotEmpty &&
+        _appleApiKey != 'YOUR_REVENUECAT_APPLE_API_KEY';
+  }
+
+  /// Raw customer info access for verification (internal use)
+  Future<CustomerInfo> getCustomerInfoRaw() async {
+    return await Purchases.getCustomerInfo();
   }
 
   @override

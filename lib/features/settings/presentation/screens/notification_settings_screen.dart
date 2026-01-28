@@ -258,7 +258,7 @@ class NotificationSettingsScreen extends ConsumerWidget {
     UserProfile? profile,
     UserSettings settings,
   ) async {
-    if (profile == null) return;
+    if (profile == null || profile.uid.isEmpty) return;
     final updatedProfile = profile.copyWith(settings: settings);
     await ref.read(userStatsRepositoryProvider).saveUserStats(updatedProfile);
   }

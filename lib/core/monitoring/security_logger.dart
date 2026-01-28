@@ -14,12 +14,7 @@ enum SecurityEventType {
   configuration,
 }
 
-enum SecurityEventLevel {
-  info,
-  warning,
-  error,
-  critical,
-}
+enum SecurityEventLevel { info, warning, error, critical }
 
 class SecurityEvent {
   final SecurityEventType type;
@@ -145,15 +140,16 @@ class SecurityLogger {
     );
   }
 
-  void logAuthenticationFailure(String email, {String? reason, String? ipAddress}) {
+  void logAuthenticationFailure(
+    String email, {
+    String? reason,
+    String? ipAddress,
+  }) {
     logEvent(
       type: SecurityEventType.authentication,
       level: SecurityEventLevel.warning,
       message: 'User authentication failed',
-      details: {
-        'email': _sanitizeEmail(email),
-        'reason': reason ?? 'unknown',
-      },
+      details: {'email': _sanitizeEmail(email), 'reason': reason ?? 'unknown'},
       ipAddress: ipAddress,
     );
   }
@@ -183,11 +179,7 @@ class SecurityLogger {
       level: success ? SecurityEventLevel.info : SecurityEventLevel.warning,
       message: 'Data access: $action on $resource',
       userId: userId,
-      details: {
-        'resource': resource,
-        'action': action,
-        'success': success,
-      },
+      details: {'resource': resource, 'action': action, 'success': success},
     );
   }
 
@@ -236,11 +228,7 @@ class SecurityLogger {
       level: SecurityEventLevel.info,
       message: 'Configuration changed: $setting',
       userId: userId,
-      details: {
-        'setting': setting,
-        'oldValue': oldValue,
-        'newValue': newValue,
-      },
+      details: {'setting': setting, 'oldValue': oldValue, 'newValue': newValue},
     );
   }
 
@@ -251,20 +239,31 @@ class SecurityLogger {
     final last1h = now.subtract(const Duration(hours: 1));
 
     final recentEvents = _events.where((e) => e.timestamp.isAfter(last24h));
-    final criticalEvents = recentEvents.where((e) => e.level == SecurityEventLevel.critical);
-    final authFailures = recentEvents.where((e) =>
-        e.type == SecurityEventType.authentication &&
-        e.level == SecurityEventLevel.warning);
-    final suspiciousEvents = recentEvents.where((e) =>
-        e.type == SecurityEventType.suspiciousActivity);
+    final criticalEvents = recentEvents.where(
+      (e) => e.level == SecurityEventLevel.critical,
+    );
+    final authFailures = recentEvents.where(
+      (e) =>
+          e.type == SecurityEventType.authentication &&
+          e.level == SecurityEventLevel.warning,
+    );
+    final suspiciousEvents = recentEvents.where(
+      (e) => e.type == SecurityEventType.suspiciousActivity,
+    );
 
     return {
       'totalEvents24h': recentEvents.length,
       'criticalEvents24h': criticalEvents.length,
       'authFailures24h': authFailures.length,
       'suspiciousActivities24h': suspiciousEvents.length,
-      'eventsLastHour': _events.where((e) => e.timestamp.isAfter(last1h)).length,
-      'uniqueUsers24h': recentEvents.map((e) => e.userId).where((id) => id != null).toSet().length,
+      'eventsLastHour': _events
+          .where((e) => e.timestamp.isAfter(last1h))
+          .length,
+      'uniqueUsers24h': recentEvents
+          .map((e) => e.userId)
+          .where((id) => id != null)
+          .toSet()
+          .length,
     };
   }
 
@@ -278,8 +277,12 @@ class SecurityLogger {
   // Export events for analysis
   String exportEvents({DateTime? startDate, DateTime? endDate}) {
     final filteredEvents = _events.where((event) {
-      if (startDate != null && event.timestamp.isBefore(startDate)) return false;
-      if (endDate != null && event.timestamp.isAfter(endDate)) return false;
+      if (startDate != null && event.timestamp.isBefore(startDate)) {
+        return false;
+      }
+      if (endDate != null && event.timestamp.isAfter(endDate)) {
+        return false;
+      }
       return true;
     });
 
@@ -294,7 +297,9 @@ class SecurityLogger {
 
   // Private helper methods
   SecurityEventLevel _getNetworkLogLevel(int? statusCode) {
-    if (statusCode == null) return SecurityEventLevel.error;
+    if (statusCode == null) {
+      return SecurityEventLevel.error;
+    }
 
     if (statusCode >= 200 && statusCode < 300) {
       return SecurityEventLevel.info;

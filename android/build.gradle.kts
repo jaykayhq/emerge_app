@@ -21,6 +21,13 @@ allprojects {
         google()
         mavenCentral()
     }
+
+    // Optimize for low-memory systems (4GB RAM)
+    tasks.withType<JavaCompile> {
+        options.isFork = true
+        options.forkOptions.memoryMaximumSize = "512m"
+        options.isIncremental = true
+    }
 }
 
 val newBuildDir: Directory =

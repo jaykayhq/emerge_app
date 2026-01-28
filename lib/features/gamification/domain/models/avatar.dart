@@ -11,7 +11,6 @@ enum AvatarFaceShape { round, square, oval }
 enum AvatarOutfit { casual, athletic, robe, armor, suit }
 
 class Avatar {
-  final String? modelUrl; // URL for the 3D GLB model
   final AvatarBodyType bodyType;
   final AvatarSkinTone skinTone;
   final AvatarHairStyle hairStyle;
@@ -20,7 +19,6 @@ class Avatar {
   final AvatarOutfit outfit;
 
   const Avatar({
-    this.modelUrl,
     this.bodyType = AvatarBodyType.masculine,
     this.skinTone = AvatarSkinTone.fair,
     this.hairStyle = AvatarHairStyle.short,
@@ -30,7 +28,6 @@ class Avatar {
   });
 
   Avatar copyWith({
-    String? modelUrl,
     AvatarBodyType? bodyType,
     AvatarSkinTone? skinTone,
     AvatarHairStyle? hairStyle,
@@ -39,7 +36,6 @@ class Avatar {
     AvatarOutfit? outfit,
   }) {
     return Avatar(
-      modelUrl: modelUrl ?? this.modelUrl,
       bodyType: bodyType ?? this.bodyType,
       skinTone: skinTone ?? this.skinTone,
       hairStyle: hairStyle ?? this.hairStyle,
@@ -51,7 +47,6 @@ class Avatar {
 
   Map<String, dynamic> toMap() {
     return {
-      'modelUrl': modelUrl,
       'bodyType': bodyType.name,
       'skinTone': skinTone.name,
       'hairStyle': hairStyle.name,
@@ -63,7 +58,6 @@ class Avatar {
 
   factory Avatar.fromMap(Map<String, dynamic> map) {
     return Avatar(
-      modelUrl: map['modelUrl'] as String?,
       bodyType: AvatarBodyType.values.firstWhere(
         (e) => e.name == map['bodyType'],
         orElse: () => AvatarBodyType.masculine,

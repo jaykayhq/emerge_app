@@ -54,10 +54,7 @@ class ErrorHandler {
             content: Text(message),
             backgroundColor: Colors.red,
             action: onRetry != null
-                ? SnackBarAction(
-                    label: 'Retry',
-                    onPressed: onRetry,
-                  )
+                ? SnackBarAction(label: 'Retry', onPressed: onRetry)
                 : null,
           ),
         );
@@ -91,9 +88,7 @@ class ErrorHandler {
   }
 
   /// Handle errors that occur in repository/data layer operations
-  static Either<Exception, T> handleRepositoryError<T>(
-    T Function() operation,
-  ) {
+  static Either<Exception, T> handleRepositoryError<T>(T Function() operation) {
     try {
       final result = operation();
       return Right(result);
@@ -145,10 +140,7 @@ class ErrorHandler {
   }
 
   /// Handle navigation errors
-  static void handleNavigationError(
-    BuildContext context,
-    String errorMessage,
-  ) {
+  static void handleNavigationError(BuildContext context, String errorMessage) {
     AppLogger.e('Navigation Error', errorMessage, StackTrace.current);
 
     if (context.mounted) {

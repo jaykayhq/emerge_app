@@ -36,6 +36,13 @@ android {
         buildConfig = true
     }
 
+    // Memory optimization for 4GB RAM systems
+    dexOptions {
+        javaMaxHeapSize = "1g"
+        preDexLibraries = false
+        jumboMode = true
+    }
+
     // splits {
     //     abi {
     //         isEnable = true
@@ -116,4 +123,7 @@ flutter {
 
 dependencies {
     coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.0.4")
+
+    // Play Integrity API for Firebase App Check (Android)
+    implementation("com.google.android.play:integrity:1.3.0")
 }

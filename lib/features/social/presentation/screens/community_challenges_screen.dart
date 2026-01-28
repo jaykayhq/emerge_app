@@ -1,7 +1,8 @@
+import 'package:emerge_app/core/presentation/widgets/emerge_branding.dart';
 import 'package:emerge_app/core/theme/app_theme.dart';
 import 'package:emerge_app/features/auth/presentation/providers/auth_providers.dart';
 import 'package:emerge_app/features/gamification/data/repositories/user_stats_repository.dart';
-
+import 'package:emerge_app/features/gamification/presentation/providers/user_stats_providers.dart';
 import 'package:emerge_app/features/social/domain/models/challenge.dart';
 import 'package:emerge_app/features/social/presentation/providers/challenge_provider.dart';
 import 'package:emerge_app/features/social/presentation/screens/challenge_detail_screen.dart';
@@ -9,6 +10,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
+import 'package:go_router/go_router.dart';
 
 class CommunityChallengesScreen extends ConsumerStatefulWidget {
   const CommunityChallengesScreen({super.key});
@@ -59,11 +61,77 @@ class _CommunityChallengesScreenState
 
   @override
   Widget build(BuildContext context) {
+    final userProfileAsync = ref.watch(userStatsStreamProvider);
+
     return Scaffold(
       backgroundColor: AppTheme.backgroundDark,
       appBar: AppBar(
         title: const Text('Community Challenges'),
         backgroundColor: Colors.transparent,
+        actions: [
+          // User Level Badge
+          userProfileAsync.when(
+            data: (profile) {
+              final level = profile.avatarStats.level;
+              final totalXp = profile.avatarStats.totalXp;
+              return Container(
+                margin: const EdgeInsets.only(right: 8),
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [EmergeColors.teal.withValues(alpha: 0.2), EmergeColors.coral.withValues(alpha: 0.2)],
+                  ),
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(
+                    color: EmergeColors.teal.withValues(alpha: 0.5),
+                    width: 1,
+                  ),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      Icons.stars,
+                      size: 16,
+                      color: EmergeColors.teal,
+                    ),
+                    const SizedBox(width: 6),
+                    Text(
+                      'Lvl $level',
+                      style: TextStyle(
+                        color: EmergeColors.teal,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 13,
+                      ),
+                    ),
+                    const SizedBox(width: 4),
+                    Text(
+                      '• $totalXp XP',
+                      style: TextStyle(
+                        color: Colors.white.withValues(alpha: 0.7),
+                        fontSize: 12,
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            },
+            loading: () => const Padding(
+              padding: EdgeInsets.only(right: 16),
+              child: SizedBox(
+                width: 20,
+                height: 20,
+                child: CircularProgressIndicator(strokeWidth: 2),
+              ),
+            ),
+            error: (_, __) => const SizedBox.shrink(),
+          ),
+          IconButton(
+            icon: const Icon(Icons.handshake_outlined),
+            onPressed: () => context.push('/tribes/accountability'),
+            tooltip: 'Accountability Partners',
+          ),
+        ],
         bottom: TabBar(
           controller: _tabController,
           indicatorColor: AppTheme.primary,

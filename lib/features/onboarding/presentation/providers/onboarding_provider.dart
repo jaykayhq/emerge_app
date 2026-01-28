@@ -14,6 +14,7 @@ import 'package:emerge_app/features/gamification/presentation/providers/user_sta
 import 'package:emerge_app/features/habits/domain/entities/habit.dart';
 import 'package:emerge_app/features/habits/presentation/providers/habit_providers.dart';
 import 'package:emerge_app/features/onboarding/data/services/remote_config_service.dart';
+import 'package:emerge_app/features/habits/presentation/providers/dashboard_state_provider.dart';
 import 'package:uuid/uuid.dart';
 
 part 'onboarding_provider.g.dart';
@@ -32,16 +33,26 @@ class OnboardingController extends _$OnboardingController {
   }
 
   Future<void> completeOnboarding() async {
+    // Update state FIRST so router sees onboarding is complete
+    state = false;
+
     final repo = ref.read(localSettingsRepositoryProvider);
     await repo.completeOnboarding();
 
     // Also update user stats to reflect onboarding completion
     final userAsync = ref.read(authStateChangesProvider);
     final user = userAsync.value;
-    if (user != null) {
+    if (user?.isNotEmpty == true) {
       try {
+        final userProfileRepo = ref.read(userProfileRepositoryProvider);
         final userStatsRepo = ref.read(userStatsRepositoryProvider);
-        final currentProfile = await userStatsRepo.getUserStats(user.id);
+
+        // Get current profile
+        final profileResult = await userProfileRepo.getProfile(user!.id);
+        final currentProfile = profileResult.fold(
+          (failure) => UserProfile(uid: user.id),
+          (profile) => profile,
+        );
 
         // Update the profile to mark onboarding as complete
         final updatedProfile = currentProfile.copyWith(
@@ -49,7 +60,8 @@ class OnboardingController extends _$OnboardingController {
           onboardingCompletedAt: DateTime.now(),
         );
 
-        await userStatsRepo.saveUserStats(updatedProfile);
+        // Save using UserProfileRepository (upsert)
+        await userProfileRepo.createProfile(updatedProfile);
 
         // Log the onboarding completion activity
         await userStatsRepo.logActivity(
@@ -65,8 +77,6 @@ class OnboardingController extends _$OnboardingController {
         );
       }
     }
-
-    state = false;
   }
 
   /// Resets onboarding so user can go through the flow again
@@ -81,7 +91,7 @@ class OnboardingController extends _$OnboardingController {
     final userAsync = ref.read(authStateChangesProvider);
     final user = userAsync.value;
 
-    if (user != null) {
+    if (user?.isNotEmpty == true) {
       final userProfileRepo = ref.read(userProfileRepositoryProvider);
 
       // Fetch existing profile or create new one
@@ -101,7 +111,7 @@ class OnboardingController extends _$OnboardingController {
                 : null,
           ) ??
           UserProfile(
-            uid: user.id,
+            uid: user!.id,
             archetype: onboardingState.selectedArchetype ?? UserArchetype.none,
             motive: onboardingState.motive,
             why: onboardingState.why,
@@ -115,7 +125,13 @@ class OnboardingController extends _$OnboardingController {
                 : null,
           );
 
-      await userProfileRepo.updateProfile(updatedProfile);
+      // Use createProfile for upsert behavior (merges if exists)
+      final result = await userProfileRepo.createProfile(updatedProfile);
+      result.fold(
+        (error) => AppLogger.e('Failed to save onboarding data: $error'),
+        (_) => null,
+      );
+
       if (onboardingState.currentMilestoneStep >= 5) {
         await completeOnboarding();
       }
@@ -186,25 +202,32 @@ class OnboardingController extends _$OnboardingController {
 
     // Connect to gamification system by logging the milestone completion
     final user = ref.read(authStateChangesProvider).value;
-    if (user != null) {
+    if (user?.isNotEmpty == true) {
       try {
         final userStatsRepo = ref.read(userStatsRepositoryProvider);
+        final userProfileRepo = ref.read(userProfileRepositoryProvider);
 
         // Log the milestone completion activity
         await userStatsRepo.logActivity(
-          userId: user.id,
+          userId: user!.id,
           type: 'onboarding_milestone_completed',
           sourceId: 'milestone_$milestoneIndex',
           date: DateTime.now(),
         );
 
         // Update user stats to reflect progress
-        final currentProfile = await userStatsRepo.getUserStats(user.id);
+        final profileResult = await userProfileRepo.getProfile(user.id);
+        final currentProfile = profileResult.fold(
+          (failure) => UserProfile(uid: user.id),
+          (profile) => profile,
+        );
+
         final updatedProfile = currentProfile.copyWith(
           onboardingProgress: milestoneIndex + 1,
         );
 
-        await userStatsRepo.saveUserStats(updatedProfile);
+        // Upsert profile
+        await userProfileRepo.createProfile(updatedProfile);
       } catch (e, stack) {
         AppLogger.e(
           'Error updating gamification stats for milestone completion',
@@ -219,119 +242,105 @@ class OnboardingController extends _$OnboardingController {
     final state = ref.read(onboardingStateProvider);
     final user = ref.read(authStateChangesProvider).value;
 
-    if (user == null || state.habitStacks.isEmpty) return;
-
-    final habitRepo = ref.read(habitRepositoryProvider);
-    final config = ref.read(remoteConfigServiceProvider).getOnboardingConfig();
-    final suggestions = config.habitSuggestions;
-
-    // Track created anchors to prevent duplicates: Map<AnchorSuggestionId, CreatedHabitId>
-    final Map<String, String> createdAnchorMap = {};
-
-    for (final stack in state.habitStacks) {
-      final anchorSuggestion = suggestions.firstWhere(
-        (s) => s.id == stack.anchorId,
-        orElse: () => suggestions.first,
+    if (user?.isNotEmpty == true && state.habitStacks.isNotEmpty) {
+      // Use DashboardNotifier for optimistic updates
+      final dashboardNotifier = ref.read(
+        dashboardStateNotifierProvider.notifier,
       );
+      final config = ref
+          .read(remoteConfigServiceProvider)
+          .getOnboardingConfig();
+      final suggestions = config.habitSuggestions;
 
-      // 1. Create or Get existing Anchor Habit
-      String realAnchorHabitId;
-      if (createdAnchorMap.containsKey(anchorSuggestion.id)) {
-        realAnchorHabitId = createdAnchorMap[anchorSuggestion.id]!;
-      } else {
-        realAnchorHabitId = const Uuid().v4();
-        final anchorHabit = Habit(
-          id: realAnchorHabitId,
-          userId: user.id,
-          title: anchorSuggestion.title,
-          cue: 'My established routine',
+      // Track created anchors to prevent duplicates: Map<AnchorSuggestionId, CreatedHabitId>
+      final Map<String, String> createdAnchorMap = {};
+
+      for (final stack in state.habitStacks) {
+        final anchorSuggestion = suggestions.firstWhere(
+          (s) => s.id == stack.anchorId,
+          orElse: () => suggestions.first,
+        );
+
+        // 1. Create or Get existing Anchor Habit
+        String realAnchorHabitId;
+        if (createdAnchorMap.containsKey(anchorSuggestion.id)) {
+          realAnchorHabitId = createdAnchorMap[anchorSuggestion.id]!;
+        } else {
+          realAnchorHabitId = const Uuid().v4();
+          final anchorHabit = Habit(
+            id: realAnchorHabitId,
+            userId: user!.id,
+            title: anchorSuggestion.title,
+            cue: 'My established routine',
+            createdAt: DateTime.now(),
+            difficulty: HabitDifficulty.easy,
+            impact: HabitImpact.positive,
+            attribute: HabitAttribute.vitality,
+            isArchived: false,
+            identityTags: ['anchor', 'onboarding'], // Tag for limit bypass
+          );
+
+          try {
+            await dashboardNotifier.createHabitOptimistic(anchorHabit);
+            createdAnchorMap[anchorSuggestion.id] = realAnchorHabitId;
+
+            // Log activity
+            final userStatsRepo = ref.read(userStatsRepositoryProvider);
+            await userStatsRepo.logActivity(
+              userId: user.id,
+              type: 'habit_created',
+              habitId: realAnchorHabitId,
+              sourceId: 'onboarding',
+              date: DateTime.now(),
+            );
+          } catch (e) {
+            AppLogger.e('Failed to create anchor habit', e, StackTrace.current);
+          }
+        }
+
+        // 2. Create Stack Habit linked to Anchor
+        final newHabit = Habit(
+          id: const Uuid().v4(),
+          userId: user!.id,
+          title: stack.habitId,
+          cue: 'After I ${anchorSuggestion.title}',
+          anchorHabitId: realAnchorHabitId,
           createdAt: DateTime.now(),
           difficulty: HabitDifficulty.easy,
           impact: HabitImpact.positive,
           attribute: HabitAttribute.vitality,
+          contractActive: false,
           isArchived: false,
-          identityTags: ['anchor'],
+          identityTags: ['onboarding'], // Tag for limit bypass
         );
 
-        final result = await habitRepo.createHabit(anchorHabit);
-        result.fold(
-          (failure) {
-            AppLogger.e(
-              'Failed to create onboarding anchor habit',
-              failure,
-              StackTrace.current,
-            );
-          },
-          (_) {
-            createdAnchorMap[anchorSuggestion.id] = realAnchorHabitId;
+        try {
+          await dashboardNotifier.createHabitOptimistic(newHabit);
 
-            // Connect to gamification system by logging the habit creation
-            try {
-              final userStatsRepo = ref.read(userStatsRepositoryProvider);
-              userStatsRepo.logActivity(
-                userId: user.id,
-                type: 'habit_created',
-                habitId: realAnchorHabitId,
-                sourceId: 'onboarding',
-                date: DateTime.now(),
-              );
-            } catch (e, stack) {
-              AppLogger.e('Error logging habit creation activity', e, stack);
-            }
-          },
-        );
+          // Log activity
+          final userStatsRepo = ref.read(userStatsRepositoryProvider);
+          await userStatsRepo.logActivity(
+            userId: user.id,
+            type: 'habit_created',
+            habitId: newHabit.id,
+            sourceId: 'onboarding_stack',
+            date: DateTime.now(),
+          );
+        } catch (e) {
+          AppLogger.e('Failed to create stacked habit', e, StackTrace.current);
+        }
       }
 
-      // 2. Create Stack Habit linked to Anchor
-      final newHabit = Habit(
-        id: const Uuid().v4(),
-        userId: user.id,
-        title: stack.habitId,
-        cue: 'After I ${anchorSuggestion.title}',
-        anchorHabitId: realAnchorHabitId,
-        createdAt: DateTime.now(),
-        difficulty: HabitDifficulty.easy,
-        impact: HabitImpact.positive,
-        attribute: HabitAttribute.vitality,
-        contractActive: false,
-        isArchived: false,
-      );
-
-      final result = await habitRepo.createHabit(newHabit);
-      result.fold(
-        (failure) {
-          AppLogger.e(
-            'Failed to create onboarding stacked habit',
-            failure,
-            StackTrace.current,
-          );
-        },
-        (_) {
-          // Connect to gamification system by logging the habit creation
-          try {
-            final userStatsRepo = ref.read(userStatsRepositoryProvider);
-            userStatsRepo.logActivity(
-              userId: user.id,
-              type: 'habit_created',
-              habitId: newHabit.id,
-              sourceId: 'onboarding_stack',
-              date: DateTime.now(),
-            );
-          } catch (e, stack) {
-            AppLogger.e(
-              'Error logging stacked habit creation activity',
-              e,
-              stack,
-            );
-          }
-        },
-      );
+      // Force refresh of habits after creating onboarding habits
+      // This ensures the dashboard gets updated with the newly created habits
+      ref.invalidate(habitsProvider);
     }
   }
 }
 
 class OnboardingState extends Equatable {
   final UserArchetype? selectedArchetype;
+  final String? archetypeAvatarUrl; // Avatar image URL for selected archetype
   final Map<String, int> attributes;
   final int remainingPoints;
   final String? motive;
@@ -340,16 +349,18 @@ class OnboardingState extends Equatable {
   final List<HabitStack> habitStacks;
   final int currentMilestoneStep; // 0-5 (5-step flow)
   final List<bool>
-  completedMilestones; // [archetype, attributes, why, anchors, stacking]
+  completedMilestones; // [archetype, why, attributes, anchors, stacking]
   final List<bool> skippedMilestones; // Track which steps user skipped
 
   const OnboardingState({
     this.selectedArchetype,
+    this.archetypeAvatarUrl,
     this.attributes = const {
       'Vitality': 0,
       'Focus': 0,
       'Creativity': 0,
       'Strength': 0,
+      'Spirit': 0,
     },
     this.remainingPoints = 10,
     this.motive,
@@ -363,6 +374,7 @@ class OnboardingState extends Equatable {
 
   OnboardingState copyWith({
     UserArchetype? selectedArchetype,
+    String? archetypeAvatarUrl,
     Map<String, int>? attributes,
     int? remainingPoints,
     String? motive,
@@ -375,6 +387,7 @@ class OnboardingState extends Equatable {
   }) {
     return OnboardingState(
       selectedArchetype: selectedArchetype ?? this.selectedArchetype,
+      archetypeAvatarUrl: archetypeAvatarUrl ?? this.archetypeAvatarUrl,
       attributes: attributes ?? this.attributes,
       remainingPoints: remainingPoints ?? this.remainingPoints,
       motive: motive ?? this.motive,
@@ -390,6 +403,7 @@ class OnboardingState extends Equatable {
   @override
   List<Object?> get props => [
     selectedArchetype,
+    archetypeAvatarUrl,
     attributes,
     remainingPoints,
     motive,
@@ -439,6 +453,7 @@ List<OnboardingMilestone> activeMilestones(Ref ref) {
   // Define the 5 streamlined onboarding milestones
   // Note: Using null for backgroundImageUrl to use the gradient placeholder instead
   // of external network images which can fail to load and cause exceptions
+  // Order: Archetype → Why → Attributes → Anchors → Stacking
   final allMilestones = [
     OnboardingMilestone(
       order: 1,
@@ -453,20 +468,20 @@ List<OnboardingMilestone> activeMilestones(Ref ref) {
     ),
     OnboardingMilestone(
       order: 2,
-      title: 'Shape Your Identity',
-      description: 'Allocate points to your core attributes',
-      routePath: '/onboarding/attributes',
-      icon: Icons.psychology,
+      title: 'Integrate Your Why',
+      description: 'Define your deep motivation',
+      routePath: '/onboarding/why',
+      icon: Icons.lightbulb,
       isCompleted: progress > 1,
       canSkip: true,
       backgroundImageUrl: null, // Use gradient placeholder
     ),
     OnboardingMilestone(
       order: 3,
-      title: 'Integrate Your Why',
-      description: 'Define your deep motivation',
-      routePath: '/onboarding/why',
-      icon: Icons.lightbulb,
+      title: 'Shape Your Identity',
+      description: 'Allocate points to your core attributes',
+      routePath: '/onboarding/attributes',
+      icon: Icons.psychology,
       isCompleted: progress > 2,
       canSkip: true,
       backgroundImageUrl: null, // Use gradient placeholder

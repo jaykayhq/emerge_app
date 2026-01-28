@@ -58,7 +58,9 @@ class UserStatsController {
     );
 
     // Log success for debugging
-    AppLogger.i('Habit completed event received: ${event.habitId} for user: ${event.userId}');
+    AppLogger.i(
+      'Habit completed event received: ${event.habitId} for user: ${event.userId}',
+    );
   }
 
   /// Update the world state (for building placements, etc.)

@@ -1,114 +1,11 @@
 import 'dart:io';
-import 'package:flutter/foundation.dart';
 import 'package:emerge_app/core/config/app_config.dart';
 
-class SecureHttpClient extends HttpOverrides {
-  @override
-  HttpClient createHttpClient(SecurityContext? context) {
-    if (!AppConfig.enableSslPinning) {
-      return super.createHttpClient(context);
-    }
-
-    final client = super.createHttpClient(context);
-
-    // Set timeouts
-    client.connectionTimeout = const Duration(seconds: 30);
-    client.idleTimeout = const Duration(minutes: 1);
-
-    // Configure security settings
-    client.badCertificateCallback = (cert, host, port) {
-      if (kDebugMode) {
-        print('Bad certificate callback for $host:$port');
-        print('Certificate: ${cert.subject}');
-      }
-
-      // In development, you might want to be more lenient
-      if (kDebugMode) {
-        return _isLocalhostOrDevelopment(host);
-      }
-
-      // In production, implement proper certificate pinning
-      return _validateCertificatePin(cert, host);
-    };
-
-    // Enable certificate revocation checking
-    if (!kDebugMode) {
-      // In production, you might want to enable this
-      // client.badCertificateCallback = null;
-    }
-
-    return client;
-  }
-
-  bool _isLocalhostOrDevelopment(String host) {
-    // Allow localhost and development certificates in debug mode
-    return host == 'localhost' ||
-           host == '127.0.0.1' ||
-           host.endsWith('.local') ||
-           host.contains('ngrok') ||
-           host.contains('expo');
-  }
-
-  bool _validateCertificatePin(X509Certificate? cert, String host) {
-    if (cert == null) return false;
-
-    // List of expected certificate hashes for your Firebase services
-    final Map<String, List<String>> certificatePins = {
-      'firebase.googleapis.com': [
-        'YOUR_FIREBASE_CERTIFICATE_HASH_1',
-        'YOUR_FIREBASE_CERTIFICATE_HASH_2',
-      ],
-      'firebasestorage.googleapis.com': [
-        'YOUR_STORAGE_CERTIFICATE_HASH_1',
-        'YOUR_STORAGE_CERTIFICATE_HASH_2',
-      ],
-      'www.googleapis.com': [
-        'YOUR_GOOGLE_APIS_CERTIFICATE_HASH_1',
-        'YOUR_GOOGLE_APIS_CERTIFICATE_HASH_2',
-      ],
-    };
-
-    // Get the expected pins for this host
-    final expectedPins = certificatePins[host];
-    if (expectedPins == null || expectedPins.isEmpty) {
-      if (kDebugMode) {
-        print('No certificate pins configured for $host');
-      }
-      return false;
-    }
-
-    // Calculate the certificate's SHA-256 hash
-    final certHash = _calculateCertificateHash(cert);
-
-    // Check if the certificate hash matches any of the expected pins
-    final isValidPin = expectedPins.any((pin) => pin == certHash);
-
-    if (kDebugMode) {
-      print('Certificate pin validation for $host: $isValidPin');
-      if (!isValidPin) {
-        print('Expected pins: ${expectedPins.join(', ')}');
-        print('Actual pin: $certHash');
-      }
-    }
-
-    return isValidPin;
-  }
-
-  String _calculateCertificateHash(X509Certificate cert) {
-    // This is a simplified implementation
-    // In production, you should use proper cryptographic libraries
-    final bytes = cert.der;
-    final hash = _sha256(bytes);
-    return hash.map((byte) => byte.toRadixString(16).padLeft(2, '0')).join();
-  }
-
-  List<int> _sha256(List<int> input) {
-    // This is a placeholder - use a proper crypto library in production
-    // like 'crypto' package or platform-specific implementations
-    return input; // Replace with actual SHA-256 implementation
-  }
-}
-
+/// Network security configuration for the Emerge app
+///
+/// NOTE: SSL certificate pinning has been removed in favor of Firebase App Check,
+/// which provides better security with zero maintenance overhead.
+/// App Check automatically verifies app authenticity using Play Integrity API.
 class NetworkSecurityConfig {
   static const Duration defaultTimeout = Duration(seconds: 30);
   static const Duration longTimeout = Duration(minutes: 2);
@@ -178,15 +75,19 @@ class NetworkSecurityConfig {
   static Map<String, String> sanitizeHeaders(Map<String, String> headers) {
     final sanitized = Map<String, String>.from(headers);
 
-    // Remove sensitive headers that shouldn't be sent
+    // Remove sensitive headers that shouldn't be logged
     sanitized.remove('authorization');
     sanitized.remove('cookie');
     sanitized.remove('x-api-key');
     sanitized.remove('x-auth-token');
 
-    // Add security headers
-    sanitized.addAll(securityHeaders);
-
     return sanitized;
+  }
+
+  // Add security headers to requests
+  static Map<String, String> addSecurityHeaders(Map<String, String> headers) {
+    final withSecurity = Map<String, String>.from(headers);
+    withSecurity.addAll(securityHeaders);
+    return withSecurity;
   }
 }

@@ -1,0 +1,62 @@
+{
+  "project_info": {
+    "project_number": "359335119695",
+    "project_id": "tradeflash-l2966",
+    "storage_bucket": "tradeflash-l2966.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:359335119695:android:b61cd1e2245350dfcb533a",
+        "android_client_info": {
+          "package_name": "com.emerge.emerge_app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "359335119695-b14jva3048uv7422sanbtpplro3hps4u.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.emerge.emerge_app",
+            "certificate_hash": "06485267caa879f060ab52aa9303bc978f23d795"
+          }
+        },
+        {
+          "client_id": "359335119695-r7bv5g39gv1rga2bkt2bp9nrg4b4cehj.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.emerge.emerge_app",
+            "certificate_hash": "31ff52c2d39b492fe80c339e5c9c55e0625f59e7"
+          }
+        },
+        {
+          "client_id": "359335119695-1f8gpqjrdu2776qbg5b8vfai1ckh2qm1.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAWlSsjpgQN4E_Bt3esMa1hIFJ9nESAEmA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "359335119695-1f8gpqjrdu2776qbg5b8vfai1ckh2qm1.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "359335119695-653anqm8bnhco0oqlqrmdrc09aeei2s9.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.emerge.emergeApp"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

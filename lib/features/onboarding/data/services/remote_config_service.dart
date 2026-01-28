@@ -24,47 +24,77 @@ class RemoteConfigService {
     );
 
     await _remoteConfig.setDefaults({
+      // RevenueCat API Keys (fallback to empty if Remote Config unavailable)
+      'revenuecat_google_api_key': '',
+      'revenuecat_apple_api_key': '',
       'onboarding_archetypes': jsonEncode([
         {
           'id': 'athlete',
-          'title': 'The Warrior',
-          'description': 'Forged in fire, you seek strength and resilience.',
+          'title': 'The Athlete',
+          'description': 'Physical discipline, resilience, and vitality.',
           'imageUrl': 'assets/images/archetype_athlete.png',
-        },
-        {
-          'id': 'scholar',
-          'title': 'The Sage',
-          'description': 'You seek wisdom, clarity, and focus.',
-          'imageUrl': 'assets/images/archetype_scholar.png',
         },
         {
           'id': 'creator',
           'title': 'The Creator',
-          'description': 'You bring new ideas and beauty into the world.',
+          'description': 'Imagination, expression, and bringing ideas to life.',
           'imageUrl': 'assets/images/archetype_creator.png',
+        },
+        {
+          'id': 'scholar',
+          'title': 'The Scholar',
+          'description': 'Knowledge, curiosity, and intellectual growth.',
+          'imageUrl': 'assets/images/archetype_scholar.png',
+        },
+        {
+          'id': 'stoic',
+          'title': 'The Stoic',
+          'description': 'Mindfulness, emotional control, and inner peace.',
+          'imageUrl': 'assets/images/archetype_stoic.png',
+        },
+        {
+          'id': 'mystic',
+          'title': 'The Mystic',
+          'description':
+              'Spiritual connection, transcendence, and inner wisdom.',
+          'imageUrl': 'assets/images/archetype_mystic.png',
         },
       ]),
       'onboarding_attributes': jsonEncode([
         {
           'id': 'vitality',
           'title': 'Vitality',
-          'description': 'Energy and Health',
-          'icon': 'heart',
-          'color': '0xFF4CAF50',
+          'description': 'For a life of energy and boundless health.',
+          'icon': 'favorite',
+          'color': '0xFFF44336', // Red-500
         },
         {
           'id': 'focus',
           'title': 'Focus',
-          'description': 'Clarity and Concentration',
-          'icon': 'brain',
-          'color': '0xFF2196F3',
+          'description': 'For a mind that is clear, present, and sharp.',
+          'icon': 'psychology',
+          'color': '0xFF00BCD4', // Cyan-500
+        },
+        {
+          'id': 'creativity',
+          'title': 'Creativity',
+          'description': 'For a spark of imagination and endless ideas.',
+          'icon': 'brush',
+          'color': '0xFF9C27B0', // Purple-500
         },
         {
           'id': 'strength',
           'title': 'Strength',
-          'description': 'Power and Resilience',
-          'icon': 'gym',
-          'color': '0xFFF44336',
+          'description': 'For a body that is resilient and powerful.',
+          'icon': 'fitness_center',
+          'color': '0xFFFFC107', // Amber-500
+        },
+        {
+          'id': 'spirit',
+          'title': 'Spirit',
+          'description': 'For a soul aligned with purpose and higher meaning.',
+          'icon': 'self_improvement',
+          'color': '0xFF673AB7', // Deep Purple-500
         },
       ]),
       'onboarding_habit_suggestions': jsonEncode([
@@ -81,12 +111,28 @@ class RemoteConfigService {
       ]),
     });
 
+    // Fetch remote config values
     try {
       await _remoteConfig.fetchAndActivate();
+      debugPrint('✅ Remote Config fetched successfully');
     } catch (e) {
       // Handle fetch error or use defaults
-      debugPrint('Remote Config fetch failed: $e');
+      debugPrint('⚠️ Remote Config fetch failed: $e (using defaults)');
     }
+  }
+
+  /// Get RevenueCat API key from Remote Config
+  String getRevenueCatApiKey(String platform) {
+    final key = _remoteConfig.getString(
+      platform == 'android' ? 'revenuecat_google_api_key' : 'revenuecat_apple_api_key',
+    );
+    return key;
+  }
+
+  /// Check if RevenueCat keys are configured in Remote Config
+  bool isRevenueCatConfigured(String platform) {
+    final key = getRevenueCatApiKey(platform);
+    return key.isNotEmpty && key != 'YOUR_REVENUECAT_API_KEY';
   }
 
   OnboardingConfig getOnboardingConfig() {

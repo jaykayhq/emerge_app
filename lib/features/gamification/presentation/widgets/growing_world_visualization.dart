@@ -1,9 +1,6 @@
 import 'package:emerge_app/core/theme/app_theme.dart';
 import 'package:emerge_app/features/auth/domain/entities/user_extension.dart';
 import 'package:emerge_app/features/gamification/domain/models/world_zone.dart';
-import 'package:emerge_app/features/gamification/presentation/widgets/animated_world_background.dart';
-import 'package:emerge_app/features/gamification/presentation/widgets/environment_effects.dart';
-import 'package:emerge_app/features/gamification/presentation/widgets/world_inhabitants.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 
@@ -27,7 +24,6 @@ class WorldVisualization extends StatefulWidget {
 class _WorldVisualizationState extends State<WorldVisualization>
     with SingleTickerProviderStateMixin {
   late final AnimationController _pulseController;
-  double _scrollOffset = 0;
 
   @override
   void initState() {
@@ -44,86 +40,48 @@ class _WorldVisualizationState extends State<WorldVisualization>
     super.dispose();
   }
 
-  String _getThemeString() {
-    switch (widget.worldState.worldTheme) {
-      case WorldTheme.sanctuary:
-        return 'city';
-      case WorldTheme.island:
-        return 'forest';
-      case WorldTheme.settlement:
-        return 'city';
-      case WorldTheme.floatingRealm:
-        return 'city';
-    }
-  }
-
-  String _getSeasonString() {
-    switch (widget.worldState.seasonalState) {
-      case WorldSeason.spring:
-        return 'spring';
-      case WorldSeason.summer:
-        return 'summer';
-      case WorldSeason.autumn:
-        return 'autumn';
-      case WorldSeason.winter:
-        return 'winter';
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
-    final theme = _getThemeString();
-    final season = _getSeasonString();
-    final isNight = DateTime.now().hour < 6 || DateTime.now().hour > 20;
-
-    return GestureDetector(
-      onPanUpdate: (details) {
-        setState(() {
-          _scrollOffset += details.delta.dx * 0.5;
-        });
-      },
-      child: Stack(
-        fit: StackFit.expand,
-        children: [
-          // Animated parallax background
-          AnimatedWorldBackground(
-            theme: theme,
-            scrollOffset: _scrollOffset,
-            isNightMode: isNight,
+    return Stack(
+      fit: StackFit.expand,
+      children: [
+        // Static background image
+        Positioned.fill(
+          child: Image.asset(
+            'assets/images/world_sanctuary_base.png',
+            fit: BoxFit.cover,
+            errorBuilder: (context, error, stackTrace) {
+              return Container(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [
+                      AppTheme.backgroundDark,
+                      AppTheme.backgroundDark.withValues(alpha: 0.8),
+                      AppTheme.surfaceDark,
+                    ],
+                  ),
+                ),
+              );
+            },
           ),
+        ),
 
-          // World inhabitants (NPCs)
-          WorldInhabitants(
-            theme: theme,
-            populationCount: widget.worldState.isThriving ? 12 : 6,
-            isNightMode: isNight,
-          ),
+        // Decay overlay (fog effect)
+        if (widget.worldState.isDecaying) _buildDecayOverlay(),
 
-          // Environment effects (weather/particles)
-          EnvironmentEffects(
-            theme: theme,
-            season: season,
-            isNightMode: isNight,
-            intensity: widget.worldState.isDecaying ? 0.3 : 0.5,
-          ),
+        // Zone hotspots
+        ..._buildZoneHotspots(),
 
-          // Decay overlay (fog effect)
-          if (widget.worldState.isDecaying) _buildDecayOverlay(),
+        // Particle effects for thriving world
+        if (widget.worldState.isThriving) _buildThriveParticles(),
 
-          // Zone hotspots
-          ..._buildZoneHotspots(),
-
-          // Particle effects for thriving world
-          if (widget.worldState.isThriving) _buildThriveParticles(),
-
-          // Season indicator
-          Positioned(top: 80, right: 16, child: _buildSeasonBadge()),
-        ],
-      ),
+        // Season indicator
+        Positioned(top: 80, right: 16, child: _buildSeasonBadge()),
+      ],
     );
   }
-
-  // Note: _buildBaseLandscape removed - now using AnimatedWorldBackground widget
 
   Widget _buildDecayOverlay() {
     // Enhanced decay effect based on entropy level
