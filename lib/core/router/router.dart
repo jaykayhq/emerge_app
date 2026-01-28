@@ -1,42 +1,32 @@
 import 'package:emerge_app/core/presentation/screens/splash_screen.dart';
+import 'package:emerge_app/core/presentation/screens/world_splash_screen.dart';
 import 'package:emerge_app/core/presentation/widgets/scaffold_with_nav_bar.dart';
 import 'package:emerge_app/features/auth/presentation/providers/auth_providers.dart';
 import 'package:emerge_app/features/auth/presentation/screens/login_screen.dart';
 import 'package:emerge_app/features/auth/presentation/screens/signup_screen.dart';
 import 'package:emerge_app/features/gamification/presentation/providers/user_stats_providers.dart';
-import 'package:emerge_app/features/gamification/presentation/screens/creator_blueprints_screen.dart';
-import 'package:emerge_app/features/gamification/presentation/screens/growing_world_screen.dart';
+import 'package:emerge_app/features/world_map/presentation/screens/world_map_screen.dart';
+import 'package:emerge_app/features/timeline/presentation/screens/timeline_screen.dart';
 import 'package:emerge_app/features/ai/presentation/screens/goldilocks_screen.dart';
 import 'package:emerge_app/features/gamification/presentation/screens/leveling_screen.dart';
-import 'package:emerge_app/features/gamification/presentation/screens/avatar_customization_screen.dart';
-import 'package:emerge_app/features/gamification/presentation/screens/user_profile_screen.dart';
+import 'package:emerge_app/features/profile/presentation/screens/future_self_studio_screen.dart';
 import 'package:emerge_app/features/gamification/presentation/widgets/level_up_listener.dart';
 import 'package:emerge_app/features/habits/presentation/screens/advanced_create_habit_screen.dart';
-import 'package:emerge_app/features/habits/presentation/screens/habit_builder_screen.dart';
 import 'package:emerge_app/features/habits/presentation/screens/environment_priming_screen.dart';
-import 'package:emerge_app/features/home/presentation/screens/gatekeeper_screen.dart';
-import 'package:emerge_app/features/home/presentation/screens/home_screen.dart';
-import 'package:emerge_app/features/home/presentation/screens/two_minute_timer_screen.dart';
 import 'package:emerge_app/features/gamification/presentation/screens/weekly_recap_screen.dart';
-import 'package:emerge_app/features/gamification/presentation/screens/daily_report_screen.dart';
-import 'package:emerge_app/features/gamification/presentation/screens/building_placement_screen.dart';
-import 'package:emerge_app/features/gamification/presentation/screens/land_expansion_screen.dart';
 import 'package:emerge_app/features/insights/presentation/screens/recap_screen.dart';
 import 'package:emerge_app/features/ai/presentation/screens/ai_reflections_screen.dart';
-import 'package:emerge_app/features/monetization/presentation/screens/paywall_screen.dart';
 import 'package:emerge_app/features/onboarding/presentation/providers/onboarding_provider.dart';
-import 'package:emerge_app/features/onboarding/presentation/screens/habit_anchors_screen.dart';
-import 'package:emerge_app/features/onboarding/presentation/screens/habit_stacking_screen.dart';
-import 'package:emerge_app/features/onboarding/presentation/screens/identity_attributes_screen.dart';
-import 'package:emerge_app/features/onboarding/presentation/screens/integrate_why_screen.dart';
-import 'package:emerge_app/features/onboarding/presentation/screens/onboarding_archetype_screen.dart';
+import 'package:emerge_app/features/onboarding/presentation/screens/first_habit_screen.dart';
+import 'package:emerge_app/features/onboarding/presentation/screens/identity_studio_screen.dart';
 import 'package:emerge_app/features/onboarding/presentation/screens/onboarding_screen.dart';
 import 'package:emerge_app/features/onboarding/presentation/screens/welcome_screen.dart';
+import 'package:emerge_app/features/onboarding/presentation/screens/world_reveal_screen.dart';
 import 'package:emerge_app/features/settings/presentation/screens/settings_screen.dart';
 import 'package:emerge_app/features/settings/presentation/screens/notification_settings_screen.dart';
 import 'package:emerge_app/features/social/presentation/screens/accountability_screen.dart';
 import 'package:emerge_app/features/social/presentation/screens/community_challenges_screen.dart';
-import 'package:emerge_app/features/social/presentation/screens/tribes_screen.dart';
+import 'package:emerge_app/features/social/presentation/screens/community_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -126,7 +116,7 @@ GoRouter router(Ref ref) {
           final userProfile = userProfileAsync.valueOrNull;
           final onboardingProgress = userProfile?.onboardingProgress ?? 0;
 
-          if (onboardingProgress < 5) {
+          if (onboardingProgress < 3) {
             final nextStep = _getOnboardingRouteForProgress(onboardingProgress);
             debugPrint(
               'Router: Redirecting to $nextStep (Incomplete onboarding)',
@@ -140,6 +130,20 @@ GoRouter router(Ref ref) {
 
         // If trying to access home/dashboard but onboarding is incomplete, redirect to onboarding
         if (state.uri.path == '/' || state.uri.path.isEmpty) {
+          // Check local onboarding state first (more reliable than Firestore)
+          final isOnboardingComplete = !isFirstLaunch;
+
+          debugPrint('Router: isOnboardingComplete=$isOnboardingComplete');
+
+          // If local state says onboarding is complete, allow access
+          if (isOnboardingComplete) {
+            debugPrint(
+              'Router: Onboarding complete (local state), allowing access',
+            );
+            return null;
+          }
+
+          // Otherwise check Firestore profile as fallback
           final userProfileAsync = ref.read(userStatsStreamProvider);
 
           // If profile is still loading, allow access (we'll redirect later when loaded)
@@ -154,7 +158,7 @@ GoRouter router(Ref ref) {
           debugPrint('Router: onboardingProgress=$onboardingProgress');
 
           // If onboarding is not complete (progress < 5), redirect to the next step
-          if (onboardingProgress < 5) {
+          if (onboardingProgress < 3) {
             final nextStep = _getOnboardingRouteForProgress(onboardingProgress);
             debugPrint(
               'Router: Redirecting to $nextStep (Incomplete onboarding)',
@@ -175,6 +179,10 @@ GoRouter router(Ref ref) {
         builder: (context, state) => const SplashScreen(),
       ),
       GoRoute(
+        path: '/world-splash',
+        builder: (context, state) => const WorldSplashScreen(),
+      ),
+      GoRoute(
         path: '/welcome',
         builder: (context, state) => const WelcomeScreen(),
       ),
@@ -182,25 +190,18 @@ GoRouter router(Ref ref) {
         path: '/onboarding',
         builder: (context, state) => const OnboardingScreen(),
         routes: [
+          // New simplified onboarding flow (3 steps)
           GoRoute(
-            path: 'archetype',
-            builder: (context, state) => const OnboardingArchetypeScreen(),
+            path: 'identity-studio',
+            builder: (context, state) => const IdentityStudioScreen(),
           ),
           GoRoute(
-            path: 'attributes',
-            builder: (context, state) => const IdentityAttributesScreen(),
+            path: 'first-habit',
+            builder: (context, state) => const FirstHabitScreen(),
           ),
           GoRoute(
-            path: 'why',
-            builder: (context, state) => const IntegrateWhyScreen(),
-          ),
-          GoRoute(
-            path: 'anchors',
-            builder: (context, state) => const HabitAnchorsScreen(),
-          ),
-          GoRoute(
-            path: 'stacking',
-            builder: (context, state) => const HabitStackingScreen(),
+            path: 'world-reveal',
+            builder: (context, state) => const WorldRevealScreen(),
           ),
         ],
       ),
@@ -208,6 +209,12 @@ GoRouter router(Ref ref) {
       GoRoute(
         path: '/signup',
         builder: (context, state) => const SignUpScreen(),
+      ),
+      // Add root-level create-habit route for FAB access
+      GoRoute(
+        path: '/create-habit',
+        parentNavigatorKey: _rootNavigatorKey,
+        builder: (context, state) => const AdvancedCreateHabitScreen(),
       ),
       // ShellRoute for Bottom Navigation
       StatefulShellRoute.indexedStack(
@@ -217,87 +224,37 @@ GoRouter router(Ref ref) {
           );
         },
         branches: [
-          // Branch 1: Habits (Home)
+          // Branch 1: World (Gamification) - NEW HOME
           StatefulShellBranch(
             routes: [
               GoRoute(
                 path: '/',
-                builder: (context, state) => const HomeScreen(),
-                routes: [
-                  GoRoute(
-                    path: 'create-habit',
-                    parentNavigatorKey: _rootNavigatorKey, // Hide bottom nav
-                    builder: (context, state) =>
-                        const AdvancedCreateHabitScreen(),
-                  ),
-                  GoRoute(
-                    path: 'two-minute-timer',
-                    parentNavigatorKey: _rootNavigatorKey,
-                    builder: (context, state) => const TwoMinuteTimerScreen(),
-                  ),
-                  GoRoute(
-                    path: 'gatekeeper',
-                    parentNavigatorKey: _rootNavigatorKey,
-                    builder: (context, state) => const GatekeeperScreen(),
-                  ),
-                  GoRoute(
-                    path: 'paywall',
-                    parentNavigatorKey: _rootNavigatorKey,
-                    builder: (context, state) => const PaywallScreen(),
-                  ),
-                  GoRoute(
-                    path: 'habit-builder',
-                    parentNavigatorKey: _rootNavigatorKey,
-                    builder: (context, state) => const HabitBuilderScreen(),
-                  ),
-                  GoRoute(
-                    path: 'blueprints',
-                    parentNavigatorKey: _rootNavigatorKey,
-                    builder: (context, state) =>
-                        const CreatorBlueprintsScreen(),
-                  ),
-                ],
-              ),
-            ],
-          ),
-          // Branch 2: World (Gamification)
-          StatefulShellBranch(
-            routes: [
-              GoRoute(
-                path: '/world',
-                builder: (context, state) => const GrowingWorldScreen(),
+                builder: (context, state) => const WorldMapScreen(),
                 routes: [
                   GoRoute(
                     path: 'recap',
                     parentNavigatorKey: _rootNavigatorKey,
                     builder: (context, state) => const WeeklyRecapScreen(),
                   ),
-                  GoRoute(
-                    path: 'daily-report',
-                    parentNavigatorKey: _rootNavigatorKey,
-                    builder: (context, state) => const DailyReportScreen(),
-                  ),
-                  GoRoute(
-                    path: 'build',
-                    parentNavigatorKey: _rootNavigatorKey,
-                    builder: (context, state) =>
-                        const BuildingPlacementScreen(),
-                  ),
-                  GoRoute(
-                    path: 'expand',
-                    parentNavigatorKey: _rootNavigatorKey,
-                    builder: (context, state) => const LandExpansionScreen(),
-                  ),
                 ],
               ),
             ],
           ),
-          // Branch 3: Tribes & Social
+          // Branch 2: Timeline (NEW)
           StatefulShellBranch(
             routes: [
               GoRoute(
-                path: '/tribes',
-                builder: (context, state) => const TribesScreen(),
+                path: '/timeline',
+                builder: (context, state) => const TimelineScreen(),
+              ),
+            ],
+          ),
+          // Branch 3: Community
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/community',
+                builder: (context, state) => const CommunityScreen(),
                 routes: [
                   GoRoute(
                     path: 'challenges',
@@ -312,12 +269,12 @@ GoRouter router(Ref ref) {
               ),
             ],
           ),
-          // Branch 4: Profile & Insights
+          // Branch 4: Profile & Insights (Future Self Studio)
           StatefulShellBranch(
             routes: [
               GoRoute(
                 path: '/profile',
-                builder: (context, state) => const UserProfileScreen(),
+                builder: (context, state) => const FutureSelfStudioScreen(),
                 routes: [
                   GoRoute(
                     path: 'settings',
@@ -352,11 +309,6 @@ GoRouter router(Ref ref) {
                     path: 'goldilocks',
                     builder: (context, state) => const GoldilocksScreen(),
                   ),
-                  GoRoute(
-                    path: 'avatar',
-                    builder: (context, state) =>
-                        const AvatarCustomizationScreen(),
-                  ),
                 ],
               ),
             ],
@@ -368,19 +320,16 @@ GoRouter router(Ref ref) {
 }
 
 /// Helper function to get the onboarding route for a given progress level
+/// New flow: 0 = identity-studio, 1 = first-habit, 2 = world-reveal, 3+ = complete
 String _getOnboardingRouteForProgress(int progress) {
   switch (progress) {
     case 0:
-      return '/onboarding/archetype';
+      return '/onboarding/identity-studio';
     case 1:
-      return '/onboarding/attributes';
+      return '/onboarding/first-habit';
     case 2:
-      return '/onboarding/why';
-    case 3:
-      return '/onboarding/anchors';
-    case 4:
-      return '/onboarding/stacking';
+      return '/onboarding/world-reveal';
     default:
-      return '/'; // All onboarding complete, go to dashboard
+      return '/'; // All onboarding complete, go to world
   }
 }

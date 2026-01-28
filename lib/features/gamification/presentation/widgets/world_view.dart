@@ -34,7 +34,7 @@ class WorldView extends StatelessWidget {
             child: ClipRRect(
               borderRadius: BorderRadius.circular(16),
               child: Image.asset(
-                'assets/images/dashboard_card_bg.png',
+                'assets/images/world_sanctuary_base.png',
                 fit: BoxFit.cover,
                 errorBuilder: (context, error, stackTrace) {
                   // Fallback to a gradient if the asset fails to load

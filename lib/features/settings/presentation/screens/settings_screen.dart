@@ -6,7 +6,6 @@ import 'package:emerge_app/features/auth/domain/entities/user_extension.dart';
 import 'package:emerge_app/features/auth/presentation/providers/auth_providers.dart';
 import 'package:emerge_app/features/gamification/data/repositories/user_stats_repository.dart';
 import 'package:emerge_app/features/gamification/presentation/providers/user_stats_providers.dart';
-import 'package:emerge_app/features/gamification/presentation/widgets/avatar_display.dart';
 import 'package:emerge_app/features/settings/presentation/screens/notification_settings_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -453,31 +452,130 @@ class SettingsScreen extends ConsumerWidget {
     AuthUser authUser,
     UserProfile profile,
   ) {
+    final avatarStats = profile.avatarStats;
+    final currentLevel = avatarStats.level;
+    final totalXp = avatarStats.totalXp;
+    final xpForCurrentLevel = (currentLevel - 1) * 100;
+    final xpForNextLevel = currentLevel * 100;
+    final xpProgress = totalXp - xpForCurrentLevel;
+    final xpNeeded = xpForNextLevel - totalXp;
+    final progressPercent = (xpProgress / 100).clamp(0.0, 1.0);
+
     return Row(
       children: [
         SizedBox(
           width: 80,
           height: 80,
-          child: AvatarDisplay(avatar: profile.avatar, size: 80),
+          child: Container(
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: EmergeColors.teal.withValues(alpha: 0.2),
+            ),
+            child: const Icon(Icons.person, size: 40, color: EmergeColors.teal),
+          ),
         ),
         const SizedBox(width: 16),
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              authUser.displayName ?? 'Jae Kay',
-              style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                fontWeight: FontWeight.bold,
-                color: AppTheme.textMainDark,
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                authUser.displayName ?? 'Jae Kay',
+                style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                  fontWeight: FontWeight.bold,
+                  color: AppTheme.textMainDark,
+                ),
               ),
-            ),
-            Text(
-              'Level ${profile.avatarStats.level} ${profile.characterClass ?? 'Novice'}',
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: AppTheme.textSecondaryDark,
+              const SizedBox(height: 4),
+              Row(
+                children: [
+                  Text(
+                    'Level $currentLevel',
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: EmergeColors.teal,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 2,
+                    ),
+                    decoration: BoxDecoration(
+                      color: EmergeColors.teal.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Text(
+                      profile.characterClass ?? 'Novice',
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: EmergeColors.teal,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ],
               ),
-            ),
-          ],
+              const SizedBox(height: 8),
+              // XP Progress Bar
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        'XP',
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: AppTheme.textSecondaryDark,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                      Text(
+                        '$xpProgress / 100',
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: AppTheme.textSecondaryDark,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 4),
+                  Stack(
+                    children: [
+                      Container(
+                        height: 8,
+                        decoration: BoxDecoration(
+                          color: AppTheme.surfaceDark,
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                      ),
+                      FractionallySizedBox(
+                        widthFactor: progressPercent,
+                        child: Container(
+                          height: 8,
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              colors: [EmergeColors.teal, EmergeColors.coral],
+                            ),
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    '$xpNeeded XP to next level • Total: $totalXp XP',
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: AppTheme.textSecondaryDark,
+                      fontSize: 11,
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
         ),
       ],
     );
@@ -717,6 +815,7 @@ class SettingsScreen extends ConsumerWidget {
     String? theme,
   ) async {
     Navigator.pop(context);
+    if (profile.uid.isEmpty) return; // Prevent saving with empty UID
     final updatedProfile = profile.copyWith(worldTheme: theme);
     await ref.read(userStatsRepositoryProvider).saveUserStats(updatedProfile);
   }
@@ -727,7 +826,7 @@ class SettingsScreen extends ConsumerWidget {
     UserProfile? profile,
     UserSettings settings,
   ) async {
-    if (profile == null) return;
+    if (profile == null || profile.uid.isEmpty) return;
     final updatedProfile = profile.copyWith(settings: settings);
     await ref.read(userStatsRepositoryProvider).saveUserStats(updatedProfile);
   }

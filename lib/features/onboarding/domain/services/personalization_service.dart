@@ -11,6 +11,8 @@ extension UserArchetypeExtension on UserArchetype {
         return 'The Scholar';
       case UserArchetype.stoic:
         return 'The Stoic';
+      case UserArchetype.mystic:
+        return 'The Mystic';
       case UserArchetype.none:
         return 'Undecided';
     }
@@ -26,6 +28,8 @@ extension UserArchetypeExtension on UserArchetype {
         return 'Knowledge, curiosity, and intellectual growth.';
       case UserArchetype.stoic:
         return 'Mindfulness, emotional control, and inner peace.';
+      case UserArchetype.mystic:
+        return 'Spiritual connection, transcendence, and inner wisdom.';
       case UserArchetype.none:
         return 'Select an archetype to begin.';
     }
@@ -42,6 +46,8 @@ extension UserArchetypeExtension on UserArchetype {
         return 'assets/images/archetype_scholar.png';
       case UserArchetype.stoic:
         return 'assets/images/archetype_stoic.png';
+      case UserArchetype.mystic:
+        return 'assets/images/archetype_mystic.png';
       case UserArchetype.none:
         return 'assets/images/logo.png';
     }
@@ -78,6 +84,13 @@ class PersonalizationService {
           'Journal Reflection',
           'Cold Shower',
           'Gratitude Log',
+        ];
+      case UserArchetype.mystic:
+        return [
+          'Morning Prayer',
+          'Sacred Reading',
+          'Mindful Breathing',
+          'Evening Reflection',
         ];
       case UserArchetype.none:
         return [];

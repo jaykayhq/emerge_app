@@ -1,7 +1,7 @@
 import 'package:emerge_app/features/auth/domain/entities/auth_user.dart';
 import 'package:emerge_app/features/gamification/domain/models/avatar.dart';
 
-enum UserArchetype { athlete, creator, scholar, stoic, none }
+enum UserArchetype { athlete, creator, scholar, stoic, mystic, none }
 
 class UserAvatarStats {
   final int strengthXp;
@@ -9,6 +9,7 @@ class UserAvatarStats {
   final int vitalityXp;
   final int creativityXp;
   final int focusXp;
+  final int spiritXp;
   final int level;
   final int streak;
 
@@ -18,6 +19,7 @@ class UserAvatarStats {
     this.vitalityXp = 0,
     this.creativityXp = 0,
     this.focusXp = 0,
+    this.spiritXp = 0,
     this.level = 1,
     this.streak = 0,
   });
@@ -29,6 +31,7 @@ class UserAvatarStats {
       'vitalityXp': vitalityXp,
       'creativityXp': creativityXp,
       'focusXp': focusXp,
+      'spiritXp': spiritXp,
       'level': level,
       'streak': streak,
     };
@@ -41,12 +44,13 @@ class UserAvatarStats {
       vitalityXp: map['vitalityXp'] as int? ?? 0,
       creativityXp: map['creativityXp'] as int? ?? 0,
       focusXp: map['focusXp'] as int? ?? 0,
+      spiritXp: map['spiritXp'] as int? ?? 0,
       level: map['level'] as int? ?? 1,
       streak: map['streak'] as int? ?? 0,
     );
   }
   int get totalXp =>
-      strengthXp + intellectXp + vitalityXp + creativityXp + focusXp;
+      strengthXp + intellectXp + vitalityXp + creativityXp + focusXp + spiritXp;
 }
 
 /// Seasonal states for the world based on streak
@@ -211,6 +215,13 @@ class UserWorldState {
         },
         'shrine': {
           'zoneId': 'shrine',
+          'level': 1,
+          'health': 1.0,
+          'milestone': 0,
+          'activeElements': <String>[],
+        },
+        'temple': {
+          'zoneId': 'temple',
           'level': 1,
           'health': 1.0,
           'milestone': 0,

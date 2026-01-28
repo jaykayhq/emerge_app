@@ -27,7 +27,9 @@ class Reflection {
   final String date;
   final String title;
   final String content;
-  final String type; // e.g., "insight", "pattern", "suggestion"
+  final String type; // e.g., "insight", "pattern", "suggestion", "daily"
+  final double? moodValue; // 0.0-1.0 for daily reflections
+  final DateTime createdAt;
 
   const Reflection({
     required this.id,
@@ -35,5 +37,33 @@ class Reflection {
     required this.title,
     required this.content,
     required this.type,
+    this.moodValue,
+    required this.createdAt,
   });
+
+  Map<String, dynamic> toMap() {
+    return {
+      'id': id,
+      'date': date,
+      'title': title,
+      'content': content,
+      'type': type,
+      'moodValue': moodValue,
+      'createdAt': createdAt.toIso8601String(),
+    };
+  }
+
+  factory Reflection.fromMap(Map<String, dynamic> map, String docId) {
+    return Reflection(
+      id: docId,
+      date: map['date'] as String? ?? '',
+      title: map['title'] as String? ?? '',
+      content: map['content'] as String? ?? '',
+      type: map['type'] as String? ?? 'insight',
+      moodValue: (map['moodValue'] as num?)?.toDouble(),
+      createdAt: map['createdAt'] != null
+          ? DateTime.parse(map['createdAt'] as String)
+          : DateTime.now(),
+    );
+  }
 }

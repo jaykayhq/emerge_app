@@ -4,6 +4,35 @@ import 'package:emerge_app/core/utils/app_logger.dart';
 import 'package:emerge_app/features/gamification/domain/entities/user_stats.dart';
 import 'package:emerge_app/features/gamification/domain/repositories/gamification_repository.dart';
 import 'package:fpdart/fpdart.dart';
+import 'package:flutter/foundation.dart';
+
+// ENHANCED: Top-level function for isolate parsing (must be top-level)
+UserStats _parseUserStats(Map<String, dynamic> params) {
+  final userId = params['userId'] as String;
+  final data = params['data'] as Map<String, dynamic>?;
+
+  if (data == null) {
+    return UserStats(userId: userId);
+  }
+
+  // All parsing happens in isolate, not blocking main thread
+  return UserStats(
+    userId: userId,
+    currentXp: data['currentXp'] as int? ?? 0,
+    currentLevel: data['currentLevel'] as int? ?? 1,
+    currentStreak: data['currentStreak'] as int? ?? 0,
+    unlockedBadges:
+        (data['unlockedBadges'] as List<dynamic>?)
+            ?.map((e) => e as String)
+            .toList() ??
+        [],
+    identityVotes:
+        (data['identityVotes'] as Map<String, dynamic>?)?.map(
+          (key, value) => MapEntry(key, value as int),
+        ) ??
+        const {},
+  );
+}
 
 class FirestoreGamificationRepository implements GamificationRepository {
   final FirebaseFirestore _firestore;
@@ -12,29 +41,19 @@ class FirestoreGamificationRepository implements GamificationRepository {
 
   @override
   Stream<UserStats> watchUserStats(String userId) {
-    return _firestore.collection('user_stats').doc(userId).snapshots().map((
+    return _firestore.collection('user_stats').doc(userId).snapshots().asyncMap((
       snapshot,
-    ) {
+    ) async {
+      // ENHANCED: Move heavy parsing to isolate to prevent UI jank
       if (!snapshot.exists || snapshot.data() == null) {
         return UserStats(userId: userId);
       }
-      final data = snapshot.data()!;
-      return UserStats(
-        userId: userId,
-        currentXp: data['currentXp'] as int? ?? 0,
-        currentLevel: data['currentLevel'] as int? ?? 1,
-        currentStreak: data['currentStreak'] as int? ?? 0,
-        unlockedBadges:
-            (data['unlockedBadges'] as List<dynamic>?)
-                ?.map((e) => e as String)
-                .toList() ??
-            [],
-        identityVotes:
-            (data['identityVotes'] as Map<String, dynamic>?)?.map(
-              (key, value) => MapEntry(key, value as int),
-            ) ??
-            const {},
-      );
+
+      // Parse in isolate using compute()
+      return compute(_parseUserStats, {
+        'userId': userId,
+        'data': snapshot.data(),
+      });
     }).distinct();
   }
 

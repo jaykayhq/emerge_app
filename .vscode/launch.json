@@ -13,7 +13,10 @@
             "name": "Emerge App (Android Device)",
             "request": "launch",
             "type": "dart",
-            "deviceId": "24048RN6CG"
+            "deviceId": "24048RN6CG",
+            "args": [
+                "--dart-define=REVENUECAT_GOOGLE_API_KEY=goog_YOUR_API_KEY_HERE"
+            ]
         },
         {
             "name": "Launch Chrome against localhost",

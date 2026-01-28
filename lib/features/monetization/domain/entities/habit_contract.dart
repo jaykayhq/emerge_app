@@ -43,10 +43,9 @@ class HabitContract extends Equatable {
       penaltyAmount: (map['penaltyAmount'] ?? 0.0).toDouble(),
       isActive: map['isActive'] ?? false,
       signatureUrl: map['signatureUrl'] as String?,
-      signedAt:
-          map['signedAt'] != null
-              ? DateTime.tryParse(map['signedAt'] as String)
-              : null,
+      signedAt: map['signedAt'] != null
+          ? DateTime.tryParse(map['signedAt'] as String)
+          : null,
     );
   }
 

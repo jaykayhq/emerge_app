@@ -56,19 +56,22 @@ class FirestoreInsightsRepository implements InsightsRepository {
         .collection('user_stats')
         .doc(userId)
         .collection('reflections')
-        .orderBy('date', descending: true) // Assuming date is sortable
-        .limit(10)
+        .orderBy('createdAt', descending: true)
+        .limit(30)
         .get();
 
     return snapshot.docs.map((doc) {
-      final data = doc.data();
-      return Reflection(
-        id: doc.id,
-        date: data['date'] as String? ?? '',
-        title: data['title'] as String? ?? '',
-        content: data['content'] as String? ?? '',
-        type: data['type'] as String? ?? 'insight',
-      );
+      return Reflection.fromMap(doc.data(), doc.id);
     }).toList();
+  }
+
+  @override
+  Future<void> saveReflection(String userId, Reflection reflection) async {
+    await _firestore
+        .collection('user_stats')
+        .doc(userId)
+        .collection('reflections')
+        .doc(reflection.id)
+        .set(reflection.toMap());
   }
 }

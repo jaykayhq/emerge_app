@@ -1,0 +1,513 @@
+import 'package:emerge_app/core/presentation/widgets/emerge_branding.dart';
+import 'package:emerge_app/features/auth/domain/entities/user_extension.dart';
+import 'package:emerge_app/features/habits/domain/entities/habit.dart';
+import 'package:emerge_app/features/world_map/domain/models/archetype_map_config.dart';
+import 'package:emerge_app/features/world_map/domain/models/world_node.dart';
+import 'package:flutter/material.dart';
+
+/// Catalog of all archetype-specific world maps
+class ArchetypeMapsCatalog {
+  /// Get the map configuration for a specific archetype
+  static ArchetypeMapConfig getMapForArchetype(UserArchetype archetype) {
+    switch (archetype) {
+      case UserArchetype.athlete:
+        return _athleteMap;
+      case UserArchetype.scholar:
+        return _scholarMap;
+      case UserArchetype.creator:
+        return _creatorMap;
+      case UserArchetype.stoic:
+        return _stoicMap;
+      case UserArchetype.mystic:
+        return _mysticMap;
+      case UserArchetype.none:
+        return _explorerMap;
+    }
+  }
+
+  // ============ ATHLETE MAP: Summit Peak ============
+  static final _athleteMap = ArchetypeMapConfig(
+    archetype: UserArchetype.athlete,
+    mapName: 'Summit Peak',
+    mapDescription: 'Climb the mountain of physical mastery',
+    primaryColor: EmergeColors.coral,
+    accentColor: const Color(0xFFFF8E72),
+    backgroundGradient: [const Color(0xFF1A1A2E), const Color(0xFF16213E)],
+    journeyIcon: Icons.hiking,
+    nodes: [
+      // Valley (Levels 1-10)
+      WorldNode(
+        id: 'ath_1',
+        name: 'Base Camp',
+        description: 'Your journey begins here',
+        targetedAttributes: [HabitAttribute.vitality],
+        xpBoosts: {HabitAttribute.vitality: 10},
+        requiredLevel: 1,
+        type: NodeType.waypoint,
+        position: const Offset(0.5, 0.05),
+        connectedNodeIds: ['ath_2'],
+        state: NodeState.available,
+      ),
+      WorldNode(
+        id: 'ath_2',
+        name: 'First Trail',
+        description: 'Build your foundation',
+        targetedAttributes: [HabitAttribute.vitality, HabitAttribute.strength],
+        xpBoosts: {HabitAttribute.vitality: 12, HabitAttribute.strength: 8},
+        requiredLevel: 2,
+        type: NodeType.waypoint,
+        position: const Offset(0.35, 0.12),
+        connectedNodeIds: ['ath_3', 'ath_4'],
+      ),
+      WorldNode(
+        id: 'ath_3',
+        name: 'Strength Stone',
+        description: 'A place of power',
+        targetedAttributes: [HabitAttribute.strength],
+        xpBoosts: {HabitAttribute.strength: 15},
+        requiredLevel: 3,
+        type: NodeType.resource,
+        position: const Offset(0.2, 0.18),
+        connectedNodeIds: ['ath_5'],
+      ),
+      WorldNode(
+        id: 'ath_4',
+        name: 'Endurance Path',
+        description: 'Test your stamina',
+        targetedAttributes: [HabitAttribute.vitality],
+        xpBoosts: {HabitAttribute.vitality: 15},
+        requiredLevel: 3,
+        type: NodeType.waypoint,
+        position: const Offset(0.65, 0.15),
+        connectedNodeIds: ['ath_5'],
+      ),
+      WorldNode(
+        id: 'ath_5',
+        name: 'Valley Gate',
+        description: 'First milestone - prove your commitment',
+        targetedAttributes: [HabitAttribute.vitality, HabitAttribute.strength],
+        xpBoosts: {HabitAttribute.vitality: 25, HabitAttribute.strength: 25},
+        requiredLevel: 5,
+        type: NodeType.milestone,
+        position: const Offset(0.5, 0.22),
+        connectedNodeIds: ['ath_6'],
+      ),
+      // Forest (Levels 11-20)
+      WorldNode(
+        id: 'ath_6',
+        name: 'Forest Clearing',
+        description: 'A moment of clarity',
+        targetedAttributes: [HabitAttribute.focus],
+        xpBoosts: {HabitAttribute.focus: 15},
+        requiredLevel: 11,
+        type: NodeType.waypoint,
+        position: const Offset(0.5, 0.30),
+        connectedNodeIds: ['ath_7', 'ath_8'],
+      ),
+      WorldNode(
+        id: 'ath_7',
+        name: 'Runner\'s Grove',
+        description: 'Where speed is born',
+        targetedAttributes: [HabitAttribute.vitality],
+        xpBoosts: {HabitAttribute.vitality: 20},
+        requiredLevel: 13,
+        type: NodeType.waypoint,
+        position: const Offset(0.3, 0.38),
+        connectedNodeIds: ['ath_9'],
+      ),
+      WorldNode(
+        id: 'ath_8',
+        name: 'Warrior\'s Den',
+        description: 'Embrace your inner fighter',
+        targetedAttributes: [HabitAttribute.strength],
+        xpBoosts: {HabitAttribute.strength: 20},
+        requiredLevel: 13,
+        type: NodeType.challenge,
+        position: const Offset(0.7, 0.36),
+        connectedNodeIds: ['ath_9'],
+      ),
+      WorldNode(
+        id: 'ath_9',
+        name: 'Forest Summit',
+        description: 'You\'ve mastered the wilderness',
+        targetedAttributes: [
+          HabitAttribute.vitality,
+          HabitAttribute.strength,
+          HabitAttribute.focus,
+        ],
+        xpBoosts: {
+          HabitAttribute.vitality: 30,
+          HabitAttribute.strength: 30,
+          HabitAttribute.focus: 20,
+        },
+        requiredLevel: 20,
+        type: NodeType.milestone,
+        position: const Offset(0.5, 0.45),
+        connectedNodeIds: ['ath_10'],
+      ),
+      // More nodes would continue for Cliffs, Clouds, Summit...
+    ],
+  );
+
+  // ============ SCHOLAR MAP: Knowledge Nexus ============
+  static final _scholarMap = ArchetypeMapConfig(
+    archetype: UserArchetype.scholar,
+    mapName: 'Knowledge Nexus',
+    mapDescription: 'Ascend the tower of wisdom',
+    primaryColor: EmergeColors.violet,
+    accentColor: const Color(0xFFB794F6),
+    backgroundGradient: [const Color(0xFF1A1B2E), const Color(0xFF2D2B55)],
+    journeyIcon: Icons.auto_stories,
+    nodes: [
+      WorldNode(
+        id: 'sch_1',
+        name: 'Library Entrance',
+        description: 'The journey of knowledge begins',
+        targetedAttributes: [HabitAttribute.intellect],
+        xpBoosts: {HabitAttribute.intellect: 10},
+        requiredLevel: 1,
+        type: NodeType.waypoint,
+        position: const Offset(0.5, 0.05),
+        connectedNodeIds: ['sch_2'],
+        state: NodeState.available,
+      ),
+      WorldNode(
+        id: 'sch_2',
+        name: 'Reading Alcove',
+        description: 'Absorb ancient wisdom',
+        targetedAttributes: [HabitAttribute.intellect, HabitAttribute.focus],
+        xpBoosts: {HabitAttribute.intellect: 12, HabitAttribute.focus: 10},
+        requiredLevel: 2,
+        type: NodeType.waypoint,
+        position: const Offset(0.4, 0.12),
+        connectedNodeIds: ['sch_3', 'sch_4'],
+      ),
+      WorldNode(
+        id: 'sch_3',
+        name: 'Meditation Chamber',
+        description: 'Focus your mind',
+        targetedAttributes: [HabitAttribute.focus],
+        xpBoosts: {HabitAttribute.focus: 18},
+        requiredLevel: 3,
+        type: NodeType.resource,
+        position: const Offset(0.25, 0.18),
+        connectedNodeIds: ['sch_5'],
+      ),
+      WorldNode(
+        id: 'sch_4',
+        name: 'Research Lab',
+        description: 'Experiment and discover',
+        targetedAttributes: [
+          HabitAttribute.intellect,
+          HabitAttribute.creativity,
+        ],
+        xpBoosts: {HabitAttribute.intellect: 15, HabitAttribute.creativity: 10},
+        requiredLevel: 4,
+        type: NodeType.waypoint,
+        position: const Offset(0.65, 0.16),
+        connectedNodeIds: ['sch_5'],
+      ),
+      WorldNode(
+        id: 'sch_5',
+        name: 'First Revelation',
+        description: 'Your first breakthrough',
+        targetedAttributes: [HabitAttribute.intellect, HabitAttribute.focus],
+        xpBoosts: {HabitAttribute.intellect: 30, HabitAttribute.focus: 25},
+        requiredLevel: 5,
+        type: NodeType.milestone,
+        position: const Offset(0.5, 0.24),
+        connectedNodeIds: ['sch_6'],
+      ),
+    ],
+  );
+
+  // ============ CREATOR MAP: Forge Garden ============
+  static final _creatorMap = ArchetypeMapConfig(
+    archetype: UserArchetype.creator,
+    mapName: 'Forge Garden',
+    mapDescription: 'Cultivate your creative spirit',
+    primaryColor: EmergeColors.yellow,
+    accentColor: const Color(0xFFFFD93D),
+    backgroundGradient: [const Color(0xFF2C1810), const Color(0xFF3D2317)],
+    journeyIcon: Icons.brush,
+    nodes: [
+      WorldNode(
+        id: 'cre_1',
+        name: 'Inspiration Spring',
+        description: 'Where ideas are born',
+        targetedAttributes: [HabitAttribute.creativity],
+        xpBoosts: {HabitAttribute.creativity: 15},
+        requiredLevel: 1,
+        type: NodeType.waypoint,
+        position: const Offset(0.5, 0.05),
+        connectedNodeIds: ['cre_2'],
+        state: NodeState.available,
+      ),
+      WorldNode(
+        id: 'cre_2',
+        name: 'Sketch Meadow',
+        description: 'Practice your craft',
+        targetedAttributes: [HabitAttribute.creativity, HabitAttribute.focus],
+        xpBoosts: {HabitAttribute.creativity: 12, HabitAttribute.focus: 8},
+        requiredLevel: 2,
+        type: NodeType.waypoint,
+        position: const Offset(0.4, 0.12),
+        connectedNodeIds: ['cre_3', 'cre_4'],
+      ),
+      WorldNode(
+        id: 'cre_3',
+        name: 'Color Forge',
+        description: 'Master your palette',
+        targetedAttributes: [HabitAttribute.creativity],
+        xpBoosts: {HabitAttribute.creativity: 20},
+        requiredLevel: 3,
+        type: NodeType.resource,
+        position: const Offset(0.25, 0.18),
+        connectedNodeIds: ['cre_5'],
+      ),
+      WorldNode(
+        id: 'cre_4',
+        name: 'Output Workshop',
+        description: 'Ship your work',
+        targetedAttributes: [
+          HabitAttribute.strength,
+          HabitAttribute.creativity,
+        ],
+        xpBoosts: {HabitAttribute.strength: 15, HabitAttribute.creativity: 10},
+        requiredLevel: 4,
+        type: NodeType.challenge,
+        position: const Offset(0.7, 0.15),
+        connectedNodeIds: ['cre_5'],
+      ),
+      WorldNode(
+        id: 'cre_5',
+        name: 'First Masterpiece',
+        description: 'Your creation shines',
+        targetedAttributes: [
+          HabitAttribute.creativity,
+          HabitAttribute.strength,
+        ],
+        xpBoosts: {HabitAttribute.creativity: 35, HabitAttribute.strength: 20},
+        requiredLevel: 5,
+        type: NodeType.milestone,
+        position: const Offset(0.5, 0.24),
+        connectedNodeIds: ['cre_6'],
+      ),
+    ],
+  );
+
+  // ============ STOIC MAP: Ancient Path ============
+  static final _stoicMap = ArchetypeMapConfig(
+    archetype: UserArchetype.stoic,
+    mapName: 'Ancient Path',
+    mapDescription: 'Walk the way of wisdom and discipline',
+    primaryColor: EmergeColors.teal,
+    accentColor: const Color(0xFF4DD4AC),
+    backgroundGradient: [const Color(0xFF0D1B1E), const Color(0xFF1A3B3E)],
+    journeyIcon: Icons.self_improvement,
+    nodes: [
+      WorldNode(
+        id: 'sto_1',
+        name: 'Stone Gate',
+        description: 'Enter the path of discipline',
+        targetedAttributes: [HabitAttribute.strength],
+        xpBoosts: {HabitAttribute.strength: 12},
+        requiredLevel: 1,
+        type: NodeType.waypoint,
+        position: const Offset(0.5, 0.05),
+        connectedNodeIds: ['sto_2'],
+        state: NodeState.available,
+      ),
+      WorldNode(
+        id: 'sto_2',
+        name: 'Meditation Garden',
+        description: 'Find inner peace',
+        targetedAttributes: [HabitAttribute.focus, HabitAttribute.strength],
+        xpBoosts: {HabitAttribute.focus: 15, HabitAttribute.strength: 10},
+        requiredLevel: 2,
+        type: NodeType.waypoint,
+        position: const Offset(0.45, 0.12),
+        connectedNodeIds: ['sto_3', 'sto_4'],
+      ),
+      WorldNode(
+        id: 'sto_3',
+        name: 'Reflection Pool',
+        description: 'See yourself clearly',
+        targetedAttributes: [HabitAttribute.focus],
+        xpBoosts: {HabitAttribute.focus: 18},
+        requiredLevel: 3,
+        type: NodeType.resource,
+        position: const Offset(0.25, 0.20),
+        connectedNodeIds: ['sto_5'],
+      ),
+      WorldNode(
+        id: 'sto_4',
+        name: 'Endurance Trial',
+        description: 'Test your resolve',
+        targetedAttributes: [HabitAttribute.strength, HabitAttribute.vitality],
+        xpBoosts: {HabitAttribute.strength: 15, HabitAttribute.vitality: 10},
+        requiredLevel: 4,
+        type: NodeType.challenge,
+        position: const Offset(0.7, 0.18),
+        connectedNodeIds: ['sto_5'],
+      ),
+      WorldNode(
+        id: 'sto_5',
+        name: 'First Awakening',
+        description: 'You have begun to see',
+        targetedAttributes: [HabitAttribute.strength, HabitAttribute.focus],
+        xpBoosts: {HabitAttribute.strength: 30, HabitAttribute.focus: 25},
+        requiredLevel: 5,
+        type: NodeType.milestone,
+        position: const Offset(0.5, 0.26),
+        connectedNodeIds: ['sto_6'],
+      ),
+    ],
+  );
+
+  // ============ MYSTIC MAP: Ethereal Realm ============
+  static final _mysticMap = ArchetypeMapConfig(
+    archetype: UserArchetype.mystic,
+    mapName: 'Ethereal Realm',
+    mapDescription: 'Transcend the ordinary',
+    primaryColor: const Color(0xFF8E44AD),
+    accentColor: const Color(0xFFBB6BD9),
+    backgroundGradient: [const Color(0xFF1A0A2E), const Color(0xFF2D1B4E)],
+    journeyIcon: Icons.auto_awesome,
+    nodes: [
+      WorldNode(
+        id: 'mys_1',
+        name: 'Spirit Portal',
+        description: 'Enter the ethereal realm',
+        targetedAttributes: [HabitAttribute.focus, HabitAttribute.creativity],
+        xpBoosts: {HabitAttribute.focus: 10, HabitAttribute.creativity: 10},
+        requiredLevel: 1,
+        type: NodeType.waypoint,
+        position: const Offset(0.5, 0.05),
+        connectedNodeIds: ['mys_2'],
+        state: NodeState.available,
+      ),
+      WorldNode(
+        id: 'mys_2',
+        name: 'Dream Garden',
+        description: 'Where visions bloom',
+        targetedAttributes: [HabitAttribute.creativity],
+        xpBoosts: {HabitAttribute.creativity: 15},
+        requiredLevel: 2,
+        type: NodeType.waypoint,
+        position: const Offset(0.4, 0.12),
+        connectedNodeIds: ['mys_3', 'mys_4'],
+      ),
+      WorldNode(
+        id: 'mys_3',
+        name: 'Cosmic Well',
+        description: 'Draw from infinite energy',
+        targetedAttributes: [HabitAttribute.vitality, HabitAttribute.focus],
+        xpBoosts: {HabitAttribute.vitality: 12, HabitAttribute.focus: 15},
+        requiredLevel: 3,
+        type: NodeType.resource,
+        position: const Offset(0.25, 0.19),
+        connectedNodeIds: ['mys_5'],
+      ),
+      WorldNode(
+        id: 'mys_4',
+        name: 'Astral Bridge',
+        description: 'Connect to higher wisdom',
+        targetedAttributes: [HabitAttribute.intellect, HabitAttribute.focus],
+        xpBoosts: {HabitAttribute.intellect: 12, HabitAttribute.focus: 12},
+        requiredLevel: 4,
+        type: NodeType.waypoint,
+        position: const Offset(0.68, 0.16),
+        connectedNodeIds: ['mys_5'],
+      ),
+      WorldNode(
+        id: 'mys_5',
+        name: 'First Transcendence',
+        description: 'You glimpse beyond',
+        targetedAttributes: [
+          HabitAttribute.focus,
+          HabitAttribute.creativity,
+          HabitAttribute.intellect,
+        ],
+        xpBoosts: {
+          HabitAttribute.focus: 25,
+          HabitAttribute.creativity: 25,
+          HabitAttribute.intellect: 20,
+        },
+        requiredLevel: 5,
+        type: NodeType.milestone,
+        position: const Offset(0.5, 0.25),
+        connectedNodeIds: ['mys_6'],
+      ),
+    ],
+  );
+
+  // ============ EXPLORER MAP (Default/None) ============
+  static final _explorerMap = ArchetypeMapConfig(
+    archetype: UserArchetype.none,
+    mapName: 'Explorer\'s Journey',
+    mapDescription: 'Discover your path',
+    primaryColor: EmergeColors.teal,
+    accentColor: const Color(0xFF64FFDA),
+    backgroundGradient: [const Color(0xFF1A1A2E), const Color(0xFF16213E)],
+    journeyIcon: Icons.explore,
+    nodes: [
+      WorldNode(
+        id: 'exp_1',
+        name: 'Starting Point',
+        description: 'Every journey begins with a single step',
+        targetedAttributes: [HabitAttribute.vitality],
+        xpBoosts: {HabitAttribute.vitality: 10},
+        requiredLevel: 1,
+        type: NodeType.waypoint,
+        position: const Offset(0.5, 0.05),
+        connectedNodeIds: ['exp_2'],
+        state: NodeState.available,
+      ),
+      WorldNode(
+        id: 'exp_2',
+        name: 'First Crossroads',
+        description: 'Choose your direction',
+        targetedAttributes: [HabitAttribute.focus, HabitAttribute.strength],
+        xpBoosts: {HabitAttribute.focus: 10, HabitAttribute.strength: 10},
+        requiredLevel: 2,
+        type: NodeType.waypoint,
+        position: const Offset(0.45, 0.12),
+        connectedNodeIds: ['exp_3', 'exp_4'],
+      ),
+      WorldNode(
+        id: 'exp_3',
+        name: 'Discovery Point',
+        description: 'Learn something new',
+        targetedAttributes: [HabitAttribute.intellect],
+        xpBoosts: {HabitAttribute.intellect: 15},
+        requiredLevel: 3,
+        type: NodeType.resource,
+        position: const Offset(0.3, 0.18),
+        connectedNodeIds: ['exp_5'],
+      ),
+      WorldNode(
+        id: 'exp_4',
+        name: 'Creative Oasis',
+        description: 'Express yourself',
+        targetedAttributes: [HabitAttribute.creativity],
+        xpBoosts: {HabitAttribute.creativity: 15},
+        requiredLevel: 3,
+        type: NodeType.waypoint,
+        position: const Offset(0.65, 0.16),
+        connectedNodeIds: ['exp_5'],
+      ),
+      WorldNode(
+        id: 'exp_5',
+        name: 'First Milestone',
+        description: 'You\'re on your way',
+        targetedAttributes: [HabitAttribute.vitality, HabitAttribute.strength],
+        xpBoosts: {HabitAttribute.vitality: 25, HabitAttribute.strength: 25},
+        requiredLevel: 5,
+        type: NodeType.milestone,
+        position: const Offset(0.5, 0.24),
+        connectedNodeIds: ['exp_6'],
+      ),
+    ],
+  );
+}

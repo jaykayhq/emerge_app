@@ -11,12 +11,17 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:flutter/foundation.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 void main() async {
   await initApp();
 
-  // Initialize Environment Variables
-  await dotenv.load(fileName: ".env");
+  // Initialize Environment Variables (optional - continues if .env doesn't exist)
+  try {
+    await dotenv.load(fileName: ".env");
+  } catch (e) {
+    debugPrint('.env file not found - using default configuration');
+  }
 
   // Initialize Remote Config
   final container = ProviderContainer();
@@ -49,6 +54,17 @@ void main() async {
       FirebaseCrashlytics.instance.recordError(error, stack, fatal: true);
       return true;
     };
+  }
+
+  // Ensure user is signed in anonymously if not already signed in
+  // This is required for Firestore permission checks during onboarding
+  try {
+    if (FirebaseAuth.instance.currentUser == null) {
+      await FirebaseAuth.instance.signInAnonymously();
+      debugPrint('Signed in anonymously');
+    }
+  } catch (e) {
+    debugPrint('Failed to sign in anonymously: $e');
   }
 
   runApp(

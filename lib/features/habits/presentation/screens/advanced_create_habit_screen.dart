@@ -1,6 +1,9 @@
 import 'package:emerge_app/core/utils/app_logger.dart';
+import 'package:emerge_app/features/auth/domain/entities/user_extension.dart';
+import 'package:emerge_app/features/gamification/presentation/providers/user_stats_providers.dart';
 import 'package:emerge_app/features/habits/domain/entities/habit.dart';
 import 'package:emerge_app/features/habits/presentation/providers/habit_providers.dart';
+import 'package:emerge_app/features/habits/presentation/widgets/habit_template_picker.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -84,9 +87,9 @@ class _AdvancedCreateHabitScreenState
       final user = FirebaseAuth.instance.currentUser;
       if (user == null) {
         if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('User not logged in')),
-          );
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(const SnackBar(content: Text('User not logged in')));
         }
         return;
       }
@@ -112,7 +115,9 @@ class _AdvancedCreateHabitScreenState
         // Use the createHabit provider which connects to gamification system
         await ref.read(createHabitProvider(newHabit).future);
 
-        AppLogger.i('Successfully created habit from Advanced Create: ${newHabit.id}');
+        AppLogger.i(
+          'Successfully created habit from Advanced Create: ${newHabit.id}',
+        );
 
         // Store context reference to avoid async gap issues
         if (context.mounted) {
@@ -130,11 +135,50 @@ class _AdvancedCreateHabitScreenState
         AppLogger.e('Error creating habit from Advanced Create', e, s);
         if (context.mounted) {
           final contextRef = context;
-          ScaffoldMessenger.of(contextRef).showSnackBar(
-            SnackBar(content: Text('Error creating habit: $e')),
-          );
+          ScaffoldMessenger.of(
+            contextRef,
+          ).showSnackBar(SnackBar(content: Text('Error creating habit: $e')));
         }
       }
+    }
+  }
+
+  void _applyTemplate(HabitTemplate template) {
+    setState(() {
+      _titleController.text = template.title;
+      // Map time of day
+      switch (template.timeOfDay.toLowerCase()) {
+        case 'morning':
+          _timeOfDay = TimeOfDayPreference.morning;
+          break;
+        case 'afternoon':
+          _timeOfDay = TimeOfDayPreference.afternoon;
+          break;
+        case 'evening':
+          _timeOfDay = TimeOfDayPreference.evening;
+          break;
+        case 'night':
+          _timeOfDay = TimeOfDayPreference.evening;
+          break;
+        default:
+          _timeOfDay = TimeOfDayPreference.anytime;
+      }
+      // Map frequency
+      if (template.frequency.toLowerCase() == 'weekly') {
+        _frequency = HabitFrequency.weekly;
+      } else {
+        _frequency = HabitFrequency.daily;
+      }
+      _updateIdentityStatement();
+    });
+    // Show confirmation
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Applied "${template.title}" template'),
+          duration: const Duration(seconds: 2),
+        ),
+      );
     }
   }
 
@@ -175,14 +219,18 @@ class _AdvancedCreateHabitScreenState
             ),
             const SizedBox(height: 24),
 
-            // Blueprints Button
-            OutlinedButton.icon(
-              onPressed: () => context.push('/blueprints'),
-              icon: const Icon(Icons.auto_stories),
-              label: const Text('Browse Habit Blueprints'),
-              style: OutlinedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(vertical: 12),
-              ),
+            // Habit Templates Carousel
+            Builder(
+              builder: (context) {
+                final userProfile = ref
+                    .watch(userStatsStreamProvider)
+                    .valueOrNull;
+                final archetype = userProfile?.archetype ?? UserArchetype.none;
+                return HabitTemplateCarousel(
+                  archetype: archetype,
+                  onTemplateSelected: _applyTemplate,
+                );
+              },
             ),
             const SizedBox(height: 24),
 

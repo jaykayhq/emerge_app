@@ -27,7 +27,7 @@ void main() {
 
   setUp(() {
     mockHttpClient = MockHttpClient();
-    service = GroqAiService(client: mockHttpClient);
+    service = GroqAiService();
     registerFallbackValue(Uri());
   });
 

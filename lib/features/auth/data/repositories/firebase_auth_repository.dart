@@ -190,4 +190,30 @@ class FirebaseAuthRepository implements AuthRepository {
       return Left(ServerFailure(e.toString()));
     }
   }
+
+  @override
+  Future<Either<Failure, AuthUser>> signInAnonymously() async {
+    try {
+      final userCredential = await _firebaseAuth.signInAnonymously();
+      final user = userCredential.user;
+      if (user == null) {
+        return const Left(
+          AuthFailure('User not found after anonymous sign in'),
+        );
+      }
+      return Right(
+        AuthUser(
+          id: user.uid,
+          email: user.email ?? '',
+          displayName: user.displayName,
+        ),
+      );
+    } on FirebaseAuthException catch (e) {
+      AppLogger.e('Anonymous sign in failed', e);
+      return Left(AuthFailure(e.message ?? 'Anonymous sign in failed'));
+    } catch (e, s) {
+      AppLogger.e('Anonymous sign in failed', e, s);
+      return Left(ServerFailure(e.toString()));
+    }
+  }
 }

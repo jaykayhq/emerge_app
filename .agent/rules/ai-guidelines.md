@@ -1,5 +1,5 @@
 ---
-trigger: always_on
+trigger: manual
 ---
 
 AI Developer Guidelines: Flutter & Firebase (2025 Production Standard)

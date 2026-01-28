@@ -15,9 +15,9 @@ class GamificationWorldSection extends ConsumerWidget {
         padding: const EdgeInsets.all(16.0),
         child: WorldView(
           worldState: profile.worldState,
-          isCity: profile.archetype == UserArchetype.creator ||
-              profile.archetype ==
-                  UserArchetype.scholar, // Example logic
+          isCity:
+              profile.archetype == UserArchetype.creator ||
+              profile.archetype == UserArchetype.scholar, // Example logic
         ),
       ),
       loading: () => const SizedBox(

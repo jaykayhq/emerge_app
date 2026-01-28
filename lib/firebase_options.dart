@@ -63,8 +63,10 @@ class DefaultFirebaseOptions {
     messagingSenderId: '359335119695',
     projectId: 'tradeflash-l2966',
     storageBucket: 'tradeflash-l2966.firebasestorage.app',
-    androidClientId: '359335119695-llosj38fvsae11cnts31bdhsoef3iiud.apps.googleusercontent.com',
-    iosClientId: '359335119695-653anqm8bnhco0oqlqrmdrc09aeei2s9.apps.googleusercontent.com',
+    androidClientId:
+        '359335119695-llosj38fvsae11cnts31bdhsoef3iiud.apps.googleusercontent.com',
+    iosClientId:
+        '359335119695-653anqm8bnhco0oqlqrmdrc09aeei2s9.apps.googleusercontent.com',
     iosBundleId: 'com.emerge.emergeApp',
   );
 }

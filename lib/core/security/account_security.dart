@@ -1,6 +1,6 @@
 import 'dart:async';
 import 'dart:math';
-import 'package:flutter/foundation.dart';
+import '../utils/app_logger.dart';
 
 class AccountSecurity {
   static final AccountSecurity _instance = AccountSecurity._internal();
@@ -19,7 +19,10 @@ class AccountSecurity {
 
   void initialize() {
     _cleanupTimer?.cancel();
-    _cleanupTimer = Timer.periodic(cleanupInterval, (_) => _cleanupExpiredData());
+    _cleanupTimer = Timer.periodic(
+      cleanupInterval,
+      (_) => _cleanupExpiredData(),
+    );
   }
 
   void dispose() {
@@ -34,8 +37,9 @@ class AccountSecurity {
     final attempt = _loginAttempts[normalizedEmail] ?? LoginAttemptData();
 
     // Remove attempts outside the window
-    attempt.attempts.removeWhere((timestamp) =>
-        now.difference(timestamp) > attemptWindow);
+    attempt.attempts.removeWhere(
+      (timestamp) => now.difference(timestamp) > attemptWindow,
+    );
 
     // Add new attempt
     attempt.attempts.add(now);
@@ -95,8 +99,9 @@ class AccountSecurity {
 
     final now = DateTime.now();
     // Remove attempts outside the window
-    attempt.attempts.removeWhere((timestamp) =>
-        now.difference(timestamp) > attemptWindow);
+    attempt.attempts.removeWhere(
+      (timestamp) => now.difference(timestamp) > attemptWindow,
+    );
 
     return attempt.attempts.length;
   }
@@ -106,9 +111,11 @@ class AccountSecurity {
     final lockUntil = DateTime.now().add(lockoutDuration);
     _lockedAccounts[email] = AccountLockData(lockUntil: lockUntil);
 
-    if (kDebugMode) {
-      print('Account locked: $email until $lockUntil');
-    }
+    // ENHANCED: Use AppLogger with security event tracking (auto-redacts email)
+    AppLogger.security('Account locked', context: {
+      'until': lockUntil.toIso8601String(),
+      'duration': '${lockoutDuration.inMinutes} minutes'
+    });
   }
 
   // Clean up expired data
@@ -117,19 +124,23 @@ class AccountSecurity {
 
     // Clean up old login attempts
     _loginAttempts.removeWhere((email, attempt) {
-      attempt.attempts.removeWhere((timestamp) =>
-          now.difference(timestamp) > attemptWindow);
+      attempt.attempts.removeWhere(
+        (timestamp) => now.difference(timestamp) > attemptWindow,
+      );
       return attempt.attempts.isEmpty;
     });
 
     // Clean up expired locks
-    _lockedAccounts.removeWhere((email, lockData) =>
-        now.isAfter(lockData.lockUntil));
+    _lockedAccounts.removeWhere(
+      (email, lockData) => now.isAfter(lockData.lockUntil),
+    );
   }
 
-  // Generate secure session token
+  // SECURE: Generate cryptographically secure session token
+  // Uses Random.secure() which provides cryptographically strong random numbers
   String generateSessionToken() {
-    final bytes = List<int>.generate(32, (_) => Random().nextInt(256));
+    final secureRandom = Random.secure();
+    final bytes = List<int>.generate(32, (_) => secureRandom.nextInt(256));
     return bytes.map((b) => b.toRadixString(16).padLeft(2, '0')).join();
   }
 

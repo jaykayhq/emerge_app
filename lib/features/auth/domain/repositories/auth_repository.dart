@@ -23,4 +23,6 @@ abstract class AuthRepository {
   Future<void> signOut();
 
   Future<Either<Failure, void>> updateDisplayName(String displayName);
+
+  Future<Either<Failure, AuthUser>> signInAnonymously();
 }

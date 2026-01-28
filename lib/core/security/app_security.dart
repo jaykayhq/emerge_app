@@ -1,8 +1,12 @@
 import 'dart:io';
+import 'dart:math';
+import 'dart:convert';
 import 'package:flutter/foundation.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:crypto/crypto.dart';
+import '../utils/app_logger.dart';
 
 class AppSecurity {
-
   // Anti-tampering checks
   static bool isAppIntegrityValid() {
     if (kDebugMode) return true; // Skip checks in debug mode
@@ -145,15 +149,86 @@ class AppSecurity {
     }
   }
 
-  // Obfuscate sensitive data
+  // SECURE: Proper AES-256 encryption using FlutterSecureStorage
+  // FlutterSecureStorage internally uses:
+  // - iOS: Keychain Services with AES-256-GCM
+  // - Android: Encrypted SharedPreferences (AES-256-GCM)
+  // - Web: EncryptedLocalStorage (AES-256-CBC)
+  static const _secureStorage = FlutterSecureStorage(
+    aOptions: AndroidOptions(
+      encryptedSharedPreferences: true, // Use AES-256 encryption on Android
+    ),
+  );
+
+  /// SECURE: Encrypt sensitive data using platform-native secure storage
+  /// Uses AES-256-GCM on iOS/Android, not simple obfuscation
+  static Future<void> encryptAndStore(String key, String value) async {
+    try {
+      await _secureStorage.write(key: key, value: value);
+    } catch (e) {
+      AppLogger.e('Encryption error', e);
+      rethrow;
+    }
+  }
+
+  /// SECURE: Retrieve and decrypt sensitive data
+  static Future<String?> decryptAndRetrieve(String key) async {
+    try {
+      return await _secureStorage.read(key: key);
+    } catch (e) {
+      AppLogger.e('Decryption error', e);
+      return null;
+    }
+  }
+
+  /// SECURE: Delete encrypted data
+  static Future<void> deleteEncryptedData(String key) async {
+    try {
+      await _secureStorage.delete(key: key);
+    } catch (e) {
+      AppLogger.e('Delete encrypted data error', e);
+    }
+  }
+
+  /// SECURE: Cryptographically secure random string generation
+  /// Uses Random.secure() which provides cryptographically strong random numbers
+  static String generateSecureRandom(int length) {
+    final chars =
+        'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+    final secureRandom = Random.secure();
+    final random = <int>[];
+
+    for (int i = 0; i < length; i++) {
+      random.add(chars.codeUnitAt(secureRandom.nextInt(chars.length)));
+    }
+
+    return String.fromCharCodes(random);
+  }
+
+  /// SECURE: Generate a cryptographically strong token for sessions
+  /// Uses SHA-256 hash of secure random bytes + timestamp
+  static String generateSecureToken() {
+    final secureRandom = Random.secure();
+    final bytes = List<int>.generate(32, (_) => secureRandom.nextInt(256));
+    final timestamp = DateTime.now().millisecondsSinceEpoch;
+
+    final combined = utf8.encode('$timestamp:${base64Encode(bytes)}');
+    final hash = sha256.convert(combined);
+
+    return hash.toString(); // 64-character hex string (256 bits)
+  }
+
+  /// DEPRECATED: XOR obfuscation is NOT secure for production use
+  /// This method is kept only for backward compatibility during migration
+  @Deprecated('Use encryptAndStore() instead. XOR obfuscation is not secure.')
   static String obfuscateString(String input) {
+    debugPrint('WARNING: obfuscateString() is deprecated and insecure. Use encryptAndStore() instead.');
     if (input.isEmpty) return input;
 
     final bytes = input.codeUnits;
     final obfuscated = <int>[];
 
     for (int i = 0; i < bytes.length; i++) {
-      // Simple XOR obfuscation with position-based key
       final key = (i + 42) % 256;
       obfuscated.add(bytes[i] ^ key);
     }
@@ -161,8 +236,10 @@ class AppSecurity {
     return String.fromCharCodes(obfuscated);
   }
 
-  // De-obfuscate data
+  /// DEPRECATED: XOR de-obfuscation is NOT secure for production use
+  @Deprecated('Use decryptAndRetrieve() instead. XOR obfuscation is not secure.')
   static String deobfuscateString(String obfuscated) {
+    debugPrint('WARNING: deobfuscateString() is deprecated and insecure. Use decryptAndRetrieve() instead.');
     if (obfuscated.isEmpty) return obfuscated;
 
     final bytes = obfuscated.codeUnits;
@@ -174,18 +251,6 @@ class AppSecurity {
     }
 
     return String.fromCharCodes(deobfuscated);
-  }
-
-  // Secure random string generation
-  static String generateSecureRandom(int length) {
-    final chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-    final random = <int>[];
-
-    for (int i = 0; i < length; i++) {
-      random.add(chars.codeUnitAt(DateTime.now().millisecondsSinceEpoch % chars.length));
-    }
-
-    return String.fromCharCodes(random);
   }
 
   // Clear sensitive data from memory
@@ -256,7 +321,8 @@ class AppSecurity {
       fingerprint['platform'] = Platform.operatingSystem;
       fingerprint['version'] = Platform.operatingSystemVersion;
       fingerprint['localHostname'] = Platform.localHostname;
-      fingerprint['numberOfProcessors'] = Platform.numberOfProcessors.toString();
+      fingerprint['numberOfProcessors'] = Platform.numberOfProcessors
+          .toString();
       fingerprint['pathSeparator'] = Platform.pathSeparator;
 
       // Add some obfuscated identifiers

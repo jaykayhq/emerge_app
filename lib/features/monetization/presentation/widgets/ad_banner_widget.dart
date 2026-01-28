@@ -12,12 +12,16 @@ class AdBannerWidget extends ConsumerStatefulWidget {
   ConsumerState<AdBannerWidget> createState() => _AdBannerWidgetState();
 }
 
-class _AdBannerWidgetState extends ConsumerState<AdBannerWidget> {
+class _AdBannerWidgetState extends ConsumerState<AdBannerWidget>
+    with AutomaticKeepAliveClientMixin {
   BannerAd? _bannerAd;
   bool _isLoaded = false;
 
   // Using Google's Test Ad Unit ID for Android Banner
   final String _adUnitId = 'ca-app-pub-3940256099942544/6300978111';
+
+  @override
+  bool get wantKeepAlive => true;
 
   @override
   void initState() {
@@ -32,9 +36,11 @@ class _AdBannerWidgetState extends ConsumerState<AdBannerWidget> {
       size: AdSize.banner,
       listener: BannerAdListener(
         onAdLoaded: (ad) {
-          setState(() {
-            _isLoaded = true;
-          });
+          if (mounted) {
+            setState(() {
+              _isLoaded = true;
+            });
+          }
         },
         onAdFailedToLoad: (ad, err) {
           ad.dispose();
@@ -51,26 +57,33 @@ class _AdBannerWidgetState extends ConsumerState<AdBannerWidget> {
 
   @override
   Widget build(BuildContext context) {
+    super.build(context); // Required for AutomaticKeepAliveClientMixin
     final isPremiumAsync = ref.watch(isPremiumProvider);
 
     return isPremiumAsync.when(
       data: (isPremium) {
         if (isPremium) return const SizedBox.shrink();
         if (_bannerAd != null && _isLoaded) {
-          return Center(
-            child: Container(
-              constraints: const BoxConstraints(
-                maxWidth: 728,
-              ), // Leaderboard size
-              width: _bannerAd!.size.width.toDouble(),
+          return RepaintBoundary(
+            child: SizedBox(
               height: _bannerAd!.size.height.toDouble(),
-              child: AdWidget(ad: _bannerAd!),
+              child: Center(
+                child: SizedBox(
+                  width: _bannerAd!.size.width.toDouble(),
+                  height: _bannerAd!.size.height.toDouble(),
+                  child: AdWidget(
+                    key: ValueKey(_bannerAd!.hashCode),
+                    ad: _bannerAd!,
+                  ),
+                ),
+              ),
             ),
           );
         }
-        return const SizedBox.shrink();
+        // Return a placeholder with same height to prevent layout shifts
+        return const SizedBox(height: 50);
       },
-      loading: () => const SizedBox.shrink(),
+      loading: () => const SizedBox(height: 50),
       error: (_, __) => const SizedBox.shrink(),
     );
   }

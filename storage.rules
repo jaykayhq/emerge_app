@@ -1,61 +1,10 @@
 rules_version = '2';
 
+// Craft rules based on data in your Firestore database
+// allow write: if firestore.get(
+//    /databases/(default)/documents/users/$(request.auth.uid)).data.isAdmin;
 service firebase.storage {
   match /b/{bucket}/o {
-    // Helper function to check if user is authenticated
-    function isAuthenticated() {
-      return request.auth != null;
-    }
-
-    // Helper function to check if user owns the content
-    function isOwner(userId) {
-      return isAuthenticated() && request.auth.uid == userId;
-    }
-
-    // Helper function to validate file types
-    function isValidImageType() {
-      return resource.contentType.matches('image/.*');
-    }
-
-    // Helper function to validate file size (max 5MB)
-    function isValidFileSize() {
-      return resource.size < 5 * 1024 * 1024;
-    }
-
-    // User profile pictures and avatars
-    match /users/{userId}/avatar/{fileName} {
-      allow read: if isAuthenticated();
-      allow write: if isOwner(userId) && isValidImageType() && isValidFileSize();
-      allow delete: if isOwner(userId);
-    }
-
-    // User uploaded content (habits images, etc.)
-    match /users/{userId}/uploads/{allPaths=**} {
-      allow read: if isOwner(userId);
-      allow write: if isOwner(userId) && isValidImageType() && isValidFileSize();
-      allow delete: if isOwner(userId);
-    }
-
-    // Tribe/community images (public read, controlled write)
-    match /tribes/{tribeId}/{fileName} {
-      allow read: if isAuthenticated();
-      allow write: if isAuthenticated() &&
-        firestore.exists(/databases/(default)/documents/tribes/$(tribeId)/members/$(request.auth.uid));
-    }
-
-    // Challenge images (public read, controlled write)
-    match /challenges/{challengeId}/{fileName} {
-      allow read: if isAuthenticated();
-      allow write: if false; // Admin only for now
-    }
-
-    // Public assets (app logos, etc.)
-    match /public/{allPaths=**} {
-      allow read: if true;
-      allow write: if false; // Admin only
-    }
-
-    // Deny all other access
     match /{allPaths=**} {
       allow read, write: if false;
     }
