@@ -12,6 +12,7 @@ import 'package:emerge_app/features/gamification/presentation/screens/leveling_s
 import 'package:emerge_app/features/profile/presentation/screens/future_self_studio_screen.dart';
 import 'package:emerge_app/features/gamification/presentation/widgets/level_up_listener.dart';
 import 'package:emerge_app/features/habits/presentation/screens/advanced_create_habit_screen.dart';
+import 'package:emerge_app/features/habits/presentation/screens/habit_detail_screen.dart';
 import 'package:emerge_app/features/habits/presentation/screens/environment_priming_screen.dart';
 import 'package:emerge_app/features/gamification/presentation/screens/weekly_recap_screen.dart';
 import 'package:emerge_app/features/insights/presentation/screens/recap_screen.dart';
@@ -24,9 +25,8 @@ import 'package:emerge_app/features/onboarding/presentation/screens/welcome_scre
 import 'package:emerge_app/features/onboarding/presentation/screens/world_reveal_screen.dart';
 import 'package:emerge_app/features/settings/presentation/screens/settings_screen.dart';
 import 'package:emerge_app/features/settings/presentation/screens/notification_settings_screen.dart';
-import 'package:emerge_app/features/social/presentation/screens/accountability_screen.dart';
-import 'package:emerge_app/features/social/presentation/screens/community_challenges_screen.dart';
-import 'package:emerge_app/features/social/presentation/screens/community_screen.dart';
+import 'package:emerge_app/features/monetization/presentation/screens/paywall_screen.dart';
+import 'package:emerge_app/features/social/presentation/screens/coming_soon_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -210,12 +210,6 @@ GoRouter router(Ref ref) {
         path: '/signup',
         builder: (context, state) => const SignUpScreen(),
       ),
-      // Add root-level create-habit route for FAB access
-      GoRoute(
-        path: '/create-habit',
-        parentNavigatorKey: _rootNavigatorKey,
-        builder: (context, state) => const AdvancedCreateHabitScreen(),
-      ),
       // ShellRoute for Bottom Navigation
       StatefulShellRoute.indexedStack(
         builder: (context, state, navigationShell) {
@@ -246,26 +240,29 @@ GoRouter router(Ref ref) {
               GoRoute(
                 path: '/timeline',
                 builder: (context, state) => const TimelineScreen(),
+                routes: [
+                  GoRoute(
+                    path: 'create-habit',
+                    builder: (context, state) =>
+                        const AdvancedCreateHabitScreen(),
+                  ),
+                  GoRoute(
+                    path: 'detail/:habitId',
+                    builder: (context, state) {
+                      final habitId = state.pathParameters['habitId']!;
+                      return HabitDetailScreen(habitId: habitId);
+                    },
+                  ),
+                ],
               ),
             ],
           ),
-          // Branch 3: Community
+          // Branch 3: Community (Coming Soon)
           StatefulShellBranch(
             routes: [
               GoRoute(
                 path: '/community',
-                builder: (context, state) => const CommunityScreen(),
-                routes: [
-                  GoRoute(
-                    path: 'challenges',
-                    builder: (context, state) =>
-                        const CommunityChallengesScreen(),
-                  ),
-                  GoRoute(
-                    path: 'accountability',
-                    builder: (context, state) => const AccountabilityScreen(),
-                  ),
-                ],
+                builder: (context, state) => const ComingSoonScreen(),
               ),
             ],
           ),
@@ -308,6 +305,10 @@ GoRouter router(Ref ref) {
                   GoRoute(
                     path: 'goldilocks',
                     builder: (context, state) => const GoldilocksScreen(),
+                  ),
+                  GoRoute(
+                    path: 'paywall',
+                    builder: (context, state) => const PaywallScreen(),
                   ),
                 ],
               ),

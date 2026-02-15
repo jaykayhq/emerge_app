@@ -72,6 +72,44 @@ class SocialPost extends Equatable {
     );
   }
 
+  Map<String, dynamic> toMap() {
+    return {
+      'id': id,
+      'userId': userId,
+      'userName': userName,
+      'userAvatarUrl': userAvatarUrl,
+      'content': content,
+      'imageUrl': imageUrl,
+      'type': type.name, // Store enum as string
+      'likes': likes,
+      'comments': comments,
+      'timestamp': timestamp.toIso8601String(),
+      'isLikedByMe':
+          isLikedByMe, // Note: In real app, this is computed, not stored in post doc
+    };
+  }
+
+  factory SocialPost.fromMap(Map<String, dynamic> map, String id) {
+    return SocialPost(
+      id: id,
+      userId: map['userId'] as String? ?? '',
+      userName: map['userName'] as String? ?? 'Anonymous',
+      userAvatarUrl: map['userAvatarUrl'] as String? ?? '',
+      content: map['content'] as String? ?? '',
+      imageUrl: map['imageUrl'] as String?,
+      type: PostType.values.firstWhere(
+        (e) => e.name == map['type'],
+        orElse: () => PostType.regular,
+      ),
+      likes: map['likes'] as int? ?? 0,
+      comments: map['comments'] as int? ?? 0,
+      timestamp:
+          DateTime.tryParse(map['timestamp'] as String? ?? '') ??
+          DateTime.now(),
+      isLikedByMe: map['isLikedByMe'] as bool? ?? false,
+    );
+  }
+
   @override
   List<Object?> get props => [
     id,

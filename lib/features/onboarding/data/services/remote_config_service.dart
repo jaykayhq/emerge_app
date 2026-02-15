@@ -124,7 +124,9 @@ class RemoteConfigService {
   /// Get RevenueCat API key from Remote Config
   String getRevenueCatApiKey(String platform) {
     final key = _remoteConfig.getString(
-      platform == 'android' ? 'revenuecat_google_api_key' : 'revenuecat_apple_api_key',
+      platform == 'android'
+          ? 'revenuecat_google_api_key'
+          : 'revenuecat_apple_api_key',
     );
     return key;
   }

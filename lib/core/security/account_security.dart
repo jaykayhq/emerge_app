@@ -112,10 +112,13 @@ class AccountSecurity {
     _lockedAccounts[email] = AccountLockData(lockUntil: lockUntil);
 
     // ENHANCED: Use AppLogger with security event tracking (auto-redacts email)
-    AppLogger.security('Account locked', context: {
-      'until': lockUntil.toIso8601String(),
-      'duration': '${lockoutDuration.inMinutes} minutes'
-    });
+    AppLogger.security(
+      'Account locked',
+      context: {
+        'until': lockUntil.toIso8601String(),
+        'duration': '${lockoutDuration.inMinutes} minutes',
+      },
+    );
   }
 
   // Clean up expired data

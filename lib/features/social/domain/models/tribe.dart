@@ -16,6 +16,14 @@ class Tribe {
   final bool isVerified;
   final DateTime? createdAt;
 
+  // New affiliate/club fields
+  final String? affiliatePartnerId;  // For brand clubs
+  final String? brandLogoUrl;         // Separate brand logo
+  final DateTime? brandSponsorshipStart;
+  final DateTime? brandSponsorshipEnd;
+  final bool isFeatured;              // For official club spotlight
+  final int? maxMembers;              // For private clubs
+
   const Tribe({
     required this.id,
     required this.name,
@@ -31,6 +39,13 @@ class Tribe {
     this.archetypeId,
     this.isVerified = false,
     this.createdAt,
+    // New fields with defaults
+    this.affiliatePartnerId,
+    this.brandLogoUrl,
+    this.brandSponsorshipStart,
+    this.brandSponsorshipEnd,
+    this.isFeatured = false,
+    this.maxMembers,
   });
 
   Map<String, dynamic> toMap() {
@@ -49,10 +64,28 @@ class Tribe {
       'archetypeId': archetypeId,
       'isVerified': isVerified,
       'createdAt': createdAt?.toIso8601String(),
+      // New affiliate/club fields
+      'affiliatePartnerId': affiliatePartnerId,
+      'brandLogoUrl': brandLogoUrl,
+      'brandSponsorshipStart': brandSponsorshipStart?.toIso8601String(),
+      'brandSponsorshipEnd': brandSponsorshipEnd?.toIso8601String(),
+      'isFeatured': isFeatured,
+      'maxMembers': maxMembers,
     };
   }
 
   factory Tribe.fromMap(Map<String, dynamic> map) {
+    // Parse sponsorship dates
+    DateTime? brandSponsorshipStart;
+    if (map['brandSponsorshipStart'] != null) {
+      brandSponsorshipStart = DateTime.tryParse(map['brandSponsorshipStart'] as String);
+    }
+
+    DateTime? brandSponsorshipEnd;
+    if (map['brandSponsorshipEnd'] != null) {
+      brandSponsorshipEnd = DateTime.tryParse(map['brandSponsorshipEnd'] as String);
+    }
+
     return Tribe(
       id: map['id'] ?? '',
       name: map['name'] ?? '',
@@ -73,6 +106,13 @@ class Tribe {
       createdAt: map['createdAt'] != null
           ? DateTime.tryParse(map['createdAt'])
           : null,
+      // New affiliate/club fields
+      affiliatePartnerId: map['affiliatePartnerId'],
+      brandLogoUrl: map['brandLogoUrl'],
+      brandSponsorshipStart: brandSponsorshipStart,
+      brandSponsorshipEnd: brandSponsorshipEnd,
+      isFeatured: map['isFeatured'] ?? false,
+      maxMembers: map['maxMembers']?.toInt(),
     );
   }
 }

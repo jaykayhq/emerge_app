@@ -1,5 +1,6 @@
 import 'package:emerge_app/core/error/failure.dart';
 import 'package:emerge_app/features/habits/domain/entities/habit.dart';
+import 'package:emerge_app/features/habits/domain/models/habit_activity.dart';
 import 'package:fpdart/fpdart.dart';
 
 abstract class HabitRepository {
@@ -16,5 +17,12 @@ abstract class HabitRepository {
   Future<Habit?> getHabit(String habitId);
 
   // Verifies that habit stacking logic is supported by the repository
+  // Verifies that habit stacking logic is supported by the repository
   Future<List<Habit>> getHabitsByAnchor(String anchorHabitId);
+
+  Future<List<HabitActivity>> getActivity(
+    String userId,
+    DateTime start,
+    DateTime end,
+  );
 }

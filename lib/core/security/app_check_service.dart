@@ -26,11 +26,12 @@ class AppCheckService {
         );
 
         // Print debug token for Firebase Console setup
-        final debugToken = await appCheck.getToken();
-        if (debugToken != null) {
-          debugPrint('🔐 App Check Debug Token: $debugToken');
-          debugPrint('Add this token in Firebase Console → App Check → Apps → Debug Tokens');
-        }
+        // Wrapped in try-catch to handle rate limiting during hot reloads
+        // Note: Token fetch is commented out to avoid rate limiting during dev
+        debugPrint('🔐 App Check activated in DEBUG mode');
+        debugPrint(
+          'Use "Copy Debug Token" from terminal if needed for Firebase Console',
+        );
       } else {
         // Production mode: Use real attestation providers
         // Mobile: Play Integrity (Android) and App Attest (iOS)
@@ -47,6 +48,15 @@ class AppCheckService {
       debugPrint('✅ Firebase App Check initialized successfully');
       return appCheck;
     } catch (e) {
+      // Check for rate limiting errors (common during development)
+      final isRateLimited = e.toString().contains('Too many attempts');
+
+      if (isRateLimited) {
+        debugPrint('⚠️ App Check rate limited - continuing without token');
+        debugPrint('   Wait a few minutes before hot reloading again');
+        return appCheck;
+      }
+
       debugPrint('⚠️ Firebase App Check initialization failed: $e');
       debugPrint('📱 This is usually due to:');
       debugPrint('   1. No internet connection on the device');
@@ -54,8 +64,12 @@ class AppCheckService {
       debugPrint('   3. DNS resolution issues');
       debugPrint('');
       debugPrint('🔧 The app will continue without App Check protection.');
-      debugPrint('   Please enable App Check in Firebase Console when you have internet.');
-      rethrow;
+      debugPrint(
+        '   Please enable App Check in Firebase Console when you have internet.',
+      );
+
+      // Return instance anyway - app can continue without token verification
+      return appCheck;
     }
   }
 

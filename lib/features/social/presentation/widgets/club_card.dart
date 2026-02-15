@@ -91,7 +91,10 @@ class ClubCard extends StatelessWidget {
                       decoration: BoxDecoration(
                         color: AppTheme.backgroundDark,
                         shape: BoxShape.circle,
-                        border: Border.all(color: AppTheme.surfaceDark, width: 3),
+                        border: Border.all(
+                          color: AppTheme.surfaceDark,
+                          width: 3,
+                        ),
                       ),
                       child: logoUrl != null
                           ? ClipOval(
@@ -110,7 +113,12 @@ class ClubCard extends StatelessWidget {
 
             // Content
             Padding(
-              padding: const EdgeInsets.fromLTRB(12, 24, 12, 10), // Reduced padding
+              padding: const EdgeInsets.fromLTRB(
+                12,
+                24,
+                12,
+                10,
+              ), // Reduced padding
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisSize: MainAxisSize.min,
@@ -145,21 +153,26 @@ class ClubCard extends StatelessWidget {
                         color: AppTheme.textSecondaryDark,
                       ),
                       const Gap(3),
-                      Text(
-                        _formatNumber(memberCount),
-                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: AppTheme.textSecondaryDark,
-                          fontSize: 11,
+                      Expanded(
+                        child: Text(
+                          _formatNumber(memberCount),
+                          overflow: TextOverflow.ellipsis,
+                          style: Theme.of(context).textTheme.bodySmall
+                              ?.copyWith(
+                                color: AppTheme.textSecondaryDark,
+                                fontSize: 10,
+                              ),
                         ),
                       ),
-                      const Gap(10),
-                      Icon(Icons.bolt, size: 12, color: AppTheme.primary),
+                      const Gap(8),
+                      Icon(Icons.bolt, size: 11, color: AppTheme.primary),
                       const Gap(2),
-                      Text(
-                        '${_formatNumber(totalXp)} XP',
-                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: AppTheme.primary,
-                          fontSize: 11,
+                      Expanded(
+                        child: Text(
+                          '${_formatNumber(totalXp)} XP',
+                          overflow: TextOverflow.ellipsis,
+                          style: Theme.of(context).textTheme.bodySmall
+                              ?.copyWith(color: AppTheme.primary, fontSize: 10),
                         ),
                       ),
                     ],
@@ -176,7 +189,9 @@ class ClubCard extends StatelessWidget {
                         side: BorderSide(
                           color: isJoined ? Colors.grey : AppTheme.primary,
                         ),
-                        padding: const EdgeInsets.symmetric(vertical: 5), // Reduced padding
+                        padding: const EdgeInsets.symmetric(
+                          vertical: 5,
+                        ), // Reduced padding
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(8),
                         ),

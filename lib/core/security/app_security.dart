@@ -222,7 +222,9 @@ class AppSecurity {
   /// This method is kept only for backward compatibility during migration
   @Deprecated('Use encryptAndStore() instead. XOR obfuscation is not secure.')
   static String obfuscateString(String input) {
-    debugPrint('WARNING: obfuscateString() is deprecated and insecure. Use encryptAndStore() instead.');
+    debugPrint(
+      'WARNING: obfuscateString() is deprecated and insecure. Use encryptAndStore() instead.',
+    );
     if (input.isEmpty) return input;
 
     final bytes = input.codeUnits;
@@ -237,9 +239,13 @@ class AppSecurity {
   }
 
   /// DEPRECATED: XOR de-obfuscation is NOT secure for production use
-  @Deprecated('Use decryptAndRetrieve() instead. XOR obfuscation is not secure.')
+  @Deprecated(
+    'Use decryptAndRetrieve() instead. XOR obfuscation is not secure.',
+  )
   static String deobfuscateString(String obfuscated) {
-    debugPrint('WARNING: deobfuscateString() is deprecated and insecure. Use decryptAndRetrieve() instead.');
+    debugPrint(
+      'WARNING: deobfuscateString() is deprecated and insecure. Use decryptAndRetrieve() instead.',
+    );
     if (obfuscated.isEmpty) return obfuscated;
 
     final bytes = obfuscated.codeUnits;

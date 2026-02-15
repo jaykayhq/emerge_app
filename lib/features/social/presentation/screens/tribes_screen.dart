@@ -1,12 +1,11 @@
 import 'package:emerge_app/core/theme/app_theme.dart';
 import 'package:emerge_app/features/auth/presentation/providers/auth_providers.dart';
 import 'package:emerge_app/features/gamification/presentation/providers/user_stats_providers.dart';
+import 'package:emerge_app/features/social/domain/models/challenge.dart';
 import 'package:emerge_app/features/social/domain/models/tribe.dart';
+import 'package:emerge_app/features/social/presentation/providers/challenge_provider.dart';
 import 'package:emerge_app/features/social/presentation/providers/tribes_provider.dart';
-import 'package:emerge_app/features/social/domain/entities/social_entities.dart'
-    hide Tribe;
-import 'package:emerge_app/features/social/data/repositories/social_repository.dart'
-    hide tribesProvider;
+
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -188,7 +187,7 @@ class _TribesScreenState extends ConsumerState<TribesScreen>
   }
 
   Widget _buildChallengesTab() {
-    final challengesAsync = ref.watch(activeChallengesProvider);
+    final challengesAsync = ref.watch(allChallengesProvider);
 
     return challengesAsync.when(
       data: (challenges) {

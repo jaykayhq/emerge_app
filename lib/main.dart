@@ -12,6 +12,9 @@ import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:flutter/foundation.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:emerge_app/core/theme/archetype_theme.dart';
+import 'package:emerge_app/features/auth/domain/entities/user_extension.dart';
+import 'package:emerge_app/features/gamification/presentation/providers/user_stats_providers.dart';
 
 void main() async {
   await initApp();
@@ -79,11 +82,18 @@ class EmergeApp extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final router = ref.watch(routerProvider);
     final themeMode = ref.watch(themeControllerProvider);
+    final userStatsAsync = ref.watch(userStatsStreamProvider);
+
+    // Default to Explorer if loading/error or no archetype
+    final archetype = userStatsAsync.maybeWhen(
+      data: (profile) => ArchetypeTheme.forArchetype(profile.archetype),
+      orElse: () => ArchetypeTheme.forArchetype(UserArchetype.none),
+    );
 
     return MaterialApp.router(
       title: 'Emerge',
-      theme: AppTheme.lightTheme,
-      darkTheme: AppTheme.darkTheme,
+      theme: AppTheme.lightTheme(archetype),
+      darkTheme: AppTheme.darkTheme(archetype),
       themeMode: themeMode,
       routerConfig: router,
       debugShowCheckedModeBanner: false,

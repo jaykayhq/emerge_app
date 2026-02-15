@@ -1,6 +1,7 @@
 import 'package:emerge_app/core/presentation/widgets/growth_background.dart';
 import 'package:emerge_app/core/theme/app_theme.dart';
 import 'package:emerge_app/features/gamification/presentation/providers/user_stats_providers.dart';
+import 'package:emerge_app/core/constants/gamification_constants.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -22,8 +23,8 @@ class LevelingScreen extends ConsumerWidget {
       child: statsAsync.when(
         data: (profile) {
           final stats = profile.avatarStats;
-          // Calculate XP for next level (simplified: 100 XP per level)
-          final xpForNextLevel = 100;
+          // Calculate XP for next level (standardized: 500 XP per level)
+          final xpForNextLevel = GamificationConstants.xpPerLevel;
           final currentLevelXp = stats.totalXp % xpForNextLevel;
           final progress = currentLevelXp / xpForNextLevel;
 

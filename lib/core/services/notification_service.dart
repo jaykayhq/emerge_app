@@ -48,11 +48,8 @@ class NotificationService {
 
     // Request permissions and initialize FCM with error handling
     try {
-      NotificationSettings settings = await _firebaseMessaging.requestPermission(
-        alert: true,
-        badge: true,
-        sound: true,
-      );
+      NotificationSettings settings = await _firebaseMessaging
+          .requestPermission(alert: true, badge: true, sound: true);
 
       if (settings.authorizationStatus == AuthorizationStatus.authorized) {
         if (kDebugMode) {
@@ -72,9 +69,7 @@ class NotificationService {
             await FirebaseFirestore.instance
                 .collection('users')
                 .doc(user.uid)
-                .set({
-              'fcmToken': token,
-            }, SetOptions(merge: true));
+                .set({'fcmToken': token}, SetOptions(merge: true));
           }
         } catch (e) {
           // FCM not available on this device, continue without it
@@ -170,5 +165,95 @@ class NotificationService {
     }
 
     return scheduledDate;
+  }
+
+  /// Sends notification for new weekly challenge
+  Future<void> notifyNewWeeklyChallenge(
+    String challengeId,
+    String challengeName,
+  ) async {
+    try {
+      await _localNotifications.show(
+        challengeId.hashCode,
+        '🔥 New Weekly Challenge!',
+        challengeName,
+        const NotificationDetails(
+          android: AndroidNotificationDetails(
+            'weekly_challenges',
+            'Weekly Challenges',
+            channelDescription: 'New weekly challenge notifications',
+            importance: Importance.high,
+            priority: Priority.high,
+          ),
+          iOS: DarwinNotificationDetails(),
+        ),
+        payload: '/challenges/$challengeId',
+      );
+      debugPrint('New weekly challenge notification sent: $challengeName');
+    } catch (e) {
+      debugPrint('Error sending weekly challenge notification: $e');
+    }
+  }
+
+  /// Sends notification when challenge is ending soon
+  Future<void> notifyChallengeEnding(
+    String challengeId,
+    int hoursLeft,
+  ) async {
+    try {
+      final timeText = hoursLeft == 24
+          ? '1 day'
+          : hoursLeft >= 24
+              ? '${hoursLeft ~/ 24} days'
+              : '$hoursLeft hours';
+
+      await _localNotifications.show(
+        challengeId.hashCode,
+        '⏰ Challenge Ending Soon!',
+        'Only $timeText left to complete your challenge!',
+        const NotificationDetails(
+          android: AndroidNotificationDetails(
+            'challenge_reminders',
+            'Challenge Reminders',
+            channelDescription: 'Challenge deadline notifications',
+            importance: Importance.high,
+            priority: Priority.high,
+          ),
+          iOS: DarwinNotificationDetails(),
+        ),
+        payload: '/challenges/$challengeId',
+      );
+      debugPrint('Challenge ending notification sent: $hoursLeft hours left');
+    } catch (e) {
+      debugPrint('Error sending challenge ending notification: $e');
+    }
+  }
+
+  /// Sends notification when reward is available for redemption
+  Future<void> notifyRewardAvailable(
+    String challengeId,
+    String rewardDescription,
+  ) async {
+    try {
+      await _localNotifications.show(
+        challengeId.hashCode,
+        '🎁 Reward Available!',
+        rewardDescription,
+        const NotificationDetails(
+          android: AndroidNotificationDetails(
+            'rewards',
+            'Rewards',
+            channelDescription: 'Reward redemption notifications',
+            importance: Importance.high,
+            priority: Priority.high,
+          ),
+          iOS: DarwinNotificationDetails(),
+        ),
+        payload: '/challenges/$challengeId',
+      );
+      debugPrint('Reward available notification sent: $rewardDescription');
+    } catch (e) {
+      debugPrint('Error sending reward notification: $e');
+    }
   }
 }

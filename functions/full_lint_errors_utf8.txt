@@ -1,0 +1,88 @@
+﻿
+> lint
+> eslint --ext .js,.ts .
+
+
+C:\Users\excel\Downloads\emerge_app\functions\src\challenges.ts
+    4:1   error    This line has a length of 113. Maximum allowed is 80  max-len
+    5:1   error    This line has a length of 94. Maximum allowed is 80   max-len
+   12:1   error    This line has a length of 84. Maximum allowed is 80   max-len
+   26:1   error    This line has a length of 109. Maximum allowed is 80  max-len
+   42:1   error    This line has a length of 88. Maximum allowed is 80   max-len
+  101:1   error    This line has a length of 86. Maximum allowed is 80   max-len
+  150:1   error    This line has a length of 87. Maximum allowed is 80   max-len
+  161:1   error    Missing JSDoc comment                                 require-jsdoc
+  161:51  warning  Unexpected any. Specify a different type              @typescript-eslint/no-explicit-any
+  170:1   error    This line has a length of 97. Maximum allowed is 80   max-len
+
+C:\Users\excel\Downloads\emerge_app\functions\src\generateWeeklyChallenge.ts
+   42:17  warning  'context' is defined but never used         @typescript-eslint/no-unused-vars
+  148:1   error    Missing JSDoc @return for function          valid-jsdoc
+  148:1   error    Missing JSDoc for parameter 'daysRequired'  valid-jsdoc
+
+C:\Users\excel\Downloads\emerge_app\functions\src\index.js
+  0:0  error  Parsing error: ESLint was configured to run on `<tsconfigRootDir>/src\index.js` using `parserOptions.project`: 
+- <tsconfigRootDir>/tsconfig.json
+- <tsconfigRootDir>/tsconfig.dev.json
+However, none of those TSConfigs include this file. Either:
+- Change ESLint's list of included files to not include this file
+- Change one of those TSConfigs to include this file
+- Create a new TSConfig that includes this file and include it in your parserOptions.project
+See the typescript-eslint docs for more info: https://typescript-eslint.io/linting/troubleshooting#i-get-errors-telling-me-eslint-was-configured-to-run--however-that-tsconfig-does-not--none-of-those-tsconfigs-include-this-file
+
+C:\Users\excel\Downloads\emerge_app\functions\src\refreshQuarterlyChallenges.ts
+   73:17  warning  'context' is defined but never used                   @typescript-eslint/no-unused-vars
+   95:1   error    This line has a length of 83. Maximum allowed is 80   max-len
+  116:1   error    Missing JSDoc for parameter 'partnerId'               valid-jsdoc
+  116:1   error    Missing JSDoc for parameter 'quarter'                 valid-jsdoc
+  116:1   error    Missing JSDoc for parameter 'themeName'               valid-jsdoc
+  116:1   error    Missing JSDoc for parameter 'endDate'                 valid-jsdoc
+  126:1   error    This line has a length of 83. Maximum allowed is 80   max-len
+  145:1   error    This line has a length of 119. Maximum allowed is 80  max-len
+  176:1   error    This line has a length of 85. Maximum allowed is 80   max-len
+  182:1   error    Missing JSDoc for parameter 'challengeId'             valid-jsdoc
+  182:1   error    Missing JSDoc for parameter 'challengeName'           valid-jsdoc
+  206:1   error    Missing JSDoc @return for function                    valid-jsdoc
+  206:1   error    Missing JSDoc for parameter 'partnerName'             valid-jsdoc
+  206:1   error    Missing JSDoc for parameter 'days'                    valid-jsdoc
+  209:54  warning  'days' is defined but never used                      @typescript-eslint/no-unused-vars
+  255:1   error    Missing JSDoc @return for function                    valid-jsdoc
+  255:1   error    Missing JSDoc for parameter 'date'                    valid-jsdoc
+  262:1   error    This line has a length of 96. Maximum allowed is 80   max-len
+
+C:\Users\excel\Downloads\emerge_app\functions\src\seed.ts
+   31:1  error  This line has a length of 129. Maximum allowed is 80  max-len
+   46:1  error  This line has a length of 131. Maximum allowed is 80  max-len
+   61:1  error  This line has a length of 127. Maximum allowed is 80  max-len
+   76:1  error  This line has a length of 116. Maximum allowed is 80  max-len
+   97:1  error  This line has a length of 97. Maximum allowed is 80   max-len
+  110:1  error  This line has a length of 95. Maximum allowed is 80   max-len
+  111:1  error  This line has a length of 98. Maximum allowed is 80   max-len
+  112:1  error  This line has a length of 93. Maximum allowed is 80   max-len
+  113:1  error  This line has a length of 100. Maximum allowed is 80  max-len
+  120:1  error  This line has a length of 88. Maximum allowed is 80   max-len
+  133:1  error  This line has a length of 90. Maximum allowed is 80   max-len
+  134:1  error  This line has a length of 91. Maximum allowed is 80   max-len
+  135:1  error  This line has a length of 94. Maximum allowed is 80   max-len
+  136:1  error  This line has a length of 99. Maximum allowed is 80   max-len
+  156:1  error  This line has a length of 100. Maximum allowed is 80  max-len
+  157:1  error  This line has a length of 89. Maximum allowed is 80   max-len
+  158:1  error  This line has a length of 90. Maximum allowed is 80   max-len
+  159:1  error  This line has a length of 98. Maximum allowed is 80   max-len
+  166:1  error  This line has a length of 87. Maximum allowed is 80   max-len
+  178:1  error  This line has a length of 96. Maximum allowed is 80   max-len
+  179:1  error  This line has a length of 96. Maximum allowed is 80   max-len
+  180:1  error  This line has a length of 94. Maximum allowed is 80   max-len
+  273:1  error  Missing JSDoc comment                                 require-jsdoc
+  289:1  error  Missing JSDoc comment                                 require-jsdoc
+  305:1  error  Missing JSDoc comment                                 require-jsdoc
+  321:1  error  Missing JSDoc comment                                 require-jsdoc
+
+C:\Users\excel\Downloads\emerge_app\functions\src\seed_templates.ts
+   38:1  error  This line has a length of 83. Maximum allowed is 80  max-len
+  163:1  error  This line has a length of 81. Maximum allowed is 80  max-len
+  220:1  error  This line has a length of 81. Maximum allowed is 80  max-len
+  237:1  error  This line has a length of 85. Maximum allowed is 80  max-len
+
+Γ£û 62 problems (58 errors, 4 warnings)
+

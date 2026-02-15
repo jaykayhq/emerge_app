@@ -1,12 +1,11 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:emerge_app/core/error/failure.dart';
-import 'package:emerge_app/features/social/domain/entities/social_entities.dart';
 import 'package:emerge_app/features/social/domain/models/social_post.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:fpdart/fpdart.dart';
 
+// Activity Feed Repository (Keep as specific repo or part of SocialRepository)
 class SocialRepository {
-  // Mock data for now
+  SocialRepository();
+
+  // Mock data for feed
   final List<SocialPost> _mockPosts = [
     SocialPost(
       id: '1',
@@ -46,79 +45,24 @@ class SocialRepository {
     ),
   ];
 
-  Future<Either<Failure, List<Tribe>>> getTribes({
-    int limit = 20,
-    DocumentSnapshot? lastDocument,
-  }) async {
-    return const Right([]);
-  }
-
-  Future<Either<Failure, List<Challenge>>> getActiveChallenges({
-    int limit = 20,
-    DocumentSnapshot? lastDocument,
-  }) async {
-    return const Right([]);
-  }
-
-  Future<Either<Failure, Unit>> joinTribe(String tribeId, String userId) async {
-    return const Right(unit);
-  }
-
-  Future<Either<Failure, Unit>> joinChallenge(
-    String challengeId,
-    String userId,
-  ) async {
-    return const Right(unit);
-  }
-
   Future<List<SocialPost>> getFeed() async {
-    // Simulate network delay
+    // In future: fetch from 'feed' collection
     await Future.delayed(const Duration(milliseconds: 800));
     return _mockPosts;
   }
-
-  Future<void> likePost(String postId) async {
-    await Future.delayed(const Duration(milliseconds: 200));
-    // In a real app, this would update Firestore
-  }
-
-  Future<void> createPost(String content) async {
-    await Future.delayed(const Duration(milliseconds: 500));
-    _mockPosts.insert(
-      0,
-      SocialPost(
-        id: DateTime.now().toString(),
-        userId: 'current_user',
-        userName: 'You',
-        userAvatarUrl: '',
-        content: content,
-        type: PostType.regular,
-        likes: 0,
-        comments: 0,
-        timestamp: DateTime.now(),
-        isLikedByMe: false,
-      ),
-    );
-  }
 }
+
+// ================= PROVIDERS =================
+
+// 1. Repositories
 
 final socialRepositoryProvider = Provider<SocialRepository>((ref) {
   return SocialRepository();
 });
 
+// 2. Data Providers
+
 final socialFeedProvider = FutureProvider<List<SocialPost>>((ref) async {
   final repository = ref.watch(socialRepositoryProvider);
   return repository.getFeed();
-});
-
-final tribesProvider = FutureProvider<List<Tribe>>((ref) async {
-  final repository = ref.watch(socialRepositoryProvider);
-  final result = await repository.getTribes();
-  return result.fold((l) => [], (r) => r);
-});
-
-final activeChallengesProvider = FutureProvider<List<Challenge>>((ref) async {
-  final repository = ref.watch(socialRepositoryProvider);
-  final result = await repository.getActiveChallenges();
-  return result.fold((l) => [], (r) => r);
 });

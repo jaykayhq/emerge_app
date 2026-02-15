@@ -36,9 +36,7 @@ class EventBus {
       throw StateError('EventBus has been disposed');
     }
 
-    return _controller.stream
-        .where((event) => event is T)
-        .cast<T>();
+    return _controller.stream.where((event) => event is T).cast<T>();
   }
 
   /// ENHANCED: Register a subscription for automatic cleanup

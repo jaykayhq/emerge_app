@@ -13,6 +13,11 @@ final featuredChallengesProvider = FutureProvider<List<Challenge>>((ref) async {
   return repository.getChallenges(featuredOnly: true);
 });
 
+final allChallengesProvider = FutureProvider<List<Challenge>>((ref) async {
+  final repository = ref.read(challengeRepositoryProvider);
+  return repository.getChallenges(featuredOnly: false);
+});
+
 final userChallengesProvider = FutureProvider<List<Challenge>>((ref) async {
   final repository = ref.read(challengeRepositoryProvider);
   final user = FirebaseAuth.instance.currentUser;

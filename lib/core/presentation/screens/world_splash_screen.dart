@@ -41,11 +41,7 @@ class _WorldSplashScreenState extends State<WorldSplashScreen>
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
-            colors: [
-              Color(0xFF1a1a2e),
-              Color(0xFF16213e),
-              Color(0xFF0f3460),
-            ],
+            colors: [Color(0xFF1a1a2e), Color(0xFF16213e), Color(0xFF0f3460)],
           ),
         ),
         child: Stack(
@@ -79,30 +75,30 @@ class _WorldSplashScreenState extends State<WorldSplashScreen>
                 children: [
                   // World icon with pulse
                   Container(
-                    width: 120,
-                    height: 120,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      gradient: RadialGradient(
-                        colors: [
-                          AppTheme.primary.withValues(alpha: 0.8),
-                          AppTheme.primary.withValues(alpha: 0.2),
-                        ],
-                      ),
-                      boxShadow: [
-                        BoxShadow(
-                          color: AppTheme.primary.withValues(alpha: 0.5),
-                          blurRadius: 40,
-                          spreadRadius: 10,
+                        width: 120,
+                        height: 120,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          gradient: RadialGradient(
+                            colors: [
+                              AppTheme.primary.withValues(alpha: 0.8),
+                              AppTheme.primary.withValues(alpha: 0.2),
+                            ],
+                          ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: AppTheme.primary.withValues(alpha: 0.5),
+                              blurRadius: 40,
+                              spreadRadius: 10,
+                            ),
+                          ],
                         ),
-                      ],
-                    ),
-                    child: const Icon(
-                      Icons.public,
-                      size: 64,
-                      color: Colors.white,
-                    ),
-                  )
+                        child: const Icon(
+                          Icons.public,
+                          size: 64,
+                          color: Colors.white,
+                        ),
+                      )
                       .animate()
                       .scale(
                         begin: const Offset(0.5, 0.5),
@@ -117,20 +113,20 @@ class _WorldSplashScreenState extends State<WorldSplashScreen>
 
                   // Title text
                   Text(
-                    'YOUR WORLD',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 32,
-                      fontWeight: FontWeight.bold,
-                      letterSpacing: 4,
-                      shadows: [
-                        Shadow(
-                          color: AppTheme.primary.withValues(alpha: 0.8),
-                          blurRadius: 20,
+                        'YOUR WORLD',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 32,
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: 4,
+                          shadows: [
+                            Shadow(
+                              color: AppTheme.primary.withValues(alpha: 0.8),
+                              blurRadius: 20,
+                            ),
+                          ],
                         ),
-                      ],
-                    ),
-                  )
+                      )
                       .animate()
                       .fadeIn(delay: 400.ms, duration: 600.ms)
                       .slideY(begin: 0.3, end: 0),
@@ -139,14 +135,14 @@ class _WorldSplashScreenState extends State<WorldSplashScreen>
 
                   // Subtitle
                   Text(
-                    'Your sanctuary awaits',
-                    style: TextStyle(
-                      color: Colors.white.withValues(alpha: 0.8),
-                      fontSize: 16,
-                      fontStyle: FontStyle.italic,
-                      letterSpacing: 1,
-                    ),
-                  )
+                        'Your sanctuary awaits',
+                        style: TextStyle(
+                          color: Colors.white.withValues(alpha: 0.8),
+                          fontSize: 16,
+                          fontStyle: FontStyle.italic,
+                          letterSpacing: 1,
+                        ),
+                      )
                       .animate()
                       .fadeIn(delay: 600.ms, duration: 600.ms)
                       .slideY(begin: 0.3, end: 0),
@@ -166,9 +162,7 @@ class _WorldSplashScreenState extends State<WorldSplashScreen>
                         minHeight: 4,
                       ),
                     ),
-                  )
-                      .animate()
-                      .fadeIn(delay: 800.ms, duration: 400.ms),
+                  ).animate().fadeIn(delay: 800.ms, duration: 400.ms),
                 ],
               ),
             ),

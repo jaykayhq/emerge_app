@@ -1,5 +1,6 @@
 import 'package:emerge_app/core/theme/app_theme.dart';
 import 'package:emerge_app/core/theme/archetype_theme.dart';
+import 'package:emerge_app/core/presentation/widgets/emerge_branding.dart';
 import 'package:emerge_app/features/auth/domain/entities/user_extension.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -44,7 +45,7 @@ class HabitTemplate {
 }
 
 /// Inline horizontal carousel showing archetype-specific habit templates
-/// Tap "See More" to open full template bottom sheet
+/// Redesigned with cosmic glassmorphism aesthetic
 class HabitTemplateCarousel extends StatelessWidget {
   final UserArchetype archetype;
   final OnTemplateSelected onTemplateSelected;
@@ -74,21 +75,38 @@ class HabitTemplateCarousel extends StatelessWidget {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Row(
-                children: [
-                  Icon(Icons.auto_awesome, color: theme.primaryColor, size: 18),
-                  const Gap(8),
-                  Text(
-                    'Suggested for ${theme.archetypeName}',
-                    style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                      color: AppTheme.textMainDark,
-                      fontWeight: FontWeight.w600,
+              Expanded(
+                child: Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(6),
+                      decoration: BoxDecoration(
+                        color: EmergeColors.teal.withValues(alpha: 0.15),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Icon(
+                        Icons.auto_awesome,
+                        color: EmergeColors.teal,
+                        size: 16,
+                      ),
                     ),
-                  ),
-                ],
+                    const Gap(10),
+                    Flexible(
+                      child: Text(
+                        'Quick Start',
+                        style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                          color: AppTheme.textMainDark,
+                          fontWeight: FontWeight.w600,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ],
+                ),
               ),
-              TextButton(
-                onPressed: () {
+              GestureDetector(
+                onTap: () {
                   HapticFeedback.lightImpact();
                   if (onSeeMore != null) {
                     onSeeMore!();
@@ -96,20 +114,45 @@ class HabitTemplateCarousel extends StatelessWidget {
                     _showAllTemplates(context, theme);
                   }
                 },
-                child: Text(
-                  'See More',
-                  style: TextStyle(
-                    color: theme.primaryColor,
-                    fontWeight: FontWeight.w600,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 6,
+                  ),
+                  decoration: BoxDecoration(
+                    color: EmergeColors.teal.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(
+                      color: EmergeColors.teal.withValues(alpha: 0.3),
+                    ),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        'See All',
+                        style: TextStyle(
+                          color: EmergeColors.teal,
+                          fontWeight: FontWeight.w600,
+                          fontSize: 12,
+                        ),
+                      ),
+                      const Gap(4),
+                      Icon(
+                        Icons.arrow_forward_ios,
+                        color: EmergeColors.teal,
+                        size: 10,
+                      ),
+                    ],
                   ),
                 ),
               ),
             ],
           ),
         ),
-        const Gap(8),
+        const Gap(12),
         SizedBox(
-          height: 120,
+          height: 115, // Increased from 100 to prevent 1px overflow
           child: ListView.separated(
             scrollDirection: Axis.horizontal,
             padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -119,7 +162,7 @@ class HabitTemplateCarousel extends StatelessWidget {
               final template = templates[index];
               return _TemplateCard(
                 template: template,
-                accentColor: theme.primaryColor,
+                accentColor: EmergeColors.teal,
                 onTap: () {
                   HapticFeedback.mediumImpact();
                   onTemplateSelected(template);
@@ -148,7 +191,7 @@ class HabitTemplateCarousel extends StatelessWidget {
   }
 }
 
-/// Individual template card for the carousel
+/// Individual template card with glassmorphism design
 class _TemplateCard extends StatelessWidget {
   final HabitTemplate template;
   final Color accentColor;
@@ -165,26 +208,47 @@ class _TemplateCard extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        width: 160,
+        width: 140,
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
-          color: AppTheme.surfaceDark,
+          color: Colors.white.withValues(alpha: 0.05),
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
-            color: accentColor.withValues(alpha: 0.3),
+            color: accentColor.withValues(alpha: 0.2),
             width: 1,
           ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.1),
+              blurRadius: 10,
+              offset: const Offset(0, 2),
+            ),
+          ],
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisSize: MainAxisSize.min,
           children: [
             Container(
-              padding: const EdgeInsets.all(8),
+              padding: const EdgeInsets.all(6),
               decoration: BoxDecoration(
-                color: accentColor.withValues(alpha: 0.15),
-                borderRadius: BorderRadius.circular(10),
+                gradient: LinearGradient(
+                  colors: [
+                    accentColor.withValues(alpha: 0.2),
+                    accentColor.withValues(alpha: 0.1),
+                  ],
+                ),
+                borderRadius: BorderRadius.circular(8),
+                boxShadow: [
+                  BoxShadow(
+                    color: accentColor.withValues(alpha: 0.2),
+                    blurRadius: 8,
+                    spreadRadius: -2,
+                  ),
+                ],
               ),
-              child: Icon(template.icon, color: accentColor, size: 20),
+              child: Icon(template.icon, color: accentColor, size: 16),
             ),
             const Gap(8),
             Text(
@@ -192,15 +256,17 @@ class _TemplateCard extends StatelessWidget {
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                 color: AppTheme.textMainDark,
                 fontWeight: FontWeight.w600,
+                fontSize: 12,
               ),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
             ),
-            const Gap(4),
+            const Gap(2),
             Text(
               template.anchor,
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
                 color: AppTheme.textSecondaryDark,
+                fontSize: 11,
               ),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
@@ -212,7 +278,7 @@ class _TemplateCard extends StatelessWidget {
   }
 }
 
-/// Bottom sheet with categorized habit templates
+/// Bottom sheet with categorized habit templates - cosmic glassmorphism design
 class HabitTemplateSheet extends StatefulWidget {
   final UserArchetype archetype;
   final OnTemplateSelected onTemplateSelected;
@@ -462,17 +528,23 @@ class _HabitTemplateSheetState extends State<HabitTemplateSheet> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = ArchetypeTheme.forArchetype(widget.archetype);
-
     return DraggableScrollableSheet(
       initialChildSize: 0.75,
       minChildSize: 0.5,
       maxChildSize: 0.95,
       builder: (context, scrollController) {
         return Container(
-          decoration: const BoxDecoration(
-            color: AppTheme.backgroundDark,
-            borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+          decoration: BoxDecoration(
+            gradient: const LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [Color(0xFF1A1A2E), Color(0xFF0F0F1A)],
+            ),
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+            border: Border.all(
+              color: Colors.white.withValues(alpha: 0.1),
+              width: 1,
+            ),
           ),
           child: Column(
             children: [
@@ -492,42 +564,63 @@ class _HabitTemplateSheetState extends State<HabitTemplateSheet> {
                 padding: const EdgeInsets.symmetric(horizontal: 20),
                 child: Row(
                   children: [
-                    Icon(
-                      Icons.auto_stories,
-                      color: theme.primaryColor,
-                      size: 24,
-                    ),
-                    const Gap(12),
-                    Text(
-                      'Habit Templates',
-                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                        color: AppTheme.textMainDark,
-                        fontWeight: FontWeight.bold,
+                    Container(
+                      padding: const EdgeInsets.all(10),
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [
+                            EmergeColors.teal.withValues(alpha: 0.2),
+                            EmergeColors.teal.withValues(alpha: 0.1),
+                          ],
+                        ),
+                        borderRadius: BorderRadius.circular(12),
+                        boxShadow: [
+                          BoxShadow(
+                            color: EmergeColors.teal.withValues(alpha: 0.2),
+                            blurRadius: 12,
+                            spreadRadius: -2,
+                          ),
+                        ],
                       ),
+                      child: Icon(
+                        Icons.auto_stories,
+                        color: EmergeColors.teal,
+                        size: 22,
+                      ),
+                    ),
+                    const Gap(14),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Habit Templates',
+                          style: Theme.of(context).textTheme.titleLarge
+                              ?.copyWith(
+                                color: AppTheme.textMainDark,
+                                fontWeight: FontWeight.bold,
+                              ),
+                        ),
+                        const Gap(2),
+                        Text(
+                          'Tap to quick-fill your habit',
+                          style: Theme.of(context).textTheme.bodySmall
+                              ?.copyWith(color: AppTheme.textSecondaryDark),
+                        ),
+                      ],
                     ),
                   ],
                 ),
               ),
-              const Gap(8),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20),
-                child: Text(
-                  'Choose a template to auto-fill your habit details',
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: AppTheme.textSecondaryDark,
-                  ),
-                ),
-              ),
-              const Gap(16),
+              const Gap(20),
 
               // Category chips
               SizedBox(
-                height: 36,
+                height: 40,
                 child: ListView.separated(
                   scrollDirection: Axis.horizontal,
                   padding: const EdgeInsets.symmetric(horizontal: 20),
                   itemCount: _categories.length,
-                  separatorBuilder: (_, __) => const Gap(8),
+                  separatorBuilder: (_, __) => const Gap(10),
                   itemBuilder: (context, index) {
                     final category = _categories[index];
                     final isSelected = category == _selectedCategory;
@@ -536,23 +629,41 @@ class _HabitTemplateSheetState extends State<HabitTemplateSheet> {
                         HapticFeedback.selectionClick();
                         setState(() => _selectedCategory = category);
                       },
-                      child: Container(
+                      child: AnimatedContainer(
+                        duration: const Duration(milliseconds: 200),
                         padding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 8,
+                          horizontal: 18,
+                          vertical: 10,
                         ),
                         decoration: BoxDecoration(
+                          gradient: isSelected
+                              ? LinearGradient(
+                                  colors: [
+                                    EmergeColors.teal,
+                                    EmergeColors.teal.withValues(alpha: 0.8),
+                                  ],
+                                )
+                              : null,
                           color: isSelected
-                              ? theme.primaryColor
-                              : AppTheme.surfaceDark,
+                              ? null
+                              : Colors.white.withValues(alpha: 0.05),
                           borderRadius: BorderRadius.circular(20),
                           border: Border.all(
                             color: isSelected
-                                ? theme.primaryColor
-                                : AppTheme.textSecondaryDark.withValues(
-                                    alpha: 0.2,
-                                  ),
+                                ? EmergeColors.teal
+                                : Colors.white.withValues(alpha: 0.1),
                           ),
+                          boxShadow: isSelected
+                              ? [
+                                  BoxShadow(
+                                    color: EmergeColors.teal.withValues(
+                                      alpha: 0.3,
+                                    ),
+                                    blurRadius: 12,
+                                    spreadRadius: -2,
+                                  ),
+                                ]
+                              : null,
                         ),
                         child: Text(
                           category,
@@ -569,7 +680,7 @@ class _HabitTemplateSheetState extends State<HabitTemplateSheet> {
                   },
                 ),
               ),
-              const Gap(16),
+              const Gap(20),
 
               // Template grid
               Expanded(
@@ -582,7 +693,7 @@ class _HabitTemplateSheetState extends State<HabitTemplateSheet> {
                     final template = _filteredTemplates[index];
                     return _TemplateListTile(
                       template: template,
-                      accentColor: theme.primaryColor,
+                      accentColor: EmergeColors.teal,
                       onTap: () {
                         HapticFeedback.mediumImpact();
                         widget.onTemplateSelected(template);
@@ -599,7 +710,7 @@ class _HabitTemplateSheetState extends State<HabitTemplateSheet> {
   }
 }
 
-/// List tile for bottom sheet templates
+/// List tile for bottom sheet templates with glassmorphism
 class _TemplateListTile extends StatelessWidget {
   final HabitTemplate template;
   final Color accentColor;
@@ -618,21 +729,38 @@ class _TemplateListTile extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: AppTheme.surfaceDark,
+          color: Colors.white.withValues(alpha: 0.05),
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(
-            color: AppTheme.textSecondaryDark.withValues(alpha: 0.1),
-          ),
+          border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.1),
+              blurRadius: 10,
+              offset: const Offset(0, 2),
+            ),
+          ],
         ),
         child: Row(
           children: [
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: accentColor.withValues(alpha: 0.15),
-                borderRadius: BorderRadius.circular(12),
+                gradient: LinearGradient(
+                  colors: [
+                    accentColor.withValues(alpha: 0.2),
+                    accentColor.withValues(alpha: 0.1),
+                  ],
+                ),
+                borderRadius: BorderRadius.circular(14),
+                boxShadow: [
+                  BoxShadow(
+                    color: accentColor.withValues(alpha: 0.15),
+                    blurRadius: 8,
+                    spreadRadius: -2,
+                  ),
+                ],
               ),
-              child: Icon(template.icon, color: accentColor, size: 24),
+              child: Icon(template.icon, color: accentColor, size: 22),
             ),
             const Gap(16),
             Expanded(
@@ -653,15 +781,16 @@ class _TemplateListTile extends StatelessWidget {
                       color: AppTheme.textSecondaryDark,
                     ),
                   ),
-                  const Gap(6),
-                  Row(
+                  const Gap(8),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 4,
                     children: [
                       _InfoChip(
                         icon: Icons.link,
                         label: template.anchor,
                         color: accentColor,
                       ),
-                      const Gap(8),
                       _InfoChip(
                         icon: Icons.schedule,
                         label: template.timeOfDay,
@@ -672,7 +801,14 @@ class _TemplateListTile extends StatelessWidget {
                 ],
               ),
             ),
-            Icon(Icons.add_circle_outline, color: accentColor, size: 24),
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: accentColor.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Icon(Icons.add, color: accentColor, size: 20),
+            ),
           ],
         ),
       ),
@@ -697,19 +833,20 @@ class _InfoChip extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.1),
+        color: color.withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: color.withValues(alpha: 0.15)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 12, color: color),
+          Icon(icon, size: 11, color: color.withValues(alpha: 0.8)),
           const Gap(4),
           Text(
             label,
             style: TextStyle(
-              fontSize: 11,
-              color: color,
+              fontSize: 10,
+              color: color.withValues(alpha: 0.9),
               fontWeight: FontWeight.w500,
             ),
           ),

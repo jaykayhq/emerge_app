@@ -361,6 +361,7 @@ class OnboardingState extends Equatable {
       'Creativity': 0,
       'Strength': 0,
       'Spirit': 0,
+      'Intellect': 0,
     },
     this.remainingPoints = 10,
     this.motive,

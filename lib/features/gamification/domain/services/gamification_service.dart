@@ -1,12 +1,10 @@
+import 'package:emerge_app/core/constants/gamification_constants.dart';
 import 'package:emerge_app/features/auth/domain/entities/user_extension.dart';
 import 'package:emerge_app/features/gamification/domain/models/world_building.dart';
 import 'package:emerge_app/features/gamification/domain/models/world_zone.dart';
 import 'package:emerge_app/features/habits/domain/entities/habit.dart';
 
 class GamificationService {
-  static const int baseXpPerHabit = 10;
-  static const int xpPerLevel = 100;
-
   // Zone growth/decay constants
   static const double healthGainOnComplete = 0.1;
   static const double healthLossOnMiss = 0.05;
@@ -15,24 +13,30 @@ class GamificationService {
 
   /// Calculates XP gain based on habit difficulty and streak.
   int calculateXpGain(Habit habit) {
-    int multiplier = 1;
+    double multiplier = GamificationConstants.difficultyEasyMultiplier;
     switch (habit.difficulty) {
       case HabitDifficulty.easy:
-        multiplier = 1;
+        multiplier = GamificationConstants.difficultyEasyMultiplier;
         break;
       case HabitDifficulty.medium:
-        multiplier = 2;
+        multiplier = GamificationConstants.difficultyMediumMultiplier;
         break;
       case HabitDifficulty.hard:
-        multiplier = 3;
+        multiplier = GamificationConstants.difficultyHardMultiplier;
         break;
     }
 
     // Streak bonus: +10% per 7 days, capped at 50%
-    double streakBonus = (habit.currentStreak / 7) * 0.1;
-    if (streakBonus > 0.5) streakBonus = 0.5;
+    double streakBonus =
+        (habit.currentStreak / GamificationConstants.daysPerStreakBonusStep) *
+        GamificationConstants.streakBonusPerStep;
+    if (streakBonus > GamificationConstants.maxStreakBonus) {
+      streakBonus = GamificationConstants.maxStreakBonus;
+    }
 
-    return ((baseXpPerHabit * multiplier) * (1 + streakBonus)).round();
+    return ((GamificationConstants.baseXpPerHabit * multiplier) *
+            (1 + streakBonus))
+        .round();
   }
 
   /// Returns a new UserAvatarStats with updated XP and potentially a new level.
@@ -46,6 +50,7 @@ class GamificationService {
     int newVitality = currentStats.vitalityXp;
     int newCreativity = currentStats.creativityXp;
     int newFocus = currentStats.focusXp;
+    int newSpirit = currentStats.spiritXp;
 
     switch (attribute) {
       case HabitAttribute.strength:
@@ -63,12 +68,20 @@ class GamificationService {
       case HabitAttribute.focus:
         newFocus += xp;
         break;
+      case HabitAttribute.spirit:
+        newSpirit += xp;
+        break;
     }
 
     // Calculate total level based on total XP
     int totalXp =
-        newStrength + newIntellect + newVitality + newCreativity + newFocus;
-    int newLevel = (totalXp / xpPerLevel).floor() + 1;
+        newStrength +
+        newIntellect +
+        newVitality +
+        newCreativity +
+        newFocus +
+        newSpirit;
+    int newLevel = calculateLevel(totalXp);
 
     return UserAvatarStats(
       strengthXp: newStrength,
@@ -76,8 +89,15 @@ class GamificationService {
       vitalityXp: newVitality,
       creativityXp: newCreativity,
       focusXp: newFocus,
+      spiritXp: newSpirit,
       level: newLevel,
+      streak: currentStats.streak,
     );
+  }
+
+  /// Centralized level calculation from total XP
+  static int calculateLevel(int totalXp) {
+    return (totalXp / GamificationConstants.xpPerLevel).floor() + 1;
   }
 
   /// Updates the world state when a habit is completed or missed

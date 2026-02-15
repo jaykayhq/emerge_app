@@ -161,30 +161,30 @@ class EmergeDimensions {
 
   /// Light elevation shadow
   static List<BoxShadow> shadowLight() => [
-        BoxShadow(
-          color: Colors.black.withValues(alpha: 0.05),
-          blurRadius: 4,
-          offset: const Offset(0, 2),
-        ),
-      ];
+    BoxShadow(
+      color: Colors.black.withValues(alpha: 0.05),
+      blurRadius: 4,
+      offset: const Offset(0, 2),
+    ),
+  ];
 
   /// Medium elevation shadow
   static List<BoxShadow> shadowMedium() => [
-        BoxShadow(
-          color: Colors.black.withValues(alpha: 0.1),
-          blurRadius: 8,
-          offset: const Offset(0, 4),
-        ),
-      ];
+    BoxShadow(
+      color: Colors.black.withValues(alpha: 0.1),
+      blurRadius: 8,
+      offset: const Offset(0, 4),
+    ),
+  ];
 
   /// Heavy elevation shadow
   static List<BoxShadow> shadowHeavy() => [
-        BoxShadow(
-          color: Colors.black.withValues(alpha: 0.15),
-          blurRadius: 16,
-          offset: const Offset(0, 8),
-        ),
-      ];
+    BoxShadow(
+      color: Colors.black.withValues(alpha: 0.15),
+      blurRadius: 16,
+      offset: const Offset(0, 8),
+    ),
+  ];
 }
 
 /// Extension to easily check device type
@@ -198,11 +198,7 @@ extension ScreenSize on BoxConstraints {
 
 /// Extension to get responsive values
 extension ResponsiveValue on BuildContext {
-  T responsive<T>({
-    required T mobile,
-    T? tablet,
-    T? desktop,
-  }) {
+  T responsive<T>({required T mobile, T? tablet, T? desktop}) {
     final width = MediaQuery.of(this).size.width;
     if (width >= EmergeDimensions.breakpointDesktop && desktop != null) {
       return desktop;

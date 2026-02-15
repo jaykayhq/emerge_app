@@ -18,11 +18,10 @@ class WorldSidebarMenu extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Positioned(
-      top: MediaQuery.of(context).padding.top + 8, // Status bar + AppBar padding
+      top:
+          MediaQuery.of(context).padding.top + 8, // Status bar + AppBar padding
       left: 16,
-      child: _MenuButton(
-        onPressed: () => _showMenuSheet(context),
-      ),
+      child: _MenuButton(onPressed: () => _showMenuSheet(context)),
     );
   }
 
@@ -70,11 +69,7 @@ class _MenuButton extends StatelessWidget {
               borderRadius: BorderRadius.circular(16),
               child: const Padding(
                 padding: EdgeInsets.all(12),
-                child: Icon(
-                  Icons.menu_rounded,
-                  color: Colors.white,
-                  size: 24,
-                ),
+                child: Icon(Icons.menu_rounded, color: Colors.white, size: 24),
               ),
             ),
           ),
@@ -99,9 +94,7 @@ class _WorldMenuSheet extends ConsumerWidget {
         return Container(
           decoration: BoxDecoration(
             color: AppTheme.surfaceDark.withValues(alpha: 0.95),
-            borderRadius: const BorderRadius.vertical(
-              top: Radius.circular(24),
-            ),
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
             border: Border(
               top: BorderSide(
                 color: AppTheme.primary.withValues(alpha: 0.3),
@@ -175,12 +168,21 @@ class _WorldMenuSheet extends ConsumerWidget {
                                       ),
                                       const Spacer(),
                                       Container(
-                                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 10,
+                                          vertical: 4,
+                                        ),
                                         decoration: BoxDecoration(
-                                          color: AppTheme.primary.withValues(alpha: 0.2),
-                                          borderRadius: BorderRadius.circular(12),
+                                          color: AppTheme.primary.withValues(
+                                            alpha: 0.2,
+                                          ),
+                                          borderRadius: BorderRadius.circular(
+                                            12,
+                                          ),
                                           border: Border.all(
-                                            color: AppTheme.primary.withValues(alpha: 0.5),
+                                            color: AppTheme.primary.withValues(
+                                              alpha: 0.5,
+                                            ),
                                           ),
                                         ),
                                         child: Text(
@@ -230,7 +232,9 @@ class _WorldMenuSheet extends ConsumerWidget {
                                   Container(
                                     height: 8,
                                     decoration: BoxDecoration(
-                                      color: Colors.white.withValues(alpha: 0.1),
+                                      color: Colors.white.withValues(
+                                        alpha: 0.1,
+                                      ),
                                       borderRadius: BorderRadius.circular(6),
                                     ),
                                   ),
@@ -359,9 +363,7 @@ class _WorldMenuSheet extends ConsumerWidget {
         padding: const EdgeInsets.all(24),
         decoration: BoxDecoration(
           color: AppTheme.surfaceDark,
-          borderRadius: const BorderRadius.vertical(
-            top: Radius.circular(24),
-          ),
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -424,9 +426,7 @@ class _MenuItem extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.black.withValues(alpha: 0.2),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: color.withValues(alpha: 0.2),
-        ),
+        border: Border.all(color: color.withValues(alpha: 0.2)),
       ),
       child: Material(
         color: Colors.transparent,

@@ -258,6 +258,18 @@ class _ProgressRecapSectionState extends State<ProgressRecapSection> {
   }
 
   Widget _buildRecapsContent(BuildContext context) {
+    // Calculate daily stats from completedToday
+    final dailyCompleted = widget.completedToday.length;
+    final dailyTotal = widget.habits.length;
+    // Estimate XP based on completions (10 base + streak bonus approximation)
+    final dailyXp = dailyCompleted * 13; // Rough avg with small streak bonus
+
+    // Calculate weekly stats - sum up all completions from habit data
+    // Using totalVotes as a proxy for weekly completions
+    final weeklyCompleted = widget.totalVotes;
+    final weeklyXp =
+        weeklyCompleted * 11; // Slightly lower avg XP per completion
+
     return Column(
       key: const ValueKey('recaps'),
       children: [
@@ -266,8 +278,8 @@ class _ProgressRecapSectionState extends State<ProgressRecapSection> {
           context,
           icon: Icons.today,
           title: 'Daily Recap',
-          subtitle: 'Yesterday: 4/5 habits • +52 XP',
-          onTap: () => context.push('/world/daily-report'),
+          subtitle: 'Today: $dailyCompleted/$dailyTotal habits • +$dailyXp XP',
+          onTap: () => context.push('/profile/recap'),
         ),
         const SizedBox(height: 12),
         // Weekly Recap card
@@ -275,8 +287,8 @@ class _ProgressRecapSectionState extends State<ProgressRecapSection> {
           context,
           icon: Icons.date_range,
           title: 'Weekly Recap',
-          subtitle: 'This week: 28/35 habits • +320 XP',
-          onTap: () => context.push('/world/recap'),
+          subtitle: 'This week: $weeklyCompleted habits • +$weeklyXp XP',
+          onTap: () => context.push('/recap'),
         ),
       ],
     );
@@ -367,13 +379,13 @@ class _ProgressRecapSectionState extends State<ProgressRecapSection> {
           Text(
             'Create your first habit to start casting votes for who you want to become.',
             textAlign: TextAlign.center,
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              color: AppTheme.textSecondaryDark,
-            ),
+            style: Theme.of(
+              context,
+            ).textTheme.bodyMedium?.copyWith(color: AppTheme.textSecondaryDark),
           ),
           const SizedBox(height: 16),
           ElevatedButton(
-            onPressed: () => context.push('/create-habit'),
+            onPressed: () => context.push('/timeline/create-habit'),
             style: ElevatedButton.styleFrom(
               backgroundColor: EmergeColors.teal,
               foregroundColor: Colors.white,

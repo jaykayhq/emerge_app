@@ -5,13 +5,25 @@ import 'package:emerge_app/core/theme/emerge_dimensions.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
+/// Completion status for a day
+enum DayCompletionStatus { none, partial, complete }
+
 /// Horizontal scrollable calendar strip showing the current week
 /// Highlights today and allows selecting a day to view its habits/progress
+/// Now includes completion dots below each day per Stitch design
 class WeekCalendarStrip extends StatefulWidget {
   final DateTime? selectedDate;
   final ValueChanged<DateTime>? onDateSelected;
 
-  const WeekCalendarStrip({super.key, this.selectedDate, this.onDateSelected});
+  /// Map of date (year-month-day string) to completion status
+  final Map<String, DayCompletionStatus>? completionStatus;
+
+  const WeekCalendarStrip({
+    super.key,
+    this.selectedDate,
+    this.onDateSelected,
+    this.completionStatus,
+  });
 
   @override
   State<WeekCalendarStrip> createState() => _WeekCalendarStripState();
@@ -41,14 +53,19 @@ class _WeekCalendarStripState extends State<WeekCalendarStrip> {
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 8),
       decoration: BoxDecoration(
-        color: AppTheme.surfaceDark,
+        color: Colors.transparent,
         border: Border(
-          bottom: BorderSide(color: EmergeColors.hexLine, width: 1),
+          bottom: BorderSide(
+            color: EmergeColors.hexLine.withValues(alpha: 0.3),
+            width: 1,
+          ),
         ),
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-        children: _weekDays.map((date) => _buildDayItem(date)).toList(),
+        children: _weekDays
+            .map((date) => Expanded(child: _buildDayItem(date)))
+            .toList(),
       ),
     );
   }
@@ -59,7 +76,8 @@ class _WeekCalendarStripState extends State<WeekCalendarStrip> {
     final dayName = DateFormat('E').format(date).substring(0, 3);
     final dayNumber = date.day.toString();
     final monthName = DateFormat('MMM').format(date);
-    final fullDateLabel = '$dayName, $monthName $dayNumber${isToday ? ' (Today)' : ''}';
+    final fullDateLabel =
+        '$dayName, $monthName $dayNumber${isToday ? ' (Today)' : ''}';
 
     return EmergeTappable(
       label: fullDateLabel,
@@ -70,8 +88,8 @@ class _WeekCalendarStripState extends State<WeekCalendarStrip> {
       },
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
-        width: 48, // Increased from 44 for better tap target
-        height: EmergeDimensions.minTapTarget, // Ensure 44px height
+        height: 80,
+        margin: const EdgeInsets.symmetric(horizontal: 2),
         padding: const EdgeInsets.symmetric(vertical: 8),
         decoration: BoxDecoration(
           color: isSelected
@@ -83,6 +101,16 @@ class _WeekCalendarStripState extends State<WeekCalendarStrip> {
           border: isToday && !isSelected
               ? Border.all(color: EmergeColors.teal.withValues(alpha: 0.5))
               : null,
+          // Glow effect for today
+          boxShadow: isToday
+              ? [
+                  BoxShadow(
+                    color: EmergeColors.teal.withValues(alpha: 0.3),
+                    blurRadius: 8,
+                    spreadRadius: -2,
+                  ),
+                ]
+              : null,
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -92,7 +120,7 @@ class _WeekCalendarStripState extends State<WeekCalendarStrip> {
               dayName,
               style: TextStyle(
                 color: isSelected ? Colors.white : AppTheme.textSecondaryDark,
-                fontSize: EmergeDimensions.minFontSize, // 12px minimum
+                fontSize: EmergeDimensions.minFontSize,
                 fontWeight: FontWeight.w500,
               ),
             ),
@@ -111,8 +139,42 @@ class _WeekCalendarStripState extends State<WeekCalendarStrip> {
                     : FontWeight.normal,
               ),
             ),
+            const SizedBox(height: 4),
+            // Completion indicator dot
+            _buildCompletionDot(date, isSelected),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildCompletionDot(DateTime date, bool isSelected) {
+    final dateKey =
+        '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
+    final status =
+        widget.completionStatus?[dateKey] ?? DayCompletionStatus.none;
+
+    if (status == DayCompletionStatus.none) {
+      return const SizedBox(height: 8);
+    }
+
+    final color = status == DayCompletionStatus.complete
+        ? (isSelected ? Colors.white : EmergeColors.teal)
+        : (isSelected ? Colors.white70 : EmergeColors.coral);
+
+    return Container(
+      width: 8,
+      height: 8,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        color: color,
+        boxShadow: [
+          BoxShadow(
+            color: color.withValues(alpha: 0.5),
+            blurRadius: 4,
+            spreadRadius: 0,
+          ),
+        ],
       ),
     );
   }

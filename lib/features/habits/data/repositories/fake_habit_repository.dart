@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:emerge_app/core/error/failure.dart';
 import 'package:emerge_app/features/habits/domain/entities/habit.dart';
+import 'package:emerge_app/features/habits/domain/models/habit_activity.dart';
 import 'package:emerge_app/features/habits/domain/repositories/habit_repository.dart';
 import 'package:fpdart/fpdart.dart';
 import 'package:uuid/uuid.dart';
@@ -125,6 +126,15 @@ class FakeHabitRepository implements HabitRepository {
   @override
   Future<List<Habit>> getHabitsByAnchor(String anchorHabitId) async {
     await Future.delayed(const Duration(milliseconds: 100));
+    return [];
+  }
+
+  @override
+  Future<List<HabitActivity>> getActivity(
+    String userId,
+    DateTime start,
+    DateTime end,
+  ) async {
     return [];
   }
 }

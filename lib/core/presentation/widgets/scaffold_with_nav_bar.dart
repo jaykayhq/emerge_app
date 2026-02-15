@@ -18,7 +18,7 @@ class ScaffoldWithNavBar extends StatelessWidget {
       body: GrowthBackground(child: navigationShell),
       bottomNavigationBar: EmergeBottomNav(
         navigationShell: navigationShell,
-        onFabPressed: () => context.push('/create-habit'),
+        onFabPressed: () => context.push('/timeline/create-habit'),
       ),
     );
   }

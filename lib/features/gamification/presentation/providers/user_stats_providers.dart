@@ -106,4 +106,36 @@ class UserStatsController {
       rethrow;
     }
   }
+
+  /// Claim a world node and add it to the claimed list
+  Future<void> claimNode(String nodeId) async {
+    if (userId.isEmpty) return;
+
+    try {
+      final currentProfile = await repository.getUserStats(userId);
+      final currentWorldState = currentProfile.worldState;
+
+      // Prevent duplicate claims
+      if (currentWorldState.claimedNodes.contains(nodeId)) {
+        debugPrint('Node $nodeId already claimed');
+        return;
+      }
+
+      final updatedClaimedNodes = List<String>.from(
+        currentWorldState.claimedNodes,
+      )..add(nodeId);
+
+      final newWorldState = currentWorldState.copyWith(
+        claimedNodes: updatedClaimedNodes,
+      );
+
+      final updatedProfile = currentProfile.copyWith(worldState: newWorldState);
+      await repository.saveUserStats(updatedProfile);
+
+      debugPrint('Node claimed: $nodeId');
+    } catch (e) {
+      debugPrint('Error claiming node: $e');
+      rethrow;
+    }
+  }
 }

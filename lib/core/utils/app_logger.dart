@@ -62,7 +62,10 @@ class AppLogger {
 
     // Redact query parameters with sensitive data
     message = message.replaceAll(
-      RegExp(r'[?&](token|key|password|api_key|access_token|secret)=[^&\s]*', caseSensitive: false),
+      RegExp(
+        r'[?&](token|key|password|api_key|access_token|secret)=[^&\s]*',
+        caseSensitive: false,
+      ),
       '',
     );
 
@@ -136,11 +139,14 @@ class AppLogger {
   /// Usage: `AppLogger.security('Failed login attempt', {'email': email})`
   static void security(String event, {Map<String, dynamic>? context}) {
     final redactedEvent = _redactPii(event);
-    final redactedContext = context?.map((key, value) =>
-        MapEntry(key, _redactPii(value.toString())));
+    final redactedContext = context?.map(
+      (key, value) => MapEntry(key, _redactPii(value.toString())),
+    );
 
     if (kDebugMode) {
-      _logger.w('🔒 $redactedEvent ${redactedContext != null ? "- $redactedContext" : ""}');
+      _logger.w(
+        '🔒 $redactedEvent ${redactedContext != null ? "- $redactedContext" : ""}',
+      );
     } else if (!kIsWeb) {
       // Always log security events to Crashlytics
       FirebaseCrashlytics.instance.log(
@@ -155,7 +161,10 @@ class AppLogger {
   static void networkRequest(String method, String url, {int? statusCode}) {
     // Redact query parameters that might contain sensitive data
     final redactedUrl = url.replaceAll(
-      RegExp(r'[?&](token|key|password|api_key|access_token)=[^&]*', caseSensitive: false),
+      RegExp(
+        r'[?&](token|key|password|api_key|access_token)=[^&]*',
+        caseSensitive: false,
+      ),
       '',
     );
 

@@ -1,11 +1,11 @@
 /**
  * Firebase Admin SDK Seeding Script
- * 
+ *
  * Seeds Firestore with initial data for tribes and challenges.
  * Uses Admin SDK which bypasses security rules.
- * 
+ *
  * Usage: npm run seed
- * 
+ *
  * Prerequisites:
  * 1. Set GOOGLE_APPLICATION_CREDENTIALS to service account key path
  * 2. Or run: gcloud auth application-default login
@@ -28,7 +28,8 @@ const tribes = [
     id: "tribe_meditation_guild",
     name: "Meditation Guild",
     description:
-      "A sanctuary for mindfulness practitioners. Build your daily meditation habit with like-minded souls seeking inner peace.",
+      "A sanctuary for mindfulness practitioners. Build your daily " +
+      "meditation habit with like-minded souls seeking inner peace.",
     imageUrl:
       "https://lh3.googleusercontent.com/aida-public/AB6AXuCQPv10oFu2sDwJG5HnbqYGpxbA0wnzkC6vDlQDKULU6jqd1GFbAvaHlVR8HP5FFbKR_csCaRnpfWctY_KWyR2M1ncSIaVW8yWh3FvINl5K1powi1_HlOHAdAb70KYF1Zh17eHisSvHT7K9zpZ0cKwQM8R59grDPZrlwAwNoWvxJHM6s6Hh9KaFhsxOLvyRPLwbBAQmGzjp2zSF306Ho62WsKQR1Hk5Ym5Xjqyx8XMPXH__xq3jmOHuKvKiBVEfaZO5_BgmfJhgQuo",
     memberCount: 0,
@@ -43,7 +44,8 @@ const tribes = [
     id: "tribe_5am_writers",
     name: "5 AM Writers",
     description:
-      "Early risers who write before the world wakes. Build a consistent writing practice and become the Writer you aspire to be.",
+      "Early risers who write before the world wakes. Build a " +
+      "consistent writing practice and become the Writer you aspire to be.",
     imageUrl:
       "https://lh3.googleusercontent.com/aida-public/AB6AXuClgA57GDCz5sdk2ZI7AfSAhkSv7hUoB_Wp-Tpa7zqU-A4H5UePzeWr9LE-xfPLVIA2BRUV6pfaZqqoRd29PuxlnRtuIfQPcO3YOCNI9LyL8GGugh3z_M99nsW62fAhd23x9IwcXZMazbVh3E2rVfFtwriLMAPGcAunjMZlwhRb7kiLAcDNR6P8IfadiZf0IwqQ_V-wbAHN3UhB3hHkmExRjo7uAWRE69oQhKcn3ez2YCynQ7Q7rhEsAIVE0sU7-YYjf1srOVEo-pk",
     memberCount: 0,
@@ -58,7 +60,8 @@ const tribes = [
     id: "tribe_fitness_guilds",
     name: "Fitness Guilds",
     description:
-      "Building physical vitality, endurance, and strength together. Every workout is a vote for your identity as an Athlete.",
+      "Building physical vitality, endurance, and strength together. " +
+      "Every workout is a vote for your identity as an Athlete.",
     imageUrl:
       "https://lh3.googleusercontent.com/aida-public/AB6AXuAcblAAnG3M4wmuLF9ZQ8PcI3vpkkp-Tsb9lPuwS3R9yyoz9p-9RzXs7SEnt-xumWZXp5M6ezwTrS7kdGjT_J5wxc5FJSVdFWFo8C_X_BEw89X-ADBiEMfX5WwTw3BgEvC5lPrczPdMpAiA5khGBQKAw-Wjspg94vy1I0Vomf6HklnNjg7NdPFWfylP5gxFDLqP-mV8MM8ch2D_j95CEZ03Cb48pHa87E9BV68ZUDoQQRHgsDfefC_MYIFgE28uPzaRJFxSreS0tZk",
     memberCount: 0,
@@ -73,7 +76,8 @@ const tribes = [
     id: "tribe_plant_based_parents",
     name: "Plant-Based Parents",
     description:
-      "Parents building healthy eating habits for themselves and their families. Share recipes, tips, and support.",
+      "Parents building healthy eating habits for themselves and their " +
+      "families. Share recipes, tips, and support.",
     imageUrl:
       "https://lh3.googleusercontent.com/aida-public/AB6AXuCL4J9tsC-b5pwJGqxpGob7_-OkXHHv9dtL8P0XxMsL7FdqL9VnQzh8sU5wduI8XNiXnbz1PCsCCBXJzRqSyZPKm4cG4YXA24-a3ipyODG4a31uLncKAJkuVo3f70_-r3k4uYdgeSduK7Q5olfcgWpyA7gwbOFkyzDFtw1vKhBTu2wp-FiouVWnFKbOnTe2iE5K0xKdu-9SLaGNAYnn19aFnbJAxDMiGa_7sbQWynEOkHn3FS0h0ttwuAeV_uKEN3S5FbtrqIrbnh8",
     memberCount: 0,
@@ -94,7 +98,8 @@ const challenges = [
     id: "challenge_30_day_running",
     title: "30-Day Running Streak",
     description:
-      "Build a consistent running habit. Complete 30 days of running to earn your Runner badge.",
+      "Build a consistent running habit. Complete 30 days of running to " +
+      "earn your Runner badge.",
     imageUrl:
       "https://lh3.googleusercontent.com/aida-public/AB6AXuDOh_utD3m3xlwj_lio5W-29cxexZgkN2h28IwWvfeMCbW6mFb2mf4R2hxpgLTqZoyjc5GMat3j2885Y_ZNMHxjHP5Hz45ARtDAD14ZRPtB--_peel9PvIq9NIzXOrbCu4gZhcVHfPUY9oWKFi0xMk-yHoab6iZFuFu44jBOcp7V_17aH8Dt4g7ZoqIAk6nMY9ghnlJdUPFrttCNe6ZocpOvxgxtDCXy_6w062COFol-Ehw2GgYkzVp2cG9yRW9VOtrN8mscbeIY0o",
     reward: "Runner Badge + 750 XP",
@@ -107,17 +112,30 @@ const challenges = [
     isTeamChallenge: false,
     category: "Fitness",
     steps: [
-      { day: 1, title: "First Run", description: "Complete your first run", isCompleted: false },
-      { day: 10, title: "10-Day Milestone", description: "Building momentum!", isCompleted: false },
-      { day: 20, title: "20-Day Milestone", description: "Almost there!", isCompleted: false },
-      { day: 30, title: "Runner Identity", description: "You ARE a runner now!", isCompleted: false },
+      {
+        day: 1, title: "First Run",
+        description: "Complete your first run", isCompleted: false,
+      },
+      {
+        day: 10, title: "10-Day Milestone",
+        description: "Building momentum!", isCompleted: false,
+      },
+      {
+        day: 20, title: "20-Day Milestone",
+        description: "Almost there!", isCompleted: false,
+      },
+      {
+        day: 30, title: "Runner Identity",
+        description: "You ARE a runner now!", isCompleted: false,
+      },
     ],
   },
   {
     id: "challenge_21_day_meditation",
     title: "21-Day Meditation Quest",
     description:
-      "Build a meditation practice. 21 days of daily meditation to unlock inner peace.",
+      "Build a meditation practice. 21 days of daily meditation to " +
+      "unlock inner peace.",
     imageUrl:
       "https://lh3.googleusercontent.com/aida-public/AB6AXuCodTUg4WyK3YvCqWVf4ApHDNFGSNFSqtJE_GxnttuProcXtP9wjNwWcMyJGUOIbB5HIh5CdNswcArwjXOUKsYtPrEyMeenKVR7cU56R7YEtIxrvSSjqQyGJeHW8-7r0ECmPbjEAn3344G2BB5Ti74Z6Uti3uPfy0sZaMd33pwrpVY9_pUsms407N66K9opRXoMHYC_yuvD31j0t1J2yuOTO1bCKmwgw7Roe9LnzveZVGHZtzb6gFSDlVtEnDOQsGgHsQkyeQFEpRg",
     reward: "Mindful Master Badge + 500 XP",
@@ -130,10 +148,22 @@ const challenges = [
     isTeamChallenge: false,
     category: "Mindfulness",
     steps: [
-      { day: 1, title: "Begin", description: "5 minutes of breathing", isCompleted: false },
-      { day: 7, title: "Week 1", description: "Increase to 10 minutes", isCompleted: false },
-      { day: 14, title: "Halfway", description: "Try unguided meditation", isCompleted: false },
-      { day: 21, title: "Mindful Master", description: "Practice established!", isCompleted: false },
+      {
+        day: 1, title: "Begin",
+        description: "5 minutes of breathing", isCompleted: false,
+      },
+      {
+        day: 7, title: "Week 1",
+        description: "Increase to 10 minutes", isCompleted: false,
+      },
+      {
+        day: 14, title: "Halfway",
+        description: "Try unguided meditation", isCompleted: false,
+      },
+      {
+        day: 21, title: "Mindful Master",
+        description: "Practice established!", isCompleted: false,
+      },
     ],
   },
   {
@@ -153,17 +183,30 @@ const challenges = [
     isTeamChallenge: false,
     category: "Learning",
     steps: [
-      { day: 1, title: "Open the Book", description: "Read your first 10 pages", isCompleted: false },
-      { day: 10, title: "100 Pages", description: "Making progress!", isCompleted: false },
-      { day: 20, title: "200 Pages", description: "Habit is sticking", isCompleted: false },
-      { day: 30, title: "Scholar Status", description: "300 pages conquered!", isCompleted: false },
+      {
+        day: 1, title: "Open the Book",
+        description: "Read your first 10 pages", isCompleted: false,
+      },
+      {
+        day: 10, title: "10-Day",
+        description: "Making progress!", isCompleted: false,
+      },
+      {
+        day: 20, title: "20-Day",
+        description: "Habit is sticking", isCompleted: false,
+      },
+      {
+        day: 30, title: "Scholar Status",
+        description: "300 pages conquered!", isCompleted: false,
+      },
     ],
   },
   {
     id: "challenge_deep_work",
     title: "14-Day Deep Work Sprint",
     description:
-      "Master focused, distraction-free work. Complete 2-hour deep work blocks daily.",
+      "Master focused, distraction-free work. Complete 2-hour deep work " +
+      "blocks daily.",
     imageUrl: "https://images.unsplash.com/photo-1497032628192-86f99bcd76bc?w=400",
     reward: "Focus Master Badge + 500 XP",
     participants: 0,
@@ -175,9 +218,18 @@ const challenges = [
     isTeamChallenge: false,
     category: "Productivity",
     steps: [
-      { day: 1, title: "No Distractions", description: "First 2-hour block", isCompleted: false },
-      { day: 7, title: "Week 1 Done", description: "14 hours of deep work!", isCompleted: false },
-      { day: 14, title: "Focus Master", description: "28 hours achieved!", isCompleted: false },
+      {
+        day: 1, title: "No Distractions",
+        description: "First 2-hour block", isCompleted: false,
+      },
+      {
+        day: 7, title: "Week 1 Done",
+        description: "14 hours of deep work!", isCompleted: false,
+      },
+      {
+        day: 14, title: "Focus Master",
+        description: "28 hours achieved!", isCompleted: false,
+      },
     ],
   },
 ];
@@ -186,6 +238,114 @@ const challenges = [
 // SEEDING FUNCTIONS
 // ============================================================================
 
+// Official Clubs from Affiliate Strategy
+const officialClubs = [
+  {
+    id: "morning_warriors",
+    name: "Morning Warriors",
+    description: "5AM workouts to start your day with energy and discipline",
+    imageUrl: "https://images.unsplash.com/photo-1517836357463-d25dfeac3438?w=800",
+    archetypeId: "athlete",
+    type: "official",
+    levelRequirement: 1,
+    tags: ["fitness", "morning", "workout", "early-risers"],
+    isVerified: true,
+    isFeatured: true,
+    rank: 1,
+    totalXp: 50000,
+    memberCount: 1250,
+    ownerId: "emerge_official",
+  },
+  {
+    id: "deep_work_society",
+    name: "Deep Work Society",
+    description: "90-minute focus blocks for profound productivity",
+    imageUrl: "https://images.unsplash.com/photo-1434030216411-0b793f4b4173?w=800",
+    archetypeId: "scholar",
+    type: "official",
+    levelRequirement: 1,
+    tags: ["productivity", "focus", "deep-work", "study"],
+    isVerified: true,
+    isFeatured: true,
+    rank: 2,
+    totalXp: 68000,
+    memberCount: 2100,
+    ownerId: "emerge_official",
+  },
+  {
+    id: "mindful_masters",
+    name: "Mindful Masters",
+    description: "21-day meditation challenges for inner peace and clarity",
+    imageUrl: "https://images.unsplash.com/photo-1506126613408-eca07ce68773?w=800",
+    archetypeId: "stoic",
+    type: "official",
+    levelRequirement: 1,
+    tags: ["meditation", "mindfulness", "calm", "mental-health"],
+    isVerified: true,
+    isFeatured: true,
+    rank: 1,
+    totalXp: 75000,
+    memberCount: 3200,
+    ownerId: "emerge_official",
+  },
+  {
+    id: "creative_collective",
+    name: "Creative Collective",
+    description: "Ship something every day - build your creative muscle",
+    imageUrl: "https://images.unsplash.com/photo-1513364776144-60967b0f800f?w=800",
+    archetypeId: "creator",
+    type: "official",
+    levelRequirement: 1,
+    tags: ["creativity", "art", "create", "daily-practice"],
+    isVerified: true,
+    isFeatured: true,
+    rank: 3,
+    totalXp: 46000,
+    memberCount: 1650,
+    ownerId: "emerge_official",
+  },
+  {
+    id: "lunar_seekers",
+    name: "Lunar Seekers",
+    description: "Scripture study and daily prayer for spiritual growth",
+    imageUrl: "https://images.unsplash.com/photo-1507692049790-de58290a4334?w=800",
+    archetypeId: "mystic",
+    type: "official",
+    levelRequirement: 1,
+    tags: ["faith", "prayer", "scripture", "spiritual"],
+    isVerified: true,
+    isFeatured: true,
+    rank: 2,
+    totalXp: 58000,
+    memberCount: 1890,
+    ownerId: "emerge_official",
+  },
+];
+
+/**
+ * Seeds official clubs into the tribes collection.
+ * @return {Promise<void>}
+ */
+async function seedOfficialClubs(): Promise<void> {
+  console.log("Seeding official clubs...");
+  const batch = db.batch();
+
+  for (const club of officialClubs) {
+    const docRef = db.collection("tribes").doc(club.id);
+    batch.set(docRef, {
+      ...club,
+      createdAt: admin.firestore.FieldValue.serverTimestamp(),
+    });
+  }
+
+  await batch.commit();
+  console.log(`✓ Seeded ${officialClubs.length} official clubs`);
+}
+
+/**
+ * Seeds community tribes.
+ * @return {Promise<void>}
+ */
 async function seedTribes(): Promise<void> {
   console.log("Seeding tribes...");
   const batch = db.batch();
@@ -202,6 +362,10 @@ async function seedTribes(): Promise<void> {
   console.log(`✓ Seeded ${tribes.length} tribes`);
 }
 
+/**
+ * Seeds system challenges.
+ * @return {Promise<void>}
+ */
 async function seedChallenges(): Promise<void> {
   console.log("Seeding challenges...");
   const batch = db.batch();
@@ -218,6 +382,10 @@ async function seedChallenges(): Promise<void> {
   console.log(`✓ Seeded ${challenges.length} challenges`);
 }
 
+/**
+ * Orchestrates seeding of all data.
+ * @return {Promise<void>}
+ */
 async function seedAll(): Promise<void> {
   console.log("=".repeat(60));
   console.log("Firebase Admin SDK - Seeding Firestore");
@@ -225,6 +393,7 @@ async function seedAll(): Promise<void> {
 
   try {
     await seedTribes();
+    await seedOfficialClubs();
     await seedChallenges();
 
     console.log("=".repeat(60));

@@ -1,15 +1,20 @@
+import 'package:emerge_app/core/theme/app_theme.dart';
+import 'package:emerge_app/core/presentation/widgets/emerge_branding.dart';
 import 'package:emerge_app/core/utils/app_logger.dart';
 import 'package:emerge_app/features/auth/domain/entities/user_extension.dart';
 import 'package:emerge_app/features/gamification/presentation/providers/user_stats_providers.dart';
 import 'package:emerge_app/features/habits/domain/entities/habit.dart';
 import 'package:emerge_app/features/habits/presentation/providers/habit_providers.dart';
 import 'package:emerge_app/features/habits/presentation/widgets/habit_template_picker.dart';
+import 'package:emerge_app/features/habits/presentation/widgets/habit_form_widgets.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:uuid/uuid.dart';
 
+/// Redesigned Create Habit Screen with Stitch-inspired cosmic glassmorphism
 class AdvancedCreateHabitScreen extends ConsumerStatefulWidget {
   const AdvancedCreateHabitScreen({super.key});
 
@@ -23,14 +28,12 @@ class _AdvancedCreateHabitScreenState
   final _formKey = GlobalKey<FormState>();
   final _titleController = TextEditingController();
   final _locationController = TextEditingController();
-
   HabitFrequency _frequency = HabitFrequency.daily;
   final List<int> _specificDays = [];
   TimeOfDayPreference _timeOfDay = TimeOfDayPreference.morning;
   TimeOfDay? _specificTime;
   String? _anchorHabitId;
   HabitAttribute _attribute = HabitAttribute.vitality;
-  String _identityStatement = "I will...";
 
   @override
   void initState() {
@@ -43,30 +46,13 @@ class _AdvancedCreateHabitScreenState
   void dispose() {
     _titleController.dispose();
     _locationController.dispose();
+
     super.dispose();
   }
 
   void _updateIdentityStatement() {
-    // Logic to construct statement: "I will [BEHAVIOR] at [TIME] in [LOCATION] to become [IDENTITY]"
-    final behavior = _titleController.text.isEmpty
-        ? '...'
-        : _titleController.text;
-
-    String timeString = "";
-    if (_specificTime != null) {
-      timeString = " at ${_specificTime!.format(context)}";
-    } else {
-      timeString = " in the ${_timeOfDay.name}";
-    }
-
-    final location = _locationController.text.isEmpty
-        ? ""
-        : " in ${_locationController.text}";
-
-    setState(() {
-      _identityStatement =
-          "I will $behavior$timeString$location to become more ${_attribute.name}.";
-    });
+    // This now serves mainly for non-text changes (attributes, etc)
+    setState(() {});
   }
 
   Future<void> _selectTime(BuildContext context) async {
@@ -84,6 +70,19 @@ class _AdvancedCreateHabitScreenState
 
   Future<void> _saveHabit() async {
     if (_formKey.currentState!.validate()) {
+      // Validate required scheduled time
+      if (_specificTime == null) {
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: const Text('Please set a scheduled time for this habit'),
+              backgroundColor: Colors.orange[700],
+            ),
+          );
+        }
+        return;
+      }
+
       final user = FirebaseAuth.instance.currentUser;
       if (user == null) {
         if (context.mounted) {
@@ -109,27 +108,27 @@ class _AdvancedCreateHabitScreenState
         attribute: _attribute,
         createdAt: DateTime.now(),
         difficulty: HabitDifficulty.medium,
+        twoMinuteVersion: null,
+        reward: 'Complete and enjoy your progress!', // Default reward
+        timerDurationMinutes: 2,
+        customRules: const [],
       );
 
       try {
-        // Use the createHabit provider which connects to gamification system
         await ref.read(createHabitProvider(newHabit).future);
 
         AppLogger.i(
           'Successfully created habit from Advanced Create: ${newHabit.id}',
         );
 
-        // Store context reference to avoid async gap issues
         if (context.mounted) {
           final contextRef = context;
-
-          // Show success toast
           if (contextRef.mounted) {
             ScaffoldMessenger.of(contextRef).showSnackBar(
               const SnackBar(content: Text('Habit created successfully!')),
             );
           }
-          contextRef.pop(); // Return to previous screen
+          contextRef.pop();
         }
       } catch (e, s) {
         AppLogger.e('Error creating habit from Advanced Create', e, s);
@@ -144,9 +143,9 @@ class _AdvancedCreateHabitScreenState
   }
 
   void _applyTemplate(HabitTemplate template) {
+    HapticFeedback.mediumImpact();
     setState(() {
       _titleController.text = template.title;
-      // Map time of day
       switch (template.timeOfDay.toLowerCase()) {
         case 'morning':
           _timeOfDay = TimeOfDayPreference.morning;
@@ -163,7 +162,6 @@ class _AdvancedCreateHabitScreenState
         default:
           _timeOfDay = TimeOfDayPreference.anytime;
       }
-      // Map frequency
       if (template.frequency.toLowerCase() == 'weekly') {
         _frequency = HabitFrequency.weekly;
       } else {
@@ -171,12 +169,12 @@ class _AdvancedCreateHabitScreenState
       }
       _updateIdentityStatement();
     });
-    // Show confirmation
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Applied "${template.title}" template'),
           duration: const Duration(seconds: 2),
+          backgroundColor: EmergeColors.teal,
         ),
       );
     }
@@ -185,250 +183,688 @@ class _AdvancedCreateHabitScreenState
   @override
   Widget build(BuildContext context) {
     final habitsAsync = ref.watch(habitsProvider);
+    final userProfile = ref.watch(userStatsStreamProvider).valueOrNull;
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('New Habit'),
-        centerTitle: true,
-        leading: IconButton(
-          icon: const Icon(Icons.close),
-          onPressed: () => context.pop(),
-        ),
-      ),
-      body: Form(
-        key: _formKey,
-        child: ListView(
-          padding: const EdgeInsets.all(16),
-          children: [
-            // Identity Statement Preview
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: Theme.of(context).primaryColor.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(16),
-              ),
-              child: Text(
-                _identityStatement,
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: Theme.of(context).primaryColor,
-                ),
-                textAlign: TextAlign.center,
-              ),
-            ),
-            const SizedBox(height: 24),
-
-            // Habit Templates Carousel
-            Builder(
-              builder: (context) {
-                final userProfile = ref
-                    .watch(userStatsStreamProvider)
-                    .valueOrNull;
-                final archetype = userProfile?.archetype ?? UserArchetype.none;
-                return HabitTemplateCarousel(
-                  archetype: archetype,
-                  onTemplateSelected: _applyTemplate,
-                );
-              },
-            ),
-            const SizedBox(height: 24),
-
-            // Habit Name
-            TextFormField(
-              controller: _titleController,
-              decoration: const InputDecoration(
-                labelText: 'Habit Name',
-                hintText: 'e.g., Read 10 pages',
-                border: OutlineInputBorder(),
-              ),
-              validator: (value) => value == null || value.isEmpty
-                  ? 'Please enter a habit name'
-                  : null,
-            ),
-            const SizedBox(height: 24),
-
-            // Frequency
-            _buildSectionHeader('Frequency'),
-            SegmentedButton<HabitFrequency>(
-              segments: const [
-                ButtonSegment(
-                  value: HabitFrequency.daily,
-                  label: Text('Daily'),
-                ),
-                ButtonSegment(
-                  value: HabitFrequency.weekly,
-                  label: Text('Weekly'),
-                ),
-                ButtonSegment(
-                  value: HabitFrequency.specificDays,
-                  label: Text('Specific'),
-                ),
-              ],
-              selected: {_frequency},
-              onSelectionChanged: (Set<HabitFrequency> newSelection) {
-                setState(() {
-                  _frequency = newSelection.first;
-                });
-              },
-            ),
-            if (_frequency == HabitFrequency.specificDays) ...[
-              const SizedBox(height: 12),
-              Wrap(
-                spacing: 8,
-                children: List.generate(7, (index) {
-                  final day = index + 1;
-                  final isSelected = _specificDays.contains(day);
-                  return FilterChip(
-                    label: Text(['M', 'T', 'W', 'T', 'F', 'S', 'S'][index]),
-                    selected: isSelected,
-                    onSelected: (selected) {
-                      setState(() {
-                        if (selected) {
-                          _specificDays.add(day);
-                        } else {
-                          _specificDays.remove(day);
-                        }
-                      });
-                    },
-                  );
-                }),
-              ),
-            ],
-            const SizedBox(height: 24),
-
-            // Time & Location (Implementation Intentions)
-            _buildSectionHeader('Implementation Intentions'),
-            Row(
-              children: [
-                Expanded(
-                  child: InkWell(
-                    onTap: () => _selectTime(context),
-                    child: InputDecorator(
-                      decoration: const InputDecoration(
-                        labelText: 'Time',
-                        border: OutlineInputBorder(),
-                        suffixIcon: Icon(Icons.access_time),
+      backgroundColor: EmergeColors.background,
+      body: Container(
+        decoration: const BoxDecoration(gradient: EmergeColors.cosmicGradient),
+        child: SafeArea(
+          child: Form(
+            key: _formKey,
+            child: CustomScrollView(
+              slivers: [
+                // App Bar
+                SliverAppBar(
+                  floating: true,
+                  backgroundColor: Colors.transparent,
+                  elevation: 0,
+                  leading: IconButton(
+                    icon: Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(12),
                       ),
-                      child: Text(
-                        _specificTime != null
-                            ? _specificTime!.format(context)
-                            : 'Set Time',
-                      ),
+                      child: Icon(Icons.close, color: AppTheme.textMainDark),
+                    ),
+                    onPressed: () => context.pop(),
+                  ),
+                  title: Text(
+                    'NEW HABIT',
+                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                      color: AppTheme.textMainDark,
+                      fontWeight: FontWeight.bold,
+                      letterSpacing: 1.5,
                     ),
                   ),
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: TextFormField(
-                    controller: _locationController,
-                    decoration: const InputDecoration(
-                      labelText: 'Location',
-                      hintText: 'e.g., Bedroom',
-                      border: OutlineInputBorder(),
-                      suffixIcon: Icon(Icons.place),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            Wrap(
-              spacing: 8,
-              children: TimeOfDayPreference.values.map((time) {
-                return ChoiceChip(
-                  label: Text(time.name.toUpperCase()),
-                  selected: _timeOfDay == time && _specificTime == null,
-                  onSelected: (selected) {
-                    if (selected) {
-                      setState(() {
-                        _timeOfDay = time;
-                        _specificTime =
-                            null; // Clear specific time if general preference selected
-                        _updateIdentityStatement();
-                      });
-                    }
-                  },
-                );
-              }).toList(),
-            ),
-
-            const SizedBox(height: 24),
-
-            // Anchor Habit
-            _buildSectionHeader('Anchor Habit (Optional)'),
-            habitsAsync.when(
-              data: (habits) {
-                return DropdownButtonFormField<String>(
-                  initialValue: _anchorHabitId,
-                  decoration: const InputDecoration(
-                    border: OutlineInputBorder(),
-                    hintText: 'Select an existing habit',
-                  ),
-                  items: [
-                    const DropdownMenuItem(value: null, child: Text('None')),
-                    ...habits.map(
-                      (habit) => DropdownMenuItem(
-                        value: habit.id,
-                        child: Text(habit.title),
+                  centerTitle: true,
+                  actions: [
+                    IconButton(
+                      icon: Icon(
+                        Icons.person_outline,
+                        color: EmergeColors.teal,
                       ),
+                      onPressed: () => context.push('/profile'),
                     ),
                   ],
-                  onChanged: (value) {
-                    setState(() {
-                      _anchorHabitId = value;
-                      // Logic for anchor habit in identity statement could be added here
-                    });
-                  },
-                );
-              },
-              loading: () => const CircularProgressIndicator(),
-              error: (err, stack) => Text('Error loading habits: $err'),
-            ),
-            const SizedBox(height: 24),
+                ),
 
-            // Identity Attribute
-            _buildSectionHeader('Identity Attribute'),
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: HabitAttribute.values.map((attr) {
-                return ChoiceChip(
-                  label: Text(attr.name.toUpperCase()),
-                  selected: _attribute == attr,
-                  onSelected: (selected) {
-                    if (selected) {
-                      setState(() {
-                        _attribute = attr;
-                        _updateIdentityStatement();
-                      });
-                    }
-                  },
-                );
-              }).toList(),
-            ),
-            const SizedBox(height: 32),
+                // Identity Statement Preview Card (Glassmorphism)
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: RepaintBoundary(
+                      child: IdentityStatementPreview(
+                        titleController: _titleController,
+                        locationController: _locationController,
+                        specificTime: _specificTime,
+                        timeOfDay: _timeOfDay,
+                        attributeName: _attribute.name,
+                      ),
+                    ),
+                  ),
+                ),
 
-            // Save Button
-            SizedBox(
-              height: 50,
-              child: ElevatedButton(
-                onPressed: _saveHabit,
-                child: const Text('Create Habit'),
-              ),
+                // Quick Suggestions Carousel
+                SliverToBoxAdapter(
+                  child: RepaintBoundary(
+                    child: HabitTemplateCarousel(
+                      archetype: userProfile?.archetype ?? UserArchetype.none,
+                      onTemplateSelected: _applyTemplate,
+                    ),
+                  ),
+                ),
+
+                const SliverToBoxAdapter(child: SizedBox(height: 24)),
+
+                // Habit Name Input
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    child: RepaintBoundary(
+                      child: GlassmorphismCard(
+                        child: Padding(
+                          padding: const EdgeInsets.all(16),
+                          child: TextFormField(
+                            controller: _titleController,
+                            style: TextStyle(color: AppTheme.textMainDark),
+                            decoration: InputDecoration(
+                              labelText: 'Habit Name',
+                              labelStyle: TextStyle(
+                                color: AppTheme.textSecondaryDark,
+                              ),
+                              hintText: 'e.g., Read 10 pages',
+                              hintStyle: TextStyle(
+                                color: AppTheme.textSecondaryDark.withValues(
+                                  alpha: 0.5,
+                                ),
+                              ),
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                borderSide: BorderSide(
+                                  color: EmergeColors.teal.withValues(
+                                    alpha: 0.3,
+                                  ),
+                                ),
+                              ),
+                              enabledBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                borderSide: BorderSide(
+                                  color: EmergeColors.teal.withValues(
+                                    alpha: 0.3,
+                                  ),
+                                ),
+                              ),
+                              focusedBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                borderSide: BorderSide(
+                                  color: EmergeColors.teal,
+                                  width: 2,
+                                ),
+                              ),
+                              filled: true,
+                              fillColor: Colors.white.withValues(alpha: 0.05),
+                            ),
+                            validator: (value) => value == null || value.isEmpty
+                                ? 'Please enter a habit name'
+                                : null,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+
+                const SliverToBoxAdapter(child: SizedBox(height: 16)),
+
+                // Frequency Selector
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    child: RepaintBoundary(
+                      child: GlassmorphismCard(
+                        child: Padding(
+                          padding: const EdgeInsets.all(16),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              SectionHeader(title: 'Frequency'),
+                              const SizedBox(height: 12),
+                              Row(
+                                children: [
+                                  FrequencyChip(
+                                    label: 'Daily',
+                                    isSelected:
+                                        _frequency == HabitFrequency.daily,
+                                    onTap: () => setState(
+                                      () => _frequency = HabitFrequency.daily,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  FrequencyChip(
+                                    label: 'Weekly',
+                                    isSelected:
+                                        _frequency == HabitFrequency.weekly,
+                                    onTap: () => setState(
+                                      () => _frequency = HabitFrequency.weekly,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  FrequencyChip(
+                                    label: 'Specific',
+                                    isSelected:
+                                        _frequency ==
+                                        HabitFrequency.specificDays,
+                                    onTap: () => setState(
+                                      () => _frequency =
+                                          HabitFrequency.specificDays,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              if (_frequency ==
+                                  HabitFrequency.specificDays) ...[
+                                const SizedBox(height: 12),
+                                Wrap(
+                                  spacing: 8,
+                                  children: List.generate(7, (index) {
+                                    final day = index + 1;
+                                    final isSelected = _specificDays.contains(
+                                      day,
+                                    );
+                                    return GestureDetector(
+                                      onTap: () {
+                                        HapticFeedback.selectionClick();
+                                        setState(() {
+                                          if (isSelected) {
+                                            _specificDays.remove(day);
+                                          } else {
+                                            _specificDays.add(day);
+                                          }
+                                        });
+                                      },
+                                      child: Container(
+                                        width: 36,
+                                        height: 36,
+                                        decoration: BoxDecoration(
+                                          color: isSelected
+                                              ? EmergeColors.teal
+                                              : Colors.transparent,
+                                          borderRadius: BorderRadius.circular(
+                                            8,
+                                          ),
+                                          border: Border.all(
+                                            color: isSelected
+                                                ? EmergeColors.teal
+                                                : AppTheme.textSecondaryDark
+                                                      .withValues(alpha: 0.3),
+                                          ),
+                                        ),
+                                        child: Center(
+                                          child: Text(
+                                            [
+                                              'M',
+                                              'T',
+                                              'W',
+                                              'T',
+                                              'F',
+                                              'S',
+                                              'S',
+                                            ][index],
+                                            style: TextStyle(
+                                              color: isSelected
+                                                  ? Colors.white
+                                                  : AppTheme.textSecondaryDark,
+                                              fontWeight: FontWeight.w600,
+                                              fontSize: 12,
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                    );
+                                  }),
+                                ),
+                              ],
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+
+                const SliverToBoxAdapter(child: SizedBox(height: 16)),
+
+                // Time & Location
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    child: RepaintBoundary(
+                      child: GlassmorphismCard(
+                        child: Padding(
+                          padding: const EdgeInsets.all(16),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              SectionHeader(title: 'Time & Location'),
+                              const SizedBox(height: 12),
+                              Row(
+                                children: [
+                                  Expanded(
+                                    child: GestureDetector(
+                                      onTap: () => _selectTime(context),
+                                      child: Container(
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 16,
+                                          vertical: 14,
+                                        ),
+                                        decoration: BoxDecoration(
+                                          color: Colors.white.withValues(
+                                            alpha: 0.05,
+                                          ),
+                                          borderRadius: BorderRadius.circular(
+                                            12,
+                                          ),
+                                          border: Border.all(
+                                            color: EmergeColors.teal.withValues(
+                                              alpha: 0.3,
+                                            ),
+                                          ),
+                                        ),
+                                        child: Row(
+                                          children: [
+                                            Icon(
+                                              Icons.access_time,
+                                              color: EmergeColors.teal,
+                                              size: 20,
+                                            ),
+                                            const SizedBox(width: 8),
+                                            Flexible(
+                                              child: Text(
+                                                _specificTime != null
+                                                    ? _specificTime!.format(
+                                                        context,
+                                                      )
+                                                    : 'Set Time',
+                                                style: TextStyle(
+                                                  color: AppTheme.textMainDark,
+                                                ),
+                                                overflow: TextOverflow.ellipsis,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 12),
+                                  Expanded(
+                                    child: Container(
+                                      decoration: BoxDecoration(
+                                        color: Colors.white.withValues(
+                                          alpha: 0.05,
+                                        ),
+                                        borderRadius: BorderRadius.circular(12),
+                                        border: Border.all(
+                                          color: EmergeColors.teal.withValues(
+                                            alpha: 0.3,
+                                          ),
+                                        ),
+                                      ),
+                                      child: TextFormField(
+                                        controller: _locationController,
+                                        style: TextStyle(
+                                          color: AppTheme.textMainDark,
+                                        ),
+                                        decoration: InputDecoration(
+                                          prefixIcon: Icon(
+                                            Icons.place,
+                                            color: EmergeColors.teal,
+                                            size: 20,
+                                          ),
+                                          hintText: 'Location',
+                                          hintStyle: TextStyle(
+                                            color: AppTheme.textSecondaryDark
+                                                .withValues(alpha: 0.5),
+                                          ),
+                                          border: InputBorder.none,
+                                          contentPadding:
+                                              const EdgeInsets.symmetric(
+                                                horizontal: 8,
+                                                vertical: 14,
+                                              ),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 16),
+                              Wrap(
+                                spacing: 8,
+                                runSpacing: 8,
+                                children: TimeOfDayPreference.values.map((
+                                  time,
+                                ) {
+                                  final isSelected =
+                                      _timeOfDay == time &&
+                                      _specificTime == null;
+                                  return GestureDetector(
+                                    onTap: () {
+                                      HapticFeedback.selectionClick();
+                                      setState(() {
+                                        _timeOfDay = time;
+                                        _specificTime = null;
+                                        _updateIdentityStatement();
+                                      });
+                                    },
+                                    child: Container(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 16,
+                                        vertical: 10,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        color: isSelected
+                                            ? EmergeColors.teal
+                                            : Colors.transparent,
+                                        borderRadius: BorderRadius.circular(20),
+                                        border: Border.all(
+                                          color: isSelected
+                                              ? EmergeColors.teal
+                                              : AppTheme.textSecondaryDark
+                                                    .withValues(alpha: 0.3),
+                                        ),
+                                      ),
+                                      child: Text(
+                                        time.name.toUpperCase(),
+                                        style: TextStyle(
+                                          color: isSelected
+                                              ? Colors.white
+                                              : AppTheme.textSecondaryDark,
+                                          fontWeight: FontWeight.w600,
+                                          fontSize: 12,
+                                        ),
+                                      ),
+                                    ),
+                                  );
+                                }).toList(),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+
+                const SliverToBoxAdapter(child: SizedBox(height: 16)),
+
+                const SliverToBoxAdapter(child: SizedBox(height: 16)),
+
+                // Identity Attribute
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    child: GlassmorphismCard(
+                      child: Padding(
+                        padding: const EdgeInsets.all(16),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            SectionHeader(title: 'Identity Attribute'),
+                            const SizedBox(height: 12),
+                            Wrap(
+                              spacing: 8,
+                              runSpacing: 8,
+                              children: HabitAttribute.values.map((attr) {
+                                final isSelected = _attribute == attr;
+                                return GestureDetector(
+                                  onTap: () {
+                                    HapticFeedback.selectionClick();
+                                    setState(() {
+                                      _attribute = attr;
+                                      _updateIdentityStatement();
+                                    });
+                                  },
+                                  child: Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 16,
+                                      vertical: 10,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      gradient: isSelected
+                                          ? LinearGradient(
+                                              colors: [
+                                                EmergeColors.teal,
+                                                EmergeColors.teal.withValues(
+                                                  alpha: 0.7,
+                                                ),
+                                              ],
+                                            )
+                                          : null,
+                                      color: isSelected
+                                          ? null
+                                          : Colors.transparent,
+                                      borderRadius: BorderRadius.circular(20),
+                                      border: Border.all(
+                                        color: isSelected
+                                            ? EmergeColors.teal
+                                            : AppTheme.textSecondaryDark
+                                                  .withValues(alpha: 0.3),
+                                      ),
+                                      boxShadow: isSelected
+                                          ? [
+                                              BoxShadow(
+                                                color: EmergeColors.teal
+                                                    .withValues(alpha: 0.3),
+                                                blurRadius: 8,
+                                                spreadRadius: -2,
+                                              ),
+                                            ]
+                                          : null,
+                                    ),
+                                    child: Text(
+                                      attr.name.toUpperCase(),
+                                      style: TextStyle(
+                                        color: isSelected
+                                            ? Colors.white
+                                            : AppTheme.textSecondaryDark,
+                                        fontWeight: FontWeight.w600,
+                                        fontSize: 12,
+                                      ),
+                                    ),
+                                  ),
+                                );
+                              }).toList(),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+
+                // Anchor Habit (Optional)
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: habitsAsync.when(
+                      data: (habits) {
+                        if (habits.isEmpty) return const SizedBox.shrink();
+                        return GlassmorphismCard(
+                          child: Padding(
+                            padding: const EdgeInsets.all(16),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                SectionHeader(title: 'Anchor Habit (Optional)'),
+                                const SizedBox(height: 12),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 12,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: Colors.white.withValues(alpha: 0.05),
+                                    borderRadius: BorderRadius.circular(12),
+                                    border: Border.all(
+                                      color: EmergeColors.teal.withValues(
+                                        alpha: 0.3,
+                                      ),
+                                    ),
+                                  ),
+                                  child: DropdownButtonFormField<String>(
+                                    initialValue: _anchorHabitId,
+                                    dropdownColor: AppTheme.surfaceDark,
+                                    style: TextStyle(
+                                      color: AppTheme.textMainDark,
+                                    ),
+                                    decoration: const InputDecoration(
+                                      border: InputBorder.none,
+                                      hintText: 'Select an existing habit',
+                                    ),
+                                    items: [
+                                      DropdownMenuItem(
+                                        value: null,
+                                        child: Text(
+                                          'None',
+                                          style: TextStyle(
+                                            color: AppTheme.textSecondaryDark,
+                                          ),
+                                        ),
+                                      ),
+                                      ...habits.map(
+                                        (habit) => DropdownMenuItem(
+                                          value: habit.id,
+                                          child: Text(habit.title),
+                                        ),
+                                      ),
+                                    ],
+                                    onChanged: (value) {
+                                      setState(() {
+                                        _anchorHabitId = value;
+                                      });
+                                    },
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        );
+                      },
+                      loading: () =>
+                          const Center(child: CircularProgressIndicator()),
+                      error: (err, stack) => const SizedBox.shrink(),
+                    ),
+                  ),
+                ),
+
+                // Create Button
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
+                    child: GestureDetector(
+                      onTap: _saveHabit,
+                      child: Container(
+                        height: 56,
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            colors: [
+                              EmergeColors.teal,
+                              EmergeColors.teal.withValues(alpha: 0.8),
+                            ],
+                          ),
+                          borderRadius: BorderRadius.circular(16),
+                          boxShadow: [
+                            BoxShadow(
+                              color: EmergeColors.teal.withValues(alpha: 0.4),
+                              blurRadius: 16,
+                              offset: const Offset(0, 4),
+                            ),
+                          ],
+                        ),
+                        child: Center(
+                          child: Text(
+                            'CREATE HABIT',
+                            style: Theme.of(context).textTheme.titleMedium
+                                ?.copyWith(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold,
+                                  letterSpacing: 1.5,
+                                ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
             ),
-          ],
+          ),
         ),
       ),
     );
   }
+}
 
-  Widget _buildSectionHeader(String title) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 8),
-      child: Text(
-        title,
-        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+/// Specialized preview widget that avoids rebuilding the main screen on every keystroke
+class IdentityStatementPreview extends StatelessWidget {
+  final TextEditingController titleController;
+  final TextEditingController locationController;
+  final TimeOfDay? specificTime;
+  final TimeOfDayPreference timeOfDay;
+  final String attributeName;
+
+  const IdentityStatementPreview({
+    super.key,
+    required this.titleController,
+    required this.locationController,
+    required this.specificTime,
+    required this.timeOfDay,
+    required this.attributeName,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GlassmorphismCard(
+      child: Padding(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          children: [
+            Icon(Icons.auto_awesome, color: EmergeColors.teal, size: 24),
+            const SizedBox(height: 12),
+            ListenableBuilder(
+              listenable: Listenable.merge([
+                titleController,
+                locationController,
+              ]),
+              builder: (context, _) {
+                final behavior = titleController.text.isEmpty
+                    ? '...'
+                    : titleController.text;
+                String timeString = "";
+                if (specificTime != null) {
+                  timeString = " at ${specificTime!.format(context)}";
+                } else {
+                  timeString = " in the ${timeOfDay.name}";
+                }
+                final location = locationController.text.isEmpty
+                    ? ""
+                    : " in ${locationController.text}";
+
+                return Text(
+                  "I will $behavior$timeString$location to become more $attributeName.",
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    color: AppTheme.textMainDark,
+                    fontWeight: FontWeight.w600,
+                    height: 1.4,
+                  ),
+                  textAlign: TextAlign.center,
+                );
+              },
+            ),
+          ],
+        ),
       ),
     );
   }
