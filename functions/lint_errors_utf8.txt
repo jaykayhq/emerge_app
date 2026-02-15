@@ -1,0 +1,14 @@
+﻿
+C:\Users\excel\Downloads\emerge_app\functions\src\index.ts
+   74:1   error    This line has a length of 81. Maximum allowed is 80   max-len
+  112:1   error    This line has a length of 81. Maximum allowed is 80   max-len
+  139:1   error    This line has a length of 81. Maximum allowed is 80   max-len
+  151:1   error    This line has a length of 87. Maximum allowed is 80   max-len
+  161:22  warning  Forbidden non-null assertion                          @typescript-eslint/no-non-null-assertion
+  162:72  warning  Unexpected any. Specify a different type              @typescript-eslint/no-explicit-any
+  170:1   error    This line has a length of 103. Maximum allowed is 80  max-len
+  187:39  warning  Unexpected any. Specify a different type              @typescript-eslint/no-explicit-any
+  279:21  warning  Forbidden non-null assertion                          @typescript-eslint/no-non-null-assertion
+
+Γ£û 9 problems (5 errors, 4 warnings)
+

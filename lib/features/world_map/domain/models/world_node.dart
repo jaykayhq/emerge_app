@@ -1,4 +1,5 @@
 import 'package:emerge_app/features/habits/domain/entities/habit.dart';
+import 'package:emerge_app/features/world_map/domain/models/hex_location.dart';
 import 'package:flutter/material.dart';
 
 /// Type of node in the world map
@@ -52,6 +53,7 @@ class WorldNode {
   final String id;
   final String name;
   final String description;
+  final String emoji; // Added for visual representation (3D object style)
 
   /// Which habit attributes this node boosts when completed
   final List<HabitAttribute> targetedAttributes;
@@ -65,8 +67,11 @@ class WorldNode {
   /// Type of node (waypoint, milestone, challenge, etc.)
   final NodeType type;
 
-  /// Relative position on map (0.0-1.0 for both x and y)
-  /// Y increases upward (bottom = 0, top = 1)
+  /// Hexagonal Grid Location (q, r)
+  final HexLocation hexLocation;
+
+  /// Deprecated: Relative position on map (0.0-1.0)
+  /// Kept for fallback/calculations if needed, but primary source is hexLocation
   final Offset position;
 
   /// IDs of nodes this connects to (for drawing paths)
@@ -110,11 +115,13 @@ class WorldNode {
     required this.id,
     required this.name,
     required this.description,
+    this.emoji = '📍',
     required this.targetedAttributes,
     required this.xpBoosts,
     required this.requiredLevel,
     required this.type,
-    required this.position,
+    required this.hexLocation,
+    this.position = const Offset(0.5, 0.5), // Default to center if not used
     this.connectedNodeIds = const [],
     this.state = NodeState.locked,
     this.progress = 0,
@@ -124,10 +131,12 @@ class WorldNode {
     String? id,
     String? name,
     String? description,
+    String? emoji,
     List<HabitAttribute>? targetedAttributes,
     Map<HabitAttribute, int>? xpBoosts,
     int? requiredLevel,
     NodeType? type,
+    HexLocation? hexLocation,
     Offset? position,
     List<String>? connectedNodeIds,
     NodeState? state,
@@ -137,10 +146,12 @@ class WorldNode {
       id: id ?? this.id,
       name: name ?? this.name,
       description: description ?? this.description,
+      emoji: emoji ?? this.emoji,
       targetedAttributes: targetedAttributes ?? this.targetedAttributes,
       xpBoosts: xpBoosts ?? this.xpBoosts,
       requiredLevel: requiredLevel ?? this.requiredLevel,
       type: type ?? this.type,
+      hexLocation: hexLocation ?? this.hexLocation,
       position: position ?? this.position,
       connectedNodeIds: connectedNodeIds ?? this.connectedNodeIds,
       state: state ?? this.state,
@@ -153,10 +164,12 @@ class WorldNode {
       'id': id,
       'name': name,
       'description': description,
+      'emoji': emoji,
       'targetedAttributes': targetedAttributes.map((a) => a.name).toList(),
       'xpBoosts': xpBoosts.map((k, v) => MapEntry(k.name, v)),
       'requiredLevel': requiredLevel,
       'type': type.name,
+      'hexLocation': hexLocation.toMap(),
       'positionX': position.dx,
       'positionY': position.dy,
       'connectedNodeIds': connectedNodeIds,
@@ -170,6 +183,7 @@ class WorldNode {
       id: map['id'] as String,
       name: map['name'] as String,
       description: map['description'] as String? ?? '',
+      emoji: map['emoji'] as String? ?? '📍',
       targetedAttributes:
           (map['targetedAttributes'] as List<dynamic>?)
               ?.map((a) => HabitAttribute.values.firstWhere((e) => e.name == a))
@@ -187,6 +201,9 @@ class WorldNode {
       type: NodeType.values.firstWhere(
         (e) => e.name == map['type'],
         orElse: () => NodeType.waypoint,
+      ),
+      hexLocation: HexLocation.fromMap(
+        (map['hexLocation'] as Map<String, dynamic>?) ?? {'q': 0, 'r': 0},
       ),
       position: Offset(
         (map['positionX'] as num?)?.toDouble() ?? 0.5,

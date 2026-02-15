@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:emerge_app/core/config/app_config.dart';
 import 'package:emerge_app/features/monetization/domain/repositories/monetization_repository.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:fpdart/fpdart.dart';
 import 'package:purchases_flutter/purchases_flutter.dart';
@@ -9,6 +10,7 @@ import 'package:purchases_flutter/purchases_flutter.dart';
 class RevenueCatRepository implements MonetizationRepository {
   late final String _googleApiKey;
   late final String _appleApiKey;
+  bool _isConfigured = false;
 
   static const _entitlementId =
       'premium'; // The identifier you set in RevenueCat
@@ -18,6 +20,14 @@ class RevenueCatRepository implements MonetizationRepository {
     // Initialize API keys from secure config
     _googleApiKey = AppConfig.getRevenueCatApiKey('android');
     _appleApiKey = AppConfig.getRevenueCatApiKey('ios');
+
+    // Skip initialization if keys are not configured (development mode)
+    final currentKey = Platform.isAndroid ? _googleApiKey : _appleApiKey;
+    if (currentKey.isEmpty) {
+      debugPrint('⚠️ RevenueCat not configured - skipping initialization');
+      _isConfigured = false;
+      return;
+    }
 
     // Validate configuration
     if (AppConfig.isProduction && !_validateProductionConfig()) {
@@ -40,6 +50,7 @@ class RevenueCatRepository implements MonetizationRepository {
     }
 
     await Purchases.configure(configuration);
+    _isConfigured = true;
   }
 
   bool _validateProductionConfig() {
@@ -50,12 +61,17 @@ class RevenueCatRepository implements MonetizationRepository {
   }
 
   /// Raw customer info access for verification (internal use)
-  Future<CustomerInfo> getCustomerInfoRaw() async {
+  Future<CustomerInfo?> getCustomerInfoRaw() async {
+    if (!_isConfigured) return null;
     return await Purchases.getCustomerInfo();
   }
 
   @override
   Future<Either<String, bool>> get isPremium async {
+    if (!_isConfigured) {
+      // Not configured = treat as free user in development
+      return const Right(false);
+    }
     try {
       final customerInfo = await Purchases.getCustomerInfo();
       final isPremium =
@@ -70,6 +86,9 @@ class RevenueCatRepository implements MonetizationRepository {
 
   @override
   Future<Either<String, bool>> purchasePremium() async {
+    if (!_isConfigured) {
+      return const Left('RevenueCat not configured');
+    }
     try {
       final offerings = await Purchases.getOfferings();
       if (offerings.current != null &&
@@ -103,6 +122,9 @@ class RevenueCatRepository implements MonetizationRepository {
 
   @override
   Future<Either<String, bool>> restorePurchases() async {
+    if (!_isConfigured) {
+      return const Left('RevenueCat not configured');
+    }
     try {
       final customerInfo = await Purchases.restorePurchases();
       final isPremium =
@@ -117,6 +139,7 @@ class RevenueCatRepository implements MonetizationRepository {
 
   @override
   Future<String?> get premiumPriceString async {
+    if (!_isConfigured) return null;
     try {
       final offerings = await Purchases.getOfferings();
       if (offerings.current != null &&

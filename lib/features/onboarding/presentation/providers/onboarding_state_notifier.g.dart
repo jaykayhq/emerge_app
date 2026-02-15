@@ -47,7 +47,7 @@ final onboardingProgressProvider = AutoDisposeProvider<double>.internal(
 // ignore: unused_element
 typedef OnboardingProgressRef = AutoDisposeProviderRef<double>;
 String _$enhancedOnboardingNotifierHash() =>
-    r'0f9a7271af68f6f75e132306b8f005845795932d';
+    r'b2ff33e69dfd310f45fcf4f4d1b6cbb394f38b08';
 
 /// Enhanced Onboarding State Notifier with dashboard sync
 ///

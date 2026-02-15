@@ -1,27 +1,19 @@
+import 'package:emerge_app/core/presentation/widgets/emerge_branding.dart';
 import 'package:emerge_app/core/theme/app_theme.dart';
-import 'package:emerge_app/features/auth/domain/entities/user_extension.dart';
 import 'package:emerge_app/features/auth/presentation/providers/auth_providers.dart';
 import 'package:emerge_app/features/gamification/presentation/providers/user_stats_providers.dart';
 import 'package:emerge_app/features/social/domain/models/tribe.dart';
 import 'package:emerge_app/features/social/presentation/providers/tribes_provider.dart';
-import 'package:emerge_app/features/social/data/repositories/social_repository.dart'
-    hide tribesProvider;
-import 'package:emerge_app/features/social/presentation/widgets/challenge_card.dart';
-import 'package:emerge_app/features/social/presentation/widgets/club_card.dart';
-import 'package:emerge_app/features/social/presentation/widgets/friends_leaderboard.dart';
+import 'package:emerge_app/features/social/presentation/screens/challenges_screen.dart';
+import 'package:emerge_app/features/social/presentation/screens/friends_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 import 'package:gap/gap.dart';
-import 'package:share_plus/share_plus.dart';
-
 import 'package:emerge_app/features/social/presentation/screens/create_tribe_screen.dart';
 
-/// Sweatcoin-inspired Community Screen with 3 tabs:
-/// - Challenges (sponsored + community)
-/// - Clubs (former Tribes)
-/// - Friends (leaderboard)
+/// Community Screen - Stitch Design "Identity Club Home"
+/// Features: Club stats card, Weekly goal, Top contributors, Activity feed
 class CommunityScreen extends ConsumerStatefulWidget {
   const CommunityScreen({super.key});
 
@@ -34,17 +26,11 @@ class _CommunityScreenState extends ConsumerState<CommunityScreen>
   late TabController _tabController;
   final TextEditingController _searchController = TextEditingController();
   bool _isSearching = false;
-  String _searchQuery = '';
 
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 3, vsync: this);
-    _searchController.addListener(() {
-      setState(() {
-        _searchQuery = _searchController.text.toLowerCase();
-      });
-    });
   }
 
   @override
@@ -57,63 +43,120 @@ class _CommunityScreenState extends ConsumerState<CommunityScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.transparent,
-      appBar: AppBar(
-        title: _isSearching
-            ? TextField(
-                controller: _searchController,
-                autofocus: true,
-                style: const TextStyle(color: Colors.white),
-                decoration: InputDecoration(
-                  hintText: 'Search friends & clubs...',
-                  hintStyle: TextStyle(
-                    color: AppTheme.textSecondaryDark.withValues(alpha: 0.5),
-                  ),
-                  border: InputBorder.none,
+      backgroundColor: EmergeColors.background,
+      body: Container(
+        decoration: const BoxDecoration(gradient: EmergeColors.cosmicGradient),
+        child: SafeArea(
+          child: Column(
+            children: [
+              // App Bar
+              Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 8,
                 ),
-              )
-            : const Text(
-                'Community',
-                style: TextStyle(fontWeight: FontWeight.bold),
+                child: Row(
+                  children: [
+                    if (_isSearching)
+                      Expanded(
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 16),
+                          decoration: BoxDecoration(
+                            color: EmergeColors.glassWhite,
+                            borderRadius: BorderRadius.circular(20),
+                            border: Border.all(color: EmergeColors.glassBorder),
+                          ),
+                          child: TextField(
+                            controller: _searchController,
+                            autofocus: true,
+                            style: const TextStyle(color: Colors.white),
+                            decoration: InputDecoration(
+                              hintText: 'Search friends & clubs...',
+                              hintStyle: TextStyle(
+                                color: AppTheme.textSecondaryDark.withValues(
+                                  alpha: 0.5,
+                                ),
+                              ),
+                              border: InputBorder.none,
+                            ),
+                          ),
+                        ),
+                      )
+                    else
+                      Expanded(
+                        child: Text(
+                          'COMMUNITY',
+                          style: Theme.of(context).textTheme.titleMedium
+                              ?.copyWith(
+                                color: AppTheme.textMainDark,
+                                fontWeight: FontWeight.bold,
+                                letterSpacing: 2,
+                              ),
+                        ),
+                      ),
+                    IconButton(
+                      icon: Icon(
+                        _isSearching ? Icons.close : Icons.search,
+                        color: EmergeColors.teal,
+                      ),
+                      onPressed: () {
+                        setState(() {
+                          if (_isSearching) {
+                            _isSearching = false;
+                            _searchController.clear();
+                          } else {
+                            _isSearching = true;
+                          }
+                        });
+                      },
+                    ),
+                  ],
+                ),
               ),
-        centerTitle: true,
-        backgroundColor: Colors.transparent,
-        actions: [
-          IconButton(
-            icon: Icon(_isSearching ? Icons.close : Icons.search),
-            onPressed: () {
-              setState(() {
-                if (_isSearching) {
-                  _isSearching = false;
-                  _searchController.clear();
-                  _searchQuery = '';
-                } else {
-                  _isSearching = true;
-                }
-              });
-            },
+
+              // Tab Bar
+              Container(
+                margin: const EdgeInsets.symmetric(horizontal: 16),
+                decoration: BoxDecoration(
+                  color: EmergeColors.glassWhite,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: EmergeColors.glassBorder),
+                ),
+                child: TabBar(
+                  controller: _tabController,
+                  labelColor: EmergeColors.teal,
+                  unselectedLabelColor: AppTheme.textSecondaryDark,
+                  indicatorColor: EmergeColors.teal,
+                  indicatorSize: TabBarIndicatorSize.label,
+                  dividerColor: Colors.transparent,
+                  labelStyle: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 13,
+                  ),
+                  tabs: const [
+                    Tab(text: 'Challenges'),
+                    Tab(text: 'Clubs'),
+                    Tab(text: 'Friends'),
+                  ],
+                ),
+              ),
+
+              const Gap(16),
+
+              // Tab Content
+              Expanded(
+                child: TabBarView(
+                  controller: _tabController,
+                  children: [
+                    const ChallengesTabContent(),
+                    _buildClubsTab(),
+                    const FriendsTabContent(),
+                  ],
+                ),
+              ),
+            ],
           ),
-        ],
-        bottom: TabBar(
-          controller: _tabController,
-          labelColor: AppTheme.primary,
-          unselectedLabelColor: AppTheme.textSecondaryDark,
-          indicatorColor: AppTheme.primary,
-          indicatorSize: TabBarIndicatorSize.label,
-          labelStyle: const TextStyle(
-            fontWeight: FontWeight.bold,
-            fontSize: 14,
-          ),
-          tabs: const [
-            Tab(text: 'Challenges'),
-            Tab(text: 'Clubs'),
-            Tab(text: 'Friends'),
-          ],
         ),
-      ),
-      body: TabBarView(
-        controller: _tabController,
-        children: [_buildChallengesTab(), _buildClubsTab(), _buildFriendsTab()],
       ),
       floatingActionButton: _buildFab(),
     );
@@ -125,23 +168,40 @@ class _CommunityScreenState extends ConsumerState<CommunityScreen>
       builder: (context, child) {
         if (_tabController.index == 2) return const SizedBox.shrink();
 
-        return FloatingActionButton.extended(
-          heroTag: 'community_fab',
-          onPressed: () {
-            if (_tabController.index == 0) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Create Challenge coming soon!')),
-              );
-            } else if (_tabController.index == 1) {
-              _createClub(context, ref);
-            }
-          },
-          label: Text(
-            _tabController.index == 0 ? 'Create Challenge' : 'Create Club',
+        return Container(
+          decoration: BoxDecoration(
+            gradient: EmergeColors.neonGradient,
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: [
+              BoxShadow(
+                color: EmergeColors.teal.withValues(alpha: 0.4),
+                blurRadius: 16,
+                spreadRadius: 2,
+              ),
+            ],
           ),
-          icon: const Icon(Icons.add),
-          backgroundColor: AppTheme.primary,
-          foregroundColor: Colors.black,
+          child: FloatingActionButton.extended(
+            heroTag: 'community_fab',
+            onPressed: () {
+              if (_tabController.index == 0) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Create Challenge coming soon!'),
+                  ),
+                );
+              } else if (_tabController.index == 1) {
+                _createClub(context, ref);
+              }
+            },
+            label: Text(
+              _tabController.index == 0 ? 'Create Challenge' : 'Create Club',
+              style: const TextStyle(fontWeight: FontWeight.bold),
+            ),
+            icon: const Icon(Icons.add),
+            backgroundColor: Colors.transparent,
+            foregroundColor: Colors.white,
+            elevation: 0,
+          ),
         ).animate().scale();
       },
     );
@@ -181,98 +241,13 @@ class _CommunityScreenState extends ConsumerState<CommunityScreen>
   }
 
   // ==========================================================================
-  // CHALLENGES TAB
-  // ==========================================================================
-  Widget _buildChallengesTab() {
-    final challengesAsync = ref.watch(activeChallengesProvider);
-
-    return challengesAsync.when(
-      data: (challenges) {
-        // Mock sponsored challenges for demo
-        final sponsoredChallenges = [
-          ChallengeCard(
-            id: 'sponsored-1',
-            title: '30-Day Running Streak',
-            description: 'Run at least 1 mile every day for 30 days straight.',
-            xpReward: 500,
-            daysRemaining: 30,
-            sponsorName: 'Nike',
-            prizeDescription: '20% Off',
-            onJoin: () => _onJoinChallenge('sponsored-1'),
-          ),
-          ChallengeCard(
-            id: 'sponsored-2',
-            title: '21-Day Meditation Practice',
-            description: 'Meditate for at least 10 minutes daily for 21 days.',
-            xpReward: 300,
-            daysRemaining: 21,
-            sponsorName: 'Headspace',
-            prizeDescription: '30 Days Free',
-            onJoin: () => _onJoinChallenge('sponsored-2'),
-          ),
-        ];
-
-        return ListView(
-          padding: const EdgeInsets.all(16),
-          children: [
-            // Featured Challenges Header
-            _SectionHeader(title: 'Featured Challenges', onSeeAll: () {}),
-            const Gap(12),
-            // Sponsored
-            ...sponsoredChallenges.map(
-              (c) =>
-                  Padding(padding: const EdgeInsets.only(bottom: 16), child: c),
-            ),
-            const Gap(8),
-            // Community Challenges
-            _SectionHeader(title: 'Community Challenges', onSeeAll: () {}),
-            const Gap(12),
-            if (challenges.isEmpty)
-              const _EmptyState(
-                message: 'No active challenges.',
-                icon: Icons.emoji_events_outlined,
-              )
-            else
-              ...challenges.map(
-                (challenge) => Padding(
-                  padding: const EdgeInsets.only(bottom: 12),
-                  child: ChallengeCard(
-                    id: challenge.id,
-                    title: challenge.title,
-                    description: challenge.description,
-                    xpReward: 100,
-                    daysRemaining: challenge.daysLeft,
-                    onJoin: () => _onJoinChallenge(challenge.id),
-                  ),
-                ),
-              ),
-            const Gap(80), // FAB spacing
-          ],
-        );
-      },
-      loading: () => const Center(child: CircularProgressIndicator()),
-      error: (err, stack) => _ErrorState(error: err.toString()),
-    );
-  }
-
-  void _onJoinChallenge(String challengeId) {
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(SnackBar(content: Text('Joined challenge: $challengeId')));
-  }
-
-  // ==========================================================================
-  // CLUBS TAB
+  // CLUBS TAB - Stitch "Identity Club Home" Design
   // ==========================================================================
   Widget _buildClubsTab() {
     final tribesAsync = ref.watch(tribesProvider);
 
     return tribesAsync.when(
       data: (tribes) {
-        final featuredClubs = tribes.take(5).toList();
-        final leaderboardClubs = List<Tribe>.from(tribes)
-          ..sort((a, b) => b.totalXp.compareTo(a.totalXp));
-
         if (tribes.isEmpty) {
           return _EmptyState(
             message: 'No clubs found.',
@@ -282,453 +257,405 @@ class _CommunityScreenState extends ConsumerState<CommunityScreen>
           );
         }
 
-        return ListView(
-          padding: const EdgeInsets.all(16),
-          children: [
-            _SectionHeader(title: 'Featured Clubs', onSeeAll: () {}),
-            const Gap(12),
-            // Horizontal Club Cards - remove fixed height to prevent overflow
-            SizedBox(
-              height: 220, // Adjusted to match actual card content height
-              child: ListView.separated(
-                scrollDirection: Axis.horizontal,
-                itemCount: featuredClubs.length,
-                separatorBuilder: (context, index) => const Gap(12),
-                itemBuilder: (context, index) {
-                  final club = featuredClubs[index];
-                  return ClubCard(
-                    id: club.id,
-                    name: club.name,
-                    coverImageUrl: club.imageUrl,
-                    memberCount: club.memberCount,
-                    totalXp: club.totalXp,
-                    isVerified: club.memberCount > 100,
-                    onJoin: () => _onJoinClub(club.id),
-                  );
-                },
-              ),
-            ),
-            const Gap(24),
-            _SectionHeader(title: 'Top Clubs', onSeeAll: () {}),
-            const Gap(12),
-            ListView.separated(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              itemCount: leaderboardClubs.take(10).length,
-              separatorBuilder: (context, index) => const Gap(12),
-              itemBuilder: (context, index) {
-                return _ClubLeaderboardItem(
-                  rank: index + 1,
-                  tribe: leaderboardClubs[index],
-                );
-              },
-            ),
-            const Gap(80), // Fab spacing
-          ],
+        final club = tribes.first;
+
+        return SingleChildScrollView(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: Column(
+            children: [
+              const Gap(16),
+
+              // ===== CLUB EMBLEM (Centered, glowing) =====
+              _ClubEmblem(
+                club: club,
+              ).animate().fadeIn().scale(begin: const Offset(0.9, 0.9)),
+
+              const Gap(16),
+
+              // ===== CLUB NAME & SUBTITLE =====
+              Text(
+                club.name.toUpperCase(),
+                style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                  letterSpacing: 1.5,
+                ),
+              ).animate().fadeIn(delay: 100.ms),
+              const Gap(4),
+              Text(
+                '${club.memberCount} Members • Level ${(club.totalXp / 1000).floor() + 1}',
+                style: TextStyle(fontSize: 14, color: EmergeColors.teal),
+              ).animate().fadeIn(delay: 150.ms),
+
+              const Gap(32),
+
+              // ===== STATS ROW (No box, just numbers) =====
+              _StatsRow(club: club).animate().fadeIn(delay: 200.ms),
+
+              const Gap(32),
+
+              // ===== TOP CONTRIBUTORS (Overlapping avatars) =====
+              _ContributorsSection().animate().fadeIn(delay: 300.ms),
+
+              const Gap(32),
+
+              // ===== RECENT ACTIVITY (Simple list, no heavy cards) =====
+              _ActivitySection().animate().fadeIn(delay: 400.ms),
+
+              const Gap(100), // FAB spacing
+            ],
+          ),
         );
       },
-      loading: () => const Center(child: CircularProgressIndicator()),
+      loading: () => const Center(
+        child: CircularProgressIndicator(color: EmergeColors.teal),
+      ),
       error: (error, stack) => _ErrorState(error: error.toString()),
     );
   }
-
-  void _onJoinClub(String clubId) {
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(SnackBar(content: Text('Joined club: $clubId')));
-  }
-
-  // ==========================================================================
-  // FRIENDS TAB (Updated with Search)
-  // ==========================================================================
-  Widget _buildFriendsTab() {
-    final userAsync = ref.watch(userStatsStreamProvider);
-
-    return userAsync.when(
-      data: (profile) {
-        // Mock friends for demo
-        final mockFriends = [
-          FriendRankEntry(id: '1', name: 'Sarah Chen', xp: 4520, streak: 21),
-          FriendRankEntry(id: '2', name: 'Mike Johnson', xp: 3800, streak: 14),
-          FriendRankEntry(
-            id: 'me',
-            name: profile.archetype != UserArchetype.none
-                ? profile.archetype.name
-                : 'You',
-            xp: profile.avatarStats.totalXp,
-            streak: profile.avatarStats.streak,
-            isYou: true,
-          ),
-          const FriendRankEntry(
-            id: '3',
-            name: 'Emma Wilson',
-            xp: 2100,
-            streak: 7,
-          ),
-          const FriendRankEntry(
-            id: '4',
-            name: 'Alex Park',
-            xp: 1850,
-            streak: 5,
-          ),
-        ];
-
-        // Filter friends based on search query
-        final filteredFriends = mockFriends.where((f) {
-          return f.name.toLowerCase().contains(_searchQuery);
-        }).toList();
-
-        // Sort descending by XP
-        filteredFriends.sort((a, b) => b.xp.compareTo(a.xp));
-
-        if (filteredFriends.isEmpty) {
-          return const _EmptyState(
-            message: 'No friends found.',
-            icon: Icons.search_off,
-          );
-        }
-
-        return SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(vertical: 16),
-          child: FriendsLeaderboard(
-            friends: filteredFriends,
-            onAddFriend: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Add friend coming soon!')),
-              );
-            },
-            onShareLink: () {
-              // ignore: deprecated_member_use
-              Share.share(
-                'Join me on Emerge and level up your habits! 🚀\n\nhttps://emerge.app/invite/${profile.uid}',
-              );
-            },
-            onAction: (friend, action) {
-              _handleFriendAction(context, friend, action);
-            },
-          ),
-        );
-      },
-      loading: () => const Center(child: CircularProgressIndicator()),
-      error: (e, _) => _ErrorState(error: e.toString()),
-    );
-  }
-
-  void _handleFriendAction(
-    BuildContext context,
-    FriendRankEntry friend,
-    String action,
-  ) {
-    if (action == 'nudge') {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('👋 You nudged ${friend.name}!'),
-          behavior: SnackBarBehavior.floating,
-          backgroundColor: AppTheme.primary,
-        ),
-      );
-    } else if (action == 'challenge') {
-      // Show hybrid accountability sheet
-      showModalBottomSheet(
-        context: context,
-        backgroundColor: Colors.transparent,
-        builder: (context) => _AccountabilityActionSheet(friend: friend),
-      );
-    }
-  }
 }
 
-class _AccountabilityActionSheet extends StatelessWidget {
-  final FriendRankEntry friend;
+// ============ CLUB EMBLEM (Centered, glowing ring) ============
 
-  const _AccountabilityActionSheet({required this.friend});
+class _ClubEmblem extends StatelessWidget {
+  final Tribe club;
+
+  const _ClubEmblem({required this.club});
 
   @override
   Widget build(BuildContext context) {
     return Container(
+      width: 100,
+      height: 100,
       decoration: BoxDecoration(
-        color: AppTheme.backgroundDark,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-        border: Border(
-          top: BorderSide(color: Colors.white.withValues(alpha: 0.1)),
+        shape: BoxShape.circle,
+        gradient: const LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [EmergeColors.violet, EmergeColors.teal],
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: EmergeColors.violet.withValues(alpha: 0.6),
+            blurRadius: 30,
+            spreadRadius: 5,
+          ),
+          BoxShadow(
+            color: EmergeColors.teal.withValues(alpha: 0.4),
+            blurRadius: 40,
+            spreadRadius: 10,
+          ),
+        ],
+      ),
+      child: Container(
+        margin: const EdgeInsets.all(4),
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          color: EmergeColors.background,
+        ),
+        child: Center(
+          child: Text(
+            club.name.isNotEmpty ? club.name[0].toUpperCase() : '?',
+            style: const TextStyle(
+              fontSize: 36,
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
+            ),
+          ),
         ),
       ),
-      padding: const EdgeInsets.all(24),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
+    );
+  }
+}
+
+// ============ STATS ROW (Minimal, no boxes) ============
+
+class _StatsRow extends StatelessWidget {
+  final Tribe club;
+
+  const _StatsRow({required this.club});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 24),
+      decoration: BoxDecoration(
+        color: EmergeColors.glassWhite,
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: [
-          Row(
-            children: [
-              CircleAvatar(
-                radius: 20,
-                backgroundImage: friend.avatarUrl != null
-                    ? NetworkImage(friend.avatarUrl!)
-                    : null,
-                child: friend.avatarUrl == null ? Text(friend.name[0]) : null,
-              ),
-              const Gap(12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Challenge ${friend.name}',
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    Text(
-                      '${friend.xp} XP • Ahead of you',
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: AppTheme.textSecondaryDark,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              IconButton(
-                onPressed: () => Navigator.pop(context),
-                icon: const Icon(Icons.close),
-              ),
-            ],
+          _StatColumn(
+            label: 'Total XP:',
+            value: (club.totalXp / 100).toStringAsFixed(0),
+            trend: '↗',
+            trendColor: EmergeColors.teal,
           ),
-          const Gap(24),
-          _ActionOption(
-            icon: Icons.timer,
-            title: 'Race to 5k Steps',
-            subtitle: 'First to hit 5,000 steps today wins 50 XP',
-            onTap: () {
-              Navigator.pop(context); // Close sheet
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Challenge sent: Race to 5k Steps'),
-                ),
-              );
-            },
+          Container(width: 1, height: 50, color: EmergeColors.glassBorder),
+          _StatColumn(
+            label: 'Weekly Progress:',
+            value: '+${(club.memberCount * 42).toString()}',
+            trend: '↗',
+            trendColor: EmergeColors.teal,
           ),
-          const Gap(12),
-          _ActionOption(
-            icon: Icons.monetization_on_outlined,
-            title: 'Wager Challenge',
-            subtitle: 'Bet \$5 on who keeps their streak this week',
-            isPremium: true,
-            onTap: () {
-              // Navigate to Accountability Screen for details
-              Navigator.pop(context);
-              context.push('/community/accountability');
-            },
-          ),
-          const Gap(12),
-          _ActionOption(
-            icon: Icons.edit_note,
-            title: 'Custom Challenge',
-            subtitle: 'create your own rules...',
-            onTap: () {
-              Navigator.pop(context);
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Custom challenge coming soon')),
-              );
-            },
-          ),
-          const Gap(24),
         ],
       ),
     );
   }
 }
 
-class _ActionOption extends StatelessWidget {
-  final IconData icon;
-  final String title;
-  final String subtitle;
-  final bool isPremium;
-  final VoidCallback onTap;
+class _StatColumn extends StatelessWidget {
+  final String label;
+  final String value;
+  final String trend;
+  final Color trendColor;
 
-  const _ActionOption({
-    required this.icon,
-    required this.title,
-    required this.subtitle,
-    this.isPremium = false,
-    required this.onTap,
+  const _StatColumn({
+    required this.label,
+    required this.value,
+    required this.trend,
+    required this.trendColor,
   });
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: AppTheme.surfaceDark,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
-        ),
-        child: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: AppTheme.primary.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Icon(icon, color: AppTheme.primary),
-            ),
-            const Gap(16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Text(
-                        title,
-                        style: const TextStyle(fontWeight: FontWeight.bold),
-                      ),
-                      if (isPremium) ...[
-                        const Gap(6),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 6,
-                            vertical: 2,
-                          ),
-                          decoration: BoxDecoration(
-                            gradient: const LinearGradient(
-                              colors: [Colors.purple, Colors.blue],
-                            ),
-                            borderRadius: BorderRadius.circular(6),
-                          ),
-                          child: const Text(
-                            'PRO',
-                            style: TextStyle(
-                              fontSize: 10,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ],
-                  ),
-                  const Gap(4),
-                  Text(
-                    subtitle,
-                    style: TextStyle(
-                      color: AppTheme.textSecondaryDark,
-                      fontSize: 12,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            Icon(Icons.chevron_right, color: AppTheme.textSecondaryDark),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-// ===========================================================================
-// HELPER WIDGETS
-// ===========================================================================
-
-class _SectionHeader extends StatelessWidget {
-  final String title;
-  final VoidCallback onSeeAll;
-
-  const _SectionHeader({required this.title, required this.onSeeAll});
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+    return Column(
       children: [
         Text(
-          title,
-          style: const TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-            color: AppTheme.textMainDark,
+          label,
+          style: TextStyle(
+            fontSize: 12,
+            color: AppTheme.textSecondaryDark.withValues(alpha: 0.7),
           ),
         ),
-        TextButton(onPressed: onSeeAll, child: const Text('See All')),
+        const Gap(4),
+        Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              value,
+              style: const TextStyle(
+                fontSize: 26,
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+              ),
+            ),
+            const Gap(4),
+            Text(
+              trend,
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: trendColor,
+              ),
+            ),
+          ],
+        ),
       ],
     );
   }
 }
 
-class _ClubLeaderboardItem extends StatelessWidget {
-  final int rank;
-  final Tribe tribe;
+// ============ TOP CONTRIBUTORS (Overlapping avatars) ============
 
-  const _ClubLeaderboardItem({required this.rank, required this.tribe});
+class _ContributorsSection extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    final contributors = [
+      {'name': 'Sarah', 'status': 'Online'},
+      {'name': 'Leo', 'status': 'Online'},
+      {'name': 'Maya', 'status': 'Top 1'},
+      {'name': 'Kai', 'status': 'Online'},
+      {'name': 'Elena', 'status': 'Top 1'},
+    ];
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            const Text(
+              'Top Contributors',
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+              ),
+            ),
+            Text(
+              'View All >',
+              style: TextStyle(fontSize: 12, color: EmergeColors.teal),
+            ),
+          ],
+        ),
+        const Gap(16),
+
+        // Overlapping avatars row - horizontally scrollable
+        SizedBox(
+          height: 80,
+          child: ListView.builder(
+            scrollDirection: Axis.horizontal,
+            itemCount: contributors.length,
+            itemBuilder: (context, index) {
+              final c = contributors[index];
+              final isOnline = c['status'] == 'Online';
+              return Transform.translate(
+                offset: Offset(index == 0 ? 0 : -index * 15.0, 0),
+                child: _ContributorAvatar(
+                  name: c['name']!,
+                  status: c['status']!,
+                  isOnline: isOnline,
+                ),
+              );
+            },
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _ContributorAvatar extends StatelessWidget {
+  final String name;
+  final String status;
+  final bool isOnline;
+
+  const _ContributorAvatar({
+    required this.name,
+    required this.status,
+    required this.isOnline,
+  });
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: AppTheme.surfaceDark,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 30,
-            height: 30,
-            alignment: Alignment.center,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: rank <= 3
-                  ? Colors.amber
-                  : AppTheme.surfaceDark.withValues(alpha: 0.8),
-            ),
-            child: Text(
-              '#$rank',
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                fontWeight: FontWeight.bold,
-                color: rank <= 3 ? Colors.black : Colors.white,
+    return Column(
+      children: [
+        Stack(
+          children: [
+            Container(
+              width: 50,
+              height: 50,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    EmergeColors.violet.withValues(alpha: 0.6),
+                    EmergeColors.teal.withValues(alpha: 0.4),
+                  ],
+                ),
+                border: Border.all(color: EmergeColors.background, width: 3),
               ),
-            ),
-          ),
-          const Gap(16),
-          CircleAvatar(
-            backgroundColor: AppTheme.surfaceDark.withValues(alpha: 0.5),
-            radius: 20,
-            backgroundImage: NetworkImage(tribe.imageUrl),
-            onBackgroundImageError: (_, __) {},
-            child: tribe.imageUrl.isEmpty
-                ? Icon(
-                    Icons.groups,
-                    size: 20,
-                    color: AppTheme.textSecondaryDark,
-                  )
-                : null,
-          ),
-          const Gap(12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  tribe.name,
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+              child: Center(
+                child: Text(
+                  name[0],
+                  style: const TextStyle(
+                    fontSize: 18,
                     fontWeight: FontWeight.bold,
-                    color: AppTheme.textMainDark,
+                    color: Colors.white,
                   ),
                 ),
-                Text(
-                  '${tribe.totalXp} XP',
-                  style: Theme.of(
-                    context,
-                  ).textTheme.bodySmall?.copyWith(color: AppTheme.primary),
+              ),
+            ),
+            if (isOnline)
+              Positioned(
+                right: 0,
+                bottom: 0,
+                child: Container(
+                  width: 14,
+                  height: 14,
+                  decoration: BoxDecoration(
+                    color: EmergeColors.teal,
+                    shape: BoxShape.circle,
+                    border: Border.all(
+                      color: EmergeColors.background,
+                      width: 2,
+                    ),
+                  ),
                 ),
+              ),
+          ],
+        ),
+        const Gap(4),
+        Text(
+          status,
+          style: TextStyle(
+            fontSize: 9,
+            color: isOnline ? EmergeColors.teal : EmergeColors.yellow,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+// ============ RECENT ACTIVITY (Simple list, no heavy cards) ============
+
+class _ActivitySection extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    final activities = [
+      {
+        'icon': '🏆',
+        'text': 'Alex T. earned "Cosmic Pioneer" badge',
+        'time': '1:30 pm',
+      },
+      {
+        'icon': '💬',
+        'text': 'Sarah M. posted in "Stargazing" discussion',
+        'time': '1:00 pm',
+      },
+      {'icon': '🎯', 'text': 'New Club Goal: Reach Level 11', 'time': ''},
+    ];
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'Recent Activity',
+          style: TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+          ),
+        ),
+        const Gap(16),
+
+        ...activities.asMap().entries.map((entry) {
+          final activity = entry.value;
+          return Padding(
+            padding: const EdgeInsets.only(bottom: 16),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(activity['icon']!, style: const TextStyle(fontSize: 20)),
+                const Gap(12),
+                Expanded(
+                  child: Text(
+                    activity['text']!,
+                    style: const TextStyle(
+                      fontSize: 14,
+                      color: Colors.white,
+                      height: 1.4,
+                    ),
+                  ),
+                ),
+                if (activity['time']!.isNotEmpty)
+                  Text(
+                    activity['time']!,
+                    style: TextStyle(
+                      fontSize: 11,
+                      color: AppTheme.textSecondaryDark.withValues(alpha: 0.6),
+                    ),
+                  ),
               ],
             ),
-          ),
-        ],
-      ),
+          );
+        }),
+      ],
     );
   }
 }
@@ -764,13 +691,20 @@ class _EmptyState extends StatelessWidget {
           ),
           if (onAction != null) ...[
             const Gap(24),
-            ElevatedButton(
-              onPressed: onAction,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppTheme.primary,
-                foregroundColor: Colors.black,
+            Container(
+              decoration: BoxDecoration(
+                gradient: EmergeColors.neonGradient,
+                borderRadius: BorderRadius.circular(12),
               ),
-              child: Text(actionLabel ?? 'Action'),
+              child: ElevatedButton(
+                onPressed: onAction,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.transparent,
+                  foregroundColor: Colors.white,
+                  shadowColor: Colors.transparent,
+                ),
+                child: Text(actionLabel ?? 'Action'),
+              ),
             ),
           ],
         ],
@@ -790,12 +724,20 @@ class _ErrorState extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.error_outline, color: Colors.redAccent, size: 48),
+            Icon(Icons.error_outline, size: 48, color: EmergeColors.coral),
             const Gap(16),
             Text(
-              'Error: $error',
+              'Something went wrong',
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                color: EmergeColors.coral,
+              ),
+            ),
+            const Gap(8),
+            Text(
+              error,
               textAlign: TextAlign.center,
-              style: const TextStyle(color: Colors.white),
+              style: TextStyle(fontSize: 12, color: AppTheme.textSecondaryDark),
             ),
           ],
         ),

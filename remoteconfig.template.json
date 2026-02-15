@@ -1,16 +1,1 @@
-{
-  "parameters": {
-    "revenuecat_google_api_key": {
-      "defaultValue": {
-        "value": ""
-      },
-      "description": "RevenueCat API key for Android - fetched from Google Cloud Secret Manager"
-    },
-    "revenuecat_apple_api_key": {
-      "defaultValue": {
-        "value": ""
-      },
-      "description": "RevenueCat API key for iOS - fetched from Google Cloud Secret Manager"
-    }
-  }
-}
+{}

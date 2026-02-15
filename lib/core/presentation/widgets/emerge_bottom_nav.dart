@@ -130,13 +130,13 @@ class _NavItem extends StatelessWidget {
       hint: isSelected ? 'Currently on $label screen' : 'Navigate to $label',
       onTap: onTap,
       child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 4),
+        padding: const EdgeInsets.symmetric(vertical: 2),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             AnimatedContainer(
               duration: EmergeDimensions.animationMedium,
-              padding: const EdgeInsets.all(8),
+              padding: const EdgeInsets.all(6),
               decoration: BoxDecoration(
                 color: isSelected
                     ? EmergeColors.teal.withValues(alpha: 0.1)
@@ -145,7 +145,7 @@ class _NavItem extends StatelessWidget {
               ),
               child: Icon(icon, color: color, size: 24),
             ),
-            const SizedBox(height: 4),
+            const SizedBox(height: 2),
             Text(
               label,
               style: TextStyle(

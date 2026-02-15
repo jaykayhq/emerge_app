@@ -230,6 +230,7 @@ class _FriendRankTile extends StatelessWidget {
             backgroundImage: entry.avatarUrl != null
                 ? NetworkImage(entry.avatarUrl!)
                 : null,
+            onBackgroundImageError: entry.avatarUrl != null ? (_, __) {} : null,
             child: entry.avatarUrl == null
                 ? Text(
                     entry.name.isNotEmpty ? entry.name[0].toUpperCase() : '?',

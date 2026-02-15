@@ -1,11 +1,13 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:emerge_app/core/error/failure.dart';
+import 'package:emerge_app/core/constants/gamification_constants.dart';
 import 'package:emerge_app/core/utils/app_logger.dart';
 import 'package:emerge_app/features/gamification/domain/entities/user_stats.dart';
 import 'package:emerge_app/features/gamification/domain/repositories/gamification_repository.dart';
 import 'package:fpdart/fpdart.dart';
 import 'package:flutter/foundation.dart';
 
+// ENHANCED: Top-level function for isolate parsing (must be top-level)
 // ENHANCED: Top-level function for isolate parsing (must be top-level)
 UserStats _parseUserStats(Map<String, dynamic> params) {
   final userId = params['userId'] as String;
@@ -15,12 +17,39 @@ UserStats _parseUserStats(Map<String, dynamic> params) {
     return UserStats(userId: userId);
   }
 
+  // Handle both flat structure (legacy) and avatarStats structure (new)
+  final avatarStats = data['avatarStats'] as Map<String, dynamic>?;
+
+  int xp = 0;
+  int level = 1;
+  int streak = 0;
+
+  if (avatarStats != null) {
+    // New structure
+    // Summing all XP types for 'currentXp'
+    final strength = avatarStats['strengthXp'] as int? ?? 0;
+    final intellect = avatarStats['intellectXp'] as int? ?? 0;
+    final vitality = avatarStats['vitalityXp'] as int? ?? 0;
+    final creativity = avatarStats['creativityXp'] as int? ?? 0;
+    final focus = avatarStats['focusXp'] as int? ?? 0;
+    final spirit = avatarStats['spiritXp'] as int? ?? 0;
+
+    xp = strength + intellect + vitality + creativity + focus + spirit;
+    level = avatarStats['level'] as int? ?? 1;
+    streak = avatarStats['streak'] as int? ?? 0;
+  } else {
+    // Legacy structure
+    xp = data['currentXp'] as int? ?? 0;
+    level = data['currentLevel'] as int? ?? 1;
+    streak = data['currentStreak'] as int? ?? 0;
+  }
+
   // All parsing happens in isolate, not blocking main thread
   return UserStats(
     userId: userId,
-    currentXp: data['currentXp'] as int? ?? 0,
-    currentLevel: data['currentLevel'] as int? ?? 1,
-    currentStreak: data['currentStreak'] as int? ?? 0,
+    currentXp: xp,
+    currentLevel: level,
+    currentStreak: streak,
     unlockedBadges:
         (data['unlockedBadges'] as List<dynamic>?)
             ?.map((e) => e as String)
@@ -41,31 +70,44 @@ class FirestoreGamificationRepository implements GamificationRepository {
 
   @override
   Stream<UserStats> watchUserStats(String userId) {
-    return _firestore.collection('user_stats').doc(userId).snapshots().asyncMap((
-      snapshot,
-    ) async {
-      // ENHANCED: Move heavy parsing to isolate to prevent UI jank
-      if (!snapshot.exists || snapshot.data() == null) {
-        return UserStats(userId: userId);
-      }
+    return _firestore.collection('user_stats').doc(userId).snapshots().asyncMap(
+      (snapshot) async {
+        // ENHANCED: Move heavy parsing to isolate to prevent UI jank
+        if (!snapshot.exists || snapshot.data() == null) {
+          return UserStats(userId: userId);
+        }
 
-      // Parse in isolate using compute()
-      return compute(_parseUserStats, {
-        'userId': userId,
-        'data': snapshot.data(),
-      });
-    }).distinct();
+        // Parse in isolate using compute()
+        return compute(_parseUserStats, {
+          'userId': userId,
+          'data': snapshot.data(),
+        });
+      },
+    ).distinct();
   }
 
   @override
   Future<Either<Failure, Unit>> updateUserStats(UserStats stats) async {
     try {
+      // Write to 'avatarStats' map to align with UserProfile
+      // We map currentXp to 'vitalityXp' as a default for now to keep it simple,
+      // or we probably shouldn't be overwriting 'avatarStats' completely if we can avoid it.
+      // But update is usually clean.
+
       await _firestore.collection('user_stats').doc(stats.userId).set({
+        'avatarStats': {
+          'vitalityXp':
+              stats.currentXp, // Mapping generic XP to Vitality for now
+          'level': stats.currentLevel,
+          'streak': stats.currentStreak,
+          // Other stats default to 0 if not tracked in UserStats entity yet
+        },
+        'unlockedBadges': stats.unlockedBadges,
+        'identityVotes': stats.identityVotes,
+        // Legacy fields for insurance
         'currentXp': stats.currentXp,
         'currentLevel': stats.currentLevel,
         'currentStreak': stats.currentStreak,
-        'unlockedBadges': stats.unlockedBadges,
-        'identityVotes': stats.identityVotes,
       }, SetOptions(merge: true));
       return const Right(unit);
     } catch (e, s) {
@@ -75,27 +117,71 @@ class FirestoreGamificationRepository implements GamificationRepository {
   }
 
   @override
-  Future<Either<Failure, Unit>> addXp(String userId, int amount) async {
+  Future<Either<Failure, Unit>> addXp(
+    String userId,
+    int amount, {
+    String? attributeName,
+  }) async {
     try {
       final docRef = _firestore.collection('user_stats').doc(userId);
 
       return await _firestore.runTransaction((transaction) async {
         final snapshot = await transaction.get(docRef);
 
-        int currentXp = 0;
-        // int currentLevel = 1; // Unused
+        Map<String, dynamic> avatarStats = {};
 
+        // Initialize with existing data or defaults
         if (snapshot.exists && snapshot.data() != null) {
-          currentXp = snapshot.data()!['currentXp'] as int? ?? 0;
-          // currentLevel = snapshot.data()!['currentLevel'] as int? ?? 1;
+          final data = snapshot.data()!;
+          if (data['avatarStats'] != null) {
+            avatarStats = Map<String, dynamic>.from(data['avatarStats'] as Map);
+          } else {
+            // Migration from legacy: put existing currentXp into vitality
+            final legacyXp = data['currentXp'] as int? ?? 0;
+            avatarStats['vitalityXp'] = legacyXp;
+          }
         }
 
-        final newXp = currentXp + amount;
-        // Simple level up logic: Level = XP / 100 + 1
-        final newLevel = (newXp / 100).floor() + 1;
+        // Determine which attribute to update
+        // Default to 'vitalityXp' if not specified or unknown
+        String targetField = 'vitalityXp';
+        if (attributeName != null) {
+          // Map 'strength' -> 'strengthXp', etc.
+          // Safe mapping in case of weird strings
+          final key = '${attributeName.toLowerCase()}Xp';
+          // Check if it's one of the known keys (optional, but good for safety)
+          // For now just assume valid or it creates a new field which is fine
+          targetField = key;
+        }
+
+        final currentVal = (avatarStats[targetField] as int?) ?? 0;
+        final newVal = currentVal + amount;
+        avatarStats[targetField] = newVal;
+
+        // Recalculate Total XP and Level
+        // UserAvatarStats logic: sum of all XPs
+        int totalXp = 0;
+        final keys = [
+          'strengthXp',
+          'intellectXp',
+          'vitalityXp',
+          'creativityXp',
+          'focusXp',
+          'spiritXp',
+        ];
+        for (final k in keys) {
+          totalXp += (avatarStats[k] as int?) ?? 0;
+        }
+
+        // Internal Level Calculation (Standardized: 500 XP per level)
+        final newLevel =
+            (totalXp / GamificationConstants.xpPerLevel).floor() + 1;
+        avatarStats['level'] = newLevel;
 
         transaction.set(docRef, {
-          'currentXp': newXp,
+          'avatarStats': avatarStats,
+          // Update legacy fields for compatibility if needed
+          'currentXp': totalXp,
           'currentLevel': newLevel,
         }, SetOptions(merge: true));
 

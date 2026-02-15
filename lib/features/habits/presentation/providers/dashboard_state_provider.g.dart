@@ -85,7 +85,7 @@ final dashboardErrorProvider = AutoDisposeProvider<String?>.internal(
 // ignore: unused_element
 typedef DashboardErrorRef = AutoDisposeProviderRef<String?>;
 String _$dashboardStateNotifierHash() =>
-    r'c6fa6f801997f0ea1046f93b873ee46c78737f34';
+    r'c736a8d9538c10c79dfb4ff0bb053382bbc8fcdd';
 
 /// Central Dashboard State Notifier
 /// Orchestrates all state that affects the dashboard view

@@ -40,7 +40,7 @@ final habitsProvider = AutoDisposeStreamProvider<List<Habit>>.internal(
 @Deprecated('Will be removed in 3.0. Use Ref instead')
 // ignore: unused_element
 typedef HabitsRef = AutoDisposeStreamProviderRef<List<Habit>>;
-String _$createHabitHash() => r'80934ee259dcb053f2a3516fa5803fdad787b820';
+String _$createHabitHash() => r'3357d490d1de234f78533cea4217b9e1dbc29f99';
 
 /// Copied from Dart SDK
 class _SystemHash {
@@ -179,7 +179,7 @@ class _CreateHabitProviderElement extends AutoDisposeFutureProviderElement<void>
   Habit get habit => (origin as CreateHabitProvider).habit;
 }
 
-String _$completeHabitHash() => r'4460a70b5e5ca6c22249f7c4b2e76e46ab751d30';
+String _$completeHabitHash() => r'b354c2927bf91f508bade3bcd7fc8de6a5c79e19';
 
 /// See also [completeHabit].
 @ProviderFor(completeHabit)
@@ -297,6 +297,139 @@ class _CompleteHabitProviderElement
 
   @override
   String get habitId => (origin as CompleteHabitProvider).habitId;
+}
+
+String _$habitActivityHash() => r'a3a0cb90b290befbf5d6cb2bf715b7d1b98c1beb';
+
+/// See also [habitActivity].
+@ProviderFor(habitActivity)
+const habitActivityProvider = HabitActivityFamily();
+
+/// See also [habitActivity].
+class HabitActivityFamily extends Family<AsyncValue<List<HabitActivity>>> {
+  /// See also [habitActivity].
+  const HabitActivityFamily();
+
+  /// See also [habitActivity].
+  HabitActivityProvider call({required DateTime start, required DateTime end}) {
+    return HabitActivityProvider(start: start, end: end);
+  }
+
+  @override
+  HabitActivityProvider getProviderOverride(
+    covariant HabitActivityProvider provider,
+  ) {
+    return call(start: provider.start, end: provider.end);
+  }
+
+  static const Iterable<ProviderOrFamily>? _dependencies = null;
+
+  @override
+  Iterable<ProviderOrFamily>? get dependencies => _dependencies;
+
+  static const Iterable<ProviderOrFamily>? _allTransitiveDependencies = null;
+
+  @override
+  Iterable<ProviderOrFamily>? get allTransitiveDependencies =>
+      _allTransitiveDependencies;
+
+  @override
+  String? get name => r'habitActivityProvider';
+}
+
+/// See also [habitActivity].
+class HabitActivityProvider
+    extends AutoDisposeFutureProvider<List<HabitActivity>> {
+  /// See also [habitActivity].
+  HabitActivityProvider({required DateTime start, required DateTime end})
+    : this._internal(
+        (ref) => habitActivity(ref as HabitActivityRef, start: start, end: end),
+        from: habitActivityProvider,
+        name: r'habitActivityProvider',
+        debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
+            ? null
+            : _$habitActivityHash,
+        dependencies: HabitActivityFamily._dependencies,
+        allTransitiveDependencies:
+            HabitActivityFamily._allTransitiveDependencies,
+        start: start,
+        end: end,
+      );
+
+  HabitActivityProvider._internal(
+    super._createNotifier, {
+    required super.name,
+    required super.dependencies,
+    required super.allTransitiveDependencies,
+    required super.debugGetCreateSourceHash,
+    required super.from,
+    required this.start,
+    required this.end,
+  }) : super.internal();
+
+  final DateTime start;
+  final DateTime end;
+
+  @override
+  Override overrideWith(
+    FutureOr<List<HabitActivity>> Function(HabitActivityRef provider) create,
+  ) {
+    return ProviderOverride(
+      origin: this,
+      override: HabitActivityProvider._internal(
+        (ref) => create(ref as HabitActivityRef),
+        from: from,
+        name: null,
+        dependencies: null,
+        allTransitiveDependencies: null,
+        debugGetCreateSourceHash: null,
+        start: start,
+        end: end,
+      ),
+    );
+  }
+
+  @override
+  AutoDisposeFutureProviderElement<List<HabitActivity>> createElement() {
+    return _HabitActivityProviderElement(this);
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return other is HabitActivityProvider &&
+        other.start == start &&
+        other.end == end;
+  }
+
+  @override
+  int get hashCode {
+    var hash = _SystemHash.combine(0, runtimeType.hashCode);
+    hash = _SystemHash.combine(hash, start.hashCode);
+    hash = _SystemHash.combine(hash, end.hashCode);
+
+    return _SystemHash.finish(hash);
+  }
+}
+
+@Deprecated('Will be removed in 3.0. Use Ref instead')
+// ignore: unused_element
+mixin HabitActivityRef on AutoDisposeFutureProviderRef<List<HabitActivity>> {
+  /// The parameter `start` of this provider.
+  DateTime get start;
+
+  /// The parameter `end` of this provider.
+  DateTime get end;
+}
+
+class _HabitActivityProviderElement
+    extends AutoDisposeFutureProviderElement<List<HabitActivity>>
+    with HabitActivityRef {
+  _HabitActivityProviderElement(super.provider);
+
+  @override
+  DateTime get start => (origin as HabitActivityProvider).start;
+  @override
+  DateTime get end => (origin as HabitActivityProvider).end;
 }
 
 // ignore_for_file: type=lint

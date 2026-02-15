@@ -25,7 +25,7 @@ final localSettingsRepositoryProvider =
 @Deprecated('Will be removed in 3.0. Use Ref instead')
 // ignore: unused_element
 typedef LocalSettingsRepositoryRef = ProviderRef<LocalSettingsRepository>;
-String _$activeMilestonesHash() => r'71e06573f2501e4eabeaa5208c5831ea526edf26';
+String _$activeMilestonesHash() => r'da6c8017ac730302131879b3b0858044d3e604d8';
 
 /// Provider that returns the currently active onboarding milestones
 /// Based on user's onboarding progress (0-5)
@@ -48,7 +48,7 @@ final activeMilestonesProvider =
 // ignore: unused_element
 typedef ActiveMilestonesRef = AutoDisposeProviderRef<List<OnboardingMilestone>>;
 String _$onboardingControllerHash() =>
-    r'4dcd8d35ccccc54c9f3eab1788c9ff0e4d8bc7ab';
+    r'2c593cdbdd1b68372c2206c4f31741bbec3c14af';
 
 /// See also [OnboardingController].
 @ProviderFor(OnboardingController)

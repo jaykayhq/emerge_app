@@ -18,6 +18,12 @@ class ChallengeCard extends StatelessWidget {
   final VoidCallback? onJoin;
   final VoidCallback? onTap;
 
+  // New affiliate fields
+  final bool isSponsored;
+  final String? rewardDescription;
+  final String? category;
+  final String? affiliatePartnerId;
+
   const ChallengeCard({
     super.key,
     required this.id,
@@ -32,6 +38,11 @@ class ChallengeCard extends StatelessWidget {
     this.isJoined = false,
     this.onJoin,
     this.onTap,
+    // New affiliate fields with defaults
+    this.isSponsored = false,
+    this.rewardDescription,
+    this.category,
+    this.affiliatePartnerId,
   });
 
   @override
@@ -105,26 +116,85 @@ class ChallengeCard extends StatelessWidget {
                       ),
                     ),
                   ),
-                  // Sponsor Logo
-                  if (sponsorName != null)
+                  // Top-right badges (Sponsored and/or Sponsor)
+                  Positioned(
+                    top: 12,
+                    right: 12,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        // Sponsored Badge
+                        if (isSponsored)
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 4,
+                            ),
+                            decoration: BoxDecoration(
+                              color: Colors.amber.withValues(alpha: 0.9),
+                              borderRadius: BorderRadius.circular(8),
+                              border: Border.all(color: Colors.amber.shade700, width: 1),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const Icon(Icons.star, size: 12, color: Colors.black87),
+                                const Gap(4),
+                                const Text(
+                                  'Sponsored',
+                                  style: TextStyle(
+                                    color: Colors.black87,
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        // Sponsor Name (if different from sponsored badge)
+                        if (sponsorName != null && !isSponsored)
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 4,
+                            ),
+                            decoration: BoxDecoration(
+                              color: Colors.black.withValues(alpha: 0.6),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Text(
+                              sponsorName!,
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 10,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
+                  // Category Tag (bottom of image)
+                  if (category != null && category != 'all')
                     Positioned(
-                      top: 12,
-                      right: 12,
+                      bottom: 12,
+                      left: 12,
                       child: Container(
                         padding: const EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 4,
+                          horizontal: 10,
+                          vertical: 6,
                         ),
                         decoration: BoxDecoration(
-                          color: Colors.black.withValues(alpha: 0.6),
-                          borderRadius: BorderRadius.circular(8),
+                          color: AppTheme.secondary.withValues(alpha: 0.9),
+                          borderRadius: BorderRadius.circular(12),
                         ),
                         child: Text(
-                          sponsorName!,
+                          _formatCategory(category!),
                           style: const TextStyle(
                             color: Colors.white,
-                            fontSize: 10,
-                            fontWeight: FontWeight.w500,
+                            fontSize: 11,
+                            fontWeight: FontWeight.w600,
                           ),
                         ),
                       ),
@@ -158,27 +228,32 @@ class ChallengeCard extends StatelessWidget {
                   const Gap(16),
 
                   // Prize Row
-                  Row(
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
                     children: [
                       _PrizeChip(
                         icon: Icons.bolt,
                         label: '+$xpReward XP',
                         color: AppTheme.primary,
                       ),
-                      const Gap(8),
                       _PrizeChip(
                         icon: Icons.timer_outlined,
                         label: '$daysRemaining days',
                         color: AppTheme.secondary,
                       ),
-                      if (prizeDescription != null) ...[
-                        const Gap(8),
+                      if (rewardDescription != null)
+                        _PrizeChip(
+                          icon: Icons.card_giftcard,
+                          label: '🎁 ${rewardDescription!}',
+                          color: Colors.amber,
+                        ),
+                      if (prizeDescription != null && rewardDescription == null)
                         _PrizeChip(
                           icon: Icons.card_giftcard,
                           label: prizeDescription!,
                           color: Colors.amber,
                         ),
-                      ],
                     ],
                   ),
                   const Gap(16),
@@ -221,6 +296,11 @@ class ChallengeCard extends StatelessWidget {
         color: AppTheme.primary.withValues(alpha: 0.5),
       ),
     );
+  }
+
+  String _formatCategory(String category) {
+    // Convert 'fitness' -> 'Fitness', 'mindfulness' -> 'Mindfulness', etc.
+    return category[0].toUpperCase() + category.substring(1);
   }
 }
 

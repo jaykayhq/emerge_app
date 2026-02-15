@@ -1,15 +1,12 @@
-import 'dart:async';
-import 'package:emerge_app/core/presentation/widgets/emerge_branding.dart';
-import 'package:emerge_app/core/theme/archetype_theme.dart';
-import 'package:emerge_app/features/auth/domain/entities/user_extension.dart';
-import 'package:emerge_app/features/auth/presentation/providers/auth_providers.dart';
 import 'package:emerge_app/features/onboarding/presentation/providers/onboarding_provider.dart';
+
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:gap/gap.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-/// Cinematic world reveal screen - the dramatic transition from onboarding to world
 class WorldRevealScreen extends ConsumerStatefulWidget {
   const WorldRevealScreen({super.key});
 
@@ -19,57 +16,47 @@ class WorldRevealScreen extends ConsumerStatefulWidget {
 
 class _WorldRevealScreenState extends ConsumerState<WorldRevealScreen>
     with TickerProviderStateMixin {
-  late AnimationController _fadeController;
-  late AnimationController _pulseController;
   late AnimationController _textController;
-
-  late Animation<double> _fadeAnimation;
-  late Animation<double> _pulseAnimation;
-  late Animation<double> _textFadeAnimation;
+  late AnimationController _pulseController;
+  late AnimationController _fadeController;
 
   int _textPhase = 0;
   bool _showButton = false;
   bool _isCreatingHabits = false;
 
   final List<String> _messages = [
-    'Your world is being created...',
-    'Planting the seeds of your identity...',
-    'Every habit is a vote for who you\'re becoming.',
+    'Your identity is forming...',
+    'The world is listening...',
+    'Emerge.',
   ];
 
   @override
   void initState() {
     super.initState();
+    _textController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 2000),
+    );
+
+    _pulseController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 3000),
+    );
 
     _fadeController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 1500),
     );
 
-    _pulseController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 2000),
-    );
-
-    _textController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 800),
-    );
-
-    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: _fadeController, curve: Curves.easeInOut),
-    );
-
-    _pulseAnimation = Tween<double>(begin: 0.8, end: 1.2).animate(
-      CurvedAnimation(parent: _pulseController, curve: Curves.easeInOut),
-    );
-
-    _textFadeAnimation = Tween<double>(
-      begin: 0.0,
-      end: 1.0,
-    ).animate(CurvedAnimation(parent: _textController, curve: Curves.easeIn));
-
     _startSequence();
+  }
+
+  @override
+  void dispose() {
+    _textController.dispose();
+    _pulseController.dispose();
+    _fadeController.dispose();
+    super.dispose();
   }
 
   void _startSequence() async {
@@ -98,235 +85,9 @@ class _WorldRevealScreenState extends ConsumerState<WorldRevealScreen>
     setState(() => _showButton = true);
   }
 
-  @override
-  void dispose() {
-    _fadeController.dispose();
-    _pulseController.dispose();
-    _textController.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final onboardingState = ref.watch(onboardingStateProvider);
-    final archetype = onboardingState.selectedArchetype ?? UserArchetype.none;
-    final theme = ArchetypeTheme.forArchetype(archetype);
-    final user = ref.watch(authStateChangesProvider).valueOrNull;
-
-    return Scaffold(
-      backgroundColor: Colors.black,
-      body: Stack(
-        children: [
-          // Animated background gradient
-          AnimatedBuilder(
-            animation: _fadeAnimation,
-            builder: (context, child) {
-              return Container(
-                decoration: BoxDecoration(
-                  gradient: RadialGradient(
-                    center: Alignment.center,
-                    radius: 1.5 * _fadeAnimation.value,
-                    colors: [
-                      theme.primaryColor.withValues(
-                        alpha: 0.3 * _fadeAnimation.value,
-                      ),
-                      theme.backgroundGradient.first.withValues(
-                        alpha: _fadeAnimation.value * 0.8,
-                      ),
-                      Colors.black,
-                    ],
-                    stops: const [0.0, 0.5, 1.0],
-                  ),
-                ),
-              );
-            },
-          ),
-
-          // Particle field / hex mesh
-          AnimatedBuilder(
-            animation: _fadeAnimation,
-            builder: (context, child) {
-              return Opacity(
-                opacity: _fadeAnimation.value * 0.5,
-                child: const HexMeshBackground(),
-              );
-            },
-          ),
-
-          // Central icon with pulse
-          Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                AnimatedBuilder(
-                  animation: _pulseAnimation,
-                  builder: (context, child) {
-                    return Transform.scale(
-                      scale: _textPhase >= 1 ? _pulseAnimation.value : 1.0,
-                      child: AnimatedBuilder(
-                        animation: _fadeAnimation,
-                        builder: (context, child) {
-                          return Container(
-                            width: 120,
-                            height: 120,
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              color: theme.primaryColor.withValues(
-                                alpha: 0.2 * _fadeAnimation.value,
-                              ),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: theme.primaryColor.withValues(
-                                    alpha: 0.4 * _fadeAnimation.value,
-                                  ),
-                                  blurRadius: 40,
-                                  spreadRadius: 10,
-                                ),
-                              ],
-                            ),
-                            child: Icon(
-                              theme.journeyIcon,
-                              size: 60,
-                              color: theme.primaryColor.withValues(
-                                alpha: _fadeAnimation.value,
-                              ),
-                            ),
-                          );
-                        },
-                      ),
-                    );
-                  },
-                ),
-
-                const SizedBox(height: 48),
-
-                // Animated text
-                AnimatedBuilder(
-                  animation: _textFadeAnimation,
-                  builder: (context, child) {
-                    return Opacity(
-                      opacity: _textFadeAnimation.value,
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 40),
-                        child: Text(
-                          _messages[_textPhase.clamp(0, _messages.length - 1)],
-                          textAlign: TextAlign.center,
-                          style: GoogleFonts.poppins(
-                            fontSize: 20,
-                            color: Colors.white.withValues(alpha: 0.9),
-                            fontWeight: FontWeight.w300,
-                            height: 1.4,
-                          ),
-                        ),
-                      ),
-                    );
-                  },
-                ),
-
-                const SizedBox(height: 32),
-
-                // Journey name reveal
-                AnimatedOpacity(
-                  opacity: _textPhase >= 2 ? 1.0 : 0.0,
-                  duration: const Duration(milliseconds: 500),
-                  child: Column(
-                    children: [
-                      Text(
-                        'Welcome to',
-                        style: GoogleFonts.poppins(
-                          fontSize: 14,
-                          color: Colors.white54,
-                          letterSpacing: 2,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      ShaderMask(
-                        shaderCallback: (bounds) => LinearGradient(
-                          colors: [theme.primaryColor, theme.accentColor],
-                        ).createShader(bounds),
-                        child: Text(
-                          theme.journeyName,
-                          style: GoogleFonts.poppins(
-                            fontSize: 32,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white,
-                            letterSpacing: 1,
-                          ),
-                        ),
-                      ),
-                      if (user != null && user.displayName != null)
-                        Padding(
-                          padding: const EdgeInsets.only(top: 8),
-                          child: Text(
-                            user.displayName!,
-                            style: GoogleFonts.poppins(
-                              fontSize: 16,
-                              color: theme.primaryColor.withValues(alpha: 0.8),
-                            ),
-                          ),
-                        ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-
-          // Bottom button
-          Positioned(
-            bottom: 0,
-            left: 0,
-            right: 0,
-            child: AnimatedOpacity(
-              opacity: _showButton ? 1.0 : 0.0,
-              duration: const Duration(milliseconds: 500),
-              child: Container(
-                padding: const EdgeInsets.all(24),
-                child: SafeArea(
-                  top: false,
-                  child: SizedBox(
-                    width: double.infinity,
-                    height: 56,
-                    child: ElevatedButton(
-                      onPressed: _showButton && !_isCreatingHabits
-                          ? _enterWorld
-                          : null,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: theme.primaryColor,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16),
-                        ),
-                      ),
-                      child: _isCreatingHabits
-                          ? SizedBox(
-                              width: 24,
-                              height: 24,
-                              child: CircularProgressIndicator(
-                                color: Colors.white,
-                                strokeWidth: 2,
-                              ),
-                            )
-                          : Text(
-                              'Enter Your World',
-                              style: GoogleFonts.poppins(
-                                fontSize: 18,
-                                fontWeight: FontWeight.w600,
-                                color: Colors.white,
-                              ),
-                            ),
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
   void _enterWorld() async {
     setState(() => _isCreatingHabits = true);
+    HapticFeedback.heavyImpact();
 
     try {
       // Create onboarding habits
@@ -339,17 +100,201 @@ class _WorldRevealScreenState extends ConsumerState<WorldRevealScreen>
           .read(onboardingControllerProvider.notifier)
           .completeOnboarding();
 
-      // Navigate to world
+      // Navigate to world with a fade transition (handled by router or page transition)
       if (mounted) {
         context.go('/');
       }
     } catch (e) {
       setState(() => _isCreatingHabits = false);
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Error: $e')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error creating your world: $e'),
+            backgroundColor: Colors.redAccent,
+          ),
+        );
       }
     }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    // Deepest black-green background #05100B
+    return Scaffold(
+      backgroundColor: const Color(0xFF05100B),
+      body: Stack(
+        children: [
+          // Radial Gradient Background (Glow)
+          Positioned.fill(
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                gradient: RadialGradient(
+                  center: Alignment.center,
+                  radius: 1.5,
+                  colors: [
+                    const Color(0xFF102217), // Slightly lighter center
+                    const Color(0xFF05100B), // Deepest dark edges
+                  ],
+                  stops: const [0.0, 1.0],
+                ),
+              ),
+            ),
+          ),
+
+          // Center Content
+          Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                // The Abstract Core/Seed
+                AnimatedBuilder(
+                  animation: _pulseController,
+                  builder: (context, child) {
+                    final scale = 1.0 + (_pulseController.value * 0.1);
+                    final glowOpacity = 0.2 + (_pulseController.value * 0.3);
+
+                    return Transform.scale(
+                      scale: scale,
+                      child: Container(
+                        width: 120,
+                        height: 120,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: const Color(
+                            0xFF2BEE79,
+                          ).withValues(alpha: 0.05),
+                          boxShadow: [
+                            BoxShadow(
+                              color: const Color(
+                                0xFF2BEE79,
+                              ).withValues(alpha: glowOpacity),
+                              blurRadius: 60,
+                              spreadRadius: 10,
+                            ),
+                            BoxShadow(
+                              color: const Color(
+                                0xFF2BEE79,
+                              ).withValues(alpha: glowOpacity * 0.5),
+                              blurRadius: 100,
+                              spreadRadius: 30,
+                            ),
+                          ],
+                          border: Border.all(
+                            color: const Color(
+                              0xFF2BEE79,
+                            ).withValues(alpha: glowOpacity),
+                            width: 1,
+                          ),
+                        ),
+                        child: Center(
+                          child: Container(
+                            width: 60,
+                            height: 60,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: const Color(0xFF2BEE79),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: const Color(
+                                    0xFF2BEE79,
+                                  ).withValues(alpha: 0.8),
+                                  blurRadius: 20,
+                                  spreadRadius: 2,
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                    );
+                  },
+                ),
+
+                const Gap(80),
+
+                // Text Messages
+                AnimatedBuilder(
+                  animation: _textController,
+                  builder: (context, child) {
+                    // Fade in and out for first two, stay for last?
+                    // Actually, let's just fade IN for simplicity based on phase
+                    double fadeVal = 0.0;
+                    if (_textPhase < 2) {
+                      // Fade in then out
+                      fadeVal = _textController.value < 0.5
+                          ? _textController.value * 2
+                          : (1.0 - _textController.value) * 2;
+                    } else {
+                      // Final phase: Fade in and stay
+                      fadeVal = _textController.value;
+                    }
+
+                    return Opacity(
+                      opacity: fadeVal.clamp(0.0, 1.0),
+                      child: Text(
+                        _messages[_textPhase],
+                        textAlign: TextAlign.center,
+                        style: GoogleFonts.splineSans(
+                          color: _textPhase == 2
+                              ? const Color(0xFF2BEE79)
+                              : Colors.white,
+                          fontSize: 24,
+                          fontWeight: _textPhase == 2
+                              ? FontWeight.bold
+                              : FontWeight.w300,
+                          letterSpacing: _textPhase == 2 ? 4.0 : 1.0,
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              ],
+            ),
+          ),
+
+          // Button
+          if (_showButton)
+            Positioned(
+              bottom: 80,
+              left: 40,
+              right: 40,
+              child: AnimatedOpacity(
+                duration: const Duration(milliseconds: 1000),
+                opacity: _showButton ? 1.0 : 0.0,
+                child: SizedBox(
+                  height: 56,
+                  child: _isCreatingHabits
+                      ? const Center(
+                          child: CircularProgressIndicator(
+                            color: Color(0xFF2BEE79),
+                          ),
+                        )
+                      : OutlinedButton(
+                          onPressed: _enterWorld,
+                          style: OutlinedButton.styleFrom(
+                            side: const BorderSide(
+                              color: Color(0xFF2BEE79),
+                              width: 1,
+                            ),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(30),
+                            ),
+                            foregroundColor: const Color(0xFF2BEE79),
+                          ),
+                          child: Text(
+                            'ENTER YOUR WORLD',
+                            style: GoogleFonts.splineSans(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                              letterSpacing: 2.0,
+                            ),
+                          ),
+                        ),
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
   }
 }

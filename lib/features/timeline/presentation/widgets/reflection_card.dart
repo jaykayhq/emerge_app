@@ -150,14 +150,14 @@ class _ReflectionCardState extends State<ReflectionCard> {
                   backgroundColor: EmergeColors.teal,
                   foregroundColor: Colors.white,
                   padding: const EdgeInsets.symmetric(
-                    horizontal: 20,
+                    horizontal: 16,
                     vertical: 10,
                   ),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(10),
                   ),
                 ),
-                child: const Text('Log Reflection'),
+                child: const Text('Log'),
               ),
             ],
           ),

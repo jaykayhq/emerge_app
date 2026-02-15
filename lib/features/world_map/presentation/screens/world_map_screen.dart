@@ -1,14 +1,15 @@
+import 'dart:ui';
+
 import 'package:emerge_app/core/theme/app_theme.dart';
 import 'package:emerge_app/core/presentation/widgets/emerge_branding.dart';
-import 'package:emerge_app/core/presentation/widgets/emerge_semantics.dart';
-import 'package:emerge_app/core/theme/emerge_dimensions.dart';
 import 'package:emerge_app/features/auth/domain/entities/user_extension.dart';
 import 'package:emerge_app/features/gamification/presentation/providers/user_stats_providers.dart';
 import 'package:emerge_app/features/world_map/domain/models/archetype_map_config.dart';
 import 'package:emerge_app/features/world_map/domain/models/archetype_maps_catalog.dart';
 import 'package:emerge_app/features/world_map/domain/models/world_node.dart';
-import 'package:emerge_app/features/world_map/presentation/widgets/node_map_canvas.dart';
+import 'package:emerge_app/features/world_map/presentation/widgets/nebula_background.dart';
 import 'package:emerge_app/features/world_map/presentation/widgets/node_detail_sheet.dart';
+import 'package:emerge_app/features/world_map/presentation/widgets/pyramid_map_layout.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -22,13 +23,7 @@ class WorldMapScreen extends ConsumerStatefulWidget {
 }
 
 class _WorldMapScreenState extends ConsumerState<WorldMapScreen> {
-  late ScrollController _scrollController;
-
-  @override
-  void initState() {
-    super.initState();
-    _scrollController = ScrollController();
-  }
+  final ScrollController _scrollController = ScrollController();
 
   @override
   void dispose() {
@@ -41,7 +36,7 @@ class _WorldMapScreenState extends ConsumerState<WorldMapScreen> {
     final statsAsync = ref.watch(userStatsStreamProvider);
 
     return Scaffold(
-      backgroundColor: Colors.transparent,
+      backgroundColor: Colors.black,
       body: statsAsync.when(
         data: (profile) {
           final archetype = profile.archetype;
@@ -51,39 +46,62 @@ class _WorldMapScreenState extends ConsumerState<WorldMapScreen> {
             currentLevel,
           );
 
+          // Logic: Group nodes into sections of 5 levels
+          // Section 1: Levels 1-5
+          // Section 2: Levels 6-10
+          // ...
+          // A section is UNLOCKED only if the previous section is FULLY COMPLETED.
+          // AND the user meets the level requirement for the specific node.
+
+          final hydratedNodes = _hydrateNodesWithSectionLogic(
+            mapConfig.nodes,
+            profile,
+          );
+
           return Stack(
             children: [
-              // Background gradient based on biome
-              _buildBackground(currentBiome, mapConfig),
+              // Layer 1: Parallax            // Background
+              NebulaBackground(
+                biome: currentBiome,
+                primaryColor: mapConfig.primaryColor,
+                accentColor: mapConfig.accentColor,
+              ),
 
-              // Map content
+              // Layer 2: Map content (Pyramid Layout)
               SafeArea(
-                child: Column(
-                  children: [
-                    // Top bar with map info
-                    _buildTopBar(
-                      context,
-                      mapConfig,
-                      currentLevel,
-                      currentBiome,
-                    ),
+                bottom: false,
+                child: PyramidMapLayout(
+                  nodes: hydratedNodes,
+                  primaryColor: mapConfig.primaryColor,
+                  scrollController: _scrollController,
+                  onNodeTap: (node) =>
+                      _showNodeDetail(context, node, mapConfig),
+                ),
+              ),
 
-                    // Node map
-                    Expanded(
-                      child: NodeMapCanvas(
-                        nodes: mapConfig.nodes,
-                        primaryColor: mapConfig.primaryColor,
-                        accentColor: mapConfig.accentColor,
-                        currentLevel: currentLevel,
-                        scrollController: _scrollController,
-                        onNodeTap: (node) =>
-                            _showNodeDetail(context, node, mapConfig),
-                      ),
-                    ),
+              // Layer 3: Top Bar
+              Positioned(
+                top: 0,
+                left: 0,
+                right: 0,
+                child: SafeArea(
+                  child: _GlassmorphismTopBar(
+                    config: mapConfig,
+                    level: currentLevel,
+                    biome: currentBiome,
+                  ),
+                ),
+              ),
 
-                    // Bottom stats bar
-                    _buildBottomStatsBar(context, profile, mapConfig),
-                  ],
+              // Layer 4: Bottom Stats Bar (Extended Full Width)
+              Positioned(
+                bottom: 0,
+                left: 0,
+                right: 0,
+                child: _GlassmorphismStatsBar(
+                  profile: profile,
+                  config: mapConfig,
+                  hydratedNodes: hydratedNodes,
                 ),
               ),
             ],
@@ -101,188 +119,107 @@ class _WorldMapScreenState extends ConsumerState<WorldMapScreen> {
     );
   }
 
-  Widget _buildBackground(BiomeType biome, ArchetypeMapConfig config) {
-    final biomeColors = ArchetypeMapConfig.getBiomeColors(biome);
-
-    return Stack(
-      children: [
-        Container(
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-              colors: [
-                biomeColors[0],
-                biomeColors[1],
-                config.backgroundGradient[0],
-                config.backgroundGradient[1],
-              ],
-              stops: const [0.0, 0.3, 0.7, 1.0],
-            ),
-          ),
-        ),
-        // Ambient particles effect
-        Positioned.fill(
-          child: _AmbientParticles(
-            color: config.primaryColor.withValues(alpha: 0.3),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildTopBar(
-    BuildContext context,
-    ArchetypeMapConfig config,
-    int level,
-    BiomeType biome,
-  ) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [Colors.black.withValues(alpha: 0.6), Colors.transparent],
-        ),
-      ),
-      child: Row(
-        children: [
-          // Map icon and name
-          Icon(config.journeyIcon, color: config.primaryColor, size: 28),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  config.mapName,
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                Text(
-                  ArchetypeMapConfig.getBiomeName(biome),
-                  style: Theme.of(
-                    context,
-                  ).textTheme.bodySmall?.copyWith(color: config.primaryColor),
-                ),
-              ],
-            ),
-          ),
-          // Level badge
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-            decoration: BoxDecoration(
-              color: config.primaryColor.withValues(alpha: 0.2),
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: config.primaryColor),
-            ),
-            child: Row(
-              children: [
-                Icon(Icons.star, color: config.primaryColor, size: 18),
-                const SizedBox(width: 6),
-                Text(
-                  'LVL $level',
-                  style: TextStyle(
-                    color: config.primaryColor,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 14,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildBottomStatsBar(
-    BuildContext context,
+  List<WorldNode> _hydrateNodesWithSectionLogic(
+    List<WorldNode> nodes,
     UserProfile profile,
-    ArchetypeMapConfig config,
   ) {
-    final stats = profile.avatarStats;
-    final completedNodes = config.nodes
-        .where(
-          (n) =>
-              n.state == NodeState.completed || n.state == NodeState.mastered,
-        )
-        .length;
-    final totalNodes = config.nodes.length;
+    // 1. Sort nodes by level
+    final sortedNodes = List<WorldNode>.from(nodes)
+      ..sort((a, b) => a.requiredLevel.compareTo(b.requiredLevel));
 
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.bottomCenter,
-          end: Alignment.topCenter,
-          colors: [Colors.black.withValues(alpha: 0.8), Colors.transparent],
-        ),
-      ),
-      child: Row(
-        children: [
-          // XP
-          _StatItem(
-            icon: Icons.bolt,
-            label: 'XP',
-            value: '${stats.totalXp}',
-            color: EmergeColors.yellow,
+    // 2. Identify Sections (every 5 levels is a new section)
+    // Section 1: Lv 1-5. Section 2: Lv 6-10.
+    int getSection(int level) => ((level - 1) / 5).floor() + 1;
+
+    // 3. Determine Completion of Sections
+    final Map<int, bool> sectionCompletion = {};
+
+    // Group by section
+    final sectionNodes = <int, List<WorldNode>>{};
+    for (var node in sortedNodes) {
+      final section = getSection(node.requiredLevel);
+      sectionNodes.putIfAbsent(section, () => []).add(node);
+    }
+
+    // Check completion for each section
+    // A section is complete if ALL nodes in it are claimed
+    int maxSection = 0;
+    if (sectionNodes.isNotEmpty) {
+      maxSection = sectionNodes.keys.reduce((a, b) => a > b ? a : b);
+    }
+
+    for (int i = 1; i <= maxSection; i++) {
+      final nodesInSection = sectionNodes[i] ?? [];
+      if (nodesInSection.isEmpty) {
+        sectionCompletion[i] = true; // No nodes = complete
+        continue;
+      }
+
+      final allClaimed = nodesInSection.every(
+        (node) => profile.worldState.claimedNodes.contains(node.id),
+      );
+      sectionCompletion[i] = allClaimed;
+    }
+
+    // 4. Hydrate Nodes based on Rules
+    return sortedNodes.map((node) {
+      if (profile.worldState.claimedNodes.contains(node.id)) {
+        return node.copyWith(state: NodeState.completed);
+      }
+
+      final section = getSection(node.requiredLevel);
+      final previousSection = section - 1;
+
+      // Rule 1: Previous section must be complete (if it exists)
+      bool previousSectionComplete = true;
+      if (previousSection >= 1) {
+        previousSectionComplete = sectionCompletion[previousSection] ?? false;
+      }
+
+      if (!previousSectionComplete) {
+        // Locked because previous section not done
+        return node.copyWith(state: NodeState.locked);
+      }
+
+      // Rule 2: User Level must be sufficient
+      // if (profile.avatarStats.level >= node.requiredLevel) {
+      //   return node.copyWith(state: NodeState.available);
+      // }
+      // Actually, standard logic implies if previous section is done,
+      // AND we are at the level, it's available.
+
+      if (profile.avatarStats.level >= node.requiredLevel) {
+        return node.copyWith(state: NodeState.available);
+      }
+
+      return node.copyWith(state: NodeState.locked);
+    }).toList();
+  }
+
+  Future<void> _claimNode(WorldNode node, Color primaryColor) async {
+    try {
+      Navigator.pop(context);
+      await ref.read(userStatsControllerProvider).claimNode(node.id);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Claimed ${node.name}!'),
+            backgroundColor: primaryColor,
+            behavior: SnackBarBehavior.floating,
           ),
-          const SizedBox(width: 16),
-          // Streak
-          _StatItem(
-            icon: Icons.local_fire_department,
-            label: 'Streak',
-            value: '${stats.streak}',
-            color: EmergeColors.coral,
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to claim node: $e'),
+            backgroundColor: Colors.red,
+            behavior: SnackBarBehavior.floating,
           ),
-          const SizedBox(width: 16),
-          // Nodes completed
-          _StatItem(
-            icon: Icons.check_circle,
-            label: 'Nodes',
-            value: '$completedNodes/$totalNodes',
-            color: config.primaryColor,
-          ),
-          const Spacer(),
-          // World Health
-          SizedBox(
-            width: 100,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-                Text(
-                  'World Health',
-                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                    color: Colors.white54,
-                    fontSize: EmergeDimensions.minFontSize, // 12px minimum
-                  ),
-                ),
-                const SizedBox(height: 4),
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(4),
-                  child: LinearProgressIndicator(
-                    value: profile.worldState.worldHealth,
-                    backgroundColor: Colors.white24,
-                    valueColor: AlwaysStoppedAnimation(
-                      profile.worldState.isThriving
-                          ? Colors.green
-                          : profile.worldState.isDecaying
-                          ? Colors.orange
-                          : Colors.amber,
-                    ),
-                    minHeight: 6,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
+        );
+      }
+    }
   }
 
   void _showNodeDetail(
@@ -297,171 +234,281 @@ class _WorldMapScreenState extends ConsumerState<WorldMapScreen> {
       builder: (context) => NodeDetailSheet(
         node: node,
         primaryColor: config.primaryColor,
-        onFocusNode: () {
-          Navigator.pop(context);
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Now focusing on: ${node.name}'),
-              backgroundColor: config.primaryColor,
-              behavior: SnackBarBehavior.floating,
-            ),
-          );
+        userStats: ref.read(userStatsStreamProvider).value!.avatarStats,
+        onAction: () {
+          if (node.state == NodeState.available) {
+            _claimNode(node, config.primaryColor);
+          } else {
+            Navigator.pop(context);
+          }
         },
       ),
     );
   }
 }
 
-class _StatItem extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final String value;
-  final Color color;
+/// Glassmorphism top bar with journey info
+class _GlassmorphismTopBar extends StatelessWidget {
+  final ArchetypeMapConfig config;
+  final int level;
+  final BiomeType biome;
 
-  const _StatItem({
-    required this.icon,
-    required this.label,
-    required this.value,
-    required this.color,
+  const _GlassmorphismTopBar({
+    required this.config,
+    required this.level,
+    required this.biome,
   });
 
   @override
   Widget build(BuildContext context) {
-    return EmergeSemantics(
-      label: '$label: $value',
-      child: Row(
-        children: [
-          Icon(icon, color: color, size: 18),
-          const SizedBox(width: 4),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                value,
-                style: TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 14,
-                ),
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(12, 8, 12, 8),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(16),
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.08),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(
+                color: config.primaryColor.withValues(alpha: 0.2),
               ),
-              Text(
-                label,
-                style: TextStyle(
-                  color: Colors.white54,
-                  fontSize: EmergeDimensions.minFontSize, // 12px minimum
+            ),
+            child: Row(
+              children: [
+                // Journey icon with glow
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: config.primaryColor.withValues(alpha: 0.2),
+                    shape: BoxShape.circle,
+                    boxShadow: [
+                      BoxShadow(
+                        color: config.primaryColor.withValues(alpha: 0.3),
+                        blurRadius: 12,
+                        spreadRadius: 1,
+                      ),
+                    ],
+                  ),
+                  child: Icon(
+                    config.journeyIcon,
+                    color: config.primaryColor,
+                    size: 24,
+                  ),
                 ),
-              ),
-            ],
+                const SizedBox(width: 12),
+                // Map name
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        config.mapName,
+                        style: Theme.of(context).textTheme.titleMedium
+                            ?.copyWith(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                              letterSpacing: 0.5,
+                            ),
+                      ),
+                      Text(
+                        'Valley of New Beginnings', // Hardcoded for this redesign
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: config.primaryColor.withValues(alpha: 0.8),
+                          fontSize: 10,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                // Level badge
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 14,
+                    vertical: 8,
+                  ),
+                  decoration: BoxDecoration(
+                    color: config.primaryColor.withValues(alpha: 0.15),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: config.primaryColor.withValues(alpha: 0.6),
+                      width: 1.5,
+                    ),
+                  ),
+                  child: Text(
+                    'LVL $level',
+                    style: TextStyle(
+                      color: config.primaryColor,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 13,
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
-        ],
+        ),
       ),
     );
   }
 }
 
-class _AmbientParticles extends StatefulWidget {
-  final Color color;
-  const _AmbientParticles({required this.color});
+/// Glassmorphism bottom stats bar - Extended Left to Right
+class _GlassmorphismStatsBar extends StatelessWidget {
+  final UserProfile profile;
+  final ArchetypeMapConfig config;
+  final List<WorldNode> hydratedNodes;
 
-  @override
-  State<_AmbientParticles> createState() => _AmbientParticlesState();
-}
-
-class _AmbientParticlesState extends State<_AmbientParticles>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _controller;
-  final List<_Particle> _particles = [];
-
-  @override
-  void initState() {
-    super.initState();
-    _controller = AnimationController(
-      vsync: this,
-      duration: const Duration(seconds: 10),
-    )..repeat();
-
-    // Initialize random particles
-    for (int i = 0; i < 20; i++) {
-      _particles.add(_Particle.random());
-    }
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
+  const _GlassmorphismStatsBar({
+    required this.profile,
+    required this.config,
+    required this.hydratedNodes,
+  });
 
   @override
   Widget build(BuildContext context) {
-    return AnimatedBuilder(
-      animation: _controller,
-      builder: (context, child) {
-        return CustomPaint(
-          painter: _ParticlePainter(
-            particles: _particles,
-            progress: _controller.value,
-            color: widget.color,
+    final stats = profile.avatarStats;
+    final completedNodes = hydratedNodes
+        .where(
+          (n) =>
+              n.state == NodeState.completed || n.state == NodeState.mastered,
+        )
+        .length;
+    final totalNodes = config.nodes.length;
+
+    // Calculate progress for XP bar
+    // Simple logic: current XP / (level * 1000) or similar
+    // Assuming 500 XP per level for viz
+    final xpProgress = (stats.totalXp % 500) / 500.0;
+
+    return ClipRRect(
+      // No borders, full width at bottom (or just above nav bar if any, but Scaffold body covers it)
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
+        child: Container(
+          width: double.infinity,
+          padding: const EdgeInsets.fromLTRB(
+            20,
+            16,
+            20,
+            32,
+          ), // Extra bottom padding for safe area
+          decoration: BoxDecoration(
+            color: Colors.black.withValues(alpha: 0.6),
+            border: Border(
+              top: BorderSide(
+                color: config.primaryColor.withValues(alpha: 0.3),
+                width: 1,
+              ),
+            ),
           ),
-        );
-      },
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // XP Progress Bar (Extended Left to Right)
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    'XP ${stats.totalXp}',
+                    style: TextStyle(
+                      color: EmergeColors.yellow,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 12,
+                    ),
+                  ),
+                  Text(
+                    '${(xpProgress * 100).toInt()}%',
+                    style: TextStyle(color: Colors.white54, fontSize: 12),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 6),
+              ClipRRect(
+                borderRadius: BorderRadius.circular(4),
+                child: LinearProgressIndicator(
+                  value: xpProgress.clamp(0.0, 1.0),
+                  backgroundColor: Colors.white10,
+                  valueColor: AlwaysStoppedAnimation(EmergeColors.yellow),
+                  minHeight: 6,
+                ),
+              ),
+
+              const SizedBox(height: 16),
+
+              // Stats Row
+              Row(
+                mainAxisAlignment:
+                    MainAxisAlignment.spaceAround, // Even spacing
+                children: [
+                  _StatItem(
+                    label: 'Streak',
+                    value: '${stats.streak}',
+                    icon: Icons.local_fire_department,
+                    color: EmergeColors.coral,
+                  ),
+                  _StatItem(
+                    label: 'Nodes',
+                    value: '$completedNodes/$totalNodes',
+                    icon: Icons.check_circle_outline,
+                    color: config.primaryColor,
+                  ),
+                  _StatItem(
+                    label: 'World',
+                    value: profile.worldState.isThriving
+                        ? 'Thriving'
+                        : 'Stable',
+                    icon: Icons.public,
+                    color: Colors.greenAccent,
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }
 
-class _Particle {
-  double x;
-  double y;
-  double speed;
-  double size;
-  double opacity;
-
-  _Particle({
-    required this.x,
-    required this.y,
-    required this.speed,
-    required this.size,
-    required this.opacity,
-  });
-
-  factory _Particle.random() {
-    return _Particle(
-      x: (DateTime.now().microsecondsSinceEpoch % 100) / 100.0,
-      y: (DateTime.now().microsecondsSinceEpoch % 100) / 100.0,
-      speed: 0.05 + ((DateTime.now().microsecondsSinceEpoch % 50) / 1000.0),
-      size: 2.0 + (DateTime.now().microsecondsSinceEpoch % 4),
-      opacity: 0.2 + ((DateTime.now().microsecondsSinceEpoch % 50) / 100.0),
-    );
-  }
-}
-
-class _ParticlePainter extends CustomPainter {
-  final List<_Particle> particles;
-  final double progress;
+class _StatItem extends StatelessWidget {
+  final String label;
+  final String value;
+  final IconData icon;
   final Color color;
 
-  _ParticlePainter({
-    required this.particles,
-    required this.progress,
+  const _StatItem({
+    required this.label,
+    required this.value,
+    required this.icon,
     required this.color,
   });
 
   @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()..color = color;
-
-    for (var particle in particles) {
-      // Move particle up slowly
-      double y = particle.y - (progress * particle.speed);
-      if (y < 0) y += 1.0;
-
-      final position = Offset(particle.x * size.width, y * size.height);
-
-      paint.color = color.withValues(alpha: particle.opacity);
-      canvas.drawCircle(position, particle.size, paint);
-    }
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        Icon(icon, color: color, size: 20),
+        const SizedBox(height: 4),
+        Text(
+          value,
+          style: const TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.bold,
+            fontSize: 14,
+          ),
+        ),
+        Text(
+          label.toUpperCase(),
+          style: const TextStyle(
+            color: Colors.white54,
+            fontSize: 10,
+            letterSpacing: 1,
+          ),
+        ),
+      ],
+    );
   }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => true;
 }

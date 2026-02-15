@@ -1,5 +1,6 @@
 import 'package:emerge_app/core/theme/app_theme.dart';
 import 'package:emerge_app/core/presentation/widgets/emerge_branding.dart';
+import 'package:emerge_app/features/auth/domain/entities/user_extension.dart';
 import 'package:emerge_app/features/habits/domain/entities/habit.dart';
 import 'package:emerge_app/features/world_map/domain/models/world_node.dart';
 import 'package:flutter/material.dart';
@@ -8,13 +9,15 @@ import 'package:flutter/material.dart';
 class NodeDetailSheet extends StatelessWidget {
   final WorldNode node;
   final Color primaryColor;
-  final VoidCallback? onFocusNode;
+  final VoidCallback? onAction;
+  final UserAvatarStats userStats; // User's current attribute XP
 
   const NodeDetailSheet({
     super.key,
     required this.node,
     required this.primaryColor,
-    this.onFocusNode,
+    required this.userStats,
+    this.onAction,
   });
 
   @override
@@ -122,7 +125,12 @@ class NodeDetailSheet extends StatelessWidget {
             runSpacing: 8,
             children: node.targetedAttributes.map((attr) {
               final xpBoost = node.xpBoosts[attr] ?? 10;
-              return _AttributeChip(attribute: attr, xpBoost: xpBoost);
+              final currentXp = _getXpForAttribute(userStats, attr);
+              return _AttributeChip(
+                attribute: attr,
+                xpBoost: xpBoost,
+                currentXp: currentXp,
+              );
             }).toList(),
           ),
 
@@ -165,22 +173,30 @@ class NodeDetailSheet extends StatelessWidget {
           SizedBox(
             width: double.infinity,
             child: ElevatedButton.icon(
-              onPressed: node.state == NodeState.locked ? null : onFocusNode,
+              onPressed:
+                  node.state == NodeState.locked ||
+                      node.state == NodeState.completed ||
+                      node.state == NodeState.mastered
+                  ? null
+                  : onAction,
               icon: Icon(
                 node.state == NodeState.locked
                     ? Icons.lock
-                    : Icons.center_focus_strong,
+                    : node.state == NodeState.completed ||
+                          node.state == NodeState.mastered
+                    ? Icons.check_circle
+                    : Icons.stars,
               ),
-              label: Text(
-                node.state == NodeState.locked
-                    ? 'Locked (Reach Level ${node.requiredLevel})'
-                    : 'Focus on This Node',
-              ),
+              label: Text(_getActionButtonLabel()),
               style: ElevatedButton.styleFrom(
                 backgroundColor: primaryColor,
                 foregroundColor: Colors.white,
-                disabledBackgroundColor: Colors.grey.shade700,
-                disabledForegroundColor: Colors.grey.shade400,
+                disabledBackgroundColor:
+                    node.state == NodeState.completed ||
+                        node.state == NodeState.mastered
+                    ? primaryColor.withValues(alpha: 0.5)
+                    : Colors.grey.shade700,
+                disabledForegroundColor: Colors.white.withValues(alpha: 0.7),
                 padding: const EdgeInsets.symmetric(vertical: 14),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
@@ -191,6 +207,19 @@ class NodeDetailSheet extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  String _getActionButtonLabel() {
+    switch (node.state) {
+      case NodeState.locked:
+        return 'Locked (Reach Level ${node.requiredLevel})';
+      case NodeState.available:
+      case NodeState.inProgress:
+        return 'Claim Reward';
+      case NodeState.completed:
+      case NodeState.mastered:
+        return 'Completed';
+    }
   }
 
   Widget _buildTierBadge(BuildContext context) {
@@ -234,50 +263,89 @@ class NodeDetailSheet extends StatelessWidget {
         return EmergeColors.violet;
     }
   }
+
+  int _getXpForAttribute(UserAvatarStats stats, HabitAttribute attr) {
+    switch (attr) {
+      case HabitAttribute.vitality:
+        return stats.vitalityXp;
+      case HabitAttribute.strength:
+        return stats.strengthXp;
+      case HabitAttribute.focus:
+        return stats.focusXp;
+      case HabitAttribute.intellect:
+        return stats.intellectXp;
+      case HabitAttribute.creativity:
+        return stats.creativityXp;
+      case HabitAttribute.spirit:
+        return stats.spiritXp;
+    }
+  }
 }
 
-/// Chip showing an attribute and its XP boost
+/// Chip showing an attribute, the user's current XP, and the potential boost
 class _AttributeChip extends StatelessWidget {
   final HabitAttribute attribute;
   final int xpBoost;
+  final int currentXp;
 
-  const _AttributeChip({required this.attribute, required this.xpBoost});
+  const _AttributeChip({
+    required this.attribute,
+    required this.xpBoost,
+    required this.currentXp,
+  });
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       decoration: BoxDecoration(
         color: _getAttributeColor().withValues(alpha: 0.15),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: _getAttributeColor().withValues(alpha: 0.4)),
       ),
-      child: Row(
+      child: Column(
         mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(_getAttributeIcon(), color: _getAttributeColor(), size: 16),
-          const SizedBox(width: 6),
+          // Row 1: Icon + Attribute Name
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(_getAttributeIcon(), color: _getAttributeColor(), size: 18),
+              const SizedBox(width: 6),
+              Text(
+                attribute.name[0].toUpperCase() + attribute.name.substring(1),
+                style: TextStyle(
+                  color: _getAttributeColor(),
+                  fontWeight: FontWeight.bold,
+                  fontSize: 13,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          // Row 2: Current XP
           Text(
-            attribute.name,
+            'Current: $currentXp XP',
             style: TextStyle(
-              color: _getAttributeColor(),
-              fontWeight: FontWeight.w500,
-              fontSize: 12,
+              color: Colors.white.withValues(alpha: 0.7),
+              fontSize: 11,
             ),
           ),
-          const SizedBox(width: 8),
+          const SizedBox(height: 4),
+          // Row 3: Reward Badge
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
             decoration: BoxDecoration(
               color: _getAttributeColor(),
               borderRadius: BorderRadius.circular(6),
             ),
             child: Text(
-              '+$xpBoost XP',
+              '🚀 +$xpBoost XP',
               style: const TextStyle(
                 color: Colors.white,
                 fontWeight: FontWeight.bold,
-                fontSize: 10,
+                fontSize: 11,
               ),
             ),
           ),
@@ -289,15 +357,17 @@ class _AttributeChip extends StatelessWidget {
   Color _getAttributeColor() {
     switch (attribute) {
       case HabitAttribute.vitality:
-        return Colors.red;
-      case HabitAttribute.strength:
-        return EmergeColors.teal;
-      case HabitAttribute.focus:
-        return Colors.blue;
+        return const Color(0xFF00E5FF);
       case HabitAttribute.intellect:
-        return EmergeColors.violet;
+        return const Color(0xFFE040FB);
       case HabitAttribute.creativity:
-        return EmergeColors.yellow;
+        return const Color(0xFF76FF03);
+      case HabitAttribute.focus:
+        return const Color(0xFFFFAB00);
+      case HabitAttribute.strength:
+        return const Color(0xFFFF5252);
+      case HabitAttribute.spirit:
+        return const Color(0xFFFFD700);
     }
   }
 
@@ -305,14 +375,16 @@ class _AttributeChip extends StatelessWidget {
     switch (attribute) {
       case HabitAttribute.vitality:
         return Icons.favorite;
-      case HabitAttribute.strength:
-        return Icons.schedule;
-      case HabitAttribute.focus:
-        return Icons.center_focus_strong;
       case HabitAttribute.intellect:
-        return Icons.psychology;
+        return Icons.menu_book;
       case HabitAttribute.creativity:
         return Icons.palette;
+      case HabitAttribute.focus:
+        return Icons.center_focus_strong;
+      case HabitAttribute.strength:
+        return Icons.fitness_center;
+      case HabitAttribute.spirit:
+        return Icons.auto_awesome;
     }
   }
 }

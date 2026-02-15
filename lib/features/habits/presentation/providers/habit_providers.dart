@@ -4,6 +4,7 @@ import 'package:emerge_app/features/habits/data/repositories/firestore_habit_rep
 import 'package:emerge_app/features/auth/presentation/providers/auth_providers.dart';
 
 import 'package:emerge_app/features/habits/domain/entities/habit.dart';
+import 'package:emerge_app/features/habits/domain/models/habit_activity.dart';
 import 'package:emerge_app/features/habits/domain/repositories/habit_repository.dart';
 import 'package:emerge_app/features/monetization/presentation/providers/subscription_provider.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -105,6 +106,13 @@ Future<void> completeHabit(Ref ref, String habitId) async {
             // Log activity for gamification system
             // The actual XP calculation happens in backend Cloud Functions
             // but we can still connect to the leveling system for UI updates
+
+            // INTEGRATION: XP is now handled authoritatively by Cloud Functions
+            // triggered by the 'user_activity' log in the repository.
+            // Client-side direct write removed to prevent double XP.
+            AppLogger.i(
+              'Habit activity logged for user $userId. XP will be processed by Cloud Functions.',
+            );
           }
         }
       } else {
@@ -112,4 +120,18 @@ Future<void> completeHabit(Ref ref, String habitId) async {
       }
     },
   );
+}
+
+@riverpod
+Future<List<HabitActivity>> habitActivity(
+  Ref ref, {
+  required DateTime start,
+  required DateTime end,
+}) async {
+  final repository = ref.watch(habitRepositoryProvider);
+  final user = ref.watch(authStateChangesProvider).value;
+
+  if (user == null) return [];
+
+  return repository.getActivity(user.id, start, end);
 }

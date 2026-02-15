@@ -36,6 +36,8 @@ class _CommunityChallengesScreenState
     'Learning',
     'Nutrition',
     'Productivity',
+    'Creative',
+    'Faith',
   ];
 
   static const Map<String, IconData> _categoryIcons = {
@@ -45,6 +47,8 @@ class _CommunityChallengesScreenState
     'Learning': Icons.menu_book,
     'Nutrition': Icons.restaurant,
     'Productivity': Icons.bolt,
+    'Creative': Icons.palette,
+    'Faith': Icons.favorite,
   };
 
   @override
@@ -76,10 +80,16 @@ class _CommunityChallengesScreenState
               final totalXp = profile.avatarStats.totalXp;
               return Container(
                 margin: const EdgeInsets.only(right: 8),
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 6,
+                ),
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
-                    colors: [EmergeColors.teal.withValues(alpha: 0.2), EmergeColors.coral.withValues(alpha: 0.2)],
+                    colors: [
+                      EmergeColors.teal.withValues(alpha: 0.2),
+                      EmergeColors.coral.withValues(alpha: 0.2),
+                    ],
                   ),
                   borderRadius: BorderRadius.circular(20),
                   border: Border.all(
@@ -90,11 +100,7 @@ class _CommunityChallengesScreenState
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(
-                      Icons.stars,
-                      size: 16,
-                      color: EmergeColors.teal,
-                    ),
+                    Icon(Icons.stars, size: 16, color: EmergeColors.teal),
                     const SizedBox(width: 6),
                     Text(
                       'Lvl $level',
@@ -225,7 +231,7 @@ class _ChallengeList extends ConsumerWidget {
         // Apply category filter
         final filteredChallenges = categoryFilter == 'All'
             ? challenges
-            : challenges.where((c) => c.category == categoryFilter).toList();
+            : challenges.where((c) => c.category.name.toLowerCase() == categoryFilter.toLowerCase()).toList();
 
         if (filteredChallenges.isEmpty) {
           return Center(

@@ -2,6 +2,26 @@ import 'package:equatable/equatable.dart';
 
 enum ChallengeStatus { featured, active, completed }
 
+enum ChallengeCategory {
+  all,
+  fitness,
+  mindfulness,
+  learning,
+  nutrition,
+  productivity,
+  creative,
+  faith,
+}
+
+enum AffiliateNetwork {
+  cj,
+  impact,
+  shareASale,
+  amazon,
+  direct,
+  none,
+}
+
 class ChallengeStep extends Equatable {
   final int day;
   final String title;
@@ -45,9 +65,19 @@ class Challenge extends Equatable {
   final bool isTeamChallenge;
   final bool buddyValidationRequired;
   final List<ChallengeStep> steps;
-  final String category;
+  final ChallengeCategory category;
   final String? sponsor;
   final String? sponsorLogoUrl;
+
+  // New affiliate fields
+  final String? affiliatePartnerId;
+  final AffiliateNetwork affiliateNetwork;
+  final double? commissionRate;
+  final String? rewardDescription;
+  final bool isSponsored;
+  final DateTime? sponsorshipStartDate;
+  final DateTime? sponsorshipEndDate;
+  final String? archetypeId;
 
   const Challenge({
     required this.id,
@@ -66,9 +96,18 @@ class Challenge extends Equatable {
     this.isTeamChallenge = false,
     this.buddyValidationRequired = false,
     required this.steps,
-    this.category = 'All',
+    this.category = ChallengeCategory.all,
     this.sponsor,
     this.sponsorLogoUrl,
+    // New affiliate fields with defaults
+    this.affiliatePartnerId,
+    this.affiliateNetwork = AffiliateNetwork.none,
+    this.commissionRate,
+    this.rewardDescription,
+    this.isSponsored = false,
+    this.sponsorshipStartDate,
+    this.sponsorshipEndDate,
+    this.archetypeId,
   });
 
   Map<String, dynamic> toMap() {
@@ -88,9 +127,18 @@ class Challenge extends Equatable {
       'isFeatured': isFeatured,
       'isTeamChallenge': isTeamChallenge,
       'buddyValidationRequired': buddyValidationRequired,
-      'category': category,
+      'category': category.name,
       'sponsor': sponsor,
       'sponsorLogoUrl': sponsorLogoUrl,
+      // New affiliate fields
+      'affiliatePartnerId': affiliatePartnerId,
+      'affiliateNetwork': affiliateNetwork.name,
+      'commissionRate': commissionRate,
+      'rewardDescription': rewardDescription,
+      'isSponsored': isSponsored,
+      'sponsorshipStartDate': sponsorshipStartDate?.toIso8601String(),
+      'sponsorshipEndDate': sponsorshipEndDate?.toIso8601String(),
+      'archetypeId': archetypeId,
       // steps would be a sub-collection or array usually, simplifying for now
       'steps': steps
           .map(
@@ -106,6 +154,45 @@ class Challenge extends Equatable {
   }
 
   factory Challenge.fromMap(Map<String, dynamic> map, {String? id}) {
+    // Parse category string to enum, default to 'all'
+    final categoryString = map['category'] as String?;
+    ChallengeCategory parsedCategory = ChallengeCategory.all;
+    if (categoryString != null) {
+      try {
+        parsedCategory = ChallengeCategory.values.firstWhere(
+          (e) => e.name == categoryString,
+          orElse: () => ChallengeCategory.all,
+        );
+      } catch (_) {
+        parsedCategory = ChallengeCategory.all;
+      }
+    }
+
+    // Parse affiliate network string to enum, default to 'none'
+    final networkString = map['affiliateNetwork'] as String?;
+    AffiliateNetwork parsedNetwork = AffiliateNetwork.none;
+    if (networkString != null) {
+      try {
+        parsedNetwork = AffiliateNetwork.values.firstWhere(
+          (e) => e.name == networkString,
+          orElse: () => AffiliateNetwork.none,
+        );
+      } catch (_) {
+        parsedNetwork = AffiliateNetwork.none;
+      }
+    }
+
+    // Parse dates
+    DateTime? startDate;
+    if (map['sponsorshipStartDate'] != null) {
+      startDate = DateTime.tryParse(map['sponsorshipStartDate'] as String);
+    }
+
+    DateTime? endDate;
+    if (map['sponsorshipEndDate'] != null) {
+      endDate = DateTime.tryParse(map['sponsorshipEndDate'] as String);
+    }
+
     return Challenge(
       id: id ?? map['id'] ?? '',
       title: map['title'] ?? '',
@@ -118,17 +205,25 @@ class Challenge extends Equatable {
       currentDay: map['currentDay']?.toInt() ?? 0,
       status: ChallengeStatus.values.firstWhere(
         (e) => e.name == map['status'],
-        orElse: () => ChallengeStatus
-            .featured, // Default to featured if unknown? Or active?
+        orElse: () => ChallengeStatus.featured,
       ),
       affiliateUrl: map['affiliateUrl'],
       xpReward: map['xpReward']?.toInt() ?? 0,
       isFeatured: map['isFeatured'] ?? false,
       isTeamChallenge: map['isTeamChallenge'] ?? false,
       buddyValidationRequired: map['buddyValidationRequired'] ?? false,
-      category: map['category'] ?? 'All',
+      category: parsedCategory,
       sponsor: map['sponsor'],
       sponsorLogoUrl: map['sponsorLogoUrl'],
+      // New affiliate fields
+      affiliatePartnerId: map['affiliatePartnerId'],
+      affiliateNetwork: parsedNetwork,
+      commissionRate: map['commissionRate']?.toDouble(),
+      rewardDescription: map['rewardDescription'],
+      isSponsored: map['isSponsored'] ?? false,
+      sponsorshipStartDate: startDate,
+      sponsorshipEndDate: endDate,
+      archetypeId: map['archetypeId'],
       steps:
           (map['steps'] as List<dynamic>?)
               ?.map(
@@ -165,6 +260,15 @@ class Challenge extends Equatable {
     category,
     sponsor,
     sponsorLogoUrl,
+    // New affiliate fields
+    affiliatePartnerId,
+    affiliateNetwork,
+    commissionRate,
+    rewardDescription,
+    isSponsored,
+    sponsorshipStartDate,
+    sponsorshipEndDate,
+    archetypeId,
   ];
 
   Challenge copyWith({
@@ -175,6 +279,18 @@ class Challenge extends Equatable {
     int? currentDay,
     int? participants,
     List<ChallengeStep>? steps,
+    ChallengeCategory? category,
+    String? sponsor,
+    String? sponsorLogoUrl,
+    // New affiliate fields
+    String? affiliatePartnerId,
+    AffiliateNetwork? affiliateNetwork,
+    double? commissionRate,
+    String? rewardDescription,
+    bool? isSponsored,
+    DateTime? sponsorshipStartDate,
+    DateTime? sponsorshipEndDate,
+    String? archetypeId,
   }) {
     return Challenge(
       id: id,
@@ -193,9 +309,18 @@ class Challenge extends Equatable {
       isTeamChallenge: isTeamChallenge,
       buddyValidationRequired: buddyValidationRequired,
       steps: steps ?? this.steps,
-      category: category,
-      sponsor: sponsor,
-      sponsorLogoUrl: sponsorLogoUrl,
+      category: category ?? this.category,
+      sponsor: sponsor ?? this.sponsor,
+      sponsorLogoUrl: sponsorLogoUrl ?? this.sponsorLogoUrl,
+      // New affiliate fields
+      affiliatePartnerId: affiliatePartnerId ?? this.affiliatePartnerId,
+      affiliateNetwork: affiliateNetwork ?? this.affiliateNetwork,
+      commissionRate: commissionRate ?? this.commissionRate,
+      rewardDescription: rewardDescription ?? this.rewardDescription,
+      isSponsored: isSponsored ?? this.isSponsored,
+      sponsorshipStartDate: sponsorshipStartDate ?? this.sponsorshipStartDate,
+      sponsorshipEndDate: sponsorshipEndDate ?? this.sponsorshipEndDate,
+      archetypeId: archetypeId ?? this.archetypeId,
     );
   }
 }

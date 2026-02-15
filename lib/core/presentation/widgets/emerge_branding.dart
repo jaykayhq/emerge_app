@@ -2,20 +2,42 @@ import 'dart:math' as math;
 import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 
-/// The Core Color Palette based on the design
+/// The Core Color Palette - Stitch Design System
 class EmergeColors {
-  // Tokyo Night Base
-  static const Color background = Color(0xFF1a1b26);
+  // ============ COSMIC PURPLE GRADIENT ============
+  static const Color background = Color(0xFF0F0F23); // Deep cosmic
+  static const Color backgroundLight = Color(0xFF1A0A2E); // Cosmic purple dark
+  static const Color surface = Color(0xFF1E1433); // Cosmic surface
   static const Color hexLine = Color(0xFF1E2229);
 
-  // The "Growth" Gradient Colors
-  static const Color teal = Color(0xFF00F0FF);
-  // Tokyo Night Purple/Violet
-  static const Color violet = Color(0xFFbb9af7);
-  // Tokyo Night Red/Coral
-  static const Color coral = Color(0xFFf7768e);
-  // Tokyo Night Yellow/Orange
-  static const Color yellow = Color(0xFFe0af68);
+  // ============ NEON ACCENTS ============
+  static const Color teal = Color(0xFF00F0FF); // Bright neon teal
+  static const Color tealMuted = Color(0xFF00BFA5); // Muted teal
+  static const Color violet = Color(0xFF7C4DFF); // Neon violet
+  static const Color violetSoft = Color(0xFFbb9af7); // Tokyo Night Purple
+  static const Color coral = Color(0xFFf7768e); // Tokyo Night Red
+  static const Color yellow = Color(0xFFe0af68); // Tokyo Night Yellow
+  static const Color lime = Color(0xFF76FF03); // Lime green accent
+
+  // ============ GLASSMORPHISM ============
+  static const Color glassWhite = Color(0x14FFFFFF); // 8% white
+  static const Color glassWhiteMed = Color(0x1FFFFFFF); // 12% white
+  static const Color glassBorder = Color(0x26FFFFFF); // 15% white
+
+  // ============ GRADIENTS ============
+  static const LinearGradient cosmicGradient = LinearGradient(
+    begin: Alignment.topCenter,
+    end: Alignment.bottomCenter,
+    colors: [backgroundLight, background],
+  );
+
+  static const LinearGradient neonGradient = LinearGradient(
+    colors: [teal, violet],
+  );
+
+  static const LinearGradient warmGradient = LinearGradient(
+    colors: [coral, yellow],
+  );
 }
 
 // ---------------------------------------------------------------------------

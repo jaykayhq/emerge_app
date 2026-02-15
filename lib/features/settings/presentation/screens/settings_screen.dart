@@ -120,8 +120,15 @@ class SettingsScreen extends ConsumerWidget {
                     context,
                     Icons.card_membership,
                     'Manage Subscription',
-                    trailingText: 'Free', // Defaults to Free for now
-                    onTap: () {},
+                    trailingText: 'Free',
+                    onTap: () {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Premium features coming soon!'),
+                          duration: Duration(seconds: 2),
+                        ),
+                      );
+                    },
                   ),
                 ]),
                 const SizedBox(height: 24),

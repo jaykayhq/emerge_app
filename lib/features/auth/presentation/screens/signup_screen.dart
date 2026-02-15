@@ -11,6 +11,7 @@ import 'package:gap/gap.dart';
 import 'package:emerge_app/features/auth/domain/entities/user_extension.dart';
 import 'package:emerge_app/features/gamification/presentation/providers/gamification_providers.dart';
 import 'package:emerge_app/features/onboarding/presentation/providers/onboarding_provider.dart';
+import 'package:emerge_app/features/gamification/domain/services/gamification_service.dart';
 import 'package:go_router/go_router.dart';
 
 class SignUpScreen extends ConsumerStatefulWidget {
@@ -59,9 +60,19 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
           uid: user.id,
           archetype: onboardingState.selectedArchetype ?? UserArchetype.none,
           avatarStats: UserAvatarStats(
-            strengthXp: onboardingState.attributes['Strength'] ?? 0,
-            intellectXp: onboardingState.attributes['Focus'] ?? 0,
-            vitalityXp: onboardingState.attributes['Vitality'] ?? 0,
+            strengthXp: (onboardingState.attributes['Strength'] ?? 0) * 50,
+            intellectXp: (onboardingState.attributes['Intellect'] ?? 0) * 50,
+            vitalityXp: (onboardingState.attributes['Vitality'] ?? 0) * 50,
+            creativityXp: (onboardingState.attributes['Creativity'] ?? 0) * 50,
+            focusXp: (onboardingState.attributes['Focus'] ?? 0) * 50,
+            spiritXp: (onboardingState.attributes['Spirit'] ?? 0) * 50,
+            level: GamificationService.calculateLevel(
+              onboardingState.attributes.values.fold(
+                    0,
+                    (sum, val) => sum + val,
+                  ) *
+                  50,
+            ),
           ),
           why: onboardingState.why,
           anchors: onboardingState.anchors,
@@ -121,9 +132,19 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
           uid: user.id,
           archetype: onboardingState.selectedArchetype ?? UserArchetype.none,
           avatarStats: UserAvatarStats(
-            strengthXp: onboardingState.attributes['Strength'] ?? 0,
-            intellectXp: onboardingState.attributes['Focus'] ?? 0,
-            vitalityXp: onboardingState.attributes['Vitality'] ?? 0,
+            strengthXp: (onboardingState.attributes['Strength'] ?? 0) * 50,
+            intellectXp: (onboardingState.attributes['Intellect'] ?? 0) * 50,
+            vitalityXp: (onboardingState.attributes['Vitality'] ?? 0) * 50,
+            creativityXp: (onboardingState.attributes['Creativity'] ?? 0) * 50,
+            focusXp: (onboardingState.attributes['Focus'] ?? 0) * 50,
+            spiritXp: (onboardingState.attributes['Spirit'] ?? 0) * 50,
+            level: GamificationService.calculateLevel(
+              onboardingState.attributes.values.fold(
+                    0,
+                    (sum, val) => sum + val,
+                  ) *
+                  50,
+            ),
           ),
           why: onboardingState.why,
           anchors: onboardingState.anchors,

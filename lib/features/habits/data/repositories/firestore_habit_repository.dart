@@ -4,6 +4,7 @@ import 'package:emerge_app/core/error/failure.dart';
 import 'package:emerge_app/core/services/event_bus.dart';
 import 'package:emerge_app/core/utils/app_logger.dart';
 import 'package:emerge_app/features/habits/domain/entities/habit.dart';
+import 'package:emerge_app/features/habits/domain/models/habit_activity.dart';
 import 'package:emerge_app/features/habits/domain/repositories/habit_repository.dart';
 import 'package:fpdart/fpdart.dart';
 
@@ -18,7 +19,10 @@ class FirestoreHabitRepository implements HabitRepository {
     return _firestore
         .collection('habits')
         .where('userId', isEqualTo: userId)
-        .where('isArchived', isEqualTo: false) // Filter at source for efficiency
+        .where(
+          'isArchived',
+          isEqualTo: false,
+        ) // Filter at source for efficiency
         .orderBy('order') // Order by custom sort field
         .orderBy('createdAt', descending: true) // Secondary sort
         .limit(50) // Reduced limit for better performance
@@ -60,6 +64,7 @@ class FirestoreHabitRepository implements HabitRepository {
               isArchived: data['isArchived'] as bool,
               createdAt: (data['createdAt'] as Timestamp).toDate(),
               currentStreak: data['currentStreak'] as int? ?? 0,
+              longestStreak: data['longestStreak'] as int? ?? 0,
               lastCompletedDate: data['lastCompletedDate'] != null
                   ? (data['lastCompletedDate'] as Timestamp).toDate()
                   : null,
@@ -82,6 +87,12 @@ class FirestoreHabitRepository implements HabitRepository {
               anchorHabitId: data['anchorHabitId'] as String?,
               identityTags:
                   (data['identityTags'] as List<dynamic>?)
+                      ?.map((e) => e as String)
+                      .toList() ??
+                  [],
+              timerDurationMinutes: data['timerDurationMinutes'] as int? ?? 2,
+              customRules:
+                  (data['customRules'] as List<dynamic>?)
                       ?.map((e) => e as String)
                       .toList() ??
                   [],
@@ -112,6 +123,7 @@ class FirestoreHabitRepository implements HabitRepository {
         'isArchived': habit.isArchived,
         'createdAt': Timestamp.fromDate(habit.createdAt),
         'currentStreak': habit.currentStreak,
+        'longestStreak': habit.longestStreak,
         'lastCompletedDate': habit.lastCompletedDate != null
             ? Timestamp.fromDate(habit.lastCompletedDate!)
             : null,
@@ -122,6 +134,9 @@ class FirestoreHabitRepository implements HabitRepository {
         'order': habit.order,
         'anchorHabitId': habit.anchorHabitId,
         'identityTags': habit.identityTags,
+        'timerDurationMinutes': habit.timerDurationMinutes,
+        'customRules': habit.customRules,
+        'twoMinuteVersion': habit.twoMinuteVersion,
       });
 
       // Log success for debugging
@@ -162,6 +177,9 @@ class FirestoreHabitRepository implements HabitRepository {
         'order': habit.order,
         'anchorHabitId': habit.anchorHabitId,
         'identityTags': habit.identityTags,
+        'timerDurationMinutes': habit.timerDurationMinutes,
+        'customRules': habit.customRules,
+        'twoMinuteVersion': habit.twoMinuteVersion,
       });
       return const Right(unit);
     } catch (e, s) {
@@ -190,7 +208,9 @@ class FirestoreHabitRepository implements HabitRepository {
       final docRef = _firestore.collection('habits').doc(habitId);
       String? userId;
 
-      final result = await _firestore.runTransaction((transaction) async {
+      final completionData = await _firestore.runTransaction((
+        transaction,
+      ) async {
         final snapshot = await transaction.get(docRef);
         if (!snapshot.exists) {
           throw Exception('Habit not found');
@@ -200,6 +220,7 @@ class FirestoreHabitRepository implements HabitRepository {
         userId = data['userId'] as String;
         final lastCompletedTimestamp = data['lastCompletedDate'] as Timestamp?;
         final currentStreak = data['currentStreak'] as int? ?? 0;
+        final longestStreak = data['longestStreak'] as int? ?? 0;
 
         final lastCompletedDate = lastCompletedTimestamp?.toDate();
         final isCompletedToday =
@@ -214,42 +235,47 @@ class FirestoreHabitRepository implements HabitRepository {
             'currentStreak': currentStreak > 0 ? currentStreak - 1 : 0,
             'lastCompletedDate': null,
           });
-          return false;
+          return null; // Signals undo
         } else {
           // Complete
+          final newCurrentStreak = currentStreak + 1;
+          final newLongestStreak = newCurrentStreak > longestStreak
+              ? newCurrentStreak
+              : longestStreak;
+
           transaction.update(docRef, {
-            'currentStreak': currentStreak + 1,
+            'currentStreak': newCurrentStreak,
+            'longestStreak': newLongestStreak,
             'lastCompletedDate': Timestamp.fromDate(date),
           });
-          return true;
+
+          return {
+            'userId': userId,
+            'difficulty': data['difficulty'],
+            'attribute': data['attribute'],
+            'streakDay': newCurrentStreak,
+          };
         }
       });
 
-      if (result && userId != null) {
+      if (completionData != null) {
+        final uid = completionData['userId'] as String;
         EventBus().fire(
-          HabitCompleted(habitId: habitId, userId: userId!, date: date),
+          HabitCompleted(habitId: habitId, userId: uid, date: date),
         );
 
-        // Log activity for XP calculation (handled by Cloud Function)
-        // Note: Ideally, we should inject UserStatsRepository, but for now we'll use a direct provider reference or similar if possible.
-        // However, since we are in a Repository, we shouldn't depend on other Repositories directly if possible to avoid circular deps.
-        // Given the architecture, the 'HabitCompleted' event might should be listened to by a controller that logs the activity?
-        // OR we can just add to 'user_activity' collection directly here since it's a simple write.
-        // Let's do the direct write to 'user_activity' here to ensure atomicity/success correlation,
-        // OR refactor to use a service.
-        // The secure loop requires the activity to be logged.
-
-        // Let's assume we can access firestore here.
         try {
           await _firestore.collection('user_activity').add({
-            'userId': userId,
+            'userId': uid,
             'habitId': habitId,
             'date': Timestamp.fromDate(date),
             'type': 'habit_completion',
+            'difficulty': completionData['difficulty'],
+            'attribute': completionData['attribute'],
+            'streakDay': completionData['streakDay'],
             'createdAt': FieldValue.serverTimestamp(),
           });
         } catch (activityError, activityStack) {
-          // Don't fail the habit completion if activity logging fails
           AppLogger.e(
             'Failed to log activity for habit completion',
             activityError,
@@ -259,7 +285,7 @@ class FirestoreHabitRepository implements HabitRepository {
       }
 
       AppLogger.i('Successfully completed habit: $habitId for user: $userId');
-      return Right(result);
+      return Right(completionData != null);
     } catch (e, s) {
       AppLogger.e('Complete habit failed', e, s);
       return Left(ServerFailure(e.toString()));
@@ -381,6 +407,42 @@ class FirestoreHabitRepository implements HabitRepository {
       }).toList();
     } catch (e, s) {
       AppLogger.e('Get habits by anchor failed', e, s);
+      return [];
+    }
+  }
+
+  @override
+  Future<List<HabitActivity>> getActivity(
+    String userId,
+    DateTime start,
+    DateTime end,
+  ) async {
+    try {
+      final snapshot = await _firestore
+          .collection('user_activity')
+          .where('userId', isEqualTo: userId)
+          // Set start to beginning of day
+          .where(
+            'date',
+            isGreaterThanOrEqualTo: Timestamp.fromDate(
+              DateTime(start.year, start.month, start.day),
+            ),
+          )
+          // Set end to end of day
+          .where(
+            'date',
+            isLessThanOrEqualTo: Timestamp.fromDate(
+              DateTime(end.year, end.month, end.day, 23, 59, 59),
+            ),
+          )
+          .orderBy('date', descending: true)
+          .get();
+
+      return snapshot.docs.map((doc) {
+        return HabitActivity.fromMap(doc.data(), doc.id);
+      }).toList();
+    } catch (e, s) {
+      AppLogger.e('Get activity failed', e, s);
       return [];
     }
   }

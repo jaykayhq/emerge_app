@@ -74,6 +74,7 @@ class UserWorldState {
   final DateTime? lastActiveDate; // For decay calculation
   final WorldTheme worldTheme;
   final WorldSeason seasonalState;
+  final List<String> claimedNodes; // ID of nodes claimed on the world map
 
   const UserWorldState({
     this.cityLevel = 1,
@@ -88,6 +89,7 @@ class UserWorldState {
     this.lastActiveDate,
     this.worldTheme = WorldTheme.sanctuary,
     this.seasonalState = WorldSeason.spring,
+    this.claimedNodes = const [],
   });
 
   /// Calculate overall world health (inverse of entropy)
@@ -113,6 +115,7 @@ class UserWorldState {
       'lastActiveDate': lastActiveDate?.toIso8601String(),
       'worldTheme': worldTheme.name,
       'seasonalState': seasonalState.name,
+      'claimedNodes': claimedNodes,
     };
   }
 
@@ -147,6 +150,7 @@ class UserWorldState {
         (s) => s.name == map['seasonalState'],
         orElse: () => WorldSeason.spring,
       ),
+      claimedNodes: List<String>.from(map['claimedNodes'] ?? []),
     );
   }
 
@@ -163,6 +167,7 @@ class UserWorldState {
     DateTime? lastActiveDate,
     WorldTheme? worldTheme,
     WorldSeason? seasonalState,
+    List<String>? claimedNodes,
   }) {
     return UserWorldState(
       cityLevel: cityLevel ?? this.cityLevel,
@@ -178,6 +183,7 @@ class UserWorldState {
       lastActiveDate: lastActiveDate ?? this.lastActiveDate,
       worldTheme: worldTheme ?? this.worldTheme,
       seasonalState: seasonalState ?? this.seasonalState,
+      claimedNodes: claimedNodes ?? this.claimedNodes,
     );
   }
 
@@ -229,6 +235,7 @@ class UserWorldState {
         },
       },
       lastActiveDate: DateTime.now(),
+      claimedNodes: [],
     );
   }
 }

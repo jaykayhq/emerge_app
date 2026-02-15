@@ -10,6 +10,7 @@ class AppConfig {
     _remoteConfigService = RemoteConfigService();
     await _remoteConfigService!.initialize();
   }
+
   // Environment Configuration
   static const String _environment = String.fromEnvironment(
     'FLUTTER_ENV',
@@ -74,7 +75,9 @@ class AppConfig {
       if (remoteKey.isNotEmpty && remoteKey != 'YOUR_REVENUECAT_API_KEY') {
         key = remoteKey;
         if (kDebugMode) {
-          debugPrint('🔑 Using RevenueCat key from Remote Config for $platform');
+          debugPrint(
+            '🔑 Using RevenueCat key from Remote Config for $platform',
+          );
         }
       }
     }
@@ -89,24 +92,34 @@ class AppConfig {
         throw ArgumentError('Unsupported platform: $platform');
       }
       if (kDebugMode && key.isNotEmpty) {
-        debugPrint('🔑 Using RevenueCat key from compile-time env var for $platform');
+        debugPrint(
+          '🔑 Using RevenueCat key from compile-time env var for $platform',
+        );
       }
     }
 
-    // SECURITY: Fail fast if key is missing
+    // SECURITY: Fail fast if key is missing (production only)
     if (key.isEmpty) {
-      throw Exception(
-        'RevenueCat API key not configured for $platform. '
-        'Set REVENUECAT_${platform.toUpperCase()}_API_KEY environment variable '
-        'or configure in Firebase Remote Config.'
-      );
+      if (isProduction) {
+        throw Exception(
+          'RevenueCat API key not configured for $platform. '
+          'Set REVENUECAT_${platform.toUpperCase()}_API_KEY environment variable '
+          'or configure in Firebase Remote Config.',
+        );
+      } else {
+        // In development, allow app to continue without RevenueCat
+        debugPrint(
+          '⚠️ RevenueCat API key not configured for $platform - monetization disabled',
+        );
+        return '';
+      }
     }
 
     // SECURITY: Prevent test keys in production
     if (isProduction && key.startsWith('test_')) {
       throw Exception(
         'SECURITY VIOLATION: Test RevenueCat API key detected in production build. '
-        'This configuration is not allowed.'
+        'This configuration is not allowed.',
       );
     }
 
@@ -124,9 +137,15 @@ class AppConfig {
     if (kDebugMode) {
       AppLogger.i('App Configuration');
       AppLogger.i('  Environment: $_environment');
-      AppLogger.i('  Firebase API Key configured: ${firebaseApiKey.isNotEmpty}');
-      AppLogger.i('  RevenueCat Google Key configured: ${revenuecatGoogleApiKey.isNotEmpty}');
-      AppLogger.i('  RevenueCat Apple Key configured: ${revenuecatAppleApiKey.isNotEmpty && revenuecatAppleApiKey != 'YOUR_REVENUECAT_APPLE_API_KEY'}');
+      AppLogger.i(
+        '  Firebase API Key configured: ${firebaseApiKey.isNotEmpty}',
+      );
+      AppLogger.i(
+        '  RevenueCat Google Key configured: ${revenuecatGoogleApiKey.isNotEmpty}',
+      );
+      AppLogger.i(
+        '  RevenueCat Apple Key configured: ${revenuecatAppleApiKey.isNotEmpty && revenuecatAppleApiKey != 'YOUR_REVENUECAT_APPLE_API_KEY'}',
+      );
       AppLogger.i('  Firebase App Check enabled: $enableFirebaseAppCheck');
       AppLogger.i('  SSL Pinning enabled: $enableSslPinning');
       AppLogger.i('  Rate Limiting enabled: $enableRateLimiting');

@@ -54,9 +54,7 @@ class EmergeSemantics extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (exclude) {
-      return ExcludeSemantics(
-        child: child,
-      );
+      return ExcludeSemantics(child: child);
     }
 
     return Semantics(
@@ -117,10 +115,7 @@ class EmergeTappable extends StatelessWidget {
 
   Widget _ensureMinSize(Widget child) {
     return Container(
-      constraints: BoxConstraints(
-        minWidth: minSize,
-        minHeight: minSize,
-      ),
+      constraints: BoxConstraints(minWidth: minSize, minHeight: minSize),
       child: child,
     );
   }
@@ -167,11 +162,7 @@ class EmergeIconLabel extends StatelessWidget {
         onTap: onTap!,
         child: Padding(
           padding: const EdgeInsets.all(10), // Ensure 44x44 tap target
-          child: Icon(
-            icon,
-            color: effectiveColor,
-            size: size,
-          ),
+          child: Icon(icon, color: effectiveColor, size: size),
         ),
       );
     }
@@ -182,11 +173,7 @@ class EmergeIconLabel extends StatelessWidget {
       selected: selected,
       child: Padding(
         padding: const EdgeInsets.all(10),
-        child: Icon(
-          icon,
-          color: effectiveColor,
-          size: size,
-        ),
+        child: Icon(icon, color: effectiveColor, size: size),
       ),
     );
   }
@@ -229,10 +216,7 @@ class EmergeProgressIndicator extends StatelessWidget {
         child: SizedBox(
           width: 48,
           height: 48,
-          child: CircularProgressIndicator(
-            value: value,
-            color: color,
-          ),
+          child: CircularProgressIndicator(value: value, color: color),
         ),
       );
     }
@@ -240,10 +224,7 @@ class EmergeProgressIndicator extends StatelessWidget {
     return Semantics(
       label: semanticLabel,
       value: '$percentage%',
-      child: LinearProgressIndicator(
-        value: value,
-        color: color,
-      ),
+      child: LinearProgressIndicator(value: value, color: color),
     );
   }
 }

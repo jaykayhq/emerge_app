@@ -1,6 +1,6 @@
 /**
  * Firebase Cloud Functions - Emerge App (Gen 1)
- * 
+ *
  * Cost-optimized for scale:
  * - Single XP/Level trigger (no duplicates)
  * - Batched operations where possible
@@ -8,12 +8,16 @@
  * - Lazy initialization to avoid deployment timeouts
  */
 
-import * as functionsV1 from 'firebase-functions/v1';
-import * as admin from 'firebase-admin';
+import * as functionsV1 from "firebase-functions/v1";
+import * as admin from "firebase-admin";
 
 // Lazy initialization pattern
 let db: admin.firestore.Firestore | null = null;
 
+/**
+ * Lazy-loads the Firestore database instance.
+ * @return {admin.firestore.Firestore} The Firestore instance.
+ */
 function getDb(): admin.firestore.Firestore {
   if (!db) {
     if (admin.apps.length === 0) {
@@ -29,26 +33,51 @@ function getDb(): admin.firestore.Firestore {
 // ============================================================================
 
 const XP_CONFIG: Record<string, number> = {
-  habit_completion: 50,
+  habit_completion: 10,
   joined_challenge: 25,
   joined_tribe: 50,
   reflection_saved: 15,
 };
 
-const MAX_STREAK_MULTIPLIER = 2.0;
+const MAX_STREAK_BONUS = 0.5; // Match 50% max bonus
 
 interface UserActivity {
   userId: string;
   habitId?: string;
   type: string;
-  difficulty?: 'easy' | 'medium' | 'hard';
+  difficulty?: "easy" | "medium" | "hard";
+  attribute?: string;
   streakDay?: number;
 }
 
-function calculateLevel(totalXp: number): number {
-  return Math.floor(Math.sqrt(totalXp / 100)) + 1;
+interface AvatarStats {
+  strengthXp?: number;
+  intellectXp?: number;
+  vitalityXp?: number;
+  creativityXp?: number;
+  focusXp?: number;
+  spiritXp?: number;
+  level?: number;
+  streak?: number;
+  totalXp?: number;
+  lastUpdate?: admin.firestore.FieldValue;
+  [key: string]: number | admin.firestore.FieldValue | undefined;
 }
 
+/**
+ * Calculates user level using 500 XP linear scaling.
+ * @param {number} totalXp - The total experience points.
+ * @return {number} The calculated level.
+ */
+function calculateLevel(totalXp: number): number {
+  return Math.floor(totalXp / 500) + 1;
+}
+
+/**
+ * Calculates XP gain for a given user activity.
+ * @param {UserActivity} activity - The activity data.
+ * @return {number} The XP to be awarded.
+ */
 function calculateXpGain(activity: UserActivity): number {
   const baseXp = XP_CONFIG[activity.type] || 0;
   if (baseXp === 0) return 0;
@@ -56,15 +85,18 @@ function calculateXpGain(activity: UserActivity): number {
   let xp = baseXp;
 
   // Apply difficulty multiplier for habits
-  if (activity.type === 'habit_completion' && activity.difficulty) {
-    const mult = activity.difficulty === 'hard' ? 1.5 : activity.difficulty === 'medium' ? 1.0 : 0.7;
+  if (activity.type === "habit_completion" && activity.difficulty) {
+    const isHard = activity.difficulty === "hard";
+    const isMedium = activity.difficulty === "medium";
+    const mult = isHard ? 3.0 : (isMedium ? 2.0 : 1.0);
     xp = Math.round(baseXp * mult);
   }
 
-  // Apply streak bonus (capped)
-  if (activity.streakDay && activity.streakDay > 1) {
-    const streakMult = Math.min(1 + (activity.streakDay - 1) * 0.1, MAX_STREAK_MULTIPLIER);
-    xp = Math.round(xp * streakMult);
+  // Apply streak bonus (+10% every 7 days, capped at 50%)
+  if (activity.streakDay && activity.streakDay >= 7) {
+    const streakMultSteps = Math.floor(activity.streakDay / 7);
+    const streakBonus = Math.min(streakMultSteps * 0.1, MAX_STREAK_BONUS);
+    xp = Math.round(xp * (1 + streakBonus));
   }
 
   return xp;
@@ -74,7 +106,7 @@ function calculateXpGain(activity: UserActivity): number {
  * Main trigger: Updates user stats when activity is logged
  */
 export const onUserActivityCreated = functionsV1.firestore
-  .document('user_activity/{activityId}')
+  .document("user_activity/{activityId}")
   .onCreate(async (snapshot, context) => {
     const activity = snapshot.data() as UserActivity;
     const firestore = getDb();
@@ -84,141 +116,111 @@ export const onUserActivityCreated = functionsV1.firestore
       return null;
     }
 
-    const xpToAdd = calculateXpGain(activity);
-    if (xpToAdd === 0) {
-      console.log(`No XP for activity type: ${activity.type}`);
-      return null;
-    }
+    const xpGain = calculateXpGain(activity);
+    if (xpGain === 0) return null;
 
-    const userStatsRef = firestore.collection('user_stats').doc(activity.userId);
+    const statsRef = firestore.collection("user_stats").doc(activity.userId);
 
-    try {
-      await firestore.runTransaction(async (transaction) => {
-        const userStatsDoc = await transaction.get(userStatsRef);
+    return firestore.runTransaction(async (transaction) => {
+      const statsDoc = await transaction.get(statsRef);
+      const currentStats = statsDoc.exists ? (statsDoc.data() as AvatarStats) : {};
 
-        if (!userStatsDoc.exists) {
-          transaction.set(userStatsRef, {
-            userId: activity.userId,
-            currentXp: xpToAdd,
-            currentLevel: 1,
-            totalCompletions: activity.type === 'habit_completion' ? 1 : 0,
-            currentStreak: activity.streakDay || 0,
-            createdAt: admin.firestore.FieldValue.serverTimestamp(),
-            updatedAt: admin.firestore.FieldValue.serverTimestamp(),
-          });
-          return;
-        }
+      const updates: AvatarStats = {
+        totalXp: (currentStats.totalXp || 0) + xpGain,
+        lastUpdate: admin.firestore.FieldValue.serverTimestamp(),
+      };
 
-        const data = userStatsDoc.data()!;
-        const currentXp = (data.currentXp || 0) as number;
-        const currentLevel = (data.currentLevel || 1) as number;
-        const newXp = currentXp + xpToAdd;
-        const newLevel = calculateLevel(newXp);
+      if (activity.attribute) {
+        const attrXpKey = `${activity.attribute}Xp`;
+        const currentAttrXp = (currentStats[attrXpKey] as number) || 0;
+        updates[attrXpKey] = currentAttrXp + xpGain;
+      }
 
-        const updates: Record<string, unknown> = {
-          currentXp: newXp,
-          updatedAt: admin.firestore.FieldValue.serverTimestamp(),
-        };
+      const newLevel = calculateLevel(updates.totalXp as number);
+      if (newLevel !== currentStats.level) {
+        updates.level = newLevel;
+      }
 
-        if (activity.type === 'habit_completion') {
-          updates.totalCompletions = admin.firestore.FieldValue.increment(1);
-        }
-
-        if (activity.streakDay !== undefined) {
-          updates.currentStreak = activity.streakDay;
-        }
-
-        if (newLevel > currentLevel) {
-          updates.currentLevel = newLevel;
-          console.log(`User ${activity.userId} leveled up to ${newLevel}!`);
-        }
-
-        transaction.update(userStatsRef, updates);
-        transaction.update(
-          firestore.collection('user_activity').doc(context.params.activityId),
-          { xpEarned: xpToAdd }
-        );
-      });
-
-      console.log(`Processed ${activity.type} for ${activity.userId}: +${xpToAdd} XP`);
-    } catch (error) {
-      console.error('Error updating user stats:', error);
-    }
-
-    return null;
-  });
-
-/**
- * Reset daily challenges at midnight UTC
- */
-export const resetDailyChallenges = functionsV1.pubsub
-  .schedule('0 0 * * *')
-  .timeZone('UTC')
-  .onRun(async () => {
-    const firestore = getDb();
-    const snapshot = await firestore.collection('challenges').where('type', '==', 'daily').get();
-
-    if (snapshot.empty) {
-      console.log('No daily challenges to reset');
-      return null;
-    }
-
-    const batch = firestore.batch();
-    snapshot.forEach((doc) => {
-      batch.update(doc.ref, {
-        participants: [],
-        startDate: admin.firestore.FieldValue.serverTimestamp(),
-        endDate: admin.firestore.Timestamp.now().toMillis() + 86400000,
-      });
+      transaction.set(statsRef, updates, { merge: true });
     });
-
-    await batch.commit();
-    console.log(`Reset ${snapshot.size} daily challenges`);
-    return null;
   });
 
 /**
- * Get AI coach insight based on user stats
+ * Provides personalized aura insights based on user stats.
  */
-export const getAiCoachInsight = functionsV1.https.onCall(async (data, context) => {
+export const getAuraInsight = functionsV1.https.onCall(async (data, context) => {
   if (!context.auth) {
-    throw new functionsV1.https.HttpsError('unauthenticated', 'User must be logged in');
+    throw new functionsV1.https.HttpsError("unauthenticated", "User must be logged in");
   }
 
   const userId = context.auth.uid;
   const firestore = getDb();
 
-  try {
-    const userStatsDoc = await firestore.collection('user_stats').doc(userId).get();
+  // Check cache first to reduce reads
+  const cacheDoc = await firestore.collection("insight_cache").doc(userId).get();
 
-    if (!userStatsDoc.exists) {
-      return { insight: 'Start your journey by completing your first habit!' };
+  if (cacheDoc.exists) {
+    const cacheData = cacheDoc.data()!;
+    const now = Date.now();
+    const CACHE_DURATION_MS = 15 * 60 * 1000; // 15 minutes
+
+    if (cacheData.timestamp && (now - cacheData.timestamp.toDate().getTime()) < CACHE_DURATION_MS) {
+      return {
+        insight: cacheData.insight,
+        level: cacheData.level,
+        streak: cacheData.streak
+      };
     }
-
-    const stats = userStatsDoc.data()!;
-    const level = stats.currentLevel || 1;
-    const streak = stats.currentStreak || 0;
-
-    let insight = '';
-    if (streak >= 7) {
-      insight = `Amazing! Your ${streak}-day streak shows real commitment.`;
-    } else if (streak >= 3) {
-      insight = `${streak} days strong! Keep building momentum.`;
-    } else if (level > 1) {
-      insight = `Level ${level} achieved! Progress over perfection.`;
-    } else {
-      insight = 'Every expert was once a beginner. Start with one habit.';
-    }
-
-    return { insight, level, streak };
-  } catch (error) {
-    console.error('Error generating insight:', error);
-    throw new functionsV1.https.HttpsError('internal', 'Failed to generate insight');
   }
+
+  const userStatsDoc = await firestore.collection("user_stats").doc(userId).get();
+
+  if (!userStatsDoc.exists) {
+    return { insight: "Start your journey by completing your first habit!", level: 1, streak: 0 };
+  }
+
+  const stats = userStatsDoc.data()!;
+  const level = stats.level || 1;
+  const streak = stats.streak || 0;
+
+  let insight = "";
+  if (streak >= 7) {
+    insight = `Amazing! Your ${streak}-day streak shows real commitment.`;
+  } else if (streak >= 3) {
+    insight = `${streak} days strong! Keep building momentum.`;
+  } else if (level > 1) {
+    insight = `Level ${level} achieved! Progress over perfection.`;
+  } else {
+    insight = "Every expert was once a beginner. Start with one habit.";
+  }
+
+  // Cache the result
+  const result = { insight, level, streak };
+  await firestore.collection("insight_cache").doc(userId).set({
+    ...result,
+    timestamp: admin.firestore.FieldValue.serverTimestamp(),
+  });
+
+  return result;
 });
 
+/**
+ * Reset daily challenges/status at midnight UTC
+ */
+export const resetDailyChallengesOptimized = functionsV1.pubsub
+  .schedule("0 0 * * *")
+  .timeZone("UTC")
+  .onRun(async (context) => {
+    console.log("Resetting daily challenges status at:", context.timestamp);
+    // Add logic here if global challenge resets are needed
+    return null;
+  });
+
 // ============================================================================
-// CHALLENGE TRIGGERS (Automated & Hybrid)
+// SUB-MODULE EXPORTS
 // ============================================================================
-export * from './challenges';
-export * from './seed_templates';
+export * from "./challenges";
+export * from "./seed_templates";
+export * from "./generateWeeklyChallenge";
+export * from "./refreshQuarterlyChallenges";
+export * from "./revenuecat_webhook";

@@ -50,8 +50,12 @@ Future<void> initApp() async {
     // Verify API key is valid by fetching customer info
     try {
       final customerInfo = await revenueCatRepo.getCustomerInfoRaw();
-      debugPrint('✅ RevenueCat API key verified - can fetch customer info');
-      debugPrint('📊 Customer ID: ${customerInfo.originalAppUserId}');
+      if (customerInfo != null) {
+        debugPrint('✅ RevenueCat API key verified - can fetch customer info');
+        debugPrint('📊 Customer ID: ${customerInfo.originalAppUserId}');
+      } else {
+        debugPrint('ℹ️ RevenueCat not configured - monetization disabled');
+      }
     } catch (e) {
       debugPrint('⚠️ RevenueCat initialized but API verification failed: $e');
     }

@@ -7,7 +7,7 @@ enum HabitDifficulty { easy, medium, hard }
 
 enum HabitImpact { positive, negative, neutral }
 
-enum HabitAttribute { strength, intellect, vitality, creativity, focus }
+enum HabitAttribute { strength, intellect, vitality, creativity, focus, spirit }
 
 enum TimeOfDayPreference { morning, afternoon, evening, anytime }
 
@@ -38,6 +38,8 @@ class Habit extends Equatable {
   final String? anchorHabitId;
   final int order;
   final String? location;
+  final int timerDurationMinutes; // Default: 2 (Two-Minute Rule)
+  final List<String> customRules; // User-defined habit rules
 
   const Habit({
     required this.id,
@@ -66,6 +68,8 @@ class Habit extends Equatable {
     this.anchorHabitId,
     this.order = 0,
     this.location,
+    this.timerDurationMinutes = 2,
+    this.customRules = const [],
   });
 
   static Habit empty() {
@@ -99,6 +103,8 @@ class Habit extends Equatable {
     String? anchorHabitId,
     int? order,
     String? location,
+    int? timerDurationMinutes,
+    List<String>? customRules,
   }) {
     return Habit(
       id: id ?? this.id,
@@ -127,6 +133,8 @@ class Habit extends Equatable {
       anchorHabitId: anchorHabitId ?? this.anchorHabitId,
       order: order ?? this.order,
       location: location ?? this.location,
+      timerDurationMinutes: timerDurationMinutes ?? this.timerDurationMinutes,
+      customRules: customRules ?? this.customRules,
     );
   }
 
@@ -158,5 +166,7 @@ class Habit extends Equatable {
     anchorHabitId,
     order,
     location,
+    timerDurationMinutes,
+    customRules,
   ];
 }

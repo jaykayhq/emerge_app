@@ -82,6 +82,7 @@ dependencies:
   flame_tiled: ^3.0.9
   cloud_functions: ^5.6.2
   firebase_analytics: ^11.6.0
+  simple_animations: ^5.2.0
 
 dev_dependencies:
   integration_test:
@@ -132,9 +133,9 @@ flutter:
     - assets/images/emerge_hex_icon.png
     - assets/images/welcome_silhouette.png
     - assets/images/world_sanctuary_base.png
+    - assets/images/avatars/
     - assets/sounds/
     - assets/rive/
-    - .env
 
 
   # An image asset can refer to one or more resolution-specific "variants", see
