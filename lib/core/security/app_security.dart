@@ -218,47 +218,6 @@ class AppSecurity {
     return hash.toString(); // 64-character hex string (256 bits)
   }
 
-  /// DEPRECATED: XOR obfuscation is NOT secure for production use
-  /// This method is kept only for backward compatibility during migration
-  @Deprecated('Use encryptAndStore() instead. XOR obfuscation is not secure.')
-  static String obfuscateString(String input) {
-    debugPrint(
-      'WARNING: obfuscateString() is deprecated and insecure. Use encryptAndStore() instead.',
-    );
-    if (input.isEmpty) return input;
-
-    final bytes = input.codeUnits;
-    final obfuscated = <int>[];
-
-    for (int i = 0; i < bytes.length; i++) {
-      final key = (i + 42) % 256;
-      obfuscated.add(bytes[i] ^ key);
-    }
-
-    return String.fromCharCodes(obfuscated);
-  }
-
-  /// DEPRECATED: XOR de-obfuscation is NOT secure for production use
-  @Deprecated(
-    'Use decryptAndRetrieve() instead. XOR obfuscation is not secure.',
-  )
-  static String deobfuscateString(String obfuscated) {
-    debugPrint(
-      'WARNING: deobfuscateString() is deprecated and insecure. Use decryptAndRetrieve() instead.',
-    );
-    if (obfuscated.isEmpty) return obfuscated;
-
-    final bytes = obfuscated.codeUnits;
-    final deobfuscated = <int>[];
-
-    for (int i = 0; i < bytes.length; i++) {
-      final key = (i + 42) % 256;
-      deobfuscated.add(bytes[i] ^ key);
-    }
-
-    return String.fromCharCodes(deobfuscated);
-  }
-
   // Clear sensitive data from memory
   static void clearSensitiveData(List<String> sensitiveData) {
     for (int i = 0; i < sensitiveData.length; i++) {

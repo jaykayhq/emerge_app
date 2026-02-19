@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:emerge_app/core/services/remote_config_service.dart';
 import 'package:emerge_app/core/utils/app_logger.dart';
 import 'package:emerge_app/features/habits/data/repositories/firestore_habit_repository.dart';
 import 'package:emerge_app/features/auth/presentation/providers/auth_providers.dart';
@@ -11,6 +12,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'habit_providers.g.dart';
+
+/// Fallback free tier habit limit when Remote Config is unavailable.
+const int kDefaultFreeHabitLimit = 3;
 
 class SubscriptionLimitReachedException implements Exception {
   final String message;
@@ -33,7 +37,10 @@ Stream<List<Habit>> habits(Ref ref) {
       return repository.watchHabits(user.id);
     },
     loading: () => Stream.value([]),
-    error: (_, __) => Stream.value([]),
+    error: (error, stack) {
+      AppLogger.e('Auth error in habits provider', error, stack);
+      return Stream.error(error);
+    },
   );
 }
 
@@ -58,9 +65,12 @@ Future<void> createHabit(Ref ref, Habit habit) async {
       if (!isOnboarding) {
         final habitsAsync = ref.read(habitsProvider);
         final currentHabits = habitsAsync.valueOrNull ?? [];
-        if (currentHabits.length >= 3) {
-          throw const SubscriptionLimitReachedException(
-            'You have reached the limit of 3 active habits on the free tier. Upgrade to add more.',
+        final freeHabitLimit = ref
+            .read(remoteConfigServiceProvider)
+            .freeHabitLimit;
+        if (currentHabits.length >= freeHabitLimit) {
+          throw SubscriptionLimitReachedException(
+            'You have reached the limit of $freeHabitLimit active habits on the free tier. Upgrade to add more.',
           );
         }
       }

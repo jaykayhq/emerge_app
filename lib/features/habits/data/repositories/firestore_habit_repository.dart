@@ -13,6 +13,83 @@ class FirestoreHabitRepository implements HabitRepository {
 
   FirestoreHabitRepository(this._firestore);
 
+  /// Defensive mapping from a Firestore document to a [Habit] entity.
+  /// Uses null coalescing on all fields to prevent crashes on malformed data.
+  Habit _mapDocToHabit(DocumentSnapshot<Map<String, dynamic>> doc) {
+    final data = doc.data()!;
+    return Habit(
+      id: doc.id,
+      userId: (data['userId'] as String?) ?? '',
+      title: (data['title'] as String?) ?? '',
+      cue: (data['cue'] as String?) ?? '',
+      routine: (data['routine'] as String?) ?? '',
+      reward: (data['reward'] as String?) ?? '',
+      frequency: HabitFrequency.values.firstWhere(
+        (e) => e.toString() == data['frequency'],
+        orElse: () => HabitFrequency.daily,
+      ),
+      specificDays:
+          (data['specificDays'] as List<dynamic>?)
+              ?.map((e) => e as int)
+              .toList() ??
+          [],
+      difficulty: HabitDifficulty.values.firstWhere(
+        (e) => e.name == data['difficulty'],
+        orElse: () => HabitDifficulty.medium,
+      ),
+      reminderTime: data['reminderTime'] != null
+          ? TimeOfDay(
+              hour:
+                  (data['reminderTime'] as Map<String, dynamic>)['hour']
+                      as int? ??
+                  0,
+              minute:
+                  (data['reminderTime'] as Map<String, dynamic>)['minute']
+                      as int? ??
+                  0,
+            )
+          : null,
+      location: data['location'] as String?,
+      isArchived: (data['isArchived'] as bool?) ?? false,
+      createdAt: data['createdAt'] != null
+          ? (data['createdAt'] as Timestamp).toDate()
+          : DateTime.now(),
+      currentStreak: data['currentStreak'] as int? ?? 0,
+      longestStreak: data['longestStreak'] as int? ?? 0,
+      lastCompletedDate: data['lastCompletedDate'] != null
+          ? (data['lastCompletedDate'] as Timestamp).toDate()
+          : null,
+      attribute: HabitAttribute.values.firstWhere(
+        (e) => e.name == data['attribute'],
+        orElse: () => HabitAttribute.vitality,
+      ),
+      imageUrl: data['imageUrl'] as String?,
+      timeOfDayPreference: data['timeOfDayPreference'] != null
+          ? TimeOfDayPreference.values.firstWhere(
+              (e) => e.name == data['timeOfDayPreference'],
+              orElse: () => TimeOfDayPreference.anytime,
+            )
+          : null,
+      impact: HabitImpact.values.firstWhere(
+        (e) => e.name == data['impact'],
+        orElse: () => HabitImpact.neutral,
+      ),
+      order: data['order'] as int? ?? 0,
+      anchorHabitId: data['anchorHabitId'] as String?,
+      identityTags:
+          (data['identityTags'] as List<dynamic>?)
+              ?.map((e) => e as String)
+              .toList() ??
+          [],
+      timerDurationMinutes: data['timerDurationMinutes'] as int? ?? 2,
+      customRules:
+          (data['customRules'] as List<dynamic>?)
+              ?.map((e) => e as String)
+              .toList() ??
+          [],
+    );
+  }
+
   @override
   Stream<List<Habit>> watchHabits(String userId) {
     // ENHANCED: Optimized query with better filtering and ordering
@@ -28,76 +105,7 @@ class FirestoreHabitRepository implements HabitRepository {
         .limit(50) // Reduced limit for better performance
         .snapshots()
         .map((snapshot) {
-          return snapshot.docs.map((doc) {
-            final data = doc.data();
-            return Habit(
-              id: doc.id,
-              userId: data['userId'] as String,
-              title: data['title'] as String,
-              cue: data['cue'] as String,
-              routine: data['routine'] as String,
-              reward: data['reward'] as String,
-              frequency: HabitFrequency.values.firstWhere(
-                (e) => e.toString() == data['frequency'],
-                orElse: () => HabitFrequency.daily,
-              ),
-              specificDays:
-                  (data['specificDays'] as List<dynamic>?)
-                      ?.map((e) => e as int)
-                      .toList() ??
-                  [],
-              difficulty: HabitDifficulty.values.firstWhere(
-                (e) => e.name == data['difficulty'],
-                orElse: () => HabitDifficulty.medium,
-              ),
-              reminderTime: data['reminderTime'] != null
-                  ? TimeOfDay(
-                      hour:
-                          (data['reminderTime']
-                              as Map<String, dynamic>)['hour'],
-                      minute:
-                          (data['reminderTime']
-                              as Map<String, dynamic>)['minute'],
-                    )
-                  : null,
-              location: data['location'] as String?,
-              isArchived: data['isArchived'] as bool,
-              createdAt: (data['createdAt'] as Timestamp).toDate(),
-              currentStreak: data['currentStreak'] as int? ?? 0,
-              longestStreak: data['longestStreak'] as int? ?? 0,
-              lastCompletedDate: data['lastCompletedDate'] != null
-                  ? (data['lastCompletedDate'] as Timestamp).toDate()
-                  : null,
-              attribute: HabitAttribute.values.firstWhere(
-                (e) => e.name == data['attribute'],
-                orElse: () => HabitAttribute.vitality,
-              ),
-              imageUrl: data['imageUrl'] as String?,
-              timeOfDayPreference: data['timeOfDayPreference'] != null
-                  ? TimeOfDayPreference.values.firstWhere(
-                      (e) => e.name == data['timeOfDayPreference'],
-                      orElse: () => TimeOfDayPreference.anytime,
-                    )
-                  : null,
-              impact: HabitImpact.values.firstWhere(
-                (e) => e.name == data['impact'],
-                orElse: () => HabitImpact.neutral,
-              ),
-              order: data['order'] as int? ?? 0,
-              anchorHabitId: data['anchorHabitId'] as String?,
-              identityTags:
-                  (data['identityTags'] as List<dynamic>?)
-                      ?.map((e) => e as String)
-                      .toList() ??
-                  [],
-              timerDurationMinutes: data['timerDurationMinutes'] as int? ?? 2,
-              customRules:
-                  (data['customRules'] as List<dynamic>?)
-                      ?.map((e) => e as String)
-                      .toList() ??
-                  [],
-            );
-          }).toList();
+          return snapshot.docs.map((doc) => _mapDocToHabit(doc)).toList();
         });
   }
 
@@ -297,51 +305,7 @@ class FirestoreHabitRepository implements HabitRepository {
     try {
       final doc = await _firestore.collection('habits').doc(habitId).get();
       if (doc.exists && doc.data() != null) {
-        final data = doc.data()!;
-        return Habit(
-          id: doc.id,
-          userId: data['userId'] as String,
-          title: data['title'] as String,
-          cue: data['cue'] as String,
-          routine: data['routine'] as String,
-          reward: data['reward'] as String,
-          frequency: HabitFrequency.values.firstWhere(
-            (e) => e.toString() == data['frequency'],
-            orElse: () => HabitFrequency.daily,
-          ),
-          specificDays:
-              (data['specificDays'] as List<dynamic>?)
-                  ?.map((e) => e as int)
-                  .toList() ??
-              [],
-          difficulty: HabitDifficulty.values.firstWhere(
-            (e) => e.name == data['difficulty'],
-            orElse: () => HabitDifficulty.medium,
-          ),
-          isArchived: data['isArchived'] as bool,
-          createdAt: (data['createdAt'] as Timestamp).toDate(),
-          currentStreak: data['currentStreak'] as int? ?? 0,
-          lastCompletedDate: data['lastCompletedDate'] != null
-              ? (data['lastCompletedDate'] as Timestamp).toDate()
-              : null,
-          attribute: HabitAttribute.values.firstWhere(
-            (e) => e.name == data['attribute'],
-            orElse: () => HabitAttribute.vitality,
-          ),
-          imageUrl: data['imageUrl'] as String?,
-          timeOfDayPreference: data['timeOfDayPreference'] != null
-              ? TimeOfDayPreference.values.firstWhere(
-                  (e) => e.name == data['timeOfDayPreference'],
-                  orElse: () => TimeOfDayPreference.anytime,
-                )
-              : null,
-          anchorHabitId: data['anchorHabitId'] as String?,
-          identityTags:
-              (data['identityTags'] as List<dynamic>?)
-                  ?.map((e) => e as String)
-                  .toList() ??
-              [],
-        );
+        return _mapDocToHabit(doc);
       }
       return null;
     } catch (e, s) {
@@ -358,53 +322,7 @@ class FirestoreHabitRepository implements HabitRepository {
           .where('anchorHabitId', isEqualTo: anchorHabitId)
           .get();
 
-      return snapshot.docs.map((doc) {
-        final data = doc.data();
-        return Habit(
-          id: doc.id,
-          userId: data['userId'] as String,
-          title: data['title'] as String,
-          cue: data['cue'] as String,
-          routine: data['routine'] as String,
-          reward: data['reward'] as String,
-          frequency: HabitFrequency.values.firstWhere(
-            (e) => e.toString() == data['frequency'],
-            orElse: () => HabitFrequency.daily,
-          ),
-          specificDays:
-              (data['specificDays'] as List<dynamic>?)
-                  ?.map((e) => e as int)
-                  .toList() ??
-              [],
-          difficulty: HabitDifficulty.values.firstWhere(
-            (e) => e.name == data['difficulty'],
-            orElse: () => HabitDifficulty.medium,
-          ),
-          isArchived: data['isArchived'] as bool,
-          createdAt: (data['createdAt'] as Timestamp).toDate(),
-          currentStreak: data['currentStreak'] as int? ?? 0,
-          lastCompletedDate: data['lastCompletedDate'] != null
-              ? (data['lastCompletedDate'] as Timestamp).toDate()
-              : null,
-          attribute: HabitAttribute.values.firstWhere(
-            (e) => e.name == data['attribute'],
-            orElse: () => HabitAttribute.vitality,
-          ),
-          imageUrl: data['imageUrl'] as String?,
-          timeOfDayPreference: data['timeOfDayPreference'] != null
-              ? TimeOfDayPreference.values.firstWhere(
-                  (e) => e.name == data['timeOfDayPreference'],
-                  orElse: () => TimeOfDayPreference.anytime,
-                )
-              : null,
-          anchorHabitId: data['anchorHabitId'] as String?,
-          identityTags:
-              (data['identityTags'] as List<dynamic>?)
-                  ?.map((e) => e as String)
-                  .toList() ??
-              [],
-        );
-      }).toList();
+      return snapshot.docs.map((doc) => _mapDocToHabit(doc)).toList();
     } catch (e, s) {
       AppLogger.e('Get habits by anchor failed', e, s);
       return [];

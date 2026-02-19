@@ -162,7 +162,7 @@ export const getAuraInsight = functionsV1.https.onCall(async (data, context) => 
   if (cacheDoc.exists) {
     const cacheData = cacheDoc.data()!;
     const now = Date.now();
-    const CACHE_DURATION_MS = 15 * 60 * 1000; // 15 minutes
+    const CACHE_DURATION_MS = parseInt(process.env.INSIGHT_CACHE_DURATION_MS || "900000"); // Default: 15 minutes
 
     if (cacheData.timestamp && (now - cacheData.timestamp.toDate().getTime()) < CACHE_DURATION_MS) {
       return {

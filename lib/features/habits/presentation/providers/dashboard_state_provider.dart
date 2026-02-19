@@ -238,11 +238,9 @@ class DashboardStateNotifier extends _$DashboardStateNotifier {
       // 2. Actually create on server
       await ref.read(createHabitProvider(habit).future);
 
-      // 3. On success, the stream listener will sync and confirm
-      state = state.copyWith(
-        isCreatingHabit: false,
-        pendingHabitIds: state.pendingHabitIds.difference({habit.id}),
-      );
+      // 3. On success, keep in pendingHabitIds until stream confirms
+      // _syncHabitsFromServer will remove it when the habit appears in server data
+      state = state.copyWith(isCreatingHabit: false);
 
       AppLogger.i('Habit created successfully: ${habit.id}');
     } catch (e, s) {

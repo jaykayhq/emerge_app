@@ -1,3 +1,4 @@
+import 'package:emerge_app/core/utils/app_logger.dart';
 import 'package:emerge_app/features/monetization/data/repositories/revenue_cat_repository.dart';
 import 'package:emerge_app/features/monetization/domain/repositories/monetization_repository.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -19,10 +20,10 @@ class IsPremium extends _$IsPremium {
     await repo.initialize();
 
     final result = await repo.isPremium;
-    return result.fold(
-      (error) => false, // Default to free if error
-      (isPremium) => isPremium,
-    );
+    return result.fold((error) {
+      AppLogger.e('Failed to check premium status', error);
+      throw error;
+    }, (isPremium) => isPremium);
   }
 
   Future<void> purchase() async {
