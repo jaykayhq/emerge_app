@@ -65,27 +65,36 @@ export const revenueCatWebhook = functions.https.onRequest(
     const firestore = getDb();
 
     try {
+      // Idempotency check - skip if already processed
+      const existingReceipt = await firestore
+        .collection("webhook_receipts").doc(eventId).get();
+      if (existingReceipt.exists && existingReceipt.data()?.processedAt) {
+        console.log(`Event ${eventId} already processed, skipping`);
+        res.status(200).send("Already processed");
+        return;
+      }
+
       switch (eventType) {
-      case "INITIAL_PURCHASE":
-      case "RENEWAL":
-        await handleSubscriptionActive(eventId, body, firestore);
-        break;
-      case "CANCELLATION":
-      case "EXPIRATION":
-      case "UNCANCELLATION":
-        await handleSubscriptionCancelled(eventId, body, firestore);
-        break;
-      case "PRODUCT_CHANGE":
-        await handleProductChange(eventId, body, firestore);
-        break;
-      case "TRANSFER":
-        await handleSubscriptionTransfer(eventId, body, firestore);
-        break;
-      case "TEST":
-        console.log("Test webhook received, ignoring");
-        break;
-      default:
-        console.warn(`Unknown event type: ${eventType}`);
+        case "INITIAL_PURCHASE":
+        case "RENEWAL":
+          await handleSubscriptionActive(eventId, body, firestore);
+          break;
+        case "CANCELLATION":
+        case "EXPIRATION":
+        case "UNCANCELLATION":
+          await handleSubscriptionCancelled(eventId, body, firestore);
+          break;
+        case "PRODUCT_CHANGE":
+          await handleProductChange(eventId, body, firestore);
+          break;
+        case "TRANSFER":
+          await handleSubscriptionTransfer(eventId, body, firestore);
+          break;
+        case "TEST":
+          console.log("Test webhook received, ignoring");
+          break;
+        default:
+          console.warn(`Unknown event type: ${eventType}`);
       }
 
       // Acknowledge webhook receipt
@@ -121,25 +130,24 @@ async function handleSubscriptionActive(
   body: any,
   firestore: admin.firestore.Firestore,
 ) {
-  const apiKey = body.api_key;
+  const appUserId = body.app_user_id;
 
   // Extract customer info from body
   const customerInfo = body.customer_info || {};
   const entitlements = customerInfo.entitlements || {};
 
-  // Find user by RevenueCat customer ID
-  const usersSnapshot = await firestore
+  // Look up user by app_user_id (Firebase UID)
+  const userDoc = await firestore
     .collection("users")
-    .where("revenueCatCustomerId", "==", apiKey)
-    .limit(1)
+    .doc(appUserId)
     .get();
 
-  if (usersSnapshot.empty) {
-    console.warn(`No user found for RevenueCat customer ID: ${apiKey}`);
+  if (!userDoc.exists) {
+    console.warn(`No user found for app_user_id: ${appUserId}`);
     return;
   }
 
-  const userId = usersSnapshot.docs[0].id;
+  const userId = userDoc.id;
 
   // Update user subscription status
   await firestore.collection("users").doc(userId).update({
@@ -162,20 +170,19 @@ async function handleSubscriptionCancelled(
 ) {
   const customerInfo = body.customer_info || {};
   const entitlements = customerInfo.entitlements || {};
-  const apiKey = body.api_key;
+  const appUserId = body.app_user_id;
 
-  const usersSnapshot = await firestore
+  const userDoc = await firestore
     .collection("users")
-    .where("revenueCatCustomerId", "==", apiKey)
-    .limit(1)
+    .doc(appUserId)
     .get();
 
-  if (usersSnapshot.empty) {
-    console.warn(`No user found for RevenueCat customer ID: ${apiKey}`);
+  if (!userDoc.exists) {
+    console.warn(`No user found for app_user_id: ${appUserId}`);
     return;
   }
 
-  const userId = usersSnapshot.docs[0].id;
+  const userId = userDoc.id;
 
   // Check if any entitlement is still active
   const hasActiveEntitlement = Object.values(entitlements).some(
@@ -204,19 +211,18 @@ async function handleProductChange(
 ) {
   const customerInfo = body.customer_info || {};
   const entitlements = customerInfo.entitlements || {};
-  const apiKey = body.api_key;
+  const appUserId = body.app_user_id;
 
-  const usersSnapshot = await firestore
+  const userDoc = await firestore
     .collection("users")
-    .where("revenueCatCustomerId", "==", apiKey)
-    .limit(1)
+    .doc(appUserId)
     .get();
 
-  if (usersSnapshot.empty) {
+  if (!userDoc.exists) {
     return;
   }
 
-  const userId = usersSnapshot.docs[0].id;
+  const userId = userDoc.id;
 
   await firestore.collection("users").doc(userId).update({
     entitlements,
@@ -235,25 +241,34 @@ async function handleSubscriptionTransfer(
   body: any,
   firestore: admin.firestore.Firestore,
 ) {
-  const apiKey = body.api_key;
+  const appUserId = body.app_user_id;
+  const transferredFrom = body.transferred_from;
 
-  console.log(`Subscription transfer for ${apiKey}`);
+  console.log(`Subscription transfer for ${appUserId}`);
 
-  // Find old user and remove premium status
-  const oldUsersSnapshot = await firestore
-    .collection("users")
-    .where("revenueCatCustomerId", "==", apiKey)
-    .get();
+  // Remove premium status from the old user if provided
+  if (transferredFrom) {
+    const oldUserDoc = await firestore.collection("users").doc(transferredFrom).get();
+    if (oldUserDoc.exists) {
+      await firestore.collection("users").doc(transferredFrom).update({
+        isPremium: false,
+        subscriptionType: "free",
+        updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+      });
+    }
+  }
 
-  for (const doc of oldUsersSnapshot.docs) {
-    await firestore.collection("users").doc(doc.id).update({
-      isPremium: false,
-      subscriptionType: "free",
+  // Activate premium on the new user
+  const newUserDoc = await firestore.collection("users").doc(appUserId).get();
+  if (newUserDoc.exists) {
+    await firestore.collection("users").doc(appUserId).update({
+      isPremium: true,
+      subscriptionType: "premium",
       updatedAt: admin.firestore.FieldValue.serverTimestamp(),
     });
   }
 
-  console.log(`Removed premium status from ${oldUsersSnapshot.size} user(s)`);
+  console.log(`Transferred premium from ${transferredFrom || 'unknown'} to ${appUserId}`);
 }
 
 /**

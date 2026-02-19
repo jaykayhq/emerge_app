@@ -1,3 +1,4 @@
+import 'package:emerge_app/core/utils/app_logger.dart';
 import 'package:emerge_app/core/presentation/screens/splash_screen.dart';
 import 'package:emerge_app/core/presentation/screens/world_splash_screen.dart';
 import 'package:emerge_app/core/presentation/widgets/scaffold_with_nav_bar.dart';
@@ -66,7 +67,7 @@ GoRouter router(Ref ref) {
       final isSplash = state.uri.path == '/splash';
       final isOnboardingPath = state.uri.path.startsWith('/onboarding');
 
-      debugPrint(
+      AppLogger.d(
         'Router Redirect: path=${state.uri.path}, isLoggedIn=$isLoggedIn, isFirstLaunch=$isFirstLaunch',
       );
 
@@ -75,12 +76,12 @@ GoRouter router(Ref ref) {
       // 1. Handle onboarding paths - always allow if user is logged in
       if (isOnboardingPath) {
         if (isLoggedIn) {
-          debugPrint('Router: Allowing onboarding path for logged in user');
+          AppLogger.d('Router: Allowing onboarding path for logged in user');
           return null;
         }
         // If not logged in, redirect to welcome/login
         if (!isLoggedIn) {
-          debugPrint('Router: Redirecting to /welcome (need to login first)');
+          AppLogger.d('Router: Redirecting to /welcome (need to login first)');
           return '/welcome';
         }
       }
@@ -89,12 +90,12 @@ GoRouter router(Ref ref) {
       if (isFirstLaunch && !isLoggedIn) {
         // Allow access to welcome, login, and signup pages
         if (isWelcome || isLoggingIn || isSigningUp) {
-          debugPrint(
+          AppLogger.d(
             'Router: Allowing access to ${state.uri.path} during first launch',
           );
           return null;
         }
-        debugPrint('Router: Redirecting to /welcome (First Launch)');
+        AppLogger.d('Router: Redirecting to /welcome (First Launch)');
         return '/welcome';
       }
 
@@ -103,7 +104,7 @@ GoRouter router(Ref ref) {
         if (isLoggingIn || isSigningUp || isWelcome) {
           return null;
         }
-        debugPrint('Router: Redirecting to /login (Not Logged In)');
+        AppLogger.d('Router: Redirecting to /login (Not Logged In)');
         return '/login';
       }
 
@@ -118,13 +119,13 @@ GoRouter router(Ref ref) {
 
           if (onboardingProgress < 3) {
             final nextStep = _getOnboardingRouteForProgress(onboardingProgress);
-            debugPrint(
+            AppLogger.d(
               'Router: Redirecting to $nextStep (Incomplete onboarding)',
             );
             return nextStep;
           }
 
-          debugPrint('Router: Redirecting to / (Home) from ${state.uri.path}');
+          AppLogger.d('Router: Redirecting to / (Home) from ${state.uri.path}');
           return '/';
         }
 
@@ -133,11 +134,11 @@ GoRouter router(Ref ref) {
           // Check local onboarding state first (more reliable than Firestore)
           final isOnboardingComplete = !isFirstLaunch;
 
-          debugPrint('Router: isOnboardingComplete=$isOnboardingComplete');
+          AppLogger.d('Router: isOnboardingComplete=$isOnboardingComplete');
 
           // If local state says onboarding is complete, allow access
           if (isOnboardingComplete) {
-            debugPrint(
+            AppLogger.d(
               'Router: Onboarding complete (local state), allowing access',
             );
             return null;
@@ -148,19 +149,19 @@ GoRouter router(Ref ref) {
 
           // If profile is still loading, allow access (we'll redirect later when loaded)
           if (userProfileAsync.isLoading) {
-            debugPrint('Router: Profile loading, allowing temporary access');
+            AppLogger.d('Router: Profile loading, allowing temporary access');
             return null;
           }
 
           final userProfile = userProfileAsync.valueOrNull;
           final onboardingProgress = userProfile?.onboardingProgress ?? 0;
 
-          debugPrint('Router: onboardingProgress=$onboardingProgress');
+          AppLogger.d('Router: onboardingProgress=$onboardingProgress');
 
           // If onboarding is not complete (progress < 5), redirect to the next step
           if (onboardingProgress < 3) {
             final nextStep = _getOnboardingRouteForProgress(onboardingProgress);
-            debugPrint(
+            AppLogger.d(
               'Router: Redirecting to $nextStep (Incomplete onboarding)',
             );
             return nextStep;

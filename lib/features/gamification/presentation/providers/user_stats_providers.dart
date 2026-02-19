@@ -6,7 +6,6 @@ import 'package:emerge_app/features/auth/domain/entities/user_extension.dart';
 import 'package:emerge_app/features/auth/presentation/providers/auth_providers.dart';
 import 'package:emerge_app/features/gamification/data/repositories/user_stats_repository.dart';
 import 'package:emerge_app/features/gamification/domain/services/gamification_service.dart';
-import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 final gamificationServiceProvider = Provider((ref) => GamificationService());
@@ -24,7 +23,12 @@ final userStatsControllerProvider = Provider((ref) {
   final repository = ref.watch(userStatsRepositoryProvider);
   final userAsync = ref.watch(authStateChangesProvider);
   final userId = userAsync.value?.id ?? '';
-  return UserStatsController(repository: repository, userId: userId);
+  final controller = UserStatsController(
+    repository: repository,
+    userId: userId,
+  );
+  ref.onDispose(controller.dispose);
+  return controller;
 });
 
 class UserStatsController {
@@ -53,7 +57,7 @@ class UserStatsController {
 
     // We can use this hook for local UI feedback (confetti, toast, etc.)
     // but NO data mutation.
-    debugPrint(
+    AppLogger.d(
       'Habit completed: ${event.habitId}, waiting for server update...',
     );
 
@@ -77,9 +81,9 @@ class UserStatsController {
       // Save to Firestore
       await repository.saveUserStats(updatedProfile);
 
-      debugPrint('World state updated successfully');
+      AppLogger.d('World state updated successfully');
     } catch (e) {
-      debugPrint('Error updating world state: $e');
+      AppLogger.e('Error updating world state', e);
       rethrow;
     }
   }
@@ -100,9 +104,9 @@ class UserStatsController {
       final updatedProfile = currentProfile.copyWith(worldState: newWorldState);
       await repository.saveUserStats(updatedProfile);
 
-      debugPrint('Building unlocked: $buildingId');
+      AppLogger.d('Building unlocked: $buildingId');
     } catch (e) {
-      debugPrint('Error unlocking building: $e');
+      AppLogger.e('Error unlocking building', e);
       rethrow;
     }
   }
@@ -117,7 +121,7 @@ class UserStatsController {
 
       // Prevent duplicate claims
       if (currentWorldState.claimedNodes.contains(nodeId)) {
-        debugPrint('Node $nodeId already claimed');
+        AppLogger.d('Node $nodeId already claimed');
         return;
       }
 
@@ -132,9 +136,9 @@ class UserStatsController {
       final updatedProfile = currentProfile.copyWith(worldState: newWorldState);
       await repository.saveUserStats(updatedProfile);
 
-      debugPrint('Node claimed: $nodeId');
+      AppLogger.d('Node claimed: $nodeId');
     } catch (e) {
-      debugPrint('Error claiming node: $e');
+      AppLogger.e('Error claiming node', e);
       rethrow;
     }
   }

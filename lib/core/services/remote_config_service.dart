@@ -19,6 +19,7 @@ class RemoteConfigService {
     await _remoteConfig.setDefaults({
       'goldilocks_threshold_easy': 0.9,
       'goldilocks_threshold_hard': 0.4,
+      'free_habit_limit': 3,
       'affirmations_json': jsonEncode({
         'athlete': [
           'Pain is weakness leaving the body.',
@@ -55,6 +56,7 @@ class RemoteConfigService {
       _remoteConfig.getDouble('goldilocks_threshold_easy');
   double get hardThreshold =>
       _remoteConfig.getDouble('goldilocks_threshold_hard');
+  int get freeHabitLimit => _remoteConfig.getInt('free_habit_limit');
 
   List<String> getAffirmations(String archetype) {
     final jsonString = _remoteConfig.getString('affirmations_json');
