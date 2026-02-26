@@ -6,6 +6,7 @@ import 'package:emerge_app/features/auth/presentation/providers/auth_providers.d
 import 'package:emerge_app/features/auth/presentation/screens/login_screen.dart';
 import 'package:emerge_app/features/auth/presentation/screens/signup_screen.dart';
 import 'package:emerge_app/features/gamification/presentation/providers/user_stats_providers.dart';
+import 'package:emerge_app/features/gamification/presentation/screens/level_up_reward_screen.dart';
 import 'package:emerge_app/features/world_map/presentation/screens/world_map_screen.dart';
 import 'package:emerge_app/features/timeline/presentation/screens/timeline_screen.dart';
 import 'package:emerge_app/features/ai/presentation/screens/goldilocks_screen.dart';
@@ -21,7 +22,7 @@ import 'package:emerge_app/features/ai/presentation/screens/ai_reflections_scree
 import 'package:emerge_app/features/onboarding/presentation/providers/onboarding_provider.dart';
 import 'package:emerge_app/features/onboarding/presentation/screens/first_habit_screen.dart';
 import 'package:emerge_app/features/onboarding/presentation/screens/identity_studio_screen.dart';
-import 'package:emerge_app/features/onboarding/presentation/screens/onboarding_screen.dart';
+import 'package:emerge_app/features/onboarding/presentation/screens/map_identity_attributes_screen.dart';
 import 'package:emerge_app/features/onboarding/presentation/screens/welcome_screen.dart';
 import 'package:emerge_app/features/onboarding/presentation/screens/world_reveal_screen.dart';
 import 'package:emerge_app/features/settings/presentation/screens/settings_screen.dart';
@@ -56,122 +57,80 @@ GoRouter router(Ref ref) {
     initialLocation: '/splash',
     refreshListenable: refreshNotifier,
     redirect: (context, state) {
-      // Use ref.read to get the current state without registering a dependency for the provider itself
+      final path = state.uri.path;
+
+      // Always allow splash screen to run its course
+      if (path == '/splash') return null;
+
       final authState = ref.read(authStateChangesProvider);
+      final isLoggedIn = authState.valueOrNull?.isNotEmpty ?? false;
       final isFirstLaunch = ref.read(onboardingControllerProvider);
 
-      final isLoggedIn = authState.valueOrNull?.isNotEmpty ?? false;
-      final isLoggingIn = state.uri.path == '/login';
-      final isSigningUp = state.uri.path == '/signup';
-      final isWelcome = state.uri.path == '/welcome';
-      final isSplash = state.uri.path == '/splash';
-      final isOnboardingPath = state.uri.path.startsWith('/onboarding');
+      // Define path guards
+      final isWelcome = path == '/welcome';
+      final isLogin = path == '/login';
+      final isSignup = path == '/signup';
+      final isOnboardingPath = path.startsWith('/onboarding');
+      final isAuthScreen = isWelcome || isLogin || isSignup;
 
       AppLogger.d(
-        'Router Redirect: path=${state.uri.path}, isLoggedIn=$isLoggedIn, isFirstLaunch=$isFirstLaunch',
+        'Router Redirect: path=$path, isLoggedIn=$isLoggedIn, isFirstLaunch=$isFirstLaunch',
       );
 
-      if (isSplash) return null; // Allow splash to run its course
-
-      // 1. Handle onboarding paths - always allow if user is logged in
-      if (isOnboardingPath) {
-        if (isLoggedIn) {
-          AppLogger.d('Router: Allowing onboarding path for logged in user');
-          return null;
-        }
-        // If not logged in, redirect to welcome/login
-        if (!isLoggedIn) {
-          AppLogger.d('Router: Redirecting to /welcome (need to login first)');
-          return '/welcome';
-        }
-      }
-
-      // 2. First Launch (not logged in): Force Welcome Screen
-      if (isFirstLaunch && !isLoggedIn) {
-        // Allow access to welcome, login, and signup pages
-        if (isWelcome || isLoggingIn || isSigningUp) {
-          AppLogger.d(
-            'Router: Allowing access to ${state.uri.path} during first launch',
-          );
-          return null;
-        }
-        AppLogger.d('Router: Redirecting to /welcome (First Launch)');
-        return '/welcome';
-      }
-
-      // 3. Not Logged In: Force Login
+      // NOT LOGGED IN: Only allow welcome/login/signup
       if (!isLoggedIn) {
-        if (isLoggingIn || isSigningUp || isWelcome) {
-          return null;
-        }
-        AppLogger.d('Router: Redirecting to /login (Not Logged In)');
-        return '/login';
+        if (isAuthScreen) return null;
+        // First time users go to welcome, returning users go to login
+        return isFirstLaunch ? '/welcome' : '/login';
       }
 
-      // 4. Logged In: Check if onboarding is complete
-      if (isLoggedIn) {
-        // If user is authenticated but trying to access auth/welcome screens, check onboarding
-        if (isLoggingIn || isSigningUp || isWelcome) {
-          // Redirect to onboarding if not complete, otherwise home
-          final userProfileAsync = ref.read(userStatsStreamProvider);
-          final userProfile = userProfileAsync.valueOrNull;
-          final onboardingProgress = userProfile?.onboardingProgress ?? 0;
+      // LOGGED IN: Check onboarding progress
+      final userStatsAsync = ref.read(userStatsStreamProvider);
+      final userStats = userStatsAsync.valueOrNull;
 
-          if (onboardingProgress < 3) {
-            final nextStep = _getOnboardingRouteForProgress(onboardingProgress);
-            AppLogger.d(
-              'Router: Redirecting to $nextStep (Incomplete onboarding)',
-            );
-            return nextStep;
-          }
-
-          AppLogger.d('Router: Redirecting to / (Home) from ${state.uri.path}');
-          return '/';
+      // If user stats are still loading, allow current path only if it's an onboarding path
+      // This prevents landing on the dashboard briefly for new users
+      if (userStats == null || userStatsAsync.isLoading) {
+        if (isOnboardingPath) {
+          return null;
         }
 
-        // If trying to access home/dashboard but onboarding is incomplete, redirect to onboarding
-        if (state.uri.path == '/' || state.uri.path.isEmpty) {
-          // Check local onboarding state first (more reliable than Firestore)
-          final isOnboardingComplete = !isFirstLaunch;
-
-          AppLogger.d('Router: isOnboardingComplete=$isOnboardingComplete');
-
-          // If local state says onboarding is complete, allow access
-          if (isOnboardingComplete) {
-            AppLogger.d(
-              'Router: Onboarding complete (local state), allowing access',
-            );
+        // For returning users (not first launch on device), allow dashboard/tabs while loading
+        // For new users, wait for user stats to determine actual onboarding status
+        if (!isFirstLaunch) {
+          if (path == '/' ||
+              path == '/timeline' ||
+              path == '/community' ||
+              path == '/profile') {
             return null;
-          }
-
-          // Otherwise check Firestore profile as fallback
-          final userProfileAsync = ref.read(userStatsStreamProvider);
-
-          // If profile is still loading, allow access (we'll redirect later when loaded)
-          if (userProfileAsync.isLoading) {
-            AppLogger.d('Router: Profile loading, allowing temporary access');
-            return null;
-          }
-
-          final userProfile = userProfileAsync.valueOrNull;
-          final onboardingProgress = userProfile?.onboardingProgress ?? 0;
-
-          AppLogger.d('Router: onboardingProgress=$onboardingProgress');
-
-          // If onboarding is not complete (progress < 5), redirect to the next step
-          if (onboardingProgress < 3) {
-            final nextStep = _getOnboardingRouteForProgress(onboardingProgress);
-            AppLogger.d(
-              'Router: Redirecting to $nextStep (Incomplete onboarding)',
-            );
-            return nextStep;
           }
         }
-
-        // Allow all other paths for authenticated users who completed onboarding
+        // Don't redirect for new users - wait for user stats to load
         return null;
       }
 
+      final onboardingProgress = userStats.onboardingProgress;
+      final isOnboardingComplete = onboardingProgress >= 4;
+
+      AppLogger.d(
+        'Router: onboardingProgress=$onboardingProgress, isOnboardingComplete=$isOnboardingComplete, path=$path',
+      );
+
+      // If onboarding is incomplete, only allow onboarding paths
+      if (!isOnboardingComplete) {
+        if (isOnboardingPath) {
+          // Allow ALL onboarding paths - don't redirect while in onboarding flow
+          // This prevents the redirect loop
+          return null;
+        }
+        // Redirect to the appropriate onboarding step
+        return _getOnboardingRouteForProgress(onboardingProgress);
+      }
+
+      // Onboarding complete: Allow all paths, redirect auth screens to home
+      if (isAuthScreen) return '/';
+
+      // Allow all other paths for authenticated users with complete onboarding
       return null;
     },
     routes: [
@@ -187,24 +146,22 @@ GoRouter router(Ref ref) {
         path: '/welcome',
         builder: (context, state) => const WelcomeScreen(),
       ),
+      // Onboarding routes - removed the old OnboardingScreen
       GoRoute(
-        path: '/onboarding',
-        builder: (context, state) => const OnboardingScreen(),
-        routes: [
-          // New simplified onboarding flow (3 steps)
-          GoRoute(
-            path: 'identity-studio',
-            builder: (context, state) => const IdentityStudioScreen(),
-          ),
-          GoRoute(
-            path: 'first-habit',
-            builder: (context, state) => const FirstHabitScreen(),
-          ),
-          GoRoute(
-            path: 'world-reveal',
-            builder: (context, state) => const WorldRevealScreen(),
-          ),
-        ],
+        path: '/onboarding/identity-studio',
+        builder: (context, state) => const IdentityStudioScreen(),
+      ),
+      GoRoute(
+        path: '/onboarding/map-attributes',
+        builder: (context, state) => const MapIdentityAttributesScreen(),
+      ),
+      GoRoute(
+        path: '/onboarding/first-habit',
+        builder: (context, state) => const FirstHabitScreen(),
+      ),
+      GoRoute(
+        path: '/onboarding/world-reveal',
+        builder: (context, state) => const WorldRevealScreen(),
       ),
       GoRoute(path: '/login', builder: (context, state) => const LoginScreen()),
       GoRoute(
@@ -304,6 +261,11 @@ GoRouter router(Ref ref) {
                     builder: (context, state) => const LevelingScreen(),
                   ),
                   GoRoute(
+                    path: 'level-up-reward',
+                    parentNavigatorKey: _rootNavigatorKey,
+                    builder: (context, state) => const LevelUpRewardScreen(),
+                  ),
+                  GoRoute(
                     path: 'goldilocks',
                     builder: (context, state) => const GoldilocksScreen(),
                   ),
@@ -322,14 +284,16 @@ GoRouter router(Ref ref) {
 }
 
 /// Helper function to get the onboarding route for a given progress level
-/// New flow: 0 = identity-studio, 1 = first-habit, 2 = world-reveal, 3+ = complete
+/// New flow: 0 = identity-studio, 1 = map-attributes, 2 = first-habit, 3 = world-reveal, 4+ = complete
 String _getOnboardingRouteForProgress(int progress) {
   switch (progress) {
     case 0:
       return '/onboarding/identity-studio';
     case 1:
-      return '/onboarding/first-habit';
+      return '/onboarding/map-attributes';
     case 2:
+      return '/onboarding/first-habit';
+    case 3:
       return '/onboarding/world-reveal';
     default:
       return '/'; // All onboarding complete, go to world
