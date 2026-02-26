@@ -1,9 +1,11 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:emerge_app/core/error/failure.dart';
-import 'package:emerge_app/core/constants/gamification_constants.dart';
 import 'package:emerge_app/core/utils/app_logger.dart';
+import 'package:emerge_app/features/auth/domain/entities/user_extension.dart';
 import 'package:emerge_app/features/gamification/domain/entities/user_stats.dart';
 import 'package:emerge_app/features/gamification/domain/repositories/gamification_repository.dart';
+import 'package:emerge_app/features/world_map/domain/models/archetype_maps_catalog.dart';
+import 'package:emerge_app/features/world_map/domain/models/world_node.dart';
 import 'package:fpdart/fpdart.dart';
 import 'package:flutter/foundation.dart';
 
@@ -174,15 +176,15 @@ class FirestoreGamificationRepository implements GamificationRepository {
         }
 
         // Internal Level Calculation (Standardized: 500 XP per level)
-        final newLevel =
-            (totalXp / GamificationConstants.xpPerLevel).floor() + 1;
-        avatarStats['level'] = newLevel;
+        // REMOVED: Level is now strictly controlled by Node Claims (1 Node = 1 Level).
+        // preserve the existing level
+        final currentLevel = (avatarStats['level'] as int?) ?? 1;
 
         transaction.set(docRef, {
           'avatarStats': avatarStats,
           // Update legacy fields for compatibility if needed
           'currentXp': totalXp,
-          'currentLevel': newLevel,
+          'currentLevel': currentLevel,
         }, SetOptions(merge: true));
 
         return const Right(unit);
@@ -191,5 +193,144 @@ class FirestoreGamificationRepository implements GamificationRepository {
       AppLogger.e('Add XP failed', e, s);
       return Left(ServerFailure(e.toString()));
     }
+  }
+
+  /// Award XP to a specific node and its attributes
+  /// This method:
+  /// 1. Adds XP to each target attribute in avatarStats
+  /// 2. Tracks node XP progress separately in worldState
+  /// 3. Updates total XP
+  Future<Either<Failure, Unit>> awardNodeXp(
+    String userId,
+    String nodeId,
+    int amount, {
+    List<String>? attributes,
+  }) async {
+    try {
+      final docRef = _firestore.collection('user_stats').doc(userId);
+
+      return await _firestore.runTransaction((transaction) async {
+        final snapshot = await transaction.get(docRef);
+
+        if (!snapshot.exists) {
+          return Left(ServerFailure('User stats document does not exist'));
+        }
+
+        final data = snapshot.data()!;
+        final avatarStats = Map<String, dynamic>.from(
+          data['avatarStats'] as Map? ?? {}
+        );
+
+        // Get the node to find its attributes
+        final node = _getNodeById(nodeId);
+        if (node == null) {
+          return Left(ServerFailure('Node not found: $nodeId'));
+        }
+
+        // Use provided attributes or node's primaryAttributes
+        final targetAttributes = attributes ?? node.primaryAttributes;
+
+        // Initialize attributeXp map if not exists
+        if (!avatarStats.containsKey('attributeXp')) {
+          avatarStats['attributeXp'] = <String, int>{};
+        }
+        final attributeXp = Map<String, dynamic>.from(
+          avatarStats['attributeXp'] as Map? ?? {}
+        );
+
+        // Add XP to each target attribute
+        for (final attr in targetAttributes) {
+          final key = attr.toLowerCase();
+          final currentAttrXp = (attributeXp[key] as int?) ?? 0;
+          attributeXp[key] = currentAttrXp + amount;
+
+          // Also update the specific attribute field for backwards compatibility
+          final attrField = '${key}Xp';
+          avatarStats[attrField] = (avatarStats[attrField] as int? ?? 0) + amount;
+        }
+        avatarStats['attributeXp'] = attributeXp;
+
+        // Calculate new total XP
+        int totalXp = 0;
+        final keys = [
+          'strengthXp',
+          'intellectXp',
+          'vitalityXp',
+          'creativityXp',
+          'focusXp',
+          'spiritXp',
+        ];
+        for (final k in keys) {
+          totalXp += (avatarStats[k] as int?) ?? 0;
+        }
+        avatarStats['totalXp'] = totalXp;
+
+        // Track node progress in worldState
+        final worldState = Map<String, dynamic>.from(
+          data['worldState'] as Map? ?? {}
+        );
+        final nodeProgress = Map<String, dynamic>.from(
+          worldState['nodeProgress'] as Map? ?? {}
+        );
+        final currentNodeXp = (nodeProgress[nodeId]?['xp'] as int? ?? 0) + amount;
+        final isCompleted = currentNodeXp >= (nodeProgress[nodeId]?['required'] as int? ?? 100);
+        nodeProgress[nodeId] = {
+          'xp': currentNodeXp,
+          'completed': isCompleted,
+          'required': nodeProgress[nodeId]?['required'] as int? ?? 100,
+        };
+        worldState['nodeProgress'] = nodeProgress;
+
+        // If node is newly completed, add to claimedNodes
+        if (isCompleted) {
+          final claimedNodes = List<String>.from(worldState['claimedNodes'] as List? ?? []);
+          if (!claimedNodes.contains(nodeId)) {
+            claimedNodes.add(nodeId);
+            worldState['claimedNodes'] = claimedNodes;
+          }
+        }
+
+        // Update document
+        transaction.set(docRef, {
+          'avatarStats': avatarStats,
+          'worldState': worldState,
+          // Legacy fields
+          'currentXp': totalXp,
+          'currentLevel': avatarStats['level'] as int? ?? 1,
+        }, SetOptions(merge: true));
+
+        return const Right(unit);
+      });
+    } catch (e, s) {
+      AppLogger.e('Award node XP failed', e, s);
+      return Left(ServerFailure(e.toString()));
+    }
+  }
+
+  /// Find a node by ID across all archetype catalogs
+  WorldNode? _getNodeById(String nodeId) {
+    // Check if node ID follows the pattern {archetype}_{stage}_{level}
+    final parts = nodeId.split('_');
+    if (parts.length >= 2) {
+      final archetypeKey = parts[0];
+      final journey = ArchetypeMapsCatalog.getArchetypeJourney(archetypeKey);
+      try {
+        return journey.firstWhere((n) => n.id == nodeId);
+      } catch (_) {
+        // Not found in archetype journey, continue to search
+      }
+    }
+
+    // Search through all archetype nodes
+    for (final archetype in ArchetypeMapsCatalog.allArchetypes.keys) {
+      final journey = ArchetypeMapsCatalog.getArchetypeJourney(archetype);
+      for (final node in journey) {
+        if (node.id == nodeId) {
+          return node;
+        }
+      }
+    }
+
+    return null;
   }
 }
