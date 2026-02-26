@@ -1,5 +1,6 @@
 import 'dart:ui';
 import 'package:emerge_app/core/theme/app_theme.dart';
+import 'package:emerge_app/core/theme/archetype_theme.dart';
 import 'package:emerge_app/core/presentation/widgets/emerge_branding.dart';
 import 'package:flutter/material.dart';
 
@@ -187,19 +188,6 @@ class _AttributeBoostRow extends StatelessWidget {
   }
 
   Color _getAttributeColor(String attribute) {
-    switch (attribute.toLowerCase()) {
-      case 'vitality':
-        return const Color(0xFF00E5FF); // Cyan
-      case 'intellect':
-        return const Color(0xFFE040FB); // Magenta
-      case 'creativity':
-        return const Color(0xFF76FF03); // Lime
-      case 'focus':
-        return const Color(0xFFFFAB00); // Amber
-      case 'strength':
-        return const Color(0xFFFF5252); // Red
-      default:
-        return EmergeColors.teal;
-    }
+    return ArchetypeColors.forAttribute(attribute);
   }
 }
