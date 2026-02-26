@@ -873,11 +873,57 @@ class ArchetypeMapsCatalog {
     ],
   );
 
-  // ============ ZEALOT ARCHETYPE: Complete 15-Level Journey ============
+  /// All archetype data including new structure
+  static const Map<String, dynamic> allArchetypes = {
+    'athlete': {
+      'stageCount': 3,
+      'levelsPerStage': 5,
+    },
+    'scholar': {
+      'stageCount': 3,
+      'levelsPerStage': 5,
+    },
+    'creator': {
+      'stageCount': 3,
+      'levelsPerStage': 5,
+    },
+    'stoic': {
+      'stageCount': 3,
+      'levelsPerStage': 5,
+    },
+    'zealot': {
+      'stageCount': 3,
+      'levelsPerStage': 5,
+    },
+    'explorer': {
+      'stageCount': 3,
+      'levelsPerStage': 5,
+    },
+  };
 
-  /// Zealot archetype - devotion and spiritual strength
-  /// 3 stages of 5 levels each following the standardized progression pattern
-  class ZealotArchetype {
+  /// Get archetype journey nodes for a given archetype key
+  static List<WorldNode> getArchetypeJourney(String archetypeKey) {
+    switch (archetypeKey.toLowerCase()) {
+      case 'zealot':
+        return ZealotArchetype.getNodes();
+      default:
+        // For other archetypes, return their existing map nodes
+        final config = getMapForArchetype(
+          UserArchetype.values.firstWhere(
+            (e) => e.name == archetypeKey,
+            orElse: () => UserArchetype.none,
+          ),
+        );
+        return config.nodes;
+    }
+  }
+}
+
+// ============ ZEALOT ARCHETYPE: Complete 15-Level Journey ============
+
+/// Zealot archetype - devotion and spiritual strength
+/// 3 stages of 5 levels each following the standardized progression pattern
+class ZealotArchetype {
     static const String archetypeKey = 'zealot';
 
     static List<WorldNode> getNodes() {
@@ -1212,51 +1258,4 @@ class ArchetypeMapsCatalog {
       };
     }
   }
-
-  /// Get archetype journey nodes for a given archetype key
-  static List<WorldNode> getArchetypeJourney(String archetypeKey) {
-    switch (archetypeKey.toLowerCase()) {
-      case 'zealot':
-        return ZealotArchetype.getNodes();
-      default:
-        // For other archetypes, return their existing map nodes
-        final config = getMapForArchetype(
-          UserArchetype.values.firstWhere(
-            (e) => e.name == archetypeKey,
-            orElse: () => UserArchetype.none,
-          ),
-        );
-        return config.nodes;
-    }
-  }
-
-  /// All archetype data including new structure
-  static const Map<String, dynamic> allArchetypes = {
-    'athlete': {
-      'stageCount': 3,
-      'levelsPerStage': 5,
-    },
-    'scholar': {
-      'stageCount': 3,
-      'levelsPerStage': 5,
-    },
-    'creator': {
-      'stageCount': 3,
-      'levelsPerStage': 5,
-    },
-    'stoic': {
-      'stageCount': 3,
-      'levelsPerStage': 5,
-    },
-    'zealot': {
-      'nodes': ZealotArchetype.getNodes(),
-      'theme': ZealotArchetype.getTheme(),
-      'stageCount': 3,
-      'levelsPerStage': 5,
-    },
-    'explorer': {
-      'stageCount': 3,
-      'levelsPerStage': 5,
-    },
-  };
 }

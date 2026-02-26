@@ -2,6 +2,8 @@ import 'package:emerge_app/core/theme/app_theme.dart';
 import 'package:emerge_app/core/theme/archetype_theme.dart';
 import 'package:emerge_app/core/presentation/widgets/emerge_branding.dart';
 import 'package:emerge_app/features/auth/domain/entities/user_extension.dart';
+import 'package:emerge_app/features/habits/domain/entities/habit.dart';
+import 'package:emerge_app/features/timeline/presentation/widgets/habit_timeline_section.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:gap/gap.dart';
@@ -18,6 +20,7 @@ class HabitTemplate {
   final IconData icon;
   final String frequency;
   final String timeOfDay;
+  final HabitAttribute attribute;
 
   const HabitTemplate({
     required this.title,
@@ -27,7 +30,11 @@ class HabitTemplate {
     required this.icon,
     this.frequency = 'Daily',
     this.timeOfDay = 'Morning',
+    this.attribute = HabitAttribute.vitality,
   });
+
+  /// Get the identity color for this template's attribute
+  Color get color => attributeColor(attribute);
 
   /// Convert from ArchetypeHabitSuggestion
   factory HabitTemplate.fromSuggestion(
@@ -162,7 +169,7 @@ class HabitTemplateCarousel extends StatelessWidget {
               final template = templates[index];
               return _TemplateCard(
                 template: template,
-                accentColor: EmergeColors.teal,
+                accentColor: template.color,
                 onTap: () {
                   HapticFeedback.mediumImpact();
                   onTemplateSelected(template);
@@ -298,173 +305,193 @@ class _HabitTemplateSheetState extends State<HabitTemplateSheet> {
 
   /// Expanded template library with categories
   List<HabitTemplate> get _allTemplates => [
-    // ═══ HEALTH & FITNESS ═══
+    // ═══ STRENGTH & VITALITY (Physical) ═══
     const HabitTemplate(
       title: 'Morning Movement',
       description: '10 minutes of stretching or exercise',
       anchor: 'After waking up',
-      category: 'Health',
+      category: 'Vitality',
       icon: Icons.fitness_center,
       timeOfDay: 'Morning',
+      attribute: HabitAttribute.vitality,
     ),
     const HabitTemplate(
       title: 'Hydration',
       description: 'Drink a full glass of water',
       anchor: 'After waking up',
-      category: 'Health',
+      category: 'Vitality',
       icon: Icons.water_drop,
       timeOfDay: 'Morning',
+      attribute: HabitAttribute.vitality,
     ),
     const HabitTemplate(
       title: 'Evening Walk',
       description: '15 minute walk to decompress',
       anchor: 'After dinner',
-      category: 'Health',
+      category: 'Vitality',
       icon: Icons.directions_walk,
       timeOfDay: 'Evening',
+      attribute: HabitAttribute.vitality,
     ),
     const HabitTemplate(
       title: 'Power Workout',
       description: '30 minute strength training',
       anchor: 'After work',
-      category: 'Health',
+      category: 'Strength',
       icon: Icons.sports_gymnastics,
       timeOfDay: 'Afternoon',
+      attribute: HabitAttribute.strength,
     ),
     const HabitTemplate(
       title: 'Sleep Ritual',
       description: 'Prepare for restful sleep',
       anchor: 'Before bed',
-      category: 'Health',
+      category: 'Vitality',
       icon: Icons.bedtime,
       timeOfDay: 'Night',
+      attribute: HabitAttribute.vitality,
     ),
 
-    // ═══ MINDFULNESS ═══
+    // ═══ SPIRIT (Mindfulness) ═══
     const HabitTemplate(
       title: 'Morning Meditation',
       description: '5 minutes of silent reflection',
       anchor: 'After waking up',
-      category: 'Mindfulness',
+      category: 'Spirit',
       icon: Icons.spa,
       timeOfDay: 'Morning',
+      attribute: HabitAttribute.spirit,
     ),
     const HabitTemplate(
       title: 'Gratitude Practice',
       description: 'Write 3 things you\'re grateful for',
       anchor: 'After morning coffee',
-      category: 'Mindfulness',
+      category: 'Spirit',
       icon: Icons.favorite,
       timeOfDay: 'Morning',
+      attribute: HabitAttribute.spirit,
     ),
     const HabitTemplate(
       title: 'Breathing Exercise',
       description: '5 deep breaths to reset',
       anchor: 'Before meetings',
-      category: 'Mindfulness',
+      category: 'Spirit',
       icon: Icons.air,
       timeOfDay: 'Anytime',
+      attribute: HabitAttribute.spirit,
     ),
     const HabitTemplate(
       title: 'Digital Sunset',
       description: 'No screens 1 hour before bed',
       anchor: 'Before bed',
-      category: 'Mindfulness',
+      category: 'Spirit',
       icon: Icons.phone_disabled,
       timeOfDay: 'Night',
+      attribute: HabitAttribute.spirit,
     ),
     const HabitTemplate(
       title: 'Evening Reflection',
       description: 'Review your day mindfully',
       anchor: 'Before bed',
-      category: 'Mindfulness',
+      category: 'Spirit',
       icon: Icons.nights_stay,
       timeOfDay: 'Night',
+      attribute: HabitAttribute.spirit,
     ),
 
-    // ═══ LEARNING ═══
+    // ═══ INTELLECT (Learning) ═══
     const HabitTemplate(
       title: 'Daily Reading',
       description: 'Read 10 pages of a book',
       anchor: 'After morning coffee',
-      category: 'Learning',
+      category: 'Intellect',
       icon: Icons.menu_book,
       timeOfDay: 'Morning',
+      attribute: HabitAttribute.intellect,
     ),
     const HabitTemplate(
       title: 'Learning Session',
       description: '20 minutes of focused study',
       anchor: 'After lunch',
-      category: 'Learning',
+      category: 'Intellect',
       icon: Icons.school,
       timeOfDay: 'Afternoon',
+      attribute: HabitAttribute.intellect,
     ),
     const HabitTemplate(
       title: 'Podcast Learning',
       description: 'Listen to educational content',
       anchor: 'During commute',
-      category: 'Learning',
+      category: 'Intellect',
       icon: Icons.podcasts,
       timeOfDay: 'Morning',
+      attribute: HabitAttribute.intellect,
     ),
     const HabitTemplate(
       title: 'Write & Reflect',
       description: 'Write 3 things you learned',
       anchor: 'Before bed',
-      category: 'Learning',
+      category: 'Intellect',
       icon: Icons.edit_note,
       timeOfDay: 'Night',
+      attribute: HabitAttribute.intellect,
     ),
     const HabitTemplate(
       title: 'Skill Practice',
       description: '15 minutes practicing a skill',
       anchor: 'After work',
-      category: 'Learning',
+      category: 'Intellect',
       icon: Icons.psychology,
       timeOfDay: 'Evening',
+      attribute: HabitAttribute.intellect,
     ),
 
-    // ═══ PRODUCTIVITY ═══
+    // ═══ FOCUS (Productivity) ═══
     const HabitTemplate(
       title: 'Morning Planning',
       description: 'Set top 3 priorities for today',
       anchor: 'After waking up',
-      category: 'Productivity',
+      category: 'Focus',
       icon: Icons.checklist,
       timeOfDay: 'Morning',
+      attribute: HabitAttribute.focus,
     ),
     const HabitTemplate(
       title: 'Deep Work Block',
       description: '90 minutes of focused work',
       anchor: 'After morning coffee',
-      category: 'Productivity',
+      category: 'Focus',
       icon: Icons.timer,
       timeOfDay: 'Morning',
+      attribute: HabitAttribute.focus,
     ),
     const HabitTemplate(
       title: 'Inbox Zero',
       description: 'Process all messages to zero',
       anchor: 'After lunch',
-      category: 'Productivity',
+      category: 'Focus',
       icon: Icons.email,
       timeOfDay: 'Afternoon',
+      attribute: HabitAttribute.focus,
     ),
     const HabitTemplate(
       title: 'Weekly Review',
       description: 'Review and plan your week',
       anchor: 'Sunday evening',
-      category: 'Productivity',
+      category: 'Focus',
       icon: Icons.calendar_month,
       timeOfDay: 'Evening',
       frequency: 'Weekly',
+      attribute: HabitAttribute.focus,
     ),
     const HabitTemplate(
       title: 'Tomorrow\'s Prep',
       description: 'Prepare for the next day',
       anchor: 'Before bed',
-      category: 'Productivity',
+      category: 'Focus',
       icon: Icons.today,
       timeOfDay: 'Night',
+      attribute: HabitAttribute.focus,
     ),
 
     // ═══ CREATIVITY ═══
@@ -475,6 +502,7 @@ class _HabitTemplateSheetState extends State<HabitTemplateSheet> {
       category: 'Creativity',
       icon: Icons.palette,
       timeOfDay: 'Morning',
+      attribute: HabitAttribute.creativity,
     ),
     const HabitTemplate(
       title: 'Idea Capture',
@@ -483,6 +511,7 @@ class _HabitTemplateSheetState extends State<HabitTemplateSheet> {
       category: 'Creativity',
       icon: Icons.lightbulb,
       timeOfDay: 'Morning',
+      attribute: HabitAttribute.creativity,
     ),
     const HabitTemplate(
       title: 'Ship Something',
@@ -491,6 +520,7 @@ class _HabitTemplateSheetState extends State<HabitTemplateSheet> {
       category: 'Creativity',
       icon: Icons.rocket_launch,
       timeOfDay: 'Night',
+      attribute: HabitAttribute.creativity,
     ),
     const HabitTemplate(
       title: 'Inspiration Hunt',
@@ -499,6 +529,7 @@ class _HabitTemplateSheetState extends State<HabitTemplateSheet> {
       category: 'Creativity',
       icon: Icons.explore,
       timeOfDay: 'Afternoon',
+      attribute: HabitAttribute.creativity,
     ),
     const HabitTemplate(
       title: 'Daily Sketch',
@@ -507,15 +538,17 @@ class _HabitTemplateSheetState extends State<HabitTemplateSheet> {
       category: 'Creativity',
       icon: Icons.brush,
       timeOfDay: 'Evening',
+      attribute: HabitAttribute.creativity,
     ),
   ];
 
   List<String> get _categories => [
     'All',
-    'Health',
-    'Mindfulness',
-    'Learning',
-    'Productivity',
+    'Strength',
+    'Vitality',
+    'Spirit',
+    'Intellect',
+    'Focus',
     'Creativity',
   ];
 
@@ -693,7 +726,7 @@ class _HabitTemplateSheetState extends State<HabitTemplateSheet> {
                     final template = _filteredTemplates[index];
                     return _TemplateListTile(
                       template: template,
-                      accentColor: EmergeColors.teal,
+                      accentColor: template.color,
                       onTap: () {
                         HapticFeedback.mediumImpact();
                         widget.onTemplateSelected(template);

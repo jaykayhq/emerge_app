@@ -1,5 +1,6 @@
 import 'package:emerge_app/core/presentation/widgets/emerge_branding.dart';
 import 'package:emerge_app/core/theme/archetype_theme.dart';
+import 'package:emerge_app/features/auth/domain/entities/user_extension.dart';
 import 'package:emerge_app/features/world_map/domain/models/world_node.dart';
 import 'package:emerge_app/features/world_map/domain/services/node_state_service.dart';
 import 'package:flutter/material.dart';

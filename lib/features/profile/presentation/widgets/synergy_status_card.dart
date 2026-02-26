@@ -172,9 +172,8 @@ class SynergyStatusCard extends StatelessWidget {
 
   List<Habit> _getHabitsForAttribute(String attribute) {
     // Return habits that contribute to this attribute
-    // In a real implementation, you'd match based on habit.attributes
     return habits.where((h) =>
-      h.attributes.any((a) => a.name.toLowerCase() == attribute.toLowerCase())
+      h.attribute.name.toLowerCase() == attribute.toLowerCase()
     ).take(3).toList();
   }
 

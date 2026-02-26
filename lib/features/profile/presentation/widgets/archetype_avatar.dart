@@ -64,8 +64,8 @@ class _ArchetypeAvatarState extends State<ArchetypeAvatar>
         return 'assets/images/avatars/creator_silhouette.png';
       case UserArchetype.stoic:
         return 'assets/images/avatars/stoic_silhouette.png';
-      case UserArchetype.mystic:
-        return 'assets/images/avatars/mystic_silhouette.png';
+      case UserArchetype.zealot:
+        return 'assets/images/avatars/zealot_silhouette.png';
       case UserArchetype.none:
         return 'assets/images/avatars/athlete_silhouette.png';
     }

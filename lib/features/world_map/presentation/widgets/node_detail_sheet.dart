@@ -100,7 +100,6 @@ class NodeDetailSheet extends StatelessWidget {
 
           const SizedBox(height: 16),
 
-          // Description
           Text(
             node.description,
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
@@ -108,6 +107,49 @@ class NodeDetailSheet extends StatelessWidget {
               height: 1.5,
             ),
           ),
+
+          if (node.directive.isNotEmpty) ...[
+            const SizedBox(height: 16),
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: primaryColor.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: primaryColor.withValues(alpha: 0.3)),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Icon(
+                        Icons.assistant_direction,
+                        size: 16,
+                        color: primaryColor,
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        'DIRECTIVE',
+                        style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                          color: primaryColor,
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: 1.2,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    node.directive,
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: AppTheme.textMainDark,
+                      fontStyle: FontStyle.italic,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
 
           const SizedBox(height: 20),
 

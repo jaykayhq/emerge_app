@@ -87,6 +87,11 @@ class FirestoreHabitRepository implements HabitRepository {
               ?.map((e) => e as String)
               .toList() ??
           [],
+      environmentPriming:
+          (data['environmentPriming'] as List<dynamic>?)
+              ?.map((e) => e as String)
+              .toList() ??
+          [],
     );
   }
 
@@ -144,6 +149,7 @@ class FirestoreHabitRepository implements HabitRepository {
         'identityTags': habit.identityTags,
         'timerDurationMinutes': habit.timerDurationMinutes,
         'customRules': habit.customRules,
+        'environmentPriming': habit.environmentPriming,
         'twoMinuteVersion': habit.twoMinuteVersion,
       });
 
@@ -187,6 +193,7 @@ class FirestoreHabitRepository implements HabitRepository {
         'identityTags': habit.identityTags,
         'timerDurationMinutes': habit.timerDurationMinutes,
         'customRules': habit.customRules,
+        'environmentPriming': habit.environmentPriming,
         'twoMinuteVersion': habit.twoMinuteVersion,
       });
       return const Right(unit);

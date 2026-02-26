@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 
 /// A scrolling parallax background representing the "Valley of New Beginnings".
-/// Consists of multiple layers (Sky, Far Mountains, Mid Hills, Foreground) that move at different speeds.
+/// Uses cosmic purple-black palette with 3 depth layers that move at different speeds.
+/// Based on the Stitch World Map cosmic design.
+/// Wrapped in RepaintBoundary for performance isolation.
 class ParallaxValleyBackground extends StatelessWidget {
   final ScrollController scrollController;
   final double mapHeight;
@@ -14,9 +16,6 @@ class ParallaxValleyBackground extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // We use AnimatedBuilder to rebuild just the positioning when scroll changes
-    // But since Parallax often needs smooth updates, and we have a scrollController,
-    // we can use a LayoutBuilder + ListenableBuilder (or AnimatedBuilder) pattern.
     return ListenableBuilder(
       listenable: scrollController,
       builder: (context, child) {
@@ -24,85 +23,73 @@ class ParallaxValleyBackground extends StatelessWidget {
             ? scrollController.offset
             : 0.0;
 
-        // Parallax factors (0.0 = static, 1.0 = moves with scroll)
-        // For a "depth" effect where background moves SLOWER than foreground (content):
-        // Layer 0 (Sky): Nearly static (factor 0.1)
-        // Layer 1 (Far): Slow (factor 0.3)
-        // Layer 2 (Mid): Medium (factor 0.6)
-        // Layer 3 (Near): Fast (factor 0.8)
-
         return Stack(
           fit: StackFit.expand,
           children: [
-            // 1. Base Gradient (Deep Space/Valley Night)
-            Container(
-              decoration: const BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [
-                    Color(0xFF0F172A), // Slate 900
-                    Color(0xFF312E81), // Indigo 900
-                    Color(0xFF4C1D95), // Violet 900
-                  ],
-                ),
-              ),
-            ),
-
-            // 2. Stars / Nebula (The Sky) - Moves very slowly (Parallax depth: Far)
-            Positioned.fill(
-              top: scrollOffset * 0.05, // Moves slightly down as we scroll up
-              bottom: -scrollOffset * 0.05,
-              child: Image.network(
-                'https://images.unsplash.com/photo-1534447677768-be436bb09401?q=80&w=2894&auto=format&fit=crop',
-                fit: BoxFit.cover,
-                opacity: const AlwaysStoppedAnimation(0.6),
-              ),
-            ),
-
-            // 3. Far Mountains (Silhouette) - Moves slowly (Parallax depth: Mid-Far)
-            Positioned(
-              left: 0,
-              right: 0,
-              top:
-                  0 +
-                  scrollOffset * 0.15, // Moves down as visible window moves up
-              height: 1200,
-              child: ShaderMask(
-                shaderCallback: (bounds) {
-                  return const LinearGradient(
+            // Layer 0: Base cosmic gradient (static)
+            RepaintBoundary(
+              child: Container(
+                decoration: const BoxDecoration(
+                  gradient: LinearGradient(
                     begin: Alignment.topCenter,
                     end: Alignment.bottomCenter,
-                    colors: [Colors.black, Colors.transparent],
-                    stops: [0.6, 1.0],
-                  ).createShader(bounds);
-                },
-                blendMode: BlendMode.dstIn,
-                child: Image.network(
-                  'https://images.unsplash.com/photo-1572916127117-9195a639b596?q=80&w=2806&auto=format&fit=crop',
-                  fit: BoxFit.cover,
+                    colors: [
+                      Color(0xFF0A0A1A), // Near-black void
+                      Color(0xFF1A0A2A), // Rich purple center
+                      Color(0xFF2A1A3A), // Mid-tone purple
+                    ],
+                  ),
                 ),
               ),
             ),
 
-            // 4. Midground (Valley Hills) - Moves faster (Parallax depth: Mid)
-            Positioned(
-              left: 0,
-              right: 0,
-              top: 300 + scrollOffset * 0.3, // Moves down faster
-              height: 1500,
-              child: Opacity(
-                opacity: 0.8,
-                child: Image.network(
-                  'https://images.unsplash.com/photo-1518098268026-4e1c26002c6d?q=80&w=2788&auto=format&fit=crop',
-                  fit: BoxFit.cover,
-                  color: const Color(0xFF4C1D95).withValues(alpha: 0.5),
-                  colorBlendMode: BlendMode.hardLight,
+            // Layer 1: Far cosmic mist (parallax 0.1x) — slowest
+            RepaintBoundary(
+              child: Positioned.fill(
+                top: scrollOffset * 0.05,
+                bottom: -scrollOffset * 0.05,
+                child: CustomPaint(
+                  painter: _CosmicSkyPainter(
+                    scrollOffset: scrollOffset,
+                    layerFactor: 0.1,
+                  ),
                 ),
               ),
             ),
 
-            // 5. Overlay Gradient (Fog/Atmosphere)
+            // Layer 2: Mid-ground nebula hills (parallax 0.3x)
+            RepaintBoundary(
+              child: Positioned(
+                left: 0,
+                right: 0,
+                top: 200 + scrollOffset * 0.2,
+                height: mapHeight * 0.8,
+                child: CustomPaint(
+                  painter: _CosmicHillsPainter(
+                    scrollOffset: scrollOffset,
+                    color: const Color(0xFF1A0A2A),
+                  ),
+                ),
+              ),
+            ),
+
+            // Layer 3: Near-ground cosmic formations (parallax 0.5x) — fastest
+            RepaintBoundary(
+              child: Positioned(
+                left: 0,
+                right: 0,
+                top: 400 + scrollOffset * 0.4,
+                height: mapHeight * 0.6,
+                child: CustomPaint(
+                  painter: _CosmicHillsPainter(
+                    scrollOffset: scrollOffset,
+                    color: const Color(0xFF2A1A3A),
+                  ),
+                ),
+              ),
+            ),
+
+            // Layer 4: Atmospheric fog overlay
             Positioned.fill(
               child: Container(
                 decoration: BoxDecoration(
@@ -111,11 +98,20 @@ class ParallaxValleyBackground extends StatelessWidget {
                     end: Alignment.bottomCenter,
                     colors: [
                       Colors.transparent,
-                      const Color(0xFF0F172A).withValues(alpha: 0.4),
-                      const Color(0xFF0F172A).withValues(alpha: 0.8),
+                      const Color(0xFF1A0A2A).withValues(alpha: 0.3),
+                      const Color(0xFF0A0A1A).withValues(alpha: 0.7),
                     ],
-                    stops: const [0.0, 0.7, 1.0],
+                    stops: const [0.0, 0.6, 1.0],
                   ),
+                ),
+              ),
+            ),
+
+            // Layer 5: Star particles (subtle white/blue glow dots)
+            RepaintBoundary(
+              child: Positioned.fill(
+                child: CustomPaint(
+                  painter: _StarPainter(scrollOffset: scrollOffset),
                 ),
               ),
             ),
@@ -124,4 +120,110 @@ class ParallaxValleyBackground extends StatelessWidget {
       },
     );
   }
+}
+
+/// Paints subtle gradient sky with cosmic tones
+class _CosmicSkyPainter extends CustomPainter {
+  final double scrollOffset;
+  final double layerFactor;
+
+  _CosmicSkyPainter({required this.scrollOffset, required this.layerFactor});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    // Draw subtle stars/dots with cosmic colors
+    final colors = [
+      const Color(0xFF2BEE79).withValues(alpha: 0.08), // Green accent
+      const Color(0xFFAACFFF).withValues(alpha: 0.08), // Blue stars
+      const Color(0xFFFFD700).withValues(alpha: 0.06), // Gold stars
+    ];
+
+    for (int i = 0; i < 40; i++) {
+      final x = (i * 47.3) % size.width;
+      final y = ((i * 29.7) % size.height) + scrollOffset * layerFactor;
+      final colorIndex = i % colors.length;
+
+      final paint = Paint()..color = colors[colorIndex];
+      canvas.drawCircle(Offset(x, y % size.height), 1.5 + (i % 3) * 0.5, paint);
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant _CosmicSkyPainter oldDelegate) =>
+      oldDelegate.scrollOffset != scrollOffset;
+}
+
+/// Paints wavy hills for the mid and near ground layers (cosmic theme)
+class _CosmicHillsPainter extends CustomPainter {
+  final double scrollOffset;
+  final Color color;
+
+  _CosmicHillsPainter({required this.scrollOffset, required this.color});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()..color = color.withValues(alpha: 0.5);
+
+    final path = Path();
+    path.moveTo(0, size.height * 0.4);
+
+    // Wavy cosmic hills
+    for (double x = 0; x <= size.width; x += 20) {
+      final y =
+          size.height * 0.4 +
+          30 * (0.5 + 0.5 * ((x + scrollOffset * 0.1) * 0.01).abs() % 1);
+      path.lineTo(x, y);
+    }
+
+    path.lineTo(size.width, size.height);
+    path.lineTo(0, size.height);
+    path.close();
+
+    canvas.drawPath(path, paint);
+  }
+
+  @override
+  bool shouldRepaint(covariant _CosmicHillsPainter oldDelegate) =>
+      oldDelegate.scrollOffset != scrollOffset;
+}
+
+/// Paints floating star particles with subtle glow
+class _StarPainter extends CustomPainter {
+  final double scrollOffset;
+
+  _StarPainter({required this.scrollOffset});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final glowPaint = Paint()
+      ..color = const Color(0xFF2BEE79).withValues(alpha: 0.12)
+      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 6);
+
+    final dotPaint = Paint()
+      ..color = const Color(0xFF2BEE79).withValues(alpha: 0.35);
+
+    // Also add blue stars
+    final blueGlowPaint = Paint()
+      ..color = const Color(0xFFAACFFF).withValues(alpha: 0.10)
+      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 5);
+
+    final blueDotPaint = Paint()
+      ..color = const Color(0xFFAACFFF).withValues(alpha: 0.30);
+
+    for (int i = 0; i < 12; i++) {
+      final phase = scrollOffset * 0.002 + i * 1.7;
+      final x = (i * 73.7 + phase * 20) % size.width;
+      final y = (i * 53.1 + scrollOffset * 0.08) % size.height;
+
+      final isGreen = i % 2 == 0;
+      // Glow
+      canvas.drawCircle(Offset(x, y), 4, isGreen ? glowPaint : blueGlowPaint);
+      // Dot
+      canvas.drawCircle(Offset(x, y), 1.5, isGreen ? dotPaint : blueDotPaint);
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant _StarPainter oldDelegate) =>
+      oldDelegate.scrollOffset != scrollOffset;
 }

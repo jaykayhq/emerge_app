@@ -4,7 +4,8 @@ import 'package:emerge_app/features/auth/domain/entities/user_extension.dart';
 import 'package:flutter/material.dart';
 
 /// Animated cosmic background for the Future Self Studio screen
-/// Features floating particles, nebula gradients, and subtle energy flows
+/// Features floating particles, purple/blue nebula gradients, and subtle energy flows
+/// Based on the Stitch World Map cosmic design
 class FutureSelfCosmicBackground extends StatefulWidget {
   final UserArchetype archetype;
   final int level;
@@ -102,10 +103,10 @@ class _CosmicBackgroundPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    // Layer 1: Deep space gradient
+    // Layer 1: Deep space gradient (Cosmic purple theme)
     _drawBaseGradient(canvas, size);
 
-    // Layer 2: Nebula clouds
+    // Layer 2: Nebula clouds (purple/blue)
     _drawNebulaClouds(canvas, size);
 
     // Layer 3: Distant stars
@@ -128,12 +129,13 @@ class _CosmicBackgroundPainter extends CustomPainter {
       begin: Alignment.topCenter,
       end: Alignment.bottomCenter,
       colors: [
-        const Color(0xFF0a0a14),
-        const Color(0xFF0d0d1a),
-        Color.lerp(const Color(0xFF0d0d1a), primaryColor, 0.05)!,
-        const Color(0xFF0a0a14),
+        const Color(0xFF0A0A1A), // Near-black void (top)
+        const Color(0xFF1A0A2A), // Rich purple center
+        const Color(0xFF2A1A3A), // Mid-tone purple
+        const Color(0xFF1A0A2A), // Rich purple
+        const Color(0xFF0A0A1A), // Near-black void (bottom)
       ],
-      stops: const [0.0, 0.3, 0.7, 1.0],
+      stops: const [0.0, 0.2, 0.5, 0.8, 1.0],
     );
 
     final paint = Paint()
@@ -145,27 +147,31 @@ class _CosmicBackgroundPainter extends CustomPainter {
   }
 
   void _drawNebulaClouds(Canvas canvas, Size size) {
-    final random = math.Random(42);
+    // Multiple nebula layers with cosmic purple/blue colors
+    final nebulaColors = [
+      const Color(0xFF2A1A3A), // Mid-tone purple
+      const Color(0xFF0A1A3A), // Cosmic blue
+      const Color(0xFF1A0A3A), // Deep purple
+    ];
 
-    // Multiple nebula layers
-    for (int i = 0; i < 3; i++) {
-      final baseX = size.width * (0.2 + random.nextDouble() * 0.6);
-      final baseY = size.height * (0.1 + random.nextDouble() * 0.8);
+    for (int i = 0; i < 4; i++) {
+      final baseX = size.width * (0.1 + i * 0.25);
+      final baseY = size.height * (0.2 + (i % 3) * 0.2);
 
       // Animate position
-      final offsetX = math.sin(nebulaPhase * math.pi * 2 + i) * 30;
-      final offsetY = math.cos(nebulaPhase * math.pi * 2 + i * 0.7) * 20;
+      final offsetX = math.sin(nebulaPhase * math.pi * 2 + i * 0.7) * 30;
+      final offsetY = math.cos(nebulaPhase * math.pi * 2 + i * 0.5) * 20;
 
       final nebulaGradient = RadialGradient(
         colors: [
-          primaryColor.withValues(alpha: 0.08 - i * 0.02),
-          primaryColor.withValues(alpha: 0.03),
+          nebulaColors[i % 3].withValues(alpha: 0.15 - i * 0.02),
+          nebulaColors[i % 3].withValues(alpha: 0.05),
           Colors.transparent,
         ],
         stops: const [0.0, 0.5, 1.0],
       );
 
-      final nebulaRadius = size.width * (0.3 + i * 0.1);
+      final nebulaRadius = size.width * (0.35 + i * 0.05);
       final center = Offset(baseX + offsetX, baseY + offsetY);
 
       final paint = Paint()
@@ -175,20 +181,57 @@ class _CosmicBackgroundPainter extends CustomPainter {
 
       canvas.drawCircle(center, nebulaRadius, paint);
     }
+
+    // Add primary color glow (archetype accent) - subtle
+    final primaryGlow = RadialGradient(
+      colors: [primaryColor.withValues(alpha: 0.06), Colors.transparent],
+    );
+
+    final primaryPaint = Paint()
+      ..shader = primaryGlow.createShader(
+        Rect.fromCircle(
+          center: Offset(size.width * 0.7, size.height * 0.3),
+          radius: size.width * 0.3,
+        ),
+      );
+
+    canvas.drawCircle(
+      Offset(size.width * 0.7, size.height * 0.3),
+      size.width * 0.3,
+      primaryPaint,
+    );
   }
 
   void _drawDistantStars(Canvas canvas, Size size) {
     final random = math.Random(123);
     final starPaint = Paint()..style = PaintingStyle.fill;
 
-    for (int i = 0; i < 80; i++) {
+    // Star colors: white, blue-tinted, gold-tinted
+    final starColors = [
+      const Color(0xFFFFFFFF),
+      const Color(0xFFAACFFF), // Blue-tinted
+      const Color(0xFFFFD700), // Gold-tinted
+    ];
+
+    for (int i = 0; i < 100; i++) {
       final x = random.nextDouble() * size.width;
       final y = random.nextDouble() * size.height;
-      final starSize = 0.5 + random.nextDouble() * 1.5;
+      final starSize = 0.5 + random.nextDouble() * 2.0;
       final twinkle =
           0.3 + 0.7 * math.sin(particlePhase * math.pi * 2 + i * 0.3).abs();
+      final colorIndex = random.nextInt(starColors.length);
 
-      starPaint.color = Colors.white.withValues(alpha: 0.3 * twinkle);
+      // Draw star glow for larger stars
+      if (starSize > 1.5) {
+        final glowPaint = Paint()
+          ..color = starColors[colorIndex].withValues(alpha: 0.15 * twinkle)
+          ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 3);
+        canvas.drawCircle(Offset(x, y), starSize * 3, glowPaint);
+      }
+
+      starPaint.color = starColors[colorIndex].withValues(
+        alpha: (0.4 + 0.6 * twinkle).clamp(0.0, 1.0),
+      );
       canvas.drawCircle(Offset(x, y), starSize, starPaint);
     }
   }
@@ -196,21 +239,24 @@ class _CosmicBackgroundPainter extends CustomPainter {
   void _drawFloatingParticles(Canvas canvas, Size size) {
     final random = math.Random(456);
 
-    for (int i = 0; i < 25; i++) {
+    for (int i = 0; i < 30; i++) {
       final baseX = random.nextDouble() * size.width;
       final baseY = random.nextDouble() * size.height;
       final particleSize = 1.0 + random.nextDouble() * 3;
 
-      // Animate floating upward
+      // Animate floating upward with drift
       final phase = (particlePhase + i * 0.04) % 1.0;
-      final y = baseY - phase * size.height * 0.3;
-      final x = baseX + math.sin(phase * math.pi * 4 + i) * 15;
+      final y = baseY - phase * size.height * 0.4;
+      final x = baseX + math.sin(phase * math.pi * 4 + i) * 20;
 
       if (y > 0 && y < size.height) {
         final alpha = 0.4 * (1 - (phase * 0.5));
 
+        // Use primary color with some cosmic dust mixed in
         final particlePaint = Paint()
-          ..color = primaryColor.withValues(alpha: alpha)
+          ..color = i % 3 == 0
+              ? primaryColor.withValues(alpha: alpha)
+              : const Color(0xFFAACFFF).withValues(alpha: alpha * 0.5)
           ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 2);
 
         canvas.drawCircle(Offset(x, y), particleSize, particlePaint);
@@ -219,16 +265,22 @@ class _CosmicBackgroundPainter extends CustomPainter {
   }
 
   void _drawEnergyFlows(Canvas canvas, Size size) {
-    final flowPaint = Paint()
-      ..color = primaryColor.withValues(alpha: 0.08)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 2
-      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 4);
+    // Mix of primary color and cosmic blue
+    final flowColors = [
+      primaryColor.withValues(alpha: 0.08),
+      const Color(0xFF00FFCC).withValues(alpha: 0.06), // Teal
+      const Color(0xFFAACFFF).withValues(alpha: 0.06), // Blue
+    ];
 
-    // Vertical energy streams
-    for (int i = 0; i < 3; i++) {
-      final x = size.width * (0.2 + i * 0.3);
-      final phaseOffset = i * 0.33;
+    for (int flowIndex = 0; flowIndex < 3; flowIndex++) {
+      final flowPaint = Paint()
+        ..color = flowColors[flowIndex]
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 2
+        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 4);
+
+      final x = size.width * (0.2 + flowIndex * 0.3);
+      final phaseOffset = flowIndex * 0.33;
 
       final flowPath = Path();
       flowPath.moveTo(x, 0);
@@ -247,7 +299,10 @@ class _CosmicBackgroundPainter extends CustomPainter {
     final vignetteGradient = RadialGradient(
       center: Alignment.center,
       radius: 0.8,
-      colors: [Colors.transparent, Colors.black.withValues(alpha: 0.4)],
+      colors: [
+        Colors.transparent,
+        const Color(0xFF0A0A1A).withValues(alpha: 0.5),
+      ],
       stops: const [0.5, 1.0],
     );
 

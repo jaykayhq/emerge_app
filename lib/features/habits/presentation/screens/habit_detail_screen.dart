@@ -23,10 +23,12 @@ class _HabitDetailScreenState extends ConsumerState<HabitDetailScreen> {
   final _twoMinuteController = TextEditingController();
   final _rewardController = TextEditingController();
   final _customRulesController = TextEditingController();
+  final _primingController = TextEditingController();
 
   // State variables for editing
   late int _timerDurationMinutes;
   late List<String> _customRules;
+  late List<String> _environmentPriming;
   String? _anchorHabitId;
   bool _isInit = false;
   bool _hasChanges = false;
@@ -36,6 +38,7 @@ class _HabitDetailScreenState extends ConsumerState<HabitDetailScreen> {
     _twoMinuteController.dispose();
     _rewardController.dispose();
     _customRulesController.dispose();
+    _primingController.dispose();
     super.dispose();
   }
 
@@ -45,6 +48,7 @@ class _HabitDetailScreenState extends ConsumerState<HabitDetailScreen> {
     _rewardController.text = habit.reward;
     _timerDurationMinutes = habit.timerDurationMinutes;
     _customRules = List.from(habit.customRules);
+    _environmentPriming = List.from(habit.environmentPriming);
     _anchorHabitId = habit.anchorHabitId;
 
     // Listeners to detect changes
@@ -71,6 +75,7 @@ class _HabitDetailScreenState extends ConsumerState<HabitDetailScreen> {
       reward: _rewardController.text.trim(),
       timerDurationMinutes: _timerDurationMinutes,
       customRules: _customRules,
+      environmentPriming: _environmentPriming,
       anchorHabitId: _anchorHabitId,
     );
 
@@ -105,6 +110,24 @@ class _HabitDetailScreenState extends ConsumerState<HabitDetailScreen> {
   void _removeCustomRule(int index) {
     setState(() {
       _customRules.removeAt(index);
+      _hasChanges = true;
+    });
+  }
+
+  void _addPrimingRule() {
+    final rule = _primingController.text.trim();
+    if (rule.isNotEmpty) {
+      setState(() {
+        _environmentPriming.add(rule);
+        _primingController.clear();
+        _hasChanges = true;
+      });
+    }
+  }
+
+  void _removePrimingRule(int index) {
+    setState(() {
+      _environmentPriming.removeAt(index);
       _hasChanges = true;
     });
   }
@@ -529,6 +552,128 @@ class _HabitDetailScreenState extends ConsumerState<HabitDetailScreen> {
                                         color: AppTheme.textSecondaryDark,
                                       ),
                                       onPressed: () => _removeCustomRule(index),
+                                    ),
+                                  ],
+                                ),
+                              );
+                            },
+                          ),
+                      ],
+                    ),
+                  ),
+
+                  const Gap(24),
+
+                  // Environment Priming Section
+                  GlassmorphismCard(
+                    padding: const EdgeInsets.all(16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        SectionHeader(title: 'Environment Priming'),
+                        const Gap(16),
+                        Text(
+                          'Prepare your environment the night before to reduce friction.',
+                          style: TextStyle(
+                            color: AppTheme.textSecondaryDark,
+                            fontSize: 13,
+                          ),
+                        ),
+                        const Gap(16),
+                        TextFormField(
+                          controller: _primingController,
+                          style: TextStyle(color: AppTheme.textMainDark),
+                          onFieldSubmitted: (_) => _addPrimingRule(),
+                          decoration: InputDecoration(
+                            suffixIcon: IconButton(
+                              icon: const Icon(Icons.add),
+                              color: EmergeColors.teal,
+                              onPressed: _addPrimingRule,
+                            ),
+                            hintText: 'e.g., Lay out workout clothes...',
+                            hintStyle: TextStyle(
+                              color: AppTheme.textSecondaryDark.withValues(
+                                alpha: 0.5,
+                              ),
+                            ),
+                            border: InputBorder.none,
+                            enabledBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: BorderSide(
+                                color: AppTheme.textSecondaryDark.withValues(
+                                  alpha: 0.3,
+                                ),
+                              ),
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: BorderSide(color: EmergeColors.teal),
+                            ),
+                            filled: true,
+                            fillColor: Colors.black.withValues(alpha: 0.2),
+                          ),
+                        ),
+                        const Gap(16),
+                        if (_environmentPriming.isEmpty)
+                          Center(
+                            child: Padding(
+                              padding: const EdgeInsets.all(16.0),
+                              child: Text(
+                                'No environment priming tasks.\nAdd setup steps to make starting easier.',
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+                                  color: AppTheme.textSecondaryDark.withValues(
+                                    alpha: 0.5,
+                                  ),
+                                  fontStyle: FontStyle.italic,
+                                ),
+                              ),
+                            ),
+                          )
+                        else
+                          ListView.builder(
+                            shrinkWrap: true,
+                            physics: const NeverScrollableScrollPhysics(),
+                            itemCount: _environmentPriming.length,
+                            itemBuilder: (context, index) {
+                              return Container(
+                                margin: const EdgeInsets.only(bottom: 8),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 12,
+                                  vertical: 8,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: Colors.white.withValues(alpha: 0.05),
+                                  borderRadius: BorderRadius.circular(8),
+                                  border: Border.all(
+                                    color: Colors.white.withValues(alpha: 0.1),
+                                  ),
+                                ),
+                                child: Row(
+                                  children: [
+                                    Icon(
+                                      Icons.check_box_outline_blank,
+                                      size: 16,
+                                      color: EmergeColors.teal,
+                                    ),
+                                    const Gap(12),
+                                    Expanded(
+                                      child: Text(
+                                        _environmentPriming[index],
+                                        style: TextStyle(
+                                          color: AppTheme.textMainDark,
+                                          fontSize: 14,
+                                        ),
+                                      ),
+                                    ),
+                                    IconButton(
+                                      icon: Icon(
+                                        Icons.close,
+                                        size: 16,
+                                        color: AppTheme.textSecondaryDark,
+                                      ),
+                                      onPressed: () =>
+                                          _removePrimingRule(index),
                                     ),
                                   ],
                                 ),

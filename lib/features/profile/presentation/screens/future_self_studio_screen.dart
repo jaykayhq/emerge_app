@@ -3,6 +3,9 @@ import 'package:emerge_app/core/theme/app_theme.dart';
 import 'package:emerge_app/core/theme/archetype_theme.dart';
 import 'package:emerge_app/core/presentation/widgets/emerge_branding.dart';
 import 'package:emerge_app/features/auth/domain/entities/user_extension.dart';
+import 'package:emerge_app/features/avatar/domain/models/avatar_config.dart';
+import 'package:emerge_app/features/avatar/presentation/widgets/avatar_renderer.dart';
+import 'package:emerge_app/features/gamification/presentation/providers/gamification_providers.dart';
 import 'package:emerge_app/features/gamification/presentation/providers/user_stats_providers.dart';
 import 'package:emerge_app/features/habits/presentation/providers/habit_providers.dart';
 import 'package:emerge_app/features/profile/domain/models/silhouette_evolution.dart';
@@ -13,10 +16,12 @@ import 'package:emerge_app/features/profile/presentation/widgets/trajectory_time
 import 'package:emerge_app/features/profile/presentation/widgets/synergy_status_card.dart';
 import 'package:emerge_app/features/profile/presentation/widgets/synergy_card.dart';
 import 'package:emerge_app/features/profile/presentation/widgets/emerge_splash_reveal.dart';
-import 'package:emerge_app/features/settings/presentation/widgets/settings_sheet.dart';
+import 'package:emerge_app/features/tutorial/presentation/providers/tutorial_provider.dart';
+import 'package:emerge_app/features/tutorial/presentation/widgets/tutorial_overlay.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 /// Provider to track recovery animation state
 final _recoveryAnimatingProvider = StateProvider<bool>((ref) => false);
@@ -24,6 +29,10 @@ final _recoveryAnimatingProvider = StateProvider<bool>((ref) => false);
 /// Provider to track if user has "emerged" (pressed EMERGE button at level 5+)
 /// This transforms the Future Self Studio into its evolved state
 final _hasEmergedProvider = StateProvider<bool>((ref) => false);
+
+/// Provider to enable the new 2D isometric avatar renderer
+/// Set to true to use the new AvatarRenderer instead of EvolvingSilhouetteWidget
+final _useNewAvatarRendererProvider = StateProvider<bool>((ref) => false);
 
 /// The "Future Self Studio" - the new profile screen
 /// Features: Animated background, archetype avatar with glowing attribute auras,
@@ -39,6 +48,80 @@ class FutureSelfStudioScreen extends ConsumerStatefulWidget {
 class _FutureSelfStudioScreenState
     extends ConsumerState<FutureSelfStudioScreen> {
   int? _previousStreak;
+  final GlobalKey _identityKey = GlobalKey();
+  final GlobalKey _avatarKey = GlobalKey();
+  final GlobalKey _xpKey = GlobalKey();
+  final GlobalKey _timelineKey = GlobalKey();
+  final GlobalKey _synergyKey = GlobalKey();
+
+  @override
+  void initState() {
+    super.initState();
+    _checkTutorial();
+  }
+
+  void _checkTutorial() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final tutorialState = ref.read(tutorialProvider);
+      if (!tutorialState.isCompleted(TutorialStep.profile)) {
+        _showTutorial();
+      }
+    });
+  }
+
+  void _showTutorial() {
+    late OverlayEntry entry;
+    entry = OverlayEntry(
+      builder: (context) => TutorialOverlay(
+        steps: [
+          const TutorialStepInfo(
+            title: 'Your Future Self',
+            description:
+                'This is the projection of who you are becoming. Every habit you complete shapes this form.',
+          ),
+          TutorialStepInfo(
+            title: 'Archetype Alignment',
+            description:
+                'Your chosen archetype defines your unique growth path and visual evolution.',
+            targetKey: _identityKey,
+          ),
+          TutorialStepInfo(
+            title: 'The Avatar',
+            description:
+                'As you level up, your avatar evolves through five distinct phases of emergence.',
+            targetKey: _avatarKey,
+          ),
+          TutorialStepInfo(
+            title: 'Evolution XP',
+            description:
+                'Track your overall level progress. Each level up unlocks new world nodes and avatar features.',
+            targetKey: _xpKey,
+          ),
+          TutorialStepInfo(
+            title: 'Trajectory',
+            description:
+                'See your projected growth over time based on your current consistency.',
+            targetKey: _timelineKey,
+            alignment: Alignment.topCenter,
+          ),
+          TutorialStepInfo(
+            title: 'Identity Synergy',
+            description:
+                'Discover how your different habits combine to create unique identity strengths.',
+            targetKey: _synergyKey,
+            alignment: Alignment.topCenter,
+          ),
+        ],
+        onCompleted: () {
+          ref
+              .read(tutorialProvider.notifier)
+              .completeStep(TutorialStep.profile);
+          entry.remove();
+        },
+      ),
+    );
+    Overlay.of(context).insert(entry);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -47,7 +130,7 @@ class _FutureSelfStudioScreenState
     final hasEmerged = ref.watch(_hasEmergedProvider);
 
     return Scaffold(
-      backgroundColor: const Color(0xFF0D0D1A),
+      backgroundColor: const Color(0xFF0A0A1A), // Cosmic void dark
       body: statsAsync.when(
         data: (profile) {
           final stats = profile.avatarStats;
@@ -110,7 +193,7 @@ class _FutureSelfStudioScreenState
                           Icons.settings,
                           color: AppTheme.textMainDark,
                         ),
-                        onPressed: () => SettingsSheet.show(context),
+                        onPressed: () => context.push('settings'),
                       ),
                     ],
                     title: Column(
@@ -150,6 +233,7 @@ class _FutureSelfStudioScreenState
 
                   // Identity header (archetype + level)
                   SliverToBoxAdapter(
+                    key: _identityKey,
                     child: Container(
                       padding: const EdgeInsets.symmetric(
                         horizontal: 16,
@@ -209,39 +293,56 @@ class _FutureSelfStudioScreenState
                   const SliverToBoxAdapter(child: SizedBox(height: 16)),
 
                   // NEW: Evolving Silhouette with 5-tier system + decay/recovery
+                  // OR: New 2D Isometric Avatar Renderer (toggle via _useNewAvatarRendererProvider)
                   SliverToBoxAdapter(
+                    key: _avatarKey,
                     child: Center(
-                      child: DecayRecoveryOverlay(
-                        entropyLevel: stats.streak > 0 ? 0.0 : 0.5,
-                        daysMissed: stats.streak > 0 ? 0 : 1,
-                        primaryColor: accentColor,
-                        isRecovering: isRecovering,
-                        onRecoveryComplete: () {
-                          // Reset recovery state after animation
-                          ref.read(_recoveryAnimatingProvider.notifier).state =
-                              false;
-                        },
-                        child: EvolvingSilhouetteWidget(
-                          evolutionState: SilhouetteEvolutionState.fromUserStats(
-                            level: stats.level,
-                            currentStreak: stats.streak,
-                            // Days missed = 0 if active streak, else estimate based on streak reset
-                            daysMissed: stats.streak > 0 ? 0 : 1,
-                            habitVotes: _calculateHabitVotes(stats),
-                          ),
-                          archetype: profile.archetype,
-                          attributes: attributes,
-                          size: 280,
-                          onEvolutionTap: () {
-                            HapticFeedback.lightImpact();
-                            _showEvolutionInfo(
+                      child: ref.watch(_useNewAvatarRendererProvider)
+                          ? _buildAvatarRenderer(
                               context,
+                              profile.archetype,
                               stats.level,
+                              stats.streak,
                               accentColor,
-                            );
-                          },
-                        ),
-                      ),
+                              ref,
+                              isRecovering,
+                            )
+                          : DecayRecoveryOverlay(
+                              entropyLevel: stats.streak > 0 ? 0.0 : 0.5,
+                              daysMissed: stats.streak > 0 ? 0 : 1,
+                              primaryColor: accentColor,
+                              isRecovering: isRecovering,
+                              onRecoveryComplete: () {
+                                // Reset recovery state after animation
+                                ref
+                                        .read(
+                                          _recoveryAnimatingProvider.notifier,
+                                        )
+                                        .state =
+                                    false;
+                              },
+                              child: EvolvingSilhouetteWidget(
+                                evolutionState:
+                                    SilhouetteEvolutionState.fromUserStats(
+                                      level: stats.level,
+                                      currentStreak: stats.streak,
+                                      // Days missed = 0 if active streak, else estimate based on streak reset
+                                      daysMissed: stats.streak > 0 ? 0 : 1,
+                                      habitVotes: _calculateHabitVotes(stats),
+                                    ),
+                                archetype: profile.archetype,
+                                attributes: attributes,
+                                size: 280,
+                                onEvolutionTap: () {
+                                  HapticFeedback.lightImpact();
+                                  _showEvolutionInfo(
+                                    context,
+                                    stats.level,
+                                    accentColor,
+                                  );
+                                },
+                              ),
+                            ),
                     ),
                   ),
 
@@ -249,6 +350,7 @@ class _FutureSelfStudioScreenState
 
                   // XP Progress bar
                   SliverToBoxAdapter(
+                    key: _xpKey,
                     child: Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 24),
                       child: Column(
@@ -298,6 +400,7 @@ class _FutureSelfStudioScreenState
 
                   // NEW: Trajectory Timeline (Stitch design)
                   SliverToBoxAdapter(
+                    key: _timelineKey,
                     child: TrajectoryTimeline(
                       archetype: profile.archetype,
                       currentLevel: stats.level,
@@ -320,6 +423,7 @@ class _FutureSelfStudioScreenState
 
                   // Synergy Card with glassmorphism
                   SliverToBoxAdapter(
+                    key: _synergyKey,
                     child: SynergyCard(
                       primaryAttribute: primaryAttribute,
                       secondaryAttribute: secondaryAttribute,
@@ -438,8 +542,8 @@ class _FutureSelfStudioScreenState
         return 'Creator';
       case UserArchetype.stoic:
         return 'Stoic';
-      case UserArchetype.mystic:
-        return 'Mystic';
+      case UserArchetype.zealot:
+        return 'Zealot';
       case UserArchetype.none:
         return 'Explorer';
     }
@@ -455,7 +559,7 @@ class _FutureSelfStudioScreenState
         return 'Living Forest';
       case UserArchetype.stoic:
         return 'Ancient Temple';
-      case UserArchetype.mystic:
+      case UserArchetype.zealot:
         return 'Ethereal Realm';
       case UserArchetype.none:
         return 'Living Forest';
@@ -531,52 +635,23 @@ class _FutureSelfStudioScreenState
 
   /// Build Synergy Status Card showing which habits boost which attributes
   Widget _buildSynergyStatusCard(WidgetRef ref, Color accentColor) {
+    final userAsync = ref.watch(userProfileProvider);
     final habitsAsync = ref.watch(habitsProvider);
 
-    return habitsAsync.when(
-      data: (habits) {
-        // Create attribute boosts from habits
-        final boosts = <AttributeBoost>[];
-
-        // Group habits by attribute and take top ones
-        final attributeHabits = <String, List<String>>{};
-        for (final habit in habits.take(6)) {
-          final attrName = _getAttributeDisplayName(habit.attribute.name);
-          attributeHabits.putIfAbsent(attrName, () => []);
-          attributeHabits[attrName]!.add(habit.title);
-        }
-
-        // Create boost entries for top attributes
-        for (final entry in attributeHabits.entries.take(3)) {
-          boosts.add(
-            AttributeBoost(
-              attribute: entry.key,
-              boostedBy: entry.value.first,
-              icon: _getAttributeIcon(entry.key),
-              boostPercentage: 15.0 + (entry.value.length * 5.0),
-            ),
-          );
-        }
-
-        // If no habits, show default boosts
-        if (boosts.isEmpty) {
-          boosts.addAll([
-            const AttributeBoost(
-              attribute: 'Focus',
-              boostedBy: 'Daily Habits',
-              icon: Icons.visibility,
-              boostPercentage: 10,
-            ),
-            const AttributeBoost(
-              attribute: 'Vitality',
-              boostedBy: 'Consistency',
-              icon: Icons.favorite,
-              boostPercentage: 8,
-            ),
-          ]);
-        }
-
-        return SynergyStatusCard(boosts: boosts, accentColor: accentColor);
+    return userAsync.when(
+      data: (profile) {
+        if (profile == null) return const SizedBox.shrink();
+        return habitsAsync.when(
+          data: (habits) {
+            return SynergyStatusCard(
+              profile: profile,
+              accentColor: accentColor,
+              habits: habits,
+            );
+          },
+          loading: () => const SizedBox.shrink(),
+          error: (_, __) => const SizedBox.shrink(),
+        );
       },
       loading: () => const SizedBox.shrink(),
       error: (_, __) => const SizedBox.shrink(),
@@ -600,6 +675,43 @@ class _FutureSelfStudioScreenState
       default:
         return attribute;
     }
+  }
+
+  /// Build the new 2D isometric avatar renderer
+  Widget _buildAvatarRenderer(
+    BuildContext context,
+    UserArchetype archetype,
+    int level,
+    int streak,
+    Color accentColor,
+    WidgetRef ref,
+    bool isRecovering,
+  ) {
+    final avatarConfig = AvatarConfig.fromUserStats(
+      archetype: archetype,
+      level: level,
+    );
+
+    return DecayRecoveryOverlay(
+      entropyLevel: streak > 0 ? 0.0 : 0.5,
+      daysMissed: streak > 0 ? 0 : 1,
+      primaryColor: accentColor,
+      isRecovering: isRecovering,
+      onRecoveryComplete: () {
+        ref.read(_recoveryAnimatingProvider.notifier).state = false;
+      },
+      child: GestureDetector(
+        onTap: () {
+          HapticFeedback.lightImpact();
+          _showEvolutionInfo(context, level, accentColor);
+        },
+        child: AvatarRenderer(
+          config: avatarConfig,
+          size: 280,
+          showPhaseLabel: true,
+        ),
+      ),
+    );
   }
 }
 

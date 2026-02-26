@@ -75,7 +75,7 @@ class EvolvingSilhouette extends StatelessWidget {
         return EmergeColors.yellow;
       case UserArchetype.stoic:
         return EmergeColors.teal;
-      case UserArchetype.mystic:
+      case UserArchetype.zealot:
         return Colors.purpleAccent;
       case UserArchetype.none:
         return EmergeColors.teal;
