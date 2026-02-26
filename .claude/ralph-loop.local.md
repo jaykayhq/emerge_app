@@ -1,0 +1,9 @@
+---
+active: true
+iteration: 1
+max_iterations: 0
+completion_promise: null
+started_at: "2026-02-26T13:04:59Z"
+---
+
+Modify and enhance the level progression and habit system in the application with the following specific changes: First, ensure the level-up screen displays after every single level completion. Second, standardize each archetype journey to show exactly five levels after each stage, correcting any instances where certain archetypes currently display more than five levels. Third, resolve all inconsistencies between archetype colors as they appear in both the world map and profile sections to ensure color uniformity throughout. Fourth, implement individual XP tracking for each attribute by creating a dedicated XP log that displays within each node, showing the current XP value for that specific attribute, and ensure the XP allocated to each node represents only the XP designated for that particular misson attribute and rather than the total level XP. Fifth, enforce mission completion as a mandatory requirement before allowing access to any new node. Sixth, the synergy status cars should have a see more button that displays the rest of the attributes and their xp and the card should be able to dispaly to attributes instead of one. Seventh, replace the time-based anchors throughout the system by substituting morning with after you wake up, afternoon with during lunch, and applying similar specific time references for other periods, thereby eliminating the need for abstract time anchors. Eighth, configure the anytime habits display on the timeline to show only one of the four defined time periods, with habits displayed only for the specific time period in which they are meant to be completed. Finally, update the archetype journey link on the world map so that the zealot archetype now connects to the new zealot content instead of the previous mystic archetype. use ultrathink and come up with a plan to make everything production ready

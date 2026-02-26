@@ -1,21 +1,38 @@
 import 'package:emerge_app/core/theme/app_theme.dart';
 import 'package:emerge_app/core/presentation/widgets/emerge_branding.dart';
+import 'package:emerge_app/core/presentation/widgets/glassmorphism_card.dart';
+import 'package:emerge_app/features/timeline/presentation/providers/reflection_state_provider.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 /// Card for logging daily reflections with a slider for mood/progress
-class ReflectionCard extends StatefulWidget {
+class ReflectionCard extends ConsumerStatefulWidget {
   final Function(double value, String? note)? onLogReflection;
 
   const ReflectionCard({super.key, this.onLogReflection});
 
   @override
-  State<ReflectionCard> createState() => _ReflectionCardState();
+  ConsumerState<ReflectionCard> createState() => _ReflectionCardState();
 }
 
-class _ReflectionCardState extends State<ReflectionCard> {
+class _ReflectionCardState extends ConsumerState<ReflectionCard> {
   double _progressValue = 0.5;
   bool _showTextField = false;
+  bool _isLogged = false;
   final _noteController = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    _checkIfLoggedToday();
+  }
+
+  void _checkIfLoggedToday() {
+    final loggedState = ref.read(todayReflectionStateProvider);
+    setState(() {
+      _isLogged = loggedState;
+    });
+  }
 
   @override
   void dispose() {
@@ -25,27 +42,38 @@ class _ReflectionCardState extends State<ReflectionCard> {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: AppTheme.surfaceDark,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: EmergeColors.hexLine),
-      ),
-      child: Column(
+    return GlassmorphismCard(
+      glowColor: EmergeColors.yellow,
+      child: _isLogged ? _buildLoggedState() : _buildUnloggedState(),
+    );
+  }
+
+  Widget _buildUnloggedState() {
+    return Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
               Icon(Icons.edit_note, color: EmergeColors.yellow, size: 20),
               const SizedBox(width: 8),
-              Text(
-                'Reflection',
-                style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                  color: AppTheme.textMainDark,
-                  fontWeight: FontWeight.bold,
-                ),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Reflection',
+                    style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  Text(
+                    'Close the loop on your day',
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: EmergeColors.tealMuted.withValues(alpha: 0.7),
+                      fontSize: 11,
+                    ),
+                  ),
+                ],
               ),
             ],
           ),
@@ -54,7 +82,7 @@ class _ReflectionCardState extends State<ReflectionCard> {
             'How do you feel about your progress?',
             style: Theme.of(
               context,
-            ).textTheme.bodyMedium?.copyWith(color: AppTheme.textMainDark),
+            ).textTheme.bodyMedium?.copyWith(color: Colors.white),
           ),
           const SizedBox(height: 12),
           // Slider with emoji indicators
@@ -135,6 +163,8 @@ class _ReflectionCardState extends State<ReflectionCard> {
                     _progressValue,
                     _noteController.text.isEmpty ? null : _noteController.text,
                   );
+                  setState(() => _isLogged = true);
+                  ref.read(todayReflectionStateProvider.notifier).setLogged(true);
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
                       content: Text('Reflection logged! 🎉'),
@@ -162,8 +192,7 @@ class _ReflectionCardState extends State<ReflectionCard> {
             ],
           ),
         ],
-      ),
-    );
+      );
   }
 
   Color _getSliderColor() {
@@ -174,5 +203,61 @@ class _ReflectionCardState extends State<ReflectionCard> {
     } else {
       return EmergeColors.teal;
     }
+  }
+
+  Widget _buildLoggedState() {
+    return Padding(
+      padding: const EdgeInsets.all(16.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(
+            Icons.check_circle_outline,
+            color: EmergeColors.teal,
+            size: 48,
+          ),
+          const SizedBox(height: 12),
+          Text(
+            'Reflection Logged!',
+            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+              color: Colors.white,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: 16),
+          Text(
+            _getMoodEmoji(_progressValue),
+            style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+              color: Colors.white70,
+            ),
+          ),
+          const SizedBox(height: 20),
+          TextButton.icon(
+            onPressed: () {
+              setState(() => _isLogged = false);
+              ref.read(todayReflectionStateProvider.notifier).setLogged(false);
+            },
+            icon: Icon(
+              Icons.edit,
+              color: EmergeColors.teal,
+              size: 18,
+            ),
+            label: Text(
+              'Edit Reflection',
+              style: TextStyle(color: EmergeColors.teal),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  String _getMoodEmoji(double value) {
+    if (value >= 0.8) return '🔥 Feeling Great';
+    if (value >= 0.6) return '😊 Feeling Good';
+    if (value >= 0.4) return '😐 Feeling Okay';
+    if (value >= 0.2) return '😔 Feeling Low';
+    return '😢 Struggling';
   }
 }

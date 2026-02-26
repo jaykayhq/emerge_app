@@ -48,7 +48,18 @@ class _FirstHabitScreenState extends ConsumerState<FirstHabitScreen> {
       anchors: [_selectedAnchor!],
     );
 
-    // Navigate to world reveal
+    // PERSIST PROGRESS: Complete the third milestone (First Habit)
+    ref.read(onboardingControllerProvider.notifier).completeMilestone(2);
+
+    // Navigate to world reveal (which then goes to dashboard)
+    context.push('/onboarding/world-reveal');
+  }
+
+  void _skipForNow() {
+    // PERSIST PROGRESS: Complete the third milestone (First Habit) even if skipped
+    ref.read(onboardingControllerProvider.notifier).completeMilestone(2);
+
+    // Skip creating a habit, go to world reveal, then to dashboard
     context.push('/onboarding/world-reveal');
   }
 
@@ -65,274 +76,295 @@ class _FirstHabitScreenState extends ConsumerState<FirstHabitScreen> {
     final theme = ArchetypeTheme.forArchetype(archetype);
 
     return Scaffold(
-      backgroundColor: const Color(0xFF102217),
-      body: SafeArea(
-        child: Column(
-          children: [
-            // Header Progress
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-              child: Row(
-                children: [
-                  IconButton(
-                    icon: const Icon(Icons.arrow_back, color: Colors.white70),
-                    onPressed: () => context.pop(),
-                  ),
-                  const Spacer(),
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 6,
-                    ),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.05),
-                      borderRadius: BorderRadius.circular(20),
-                      border: Border.all(color: Colors.white10),
-                    ),
-                    child: Text(
-                      'STEP 3 OF 3',
-                      style: GoogleFonts.splineSans(
-                        color: Colors.white54,
-                        fontSize: 10,
-                        letterSpacing: 1.5,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ),
-                  const Spacer(),
-                  const SizedBox(width: 48), // Balance
-                ],
-              ),
-            ),
-
-            Expanded(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.symmetric(horizontal: 24),
-                physics: const BouncingScrollPhysics(),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              Color(0xFF0A0A1A), // cosmicVoidDark
+              Color(0xFF1A0A2A), // cosmicVoidCenter
+              Color(0xFF2A1A3A), // cosmicMidPurple
+            ],
+          ),
+        ),
+        child: SafeArea(
+          child: Column(
+            children: [
+              // Header Progress
+              Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 20,
+                  vertical: 16,
+                ),
+                child: Row(
                   children: [
-                    const Gap(12),
-                    Text(
-                      'Your First Identity Vote',
-                      style: GoogleFonts.splineSans(
-                        color: Colors.white,
-                        fontSize: 28,
-                        fontWeight: FontWeight.bold,
-                        letterSpacing: -0.5,
+                    IconButton(
+                      icon: const Icon(Icons.arrow_back, color: Colors.white70),
+                      onPressed: () => context.pop(),
+                    ),
+                    const Spacer(),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 6,
                       ),
-                    ).animate().fadeIn().moveY(begin: 10, end: 0),
-
-                    const Gap(8),
-                    Text(
-                      'Prove to yourself you are becoming ${theme.archetypeName}.',
-                      style: GoogleFonts.splineSans(
-                        color: Colors.white54,
-                        fontSize: 16,
-                      ),
-                    ).animate().fadeIn(delay: 100.ms),
-
-                    const Gap(32),
-
-                    // HABIT LIST
-                    ...theme.suggestedHabits.map((habit) {
-                      final isSelected =
-                          _selectedHabit == habit && !_isCustomHabit;
-                      return _buildHabitCard(
-                        title: habit.title,
-                        subtitle: habit.description,
-                        icon: habit.icon,
-                        isSelected: isSelected,
-                        onTap: () {
-                          setState(() {
-                            _selectedHabit = habit;
-                            // Auto-select anchor if not set, or keep existing?
-                            // Let's keep anchor separate to force a conscious choice
-                            _isCustomHabit = false;
-                            _customHabitTitleController.clear();
-                          });
-                          HapticFeedback.lightImpact();
-                        },
-                      );
-                    }),
-
-                    // CUSTOM HABIT CARD
-                    AnimatedContainer(
-                      duration: 300.ms,
-                      margin: const EdgeInsets.only(bottom: 12),
                       decoration: BoxDecoration(
-                        color: _isCustomHabit
-                            ? const Color(0xFF1A2C24)
-                            : Colors.white.withValues(alpha: 0.05),
+                        color: Colors.white.withValues(alpha: 0.05),
                         borderRadius: BorderRadius.circular(20),
-                        border: Border.all(
-                          color: _isCustomHabit
-                              ? const Color(0xFF2BEE79)
-                              : Colors.white10,
+                        border: Border.all(color: Colors.white10),
+                      ),
+                      child: Text(
+                        'STEP 4 OF 4',
+                        style: GoogleFonts.splineSans(
+                          color: Colors.white54,
+                          fontSize: 10,
+                          letterSpacing: 1.5,
+                          fontWeight: FontWeight.w600,
                         ),
                       ),
-                      padding: const EdgeInsets.all(20),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            children: [
-                              Container(
-                                padding: const EdgeInsets.all(10),
-                                decoration: BoxDecoration(
-                                  color: Colors.white.withValues(alpha: 0.1),
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                                child: const Icon(
-                                  Icons.edit,
-                                  color: Color(0xFF2BEE79),
-                                  size: 20,
-                                ),
-                              ),
-                              const Gap(16),
-                              Expanded(
-                                child: TextField(
-                                  controller: _customHabitTitleController,
-                                  style: GoogleFonts.splineSans(
-                                    color: Colors.white,
-                                    fontSize: 16,
-                                    fontWeight: _isCustomHabit
-                                        ? FontWeight.w600
-                                        : FontWeight.w400,
-                                  ),
-                                  decoration: InputDecoration(
-                                    hintText: 'Create my own habit...',
-                                    hintStyle: GoogleFonts.splineSans(
-                                      color: Colors.white30,
-                                      fontWeight: FontWeight.w400,
-                                    ),
-                                    border: InputBorder.none,
-                                    isDense: true,
-                                    contentPadding: EdgeInsets.zero,
-                                  ),
-                                  onTap: () {
-                                    setState(() {
-                                      _isCustomHabit = true;
-                                      _selectedHabit = null;
-                                    });
-                                  },
-                                  onChanged: (val) {
-                                    setState(() {});
-                                  },
-                                ),
-                              ),
-                              if (_isCustomHabit)
-                                const Icon(
-                                  Icons.check_circle,
-                                  color: Color(0xFF2BEE79),
-                                  size: 20,
-                                ),
-                            ],
-                          ),
-                          if (_isCustomHabit) ...[
-                            const Gap(8),
-                            Padding(
-                              padding: const EdgeInsets.only(left: 56),
-                              child: Text(
-                                'What simple action will you take?',
-                                style: GoogleFonts.splineSans(
-                                  color: Colors.white38,
-                                  fontSize: 13,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ],
+                    ),
+                    const Spacer(),
+                    TextButton(
+                      onPressed: _skipForNow,
+                      style: TextButton.styleFrom(
+                        foregroundColor: Colors.white54,
                       ),
-                    ).animate().fadeIn(delay: 400.ms),
-
-                    const Gap(32),
-
-                    // WHEN SECTION
-                    if (_selectedHabit != null ||
-                        (_isCustomHabit &&
-                            _customHabitTitleController.text.isNotEmpty))
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'When will you do this?',
-                            style: GoogleFonts.splineSans(
-                              color: Colors.white,
-                              fontSize: 18,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ).animate().fadeIn(),
-                          const Gap(16),
-                          Wrap(
-                            spacing: 12,
-                            runSpacing: 12,
-                            children: [
-                              _buildAnchorChip('After waking up'),
-                              _buildAnchorChip('Before bed'),
-                              _buildAnchorChip('After lunch'),
-                              _buildAnchorChip('After work'),
-                            ],
-                          ).animate().fadeIn(delay: 100.ms),
-                        ],
+                      child: Text(
+                        'Skip',
+                        style: GoogleFonts.splineSans(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
+                        ),
                       ),
-
-                    const Gap(100), // Bottom padding
+                    ),
                   ],
                 ),
               ),
-            ),
 
-            // Sticky Bottom Button
-            Container(
-              padding: const EdgeInsets.all(24),
-              decoration: BoxDecoration(
-                color: const Color(0xFF102217),
-                border: Border(
-                  top: BorderSide(color: Colors.white.withValues(alpha: 0.05)),
+              Expanded(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.symmetric(horizontal: 24),
+                  physics: const BouncingScrollPhysics(),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Gap(12),
+                      Text(
+                        'Your First Identity Vote',
+                        style: GoogleFonts.splineSans(
+                          color: Colors.white,
+                          fontSize: 28,
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: -0.5,
+                        ),
+                      ).animate().fadeIn().moveY(begin: 10, end: 0),
+
+                      const Gap(8),
+                      Text(
+                        'Prove to yourself you are becoming ${theme.archetypeName}.',
+                        style: GoogleFonts.splineSans(
+                          color: Colors.white54,
+                          fontSize: 16,
+                        ),
+                      ).animate().fadeIn(delay: 100.ms),
+
+                      const Gap(32),
+
+                      // HABIT LIST
+                      ...theme.suggestedHabits.map((habit) {
+                        final isSelected =
+                            _selectedHabit == habit && !_isCustomHabit;
+                        return _buildHabitCard(
+                          title: habit.title,
+                          subtitle: habit.description,
+                          icon: habit.icon,
+                          isSelected: isSelected,
+                          onTap: () {
+                            setState(() {
+                              _selectedHabit = habit;
+                              // Auto-select anchor if not set, or keep existing?
+                              // Let's keep anchor separate to force a conscious choice
+                              _isCustomHabit = false;
+                              _customHabitTitleController.clear();
+                            });
+                            HapticFeedback.lightImpact();
+                          },
+                        );
+                      }),
+
+                      // CUSTOM HABIT CARD
+                      AnimatedContainer(
+                        duration: 300.ms,
+                        margin: const EdgeInsets.only(bottom: 12),
+                        decoration: BoxDecoration(
+                          color: _isCustomHabit
+                              ? const Color(0xFF1A2C24)
+                              : Colors.white.withValues(alpha: 0.05),
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(
+                            color: _isCustomHabit
+                                ? const Color(0xFF2BEE79)
+                                : Colors.white10,
+                          ),
+                        ),
+                        padding: const EdgeInsets.all(20),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                Container(
+                                  padding: const EdgeInsets.all(10),
+                                  decoration: BoxDecoration(
+                                    color: Colors.white.withValues(alpha: 0.1),
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  child: const Icon(
+                                    Icons.edit,
+                                    color: Color(0xFF2BEE79),
+                                    size: 20,
+                                  ),
+                                ),
+                                const Gap(16),
+                                Expanded(
+                                  child: TextField(
+                                    controller: _customHabitTitleController,
+                                    style: GoogleFonts.splineSans(
+                                      color: Colors.white,
+                                      fontSize: 16,
+                                      fontWeight: _isCustomHabit
+                                          ? FontWeight.w600
+                                          : FontWeight.w400,
+                                    ),
+                                    decoration: InputDecoration(
+                                      hintText: 'Create my own habit...',
+                                      hintStyle: GoogleFonts.splineSans(
+                                        color: Colors.white30,
+                                        fontWeight: FontWeight.w400,
+                                      ),
+                                      border: InputBorder.none,
+                                      isDense: true,
+                                      contentPadding: EdgeInsets.zero,
+                                    ),
+                                    onTap: () {
+                                      setState(() {
+                                        _isCustomHabit = true;
+                                        _selectedHabit = null;
+                                      });
+                                    },
+                                    onChanged: (val) {
+                                      setState(() {});
+                                    },
+                                  ),
+                                ),
+                                if (_isCustomHabit)
+                                  const Icon(
+                                    Icons.check_circle,
+                                    color: Color(0xFF2BEE79),
+                                    size: 20,
+                                  ),
+                              ],
+                            ),
+                            if (_isCustomHabit) ...[
+                              const Gap(8),
+                              Padding(
+                                padding: const EdgeInsets.only(left: 56),
+                                child: Text(
+                                  'What simple action will you take?',
+                                  style: GoogleFonts.splineSans(
+                                    color: Colors.white38,
+                                    fontSize: 13,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ],
+                        ),
+                      ).animate().fadeIn(delay: 400.ms),
+
+                      const Gap(32),
+
+                      // WHEN SECTION
+                      if (_selectedHabit != null ||
+                          (_isCustomHabit &&
+                              _customHabitTitleController.text.isNotEmpty))
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'When will you do this?',
+                              style: GoogleFonts.splineSans(
+                                color: Colors.white,
+                                fontSize: 18,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ).animate().fadeIn(),
+                            const Gap(16),
+                            Wrap(
+                              spacing: 12,
+                              runSpacing: 12,
+                              children: [
+                                _buildAnchorChip('After waking up'),
+                                _buildAnchorChip('Before bed'),
+                                _buildAnchorChip('After lunch'),
+                                _buildAnchorChip('After work'),
+                              ],
+                            ).animate().fadeIn(delay: 100.ms),
+                          ],
+                        ),
+
+                      const Gap(100), // Bottom padding
+                    ],
+                  ),
                 ),
-                boxShadow: const [
-                  BoxShadow(
-                    color: Colors.black45,
-                    blurRadius: 20,
-                    offset: Offset(0, -5),
-                  ),
-                ],
               ),
-              child: SizedBox(
-                width: double.infinity,
-                height: 56,
-                child: ElevatedButton(
-                  onPressed:
-                      ((_selectedHabit != null ||
-                              (_isCustomHabit &&
-                                  _customHabitTitleController
-                                      .text
-                                      .isNotEmpty)) &&
-                          _selectedAnchor != null)
-                      ? _completeFirstHabit
-                      : null,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF2BEE79),
-                    foregroundColor: const Color(0xFF05100B),
-                    disabledBackgroundColor: Colors.white10,
-                    elevation: 0,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16),
+
+              // Sticky Bottom Button
+              Container(
+                padding: const EdgeInsets.all(24),
+                decoration: const BoxDecoration(color: Colors.transparent),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // Create Habit Button
+                    SizedBox(
+                      width: double.infinity,
+                      height: 56,
+                      child: ElevatedButton(
+                        onPressed:
+                            ((_selectedHabit != null ||
+                                    (_isCustomHabit &&
+                                        _customHabitTitleController
+                                            .text
+                                            .isNotEmpty)) &&
+                                _selectedAnchor != null)
+                            ? _completeFirstHabit
+                            : null,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFF2BEE79),
+                          foregroundColor: const Color(0xFF05100B),
+                          disabledBackgroundColor: Colors.white10,
+                          elevation: 0,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                        ),
+                        child: Text(
+                          'CREATE MY FIRST HABIT',
+                          style: GoogleFonts.splineSans(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w800,
+                            letterSpacing: 0.5,
+                          ),
+                        ),
+                      ),
                     ),
-                  ),
-                  child: Text(
-                    'CREATE MY FIRST HABIT',
-                    style: GoogleFonts.splineSans(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w800,
-                      letterSpacing: 0.5,
-                    ),
-                  ),
+                  ],
                 ),
-              ),
-            ).animate().moveY(begin: 100, end: 0, duration: 400.ms),
-          ],
+              ).animate().moveY(begin: 100, end: 0, duration: 400.ms),
+            ],
+          ),
         ),
       ),
     );

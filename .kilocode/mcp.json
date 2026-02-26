@@ -1,1 +1,1 @@
-{"mcpServers":{}}
+{"mcpServers":{"stitch":{"command":"curl","args":["-X","POST","https://stitch.googleapis.com/mcp","-H","Accept: application/json","-H","X-Goog-Api-Key: AQ.Ab8RN6L3dW1ivAfP22nREptYK05IBR2yLMs9aiOlTnYTSMGU9g","-d","{}"],"disabled":true,"alwaysAllow":[]}}}

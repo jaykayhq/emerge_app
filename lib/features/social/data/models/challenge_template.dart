@@ -72,52 +72,64 @@ class ChallengeTemplate extends Equatable {
     final steps = <ChallengeStep>[];
 
     // Add start step
-    steps.add(ChallengeStep(
-      day: 1,
-      title: 'Start Your Journey',
-      description: 'Complete your first $habitType session',
-    ));
+    steps.add(
+      ChallengeStep(
+        day: 1,
+        title: 'Start Your Journey',
+        description: 'Complete your first $habitType session',
+      ),
+    );
 
     // Add milestone steps
     if (days >= 7) {
-      steps.add(ChallengeStep(
-        day: 7,
-        title: 'One Week Strong',
-        description: 'You\'ve built momentum! Keep going.',
-      ));
+      steps.add(
+        ChallengeStep(
+          day: 7,
+          title: 'One Week Strong',
+          description: 'You\'ve built momentum! Keep going.',
+        ),
+      );
     }
 
     if (days >= 14) {
-      steps.add(ChallengeStep(
-        day: 14,
-        title: 'Two Weeks Down',
-        description: 'Halfway there! You\'re crushing it.',
-      ));
+      steps.add(
+        ChallengeStep(
+          day: 14,
+          title: 'Two Weeks Down',
+          description: 'Halfway there! You\'re crushing it.',
+        ),
+      );
     }
 
     if (days >= 21) {
-      steps.add(ChallengeStep(
-        day: 21,
-        title: 'Three Week Streak',
-        description: 'Habit formation in progress!',
-      ));
+      steps.add(
+        ChallengeStep(
+          day: 21,
+          title: 'Three Week Streak',
+          description: 'Habit formation in progress!',
+        ),
+      );
     }
 
     if (days >= 30) {
-      steps.add(ChallengeStep(
-        day: 30,
-        title: '30-Day Champion',
-        description: 'You\'ve built a life-changing habit!',
-      ));
+      steps.add(
+        ChallengeStep(
+          day: 30,
+          title: '30-Day Champion',
+          description: 'You\'ve built a life-changing habit!',
+        ),
+      );
     }
 
     // Add final step
     if (!steps.any((s) => s.day == days)) {
-      steps.add(ChallengeStep(
-        day: days,
-        title: 'Challenge Complete',
-        description: 'Congratulations! You did it!',
-      ));
+      steps.add(
+        ChallengeStep(
+          day: days,
+          title: 'Challenge Complete',
+          description: 'Congratulations! You did it!',
+        ),
+      );
     }
 
     return steps;

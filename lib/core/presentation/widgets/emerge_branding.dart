@@ -1,38 +1,38 @@
-import 'dart:math' as math;
 import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 
-/// The Core Color Palette - Stitch Design System
+/// The Core Color Palette - Plain Dark Background
 class EmergeColors {
-  // ============ COSMIC PURPLE GRADIENT ============
-  static const Color background = Color(0xFF0F0F23); // Deep cosmic
-  static const Color backgroundLight = Color(0xFF1A0A2E); // Cosmic purple dark
-  static const Color surface = Color(0xFF1E1433); // Cosmic surface
-  static const Color hexLine = Color(0xFF1E2229);
+  // ============ PLAIN DARK BACKGROUND ============
+  static const Color background = Color(0xFF0A0A1A); // Dark void
+  static const Color backgroundLight = Color(0xFF1A0A2A); // Slightly lighter
+  static const Color surface = Color(0xFF222222); // Surface for cards
+  static const Color hexLine = Color(0xFF3A3A5A); // Border lines
 
-  // ============ NEON ACCENTS ============
-  static const Color teal = Color(0xFF00F0FF); // Bright neon teal
-  static const Color tealMuted = Color(0xFF00BFA5); // Muted teal
-  static const Color violet = Color(0xFF7C4DFF); // Neon violet
-  static const Color violetSoft = Color(0xFFbb9af7); // Tokyo Night Purple
-  static const Color coral = Color(0xFFf7768e); // Tokyo Night Red
-  static const Color yellow = Color(0xFFe0af68); // Tokyo Night Yellow
-  static const Color lime = Color(0xFF76FF03); // Lime green accent
+  // ============ STITCH ACCENTS ============
+  static const Color teal = Color(0xFF2BEE79); // Primary green (buttons/cards)
+  static const Color tealMuted = Color(0xFF92C9A8); // Muted green text
+  static const Color violet = Color(0xFF1DB954); // Secondary green
+  static const Color violetSoft = Color(0xFF4ADE80); // Soft green
+  static const Color coral = Color(0xFFf7768e); // Error / warning red
+  static const Color yellow = Color(0xFFe0af68); // Accent yellow
+  static const Color lime = Color(0xFF2BEE79); // Lime = primary green
 
   // ============ GLASSMORPHISM ============
   static const Color glassWhite = Color(0x14FFFFFF); // 8% white
   static const Color glassWhiteMed = Color(0x1FFFFFFF); // 12% white
   static const Color glassBorder = Color(0x26FFFFFF); // 15% white
+  static const Color glassGreen = Color(0x142BEE79); // 8% green tint
 
   // ============ GRADIENTS ============
-  static const LinearGradient cosmicGradient = LinearGradient(
+  static const LinearGradient darkGradient = LinearGradient(
     begin: Alignment.topCenter,
     end: Alignment.bottomCenter,
     colors: [backgroundLight, background],
   );
 
   static const LinearGradient neonGradient = LinearGradient(
-    colors: [teal, violet],
+    colors: [teal, Color(0xFF1DB954)],
   );
 
   static const LinearGradient warmGradient = LinearGradient(
@@ -205,7 +205,7 @@ class UnfoldingELogoPainter extends CustomPainter {
 }
 
 // ---------------------------------------------------------------------------
-// WIDGET: The Hexagonal Mesh Background
+// WIDGET: Plain Dark Background (no green hex mesh)
 // ---------------------------------------------------------------------------
 
 class HexMeshBackground extends StatelessWidget {
@@ -213,54 +213,55 @@ class HexMeshBackground extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return CustomPaint(painter: HexGridPainter(), child: Container());
+    return Stack(
+      fit: StackFit.expand,
+      children: [
+        // Base: Plain dark gradient
+        Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [
+                Color(0xFF0A0A1A), // Dark void top
+                Color(0xFF1A0A2A), // Dark purple center
+                Color(0xFF0A0A1A), // Dark void bottom
+              ],
+              stops: [0.0, 0.5, 1.0],
+            ),
+          ),
+        ),
+
+        // Subtle radial glow (top-left) - no green tint
+        Container(
+          decoration: BoxDecoration(
+            gradient: RadialGradient(
+              center: const Alignment(-0.6, -0.4),
+              radius: 1.2,
+              colors: [
+                EmergeColors.teal.withValues(alpha: 0.02), // Very subtle
+                Colors.transparent,
+              ],
+            ),
+          ),
+        ),
+
+        // Subtle radial glow (bottom-right)
+        Container(
+          decoration: BoxDecoration(
+            gradient: RadialGradient(
+              center: const Alignment(0.7, 0.6),
+              radius: 1.0,
+              colors: [
+                Colors.white.withValues(
+                  alpha: 0.01,
+                ), // White tint instead of green
+                Colors.transparent,
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
   }
-}
-
-class HexGridPainter extends CustomPainter {
-  @override
-  void paint(Canvas canvas, Size size) {
-    final Paint paint = Paint()
-      ..color = EmergeColors.hexLine
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 1.0;
-
-    const double hexSize = 40.0;
-    final double width = size.width;
-    final double height = size.height;
-
-    // Mathematical constants for hexagon positioning
-    final double xOffset = hexSize * math.sqrt(3);
-    final double yOffset = hexSize * 1.5;
-
-    for (double y = -hexSize; y < height + hexSize; y += yOffset) {
-      for (double x = -hexSize; x < width + hexSize; x += xOffset) {
-        // Shift every other row
-        double xPos = x;
-        if ((y / yOffset).round() % 2 != 0) {
-          xPos += xOffset / 2;
-        }
-        drawHexagon(canvas, paint, Offset(xPos, y), hexSize);
-      }
-    }
-  }
-
-  void drawHexagon(Canvas canvas, Paint paint, Offset center, double size) {
-    Path path = Path();
-    for (int i = 0; i < 6; i++) {
-      double angle = (60 * i - 30) * (math.pi / 180);
-      double x = center.dx + size * math.cos(angle);
-      double y = center.dy + size * math.sin(angle);
-      if (i == 0) {
-        path.moveTo(x, y);
-      } else {
-        path.lineTo(x, y);
-      }
-    }
-    path.close();
-    canvas.drawPath(path, paint);
-  }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }

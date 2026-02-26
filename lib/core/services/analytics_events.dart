@@ -72,7 +72,8 @@ class AnalyticsParameters {
   static const String challengeId = 'challenge_id';
   static const String challengeName = 'challenge_name';
   static const String challengeCategory = 'challenge_category';
-  static const String challengeType = 'challenge_type'; // weekly, quarterly, custom
+  static const String challengeType =
+      'challenge_type'; // weekly, quarterly, custom
   static const String hasAffiliate = 'has_affiliate';
   static const String partnerId = 'partner_id';
   static const String partnerName = 'partner_name';

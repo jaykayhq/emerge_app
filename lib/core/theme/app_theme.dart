@@ -3,41 +3,66 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:emerge_app/core/theme/archetype_theme.dart';
 import 'package:emerge_app/features/auth/domain/entities/user_extension.dart';
 
-/// Stitch-aligned App Theme
-/// Design System: Cosmic purple gradients, Space Grotesk font, neon accents
+/// Emerge App Theme
+/// Design System: Cosmic purple-black background (Stitch World Map) + Green accents (#2BEE79)
+/// Font: Spline Sans (from Stitch design)
 class AppTheme {
-  // ============ STITCH DESIGN SYSTEM COLORS ============
+  // ============ COSMIC BACKGROUND COLORS (Stitch World Map) ============
 
   // Cosmic Purple Gradient (Primary Background)
-  static const Color cosmicPurpleDark = Color(0xFF1A0A2E);
-  static const Color cosmicPurpleDeep = Color(0xFF0F0F23);
-  static const Color cosmicPurpleMid = Color(0xFF150A25);
+  static const Color cosmicVoidDark = Color(0xFF0A0A1A); // Near-black void
+  static const Color cosmicVoidCenter = Color(0xFF1A0A2A); // Rich purple center
+  static const Color cosmicMidPurple = Color(
+    0xFF2A1A3A,
+  ); // Mid-tone purple glow
+  static const Color cosmicBlue = Color(0xFF0A1A3A); // Cosmic blue nebula
 
-  // Neon Accents
-  static const Color neonTeal = Color(0xFF00BFA5); // Primary accent
-  static const Color neonTealBright = Color(0xFF00F0FF); // Highlight
-  static const Color neonViolet = Color(0xFF7C4DFF); // Secondary accent
-  static const Color neonVioletSoft = Color(0xFFbb9af7); // Muted violet
+  // ============ GREEN ACCENT COLORS (Preserved) ============
+
+  // Primary green ( Stitch green - kept for buttons, cards, highlights)
+  static const Color neonGreen = Color(0xFF2BEE79); // Primary green
+  static const Color neonGreenBright = Color(0xFF4ADE80); // Bright green
+  static const Color mintMuted = Color(0xFF92C9A8); // Muted green
+
+  // Legacy forest colors (kept for compatibility)
+  static const Color forestDark = Color(0xFF112218);
+  static const Color forestDeep = Color(0xFF0A1A10);
+  static const Color forestMid = Color(0xFF142A1E);
+
+  // Additional accent colors from World Map
+  static const Color warmGold = Color(0xFFFFD700); // Gold for progress/rewards
+  static const Color softGray = Color(0xFF333333); // UI elements
+
+  // Legacy aliases for backward compatibility
+  static const Color cosmicPurpleDark = cosmicVoidDark;
+  static const Color cosmicPurpleDeep = cosmicVoidCenter;
+  static const Color cosmicPurpleMid = cosmicMidPurple;
+  static const Color neonTeal = neonGreen; // Alias to primary green
+  static const Color neonViolet = neonGreen;
+  static const Color neonVioletSoft = mintMuted;
+  static const Color neonTealBright = neonGreenBright;
 
   // Glassmorphism Colors
   static const Color glassWhite = Color(0x14FFFFFF); // 8% white
   static const Color glassWhiteLight = Color(0x1FFFFFFF); // 12% white
   static const Color glassBorder = Color(0x26FFFFFF); // 15% white
+  static const Color glassDark = Color(0x26000000); // Dark glass overlay
 
-  // ============ LEGACY TOKYO NIGHT (for compatibility) ============
-  static const Color primary = Color(0xFF7aa2f7);
-  static const Color secondary = Color(0xFFbb9af7);
-  static const Color backgroundDark = cosmicPurpleDeep; // Updated!
-  static const Color backgroundLight = Color(0xFFe1e2e7);
-  static const Color surfaceDark = Color(0xFF1E1433); // Cosmic surface
-  static const Color textMainDark = Color(0xFFc0caf5);
+  // = PRIMARY PALETTE TOKENS ============
+
+  static const Color primary = Color(0xFF2BEE79); // Green (kept)
+  static const Color secondary = Color(0xFF92C9A8); // Muted green
+  static const Color backgroundDark = cosmicVoidDark; // Cosmic background
+  static const Color backgroundLight = Color(0xFFF6F8F7);
+  static const Color surfaceDark = Color(0xFF222222); // Dark glass surface
+  static const Color textMainDark = Color(0xFFFFFFFF);
   static const Color textMainLight = Color(0xFF373b41);
-  static const Color textSecondaryDark = Color(0xFFa9b1d6);
+  static const Color textSecondaryDark = Color(0xFFAACFFF); // Blue-tinted stars
   static const Color textSecondaryLight = Color(0xFF565f89);
-  static const Color accent = Color(0xFFe0af68);
+  static const Color accent = Color(0xFFFFD700); // Gold
   static const Color errorColor = Color(0xFFf7768e);
-  static const Color successColor = Color(0xFF9ece6a);
-  static const Color borderDark = Color(0xFF414868);
+  static const Color successColor = Color(0xFF2BEE79); // Green success
+  static const Color borderDark = Color(0xFF3A3A5A);
 
   // Aliases for backward compatibility
   static const Color deepSunriseOrange = accent;
@@ -45,26 +70,45 @@ class AppTheme {
   static const Color vitalityGreen = successColor;
   static const Color offWhite = backgroundLight;
   static const Color error = errorColor;
+  static const Color green = neonGreen;
 
-  // ============ COSMIC GRADIENTS ============
+  // ============ GRADIENTS ============
 
-  /// Primary cosmic purple gradient for screen backgrounds
+  /// Primary cosmic gradient for screen backgrounds (World Map design)
   static const LinearGradient cosmicGradient = LinearGradient(
     begin: Alignment.topCenter,
     end: Alignment.bottomCenter,
-    colors: [cosmicPurpleDark, cosmicPurpleDeep],
+    colors: [cosmicVoidDark, cosmicVoidCenter, cosmicVoidDark],
+    stops: [0.0, 0.5, 1.0],
   );
 
-  /// Extended cosmic gradient with mid-tone
+  /// Extended cosmic gradient with nebula colors
   static const LinearGradient cosmicGradientExtended = LinearGradient(
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
-    colors: [cosmicPurpleDark, cosmicPurpleMid, cosmicPurpleDeep],
+    colors: [cosmicVoidDark, cosmicMidPurple, cosmicBlue, cosmicVoidCenter],
   );
 
-  /// Neon accent gradient for buttons and highlights
+  /// Radial glow for central focus (Valley of New Beginnings)
+  static const RadialGradient cosmicGlow = RadialGradient(
+    center: Alignment.center,
+    radius: 0.6,
+    colors: [
+      Color(0xFF2A1A3A), // Mid-tone purple
+      Color(0xFF1A0A2A), // Rich purple
+      Colors.transparent,
+    ],
+    stops: [0.0, 0.5, 1.0],
+  );
+
+  /// Green accent gradient for buttons and highlights (kept)
   static const LinearGradient neonGradient = LinearGradient(
-    colors: [neonTeal, neonViolet],
+    colors: [neonGreen, neonGreenBright],
+  );
+
+  /// Gold gradient for rewards and achievements
+  static const LinearGradient goldGradient = LinearGradient(
+    colors: [warmGold, Color(0xFFFFE066)],
   );
 
   // ============ THEMES ============
@@ -91,8 +135,8 @@ class AppTheme {
         surface: backgroundLight,
         onSurface: textMainLight,
       ),
-      // Space Grotesk for Stitch alignment
-      textTheme: GoogleFonts.spaceGroteskTextTheme(
+      // Spline Sans font
+      textTheme: GoogleFonts.splineSansTextTheme(
         ThemeData.light().textTheme.apply(
           bodyColor: textMainLight,
           displayColor: textMainLight,
@@ -137,12 +181,13 @@ class AppTheme {
       useMaterial3: true,
       brightness: Brightness.dark,
       primaryColor: identity.primaryColor,
-      scaffoldBackgroundColor: cosmicPurpleDeep, // Cosmic background
+      scaffoldBackgroundColor:
+          cosmicVoidDark, // Plain dark purple background for most screens
       extensions: [identity],
       colorScheme: ColorScheme(
         brightness: Brightness.dark,
         primary: identity.primaryColor,
-        onPrimary: cosmicPurpleDeep,
+        onPrimary: forestDeep,
         secondary: identity.accentColor,
         onSecondary: textMainDark,
         error: errorColor,
@@ -150,8 +195,8 @@ class AppTheme {
         surface: surfaceDark,
         onSurface: textMainDark,
       ),
-      // Space Grotesk for Stitch alignment
-      textTheme: GoogleFonts.spaceGroteskTextTheme(
+      // Spline Sans font (from Stitch design)
+      textTheme: GoogleFonts.splineSansTextTheme(
         ThemeData.dark().textTheme.apply(
           bodyColor: textMainDark,
           displayColor: textMainDark,

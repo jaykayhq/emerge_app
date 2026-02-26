@@ -1,5 +1,5 @@
 import 'package:emerge_app/core/presentation/widgets/emerge_branding.dart';
-import 'package:emerge_app/core/presentation/widgets/emerge_hex_logo.dart';
+import 'package:emerge_app/core/presentation/widgets/emerge_app_icon.dart';
 import 'package:emerge_app/core/presentation/widgets/responsive_layout.dart';
 import 'package:emerge_app/core/theme/app_theme.dart';
 import 'package:emerge_app/core/utils/validators.dart';
@@ -89,7 +89,7 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
           (_) async {
             if (mounted) {
               // Navigate to onboarding - user will complete all steps before dashboard
-              context.go('/onboarding/archetype');
+              context.go('/onboarding/identity-studio');
             }
           },
         );
@@ -158,7 +158,7 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
 
         if (mounted) {
           // Navigate to onboarding - user will complete all steps before dashboard
-          context.go('/onboarding/archetype');
+          context.go('/onboarding/identity-studio');
         }
       });
     } catch (e) {
@@ -232,7 +232,7 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
                       // Logo
-                      const Center(child: EmergeHexLogo(size: 64)),
+                      const Center(child: EmergeAppIcon(size: 64)),
                       const Gap(24),
 
                       Text(
@@ -524,7 +524,7 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
                           child: Column(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              const EmergeHexLogo(size: 80),
+                              EmergeAppIcon(size: 80),
                               const Gap(24),
                               Text(
                                 'Start Journey',

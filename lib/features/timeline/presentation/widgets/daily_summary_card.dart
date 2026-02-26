@@ -1,8 +1,9 @@
-import 'package:emerge_app/core/theme/app_theme.dart';
 import 'package:emerge_app/core/presentation/widgets/emerge_branding.dart';
+import 'package:emerge_app/core/presentation/widgets/glassmorphism_card.dart';
 import 'package:flutter/material.dart';
 
-/// Card showing today's habit completion summary with XP and streak info
+/// Card showing today's habit completion summary with XP and streak info.
+/// Uses glassmorphism background matching the Stitch green design system.
 class DailySummaryCard extends StatelessWidget {
   final int completedHabits;
   final int totalHabits;
@@ -19,14 +20,8 @@ class DailySummaryCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: AppTheme.surfaceDark,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: EmergeColors.hexLine),
-      ),
+    return GlassmorphismCard(
+      glowColor: EmergeColors.teal,
       child: Row(
         children: [
           // Left side: completion stats
@@ -45,17 +40,25 @@ class DailySummaryCard extends StatelessWidget {
                     Text(
                       'Today\'s Summary',
                       style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                        color: AppTheme.textSecondaryDark,
+                        color: EmergeColors.tealMuted,
                         fontWeight: FontWeight.w600,
                       ),
                     ),
                   ],
                 ),
+                const SizedBox(height: 4),
+                Text(
+                  'Track your daily identity votes',
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: EmergeColors.tealMuted.withValues(alpha: 0.7),
+                    fontSize: 11,
+                  ),
+                ),
                 const SizedBox(height: 12),
                 Text(
                   '$completedHabits/$totalHabits habits complete',
                   style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                    color: AppTheme.textMainDark,
+                    color: Colors.white,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
@@ -119,7 +122,7 @@ class DailySummaryCard extends StatelessWidget {
           Text(
             '${(progress * 100).toInt()}%',
             style: Theme.of(context).textTheme.labelMedium?.copyWith(
-              color: AppTheme.textMainDark,
+              color: Colors.white,
               fontWeight: FontWeight.bold,
             ),
           ),

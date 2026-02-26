@@ -33,6 +33,7 @@ class _IdentityStudioScreenState extends ConsumerState<IdentityStudioScreen> {
   String? _selectedMotive;
   final TextEditingController _customMotiveController = TextEditingController();
   bool _isCustomMotive = false;
+  UserArchetype? _revealingArchetype;
 
   final List<ArchetypeTheme> _themes = ArchetypeTheme.allThemes;
 
@@ -86,67 +87,227 @@ class _IdentityStudioScreenState extends ConsumerState<IdentityStudioScreen> {
       motive: motiveToSave,
     );
 
-    // Navigate to first habit screen
-    context.push('/onboarding/first-habit');
+    // PERSIST PROGRESS: Complete the first milestone (Archetype/Motive)
+    ref.read(onboardingControllerProvider.notifier).completeMilestone(0);
+
+    // Navigate to map attributes screen
+    context.push('/onboarding/map-attributes');
+  }
+
+  void _showArchetypeDetails(ArchetypeTheme theme) {
+    HapticFeedback.lightImpact();
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (context) => Container(
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
+        decoration: BoxDecoration(
+          color: const Color(0xFF0A0A1A).withValues(alpha: 0.98),
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
+          border: Border.all(color: Colors.white10),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.5),
+              blurRadius: 40,
+              spreadRadius: 10,
+            ),
+          ],
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Center(
+              child: Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: Colors.white24,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+            ),
+            const Gap(32),
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF2BEE79).withValues(alpha: 0.1),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(
+                    theme.journeyIcon,
+                    color: const Color(0xFF2BEE79),
+                    size: 28,
+                  ),
+                ),
+                const Gap(16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        theme.archetypeName.toUpperCase(),
+                        style: GoogleFonts.splineSans(
+                          color: Colors.white,
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: 2.0,
+                        ),
+                      ),
+                      Text(
+                        theme.tagline,
+                        style: GoogleFonts.splineSans(
+                          color: Colors.white54,
+                          fontSize: 14,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            const Gap(32),
+            _buildInfoSection('CORE STRENGTHS', theme.strengths),
+            const Gap(24),
+            _buildInfoSection('THE CHALLENGE', theme.weaknesses),
+            const Gap(24),
+            Text(
+              'IDENTITY RITUAL',
+              style: GoogleFonts.splineSans(
+                color: const Color(0xFF2BEE79),
+                fontSize: 10,
+                fontWeight: FontWeight.bold,
+                letterSpacing: 2.0,
+              ),
+            ),
+            const Gap(8),
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.05),
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: Colors.white10),
+              ),
+              child: Text(
+                theme.habitLoop,
+                style: GoogleFonts.splineSans(
+                  color: Colors.white.withValues(alpha: 0.9),
+                  fontSize: 15,
+                  height: 1.5,
+                ),
+              ),
+            ),
+            const Gap(48),
+            SizedBox(
+              width: double.infinity,
+              height: 56,
+              child: ElevatedButton(
+                onPressed: () => Navigator.pop(context),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.white.withValues(alpha: 0.05),
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                    side: const BorderSide(color: Colors.white10),
+                  ),
+                  elevation: 0,
+                ),
+                child: Text(
+                  'CLOSE',
+                  style: GoogleFonts.splineSans(
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: 1.0,
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
-    // Deep green/black background #102217
+    // Cosmic purple background
     return Scaffold(
-      backgroundColor: const Color(0xFF102217),
-      body: SafeArea(
-        child: Column(
-          children: [
-            // Header Progress / Back Button
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-              child: Row(
-                children: [
-                  if (_currentStep > 0)
-                    IconButton(
-                      icon: const Icon(Icons.arrow_back, color: Colors.white70),
-                      onPressed: _previousStep,
-                    )
-                  else
-                    const SizedBox(width: 48), // Spacer
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              Color(0xFF0A0A1A), // cosmicVoidDark
+              Color(0xFF1A0A2A), // cosmicVoidCenter
+              Color(0xFF2A1A3A), // cosmicMidPurple
+            ],
+          ),
+        ),
+        child: SafeArea(
+          child: Column(
+            children: [
+              // Header Progress / Back Button
+              Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 20,
+                  vertical: 16,
+                ),
+                child: Row(
+                  children: [
+                    if (_currentStep > 0)
+                      IconButton(
+                        icon: const Icon(
+                          Icons.arrow_back,
+                          color: Colors.white70,
+                        ),
+                        onPressed: _previousStep,
+                      )
+                    else
+                      const SizedBox(width: 48), // Spacer
 
-                  const Spacer(),
-                  // Subtle progress indicator
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 6,
-                    ),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.05),
-                      borderRadius: BorderRadius.circular(20),
-                      border: Border.all(color: Colors.white10),
-                    ),
-                    child: Text(
-                      'STEP ${_currentStep + 1} OF 3',
-                      style: GoogleFonts.splineSans(
-                        color: Colors.white54,
-                        fontSize: 10,
-                        letterSpacing: 1.5,
-                        fontWeight: FontWeight.w600,
+                    const Spacer(),
+                    // Subtle progress indicator
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 6,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.05),
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(color: Colors.white10),
+                      ),
+                      child: Text(
+                        'STEP ${_currentStep + 1} OF 4',
+                        style: GoogleFonts.splineSans(
+                          color: Colors.white54,
+                          fontSize: 10,
+                          letterSpacing: 1.5,
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
                     ),
-                  ),
-                  const Spacer(),
-                  const SizedBox(width: 48), // Balance
-                ],
+                    const Spacer(),
+                    const SizedBox(width: 48), // Balance
+                  ],
+                ),
               ),
-            ),
 
-            Expanded(
-              child: PageView(
-                controller: _stepController,
-                physics: const NeverScrollableScrollPhysics(),
-                children: [_buildArchetypeCarousel(), _buildMotiveSelection()],
+              Expanded(
+                child: PageView(
+                  controller: _stepController,
+                  physics: const NeverScrollableScrollPhysics(),
+                  children: [
+                    _buildArchetypeCarousel(),
+                    _buildMotiveSelection(),
+                  ],
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
@@ -215,6 +376,13 @@ class _IdentityStudioScreenState extends ConsumerState<IdentityStudioScreen> {
                     child: Opacity(
                       opacity: opacity,
                       child: GestureDetector(
+                        onLongPress: () {
+                          setState(() => _revealingArchetype = theme.archetype);
+                          HapticFeedback.heavyImpact();
+                        },
+                        onLongPressEnd: (_) {
+                          setState(() => _revealingArchetype = null);
+                        },
                         onTap: () {
                           _carouselController.animateToPage(
                             index,
@@ -233,7 +401,38 @@ class _IdentityStudioScreenState extends ConsumerState<IdentityStudioScreen> {
           ),
         ),
 
-        const Gap(32),
+        const Gap(16),
+
+        // Tap to learn more (Fixed below carousel)
+        GestureDetector(
+          onTap: () => _showArchetypeDetails(_themes[_focusedArchetypeIndex]),
+          behavior: HitTestBehavior.opaque,
+          child: Opacity(
+            opacity: 0.6,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(
+                  Icons.info_outline_rounded,
+                  color: Color(0xFF2BEE79),
+                  size: 16,
+                ),
+                const Gap(8),
+                Text(
+                  'Tap to learn more',
+                  style: GoogleFonts.splineSans(
+                    color: Colors.white,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500,
+                    letterSpacing: 0.5,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ).animate().fadeIn(delay: 400.ms),
+
+        const Gap(16),
 
         // Continue Button
         Padding(
@@ -371,8 +570,119 @@ class _IdentityStudioScreenState extends ConsumerState<IdentityStudioScreen> {
               ],
             ),
           ),
+
+          // Info Overlay (Revealed on Long Press)
+          if (_revealingArchetype == theme.archetype)
+            Positioned.fill(
+              child:
+                  Container(
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(24),
+                          color: Colors.black.withValues(alpha: 0.85),
+                        ),
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(24),
+                          child: BackdropFilter(
+                            filter: ColorFilter.mode(
+                              Colors.black.withValues(alpha: 0.1),
+                              BlendMode.dst,
+                            ),
+                            child: Padding(
+                              padding: const EdgeInsets.all(24.0),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    'IDENTITY DETAILS',
+                                    style: GoogleFonts.splineSans(
+                                      color: const Color(0xFF2BEE79),
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.bold,
+                                      letterSpacing: 2,
+                                    ),
+                                  ),
+                                  const Gap(16),
+                                  _buildInfoSection(
+                                    'STRENGTHS',
+                                    theme.strengths,
+                                  ),
+                                  const Gap(16),
+                                  _buildInfoSection(
+                                    'CHALLENGES',
+                                    theme.weaknesses,
+                                  ),
+                                  const Gap(16),
+                                  Text(
+                                    'HABIT LOOP',
+                                    style: GoogleFonts.splineSans(
+                                      color: Colors.white54,
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.bold,
+                                      letterSpacing: 1.5,
+                                    ),
+                                  ),
+                                  const Gap(4),
+                                  Text(
+                                    theme.habitLoop,
+                                    style: GoogleFonts.splineSans(
+                                      color: Colors.white,
+                                      fontSize: 14,
+                                      height: 1.4,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                      )
+                      .animate()
+                      .fadeIn(duration: 200.ms)
+                      .scale(
+                        begin: const Offset(0.95, 0.95),
+                        end: const Offset(1, 1),
+                      ),
+            ),
         ],
       ),
+    );
+  }
+
+  Widget _buildInfoSection(String title, List<String> items) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          title,
+          style: GoogleFonts.splineSans(
+            color: Colors.white54,
+            fontSize: 10,
+            fontWeight: FontWeight.bold,
+            letterSpacing: 1.5,
+          ),
+        ),
+        const Gap(4),
+        ...items.map(
+          (item) => Padding(
+            padding: const EdgeInsets.only(bottom: 2),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text('• ', style: TextStyle(color: Color(0xFF2BEE79))),
+                Expanded(
+                  child: Text(
+                    item,
+                    style: GoogleFonts.splineSans(
+                      color: Colors.white,
+                      fontSize: 13,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
     );
   }
 

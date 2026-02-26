@@ -1,13 +1,53 @@
 import 'package:emerge_app/core/presentation/widgets/emerge_branding.dart';
 import 'package:emerge_app/core/theme/app_theme.dart';
+import 'package:emerge_app/features/tutorial/presentation/providers/tutorial_provider.dart';
+import 'package:emerge_app/features/tutorial/presentation/widgets/tutorial_overlay.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 /// Coming Soon screen for features not yet available
-class ComingSoonScreen extends StatelessWidget {
+class ComingSoonScreen extends ConsumerWidget {
   const ComingSoonScreen({super.key});
 
+  void _checkTutorial(BuildContext context, WidgetRef ref) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final tutorialState = ref.read(tutorialProvider);
+      if (!tutorialState.isCompleted(TutorialStep.community)) {
+        _showTutorial(context, ref);
+      }
+    });
+  }
+
+  void _showTutorial(BuildContext context, WidgetRef ref) {
+    late OverlayEntry entry;
+    entry = OverlayEntry(
+      builder: (context) => TutorialOverlay(
+        steps: [
+          const TutorialStepInfo(
+            title: 'The Great Gathering',
+            description:
+                'You are currently an explorer of your own psyche. Soon, you will be able to connect with fellow travelers.',
+          ),
+          const TutorialStepInfo(
+            title: 'Tribes & Clubs',
+            description:
+                'The future of Emerge involves collective identity archetypes and shared habit rituals.',
+          ),
+        ],
+        onCompleted: () {
+          ref
+              .read(tutorialProvider.notifier)
+              .completeStep(TutorialStep.community);
+          entry.remove();
+        },
+      ),
+    );
+    Overlay.of(context).insert(entry);
+  }
+
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    _checkTutorial(context, ref);
     return Scaffold(
       backgroundColor: EmergeColors.background,
       body: Stack(

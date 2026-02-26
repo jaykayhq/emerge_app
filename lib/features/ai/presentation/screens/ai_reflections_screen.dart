@@ -235,7 +235,14 @@ class _InsightCard extends StatelessWidget {
             )
           else
             ElevatedButton(
-              onPressed: () {},
+              onPressed: () {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('AI Coach is a premium feature coming soon!'),
+                    duration: Duration(seconds: 2),
+                  ),
+                );
+              },
               style: ElevatedButton.styleFrom(
                 elevation: 0,
                 backgroundColor: EmergeColors.violet,

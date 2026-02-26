@@ -17,12 +17,12 @@ class Tribe {
   final DateTime? createdAt;
 
   // New affiliate/club fields
-  final String? affiliatePartnerId;  // For brand clubs
-  final String? brandLogoUrl;         // Separate brand logo
+  final String? affiliatePartnerId; // For brand clubs
+  final String? brandLogoUrl; // Separate brand logo
   final DateTime? brandSponsorshipStart;
   final DateTime? brandSponsorshipEnd;
-  final bool isFeatured;              // For official club spotlight
-  final int? maxMembers;              // For private clubs
+  final bool isFeatured; // For official club spotlight
+  final int? maxMembers; // For private clubs
 
   const Tribe({
     required this.id,
@@ -78,12 +78,16 @@ class Tribe {
     // Parse sponsorship dates
     DateTime? brandSponsorshipStart;
     if (map['brandSponsorshipStart'] != null) {
-      brandSponsorshipStart = DateTime.tryParse(map['brandSponsorshipStart'] as String);
+      brandSponsorshipStart = DateTime.tryParse(
+        map['brandSponsorshipStart'] as String,
+      );
     }
 
     DateTime? brandSponsorshipEnd;
     if (map['brandSponsorshipEnd'] != null) {
-      brandSponsorshipEnd = DateTime.tryParse(map['brandSponsorshipEnd'] as String);
+      brandSponsorshipEnd = DateTime.tryParse(
+        map['brandSponsorshipEnd'] as String,
+      );
     }
 
     return Tribe(

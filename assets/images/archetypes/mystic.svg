@@ -1,0 +1,140 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <defs>
+    <linearGradient id="mysticGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#6C3483"/>
+      <stop offset="50%" style="stop-color:#8E44AD"/>
+      <stop offset="100%" style="stop-color:#BB8FCE"/>
+    </linearGradient>
+    <radialGradient id="mysticGlow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" style="stop-color:#F39C12;stop-opacity:0.4"/>
+      <stop offset="50%" style="stop-color:#9B59B6;stop-opacity:0.2"/>
+      <stop offset="100%" style="stop-color:#9B59B6;stop-opacity:0"/>
+    </radialGradient>
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="4" result="coloredBlur"/>
+      <feMerge>
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+
+  <!-- Background -->
+  <circle cx="256" cy="256" r="256" fill="#F4ECF7"/>
+
+  <!-- Mystic Glow -->
+  <circle cx="256" cy="256" r="200" fill="url(#mysticGlow)"/>
+
+  <!-- Celestial Stars -->
+  <g fill="#F39C12" opacity="0.5">
+    <circle cx="80" cy="100" r="4">
+      <animate attributeName="opacity" values="0.5;1;0.5" dur="2s" repeatCount="indefinite"/>
+    </circle>
+    <circle cx="432" cy="120" r="3">
+      <animate attributeName="opacity" values="0.3;0.8;0.3" dur="3s" repeatCount="indefinite"/>
+    </circle>
+    <circle cx="100" cy="380" r="5">
+      <animate attributeName="opacity" values="0.4;1;0.4" dur="2.5s" repeatCount="indefinite"/>
+    </circle>
+    <circle cx="400" cy="400" r="4">
+      <animate attributeName="opacity" values="0.5;0.9;0.5" dur="1.8s" repeatCount="indefinite"/>
+    </circle>
+    <circle cx="60" cy="250" r="3">
+      <animate attributeName="opacity" values="0.3;0.7;0.3" dur="2.2s" repeatCount="indefinite"/>
+    </circle>
+    <circle cx="452" cy="280" r="4">
+      <animate attributeName="opacity" values="0.4;1;0.4" dur="2.8s" repeatCount="indefinite"/>
+    </circle>
+    <circle cx="200" cy="60" r="3">
+      <animate attributeName="opacity" values="0.5;1;0.5" dur="3s" repeatCount="indefinite"/>
+    </circle>
+    <circle cx="312" cy="60" r="3">
+      <animate attributeName="opacity" values="0.3;0.8;0.3" dur="2s" repeatCount="indefinite"/>
+    </circle>
+  </g>
+
+  <!-- Sacred Geometry Background -->
+  <g stroke="#9B59B6" stroke-width="1" fill="none" opacity="0.15">
+    <circle cx="256" cy="256" r="100"/>
+    <circle cx="256" cy="256" r="150"/>
+    <circle cx="256" cy="256" r="200"/>
+    <!-- Flower of Life hints -->
+    <circle cx="256" cy="186" r="60"/>
+    <circle cx="196" cy="256" r="60"/>
+    <circle cx="316" cy="256" r="60"/>
+    <circle cx="226" cy="306" r="60"/>
+    <circle cx="286" cy="306" r="60"/>
+  </g>
+
+  <!-- Mystic Figure -->
+  <g transform="translate(156, 106)">
+    <!-- Head with Third Eye -->
+    <circle cx="100" cy="45" r="38" fill="url(#mysticGrad)"/>
+
+    <!-- Third Eye (Spiritual Insight) -->
+    <g filter="url(#glow)">
+      <ellipse cx="100" cy="38" rx="12" ry="8" fill="#F39C12" opacity="0.9"/>
+      <circle cx="100" cy="38" r="5" fill="#FFF" opacity="0.8"/>
+    </g>
+
+    <!-- Eyes - Closed, meditative -->
+    <path d="M82 50 Q89 46 96 50" fill="none" stroke="#5D4E75" stroke-width="2"/>
+    <path d="M104 50 Q111 46 118 50" fill="none" stroke="#5D4E75" stroke-width="2"/>
+
+    <!-- Mystical Robes -->
+    <path d="M60 90 Q100 80 140 90 L150 250 Q100 260 50 250 Z" fill="url(#mysticGrad)"/>
+
+    <!-- Robe Details - Flowing -->
+    <path d="M70 100 Q65 175 60 250" fill="none" stroke="#7D6B99" stroke-width="2" opacity="0.6"/>
+    <path d="M100 85 Q95 175 90 255" fill="none" stroke="#7D6B99" stroke-width="2" opacity="0.6"/>
+    <path d="M130 100 Q135 175 140 250" fill="none" stroke="#7D6B99" stroke-width="2" opacity="0.6"/>
+
+    <!-- Arms - Holding Energy -->
+    <path d="M60 105 Q40 140 50 180" stroke="url(#mysticGrad)" stroke-width="14" fill="none" stroke-linecap="round"/>
+    <path d="M140 105 Q160 140 150 180" stroke="url(#mysticGrad)" stroke-width="14" fill="none" stroke-linecap="round"/>
+
+    <!-- Energy Between Hands -->
+    <g filter="url(#glow)">
+      <circle cx="100" cy="170" r="15" fill="#F39C12" opacity="0.4"/>
+      <circle cx="100" cy="170" r="8" fill="#F39C12" opacity="0.7"/>
+    </g>
+
+    <!-- Legs - Lotus Position -->
+    <path d="M60 250 Q50 285 70 310" stroke="url(#mysticGrad)" stroke-width="16" fill="none" stroke-linecap="round"/>
+    <path d="M140 250 Q150 285 130 310" stroke="url(#mysticGrad)" stroke-width="16" fill="none" stroke-linecap="round"/>
+  </g>
+
+  <!-- Ground/Cushion -->
+  <ellipse cx="256" cy="416" rx="80" ry="20" fill="#9B59B6" opacity="0.3"/>
+
+  <!-- Floating Mystical Symbols -->
+  <g filter="url(#glow)">
+    <!-- Moon -->
+    <g transform="translate(80, 320)">
+      <circle cx="0" cy="0" r="25" fill="#F39C12" opacity="0.7"/>
+      <circle cx="8" cy="-5" r="20" fill="#F4ECF7" opacity="0.9"/>
+    </g>
+
+    <!-- Eye of Wisdom -->
+    <g transform="translate(432, 320)">
+      <path d="M0 -20 A20 20 0 1 1 0 20 A20 20 0 1 1 0 -20" fill="#9B59B6" opacity="0.6"/>
+      <ellipse cx="0" cy="0" rx="8" ry="12" fill="#F39C12" opacity="0.8"/>
+      <circle cx="0" cy="0" r="4" fill="#FFF" opacity="0.9"/>
+    </g>
+
+    <!-- Om Symbol hint -->
+    <g transform="translate(256, 90)">
+      <circle cx="0" cy="0" r="15" fill="#F39C12" opacity="0.3"/>
+      <text x="0" y="6" font-family="serif" font-size="20" fill="#9B59B6" text-anchor="middle" font-weight="bold">ॐ</text>
+    </g>
+  </g>
+
+  <!-- Crown Chakra Energy -->
+  <g transform="translate(256, 95)" filter="url(#glow)">
+    <polygon points="0,-15 4,-4 15,-4 6,4 10,15 0,8 -10,15 -6,4 -15,-4 -4,-4" fill="#F39C12" opacity="0.7">
+      <animateTransform attributeName="transform" type="rotate" from="0 0 0" to="360 0 0" dur="20s" repeatCount="indefinite"/>
+    </polygon>
+  </g>
+
+  <text x="256" y="480" font-family="Arial, sans-serif" font-size="28" font-weight="bold" fill="#6C3483" text-anchor="middle">THE MYSTIC</text>
+</svg>

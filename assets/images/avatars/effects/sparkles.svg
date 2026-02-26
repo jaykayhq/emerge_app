@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- Sparkles effect for ascended avatars -->
+  <defs>
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="2" result="coloredBlur"/>
+      <feMerge>
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+  <g fill="#ffffff" filter="url(#glow)">
+    <!-- Main sparkles -->
+    <polygon points="128,20 132,30 142,30 134,36 138,46 128,40 118,46 122,36 114,30 124,30"/>
+    <polygon points="50,80 53,88 62,88 55,93 58,102 50,96 42,102 45,93 38,88 47,88"/>
+    <polygon points="206,80 209,88 218,88 211,93 214,102 206,96 198,102 201,93 194,88 203,88"/>
+    <polygon points="80,180 83,188 92,188 85,193 88,202 80,196 72,202 75,193 68,188 77,188"/>
+    <polygon points="176,180 179,188 188,188 181,193 184,202 176,196 168,202 171,193 164,188 173,188"/>
+    <!-- Small dots -->
+    <circle cx="100" cy="50" r="3"/>
+    <circle cx="156" cy="50" r="3"/>
+    <circle cx="200" cy="130" r="3"/>
+    <circle cx="56" cy="130" r="3"/>
+    <circle cx="128" cy="220" r="3"/>
+  </g>
+</svg>

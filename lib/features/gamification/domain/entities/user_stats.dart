@@ -9,11 +9,11 @@ class UserStats extends Equatable {
   final Map<String, int> identityVotes;
 
   // Referral tracking fields
-  final String? referralCode;           // Unique code for this user
-  final String? referredByCode;         // Who referred them
-  final int successfulReferrals;        // Count of successful referrals
-  final int totalReferralXpEarned;      // XP from referrals
-  final List<String> referredUserIds;   // Users they referred
+  final String? referralCode; // Unique code for this user
+  final String? referredByCode; // Who referred them
+  final int successfulReferrals; // Count of successful referrals
+  final int totalReferralXpEarned; // XP from referrals
+  final List<String> referredUserIds; // Users they referred
 
   const UserStats({
     required this.userId,
@@ -57,7 +57,8 @@ class UserStats extends Equatable {
       referralCode: referralCode ?? this.referralCode,
       referredByCode: referredByCode ?? this.referredByCode,
       successfulReferrals: successfulReferrals ?? this.successfulReferrals,
-      totalReferralXpEarned: totalReferralXpEarned ?? this.totalReferralXpEarned,
+      totalReferralXpEarned:
+          totalReferralXpEarned ?? this.totalReferralXpEarned,
       referredUserIds: referredUserIds ?? this.referredUserIds,
     );
   }

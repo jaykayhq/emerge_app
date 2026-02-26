@@ -133,7 +133,16 @@ class UserStatsController {
         claimedNodes: updatedClaimedNodes,
       );
 
-      final updatedProfile = currentProfile.copyWith(worldState: newWorldState);
+      // Node claim = Level Up!
+      final newLevel = updatedClaimedNodes.length + 1;
+      final newAvatarStats = currentProfile.avatarStats.copyWith(
+        level: newLevel,
+      );
+
+      final updatedProfile = currentProfile.copyWith(
+        worldState: newWorldState,
+        avatarStats: newAvatarStats,
+      );
       await repository.saveUserStats(updatedProfile);
 
       AppLogger.d('Node claimed: $nodeId');

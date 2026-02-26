@@ -14,11 +14,9 @@ class ReferralService {
   static const String _baseUrl = 'https://emerge.app/referral';
   static const int _xpReward = 500; // XP for successful referral
 
-  ReferralService({
-    FirebaseFirestore? firestore,
-    FirebaseAnalytics? analytics,
-  })  : _firestore = firestore ?? FirebaseFirestore.instance,
-        _analytics = analytics ?? FirebaseAnalytics.instance;
+  ReferralService({FirebaseFirestore? firestore, FirebaseAnalytics? analytics})
+    : _firestore = firestore ?? FirebaseFirestore.instance,
+      _analytics = analytics ?? FirebaseAnalytics.instance;
 
   CollectionReference _referralsCollection() =>
       _firestore.collection('referrals');
@@ -59,9 +57,9 @@ class ReferralService {
       } while (!isUnique);
 
       // Save code to user stats
-      await _userStatsRef(userId).set({
-        'referralCode': code,
-      }, SetOptions(merge: true));
+      await _userStatsRef(
+        userId,
+      ).set({'referralCode': code}, SetOptions(merge: true));
 
       // Create referral document
       await _referralsCollection().doc(code).set({
@@ -118,9 +116,9 @@ class ReferralService {
       });
 
       // Update new user's stats
-      await _userStatsRef(newUserId).set({
-        'referredByCode': referralCode,
-      }, SetOptions(merge: true));
+      await _userStatsRef(
+        newUserId,
+      ).set({'referredByCode': referralCode}, SetOptions(merge: true));
 
       // Log analytics event
       await _analytics.logEvent(
@@ -250,8 +248,12 @@ class ReferralService {
 
   /// Generates a random referral code
   String _generateCode() {
-    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // No I, O, 0, 1 for clarity
-    final code = List.generate(6, (index) => chars[_random.nextInt(chars.length)]).join();
+    const chars =
+        'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // No I, O, 0, 1 for clarity
+    final code = List.generate(
+      6,
+      (index) => chars[_random.nextInt(chars.length)],
+    ).join();
     return 'EMERGE_$code';
   }
 
@@ -274,13 +276,13 @@ class ReferralService {
           .collection('user_activity')
           .doc('${referrerId}_referral_$referredUserId')
           .set({
-        'userId': referrerId,
-        'type': 'referred_user',
-        'sourceId': referredUserId,
-        'xpEarned': _xpReward,
-        'date': DateTime.now().toIso8601String(),
-        'timestamp': FieldValue.serverTimestamp(),
-      });
+            'userId': referrerId,
+            'type': 'referred_user',
+            'sourceId': referredUserId,
+            'xpEarned': _xpReward,
+            'date': DateTime.now().toIso8601String(),
+            'timestamp': FieldValue.serverTimestamp(),
+          });
 
       debugPrint('Awarded $_xpReward XP to $referrerId for referral');
     } catch (e) {

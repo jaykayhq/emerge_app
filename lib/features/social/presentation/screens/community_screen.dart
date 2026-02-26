@@ -45,7 +45,7 @@ class _CommunityScreenState extends ConsumerState<CommunityScreen>
     return Scaffold(
       backgroundColor: EmergeColors.background,
       body: Container(
-        decoration: const BoxDecoration(gradient: EmergeColors.cosmicGradient),
+        decoration: const BoxDecoration(gradient: AppTheme.cosmicGradient),
         child: SafeArea(
           child: Column(
             children: [

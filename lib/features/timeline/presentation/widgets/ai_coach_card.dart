@@ -1,5 +1,6 @@
 import 'package:emerge_app/core/theme/app_theme.dart';
 import 'package:emerge_app/core/presentation/widgets/emerge_branding.dart';
+import 'package:emerge_app/core/presentation/widgets/glassmorphism_card.dart';
 import 'package:flutter/material.dart';
 
 /// AI Coach card that provides reflections and habit suggestions
@@ -22,25 +23,12 @@ class AiCoachCard extends StatelessWidget {
     this.accentColor,
   });
 
-  Color get _accent => accentColor ?? EmergeColors.violet;
+  Color get _accent => accentColor ?? EmergeColors.teal;
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            EmergeColors.violet.withValues(alpha: 0.1),
-            AppTheme.surfaceDark,
-          ],
-        ),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: _accent.withValues(alpha: 0.3)),
-      ),
+    return GlassmorphismCard(
+      glowColor: _accent,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -56,12 +44,24 @@ class AiCoachCard extends StatelessWidget {
                 child: Icon(Icons.smart_toy, color: _accent, size: 20),
               ),
               const SizedBox(width: 12),
-              Text(
-                'AI Coach',
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  color: AppTheme.textMainDark,
-                  fontWeight: FontWeight.bold,
-                ),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'AI Coach',
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  Text(
+                    'Personalized insights for your journey',
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: EmergeColors.tealMuted.withValues(alpha: 0.7),
+                      fontSize: 11,
+                    ),
+                  ),
+                ],
               ),
             ],
           ),

@@ -145,18 +145,7 @@ class AffiliatePartner extends Equatable {
 }
 
 /// Affiliate network types
-enum AffiliateNetwork {
-  cj,
-  impact,
-  shareASale,
-  amazon,
-  direct,
-  none,
-}
+enum AffiliateNetwork { cj, impact, shareASale, amazon, direct, none }
 
 /// Partner status for approval workflow
-enum PartnerStatus {
-  active,
-  inactive,
-  pending,
-}
+enum PartnerStatus { active, inactive, pending }

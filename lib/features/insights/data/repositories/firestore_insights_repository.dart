@@ -67,11 +67,15 @@ class FirestoreInsightsRepository implements InsightsRepository {
 
   @override
   Future<void> saveReflection(String userId, Reflection reflection) async {
+    final data = reflection.toMap(useServerTimestamp: true);
+    // Always use server timestamp for createdAt to satisfy Firestore security rules
+    data['createdAt'] = FieldValue.serverTimestamp();
+
     await _firestore
         .collection('user_stats')
         .doc(userId)
         .collection('reflections')
         .doc(reflection.id)
-        .set(reflection.toMap());
+        .set(data);
   }
 }

@@ -56,12 +56,15 @@ class OnboardingController extends _$OnboardingController {
 
         // Update the profile to mark onboarding as complete
         final updatedProfile = currentProfile.copyWith(
-          onboardingProgress: 5, // Mark as completed
+          onboardingProgress: 4, // Mark as completed (was 5)
           onboardingCompletedAt: DateTime.now(),
         );
 
         // Save using UserProfileRepository (upsert)
         await userProfileRepo.createProfile(updatedProfile);
+
+        // SYNC: Also save to user_stats collection for the router to see it
+        await userStatsRepo.saveUserStats(updatedProfile);
 
         // Log the onboarding completion activity
         await userStatsRepo.logActivity(
@@ -106,7 +109,7 @@ class OnboardingController extends _$OnboardingController {
             habitStacks: onboardingState.habitStacks,
             onboardingProgress: onboardingState.currentMilestoneStep,
             skippedOnboardingSteps: _getSkippedStepsList(onboardingState),
-            onboardingCompletedAt: onboardingState.currentMilestoneStep >= 5
+            onboardingCompletedAt: onboardingState.currentMilestoneStep >= 4
                 ? DateTime.now()
                 : null,
           ) ??
@@ -120,19 +123,24 @@ class OnboardingController extends _$OnboardingController {
             onboardingProgress: onboardingState.currentMilestoneStep,
             skippedOnboardingSteps: _getSkippedStepsList(onboardingState),
             onboardingStartedAt: DateTime.now(),
-            onboardingCompletedAt: onboardingState.currentMilestoneStep >= 5
+            onboardingCompletedAt: onboardingState.currentMilestoneStep >= 4
                 ? DateTime.now()
                 : null,
           );
 
       // Use createProfile for upsert behavior (merges if exists)
       final result = await userProfileRepo.createProfile(updatedProfile);
+
+      // SYNC: Also save to user_stats collection for the router/gamification systems
+      final userStatsRepo = ref.read(userStatsRepositoryProvider);
+      await userStatsRepo.saveUserStats(updatedProfile);
+
       result.fold(
         (error) => AppLogger.e('Failed to save onboarding data: $error'),
         (_) => null,
       );
 
-      if (onboardingState.currentMilestoneStep >= 5) {
+      if (onboardingState.currentMilestoneStep >= 4) {
         await completeOnboarding();
       }
     }
@@ -154,7 +162,7 @@ class OnboardingController extends _$OnboardingController {
   }
 
   Future<void> skipMilestone(int milestoneIndex) async {
-    if (milestoneIndex < 0 || milestoneIndex > 4) return;
+    if (milestoneIndex < 0 || milestoneIndex > 3) return;
 
     final currentState = ref.read(onboardingStateProvider);
     final skipped = List<bool>.from(currentState.skippedMilestones);
@@ -179,7 +187,7 @@ class OnboardingController extends _$OnboardingController {
   }
 
   Future<void> completeMilestone(int milestoneIndex) async {
-    if (milestoneIndex < 0 || milestoneIndex > 4) return;
+    if (milestoneIndex < 0 || milestoneIndex > 3) return;
 
     final currentState = ref.read(onboardingStateProvider);
     final completed = List<bool>.from(currentState.completedMilestones);
@@ -226,8 +234,9 @@ class OnboardingController extends _$OnboardingController {
           onboardingProgress: milestoneIndex + 1,
         );
 
-        // Upsert profile
+        // Upsert profile to BOTH collections to ensure sync
         await userProfileRepo.createProfile(updatedProfile);
+        await userStatsRepo.saveUserStats(updatedProfile);
       } catch (e, stack) {
         AppLogger.e(
           'Error updating gamification stats for milestone completion',
@@ -347,9 +356,9 @@ class OnboardingState extends Equatable {
   final String? why;
   final List<String> anchors;
   final List<HabitStack> habitStacks;
-  final int currentMilestoneStep; // 0-5 (5-step flow)
+  final int currentMilestoneStep; // 0-4 (4-step flow)
   final List<bool>
-  completedMilestones; // [archetype, why, attributes, anchors, stacking]
+  completedMilestones; // [archetype, attributes, first_habit, world_reveal]
   final List<bool> skippedMilestones; // Track which steps user skipped
 
   const OnboardingState({
@@ -363,14 +372,14 @@ class OnboardingState extends Equatable {
       'Spirit': 0,
       'Intellect': 0,
     },
-    this.remainingPoints = 10,
+    this.remainingPoints = 15,
     this.motive,
     this.why,
     this.anchors = const [],
     this.habitStacks = const [],
     this.currentMilestoneStep = 0,
-    this.completedMilestones = const [false, false, false, false, false],
-    this.skippedMilestones = const [false, false, false, false, false],
+    this.completedMilestones = const [false, false, false, false],
+    this.skippedMilestones = const [false, false, false, false],
   });
 
   OnboardingState copyWith({
@@ -451,67 +460,58 @@ List<OnboardingMilestone> activeMilestones(Ref ref) {
     progress = userStatsAsync.valueOrNull?.onboardingProgress ?? 0;
   }
 
-  // Define the 5 streamlined onboarding milestones
-  // Note: Using null for backgroundImageUrl to use the gradient placeholder instead
-  // of external network images which can fail to load and cause exceptions
-  // Order: Archetype → Why → Attributes → Anchors → Stacking
+  // Define the 4 streamlined onboarding milestones
+  // 1. Identity Studio (Archetype)
+  // 2. Shape Your Identity (Attributes)
+  // 3. First Identity Vote (First Habit)
+  // 4. World Reveal
   final allMilestones = [
     OnboardingMilestone(
       order: 1,
       title: 'Choose Your North Star',
       description:
           'Select the identity archetype that resonates with who you want to become',
-      routePath: '/onboarding/archetype',
+      routePath: '/onboarding/identity-studio',
       icon: Icons.wb_sunny,
       isCompleted: progress > 0,
       canSkip: true,
-      backgroundImageUrl: null, // Use gradient placeholder
+      backgroundImageUrl: null,
     ),
     OnboardingMilestone(
       order: 2,
-      title: 'Integrate Your Why',
-      description: 'Define your deep motivation',
-      routePath: '/onboarding/why',
-      icon: Icons.lightbulb,
+      title: 'Shape Your Identity',
+      description: 'Allocate points to your core attributes',
+      routePath: '/onboarding/map-attributes',
+      icon: Icons.psychology,
       isCompleted: progress > 1,
       canSkip: true,
-      backgroundImageUrl: null, // Use gradient placeholder
+      backgroundImageUrl: null,
     ),
     OnboardingMilestone(
       order: 3,
-      title: 'Shape Your Identity',
-      description: 'Allocate points to your core attributes',
-      routePath: '/onboarding/attributes',
-      icon: Icons.psychology,
+      title: 'Your First Identity Vote',
+      description: 'Prove to yourself you are becoming who you aspire to be',
+      routePath: '/onboarding/first-habit',
+      icon: Icons.link,
       isCompleted: progress > 2,
       canSkip: true,
-      backgroundImageUrl: null, // Use gradient placeholder
+      backgroundImageUrl: null,
     ),
     OnboardingMilestone(
       order: 4,
-      title: 'Map Your Day\'s Anchors',
-      description: 'Identify existing routines to build new habits upon',
-      routePath: '/onboarding/anchors',
-      icon: Icons.anchor,
+      title: 'Reveal Your World',
+      description: 'Step into the realm you have forged',
+      routePath: '/onboarding/world-reveal',
+      icon: Icons.public,
       isCompleted: progress > 3,
-      canSkip: true,
-      backgroundImageUrl: null, // Use gradient placeholder
-    ),
-    OnboardingMilestone(
-      order: 5,
-      title: 'Build Your Habit Chains',
-      description: 'Create personalized habit stacks based on your archetype',
-      routePath: '/onboarding/stacking',
-      icon: Icons.link,
-      isCompleted: progress > 4,
-      canSkip: true,
-      backgroundImageUrl: null, // Use gradient placeholder
+      canSkip: false,
+      backgroundImageUrl: null,
     ),
   ];
 
   // Return only the current uncompleted milestone for active onboarding
   // If all milestones completed, return empty list
-  if (progress >= 5) return [];
+  if (progress >= 4) return [];
 
   // Return the next milestone to complete
   return [allMilestones[progress]];

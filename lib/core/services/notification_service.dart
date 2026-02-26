@@ -196,16 +196,13 @@ class NotificationService {
   }
 
   /// Sends notification when challenge is ending soon
-  Future<void> notifyChallengeEnding(
-    String challengeId,
-    int hoursLeft,
-  ) async {
+  Future<void> notifyChallengeEnding(String challengeId, int hoursLeft) async {
     try {
       final timeText = hoursLeft == 24
           ? '1 day'
           : hoursLeft >= 24
-              ? '${hoursLeft ~/ 24} days'
-              : '$hoursLeft hours';
+          ? '${hoursLeft ~/ 24} days'
+          : '$hoursLeft hours';
 
       await _localNotifications.show(
         challengeId.hashCode,

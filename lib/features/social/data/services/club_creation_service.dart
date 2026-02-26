@@ -38,8 +38,10 @@ class ClubCreationService {
       final canCreate = level >= 10 && currentStreak >= 30;
 
       if (!canCreate) {
-        debugPrint('User does not meet club creation requirements. '
-            'Level: $level (need 10+), Streak: $currentStreak (need 30+)');
+        debugPrint(
+          'User does not meet club creation requirements. '
+          'Level: $level (need 10+), Streak: $currentStreak (need 30+)',
+        );
       }
 
       return canCreate;

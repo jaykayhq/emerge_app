@@ -14,13 +14,49 @@ class WeeklyRecapService {
   WeeklyRecapService(this._ref);
 
   Future<UserWeeklyRecap?> generateRecapIfNeeded(String userId) async {
-    // 1. Determine Date Range (Last 7 Days)
     final now = DateTime.now();
+
+    // 1. Get user profile and check account creation date
+    final userStatsRepository = _ref.read(userStatsRepositoryProvider);
+    final userProfile = await userStatsRepository.getUserStats(userId);
+
+    // Check if account is old enough (7+ days)
+    final accountCreationDate = userProfile.accountCreatedAt ?? now;
+    final daysSinceCreation = now.difference(accountCreationDate).inDays;
+
+    if (daysSinceCreation < 7) {
+      return null; // Not enough data - account less than 7 days old
+    }
+
+    // 2. Check for cached recap from the current week
+    final latestRecap = await userStatsRepository.getLatestRecap(userId);
+    if (latestRecap != null) {
+      final endDate = latestRecap['endDate'] as Timestamp?;
+      if (endDate != null) {
+        final recapEndDate = endDate.toDate();
+        // If a recap exists for the current week (within 7 days), return cached version
+        if (now.difference(recapEndDate).inDays < 7) {
+          return UserWeeklyRecap(
+            id: latestRecap['id'] as String,
+            userId: latestRecap['userId'] as String,
+            startDate: DateTime.parse(latestRecap['startDate'] as String),
+            endDate: recapEndDate,
+            totalHabitsCompleted: latestRecap['totalHabitsCompleted'] as int,
+            perfectDays: latestRecap['perfectDays'] as int,
+            totalXpEarned: latestRecap['totalXpEarned'] as int,
+            topHabitName: latestRecap['topHabitName'] as String,
+            currentLevel: latestRecap['currentLevel'] as int,
+            worldGrowthPercentage: (latestRecap['worldGrowthPercentage'] as num).toDouble(),
+          );
+        }
+      }
+    }
+
+    // 3. Determine Date Range (Last 7 Days)
     final endDate = now;
     final startDate = now.subtract(const Duration(days: 7));
 
-    // 2. Fetch Activity History
-    final userStatsRepository = _ref.read(userStatsRepositoryProvider);
+    // 4. Fetch Activity History
     final activities = await userStatsRepository.getWeeklyActivity(
       userId,
       startDate,
@@ -31,7 +67,7 @@ class WeeklyRecapService {
       return null; // Not enough data for a recap
     }
 
-    // 3. Aggregate Stats
+    // 5. Aggregate Stats
     int totalHabitsCompleted = 0;
     int totalXpEarned = 0;
     Map<String, int> habitCounts = {};
@@ -53,7 +89,7 @@ class WeeklyRecapService {
       }
     }
 
-    // 4. Determine Top Habit
+    // 6. Determine Top Habit
     String topHabitName = 'None';
     if (habitCounts.isNotEmpty) {
       final topHabitId = habitCounts.entries
@@ -65,18 +101,14 @@ class WeeklyRecapService {
       topHabitName = habit?.title ?? 'Unknown Habit';
     }
 
-    // 5. Fetch Current User Stats for Context
-    final userProfile = await userStatsRepository.getUserStats(userId);
-
-    // 6. Calculate World Growth (Entropy reduction proxy)
-    // We can assume perfect entropy (0.0) is 100% growth, decayed (1.0) is 0%.
-    // Or compare with a snapshot if we had one. For now, use current inverse entropy.
+    // 7. Calculate World Growth (Entropy reduction proxy)
     final worldGrowthPercentage = (1.0 - userProfile.worldState.entropy).clamp(
       0.0,
       1.0,
     );
 
-    return UserWeeklyRecap(
+    // 8. Create and save the recap
+    final recap = UserWeeklyRecap(
       id: const Uuid().v4(),
       userId: userId,
       startDate: startDate,
@@ -89,5 +121,22 @@ class WeeklyRecapService {
       currentLevel: userProfile.avatarStats.level,
       worldGrowthPercentage: worldGrowthPercentage,
     );
+
+    // 9. Save the recap for caching
+    await userStatsRepository.saveRecap(userId, {
+      'id': recap.id,
+      'userId': recap.userId,
+      'startDate': recap.startDate.toIso8601String(),
+      'endDate': recap.endDate.toIso8601String(),
+      'totalHabitsCompleted': recap.totalHabitsCompleted,
+      'perfectDays': recap.perfectDays,
+      'totalXpEarned': recap.totalXpEarned,
+      'topHabitName': recap.topHabitName,
+      'currentLevel': recap.currentLevel,
+      'worldGrowthPercentage': recap.worldGrowthPercentage,
+      'createdAt': FieldValue.serverTimestamp(),
+    });
+
+    return recap;
   }
 }

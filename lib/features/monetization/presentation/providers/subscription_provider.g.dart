@@ -25,7 +25,7 @@ final monetizationRepositoryProvider =
 @Deprecated('Will be removed in 3.0. Use Ref instead')
 // ignore: unused_element
 typedef MonetizationRepositoryRef = ProviderRef<MonetizationRepository>;
-String _$isPremiumHash() => r'641b94538738e7eba284aa1f040731f1009f5cd5';
+String _$isPremiumHash() => r'c143dca94f3104dbd2700d1fed4bcbcff369f78d';
 
 /// See also [IsPremium].
 @ProviderFor(IsPremium)

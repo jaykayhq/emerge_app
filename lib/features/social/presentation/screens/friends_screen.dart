@@ -35,7 +35,7 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen> {
     return Scaffold(
       backgroundColor: EmergeColors.background,
       body: Container(
-        decoration: const BoxDecoration(gradient: EmergeColors.cosmicGradient),
+        decoration: const BoxDecoration(gradient: AppTheme.cosmicGradient),
         child: SafeArea(
           child: CustomScrollView(
             slivers: [
@@ -253,10 +253,7 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen> {
               const Gap(8),
               Text(
                 'Earn 500 XP for each friend who joins!',
-                style: TextStyle(
-                  fontSize: 14,
-                  color: EmergeColors.teal,
-                ),
+                style: TextStyle(fontSize: 14, color: EmergeColors.teal),
               ),
               const Gap(24),
 
@@ -266,9 +263,11 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen> {
                   child: FutureBuilder<ReferralStats>(
                     future: ReferralService().getReferralStats(user.id),
                     builder: (context, snapshot) {
-                      final referralCode = snapshot.data?.referralCode ?? 'Loading...';
+                      final referralCode =
+                          snapshot.data?.referralCode ?? 'Loading...';
                       final totalReferrals = snapshot.data?.totalReferrals ?? 0;
-                      final pendingReferrals = snapshot.data?.pendingReferrals ?? 0;
+                      final pendingReferrals =
+                          snapshot.data?.pendingReferrals ?? 0;
                       final xpEarned = snapshot.data?.xpEarned ?? 0;
 
                       return Column(
@@ -279,7 +278,9 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen> {
                             decoration: BoxDecoration(
                               color: EmergeColors.glassWhite,
                               borderRadius: BorderRadius.circular(16),
-                              border: Border.all(color: EmergeColors.glassBorder),
+                              border: Border.all(
+                                color: EmergeColors.glassBorder,
+                              ),
                             ),
                             child: Column(
                               children: [
@@ -294,12 +295,18 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen> {
                                 GestureDetector(
                                   onTap: () async {
                                     // Copy referral code to clipboard
-                                    final messenger = ScaffoldMessenger.of(context);
-                                    await Clipboard.setData(ClipboardData(text: referralCode));
+                                    final messenger = ScaffoldMessenger.of(
+                                      context,
+                                    );
+                                    await Clipboard.setData(
+                                      ClipboardData(text: referralCode),
+                                    );
                                     if (!mounted) return;
                                     messenger.showSnackBar(
                                       SnackBar(
-                                        content: Text('Referral code copied: $referralCode'),
+                                        content: Text(
+                                          'Referral code copied: $referralCode',
+                                        ),
                                         duration: const Duration(seconds: 2),
                                         behavior: SnackBarBehavior.floating,
                                       ),
@@ -311,9 +318,13 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen> {
                                       vertical: 12,
                                     ),
                                     decoration: BoxDecoration(
-                                      color: EmergeColors.teal.withValues(alpha: 0.2),
+                                      color: EmergeColors.teal.withValues(
+                                        alpha: 0.2,
+                                      ),
                                       borderRadius: BorderRadius.circular(8),
-                                      border: Border.all(color: EmergeColors.teal),
+                                      border: Border.all(
+                                        color: EmergeColors.teal,
+                                      ),
                                     ),
                                     child: Text(
                                       referralCode,
@@ -372,10 +383,12 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen> {
                           // Share Button
                           GestureDetector(
                             onTap: () {
-                              final link = 'https://emerge.app/referral?code=$referralCode';
+                              final link =
+                                  'https://emerge.app/referral?code=$referralCode';
                               SharePlus.instance.share(
                                 ShareParams(
-                                  text: 'Join me on Emerge! Let\'s build better habits together. '
+                                  text:
+                                      'Join me on Emerge! Let\'s build better habits together. '
                                       'Use my code: $referralCode 🚀\n\n$link',
                                 ),
                               );
@@ -417,7 +430,9 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen> {
                             decoration: BoxDecoration(
                               color: EmergeColors.glassWhite,
                               borderRadius: BorderRadius.circular(12),
-                              border: Border.all(color: EmergeColors.glassBorder),
+                              border: Border.all(
+                                color: EmergeColors.glassBorder,
+                              ),
                             ),
                             child: Column(
                               children: [
@@ -507,13 +522,7 @@ class _ReferralStatCard extends StatelessWidget {
               color: Colors.white,
             ),
           ),
-          Text(
-            label,
-            style: TextStyle(
-              fontSize: 10,
-              color: Colors.white54,
-            ),
-          ),
+          Text(label, style: TextStyle(fontSize: 10, color: Colors.white54)),
         ],
       ),
     );
@@ -539,9 +548,7 @@ class _MilestoneRow extends StatelessWidget {
           width: 32,
           height: 32,
           decoration: BoxDecoration(
-            color: achieved
-                ? EmergeColors.teal
-                : EmergeColors.glassWhite,
+            color: achieved ? EmergeColors.teal : EmergeColors.glassWhite,
             borderRadius: BorderRadius.circular(8),
             border: Border.all(
               color: achieved ? EmergeColors.teal : EmergeColors.glassBorder,
@@ -569,17 +576,9 @@ class _MilestoneRow extends StatelessWidget {
           ),
         ),
         if (achieved)
-          Icon(
-            Icons.check_circle,
-            color: EmergeColors.teal,
-            size: 20,
-          )
+          Icon(Icons.check_circle, color: EmergeColors.teal, size: 20)
         else
-          Icon(
-            Icons.lock,
-            color: Colors.white24,
-            size: 20,
-          ),
+          Icon(Icons.lock, color: Colors.white24, size: 20),
       ],
     );
   }

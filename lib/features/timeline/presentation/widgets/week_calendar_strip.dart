@@ -42,9 +42,11 @@ class _WeekCalendarStripState extends State<WeekCalendarStrip> {
 
   void _generateWeekDays() {
     final now = DateTime.now();
-    // Start from 6 days ago to today (showing past week + today)
+    // Calculate Monday of the current week
+    final monday = now.subtract(Duration(days: now.weekday - 1));
+    // Generate 7 days from Monday to Sunday
     _weekDays = List.generate(7, (index) {
-      return now.subtract(Duration(days: 6 - index));
+      return monday.add(Duration(days: index));
     });
   }
 
@@ -73,11 +75,13 @@ class _WeekCalendarStripState extends State<WeekCalendarStrip> {
   Widget _buildDayItem(DateTime date) {
     final isToday = _isToday(date);
     final isSelected = _isSameDay(date, _selectedDate);
-    final dayName = DateFormat('E').format(date).substring(0, 3);
+    // Get full day name and create short version (first 3 chars)
+    final fullDayName = DateFormat('EEEE').format(date);
+    final dayName = fullDayName.substring(0, 3);
     final dayNumber = date.day.toString();
     final monthName = DateFormat('MMM').format(date);
     final fullDateLabel =
-        '$dayName, $monthName $dayNumber${isToday ? ' (Today)' : ''}';
+        '$fullDayName, $monthName $dayNumber${isToday ? ' (Today)' : ''}';
 
     return EmergeTappable(
       label: fullDateLabel,
@@ -133,10 +137,8 @@ class _WeekCalendarStripState extends State<WeekCalendarStrip> {
                     : isToday
                     ? EmergeColors.teal
                     : AppTheme.textMainDark,
-                fontSize: 16,
-                fontWeight: isToday || isSelected
-                    ? FontWeight.bold
-                    : FontWeight.normal,
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
               ),
             ),
             const SizedBox(height: 4),

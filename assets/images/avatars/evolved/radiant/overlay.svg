@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <!-- Radiant phase - kintsugi gold cracks -->
+  <g stroke="#ffd700" stroke-width="3" fill="none" opacity="0.8">
+    <!-- Main crack lines -->
+    <path d="M200 160 L220 200 L210 240"/>
+    <path d="M312 160 L292 200 L302 240"/>
+    <path d="M230 320 L250 350 L240 400"/>
+    <path d="M282 320 L262 350 L272 400"/>
+    <!-- Glow effect -->
+    <path d="M200 160 L220 200 L210 240" stroke-width="6" opacity="0.3"/>
+    <path d="M312 160 L292 200 L302 240" stroke-width="6" opacity="0.3"/>
+  </g>
+  <!-- Golden aura -->
+  <circle cx="256" cy="256" r="200" fill="url(#goldGradient)" opacity="0.1"/>
+  <defs>
+    <radialGradient id="goldGradient">
+      <stop offset="0%" stop-color="#ffd700" stop-opacity="0.3"/>
+      <stop offset="100%" stop-color="#ffd700" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+</svg>

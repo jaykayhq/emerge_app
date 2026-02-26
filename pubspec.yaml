@@ -130,6 +130,20 @@ flutter:
     - assets/icons/
     - assets/images/
     - assets/images/avatars/
+    - assets/images/avatars/base/
+    - assets/images/avatars/base/athlete/
+    - assets/images/avatars/base/creator/
+    - assets/images/avatars/base/scholar/
+    - assets/images/avatars/base/stoic/
+    - assets/images/avatars/base/mystic/
+    - assets/images/avatars/evolved/
+    - assets/images/avatars/evolved/construct/
+    - assets/images/avatars/evolved/incarnate/
+    - assets/images/avatars/evolved/radiant/
+    - assets/images/avatars/evolved/ascended/
+    - assets/images/avatars/effects/
+    - assets/images/archetypes/
+    - assets/images/milestones/
     - assets/sounds/
     - assets/rive/
 

@@ -1,4 +1,5 @@
 import 'package:emerge_app/features/onboarding/presentation/providers/onboarding_provider.dart';
+import 'package:emerge_app/core/presentation/widgets/animated_flame_logo.dart';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -119,181 +120,146 @@ class _WorldRevealScreenState extends ConsumerState<WorldRevealScreen>
 
   @override
   Widget build(BuildContext context) {
-    // Deepest black-green background #05100B
+    // Cosmic purple background
     return Scaffold(
-      backgroundColor: const Color(0xFF05100B),
-      body: Stack(
-        children: [
-          // Radial Gradient Background (Glow)
-          Positioned.fill(
-            child: DecoratedBox(
-              decoration: BoxDecoration(
-                gradient: RadialGradient(
-                  center: Alignment.center,
-                  radius: 1.5,
-                  colors: [
-                    const Color(0xFF102217), // Slightly lighter center
-                    const Color(0xFF05100B), // Deepest dark edges
-                  ],
-                  stops: const [0.0, 1.0],
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              Color(0xFF0A0A1A), // cosmicVoidDark
+              Color(0xFF1A0A2A), // cosmicVoidCenter
+              Color(0xFF2A1A3A), // cosmicMidPurple
+            ],
+          ),
+        ),
+        child: Stack(
+          children: [
+            // Radial Gradient Background (Glow)
+            Positioned.fill(
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  gradient: RadialGradient(
+                    center: Alignment.center,
+                    radius: 1.5,
+                    colors: [
+                      const Color(
+                        0xFF2A1A3A,
+                      ).withValues(alpha: 0.5), // Purple glow
+                      const Color(
+                        0xFF0A0A1A,
+                      ).withValues(alpha: 0.8), // Dark edges
+                    ],
+                    stops: const [0.0, 1.0],
+                  ),
                 ),
               ),
             ),
-          ),
 
-          // Center Content
-          Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                // The Abstract Core/Seed
-                AnimatedBuilder(
-                  animation: _pulseController,
-                  builder: (context, child) {
-                    final scale = 1.0 + (_pulseController.value * 0.1);
-                    final glowOpacity = 0.2 + (_pulseController.value * 0.3);
+            // Center Content
+            Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  // The Abstract Core/Seed
+                  AnimatedBuilder(
+                    animation: _pulseController,
+                    builder: (context, child) {
+                      final scale = 1.0 + (_pulseController.value * 0.1);
 
-                    return Transform.scale(
-                      scale: scale,
-                      child: Container(
-                        width: 120,
-                        height: 120,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: const Color(
-                            0xFF2BEE79,
-                          ).withValues(alpha: 0.05),
-                          boxShadow: [
-                            BoxShadow(
-                              color: const Color(
-                                0xFF2BEE79,
-                              ).withValues(alpha: glowOpacity),
-                              blurRadius: 60,
-                              spreadRadius: 10,
-                            ),
-                            BoxShadow(
-                              color: const Color(
-                                0xFF2BEE79,
-                              ).withValues(alpha: glowOpacity * 0.5),
-                              blurRadius: 100,
-                              spreadRadius: 30,
-                            ),
-                          ],
-                          border: Border.all(
-                            color: const Color(
-                              0xFF2BEE79,
-                            ).withValues(alpha: glowOpacity),
-                            width: 1,
+                      return Transform.scale(
+                        scale: scale,
+                        child: const AnimatedFlameLogo(size: 120),
+                      );
+                    },
+                  ),
+
+                  const Gap(80),
+
+                  // Text Messages
+                  AnimatedBuilder(
+                    animation: _textController,
+                    builder: (context, child) {
+                      // Fade in and out for first two, stay for last?
+                      // Actually, let's just fade IN for simplicity based on phase
+                      double fadeVal = 0.0;
+                      if (_textPhase < 2) {
+                        // Fade in then out
+                        fadeVal = _textController.value < 0.5
+                            ? _textController.value * 2
+                            : (1.0 - _textController.value) * 2;
+                      } else {
+                        // Final phase: Fade in and stay
+                        fadeVal = _textController.value;
+                      }
+
+                      return Opacity(
+                        opacity: fadeVal.clamp(0.0, 1.0),
+                        child: Text(
+                          _messages[_textPhase],
+                          textAlign: TextAlign.center,
+                          style: GoogleFonts.splineSans(
+                            color: _textPhase == 2
+                                ? const Color(0xFF2BEE79)
+                                : Colors.white,
+                            fontSize: 24,
+                            fontWeight: _textPhase == 2
+                                ? FontWeight.bold
+                                : FontWeight.w300,
+                            letterSpacing: _textPhase == 2 ? 4.0 : 1.0,
                           ),
                         ),
-                        child: Center(
-                          child: Container(
-                            width: 60,
-                            height: 60,
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              color: const Color(0xFF2BEE79),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: const Color(
-                                    0xFF2BEE79,
-                                  ).withValues(alpha: 0.8),
-                                  blurRadius: 20,
-                                  spreadRadius: 2,
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ),
-                    );
-                  },
-                ),
-
-                const Gap(80),
-
-                // Text Messages
-                AnimatedBuilder(
-                  animation: _textController,
-                  builder: (context, child) {
-                    // Fade in and out for first two, stay for last?
-                    // Actually, let's just fade IN for simplicity based on phase
-                    double fadeVal = 0.0;
-                    if (_textPhase < 2) {
-                      // Fade in then out
-                      fadeVal = _textController.value < 0.5
-                          ? _textController.value * 2
-                          : (1.0 - _textController.value) * 2;
-                    } else {
-                      // Final phase: Fade in and stay
-                      fadeVal = _textController.value;
-                    }
-
-                    return Opacity(
-                      opacity: fadeVal.clamp(0.0, 1.0),
-                      child: Text(
-                        _messages[_textPhase],
-                        textAlign: TextAlign.center,
-                        style: GoogleFonts.splineSans(
-                          color: _textPhase == 2
-                              ? const Color(0xFF2BEE79)
-                              : Colors.white,
-                          fontSize: 24,
-                          fontWeight: _textPhase == 2
-                              ? FontWeight.bold
-                              : FontWeight.w300,
-                          letterSpacing: _textPhase == 2 ? 4.0 : 1.0,
-                        ),
-                      ),
-                    );
-                  },
-                ),
-              ],
+                      );
+                    },
+                  ),
+                ],
+              ),
             ),
-          ),
 
-          // Button
-          if (_showButton)
-            Positioned(
-              bottom: 80,
-              left: 40,
-              right: 40,
-              child: AnimatedOpacity(
-                duration: const Duration(milliseconds: 1000),
-                opacity: _showButton ? 1.0 : 0.0,
-                child: SizedBox(
-                  height: 56,
-                  child: _isCreatingHabits
-                      ? const Center(
-                          child: CircularProgressIndicator(
-                            color: Color(0xFF2BEE79),
-                          ),
-                        )
-                      : OutlinedButton(
-                          onPressed: _enterWorld,
-                          style: OutlinedButton.styleFrom(
-                            side: const BorderSide(
+            // Button
+            if (_showButton)
+              Positioned(
+                bottom: 80,
+                left: 40,
+                right: 40,
+                child: AnimatedOpacity(
+                  duration: const Duration(milliseconds: 1000),
+                  opacity: _showButton ? 1.0 : 0.0,
+                  child: SizedBox(
+                    height: 56,
+                    child: _isCreatingHabits
+                        ? const Center(
+                            child: CircularProgressIndicator(
                               color: Color(0xFF2BEE79),
-                              width: 1,
                             ),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(30),
+                          )
+                        : OutlinedButton(
+                            onPressed: _enterWorld,
+                            style: OutlinedButton.styleFrom(
+                              side: const BorderSide(
+                                color: Color(0xFF2BEE79),
+                                width: 1,
+                              ),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(30),
+                              ),
+                              foregroundColor: const Color(0xFF2BEE79),
                             ),
-                            foregroundColor: const Color(0xFF2BEE79),
+                            child: Text(
+                              'ENTER YOUR WORLD',
+                              style: GoogleFonts.splineSans(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w600,
+                                letterSpacing: 2.0,
+                              ),
+                            ),
                           ),
-                          child: Text(
-                            'ENTER YOUR WORLD',
-                            style: GoogleFonts.splineSans(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w600,
-                              letterSpacing: 2.0,
-                            ),
-                          ),
-                        ),
+                  ),
                 ),
               ),
-            ),
-        ],
+          ],
+        ),
       ),
     );
   }

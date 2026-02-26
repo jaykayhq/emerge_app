@@ -53,11 +53,10 @@ class RemoteConfigService {
           'imageUrl': 'assets/images/archetype_stoic.png',
         },
         {
-          'id': 'mystic',
-          'title': 'The Mystic',
-          'description':
-              'Spiritual connection, transcendence, and inner wisdom.',
-          'imageUrl': 'assets/images/archetype_mystic.png',
+          'id': 'zealot',
+          'title': 'The Zealot',
+          'description': 'Passion through unwavering faith and spiritual fire.',
+          'imageUrl': 'assets/images/archetype_zealot.png',
         },
       ]),
       'onboarding_attributes': jsonEncode([

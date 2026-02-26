@@ -73,8 +73,8 @@ class LandExpansionCatalog {
 
     // Tier 2 - Mid-game expansions
     LandPlot(
-      id: 'mystic_grove',
-      name: 'Mystic Grove',
+      id: 'zealot_grove',
+      name: 'Zealot Grove',
       description: 'A grove where knowledge flows like water',
       requiredWorldLevel: 8,
       cost: 200,

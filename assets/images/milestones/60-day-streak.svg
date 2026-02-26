@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <circle cx="256" cy="256" r="256" fill="#ECEFF1"/>
+  <polygon fill="#90A4AE" points="256,80 380,380 132,380"/>
+  <polygon fill="#795548" points="256,80 320,380 192,380"/>
+  <polygon fill="#FFF" points="256,180 290,300 222,300"/>
+  <rect x="246" y="300" width="20" height="80" fill="#795548"/>
+  <circle fill="#FF5722" cx="256" cy="300" r="15"/>
+  <line x1="256" y1="285" x2="256" y2="250" stroke="#FF5722" stroke-width="3"/>
+  <text x="256" y="450" font-family="Arial" font-size="50" font-weight="bold" fill="#795548" text-anchor="middle">60</text>
+</svg>

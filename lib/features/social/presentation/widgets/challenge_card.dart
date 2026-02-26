@@ -134,12 +134,19 @@ class ChallengeCard extends StatelessWidget {
                             decoration: BoxDecoration(
                               color: Colors.amber.withValues(alpha: 0.9),
                               borderRadius: BorderRadius.circular(8),
-                              border: Border.all(color: Colors.amber.shade700, width: 1),
+                              border: Border.all(
+                                color: Colors.amber.shade700,
+                                width: 1,
+                              ),
                             ),
                             child: Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
-                                const Icon(Icons.star, size: 12, color: Colors.black87),
+                                const Icon(
+                                  Icons.star,
+                                  size: 12,
+                                  color: Colors.black87,
+                                ),
                                 const Gap(4),
                                 const Text(
                                   'Sponsored',

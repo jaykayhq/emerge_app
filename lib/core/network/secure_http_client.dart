@@ -53,6 +53,8 @@ class NetworkSecurityConfig {
         'accounts.google.com',
         'revenuecat.com',
         'api.revenuecat.com',
+        'pollinations.ai',
+        'image.pollinations.ai',
       ];
 
       if (allowedDomains.any((domain) => uri.host.endsWith(domain))) {
