@@ -1,7 +1,7 @@
 import 'package:emerge_app/features/auth/domain/entities/auth_user.dart';
 import 'package:emerge_app/features/gamification/domain/models/avatar.dart';
 
-enum UserArchetype { athlete, creator, scholar, stoic, mystic, none }
+enum UserArchetype { athlete, creator, scholar, stoic, zealot, none }
 
 class UserAvatarStats {
   final int strengthXp;
@@ -12,6 +12,7 @@ class UserAvatarStats {
   final int spiritXp;
   final int level;
   final int streak;
+  final Map<String, int> attributeXp; // ADD THIS
 
   const UserAvatarStats({
     this.strengthXp = 0,
@@ -22,6 +23,7 @@ class UserAvatarStats {
     this.spiritXp = 0,
     this.level = 1,
     this.streak = 0,
+    this.attributeXp = const {}, // ADD THIS
   });
 
   Map<String, dynamic> toMap() {
@@ -34,6 +36,7 @@ class UserAvatarStats {
       'spiritXp': spiritXp,
       'level': level,
       'streak': streak,
+      'attributeXp': attributeXp,
     };
   }
 
@@ -47,10 +50,53 @@ class UserAvatarStats {
       spiritXp: map['spiritXp'] as int? ?? 0,
       level: map['level'] as int? ?? 1,
       streak: map['streak'] as int? ?? 0,
+      attributeXp: Map<String, dynamic>.from(
+        map['attributeXp'] as Map? ?? {}
+      ).map((key, value) => MapEntry(key, value as int? ?? 0)),
     );
   }
   int get totalXp =>
       strengthXp + intellectXp + vitalityXp + creativityXp + focusXp + spiritXp;
+
+  UserAvatarStats copyWith({
+    int? strengthXp,
+    int? intellectXp,
+    int? vitalityXp,
+    int? creativityXp,
+    int? focusXp,
+    int? spiritXp,
+    int? level,
+    int? streak,
+    Map<String, int>? attributeXp,
+  }) {
+    return UserAvatarStats(
+      strengthXp: strengthXp ?? this.strengthXp,
+      intellectXp: intellectXp ?? this.intellectXp,
+      vitalityXp: vitalityXp ?? this.vitalityXp,
+      creativityXp: creativityXp ?? this.creativityXp,
+      focusXp: focusXp ?? this.focusXp,
+      spiritXp: spiritXp ?? this.spiritXp,
+      level: level ?? this.level,
+      streak: streak ?? this.streak,
+      attributeXp: attributeXp ?? this.attributeXp,
+    );
+  }
+
+  // ADD: Helper to get XP for specific attribute
+  int getAttributeXp(String attribute) {
+    return attributeXp[attribute.toLowerCase()] ?? 0;
+  }
+
+  // ADD: Add XP to specific attribute
+  UserAvatarStats addAttributeXp(String attribute, int amount) {
+    final key = attribute.toLowerCase();
+    final currentXp = attributeXp[key] ?? 0;
+    final newAttributeXp = Map<String, int>.from(attributeXp);
+    newAttributeXp[key] = currentXp + amount;
+    return copyWith(
+      attributeXp: newAttributeXp,
+    );
+  }
 }
 
 /// Seasonal states for the world based on streak
@@ -286,6 +332,7 @@ class UserProfile {
   final String? characterClass;
   final Avatar avatar;
   final UserSettings settings;
+  final DateTime? accountCreatedAt; // When the user account was created
 
   const UserProfile({
     required this.uid,
@@ -307,6 +354,7 @@ class UserProfile {
     this.avatar = const Avatar(),
     this.worldTheme,
     this.settings = const UserSettings(),
+    this.accountCreatedAt,
   });
 
   Map<String, dynamic> toMap() {
@@ -330,6 +378,7 @@ class UserProfile {
       'avatar': avatar.toMap(),
       'worldTheme': worldTheme,
       'settings': settings.toMap(),
+      'accountCreatedAt': accountCreatedAt?.toIso8601String(),
     };
   }
 
@@ -371,6 +420,9 @@ class UserProfile {
       settings: map['settings'] != null
           ? UserSettings.fromMap(map['settings'] as Map<String, dynamic>)
           : const UserSettings(),
+      accountCreatedAt: map['accountCreatedAt'] != null
+          ? DateTime.tryParse(map['accountCreatedAt'] as String)
+          : null,
     );
   }
 
@@ -394,6 +446,7 @@ class UserProfile {
     Avatar? avatar,
     String? worldTheme,
     UserSettings? settings,
+    DateTime? accountCreatedAt,
   }) {
     return UserProfile(
       uid: uid ?? this.uid,
@@ -417,6 +470,7 @@ class UserProfile {
       avatar: avatar ?? this.avatar,
       worldTheme: worldTheme ?? this.worldTheme,
       settings: settings ?? this.settings,
+      accountCreatedAt: accountCreatedAt ?? this.accountCreatedAt,
     );
   }
 }
