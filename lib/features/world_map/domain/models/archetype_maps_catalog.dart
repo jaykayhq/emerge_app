@@ -19,8 +19,8 @@ class ArchetypeMapsCatalog {
         return _creatorMap;
       case UserArchetype.stoic:
         return _stoicMap;
-      case UserArchetype.mystic:
-        return _mysticMap;
+      case UserArchetype.zealot:
+        return _zealotMap;
       case UserArchetype.none:
         return _explorerMap;
     }
@@ -41,6 +41,8 @@ class ArchetypeMapsCatalog {
         id: 'ath_1',
         name: 'Base Camp',
         description: 'Your journey begins here',
+        directive:
+            'Establish your rhythm: Complete 3 workouts this week to build foundational energy.',
         emoji: '⛺',
         targetedAttributes: [HabitAttribute.vitality],
         xpBoosts: {HabitAttribute.vitality: 10},
@@ -55,6 +57,8 @@ class ArchetypeMapsCatalog {
         id: 'ath_2',
         name: 'First Trail',
         description: 'Build your foundation',
+        directive:
+            'Focus on form: Complete a core strength or mobility session today.',
         emoji: '🥾',
         targetedAttributes: [HabitAttribute.vitality, HabitAttribute.strength],
         xpBoosts: {HabitAttribute.vitality: 12, HabitAttribute.strength: 8},
@@ -68,6 +72,8 @@ class ArchetypeMapsCatalog {
         id: 'ath_3',
         name: 'Strength Stone',
         description: 'A place of power',
+        directive:
+            'Push limits: Perform a progressive overload strength training session.',
         emoji: '🪨',
         targetedAttributes: [HabitAttribute.strength],
         xpBoosts: {HabitAttribute.strength: 15},
@@ -81,6 +87,8 @@ class ArchetypeMapsCatalog {
         id: 'ath_4',
         name: 'Endurance Path',
         description: 'Test your stamina',
+        directive:
+            'Build the engine: Run, cycle, or swim continuously for 30 minutes.',
         emoji: '🏃',
         targetedAttributes: [HabitAttribute.vitality],
         xpBoosts: {HabitAttribute.vitality: 15},
@@ -94,6 +102,8 @@ class ArchetypeMapsCatalog {
         id: 'ath_5',
         name: 'Valley Gate',
         description: 'First milestone - prove your commitment',
+        directive:
+            'The Trial: Complete a high-intensity interval (HIIT) session to prove your readiness.',
         emoji: '⛩️',
         targetedAttributes: [HabitAttribute.vitality, HabitAttribute.strength],
         xpBoosts: {HabitAttribute.vitality: 25, HabitAttribute.strength: 25},
@@ -182,6 +192,8 @@ class ArchetypeMapsCatalog {
         id: 'sch_1',
         name: 'Library Entrance',
         description: 'The journey of knowledge begins',
+        directive:
+            'Gather knowledge: Read 10 pages of a non-fiction book or listen to an educational podcast.',
         emoji: '🏛️',
         targetedAttributes: [HabitAttribute.intellect],
         xpBoosts: {HabitAttribute.intellect: 10},
@@ -196,6 +208,8 @@ class ArchetypeMapsCatalog {
         id: 'sch_2',
         name: 'Reading Alcove',
         description: 'Absorb ancient wisdom',
+        directive:
+            'Deep work: Complete a 30-minute undistracted focused learning session.',
         emoji: '📚',
         targetedAttributes: [HabitAttribute.intellect, HabitAttribute.focus],
         xpBoosts: {HabitAttribute.intellect: 12, HabitAttribute.focus: 10},
@@ -209,6 +223,8 @@ class ArchetypeMapsCatalog {
         id: 'sch_3',
         name: 'Meditation Chamber',
         description: 'Focus your mind',
+        directive:
+            'Clear the noise: Meditate or practice stillness for 10 minutes to train your focus.',
         emoji: '🧘',
         targetedAttributes: [HabitAttribute.focus],
         xpBoosts: {HabitAttribute.focus: 18},
@@ -222,6 +238,8 @@ class ArchetypeMapsCatalog {
         id: 'sch_4',
         name: 'Research Lab',
         description: 'Experiment and discover',
+        directive:
+            'Lateral thinking: Brainstorm 5 new ideas or solve a complex puzzle.',
         emoji: '⚗️',
         targetedAttributes: [
           HabitAttribute.intellect,
@@ -238,6 +256,8 @@ class ArchetypeMapsCatalog {
         id: 'sch_5',
         name: 'First Revelation',
         description: 'Your first breakthrough',
+        directive:
+            'The Trial: Write a summary or journal entry about your key learnings this week.',
         emoji: '💡',
         targetedAttributes: [HabitAttribute.intellect, HabitAttribute.focus],
         xpBoosts: {HabitAttribute.intellect: 30, HabitAttribute.focus: 25},
@@ -264,6 +284,8 @@ class ArchetypeMapsCatalog {
         id: 'cre_1',
         name: 'Inspiration Spring',
         description: 'Where ideas are born',
+        directive:
+            'Free creation: Spend 20 minutes creating something without judgment.',
         emoji: '⛲',
         targetedAttributes: [HabitAttribute.creativity],
         xpBoosts: {HabitAttribute.creativity: 15},
@@ -278,6 +300,8 @@ class ArchetypeMapsCatalog {
         id: 'cre_2',
         name: 'Sketch Meadow',
         description: 'Practice your craft',
+        directive:
+            'Refine your craft: Focus on a single creative task for 30 uninterrupted minutes.',
         emoji: '📝',
         targetedAttributes: [HabitAttribute.creativity, HabitAttribute.focus],
         xpBoosts: {HabitAttribute.creativity: 12, HabitAttribute.focus: 8},
@@ -291,6 +315,8 @@ class ArchetypeMapsCatalog {
         id: 'cre_3',
         name: 'Color Forge',
         description: 'Master your palette',
+        directive:
+            'Draw inspiration: Study the work of a master in your field.',
         emoji: '🎨',
         targetedAttributes: [HabitAttribute.creativity],
         xpBoosts: {HabitAttribute.creativity: 20},
@@ -304,6 +330,8 @@ class ArchetypeMapsCatalog {
         id: 'cre_4',
         name: 'Output Workshop',
         description: 'Ship your work',
+        directive:
+            'Creative endurance: Draft a new piece or push through a block even if uninspired.',
         emoji: '🔨',
         targetedAttributes: [
           HabitAttribute.strength,
@@ -320,6 +348,8 @@ class ArchetypeMapsCatalog {
         id: 'cre_5',
         name: 'First Masterpiece',
         description: 'Your creation shines',
+        directive:
+            'The Trial: Publish or share your recent creation with someone today.',
         emoji: '🖼️',
         targetedAttributes: [
           HabitAttribute.creativity,
@@ -349,6 +379,8 @@ class ArchetypeMapsCatalog {
         id: 'sto_1',
         name: 'Stone Gate',
         description: 'Enter the path of discipline',
+        directive:
+            'Voluntary discomfort: Take a cold shower or lean into physical discomfort today.',
         emoji: '⛩️',
         targetedAttributes: [HabitAttribute.strength],
         xpBoosts: {HabitAttribute.strength: 12},
@@ -363,6 +395,8 @@ class ArchetypeMapsCatalog {
         id: 'sto_2',
         name: 'Meditation Garden',
         description: 'Find inner peace',
+        directive:
+            'Stillness: Practice 15 minutes of mindfulness without moving.',
         emoji: '🎋',
         targetedAttributes: [HabitAttribute.focus, HabitAttribute.strength],
         xpBoosts: {HabitAttribute.focus: 15, HabitAttribute.strength: 10},
@@ -376,6 +410,8 @@ class ArchetypeMapsCatalog {
         id: 'sto_3',
         name: 'Reflection Pool',
         description: 'See yourself clearly',
+        directive:
+            'Self-examination: Journal what is in your control and what is not.',
         emoji: '💧',
         targetedAttributes: [HabitAttribute.focus],
         xpBoosts: {HabitAttribute.focus: 18},
@@ -389,6 +425,8 @@ class ArchetypeMapsCatalog {
         id: 'sto_4',
         name: 'Endurance Trial',
         description: 'Test your resolve',
+        directive:
+            'Physical fortitude: Hold a plank for 2 minutes or perform an isometric hold to exhaustion.',
         emoji: '🌋',
         targetedAttributes: [HabitAttribute.strength, HabitAttribute.vitality],
         xpBoosts: {HabitAttribute.strength: 15, HabitAttribute.vitality: 10},
@@ -402,6 +440,8 @@ class ArchetypeMapsCatalog {
         id: 'sto_5',
         name: 'First Awakening',
         description: 'You have begun to see',
+        directive:
+            'The Trial: Fast from a common comfort (e.g., social media, sugar) for 24 hours.',
         emoji: '👁️',
         targetedAttributes: [HabitAttribute.strength, HabitAttribute.focus],
         xpBoosts: {HabitAttribute.strength: 30, HabitAttribute.focus: 25},
@@ -414,9 +454,9 @@ class ArchetypeMapsCatalog {
     ],
   );
 
-  // ============ MYSTIC MAP: Ethereal Realm ============
-  static final _mysticMap = ArchetypeMapConfig(
-    archetype: UserArchetype.mystic,
+  // ============ ZEALOT MAP: Sacred Peak ============
+  static final _zealotMap = ArchetypeMapConfig(
+    archetype: UserArchetype.zealot,
     mapName: 'Ethereal Realm',
     mapDescription: 'Transcend the ordinary',
     primaryColor: const Color(0xFF8E44AD),
@@ -428,6 +468,8 @@ class ArchetypeMapsCatalog {
         id: 'mys_1',
         name: 'Spirit Portal',
         description: 'Enter the ethereal realm',
+        directive:
+            'Open your mind: Dedicate 10 minutes to unguided meditation or free association.',
         emoji: '🌀',
         targetedAttributes: [HabitAttribute.focus, HabitAttribute.creativity],
         xpBoosts: {HabitAttribute.focus: 10, HabitAttribute.creativity: 10},
@@ -442,6 +484,8 @@ class ArchetypeMapsCatalog {
         id: 'mys_2',
         name: 'Dream Garden',
         description: 'Where visions bloom',
+        directive:
+            'Dream logic: Keep a dream journal or write down your first thought upon waking.',
         emoji: '🌌',
         targetedAttributes: [HabitAttribute.creativity],
         xpBoosts: {HabitAttribute.creativity: 15},
@@ -455,6 +499,8 @@ class ArchetypeMapsCatalog {
         id: 'mys_3',
         name: 'Cosmic Well',
         description: 'Draw from infinite energy',
+        directive:
+            'Energy flow: Practice breathwork, qigong, or yoga for 15 minutes.',
         emoji: '✨',
         targetedAttributes: [HabitAttribute.vitality, HabitAttribute.focus],
         xpBoosts: {HabitAttribute.vitality: 12, HabitAttribute.focus: 15},
@@ -468,6 +514,8 @@ class ArchetypeMapsCatalog {
         id: 'mys_4',
         name: 'Astral Bridge',
         description: 'Connect to higher wisdom',
+        directive:
+            'Esoteric study: Read about a philosophical or spiritual concept new to you.',
         emoji: '🌉',
         targetedAttributes: [HabitAttribute.intellect, HabitAttribute.focus],
         xpBoosts: {HabitAttribute.intellect: 12, HabitAttribute.focus: 12},
@@ -481,6 +529,8 @@ class ArchetypeMapsCatalog {
         id: 'mys_5',
         name: 'First Transcendence',
         description: 'You glimpse beyond',
+        directive:
+            'The Trial: Spend a full hour in complete silence, simply observing your thoughts.',
         emoji: '🧿',
         targetedAttributes: [
           HabitAttribute.focus,
@@ -579,4 +629,391 @@ class ArchetypeMapsCatalog {
       ),
     ],
   );
+
+  // ============ ZEALOT ARCHETYPE: Complete 15-Level Journey ============
+
+  /// Zealot archetype - devotion and spiritual strength
+  /// 3 stages of 5 levels each following the standardized progression pattern
+  class ZealotArchetype {
+    static const String archetypeKey = 'zealot';
+
+    static List<WorldNode> getNodes() {
+      return [
+        // STAGE 1: SHRINE (Levels 1-5)
+        WorldNode(
+          id: 'zealot_1_1',
+          name: 'First Flame',
+          description: 'Light your first flame of devotion',
+          directive: 'Begin your practice: Spend 10 minutes in prayer or meditation.',
+          emoji: '🕯️',
+          targetedAttributes: [HabitAttribute.spirit],
+          xpBoosts: {HabitAttribute.spirit: 15},
+          requiredLevel: 1,
+          stage: 1,
+          levelInStage: 1,
+          archetype: archetypeKey,
+          primaryAttributes: ['spirit'],
+          type: NodeType.waypoint,
+          hexLocation: const HexLocation(0, 0),
+          position: const Offset(0.5, 0.05),
+          connectedNodeIds: ['zealot_1_2'],
+          state: NodeState.available,
+        ),
+        WorldNode(
+          id: 'zealot_1_2',
+          name: 'Inner Fire',
+          description: 'Complete 3 devotional habits',
+          directive: 'Fuel the flame: Complete 3 habits that nurture your spirit today.',
+          emoji: '🔥',
+          targetedAttributes: [HabitAttribute.spirit],
+          xpBoosts: {HabitAttribute.spirit: 20},
+          requiredLevel: 2,
+          stage: 1,
+          levelInStage: 2,
+          archetype: archetypeKey,
+          primaryAttributes: ['spirit'],
+          type: NodeType.resource,
+          hexLocation: const HexLocation(0, -1),
+          position: const Offset(0.4, 0.12),
+          connectedNodeIds: ['zealot_1_3'],
+        ),
+        WorldNode(
+          id: 'zealot_1_3',
+          name: 'Trial of Devotion',
+          description: 'Maintain a 5-day streak and complete a strength workout',
+          directive: 'Body and spirit: Complete a strength workout while maintaining your streak.',
+          emoji: '⚔️',
+          targetedAttributes: [HabitAttribute.spirit, HabitAttribute.strength],
+          xpBoosts: {HabitAttribute.spirit: 20, HabitAttribute.strength: 15},
+          requiredLevel: 3,
+          stage: 1,
+          levelInStage: 3,
+          archetype: archetypeKey,
+          primaryAttributes: ['spirit', 'strength'],
+          type: NodeType.challenge,
+          hexLocation: const HexLocation(-1, -1),
+          position: const Offset(0.25, 0.18),
+          connectedNodeIds: ['zealot_1_4'],
+        ),
+        WorldNode(
+          id: 'zealot_1_4',
+          name: 'Burning Focus',
+          description: 'Practice morning ritual for 7 days',
+          directive: 'Morning devotion: Establish a consistent morning practice for one week.',
+          emoji: '🌅',
+          targetedAttributes: [HabitAttribute.spirit, HabitAttribute.focus],
+          xpBoosts: {HabitAttribute.spirit: 18, HabitAttribute.focus: 12},
+          requiredLevel: 4,
+          stage: 1,
+          levelInStage: 4,
+          archetype: archetypeKey,
+          primaryAttributes: ['spirit'],
+          type: NodeType.resource,
+          hexLocation: const HexLocation(1, -1),
+          position: const Offset(0.65, 0.16),
+          connectedNodeIds: ['zealot_1_5'],
+        ),
+        WorldNode(
+          id: 'zealot_1_5',
+          name: 'Flame Unleashed',
+          description: 'Complete Stage 1 of the Zealot path',
+          directive: 'The Trial: Complete a full day of perfect habit adherence.',
+          emoji: '🔆',
+          targetedAttributes: [
+            HabitAttribute.strength,
+            HabitAttribute.intellect,
+            HabitAttribute.vitality,
+            HabitAttribute.creativity,
+            HabitAttribute.focus,
+            HabitAttribute.spirit,
+          ],
+          xpBoosts: {
+            HabitAttribute.spirit: 50,
+            HabitAttribute.strength: 25,
+            HabitAttribute.focus: 20,
+          },
+          requiredLevel: 5,
+          stage: 1,
+          levelInStage: 5,
+          archetype: archetypeKey,
+          primaryAttributes: ['strength', 'intellect', 'vitality', 'creativity', 'focus', 'spirit'],
+          type: NodeType.milestone,
+          hexLocation: const HexLocation(0, -2),
+          position: const Offset(0.5, 0.24),
+          connectedNodeIds: ['zealot_2_1'],
+        ),
+
+        // STAGE 2: CONCLAVE (Levels 6-10)
+        WorldNode(
+          id: 'zealot_2_1',
+          name: 'Conclave Entry',
+          description: 'Enter the sacred gathering',
+          directive: 'Community: Connect with others on a similar spiritual path.',
+          emoji: '🕌',
+          targetedAttributes: [HabitAttribute.spirit],
+          xpBoosts: {HabitAttribute.spirit: 15},
+          requiredLevel: 6,
+          stage: 2,
+          levelInStage: 1,
+          archetype: archetypeKey,
+          primaryAttributes: ['spirit'],
+          type: NodeType.waypoint,
+          hexLocation: const HexLocation(0, -3),
+          position: const Offset(0.5, 0.30),
+          connectedNodeIds: ['zealot_2_2'],
+        ),
+        WorldNode(
+          id: 'zealot_2_2',
+          name: 'Devotional Chant',
+          description: 'Complete 5 devotional habits in one week',
+          directive: 'Sacred rhythm: Complete 5 spirit-nurturing activities this week.',
+          emoji: '📿',
+          targetedAttributes: [HabitAttribute.spirit],
+          xpBoosts: {HabitAttribute.spirit: 25},
+          requiredLevel: 7,
+          stage: 2,
+          levelInStage: 2,
+          archetype: archetypeKey,
+          primaryAttributes: ['spirit'],
+          type: NodeType.resource,
+          hexLocation: const HexLocation(-1, -3),
+          position: const Offset(0.3, 0.36),
+          connectedNodeIds: ['zealot_2_3'],
+        ),
+        WorldNode(
+          id: 'zealot_2_3',
+          name: 'Trial of Faith',
+          description: '10-day streak with strength and spirit habits',
+          directive: 'Dual devotion: Maintain 10-day streak across spiritual and physical habits.',
+          emoji: '⚡',
+          targetedAttributes: [HabitAttribute.spirit, HabitAttribute.strength],
+          xpBoosts: {HabitAttribute.spirit: 30, HabitAttribute.strength: 25},
+          requiredLevel: 8,
+          stage: 2,
+          levelInStage: 3,
+          archetype: archetypeKey,
+          primaryAttributes: ['spirit', 'strength'],
+          type: NodeType.challenge,
+          hexLocation: const HexLocation(0, -4),
+          position: const Offset(0.5, 0.38),
+          connectedNodeIds: ['zealot_2_4'],
+        ),
+        WorldNode(
+          id: 'zealot_2_4',
+          name: 'Sacred Ritual',
+          description: 'Establish a 14-day meditation practice',
+          directive: 'Deep practice: Meditate for 20 minutes daily for two weeks.',
+          emoji: '🧘',
+          targetedAttributes: [HabitAttribute.spirit, HabitAttribute.focus],
+          xpBoosts: {HabitAttribute.spirit: 35, HabitAttribute.focus: 20},
+          requiredLevel: 9,
+          stage: 2,
+          levelInStage: 4,
+          archetype: archetypeKey,
+          primaryAttributes: ['spirit'],
+          type: NodeType.resource,
+          hexLocation: const HexLocation(1, -3),
+          position: const Offset(0.7, 0.36),
+          connectedNodeIds: ['zealot_2_5'],
+        ),
+        WorldNode(
+          id: 'zealot_2_5',
+          name: 'Conclave Master',
+          description: 'Complete Stage 2 of the Zealot path',
+          directive: 'The Trial: Lead or guide someone in their spiritual practice.',
+          emoji: '👑',
+          targetedAttributes: [
+            HabitAttribute.strength,
+            HabitAttribute.intellect,
+            HabitAttribute.vitality,
+            HabitAttribute.creativity,
+            HabitAttribute.focus,
+            HabitAttribute.spirit,
+          ],
+          xpBoosts: {
+            HabitAttribute.spirit: 60,
+            HabitAttribute.strength: 30,
+            HabitAttribute.focus: 25,
+          },
+          requiredLevel: 10,
+          stage: 2,
+          levelInStage: 5,
+          archetype: archetypeKey,
+          primaryAttributes: ['strength', 'intellect', 'vitality', 'creativity', 'focus', 'spirit'],
+          type: NodeType.milestone,
+          hexLocation: const HexLocation(0, -5),
+          position: const Offset(0.5, 0.45),
+          connectedNodeIds: ['zealot_3_1'],
+        ),
+
+        // STAGE 3: ASCENSION (Levels 11-15)
+        WorldNode(
+          id: 'zealot_3_1',
+          name: 'Ascension Begin',
+          description: 'Begin your journey to transcendence',
+          directive: 'Transcendence: Reflect on what truly matters to you.',
+          emoji: '🌟',
+          targetedAttributes: [HabitAttribute.spirit],
+          xpBoosts: {HabitAttribute.spirit: 20},
+          requiredLevel: 11,
+          stage: 3,
+          levelInStage: 1,
+          archetype: archetypeKey,
+          primaryAttributes: ['spirit'],
+          type: NodeType.waypoint,
+          hexLocation: const HexLocation(0, -6),
+          position: const Offset(0.5, 0.52),
+          connectedNodeIds: ['zealot_3_2'],
+        ),
+        WorldNode(
+          id: 'zealot_3_2',
+          name: 'Divine Connection',
+          description: '7 consecutive days of perfect habit adherence',
+          directive: 'Pure devotion: 100% habit adherence for one full week.',
+          emoji: '✨',
+          targetedAttributes: [HabitAttribute.spirit, HabitAttribute.focus],
+          xpBoosts: {HabitAttribute.spirit: 40, HabitAttribute.focus: 25},
+          requiredLevel: 12,
+          stage: 3,
+          levelInStage: 2,
+          archetype: archetypeKey,
+          primaryAttributes: ['spirit', 'focus'],
+          type: NodeType.resource,
+          hexLocation: const HexLocation(-1, -6),
+          position: const Offset(0.35, 0.58),
+          connectedNodeIds: ['zealot_3_3'],
+        ),
+        WorldNode(
+          id: 'zealot_3_3',
+          name: 'Trial of Transcendence',
+          description: '21-day streak with all spirit-based habits',
+          directive: 'Ultimate test: 21-day streak on all spiritual practices.',
+          emoji: '🔥',
+          targetedAttributes: [HabitAttribute.spirit, HabitAttribute.strength, HabitAttribute.vitality],
+          xpBoosts: {
+            HabitAttribute.spirit: 50,
+            HabitAttribute.strength: 30,
+            HabitAttribute.vitality: 25,
+          },
+          requiredLevel: 13,
+          stage: 3,
+          levelInStage: 3,
+          archetype: archetypeKey,
+          primaryAttributes: ['spirit', 'strength', 'vitality'],
+          type: NodeType.challenge,
+          hexLocation: const HexLocation(0, -7),
+          position: const Offset(0.5, 0.60),
+          connectedNodeIds: ['zealot_3_4'],
+        ),
+        WorldNode(
+          id: 'zealot_3_4',
+          name: 'Eternal Flame',
+          description: 'Maintain a 30-day devotion practice',
+          directive: 'Lifelong commitment: 30 consecutive days of spiritual practice.',
+          emoji: '🕯️',
+          targetedAttributes: [HabitAttribute.spirit],
+          xpBoosts: {HabitAttribute.spirit: 50},
+          requiredLevel: 14,
+          stage: 3,
+          levelInStage: 4,
+          archetype: archetypeKey,
+          primaryAttributes: ['spirit'],
+          type: NodeType.resource,
+          hexLocation: const HexLocation(1, -6),
+          position: const Offset(0.65, 0.58),
+          connectedNodeIds: ['zealot_3_5'],
+        ),
+        WorldNode(
+          id: 'zealot_3_5',
+          name: 'Ascended',
+          description: 'Complete Stage 3 - You have ascended!',
+          directive: 'Ascension achieved: You have mastered the Zealot path.',
+          emoji: '👼',
+          targetedAttributes: [
+            HabitAttribute.strength,
+            HabitAttribute.intellect,
+            HabitAttribute.vitality,
+            HabitAttribute.creativity,
+            HabitAttribute.focus,
+            HabitAttribute.spirit,
+          ],
+          xpBoosts: {
+            HabitAttribute.spirit: 100,
+            HabitAttribute.strength: 50,
+            HabitAttribute.focus: 40,
+            HabitAttribute.intellect: 30,
+            HabitAttribute.creativity: 30,
+            HabitAttribute.vitality: 30,
+          },
+          requiredLevel: 15,
+          stage: 3,
+          levelInStage: 5,
+          archetype: archetypeKey,
+          primaryAttributes: ['strength', 'intellect', 'vitality', 'creativity', 'focus', 'spirit'],
+          type: NodeType.milestone,
+          hexLocation: const HexLocation(0, -8),
+          position: const Offset(0.5, 0.68),
+          connectedNodeIds: [],
+        ),
+      ];
+    }
+
+    /// Get visual theme for Zealot
+    static Map<String, dynamic> getTheme() {
+      return {
+        'primaryColor': 0xFFFFAB00,
+        'accentColor': 0xFFFFD54F,
+        'background': 'flame_gradient',
+        'particle': 'ember',
+        'architecture': 'cathedral',
+      };
+    }
+  }
+
+  /// Get archetype journey nodes for a given archetype key
+  static List<WorldNode> getArchetypeJourney(String archetypeKey) {
+    switch (archetypeKey.toLowerCase()) {
+      case 'zealot':
+        return ZealotArchetype.getNodes();
+      default:
+        // For other archetypes, return their existing map nodes
+        final config = getMapForArchetype(
+          UserArchetype.values.firstWhere(
+            (e) => e.name == archetypeKey,
+            orElse: () => UserArchetype.none,
+          ),
+        );
+        return config.nodes;
+    }
+  }
+
+  /// All archetype data including new structure
+  static const Map<String, dynamic> allArchetypes = {
+    'athlete': {
+      'stageCount': 3,
+      'levelsPerStage': 5,
+    },
+    'scholar': {
+      'stageCount': 3,
+      'levelsPerStage': 5,
+    },
+    'creator': {
+      'stageCount': 3,
+      'levelsPerStage': 5,
+    },
+    'stoic': {
+      'stageCount': 3,
+      'levelsPerStage': 5,
+    },
+    'zealot': {
+      'nodes': ZealotArchetype.getNodes(),
+      'theme': ZealotArchetype.getTheme(),
+      'stageCount': 3,
+      'levelsPerStage': 5,
+    },
+    'explorer': {
+      'stageCount': 3,
+      'levelsPerStage': 5,
+    },
+  };
 }
