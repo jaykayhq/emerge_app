@@ -52,7 +52,10 @@ enum NodeTier {
 class WorldNode {
   final String id;
   final String name;
+  final String title; // Alias for name, used in some contexts
   final String description;
+  final String
+  directive; // Attribute-linked directive for identity reinforcement
   final String emoji; // Added for visual representation (3D object style)
 
   /// Which habit attributes this node boosts when completed
@@ -82,6 +85,15 @@ class WorldNode {
 
   /// Progress within the node (0-100)
   final int progress;
+
+  // NEW FIELDS for gamification system
+  final String? archetype; // Archetype this node belongs to
+  final int stage; // Stage number (1, 2, 3...)
+  final int levelInStage; // Level within stage (1-5)
+  final List<String> primaryAttributes; // Attributes this node affects (as strings)
+  final int nodeXp; // Current XP toward node completion
+  final int nodeXpRequired; // XP required to complete node (default 100)
+  final bool missionCompleted; // Has the mission been completed?
 
   /// Current tier based on progress
   NodeTier get tier {
@@ -115,6 +127,7 @@ class WorldNode {
     required this.id,
     required this.name,
     required this.description,
+    this.directive = '',
     this.emoji = '📍',
     required this.targetedAttributes,
     required this.xpBoosts,
@@ -125,12 +138,24 @@ class WorldNode {
     this.connectedNodeIds = const [],
     this.state = NodeState.locked,
     this.progress = 0,
+    // New fields with defaults
+    this.archetype,
+    this.stage = 1,
+    this.levelInStage = 1,
+    this.primaryAttributes = const [],
+    this.nodeXp = 0,
+    this.nodeXpRequired = 100,
+    this.missionCompleted = false,
   });
+
+  /// Title alias for name (for compatibility with plan references)
+  String get title => name;
 
   WorldNode copyWith({
     String? id,
     String? name,
     String? description,
+    String? directive,
     String? emoji,
     List<HabitAttribute>? targetedAttributes,
     Map<HabitAttribute, int>? xpBoosts,
@@ -141,11 +166,19 @@ class WorldNode {
     List<String>? connectedNodeIds,
     NodeState? state,
     int? progress,
+    String? archetype,
+    int? stage,
+    int? levelInStage,
+    List<String>? primaryAttributes,
+    int? nodeXp,
+    int? nodeXpRequired,
+    bool? missionCompleted,
   }) {
     return WorldNode(
       id: id ?? this.id,
       name: name ?? this.name,
       description: description ?? this.description,
+      directive: directive ?? this.directive,
       emoji: emoji ?? this.emoji,
       targetedAttributes: targetedAttributes ?? this.targetedAttributes,
       xpBoosts: xpBoosts ?? this.xpBoosts,
@@ -156,6 +189,13 @@ class WorldNode {
       connectedNodeIds: connectedNodeIds ?? this.connectedNodeIds,
       state: state ?? this.state,
       progress: progress ?? this.progress,
+      archetype: archetype ?? this.archetype,
+      stage: stage ?? this.stage,
+      levelInStage: levelInStage ?? this.levelInStage,
+      primaryAttributes: primaryAttributes ?? this.primaryAttributes,
+      nodeXp: nodeXp ?? this.nodeXp,
+      nodeXpRequired: nodeXpRequired ?? this.nodeXpRequired,
+      missionCompleted: missionCompleted ?? this.missionCompleted,
     );
   }
 
@@ -175,13 +215,20 @@ class WorldNode {
       'connectedNodeIds': connectedNodeIds,
       'state': state.name,
       'progress': progress,
+      'archetype': archetype,
+      'stage': stage,
+      'levelInStage': levelInStage,
+      'primaryAttributes': primaryAttributes,
+      'nodeXp': nodeXp,
+      'nodeXpRequired': nodeXpRequired,
+      'missionCompleted': missionCompleted,
     };
   }
 
   factory WorldNode.fromMap(Map<String, dynamic> map) {
     return WorldNode(
       id: map['id'] as String,
-      name: map['name'] as String,
+      name: map['name'] as String? ?? map['title'] as String? ?? '',
       description: map['description'] as String? ?? '',
       emoji: map['emoji'] as String? ?? '📍',
       targetedAttributes:
@@ -215,6 +262,22 @@ class WorldNode {
         orElse: () => NodeState.locked,
       ),
       progress: map['progress'] as int? ?? 0,
+      archetype: map['archetype'] as String?,
+      stage: map['stage'] as int? ?? 1,
+      levelInStage: map['levelInStage'] as int? ?? 1,
+      primaryAttributes: (map['primaryAttributes'] as List<dynamic>?)
+              ?.map((e) => e as String)
+              .toList() ??
+          [],
+      nodeXp: map['nodeXp'] as int? ?? 0,
+      nodeXpRequired: map['nodeXpRequired'] as int? ?? 100,
+      missionCompleted: map['missionCompleted'] as bool? ?? false,
     );
   }
+
+  // ADD: Helper to check if node is complete
+  bool get isComplete => nodeXp >= nodeXpRequired;
+
+  // ADD: Helper to get completion percentage
+  double get completionPercent => nodeXp / nodeXpRequired;
 }
