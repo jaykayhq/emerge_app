@@ -93,9 +93,44 @@ class UserAvatarStats {
     final currentXp = attributeXp[key] ?? 0;
     final newAttributeXp = Map<String, int>.from(attributeXp);
     newAttributeXp[key] = currentXp + amount;
-    return copyWith(
-      attributeXp: newAttributeXp,
-    );
+
+    // Also update the individual attribute field so totalXp computes correctly
+    switch (key) {
+      case 'strength':
+        return copyWith(
+          attributeXp: newAttributeXp,
+          strengthXp: strengthXp + amount,
+        );
+      case 'intellect':
+        return copyWith(
+          attributeXp: newAttributeXp,
+          intellectXp: intellectXp + amount,
+        );
+      case 'vitality':
+        return copyWith(
+          attributeXp: newAttributeXp,
+          vitalityXp: vitalityXp + amount,
+        );
+      case 'creativity':
+        return copyWith(
+          attributeXp: newAttributeXp,
+          creativityXp: creativityXp + amount,
+        );
+      case 'focus':
+        return copyWith(
+          attributeXp: newAttributeXp,
+          focusXp: focusXp + amount,
+        );
+      case 'spirit':
+        return copyWith(
+          attributeXp: newAttributeXp,
+          spiritXp: spiritXp + amount,
+        );
+      default:
+        return copyWith(
+          attributeXp: newAttributeXp,
+        );
+    }
   }
 }
 

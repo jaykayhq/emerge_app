@@ -52,7 +52,6 @@ enum NodeTier {
 class WorldNode {
   final String id;
   final String name;
-  final String title; // Alias for name, used in some contexts
   final String description;
   final String
   directive; // Attribute-linked directive for identity reinforcement
