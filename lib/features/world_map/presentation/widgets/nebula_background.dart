@@ -9,12 +9,14 @@ class NebulaBackground extends StatefulWidget {
   final BiomeType biome;
   final Color primaryColor;
   final Color accentColor;
+  final int level;
 
   const NebulaBackground({
     super.key,
     required this.biome,
     required this.primaryColor,
     required this.accentColor,
+    this.level = 1,
   });
 
   @override
@@ -57,16 +59,42 @@ class _NebulaBackgroundState extends State<NebulaBackground>
   }
 
   void _generateElements() {
-    final random = math.Random(widget.biome.index * 42);
+    final random = math.Random(widget.biome.index * 42 + widget.level);
 
-    // Generate stars
-    _stars = List.generate(80, (i) => _Star.random(random));
+    // Procedural evolution: every 5 levels increases the density/richness
+    final evolutionPhase = ((widget.level - 1) ~/ 5).clamp(
+      0,
+      10,
+    ); // 0 to 10 max
 
-    // Generate nebula clouds
-    _nebulaClouds = List.generate(5, (i) => _NebulaCloud.random(random, i));
+    // Generate stars - more stars as you evolve
+    final starCount = 60 + (evolutionPhase * 15);
+    _stars = List.generate(
+      starCount,
+      (i) => _Star.random(random, evolutionPhase),
+    );
 
-    // Generate floating particles
-    _particles = List.generate(30, (i) => _FloatingParticle.random(random));
+    // Generate nebula clouds - slightly denser and more clouds as you evolve
+    final cloudCount = 4 + (evolutionPhase ~/ 2);
+    _nebulaClouds = List.generate(
+      cloudCount,
+      (i) => _NebulaCloud.random(random, i, evolutionPhase),
+    );
+
+    // Generate floating particles - more particles as you evolve
+    final particleCount = 20 + (evolutionPhase * 8);
+    _particles = List.generate(
+      particleCount,
+      (i) => _FloatingParticle.random(random, evolutionPhase),
+    );
+  }
+
+  @override
+  void didUpdateWidget(NebulaBackground oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.level != widget.level || oldWidget.biome != widget.biome) {
+      _generateElements();
+    }
   }
 
   @override
@@ -143,16 +171,16 @@ class _NebulaBackgroundState extends State<NebulaBackground>
   Widget _buildDeepSpaceGradient(List<Color> biomeColors) {
     return Container(
       decoration: BoxDecoration(
-        gradient: RadialGradient(
-          center: const Alignment(0.0, -0.3),
-          radius: 1.5,
+        // Stitch World Map cosmic gradient
+        gradient: const LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
           colors: [
-            biomeColors[0].withValues(alpha: 0.8),
-            biomeColors[1],
-            const Color(0xFF050510),
-            const Color(0xFF020208),
+            Color(0xFF0A0A1A), // Near-black void (top)
+            Color(0xFF1A0A2A), // Rich purple center
+            Color(0xFF0A0A1A), // Near-black void (bottom)
           ],
-          stops: const [0.0, 0.3, 0.7, 1.0],
+          stops: [0.0, 0.5, 1.0],
         ),
       ),
     );
@@ -176,17 +204,34 @@ class _NebulaBackgroundState extends State<NebulaBackground>
   }
 
   List<Color> _getBiomeColors(BiomeType biome) {
+    // All biomes now use the Stitch World Map cosmic palette
+    // Colors: deep purple-black with nebula accents
     switch (biome) {
       case BiomeType.valley:
-        return [const Color(0xFF1A3A2F), const Color(0xFF0D1F1A)];
+        return [
+          const Color(0xFF2A1A3A),
+          const Color(0xFF0A1A3A),
+        ]; // Purple + Blue nebula
       case BiomeType.forest:
-        return [const Color(0xFF1B4332), const Color(0xFF0D2818)];
+        return [
+          const Color(0xFF1A0A3A),
+          const Color(0xFF2A1A3A),
+        ]; // Deep purple + Mid purple
       case BiomeType.cliffs:
-        return [const Color(0xFF2D3A4F), const Color(0xFF151C28)];
+        return [
+          const Color(0xFF0A1A3A),
+          const Color(0xFF1A0A2A),
+        ]; // Blue + Purple
       case BiomeType.clouds:
-        return [const Color(0xFF3A3A5C), const Color(0xFF1A1A2E)];
+        return [
+          const Color(0xFF2A1A3A),
+          const Color(0xFF0A1A3A),
+        ]; // Purple + Blue
       case BiomeType.summit:
-        return [const Color(0xFF2E1A4A), const Color(0xFF150D25)];
+        return [
+          const Color(0xFF1A0A2A),
+          const Color(0xFF2A1A3A),
+        ]; // Rich purple + Mid purple
     }
   }
 }
@@ -208,13 +253,19 @@ class _Star {
     required this.brightness,
   });
 
-  factory _Star.random(math.Random random) {
+  factory _Star.random(math.Random random, int phase) {
+    // Brighter and larger stars at higher phases
+    final sizeBoost = phase * 0.1;
+    final brightnessBoost = phase * 0.05;
     return _Star(
       x: random.nextDouble(),
       y: random.nextDouble(),
-      size: 0.5 + random.nextDouble() * 2.0,
+      size: 0.5 + random.nextDouble() * 2.0 + sizeBoost,
       twinklePhase: random.nextDouble(),
-      brightness: 0.3 + random.nextDouble() * 0.7,
+      brightness: (0.3 + random.nextDouble() * 0.7 + brightnessBoost).clamp(
+        0.0,
+        1.0,
+      ),
     );
   }
 }
@@ -234,12 +285,16 @@ class _NebulaCloud {
     required this.colorIndex,
   });
 
-  factory _NebulaCloud.random(math.Random random, int index) {
+  factory _NebulaCloud.random(math.Random random, int index, int phase) {
+    final opacityBoost = phase * 0.015;
     return _NebulaCloud(
       x: random.nextDouble(),
       y: random.nextDouble(),
       radius: 0.15 + random.nextDouble() * 0.25,
-      opacity: 0.08 + random.nextDouble() * 0.12,
+      opacity: (0.08 + random.nextDouble() * 0.12 + opacityBoost).clamp(
+        0.0,
+        0.5,
+      ),
       colorIndex: index % 2,
     );
   }
@@ -260,12 +315,13 @@ class _FloatingParticle {
     required this.phase,
   });
 
-  factory _FloatingParticle.random(math.Random random) {
+  factory _FloatingParticle.random(math.Random random, int phase) {
+    final speedBoost = phase * 0.05;
     return _FloatingParticle(
       x: random.nextDouble(),
       y: random.nextDouble(),
-      size: 1.0 + random.nextDouble() * 2.0,
-      speed: 0.3 + random.nextDouble() * 0.7,
+      size: 1.0 + random.nextDouble() * 2.0 + (phase * 0.2),
+      speed: 0.3 + random.nextDouble() * 0.7 + speedBoost,
       phase: random.nextDouble(),
     );
   }

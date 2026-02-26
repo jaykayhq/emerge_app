@@ -9,7 +9,9 @@ import 'package:emerge_app/features/world_map/domain/models/archetype_maps_catal
 import 'package:emerge_app/features/world_map/domain/models/world_node.dart';
 import 'package:emerge_app/features/world_map/presentation/widgets/nebula_background.dart';
 import 'package:emerge_app/features/world_map/presentation/widgets/node_detail_sheet.dart';
-import 'package:emerge_app/features/world_map/presentation/widgets/pyramid_map_layout.dart';
+import 'package:emerge_app/features/world_map/presentation/widgets/curved_map_layout.dart';
+import 'package:emerge_app/features/tutorial/presentation/providers/tutorial_provider.dart';
+import 'package:emerge_app/features/tutorial/presentation/widgets/tutorial_overlay.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -24,6 +26,65 @@ class WorldMapScreen extends ConsumerStatefulWidget {
 
 class _WorldMapScreenState extends ConsumerState<WorldMapScreen> {
   final ScrollController _scrollController = ScrollController();
+  final GlobalKey _topBarKey = GlobalKey();
+  final GlobalKey _statsBarKey = GlobalKey();
+  final GlobalKey _firstNodeKey = GlobalKey();
+
+  @override
+  void initState() {
+    super.initState();
+    _checkTutorial();
+  }
+
+  void _checkTutorial() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final tutorialState = ref.read(tutorialProvider);
+      if (!tutorialState.isCompleted(TutorialStep.worldMap)) {
+        _showTutorial();
+      }
+    });
+  }
+
+  void _showTutorial() {
+    late OverlayEntry entry;
+    entry = OverlayEntry(
+      builder: (context) => TutorialOverlay(
+        steps: [
+          const TutorialStepInfo(
+            title: 'Welcome to Your Inner World',
+            description:
+                'This map represents your psyche. As you build habits, this landscape will flourish and evolve.',
+          ),
+          TutorialStepInfo(
+            title: 'Archetype Journey',
+            description:
+                'This is your specific path. You are currently exploring the Valley of New Beginnings.',
+            targetKey: _topBarKey,
+          ),
+          TutorialStepInfo(
+            title: 'Growth Nodes',
+            description:
+                'Each node marks a significant milestone in your development. Unlock them by reaching level requirements.',
+            targetKey: _firstNodeKey,
+          ),
+          TutorialStepInfo(
+            title: 'Identity Progress',
+            description:
+                'Monitor your XP, streak, and world status here. Level up to expand your domain.',
+            targetKey: _statsBarKey,
+            alignment: Alignment.topCenter,
+          ),
+        ],
+        onCompleted: () {
+          ref
+              .read(tutorialProvider.notifier)
+              .completeStep(TutorialStep.worldMap);
+          entry.remove();
+        },
+      ),
+    );
+    Overlay.of(context).insert(entry);
+  }
 
   @override
   void dispose() {
@@ -36,7 +97,7 @@ class _WorldMapScreenState extends ConsumerState<WorldMapScreen> {
     final statsAsync = ref.watch(userStatsStreamProvider);
 
     return Scaffold(
-      backgroundColor: Colors.black,
+      backgroundColor: const Color(0xFF0A0A1A), // Cosmic void dark
       body: statsAsync.when(
         data: (profile) {
           final archetype = profile.archetype;
@@ -65,15 +126,17 @@ class _WorldMapScreenState extends ConsumerState<WorldMapScreen> {
                 biome: currentBiome,
                 primaryColor: mapConfig.primaryColor,
                 accentColor: mapConfig.accentColor,
+                level: currentLevel,
               ),
 
-              // Layer 2: Map content (Pyramid Layout)
+              // Layer 2: Map content (Curved Layout)
               SafeArea(
                 bottom: false,
-                child: PyramidMapLayout(
+                child: CurvedMapLayout(
                   nodes: hydratedNodes,
                   primaryColor: mapConfig.primaryColor,
                   scrollController: _scrollController,
+                  firstNodeKey: _firstNodeKey,
                   onNodeTap: (node) =>
                       _showNodeDetail(context, node, mapConfig),
                 ),
@@ -86,6 +149,7 @@ class _WorldMapScreenState extends ConsumerState<WorldMapScreen> {
                 right: 0,
                 child: SafeArea(
                   child: _GlassmorphismTopBar(
+                    key: _topBarKey,
                     config: mapConfig,
                     level: currentLevel,
                     biome: currentBiome,
@@ -99,6 +163,7 @@ class _WorldMapScreenState extends ConsumerState<WorldMapScreen> {
                 left: 0,
                 right: 0,
                 child: _GlassmorphismStatsBar(
+                  key: _statsBarKey,
                   profile: profile,
                   config: mapConfig,
                   hydratedNodes: hydratedNodes,
@@ -254,6 +319,7 @@ class _GlassmorphismTopBar extends StatelessWidget {
   final BiomeType biome;
 
   const _GlassmorphismTopBar({
+    super.key,
     required this.config,
     required this.level,
     required this.biome,
@@ -355,13 +421,14 @@ class _GlassmorphismTopBar extends StatelessWidget {
   }
 }
 
-/// Glassmorphism bottom stats bar - Extended Left to Right
+/// Glassmorphism bottom stats bar - Stitch World Map design
 class _GlassmorphismStatsBar extends StatelessWidget {
   final UserProfile profile;
   final ArchetypeMapConfig config;
   final List<WorldNode> hydratedNodes;
 
   const _GlassmorphismStatsBar({
+    super.key,
     required this.profile,
     required this.config,
     required this.hydratedNodes,
@@ -378,23 +445,22 @@ class _GlassmorphismStatsBar extends StatelessWidget {
         .length;
     final totalNodes = config.nodes.length;
 
-    // Calculate progress for XP bar
-    // Simple logic: current XP / (level * 1000) or similar
-    // Assuming 500 XP per level for viz
-    final xpProgress = (stats.totalXp % 500) / 500.0;
+    // Calculate progress to next level (500 XP per level)
+    final xpInLevel = stats.totalXp % 500;
+    final xpForNextLevel = 500;
+    final xpProgress = (xpInLevel / xpForNextLevel).clamp(0.0, 1.0);
 
     return ClipRRect(
-      // No borders, full width at bottom (or just above nav bar if any, but Scaffold body covers it)
       child: BackdropFilter(
         filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
         child: Container(
           width: double.infinity,
           padding: const EdgeInsets.fromLTRB(
-            20,
             16,
-            20,
-            32,
-          ), // Extra bottom padding for safe area
+            12,
+            16,
+            32, // Extra bottom padding for safe area
+          ),
           decoration: BoxDecoration(
             color: Colors.black.withValues(alpha: 0.6),
             border: Border(
@@ -407,47 +473,65 @@ class _GlassmorphismStatsBar extends StatelessWidget {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              // XP Progress Bar (Extended Left to Right)
+              // Progress to Next Level
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text(
-                    'XP ${stats.totalXp}',
+                  const Text(
+                    'Progress to Next Level',
                     style: TextStyle(
-                      color: EmergeColors.yellow,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 12,
+                      color: Colors.white70,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
                     ),
                   ),
                   Text(
-                    '${(xpProgress * 100).toInt()}%',
-                    style: TextStyle(color: Colors.white54, fontSize: 12),
+                    '$xpInLevel / $xpForNextLevel XP',
+                    style: const TextStyle(color: Colors.white70, fontSize: 12),
                   ),
                 ],
               ),
-              const SizedBox(height: 6),
+              const SizedBox(height: 8),
+
+              // XP Progress bar
               ClipRRect(
-                borderRadius: BorderRadius.circular(4),
-                child: LinearProgressIndicator(
-                  value: xpProgress.clamp(0.0, 1.0),
-                  backgroundColor: Colors.white10,
-                  valueColor: AlwaysStoppedAnimation(EmergeColors.yellow),
-                  minHeight: 6,
+                borderRadius: BorderRadius.circular(99),
+                child: Container(
+                  height: 8,
+                  decoration: BoxDecoration(
+                    color: config.primaryColor.withValues(alpha: 0.2),
+                    borderRadius: BorderRadius.circular(99),
+                  ),
+                  child: FractionallySizedBox(
+                    widthFactor: xpProgress,
+                    alignment: Alignment.centerLeft,
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: config.primaryColor,
+                        borderRadius: BorderRadius.circular(99),
+                        boxShadow: [
+                          BoxShadow(
+                            color: config.primaryColor.withValues(alpha: 0.5),
+                            blurRadius: 8,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
                 ),
               ),
 
               const SizedBox(height: 16),
 
-              // Stats Row
+              // Stats Row - Stitch style
               Row(
-                mainAxisAlignment:
-                    MainAxisAlignment.spaceAround, // Even spacing
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
                 children: [
                   _StatItem(
                     label: 'Streak',
                     value: '${stats.streak}',
                     icon: Icons.local_fire_department,
-                    color: EmergeColors.coral,
+                    color: const Color(0xFFFF7F50), // Coral
                   ),
                   _StatItem(
                     label: 'Nodes',
@@ -461,7 +545,7 @@ class _GlassmorphismStatsBar extends StatelessWidget {
                         ? 'Thriving'
                         : 'Stable',
                     icon: Icons.public,
-                    color: Colors.greenAccent,
+                    color: const Color(0xFF00FFCC), // Teal
                   ),
                 ],
               ),

@@ -7,6 +7,7 @@ import 'package:emerge_app/features/habits/domain/entities/habit.dart';
 import 'package:emerge_app/features/habits/presentation/providers/habit_providers.dart';
 import 'package:emerge_app/features/habits/presentation/widgets/habit_template_picker.dart';
 import 'package:emerge_app/features/habits/presentation/widgets/habit_form_widgets.dart';
+import 'package:emerge_app/features/timeline/presentation/widgets/habit_timeline_section.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -167,6 +168,7 @@ class _AdvancedCreateHabitScreenState
       } else {
         _frequency = HabitFrequency.daily;
       }
+      _attribute = template.attribute;
       _updateIdentityStatement();
     });
     if (mounted) {
@@ -188,7 +190,7 @@ class _AdvancedCreateHabitScreenState
     return Scaffold(
       backgroundColor: EmergeColors.background,
       body: Container(
-        decoration: const BoxDecoration(gradient: EmergeColors.cosmicGradient),
+        decoration: const BoxDecoration(gradient: AppTheme.cosmicGradient),
         child: SafeArea(
           child: Form(
             key: _formKey,
@@ -619,6 +621,7 @@ class _AdvancedCreateHabitScreenState
                               runSpacing: 8,
                               children: HabitAttribute.values.map((attr) {
                                 final isSelected = _attribute == attr;
+                                final attrColor = attributeColor(attr);
                                 return GestureDetector(
                                   onTap: () {
                                     HapticFeedback.selectionClick();
@@ -636,8 +639,8 @@ class _AdvancedCreateHabitScreenState
                                       gradient: isSelected
                                           ? LinearGradient(
                                               colors: [
-                                                EmergeColors.teal,
-                                                EmergeColors.teal.withValues(
+                                                attrColor,
+                                                attrColor.withValues(
                                                   alpha: 0.7,
                                                 ),
                                               ],
@@ -645,19 +648,19 @@ class _AdvancedCreateHabitScreenState
                                           : null,
                                       color: isSelected
                                           ? null
-                                          : Colors.transparent,
+                                          : attrColor.withValues(alpha: 0.08),
                                       borderRadius: BorderRadius.circular(20),
                                       border: Border.all(
                                         color: isSelected
-                                            ? EmergeColors.teal
-                                            : AppTheme.textSecondaryDark
-                                                  .withValues(alpha: 0.3),
+                                            ? attrColor
+                                            : attrColor.withValues(alpha: 0.3),
                                       ),
                                       boxShadow: isSelected
                                           ? [
                                               BoxShadow(
-                                                color: EmergeColors.teal
-                                                    .withValues(alpha: 0.3),
+                                                color: attrColor.withValues(
+                                                  alpha: 0.3,
+                                                ),
                                                 blurRadius: 8,
                                                 spreadRadius: -2,
                                               ),
@@ -669,7 +672,7 @@ class _AdvancedCreateHabitScreenState
                                       style: TextStyle(
                                         color: isSelected
                                             ? Colors.white
-                                            : AppTheme.textSecondaryDark,
+                                            : attrColor,
                                         fontWeight: FontWeight.w600,
                                         fontSize: 12,
                                       ),

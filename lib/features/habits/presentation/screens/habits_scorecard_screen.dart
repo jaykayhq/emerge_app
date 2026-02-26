@@ -2,6 +2,7 @@ import 'package:emerge_app/features/habits/domain/entities/habit.dart';
 import 'package:emerge_app/features/habits/presentation/providers/habit_providers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:gap/gap.dart';
 
 class HabitsScorecardScreen extends ConsumerWidget {
@@ -80,6 +81,7 @@ class _ScorecardItem extends ConsumerWidget {
     }
 
     return ListTile(
+      onTap: () => context.push('/timeline/detail/${habit.id}'),
       leading: Container(
         padding: const EdgeInsets.all(8),
         decoration: BoxDecoration(

@@ -40,6 +40,7 @@ class Habit extends Equatable {
   final String? location;
   final int timerDurationMinutes; // Default: 2 (Two-Minute Rule)
   final List<String> customRules; // User-defined habit rules
+  final List<String> environmentPriming; // Environment priming tasks
 
   const Habit({
     required this.id,
@@ -70,6 +71,7 @@ class Habit extends Equatable {
     this.location,
     this.timerDurationMinutes = 2,
     this.customRules = const [],
+    this.environmentPriming = const [],
   });
 
   static Habit empty() {
@@ -105,6 +107,7 @@ class Habit extends Equatable {
     String? location,
     int? timerDurationMinutes,
     List<String>? customRules,
+    List<String>? environmentPriming,
   }) {
     return Habit(
       id: id ?? this.id,
@@ -135,6 +138,7 @@ class Habit extends Equatable {
       location: location ?? this.location,
       timerDurationMinutes: timerDurationMinutes ?? this.timerDurationMinutes,
       customRules: customRules ?? this.customRules,
+      environmentPriming: environmentPriming ?? this.environmentPriming,
     );
   }
 
@@ -168,5 +172,6 @@ class Habit extends Equatable {
     location,
     timerDurationMinutes,
     customRules,
+    environmentPriming,
   ];
 }
