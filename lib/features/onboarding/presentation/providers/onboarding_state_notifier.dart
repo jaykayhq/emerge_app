@@ -365,14 +365,53 @@ class EnhancedOnboardingNotifier extends _$EnhancedOnboardingNotifier {
         orElse: () => suggestions.first,
       );
 
+      // Map Archetype to its core Habit Attribute
+      HabitAttribute mappedAttribute = HabitAttribute.vitality;
+      switch (state.selectedArchetype) {
+        case UserArchetype.athlete:
+          mappedAttribute = HabitAttribute.vitality;
+          break;
+        case UserArchetype.scholar:
+          mappedAttribute = HabitAttribute.intellect;
+          break;
+        case UserArchetype.creator:
+          mappedAttribute = HabitAttribute.creativity;
+          break;
+        case UserArchetype.stoic:
+          mappedAttribute = HabitAttribute.focus;
+          break;
+        case UserArchetype.zealot:
+          mappedAttribute = HabitAttribute.spirit;
+          break;
+        default:
+          mappedAttribute = HabitAttribute.vitality;
+      }
+
+      // Map pseudo-anchor string to TimeOfDay string
+      TimeOfDayPreference mappedTimeOfDay = TimeOfDayPreference.morning;
+      final rawAnchor = state.anchors.isNotEmpty ? state.anchors.first : '';
+      if (rawAnchor.toLowerCase().contains('bed') ||
+          rawAnchor.toLowerCase().contains('night')) {
+        mappedTimeOfDay = TimeOfDayPreference
+            .evening; // Using evening for night to match enum
+      } else if (rawAnchor.toLowerCase().contains('lunch') ||
+          rawAnchor.toLowerCase().contains('afternoon')) {
+        mappedTimeOfDay = TimeOfDayPreference.afternoon;
+      } else if (rawAnchor.toLowerCase().contains('work') ||
+          rawAnchor.toLowerCase().contains('even')) {
+        mappedTimeOfDay = TimeOfDayPreference.evening;
+      }
+
       final habit = Habit(
         id: const Uuid().v4(),
         userId: user.id,
         title: stack.habitId,
-        cue: 'After I ${anchorSuggestion.title}',
+        cue:
+            'After I ${anchorSuggestion.title}', // This is overridden by the real anchor string when actually displayed
         createdAt: DateTime.now(),
         difficulty: HabitDifficulty.easy,
-        attribute: HabitAttribute.vitality,
+        attribute: mappedAttribute,
+        timeOfDayPreference: mappedTimeOfDay,
         identityTags: ['onboarding', state.selectedArchetype?.name ?? ''],
       );
 

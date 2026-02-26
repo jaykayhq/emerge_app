@@ -239,7 +239,11 @@ class AffiliateService {
   }
 
   /// Generates a tracking URL with referral code and user attribution
-  String generateTrackingUrl(String baseUrl, {String? referralCode, String? userId}) {
+  String generateTrackingUrl(
+    String baseUrl, {
+    String? referralCode,
+    String? userId,
+  }) {
     final uri = Uri.parse(baseUrl);
     final queryParams = Map<String, String>.from(uri.queryParameters);
 
@@ -256,7 +260,10 @@ class AffiliateService {
 
   /// Verifies if a user is eligible to redeem a challenge reward
   /// Checks if challenge is completed and not already redeemed
-  Future<bool> verifyChallengeEligibility(String userId, String challengeId) async {
+  Future<bool> verifyChallengeEligibility(
+    String userId,
+    String challengeId,
+  ) async {
     try {
       final doc = await _firestore
           .collection('users')
@@ -288,7 +295,9 @@ class AffiliateService {
   }
 
   /// Gets all active affiliate partners for a given archetype
-  Future<List<Map<String, dynamic>>> getPartnersForArchetype(String archetypeId) async {
+  Future<List<Map<String, dynamic>>> getPartnersForArchetype(
+    String archetypeId,
+  ) async {
     try {
       final snapshot = await _firestore
           .collection('affiliatePartners')
@@ -299,10 +308,7 @@ class AffiliateService {
       return snapshot.docs.map((doc) {
         final data = doc.data() as Map<String, dynamic>?;
         if (data != null) {
-          return {
-            'id': doc.id,
-            ...data,
-          };
+          return {'id': doc.id, ...data};
         }
         return {'id': doc.id};
       }).toList();

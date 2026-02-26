@@ -180,11 +180,35 @@ service cloud.firestore {
 
     match /user_stats/{userId}/reflections/{reflectionId} {
       allow read: if isOwner(userId);
-      allow create: if isOwner(userId) && 
-                       request.resource.data.keys().hasAll(['mood', 'createdAt']) &&
-                       request.resource.data.mood is string &&
-                       request.resource.data.createdAt is timestamp;
-      allow update, delete: if isOwner(userId);
+
+      // Reflection creation: require essential fields with proper types
+      allow create: if isOwner(userId) &&
+                       // Must have these required fields
+                       request.resource.data.keys().hasAll(['id', 'date', 'title', 'content', 'type']) &&
+                       // Type validations
+                       request.resource.data.id is string &&
+                       request.resource.data.date is string &&
+                       request.resource.data.title is string &&
+                       request.resource.data.content is string &&
+                       request.resource.data.type is string &&
+                       // createdAt must be a Timestamp (FieldValue.serverTimestamp)
+                       request.resource.data.createdAt is timestamp &&
+                       // String length limits to prevent abuse
+                       request.resource.data.title.size() <= 200 &&
+                       request.resource.data.content.size() <= 5000;
+
+      // Updates: same validation as create
+      allow update: if isOwner(userId) &&
+                       request.resource.data.keys().hasAll(['id', 'date', 'title', 'content', 'type']) &&
+                       request.resource.data.id is string &&
+                       request.resource.data.date is string &&
+                       request.resource.data.title is string &&
+                       request.resource.data.content is string &&
+                       request.resource.data.type is string &&
+                       request.resource.data.title.size() <= 200 &&
+                       request.resource.data.content.size() <= 5000;
+
+      allow delete: if isOwner(userId);
     }
 
     // Affiliate Partners (Read-only for public, Write by Admin)

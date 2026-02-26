@@ -11,7 +11,9 @@ class AffiliateAnalyticsService {
 
   /// Gets conversion funnel analytics for a specific challenge
   /// Tracks: impressions → joins → completions → redemptions
-  Future<ConversionFunnel> getChallengeConversionFunnel(String challengeId) async {
+  Future<ConversionFunnel> getChallengeConversionFunnel(
+    String challengeId,
+  ) async {
     try {
       // In production, this should query pre-aggregated analytics collections
       // For now, we'll do a simplified query from challenge documents
@@ -111,9 +113,11 @@ class AffiliateAnalyticsService {
         partnerRevenue[partnerId] = RevenueBreakdown(
           partnerId: partnerId,
           partnerName: partnerName,
-          impressions: breakdown.impressions + (data['impressions'] as int? ?? 0),
+          impressions:
+              breakdown.impressions + (data['impressions'] as int? ?? 0),
           clicks: breakdown.clicks + (data['clicks'] as int? ?? 0),
-          conversions: breakdown.conversions + (data['conversions'] as int? ?? 0),
+          conversions:
+              breakdown.conversions + (data['conversions'] as int? ?? 0),
           revenue: breakdown.revenue + (data['revenue'] as double? ?? 0.0),
           commissionRate: commissionRate,
         );
@@ -174,7 +178,10 @@ class AffiliateAnalyticsService {
     try {
       final snapshot = await _firestore
           .collection('referrals')
-          .where('createdAt', isGreaterThanOrEqualTo: Timestamp.fromDate(startDate))
+          .where(
+            'createdAt',
+            isGreaterThanOrEqualTo: Timestamp.fromDate(startDate),
+          )
           .where('createdAt', isLessThanOrEqualTo: Timestamp.fromDate(endDate))
           .get();
 
@@ -206,7 +213,9 @@ class AffiliateAnalyticsService {
         pendingReferrals: totalReferrals - completedReferrals,
         totalXpAwarded: totalXpAwarded,
         uniqueReferrers: referrerIds.length,
-        completionRate: totalReferrals > 0 ? completedReferrals / totalReferrals : 0.0,
+        completionRate: totalReferrals > 0
+            ? completedReferrals / totalReferrals
+            : 0.0,
       );
     } catch (e) {
       debugPrint('Error getting referral metrics: $e');
@@ -263,8 +272,12 @@ class AffiliateAnalyticsService {
         totalRevenue: totalRevenue,
         totalImpressions: totalImpressions,
         totalConversions: totalConversions,
-        conversionRate: totalImpressions > 0 ? totalConversions / totalImpressions : 0.0,
-        topPartner: revenueBreakdown.isNotEmpty ? revenueBreakdown.first.partnerName : 'N/A',
+        conversionRate: totalImpressions > 0
+            ? totalConversions / totalImpressions
+            : 0.0,
+        topPartner: revenueBreakdown.isNotEmpty
+            ? revenueBreakdown.first.partnerName
+            : 'N/A',
         partnerCount: revenueBreakdown.length,
       );
     } catch (e) {

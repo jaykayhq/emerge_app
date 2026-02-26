@@ -1,7 +1,6 @@
 import 'dart:ui';
 import 'package:emerge_app/core/theme/app_theme.dart';
 import 'package:emerge_app/core/theme/archetype_theme.dart';
-import 'package:emerge_app/core/presentation/widgets/emerge_branding.dart';
 import 'package:emerge_app/features/auth/domain/entities/user_extension.dart';
 import 'package:emerge_app/features/habits/domain/entities/habit.dart';
 import 'package:flutter/material.dart';

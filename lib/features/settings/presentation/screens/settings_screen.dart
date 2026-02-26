@@ -1,3 +1,4 @@
+import 'dart:ui';
 import 'package:emerge_app/core/presentation/widgets/emerge_branding.dart';
 import 'package:emerge_app/core/theme/app_theme.dart';
 import 'package:emerge_app/core/theme/theme_provider.dart';
@@ -7,6 +8,7 @@ import 'package:emerge_app/features/auth/presentation/providers/auth_providers.d
 import 'package:emerge_app/features/gamification/data/repositories/user_stats_repository.dart';
 import 'package:emerge_app/features/gamification/presentation/providers/user_stats_providers.dart';
 import 'package:emerge_app/features/settings/presentation/screens/notification_settings_screen.dart';
+import 'package:emerge_app/features/tutorial/presentation/providers/tutorial_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -60,12 +62,6 @@ class SettingsScreen extends ConsumerWidget {
                 // Account Section
                 _buildSectionHeader(context, 'Account'),
                 _buildSectionContainer(context, [
-                  _buildListTile(
-                    context,
-                    Icons.person_outline,
-                    'Manage Avatar', // Changed to clarify it goes to avatar customization
-                    onTap: () => context.push('/profile/avatar'),
-                  ),
                   _buildListTile(
                     context,
                     Icons.edit_outlined,
@@ -362,9 +358,19 @@ class SettingsScreen extends ConsumerWidget {
                 _buildSectionContainer(context, [
                   _buildListTile(
                     context,
+                    Icons.replay_outlined,
+                    'Redo Tutorials',
+                    onTap: () {
+                      _showRedoTutorialsDialog(context, ref);
+                    },
+                  ),
+                  _buildListTile(
+                    context,
                     Icons.help_outline,
-                    'Help & Support',
-                    onTap: () {},
+                    'Help & Support (FAQ)',
+                    onTap: () {
+                      _showFaqDialog(context);
+                    },
                   ),
                   _buildListTile(
                     context,
@@ -604,14 +610,20 @@ class SettingsScreen extends ConsumerWidget {
   }
 
   Widget _buildSectionContainer(BuildContext context, List<Widget> children) {
-    return Container(
-      clipBehavior: Clip.antiAlias,
-      decoration: BoxDecoration(
-        color: AppTheme.surfaceDark,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: EmergeColors.hexLine),
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(16),
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
+        child: Container(
+          clipBehavior: Clip.antiAlias,
+          decoration: BoxDecoration(
+            color: Colors.white.withValues(alpha: 0.08),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: Colors.white.withValues(alpha: 0.15)),
+          ),
+          child: Column(children: children),
+        ),
       ),
-      child: Column(children: children),
     );
   }
 
@@ -716,7 +728,7 @@ class SettingsScreen extends ConsumerWidget {
                   profile,
                   'forest',
                   'Enchanted Forest',
-                  'Mystical woodland sanctuary',
+                  'Enchanted Forest sanctuary',
                   Icons.forest,
                   Colors.green,
                 ),
@@ -895,6 +907,120 @@ class SettingsScreen extends ConsumerWidget {
               ).textTheme.titleMedium?.copyWith(color: EmergeColors.teal),
             ),
           ),
+        ],
+      ),
+    );
+  }
+
+  void _showRedoTutorialsDialog(BuildContext context, WidgetRef ref) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: AppTheme.surfaceDark,
+        title: const Text(
+          'Reset Tutorials?',
+          style: TextStyle(color: Colors.white),
+        ),
+        content: const Text(
+          'This will reset all onboarding tutorials so they appear again on each screen.',
+          style: TextStyle(color: Colors.white70),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text(
+              'CANCEL',
+              style: TextStyle(color: Colors.white54),
+            ),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              ref.read(tutorialProvider.notifier).resetTutorials();
+              Navigator.pop(context);
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Tutorials reset successfully!')),
+              );
+            },
+            style: ElevatedButton.styleFrom(backgroundColor: EmergeColors.teal),
+            child: const Text(
+              'RESET',
+              style: TextStyle(
+                color: Colors.black,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showFaqDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: AppTheme.surfaceDark,
+        title: const Text(
+          'Frequently Asked Questions',
+          style: TextStyle(color: Colors.white),
+        ),
+        content: SizedBox(
+          width: double.maxFinite,
+          child: ListView(
+            shrinkWrap: true,
+            children: [
+              _buildFaqItem(
+                'What is an Archetype?',
+                'Archetypes are identity templates that define your growth path and visual evolution.',
+              ),
+              _buildFaqItem(
+                'How do I level up?',
+                'Complete your daily habits! Each habit earns you XP. Every 500 XP increases your level.',
+              ),
+              _buildFaqItem(
+                'What is World Decay?',
+                'If you miss your habits for multiple days, your inner world begins to fade. Consistency is key!',
+              ),
+              _buildFaqItem(
+                'How do I unlock nodes?',
+                'Nodes in the World Map are unlocked by reaching the required level and maintaining consistency.',
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text(
+              'CLOSE',
+              style: TextStyle(color: EmergeColors.teal),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildFaqItem(String question, String answer) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            question,
+            style: const TextStyle(
+              color: EmergeColors.teal,
+              fontWeight: FontWeight.bold,
+              fontSize: 14,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            answer,
+            style: const TextStyle(color: Colors.white70, fontSize: 13),
+          ),
+          const Divider(color: Colors.white10, height: 16),
         ],
       ),
     );

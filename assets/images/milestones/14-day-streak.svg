@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <circle cx="256" cy="256" r="256" fill="#FBE9E7"/>
+  <path fill="#FF5722" d="M256 120c-60 0-100 60-100 120 0 50 40 80 100 80s100-30 100-80c0-60-40-120-100-120z"/>
+  <path fill="#FFC107" d="M256 160c-40 0-70 40-70 80 0 35 30 55 70 55s70-20 70-55c0-40-30-80-70-80z"/>
+  <path fill="#FFF" d="M256 200c-20 0-35 20-35 40 0 15 15 25 35 25s35-10 35-25c0-20-15-40-35-40z"/>
+  <text x="256" y="380" font-family="Arial" font-size="60" font-weight="bold" fill="#FF5722" text-anchor="middle">14</text>
+</svg>

@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- Strong glow effect -->
+  <defs>
+    <radialGradient id="strongGlow">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.8"/>
+      <stop offset="30%" stop-color="#ffffff" stop-opacity="0.3"/>
+      <stop offset="100%" stop-color="#ffffff" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="256" height="256" fill="none"/>
+  <ellipse cx="128" cy="128" rx="80" ry="80" fill="url(#strongGlow)"/>
+  <ellipse cx="128" cy="128" rx="50" ry="50" fill="#ffffff" opacity="0.3"/>
+</svg>

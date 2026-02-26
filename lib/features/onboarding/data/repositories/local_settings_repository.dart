@@ -71,4 +71,22 @@ class LocalSettingsRepository {
     final box = Hive.box(_boxName);
     await box.put(_keyThemeMode, mode);
   }
+
+  bool isTutorialCompleted(String tutorialId) {
+    final box = Hive.box(_boxName);
+    return box.get('tutorial_$tutorialId', defaultValue: false);
+  }
+
+  Future<void> completeTutorial(String tutorialId) async {
+    final box = Hive.box(_boxName);
+    await box.put('tutorial_$tutorialId', true);
+  }
+
+  Future<void> resetTutorials() async {
+    final box = Hive.box(_boxName);
+    final keys = box.keys.where((k) => k.toString().startsWith('tutorial_'));
+    for (final key in keys) {
+      await box.delete(key);
+    }
+  }
 }

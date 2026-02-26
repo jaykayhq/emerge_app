@@ -1,7 +1,9 @@
 import 'package:emerge_app/core/presentation/widgets/growth_background.dart';
-import 'package:emerge_app/core/presentation/widgets/emerge_branding.dart';
 
+import 'package:emerge_app/core/utils/app_logger.dart';
+import 'package:emerge_app/core/presentation/widgets/animated_flame_logo.dart';
 import 'package:emerge_app/features/auth/presentation/providers/auth_providers.dart';
+import 'package:emerge_app/features/gamification/presentation/providers/user_stats_providers.dart';
 import 'package:emerge_app/features/onboarding/presentation/providers/onboarding_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -24,8 +26,8 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
   }
 
   Future<void> _navigateToNext() async {
-    // Artificial delay for branding
-    await Future.delayed(const Duration(seconds: 3));
+    // Reduced delay for branding (2 seconds instead of 3)
+    await Future.delayed(const Duration(seconds: 2));
 
     if (!mounted) return;
 
@@ -35,25 +37,65 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
     // Check auth state
     authState.when(
       data: (user) {
-        if (isFirstLaunch) {
-          context.go('/onboarding');
-        } else if (user.isNotEmpty) {
+        final isLoggedIn = user.isNotEmpty;
+
+        if (!isLoggedIn) {
+          // Not logged in - check if first launch for welcome or go to login
+          AppLogger.d('Splash: Not logged in, isFirstLaunch=$isFirstLaunch');
+          if (isFirstLaunch) {
+            context.go('/welcome');
+          } else {
+            context.go('/login');
+          }
+          return;
+        }
+
+        // Logged in - check onboarding progress from user stats
+        final userStatsAsync = ref.read(userStatsStreamProvider);
+        final userStats = userStatsAsync.valueOrNull;
+        final onboardingProgress = userStats?.onboardingProgress ?? 0;
+
+        AppLogger.d(
+          'Splash: Logged in, onboardingProgress=$onboardingProgress',
+        );
+
+        if (onboardingProgress >= 4) {
+          // Onboarding complete - go directly to dashboard
           context.go('/');
         } else {
-          context.go('/login');
+          // Onboarding incomplete - resume from appropriate step
+          final nextRoute = _getOnboardingRouteForProgress(onboardingProgress);
+          AppLogger.d('Splash: Redirecting to $nextRoute');
+          context.go(nextRoute);
         }
       },
       loading: () {
-        // Wait for auth to load if needed, but usually stream emits quickly
-        // For simplicity, if loading takes too long, we might default to login
-        // But here we'll just let the router redirect logic handle it eventually
-        // or re-check.
-        // Actually, the router redirect logic is better suited for this.
-        // We just need to trigger a navigation to root and let router decide.
+        // If auth is still loading, let the router redirect logic handle it
+        AppLogger.d('Splash: Auth loading, letting router decide');
         context.go('/');
       },
-      error: (_, __) => context.go('/login'),
+      error: (_, __) {
+        AppLogger.d('Splash: Auth error, going to login');
+        context.go('/login');
+      },
     );
+  }
+
+  /// Helper function to get the onboarding route for a given progress level
+  /// Flow: 0 = identity-studio, 1 = map-attributes, 2 = first-habit, 3 = world-reveal, 4+ = complete
+  String _getOnboardingRouteForProgress(int progress) {
+    switch (progress) {
+      case 0:
+        return '/onboarding/identity-studio';
+      case 1:
+        return '/onboarding/map-attributes';
+      case 2:
+        return '/onboarding/first-habit';
+      case 3:
+        return '/onboarding/world-reveal';
+      default:
+        return '/';
+    }
   }
 
   @override
@@ -69,7 +111,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             // Logo / Icon
-            const EmergeLogoWidget(size: 140, animate: true),
+            const AnimatedFlameLogo(size: 140),
 
             const Gap(24),
 

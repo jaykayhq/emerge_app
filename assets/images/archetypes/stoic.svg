@@ -1,0 +1,65 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <defs>
+    <linearGradient id="stoicGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#5D6D7E"/>
+      <stop offset="100%" style="stop-color:#2C3E50"/>
+    </linearGradient>
+    <radialGradient id="innerPeace" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" style="stop-color:#F39C12;stop-opacity:0.2"/>
+      <stop offset="100%" style="stop-color:#F39C12;stop-opacity:0"/>
+    </radialGradient>
+  </defs>
+
+  <!-- Background - Calm, centered -->
+  <circle cx="256" cy="256" r="256" fill="#F4F6F7"/>
+
+  <!-- Inner Peace Glow -->
+  <circle cx="256" cy="256" r="180" fill="url(#innerPeace)"/>
+
+  <!-- Zen Circle (Enso) -->
+  <circle cx="256" cy="180" r="40" fill="none" stroke="#5D6D7E" stroke-width="4" opacity="0.3" stroke-dasharray="200" stroke-dashoffset="40"/>
+
+  <!-- Stoic Figure - Meditative Pose -->
+  <g transform="translate(156, 140)">
+    <!-- Head - Serene, eyes closed -->
+    <ellipse cx="100" cy="40" rx="35" ry="40" fill="url(#stoicGrad)"/>
+
+    <!-- Closed eyes -->
+    <path d="M85 42 Q92 38 99 42" fill="none" stroke="#95A5A6" stroke-width="2"/>
+    <path d="M101 42 Q108 38 115 42" fill="none" stroke="#95A5A6" stroke-width="2"/>
+
+    <!-- Simple Robes -->
+    <path d="M60 85 Q100 75 140 85 L150 250 Q100 260 50 250 Z" fill="url(#stoicGrad)"/>
+
+    <!-- Robe folds - Minimalist lines -->
+    <path d="M80 100 Q75 175 70 250" fill="none" stroke="#4A5A6A" stroke-width="2"/>
+    <path d="M120 100 Q125 175 130 250" fill="none" stroke="#4A5A6A" stroke-width="2"/>
+
+    <!-- Arms - Folded in meditation -->
+    <ellipse cx="100" cy="180" rx="50" ry="25" fill="url(#stoicGrad)"/>
+
+    <!-- Hands -->
+    <circle cx="70" cy="175" r="15" fill="url(#stoicGrad)"/>
+    <circle cx="130" cy="175" r="15" fill="url(#stoicGrad)"/>
+
+    <!-- Seated Position -->
+    <ellipse cx="100" cy="255" rx="70" ry="30" fill="url(#stoicGrad)"/>
+  </g>
+
+  <!-- Ground/Lotus Position Base -->
+  <ellipse cx="256" cy="395" rx="100" ry="20" fill="#5D6D7E" opacity="0.3"/>
+
+  <!-- Resilience Symbols -->
+  <!-- Mountains (steadfast) -->
+  <g transform="translate(80, 400)" opacity="0.5">
+    <polygon points="0,30 20,0 40,30" fill="#5D6D7E"/>
+  </g>
+  <g transform="translate(392, 400)" opacity="0.5">
+    <polygon points="0,30 20,0 40,30" fill="#5D6D7E"/>
+  </g>
+
+  <!-- Wisdom Gold Accent -->
+  <circle cx="256" cy="120" r="8" fill="#F39C12" opacity="0.6"/>
+
+  <text x="256" y="470" font-family="Arial, sans-serif" font-size="28" font-weight="bold" fill="#5D6D7E" text-anchor="middle">THE STOIC</text>
+</svg>

@@ -27,7 +27,7 @@ class _ChallengesScreenState extends ConsumerState<ChallengesScreen> {
         child: const Icon(Icons.add, color: Colors.white),
       ),
       body: Container(
-        decoration: const BoxDecoration(gradient: EmergeColors.cosmicGradient),
+        decoration: const BoxDecoration(gradient: AppTheme.cosmicGradient),
         child: SafeArea(
           child: CustomScrollView(
             slivers: [

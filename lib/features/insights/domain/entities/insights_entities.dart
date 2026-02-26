@@ -1,3 +1,5 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+
 class Recap {
   final String id;
   final String period; // e.g., "Weekly", "Monthly"
@@ -29,7 +31,7 @@ class Reflection {
   final String content;
   final String type; // e.g., "insight", "pattern", "suggestion", "daily"
   final double? moodValue; // 0.0-1.0 for daily reflections
-  final DateTime createdAt;
+  final DateTime? createdAt;
 
   const Reflection({
     required this.id,
@@ -38,19 +40,28 @@ class Reflection {
     required this.content,
     required this.type,
     this.moodValue,
-    required this.createdAt,
+    this.createdAt,
   });
 
-  Map<String, dynamic> toMap() {
-    return {
+  /// Creates a map for Firestore serialization.
+  /// Note: createdAt should be set to FieldValue.serverTimestamp() when saving.
+  Map<String, dynamic> toMap({bool useServerTimestamp = true}) {
+    final map = <String, dynamic>{
       'id': id,
       'date': date,
       'title': title,
       'content': content,
       'type': type,
-      'moodValue': moodValue,
-      'createdAt': createdAt.toIso8601String(),
+      if (moodValue != null) 'moodValue': moodValue,
     };
+
+    // Only include createdAt if we're not using server timestamp
+    // When useServerTimestamp is true, the repository should handle it
+    if (!useServerTimestamp && createdAt != null) {
+      map['createdAt'] = Timestamp.fromDate(createdAt!);
+    }
+
+    return map;
   }
 
   factory Reflection.fromMap(Map<String, dynamic> map, String docId) {
@@ -61,9 +72,9 @@ class Reflection {
       content: map['content'] as String? ?? '',
       type: map['type'] as String? ?? 'insight',
       moodValue: (map['moodValue'] as num?)?.toDouble(),
-      createdAt: map['createdAt'] != null
-          ? DateTime.parse(map['createdAt'] as String)
-          : DateTime.now(),
+      createdAt: map['createdAt'] is Timestamp
+          ? (map['createdAt'] as Timestamp).toDate()
+          : null,
     );
   }
 }

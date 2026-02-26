@@ -13,14 +13,7 @@ enum ChallengeCategory {
   faith,
 }
 
-enum AffiliateNetwork {
-  cj,
-  impact,
-  shareASale,
-  amazon,
-  direct,
-  none,
-}
+enum AffiliateNetwork { cj, impact, shareASale, amazon, direct, none }
 
 class ChallengeStep extends Equatable {
   final int day;

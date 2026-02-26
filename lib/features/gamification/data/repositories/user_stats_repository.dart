@@ -102,4 +102,26 @@ class UserStatsRepository {
 
     return snapshot.docs.map((doc) => doc.data()).toList();
   }
+
+  Future<Map<String, dynamic>?> getLatestRecap(String userId) async {
+    final snapshot = await _firestore
+        .collection('user_stats')
+        .doc(userId)
+        .collection('recaps')
+        .orderBy('endDate', descending: true)
+        .limit(1)
+        .get();
+
+    if (snapshot.docs.isEmpty) return null;
+    return snapshot.docs.first.data();
+  }
+
+  Future<void> saveRecap(String userId, Map<String, dynamic> recapData) async {
+    await _firestore
+        .collection('user_stats')
+        .doc(userId)
+        .collection('recaps')
+        .doc(recapData['id'] as String)
+        .set(recapData);
+  }
 }

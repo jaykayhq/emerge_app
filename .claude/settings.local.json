@@ -28,7 +28,21 @@
       "Bash(del:*)",
       "Bash(tasklist:*)",
       "Bash(cmd.exe //c \"del \"\"C:\\Users\\JOSHUA\\.gradle\\caches\\journal-1\\journal-1.lock\"\"\")",
-      "Bash(firebase remoteconfig:deploy:*)"
+      "Bash(firebase remoteconfig:deploy:*)",
+      "mcp__stitch__list_projects",
+      "WebSearch",
+      "Bash(dart run build_runner build:*)",
+      "Bash(dart test:*)",
+      "Bash(flutter analyze:*)",
+      "Bash(dart analyze:*)",
+      "Bash(dart run:*)",
+      "mcp__stitch__list_screens",
+      "mcp__stitch__get_screen",
+      "Bash(curl:*)",
+      "Bash(cd C:\\\\Users\\\\JOSHUA\\\\Downloads\\\\emerge_app:*)",
+      "Bash(find .:*)",
+      "Bash(git add:*)",
+      "Bash(flutter test:*)"
     ],
     "deny": [],
     "ask": []

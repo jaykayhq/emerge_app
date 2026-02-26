@@ -2,38 +2,58 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-/// Welcome screen matching the reference design with cosmic silhouette background.
+/// Welcome screen matching the Stitch design with cosmic silhouette background.
+/// Features the downloaded welcome_silhouette.png image with the cosmic theme.
 class WelcomeScreen extends StatelessWidget {
   const WelcomeScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF12101C),
+      backgroundColor: const Color(0xFF0A0A1A), // Cosmic void dark
       body: Stack(
+        fit: StackFit.expand,
         children: [
           // Layer 1: The cosmic silhouette background (faded)
           Positioned.fill(
-            child: Image.asset(
-              'assets/images/welcome_silhouette.png',
-              fit: BoxFit.cover,
-              opacity: const AlwaysStoppedAnimation(0.4),
+            child: Opacity(
+              opacity: 0.3,
+              child: Image.asset(
+                'assets/images/welcome_cosmic_silhouette.png',
+                fit: BoxFit.cover,
+                errorBuilder: (context, error, stackTrace) {
+                  // Fallback if image not found - show gradient
+                  return Container(
+                    decoration: const BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                        colors: [
+                          Color(0xFF0A0A1A),
+                          Color(0xFF1A0A2A),
+                          Color(0xFF0A0A1A),
+                        ],
+                      ),
+                    ),
+                  );
+                },
+              ),
             ),
           ),
 
-          // Layer 2: Dark gradient overlay for text readability
+          // Layer 2: Cosmic gradient overlay (matches app theme)
           Positioned.fill(
             child: Container(
-              decoration: const BoxDecoration(
+              decoration: BoxDecoration(
                 gradient: LinearGradient(
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
                   colors: [
-                    Colors.transparent,
-                    Color(0x8012101C),
-                    Color(0xFF12101C),
+                    const Color(0xFF0A0A1A).withValues(alpha: 0.3),
+                    const Color(0xFF2A1A3A).withValues(alpha: 0.2),
+                    const Color(0xFF0A0A1A).withValues(alpha: 0.8),
                   ],
-                  stops: [0.0, 0.6, 1.0],
+                  stops: const [0.0, 0.4, 1.0],
                 ),
               ),
             ),
@@ -57,7 +77,7 @@ class WelcomeScreen extends StatelessWidget {
                   ),
                 ),
 
-                // Main content area - centered vertically
+                // Main content area — centered vertically
                 Expanded(
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
@@ -68,10 +88,10 @@ class WelcomeScreen extends StatelessWidget {
                         child: Text(
                           'Who do you wish to become?',
                           style: GoogleFonts.splineSans(
-                            fontSize: 38,
+                            fontSize: 40,
                             fontWeight: FontWeight.bold,
                             color: const Color(0xFFF5F5F5),
-                            height: 1.2,
+                            height: 1.15,
                           ),
                           textAlign: TextAlign.center,
                         ),
@@ -96,7 +116,7 @@ class WelcomeScreen extends StatelessWidget {
                   ),
                 ),
 
-                // Footer with CTA Button
+                // Footer with CTA Button (purple → blue gradient matches Stitch)
                 Padding(
                   padding: const EdgeInsets.only(
                     left: 24.0,

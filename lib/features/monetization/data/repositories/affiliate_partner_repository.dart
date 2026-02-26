@@ -32,7 +32,8 @@ abstract class AffiliatePartnerRepository {
 }
 
 /// Firestore implementation of AffiliatePartnerRepository
-class FirestoreAffiliatePartnerRepository implements AffiliatePartnerRepository {
+class FirestoreAffiliatePartnerRepository
+    implements AffiliatePartnerRepository {
   final FirebaseFirestore _firestore;
 
   FirestoreAffiliatePartnerRepository({FirebaseFirestore? firestore})
@@ -50,28 +51,47 @@ class FirestoreAffiliatePartnerRepository implements AffiliatePartnerRepository 
         .where('status', isEqualTo: 'active')
         .orderBy('name')
         .snapshots()
-        .map((snapshot) => snapshot.docs
-            .map((doc) => AffiliatePartner.fromMap(doc.data() as Map<String, dynamic>, id: doc.id))
-            .toList());
+        .map(
+          (snapshot) => snapshot.docs
+              .map(
+                (doc) => AffiliatePartner.fromMap(
+                  doc.data() as Map<String, dynamic>,
+                  id: doc.id,
+                ),
+              )
+              .toList(),
+        );
   }
 
   @override
   Future<AffiliatePartner?> getPartner(String partnerId) async {
     final doc = await _partnersCollection.doc(partnerId).get();
     if (!doc.exists) return null;
-    return AffiliatePartner.fromMap(doc.data() as Map<String, dynamic>, id: doc.id);
+    return AffiliatePartner.fromMap(
+      doc.data() as Map<String, dynamic>,
+      id: doc.id,
+    );
   }
 
   @override
-  Stream<List<AffiliatePartner>> getPartnersByNetwork(AffiliateNetwork network) {
+  Stream<List<AffiliatePartner>> getPartnersByNetwork(
+    AffiliateNetwork network,
+  ) {
     return _partnersCollection
         .where('network', isEqualTo: network.name)
         .where('status', isEqualTo: 'active')
         .orderBy('name')
         .snapshots()
-        .map((snapshot) => snapshot.docs
-            .map((doc) => AffiliatePartner.fromMap(doc.data() as Map<String, dynamic>, id: doc.id))
-            .toList());
+        .map(
+          (snapshot) => snapshot.docs
+              .map(
+                (doc) => AffiliatePartner.fromMap(
+                  doc.data() as Map<String, dynamic>,
+                  id: doc.id,
+                ),
+              )
+              .toList(),
+        );
   }
 
   @override
@@ -81,9 +101,16 @@ class FirestoreAffiliatePartnerRepository implements AffiliatePartnerRepository 
         .where('status', isEqualTo: 'active')
         .orderBy('name')
         .snapshots()
-        .map((snapshot) => snapshot.docs
-            .map((doc) => AffiliatePartner.fromMap(doc.data() as Map<String, dynamic>, id: doc.id))
-            .toList());
+        .map(
+          (snapshot) => snapshot.docs
+              .map(
+                (doc) => AffiliatePartner.fromMap(
+                  doc.data() as Map<String, dynamic>,
+                  id: doc.id,
+                ),
+              )
+              .toList(),
+        );
   }
 
   @override
@@ -100,7 +127,8 @@ class FirestoreAffiliatePartnerRepository implements AffiliatePartnerRepository 
   @override
   Future<void> trackImpression(String partnerId, String userId) async {
     final today = DateTime.now();
-    final dateKey = '${today.year}-${today.month.toString().padLeft(2, '0')}-${today.day.toString().padLeft(2, '0')}';
+    final dateKey =
+        '${today.year}-${today.month.toString().padLeft(2, '0')}-${today.day.toString().padLeft(2, '0')}';
 
     await _analyticsCollection.doc(partnerId).set({
       'partnerId': partnerId,
@@ -112,10 +140,10 @@ class FirestoreAffiliatePartnerRepository implements AffiliatePartnerRepository 
         .collection('daily')
         .doc(dateKey)
         .set({
-      'date': dateKey,
-      'impressions': FieldValue.increment(1),
-      'lastUpdated': FieldValue.serverTimestamp(),
-    }, SetOptions(merge: true));
+          'date': dateKey,
+          'impressions': FieldValue.increment(1),
+          'lastUpdated': FieldValue.serverTimestamp(),
+        }, SetOptions(merge: true));
 
     // Track per-user impressions
     await _analyticsCollection
@@ -123,16 +151,17 @@ class FirestoreAffiliatePartnerRepository implements AffiliatePartnerRepository 
         .collection('users')
         .doc(userId)
         .set({
-      'userId': userId,
-      'impressions': FieldValue.increment(1),
-      'lastImpressionAt': FieldValue.serverTimestamp(),
-    }, SetOptions(merge: true));
+          'userId': userId,
+          'impressions': FieldValue.increment(1),
+          'lastImpressionAt': FieldValue.serverTimestamp(),
+        }, SetOptions(merge: true));
   }
 
   @override
   Future<void> trackClick(String partnerId, String userId) async {
     final today = DateTime.now();
-    final dateKey = '${today.year}-${today.month.toString().padLeft(2, '0')}-${today.day.toString().padLeft(2, '0')}';
+    final dateKey =
+        '${today.year}-${today.month.toString().padLeft(2, '0')}-${today.day.toString().padLeft(2, '0')}';
 
     await _analyticsCollection.doc(partnerId).set({
       'partnerId': partnerId,
@@ -144,10 +173,10 @@ class FirestoreAffiliatePartnerRepository implements AffiliatePartnerRepository 
         .collection('daily')
         .doc(dateKey)
         .set({
-      'date': dateKey,
-      'clicks': FieldValue.increment(1),
-      'lastUpdated': FieldValue.serverTimestamp(),
-    }, SetOptions(merge: true));
+          'date': dateKey,
+          'clicks': FieldValue.increment(1),
+          'lastUpdated': FieldValue.serverTimestamp(),
+        }, SetOptions(merge: true));
 
     // Track per-user clicks
     await _analyticsCollection
@@ -155,22 +184,17 @@ class FirestoreAffiliatePartnerRepository implements AffiliatePartnerRepository 
         .collection('users')
         .doc(userId)
         .set({
-      'userId': userId,
-      'clicks': FieldValue.increment(1),
-      'lastClickAt': FieldValue.serverTimestamp(),
-    }, SetOptions(merge: true));
+          'userId': userId,
+          'clicks': FieldValue.increment(1),
+          'lastClickAt': FieldValue.serverTimestamp(),
+        }, SetOptions(merge: true));
   }
 
   @override
   Future<Map<String, dynamic>> getPartnerAnalytics(String partnerId) async {
     final partnerDoc = await _analyticsCollection.doc(partnerId).get();
     if (!partnerDoc.exists) {
-      return {
-        'impressions': 0,
-        'clicks': 0,
-        'ctr': 0.0,
-        'uniqueUsers': 0,
-      };
+      return {'impressions': 0, 'clicks': 0, 'ctr': 0.0, 'uniqueUsers': 0};
     }
 
     // Get aggregate data from daily stats (last 30 days)

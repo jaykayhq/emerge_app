@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <defs>
+    <radialGradient id="cosmicGrad">
+      <stop offset="0%" stop-color="#9C27B0"/>
+      <stop offset="100%" stop-color="#1A237E"/>
+    </radialGradient>
+  </defs>
+  <circle cx="256" cy="256" r="256" fill="url(#cosmicGrad)"/>
+  <circle fill="#FFF" cx="180" cy="180" r="4"/>
+  <circle fill="#FFF" cx="340" cy="150" r="3"/>
+  <circle fill="#FFF" cx="380" cy="280" r="5"/>
+  <circle fill="#FFF" cx="150" cy="320" r="3"/>
+  <circle fill="#FFF" cx="280" cy="350" r="2"/>
+  <circle fill="#9C27B0" cx="256" cy="256" r="80" opacity="0.8"/>
+  <circle fill="#FFF" cx="256" cy="256" r="50" opacity="0.3"/>
+  <circle fill="#FFD700" cx="256" cy="256" r="30"/>
+  <text x="256" y="270" font-family="Arial" font-size="40" font-weight="bold" fill="#FFF" text-anchor="middle">30</text>
+</svg>

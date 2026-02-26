@@ -231,7 +231,13 @@ class _ChallengeList extends ConsumerWidget {
         // Apply category filter
         final filteredChallenges = categoryFilter == 'All'
             ? challenges
-            : challenges.where((c) => c.category.name.toLowerCase() == categoryFilter.toLowerCase()).toList();
+            : challenges
+                  .where(
+                    (c) =>
+                        c.category.name.toLowerCase() ==
+                        categoryFilter.toLowerCase(),
+                  )
+                  .toList();
 
         if (filteredChallenges.isEmpty) {
           return Center(

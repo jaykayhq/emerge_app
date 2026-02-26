@@ -1,25 +1,27 @@
 import 'package:emerge_app/core/presentation/widgets/emerge_branding.dart';
-import 'package:emerge_app/core/theme/app_theme.dart';
-import 'package:emerge_app/core/theme/archetype_theme.dart';
+import 'package:emerge_app/core/presentation/widgets/glassmorphism_card.dart';
 import 'package:emerge_app/features/ai/domain/services/ai_personalization_service.dart';
-import 'package:emerge_app/features/auth/domain/entities/user_extension.dart';
 import 'package:emerge_app/features/auth/presentation/providers/auth_providers.dart';
-import 'package:emerge_app/features/gamification/presentation/providers/user_stats_providers.dart';
+import 'package:emerge_app/features/habits/domain/entities/habit.dart';
 import 'package:emerge_app/features/habits/presentation/providers/habit_providers.dart';
 import 'package:emerge_app/features/insights/data/repositories/insights_repository.dart';
 import 'package:emerge_app/features/insights/domain/entities/insights_entities.dart';
 import 'package:emerge_app/features/timeline/presentation/widgets/week_calendar_strip.dart';
 import 'package:emerge_app/features/timeline/presentation/widgets/daily_summary_card.dart';
 import 'package:emerge_app/features/timeline/presentation/widgets/ai_coach_card.dart';
-import 'package:emerge_app/features/timeline/presentation/widgets/progress_recap_section.dart';
+import 'package:emerge_app/features/timeline/presentation/widgets/current_mission_banner.dart';
+import 'package:emerge_app/features/timeline/presentation/widgets/habit_timeline_section.dart';
 import 'package:emerge_app/features/timeline/presentation/widgets/reflection_card.dart';
+import 'package:emerge_app/features/tutorial/presentation/providers/tutorial_provider.dart';
+import 'package:emerge_app/features/tutorial/presentation/widgets/tutorial_overlay.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:uuid/uuid.dart';
 
 /// Main Timeline screen - the daily command center
-/// Shows calendar, daily summary, progress/recaps, AI coach, and reflection
+/// Shows calendar, daily summary, habit timeline grouped by time-of-day,
+/// AI coach insights, and daily reflection
 class TimelineScreen extends ConsumerStatefulWidget {
   const TimelineScreen({super.key});
 
@@ -32,11 +34,71 @@ class _TimelineScreenState extends ConsumerState<TimelineScreen> {
   String? _aiInsight;
   String? _suggestedHabit;
   bool _isLoadingInsight = true;
+  final GlobalKey _calendarKey = GlobalKey();
+  final GlobalKey _summaryKey = GlobalKey();
+  final GlobalKey _missionKey = GlobalKey();
+  final GlobalKey _aiCoachKey = GlobalKey();
 
   @override
   void initState() {
     super.initState();
     _loadAiInsight();
+    _checkTutorial();
+  }
+
+  void _checkTutorial() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final tutorialState = ref.read(tutorialProvider);
+      if (!tutorialState.isCompleted(TutorialStep.timeline)) {
+        _showTutorial();
+      }
+    });
+  }
+
+  void _showTutorial() {
+    late OverlayEntry entry;
+    entry = OverlayEntry(
+      builder: (context) => TutorialOverlay(
+        steps: [
+          const TutorialStepInfo(
+            title: 'Your Command Center',
+            description:
+                'This is your daily protocol. Everything you do here is a vote for who you want to become.',
+          ),
+          TutorialStepInfo(
+            title: 'Identity Momentum',
+            description:
+                'Track your consistency across the week. Green dots represent days you kept your promises.',
+            targetKey: _calendarKey,
+          ),
+          TutorialStepInfo(
+            title: 'Daily Summary',
+            description: 'See your XP gains and current streaks at a glance.',
+            targetKey: _summaryKey,
+          ),
+          TutorialStepInfo(
+            title: 'Current Mission',
+            description:
+                'Your progress in the World Map. Complete your focus habits to unlock new lands.',
+            targetKey: _missionKey,
+          ),
+          TutorialStepInfo(
+            title: 'AI Architect',
+            description:
+                'Our AI analyzes your behavior to provide hyper-personalized insights and habit suggestions.',
+            targetKey: _aiCoachKey,
+            alignment: Alignment.topCenter,
+          ),
+        ],
+        onCompleted: () {
+          ref
+              .read(tutorialProvider.notifier)
+              .completeStep(TutorialStep.timeline);
+          entry.remove();
+        },
+      ),
+    );
+    Overlay.of(context).insert(entry);
   }
 
   Future<void> _loadAiInsight() async {
@@ -49,7 +111,6 @@ class _TimelineScreenState extends ConsumerState<TimelineScreen> {
         if (insights.isNotEmpty && mounted) {
           setState(() {
             _aiInsight = insights.first.description;
-            // Try to get a habit suggestion
             if (insights.length > 1) {
               _suggestedHabit = insights[1].action;
             }
@@ -80,13 +141,26 @@ class _TimelineScreenState extends ConsumerState<TimelineScreen> {
     }
   }
 
+  /// Group habits by time-of-day preference
+  Map<String, List<Habit>> _groupHabitsByTimeOfDay(List<Habit> habits) {
+    final groups = <String, List<Habit>>{
+      'morning': [],
+      'afternoon': [],
+      'evening': [],
+      'anytime': [],
+    };
+
+    for (final habit in habits) {
+      final key = habit.timeOfDayPreference?.name ?? 'anytime';
+      groups[key]!.add(habit);
+    }
+
+    return groups;
+  }
+
   @override
   Widget build(BuildContext context) {
     final habitsAsync = ref.watch(habitsProvider);
-    final userProfile = ref.watch(userStatsStreamProvider).valueOrNull;
-    final archetypeTheme = ArchetypeTheme.forArchetype(
-      userProfile?.archetype ?? UserArchetype.none,
-    );
 
     return Scaffold(
       backgroundColor: Colors.transparent,
@@ -116,11 +190,11 @@ class _TimelineScreenState extends ConsumerState<TimelineScreen> {
                       .map((h) => h.currentStreak)
                       .reduce((a, b) => a > b ? a : b);
 
-            // Calculate total votes (using longestStreak as a proxy)
-            final totalVotes = habits.fold<int>(
-              0,
-              (sum, h) => sum + h.longestStreak,
-            );
+            // Group habits by time of day (exclude 'anytime' from hierarchical timeline)
+            final grouped = _groupHabitsByTimeOfDay(habits);
+            // Remove 'anytime' key - those habits won't show in timeline
+            final timelineGroups = Map<String, List<Habit>>.from(grouped);
+            timelineGroups.remove('anytime');
 
             return CustomScrollView(
               slivers: [
@@ -133,7 +207,7 @@ class _TimelineScreenState extends ConsumerState<TimelineScreen> {
                       Text(
                         'TIMELINE',
                         style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                          color: AppTheme.textMainDark,
+                          color: Colors.white,
                           fontWeight: FontWeight.bold,
                           letterSpacing: 1.5,
                         ),
@@ -149,11 +223,22 @@ class _TimelineScreenState extends ConsumerState<TimelineScreen> {
                     ],
                   ),
                   centerTitle: true,
+                  actions: [
+                    IconButton(
+                      icon: const Icon(
+                        Icons.analytics_outlined,
+                        color: Colors.white,
+                      ),
+                      onPressed: () => context.push('/recap'),
+                      tooltip: 'Weekly Recap',
+                    ),
+                  ],
                 ),
 
                 // Calendar Strip
                 SliverToBoxAdapter(
                   child: WeekCalendarStrip(
+                    key: _calendarKey,
                     selectedDate: _selectedDate,
                     onDateSelected: (date) {
                       setState(() => _selectedDate = date);
@@ -163,8 +248,20 @@ class _TimelineScreenState extends ConsumerState<TimelineScreen> {
 
                 const SliverToBoxAdapter(child: SizedBox(height: 16)),
 
-                // Daily Summary Card
+                // Current World Map Mission
                 SliverToBoxAdapter(
+                  key: _missionKey,
+                  child: const Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 16.0),
+                    child: CurrentMissionBanner(),
+                  ),
+                ),
+
+                const SliverToBoxAdapter(child: SizedBox(height: 16)),
+
+                // Daily Summary Card (glassmorphism)
+                SliverToBoxAdapter(
+                  key: _summaryKey,
                   child: DailySummaryCard(
                     completedHabits: completedToday.length,
                     totalHabits: habits.length,
@@ -175,26 +272,101 @@ class _TimelineScreenState extends ConsumerState<TimelineScreen> {
 
                 const SliverToBoxAdapter(child: SizedBox(height: 24)),
 
-                // Progress / Recaps Section
+                // Section header for habit timeline
                 SliverToBoxAdapter(
-                  child: ProgressRecapSection(
-                    habits: habits,
-                    completedToday: completedToday,
-                    totalVotes: totalVotes,
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    child: Row(
+                      children: [
+                        Text(
+                          "Today's Timeline",
+                          style: Theme.of(context).textTheme.titleMedium
+                              ?.copyWith(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                              ),
+                        ),
+                        const Spacer(),
+                        Text(
+                          '${completedToday.length}/${habits.length}',
+                          style: Theme.of(context).textTheme.bodyMedium
+                              ?.copyWith(color: EmergeColors.tealMuted),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
 
-                const SliverToBoxAdapter(child: SizedBox(height: 16)),
+                const SliverToBoxAdapter(child: SizedBox(height: 12)),
+
+                // Habit Timeline - Hierarchical display with category anchors
+                SliverToBoxAdapter(
+                  child: HierarchicalHabitTimeline(
+                    groupedHabits: timelineGroups,
+                    onHabitTap: (habit) {
+                      context.push('/timeline/detail/${habit.id}');
+                    },
+                    onHabitToggle: (habit) {
+                      _toggleHabitCompletion(habit);
+                    },
+                  ),
+                ),
+
+                // Empty state if no habits
+                if (habits.isEmpty)
+                  SliverToBoxAdapter(
+                    child: GlassmorphismCard(
+                      glowColor: EmergeColors.teal,
+                      child: Column(
+                        children: [
+                          Icon(
+                            Icons.add_task,
+                            color: EmergeColors.teal,
+                            size: 48,
+                          ),
+                          const SizedBox(height: 12),
+                          Text(
+                            'No habits yet',
+                            style: Theme.of(context).textTheme.titleMedium
+                                ?.copyWith(color: Colors.white),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            'Create your first habit to start building your identity',
+                            style: Theme.of(context).textTheme.bodySmall
+                                ?.copyWith(color: EmergeColors.tealMuted),
+                            textAlign: TextAlign.center,
+                          ),
+                          const SizedBox(height: 16),
+                          ElevatedButton.icon(
+                            onPressed: () => context.push('/create-habit'),
+                            icon: const Icon(Icons.add),
+                            label: const Text('Create Habit'),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: EmergeColors.teal,
+                              foregroundColor: EmergeColors.background,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+
+                const SliverToBoxAdapter(child: SizedBox(height: 24)),
 
                 // AI Coach Card
                 SliverToBoxAdapter(
+                  key: _aiCoachKey,
                   child: AiCoachCard(
                     insight: _aiInsight,
                     suggestedHabit: _suggestedHabit,
                     isLoading: _isLoadingInsight,
-                    accentColor: archetypeTheme.primaryColor,
+                    accentColor: EmergeColors.teal,
                     onReflect: () => context.push('/profile/reflections'),
-                    onAddHabit: () => context.push('/create-habit'),
+                    onAddHabit: () => context.push('create-habit'),
                   ),
                 ),
 
@@ -213,7 +385,7 @@ class _TimelineScreenState extends ConsumerState<TimelineScreen> {
             );
           },
           loading: () => const Center(
-            child: CircularProgressIndicator(color: EmergeColors.teal),
+            child: CircularProgressIndicator(color: Color(0xFF2BEE79)),
           ),
           error: (e, s) => Center(
             child: Column(
@@ -223,14 +395,16 @@ class _TimelineScreenState extends ConsumerState<TimelineScreen> {
                 const SizedBox(height: 16),
                 Text(
                   'Error loading timeline',
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    color: AppTheme.textMainDark,
-                  ),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.titleMedium?.copyWith(color: Colors.white),
                 ),
-                Text(
-                  '$e',
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: AppTheme.textSecondaryDark,
+                const SizedBox(height: 8),
+                TextButton(
+                  onPressed: () => ref.invalidate(habitsProvider),
+                  child: Text(
+                    'Retry',
+                    style: TextStyle(color: EmergeColors.teal),
                   ),
                 ),
               ],
@@ -241,15 +415,41 @@ class _TimelineScreenState extends ConsumerState<TimelineScreen> {
     );
   }
 
+  void _toggleHabitCompletion(Habit habit) {
+    final now = DateTime.now();
+    final isCompleted =
+        habit.lastCompletedDate != null &&
+        habit.lastCompletedDate!.year == now.year &&
+        habit.lastCompletedDate!.month == now.month &&
+        habit.lastCompletedDate!.day == now.day;
+
+    if (!isCompleted) {
+      // Mark as completed
+      ref.read(completeHabitProvider(habit.id));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('${habit.title} completed! +${_calculateXp(habit)} XP'),
+          backgroundColor: EmergeColors.teal,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          duration: const Duration(seconds: 2),
+        ),
+      );
+    } else {
+      // Undo completion
+      ref.read(completeHabitProvider(habit.id));
+    }
+  }
+
   int _calculateXp(dynamic habit) {
     int base = 10;
-    // Simple XP calculation based on difficulty
     if (habit.difficulty.toString().contains('medium')) {
       base = 20;
     } else if (habit.difficulty.toString().contains('hard')) {
       base = 30;
     }
-    // Streak bonus
     final streakBonus = (habit.currentStreak * 0.1).clamp(0.0, 0.5);
     return (base * (1 + streakBonus)).toInt();
   }
@@ -289,7 +489,7 @@ class _TimelineScreenState extends ConsumerState<TimelineScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Failed to save: $e'),
+            content: const Text('Failed to save reflection. Tap to retry.'),
             backgroundColor: EmergeColors.coral,
             behavior: SnackBarBehavior.floating,
           ),
