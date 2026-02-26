@@ -1,8 +1,9 @@
 import 'package:emerge_app/features/auth/domain/entities/user_extension.dart';
 import 'package:emerge_app/features/world_map/domain/models/world_node.dart';
 
-/// Node states for UI rendering
-enum NodeState {
+/// Node state for progression calculation
+/// Simplified states distinct from the visual NodeState in world_node.dart
+enum ProgressionState {
   locked,
   active,
   completed,
@@ -10,21 +11,21 @@ enum NodeState {
 
 /// Service to calculate node states based on user progress
 class NodeStateService {
-  /// Calculate the state of a node based on user progress
-  static NodeState calculateState(
+  /// Calculate the progression state of a node based on user progress
+  static ProgressionState calculateState(
     WorldNode node,
     UserProfile userProfile,
     List<String> completedNodeIds,
   ) {
     // If mission is explicitly completed, it's done
     if (node.missionCompleted || completedNodeIds.contains(node.id)) {
-      return NodeState.completed;
+      return ProgressionState.completed;
     }
 
     // Check if user level meets requirement
     final userLevel = userProfile.avatarStats.level;
     if (userLevel < node.requiredLevel) {
-      return NodeState.locked;
+      return ProgressionState.locked;
     }
 
     // Check if previous node in sequence is complete
@@ -37,7 +38,7 @@ class NodeStateService {
     }
 
     // If we pass all checks, node is active
-    return NodeState.active;
+    return ProgressionState.active;
   }
 
   /// Get lock reason for display
