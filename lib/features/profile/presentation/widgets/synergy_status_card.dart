@@ -2,18 +2,22 @@ import 'dart:ui';
 import 'package:emerge_app/core/theme/app_theme.dart';
 import 'package:emerge_app/core/theme/archetype_theme.dart';
 import 'package:emerge_app/core/presentation/widgets/emerge_branding.dart';
+import 'package:emerge_app/features/auth/domain/entities/user_extension.dart';
+import 'package:emerge_app/features/habits/domain/entities/habit.dart';
 import 'package:flutter/material.dart';
 
-/// Synergy Status widget matching Stitch design
-/// Shows which attributes are boosted by which habits
+/// Synergy Status widget - displays top 2 attributes with XP
+/// Shows "See More" button to view all attributes breakdown
 class SynergyStatusCard extends StatelessWidget {
-  final List<AttributeBoost> boosts;
+  final UserProfile profile;
   final Color accentColor;
+  final List<Habit> habits; // For showing which habits contribute to attributes
 
   const SynergyStatusCard({
     super.key,
-    required this.boosts,
+    required this.profile,
     required this.accentColor,
+    this.habits = const [],
   });
 
   @override
@@ -57,7 +61,7 @@ class SynergyStatusCard extends StatelessWidget {
                     ),
                     const SizedBox(width: 12),
                     Text(
-                      'SYNERGY STATUS',
+                      'ATTRIBUTE PROGRESS',
                       style: TextStyle(
                         fontSize: 12,
                         fontWeight: FontWeight.bold,
@@ -69,13 +73,8 @@ class SynergyStatusCard extends StatelessWidget {
                 ),
                 const SizedBox(height: 20),
 
-                // Attribute boosts
-                ...boosts.map(
-                  (boost) => _AttributeBoostRow(
-                    boost: boost,
-                    accentColor: accentColor,
-                  ),
-                ),
+                // Content
+                _buildCardContent(context),
               ],
             ),
           ),
@@ -83,111 +82,293 @@ class SynergyStatusCard extends StatelessWidget {
       ),
     );
   }
-}
 
-class AttributeBoost {
-  final String attribute;
-  final String boostedBy;
-  final IconData icon;
-  final double boostPercentage;
+  Widget _buildCardContent(BuildContext context) {
+    final attributeXp = profile.avatarStats.attributeXp;
+    final attributes = ['strength', 'intellect', 'vitality', 'creativity', 'focus', 'spirit'];
 
-  const AttributeBoost({
-    required this.attribute,
-    required this.boostedBy,
-    required this.icon,
-    this.boostPercentage = 0.0,
-  });
-}
+    // Sort by XP descending, take top 2
+    final sortedAttrs = attributes
+        .where((a) => attributeXp.containsKey(a) && (attributeXp[a] ?? 0) > 0)
+        .toList()
+      ..sort((a, b) => (attributeXp[b] ?? 0).compareTo(attributeXp[a] ?? 0));
 
-class _AttributeBoostRow extends StatelessWidget {
-  final AttributeBoost boost;
-  final Color accentColor;
+    // If no attributes with XP, show empty state
+    if (sortedAttrs.isEmpty) {
+      return _buildEmptyState();
+    }
 
-  const _AttributeBoostRow({required this.boost, required this.accentColor});
+    final topAttrs = sortedAttrs.take(2).toList();
 
-  @override
-  Widget build(BuildContext context) {
-    final attributeColor = _getAttributeColor(boost.attribute);
-
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 16),
-      child: Row(
-        children: [
-          // Attribute icon with glow
-          Container(
-            width: 40,
-            height: 40,
-            decoration: BoxDecoration(
-              color: attributeColor.withValues(alpha: 0.15),
-              borderRadius: BorderRadius.circular(10),
-              border: Border.all(color: attributeColor.withValues(alpha: 0.3)),
-              boxShadow: [
-                BoxShadow(
-                  color: attributeColor.withValues(alpha: 0.2),
-                  blurRadius: 8,
-                  spreadRadius: -2,
-                ),
-              ],
+    return Column(
+      children: [
+        // Two attributes side by side
+        Row(
+          children: topAttrs.map((attr) => Expanded(
+            child: _AttributeDisplay(
+              attribute: attr,
+              xp: attributeXp[attr] ?? 0,
+              habits: _getHabitsForAttribute(attr),
             ),
-            child: Icon(boost.icon, color: attributeColor, size: 20),
-          ),
-          const SizedBox(width: 14),
+          )).toList(),
+        ),
 
-          // Attribute info
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  boost.attribute,
-                  style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                    color: AppTheme.textMainDark,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                const SizedBox(height: 2),
-                Row(
-                  children: [
-                    Icon(Icons.trending_up, size: 12, color: EmergeColors.teal),
-                    const SizedBox(width: 4),
-                    Flexible(
-                      child: Text(
-                        'Boosted by ${boost.boostedBy}',
-                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: AppTheme.textSecondaryDark,
-                        ),
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
+        SizedBox(height: 12),
 
-          // Boost indicator
-          if (boost.boostPercentage > 0)
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+        // See More button
+        if (sortedAttrs.length > 2)
+          GestureDetector(
+            onTap: () => _showAttributeBreakdownSheet(context),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               decoration: BoxDecoration(
-                color: EmergeColors.teal.withValues(alpha: 0.15),
+                color: Colors.white.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(8),
               ),
-              child: Text(
-                '+${boost.boostPercentage.toInt()}%',
-                style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.bold,
-                  color: EmergeColors.teal,
-                ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    '+${sortedAttrs.length - 2} See More',
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  const SizedBox(width: 4),
+                  Icon(Icons.expand_more, color: Colors.white, size: 16),
+                ],
               ),
             ),
+          ),
+      ],
+    );
+  }
+
+  Widget _buildEmptyState() {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        children: [
+          Icon(
+            Icons.hiking,
+            color: Colors.white.withValues(alpha: 0.3),
+            size: 32,
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Complete habits to earn attribute XP',
+            style: TextStyle(
+              color: Colors.white.withValues(alpha: 0.6),
+              fontSize: 12,
+            ),
+            textAlign: TextAlign.center,
+          ),
         ],
       ),
     );
   }
 
-  Color _getAttributeColor(String attribute) {
-    return ArchetypeColors.forAttribute(attribute);
+  List<Habit> _getHabitsForAttribute(String attribute) {
+    // Return habits that contribute to this attribute
+    // In a real implementation, you'd match based on habit.attributes
+    return habits.where((h) =>
+      h.attributes.any((a) => a.name.toLowerCase() == attribute.toLowerCase())
+    ).take(3).toList();
+  }
+
+  void _showAttributeBreakdownSheet(BuildContext context) {
+    final attributeXp = profile.avatarStats.attributeXp;
+    final attributes = ['strength', 'intellect', 'vitality', 'creativity', 'focus', 'spirit'];
+    final sortedAttrs = attributes
+        .where((a) => attributeXp.containsKey(a))
+        .toList()
+      ..sort((a, b) => (attributeXp[b] ?? 0).compareTo(attributeXp[a] ?? 0));
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => Container(
+        decoration: BoxDecoration(
+          color: AppTheme.surfaceDark,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Handle
+            Container(
+              margin: const EdgeInsets.symmetric(vertical: 12),
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.3),
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+
+            // Header
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+              child: Text(
+                'All Attribute Progress',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+
+            // Total level
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+              child: Text(
+                'Total Level: ${profile.avatarStats.level}',
+                style: TextStyle(
+                  color: Colors.white.withValues(alpha: 0.7),
+                  fontSize: 14,
+                ),
+              ),
+            ),
+
+            Divider(color: Colors.white.withValues(alpha: 0.1)),
+
+            // Attribute list
+            Flexible(
+              child: ListView.builder(
+                shrinkWrap: true,
+                itemCount: sortedAttrs.length,
+                itemBuilder: (context, index) {
+                  final attr = sortedAttrs[index];
+                  final xp = attributeXp[attr] ?? 0;
+
+                  return ListTile(
+                    leading: Container(
+                      width: 40,
+                      height: 40,
+                      decoration: BoxDecoration(
+                        color: ArchetypeColors.forAttribute(attr).withValues(alpha: 0.2),
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(
+                        _getAttributeIcon(attr),
+                        color: ArchetypeColors.forAttribute(attr),
+                      ),
+                    ),
+                    title: Text(
+                      attr.toUpperCase(),
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    trailing: Text(
+                      '$xp XP',
+                      style: TextStyle(
+                        color: ArchetypeColors.forAttribute(attr),
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
+
+            SizedBox(height: 24),
+          ],
+        ),
+      ),
+    );
+  }
+
+  IconData _getAttributeIcon(String attribute) {
+    switch (attribute.toLowerCase()) {
+      case 'strength': return Icons.fitness_center;
+      case 'intellect': return Icons.psychology;
+      case 'vitality': return Icons.favorite;
+      case 'creativity': return Icons.palette;
+      case 'focus': return Icons.center_focus_strong;
+      case 'spirit': return Icons.auto_awesome;
+      default: return Icons.stars;
+    }
+  }
+}
+
+class _AttributeDisplay extends StatelessWidget {
+  final String attribute;
+  final int xp;
+  final List<Habit> habits;
+
+  const _AttributeDisplay({
+    required this.attribute,
+    required this.xp,
+    required this.habits,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final color = ArchetypeColors.forAttribute(attribute);
+    final icon = _getAttributeIcon(attribute);
+
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 4),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: color.withValues(alpha: 0.3)),
+      ),
+      child: Column(
+        children: [
+          Icon(icon, color: color, size: 20),
+          const SizedBox(height: 4),
+          Text(
+            attribute.toUpperCase(),
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 10,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: 2),
+          Text(
+            '$xp XP',
+            style: TextStyle(
+              color: color,
+              fontSize: 14,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          if (habits.isNotEmpty) ...[
+            const SizedBox(height: 4),
+            Text(
+              '+${habits.first.impact} from ${habits.first.title}',
+              style: TextStyle(
+                color: Colors.white.withValues(alpha: 0.7),
+                fontSize: 9,
+              ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  IconData _getAttributeIcon(String attribute) {
+    switch (attribute.toLowerCase()) {
+      case 'strength': return Icons.fitness_center;
+      case 'intellect': return Icons.psychology;
+      case 'vitality': return Icons.favorite;
+      case 'creativity': return Icons.palette;
+      case 'focus': return Icons.center_focus_strong;
+      case 'spirit': return Icons.auto_awesome;
+      default: return Icons.stars;
+    }
   }
 }
