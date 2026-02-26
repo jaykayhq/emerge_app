@@ -1,8 +1,9 @@
 import 'package:emerge_app/features/auth/domain/entities/user_extension.dart';
 import 'package:emerge_app/features/gamification/presentation/providers/user_stats_providers.dart';
-import 'package:emerge_app/features/gamification/presentation/screens/cinematic_recap_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class LevelUpListener extends ConsumerStatefulWidget {
   final Widget child;
@@ -15,6 +16,19 @@ class LevelUpListener extends ConsumerStatefulWidget {
 
 class _LevelUpListenerState extends ConsumerState<LevelUpListener> {
   int? _previousLevel;
+  bool _isShowingReward = false;
+  SharedPreferences? _prefs;
+  static const String _lastCelebratedLevelKey = 'last_celebrated_level';
+
+  @override
+  void initState() {
+    super.initState();
+    _initPrefs();
+  }
+
+  Future<void> _initPrefs() async {
+    _prefs = await SharedPreferences.getInstance();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -23,18 +37,20 @@ class _LevelUpListenerState extends ConsumerState<LevelUpListener> {
       previous,
       next,
     ) {
+      if (_isShowingReward) return; // Don't trigger while already showing
+
       next.whenData((userProfile) {
         final currentLevel = userProfile.avatarStats.level;
 
-        // Initial load
+        // Initial load - just track, don't celebrate
         if (_previousLevel == null) {
           _previousLevel = currentLevel;
           return;
         }
 
-        // Level Up detected
+        // Level Up detected - check if we need to celebrate
         if (currentLevel > _previousLevel!) {
-          _showLevelUpScreen(context, currentLevel, userProfile.archetype.name);
+          _checkForLevelUp(userProfile);
           _previousLevel = currentLevel;
         }
       });
@@ -43,25 +59,32 @@ class _LevelUpListenerState extends ConsumerState<LevelUpListener> {
     return widget.child;
   }
 
-  void _showLevelUpScreen(
-    BuildContext context,
-    int newLevel,
-    String archetype,
-  ) {
-    // Use a dialog or full screen overlay
-    showGeneralDialog(
-      context: context,
-      barrierDismissible: false,
-      barrierColor: Colors.black,
-      pageBuilder: (context, anim1, anim2) {
-        return CinematicRecapScreen(
-          newLevel: newLevel,
-          userArchetype: archetype,
-          onDismiss: () {
-            Navigator.of(context).pop();
-          },
-        );
-      },
-    );
+  /// Check for level-ups and trigger reward screen for each level gained
+  void _checkForLevelUp(UserProfile userProfile) {
+    if (_prefs == null) return;
+
+    final currentLevel = userProfile.avatarStats.level;
+    final lastCelebrated = _prefs!.getInt(_lastCelebratedLevelKey) ?? _previousLevel ?? 0;
+
+    // Check if we've gained any levels since last celebration
+    if (currentLevel > lastCelebrated) {
+      // Celebrate each level we haven't celebrated yet
+      for (int level = lastCelebrated + 1; level <= currentLevel; level++) {
+        // Trigger level-up screen for each level
+        _showLevelUpRewardScreen(context, level);
+      }
+
+      // Store the new celebrated level
+      _prefs!.setInt(_lastCelebratedLevelKey, currentLevel);
+    }
+  }
+
+  void _showLevelUpRewardScreen(BuildContext context, int level) {
+    _isShowingReward = true;
+
+    // Navigate to the Level Up Reward screen
+    context.push('/profile/level-up-reward').then((_) {
+      _isShowingReward = false;
+    });
   }
 }
