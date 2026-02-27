@@ -126,7 +126,6 @@ void main() {
 
     test('Initial load does not trigger celebration', () {
       // Arrange - first time loading the app
-      const currentLevel = 5;
       final previousLevel = null; // No previous level on initial load
 
       // Assert - should not celebrate (previousLevel is null)

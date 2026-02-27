@@ -227,7 +227,7 @@ class CurrentMissionBanner extends ConsumerWidget {
               child: ElevatedButton(
                 onPressed: () {
                   Navigator.pop(context);
-                  context.push('/world-map');
+                  context.go('/');
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: config.primaryColor,

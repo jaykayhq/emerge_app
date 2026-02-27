@@ -1,7 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:emerge_app/core/error/failure.dart';
 import 'package:emerge_app/core/utils/app_logger.dart';
-import 'package:emerge_app/features/auth/domain/entities/user_extension.dart';
 import 'package:emerge_app/features/gamification/domain/entities/user_stats.dart';
 import 'package:emerge_app/features/gamification/domain/repositories/gamification_repository.dart';
 import 'package:emerge_app/features/world_map/domain/models/archetype_maps_catalog.dart';

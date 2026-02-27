@@ -26,21 +26,21 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
   }
 
   Future<void> _navigateToNext() async {
-    // Reduced delay for branding (2 seconds instead of 3)
-    await Future.delayed(const Duration(seconds: 2));
+    // Wait minimum branding time
+    await Future.delayed(const Duration(milliseconds: 1500));
 
     if (!mounted) return;
 
     final authState = ref.read(authStateChangesProvider);
-    final isFirstLaunch = ref.read(onboardingControllerProvider);
 
     // Check auth state
     authState.when(
-      data: (user) {
+      data: (user) async {
         final isLoggedIn = user.isNotEmpty;
 
         if (!isLoggedIn) {
           // Not logged in - check if first launch for welcome or go to login
+          final isFirstLaunch = ref.read(onboardingControllerProvider);
           AppLogger.d('Splash: Not logged in, isFirstLaunch=$isFirstLaunch');
           if (isFirstLaunch) {
             context.go('/welcome');
@@ -50,17 +50,21 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
           return;
         }
 
-        // Logged in - check onboarding progress from user stats
-        final userStatsAsync = ref.read(userStatsStreamProvider);
-        final userStats = userStatsAsync.valueOrNull;
-        final onboardingProgress = userStats?.onboardingProgress ?? 0;
+        // Logged in - WAIT for user stats to load before deciding
+        AppLogger.d('Splash: Logged in, waiting for user stats...');
+        final userStatsAsync = await ref.read(userStatsStreamProvider.future);
+
+        if (!mounted) return;
+
+        final onboardingProgress = userStatsAsync.onboardingProgress;
 
         AppLogger.d(
-          'Splash: Logged in, onboardingProgress=$onboardingProgress',
+          'Splash: User stats loaded, onboardingProgress=$onboardingProgress',
         );
 
         if (onboardingProgress >= 4) {
           // Onboarding complete - go directly to dashboard
+          AppLogger.d('Splash: Onboarding complete, going to dashboard');
           context.go('/');
         } else {
           // Onboarding incomplete - resume from appropriate step

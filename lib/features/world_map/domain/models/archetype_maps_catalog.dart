@@ -1,4 +1,4 @@
-import 'package:emerge_app/core/presentation/widgets/emerge_branding.dart';
+import 'package:emerge_app/core/theme/archetype_theme.dart';
 import 'package:emerge_app/features/auth/domain/entities/user_extension.dart';
 import 'package:emerge_app/features/habits/domain/entities/habit.dart';
 import 'package:emerge_app/features/world_map/domain/models/archetype_map_config.dart';
@@ -31,9 +31,9 @@ class ArchetypeMapsCatalog {
     archetype: UserArchetype.athlete,
     mapName: 'Summit Peak',
     mapDescription: 'Climb the mountain of physical mastery',
-    primaryColor: EmergeColors.coral,
-    accentColor: const Color(0xFFFF8E72),
-    backgroundGradient: [const Color(0xFF1A1A2E), const Color(0xFF16213E)],
+    primaryColor: ArchetypeTheme.forArchetype(UserArchetype.athlete).primaryColor,
+    accentColor: ArchetypeTheme.forArchetype(UserArchetype.athlete).accentColor,
+    backgroundGradient: ArchetypeTheme.forArchetype(UserArchetype.athlete).backgroundGradient,
     journeyIcon: Icons.hiking,
     nodes: [
       // STAGE 1: VALLEY BASE (Levels 1-5)
@@ -340,9 +340,9 @@ class ArchetypeMapsCatalog {
     archetype: UserArchetype.scholar,
     mapName: 'Knowledge Nexus',
     mapDescription: 'Ascend the tower of wisdom',
-    primaryColor: EmergeColors.violet,
-    accentColor: const Color(0xFFB794F6),
-    backgroundGradient: [const Color(0xFF1A1B2E), const Color(0xFF2D2B55)],
+    primaryColor: ArchetypeTheme.forArchetype(UserArchetype.scholar).primaryColor,
+    accentColor: ArchetypeTheme.forArchetype(UserArchetype.scholar).accentColor,
+    backgroundGradient: ArchetypeTheme.forArchetype(UserArchetype.scholar).backgroundGradient,
     journeyIcon: Icons.auto_stories,
     nodes: [
       // STAGE 1: LIBRARY (Levels 1-5)
@@ -453,9 +453,9 @@ class ArchetypeMapsCatalog {
     archetype: UserArchetype.creator,
     mapName: 'Forge Garden',
     mapDescription: 'Cultivate your creative spirit',
-    primaryColor: EmergeColors.yellow,
-    accentColor: const Color(0xFFFFD93D),
-    backgroundGradient: [const Color(0xFF2C1810), const Color(0xFF3D2317)],
+    primaryColor: ArchetypeTheme.forArchetype(UserArchetype.creator).primaryColor,
+    accentColor: ArchetypeTheme.forArchetype(UserArchetype.creator).accentColor,
+    backgroundGradient: ArchetypeTheme.forArchetype(UserArchetype.creator).backgroundGradient,
     journeyIcon: Icons.brush,
     nodes: [
       // STAGE 1: INSPIRATION GARDEN (Levels 1-5)
@@ -566,9 +566,9 @@ class ArchetypeMapsCatalog {
     archetype: UserArchetype.stoic,
     mapName: 'Ancient Path',
     mapDescription: 'Walk the way of wisdom and discipline',
-    primaryColor: EmergeColors.teal,
-    accentColor: const Color(0xFF4DD4AC),
-    backgroundGradient: [const Color(0xFF0D1B1E), const Color(0xFF1A3B3E)],
+    primaryColor: ArchetypeTheme.forArchetype(UserArchetype.stoic).primaryColor,
+    accentColor: ArchetypeTheme.forArchetype(UserArchetype.stoic).accentColor,
+    backgroundGradient: ArchetypeTheme.forArchetype(UserArchetype.stoic).backgroundGradient,
     journeyIcon: Icons.self_improvement,
     nodes: [
       // STAGE 1: TEMPLE ENTRY (Levels 1-5)
@@ -676,9 +676,9 @@ class ArchetypeMapsCatalog {
     archetype: UserArchetype.zealot,
     mapName: 'Ethereal Realm',
     mapDescription: 'Transcend the ordinary',
-    primaryColor: const Color(0xFF8E44AD),
-    accentColor: const Color(0xFFBB6BD9),
-    backgroundGradient: [const Color(0xFF1A0A2E), const Color(0xFF2D1B4E)],
+    primaryColor: ArchetypeTheme.forArchetype(UserArchetype.zealot).primaryColor,
+    accentColor: ArchetypeTheme.forArchetype(UserArchetype.zealot).accentColor,
+    backgroundGradient: ArchetypeTheme.forArchetype(UserArchetype.zealot).backgroundGradient,
     journeyIcon: Icons.auto_awesome,
     nodes: [
       WorldNode(
@@ -773,9 +773,9 @@ class ArchetypeMapsCatalog {
     archetype: UserArchetype.none,
     mapName: 'Explorer\'s Journey',
     mapDescription: 'Discover your path',
-    primaryColor: EmergeColors.teal,
-    accentColor: const Color(0xFF64FFDA),
-    backgroundGradient: [const Color(0xFF1A1A2E), const Color(0xFF16213E)],
+    primaryColor: ArchetypeTheme.forArchetype(UserArchetype.none).primaryColor,
+    accentColor: ArchetypeTheme.forArchetype(UserArchetype.none).accentColor,
+    backgroundGradient: ArchetypeTheme.forArchetype(UserArchetype.none).backgroundGradient,
     journeyIcon: Icons.explore,
     nodes: [
       // STAGE 1: UNKNOWN PATH (Levels 1-5)

@@ -69,8 +69,9 @@ class RevenueCatRepository implements MonetizationRepository {
   @override
   Future<Either<String, bool>> get isPremium async {
     if (!_isConfigured) {
-      // Not configured = treat as free user in development
-      return const Right(false);
+      // TESTING MODE: Treat as premium user when RevenueCat not configured
+      // Change back to `return const Right(false);` to enable paywall
+      return const Right(true);
     }
     try {
       final customerInfo = await Purchases.getCustomerInfo();

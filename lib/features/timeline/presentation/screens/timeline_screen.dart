@@ -6,6 +6,7 @@ import 'package:emerge_app/features/habits/domain/entities/habit.dart';
 import 'package:emerge_app/features/habits/presentation/providers/habit_providers.dart';
 import 'package:emerge_app/features/insights/data/repositories/insights_repository.dart';
 import 'package:emerge_app/features/insights/domain/entities/insights_entities.dart';
+import 'package:emerge_app/features/monetization/presentation/providers/subscription_provider.dart';
 import 'package:emerge_app/features/timeline/presentation/widgets/week_calendar_strip.dart';
 import 'package:emerge_app/features/timeline/presentation/widgets/daily_summary_card.dart';
 import 'package:emerge_app/features/timeline/presentation/widgets/ai_coach_card.dart';
@@ -250,10 +251,11 @@ class _TimelineScreenState extends ConsumerState<TimelineScreen> {
 
                 // Current World Map Mission
                 SliverToBoxAdapter(
-                  key: _missionKey,
-                  child: const Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 16.0),
-                    child: CurrentMissionBanner(),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                    child: CurrentMissionBanner(
+                      key: _missionKey,
+                    ),
                   ),
                 ),
 
@@ -261,8 +263,8 @@ class _TimelineScreenState extends ConsumerState<TimelineScreen> {
 
                 // Daily Summary Card (glassmorphism)
                 SliverToBoxAdapter(
-                  key: _summaryKey,
                   child: DailySummaryCard(
+                    key: _summaryKey,
                     completedHabits: completedToday.length,
                     totalHabits: habits.length,
                     xpToday: xpToday,
@@ -339,7 +341,7 @@ class _TimelineScreenState extends ConsumerState<TimelineScreen> {
                           ),
                           const SizedBox(height: 16),
                           ElevatedButton.icon(
-                            onPressed: () => context.push('/create-habit'),
+                            onPressed: () => context.push('/timeline/create-habit'),
                             icon: const Icon(Icons.add),
                             label: const Text('Create Habit'),
                             style: ElevatedButton.styleFrom(
@@ -359,14 +361,63 @@ class _TimelineScreenState extends ConsumerState<TimelineScreen> {
 
                 // AI Coach Card
                 SliverToBoxAdapter(
-                  key: _aiCoachKey,
-                  child: AiCoachCard(
-                    insight: _aiInsight,
-                    suggestedHabit: _suggestedHabit,
-                    isLoading: _isLoadingInsight,
-                    accentColor: EmergeColors.teal,
-                    onReflect: () => context.push('/profile/reflections'),
-                    onAddHabit: () => context.push('create-habit'),
+                  child: ref.watch(isPremiumProvider).when(
+                    data: (isPremium) => AiCoachCard(
+                      key: _aiCoachKey,
+                      insight: _aiInsight,
+                      suggestedHabit: _suggestedHabit,
+                      isLoading: _isLoadingInsight,
+                      accentColor: EmergeColors.teal,
+                      isPremiumLocked: !isPremium, // Unlocked when premium
+                      onAddHabit: () => context.push('/timeline/create-habit'),
+                      onLockedTap: () {
+                        // Show premium message when locked Reflect button is tapped
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: const Text(
+                              'AI Reflections is a premium feature. Upgrade to unlock!',
+                            ),
+                            backgroundColor: EmergeColors.warmGold,
+                            behavior: SnackBarBehavior.floating,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            duration: const Duration(seconds: 3),
+                            action: SnackBarAction(
+                              label: 'UPGRADE',
+                              textColor: Colors.black,
+                              onPressed: () => context.push('/profile/paywall'),
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                    loading: () => AiCoachCard(
+                      key: _aiCoachKey,
+                      insight: _aiInsight,
+                      suggestedHabit: _suggestedHabit,
+                      isLoading: _isLoadingInsight,
+                      accentColor: EmergeColors.teal,
+                      isPremiumLocked: true, // Default to locked while loading
+                      onAddHabit: () => context.push('/timeline/create-habit'),
+                      onLockedTap: () {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('Loading subscription status...'),
+                            duration: Duration(seconds: 2),
+                          ),
+                        );
+                      },
+                    ),
+                    error: (_, __) => AiCoachCard(
+                      key: _aiCoachKey,
+                      insight: _aiInsight,
+                      suggestedHabit: _suggestedHabit,
+                      isLoading: _isLoadingInsight,
+                      accentColor: EmergeColors.teal,
+                      isPremiumLocked: false, // Unlock on error
+                      onAddHabit: () => context.push('/timeline/create-habit'),
+                    ),
                   ),
                 ),
 
