@@ -149,7 +149,7 @@ class NotificationTemplates {
       case UserArchetype.creator:
         return 9;
       case UserArchetype.none:
-        return 8;
+        return 7;
     }
   }
 }
