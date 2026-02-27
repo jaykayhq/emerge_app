@@ -8,6 +8,8 @@ import 'package:emerge_app/features/habits/presentation/providers/habit_provider
 import 'package:emerge_app/features/habits/presentation/widgets/habit_template_picker.dart';
 import 'package:emerge_app/features/habits/presentation/widgets/habit_form_widgets.dart';
 import 'package:emerge_app/features/timeline/presentation/widgets/habit_timeline_section.dart';
+import 'package:emerge_app/features/tutorial/presentation/providers/tutorial_provider.dart';
+import 'package:emerge_app/features/tutorial/presentation/widgets/tutorial_overlay.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -29,6 +31,16 @@ class _AdvancedCreateHabitScreenState
   final _formKey = GlobalKey<FormState>();
   final _titleController = TextEditingController();
   final _locationController = TextEditingController();
+
+  // Tutorial keys
+  final GlobalKey _identityPreviewKey = GlobalKey();
+  final GlobalKey _templatesKey = GlobalKey();
+  final GlobalKey _nameInputKey = GlobalKey();
+  final GlobalKey _frequencyKey = GlobalKey();
+  final GlobalKey _timeLocationKey = GlobalKey();
+  final GlobalKey _attributeKey = GlobalKey();
+  final GlobalKey _createButtonKey = GlobalKey();
+
   HabitFrequency _frequency = HabitFrequency.daily;
   final List<int> _specificDays = [];
   TimeOfDayPreference _timeOfDay = TimeOfDayPreference.morning;
@@ -41,6 +53,75 @@ class _AdvancedCreateHabitScreenState
     super.initState();
     _titleController.addListener(_updateIdentityStatement);
     _locationController.addListener(_updateIdentityStatement);
+    _checkTutorial();
+  }
+
+  void _checkTutorial() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final tutorialState = ref.read(tutorialProvider);
+      if (!tutorialState.isCompleted(TutorialStep.createHabit)) {
+        _showTutorial();
+      }
+    });
+  }
+
+  void _showTutorial() {
+    late OverlayEntry entry;
+    entry = OverlayEntry(
+      builder: (context) => TutorialOverlay(
+        steps: [
+          const TutorialStepInfo(
+            title: 'Craft Your Identity',
+            description:
+                'Every habit is a vote for the person you want to become. This statement reinforces your identity.',
+          ),
+          TutorialStepInfo(
+            title: 'Quick Start Templates',
+            description:
+                'Swipe through these proven habit templates based on your archetype. Tap one to fill in the form instantly.',
+            targetKey: _templatesKey,
+            alignment: Alignment.center,
+          ),
+          TutorialStepInfo(
+            title: 'Name Your Habit',
+            description:
+                'Choose a clear, specific name. "Read 10 pages" is better than "Read more."',
+            targetKey: _nameInputKey,
+          ),
+          TutorialStepInfo(
+            title: 'Set Your Frequency',
+            description:
+                'How often will you do this? Daily habits build momentum faster than weekly ones.',
+            targetKey: _frequencyKey,
+          ),
+          TutorialStepInfo(
+            title: 'Time & Location',
+            description:
+                'Attach your habit to a specific time and place. This uses implementation intentions to trigger action.',
+            targetKey: _timeLocationKey,
+          ),
+          TutorialStepInfo(
+            title: 'Choose Your Attribute',
+            description:
+                'Which aspect of yourself does this habit strengthen? Each habit levels up different parts of your identity.',
+            targetKey: _attributeKey,
+          ),
+          TutorialStepInfo(
+            title: 'Make It Official',
+            description:
+                'When you\'re ready, tap CREATE to forge your new identity vote. You can always edit it later.',
+            targetKey: _createButtonKey,
+          ),
+        ],
+        onCompleted: () {
+          ref
+              .read(tutorialProvider.notifier)
+              .completeStep(TutorialStep.createHabit);
+          entry.remove();
+        },
+      ),
+    );
+    Overlay.of(context).insert(entry);
   }
 
   @override
@@ -238,6 +319,7 @@ class _AdvancedCreateHabitScreenState
                     padding: const EdgeInsets.all(16),
                     child: RepaintBoundary(
                       child: IdentityStatementPreview(
+                        key: _identityPreviewKey,
                         titleController: _titleController,
                         locationController: _locationController,
                         specificTime: _specificTime,
@@ -252,6 +334,7 @@ class _AdvancedCreateHabitScreenState
                 SliverToBoxAdapter(
                   child: RepaintBoundary(
                     child: HabitTemplateCarousel(
+                      key: _templatesKey,
                       archetype: userProfile?.archetype ?? UserArchetype.none,
                       onTemplateSelected: _applyTemplate,
                     ),
@@ -266,6 +349,7 @@ class _AdvancedCreateHabitScreenState
                     padding: const EdgeInsets.symmetric(horizontal: 16),
                     child: RepaintBoundary(
                       child: GlassmorphismCard(
+                        key: _nameInputKey,
                         child: Padding(
                           padding: const EdgeInsets.all(16),
                           child: TextFormField(
@@ -326,6 +410,7 @@ class _AdvancedCreateHabitScreenState
                     padding: const EdgeInsets.symmetric(horizontal: 16),
                     child: RepaintBoundary(
                       child: GlassmorphismCard(
+                        key: _frequencyKey,
                         child: Padding(
                           padding: const EdgeInsets.all(16),
                           child: Column(
@@ -444,6 +529,7 @@ class _AdvancedCreateHabitScreenState
                     padding: const EdgeInsets.symmetric(horizontal: 16),
                     child: RepaintBoundary(
                       child: GlassmorphismCard(
+                        key: _timeLocationKey,
                         child: Padding(
                           padding: const EdgeInsets.all(16),
                           child: Column(
@@ -609,6 +695,7 @@ class _AdvancedCreateHabitScreenState
                   child: Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 16),
                     child: GlassmorphismCard(
+                      key: _attributeKey,
                       child: Padding(
                         padding: const EdgeInsets.all(16),
                         child: Column(
@@ -767,6 +854,7 @@ class _AdvancedCreateHabitScreenState
                   child: Padding(
                     padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
                     child: GestureDetector(
+                      key: _createButtonKey,
                       onTap: _saveHabit,
                       child: Container(
                         height: 56,

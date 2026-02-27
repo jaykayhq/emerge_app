@@ -2,7 +2,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:emerge_app/features/onboarding/data/repositories/local_settings_repository.dart';
 
 /// Supported tutorial IDs
-enum TutorialStep { timeline, worldMap, profile, community }
+enum TutorialStep {
+  timeline,
+  worldMap,
+  profile,
+  community,
+  createHabit,
+}
 
 /// State for tracking completed tutorials
 class TutorialState {

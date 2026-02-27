@@ -57,8 +57,7 @@ class NodeStateService {
 
   /// Get completed node IDs from user profile
   static List<String> getCompletedNodeIds(UserProfile profile) {
-    final claimed = profile.worldState?.claimedNodes;
-    if (claimed == null) return [];
-    return claimed.map((e) => e.toString()).toList();
+    // worldState is non-nullable (has default const UserWorldState())
+    return profile.worldState.claimedNodes.map((e) => e.toString()).toList();
   }
 }

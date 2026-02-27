@@ -42,7 +42,15 @@
       "Bash(cd C:\\\\Users\\\\JOSHUA\\\\Downloads\\\\emerge_app:*)",
       "Bash(find .:*)",
       "Bash(git add:*)",
-      "Bash(flutter test:*)"
+      "Bash(flutter test:*)",
+      "Bash(adb uninstall com.example.emerge_app 2>&1 || adb shell pm uninstall com.example.emerge_app 2>&1)",
+      "Bash(powershell:*)",
+      "Bash(flutter:*)",
+      "Bash(du:*)",
+      "Bash(echo:*)",
+      "Bash(/c/src/flutter/bin/flutter.bat:*)",
+      "Bash(powershell.exe:*)",
+      "Bash(adb:*)"
     ],
     "deny": [],
     "ask": []

@@ -21,11 +21,13 @@ class TutorialStepInfo {
 class TutorialOverlay extends StatefulWidget {
   final List<TutorialStepInfo> steps;
   final VoidCallback onCompleted;
+  final ScrollController? scrollController;
 
   const TutorialOverlay({
     super.key,
     required this.steps,
     required this.onCompleted,
+    this.scrollController,
   });
 
   @override
@@ -34,13 +36,65 @@ class TutorialOverlay extends StatefulWidget {
 
 class _TutorialOverlayState extends State<TutorialOverlay> {
   int _currentStepIndex = 0;
+  bool _isScrolling = false;
 
   void _nextStep() {
     if (_currentStepIndex < widget.steps.length - 1) {
-      setState(() => _currentStepIndex++);
+      setState(() {
+        _currentStepIndex++;
+        _isScrolling = true;
+      });
+      // Scroll to target after a brief delay to let the state update
+      Future.delayed(const Duration(milliseconds: 100), () {
+        _scrollToTarget();
+      });
     } else {
       widget.onCompleted();
     }
+  }
+
+  void _scrollToTarget() {
+    final step = widget.steps[_currentStepIndex];
+    if (step.targetKey == null) {
+      setState(() => _isScrolling = false);
+      return;
+    }
+
+    final context = step.targetKey!.currentContext;
+    if (context == null) {
+      // Widget not built yet, retry after a delay
+      Future.delayed(const Duration(milliseconds: 200), () {
+        if (mounted) _scrollToTarget();
+      });
+      return;
+    }
+
+    try {
+      Scrollable.ensureVisible(
+        context,
+        alignment: 0.5, // Center the target
+        duration: const Duration(milliseconds: 400),
+        curve: Curves.easeInOut,
+      );
+      // Mark scrolling complete after animation finishes
+      Future.delayed(const Duration(milliseconds: 500), () {
+        if (mounted) setState(() => _isScrolling = false);
+      });
+    } catch (e) {
+      // If ensureVisible fails (e.g., not in a Scrollable), just show the highlight
+      setState(() => _isScrolling = false);
+    }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    // Scroll to first target after initial build
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      Future.delayed(const Duration(milliseconds: 300), () {
+        if (mounted) _scrollToTarget();
+      });
+    });
   }
 
   @override
@@ -52,7 +106,7 @@ class _TutorialOverlayState extends State<TutorialOverlay> {
       child: Stack(
         children: [
           // Blurred background with hole
-          if (step.targetKey != null)
+          if (step.targetKey != null && !_isScrolling)
             _TutorialHolePainter(targetKey: step.targetKey!)
           else
             Positioned.fill(
@@ -113,7 +167,7 @@ class _TutorialOverlayState extends State<TutorialOverlay> {
                               ),
                             ),
                             TextButton(
-                              onPressed: _nextStep,
+                              onPressed: _isScrolling ? null : _nextStep,
                               style: TextButton.styleFrom(
                                 backgroundColor: const Color(0xFF2BEE79),
                                 foregroundColor: Colors.black,
@@ -125,15 +179,25 @@ class _TutorialOverlayState extends State<TutorialOverlay> {
                                   borderRadius: BorderRadius.circular(12),
                                 ),
                               ),
-                              child: Text(
-                                _currentStepIndex < widget.steps.length - 1
-                                    ? 'NEXT'
-                                    : 'GOT IT',
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  letterSpacing: 1.1,
-                                ),
-                              ),
+                              child: _isScrolling
+                                  ? const SizedBox(
+                                      width: 16,
+                                      height: 16,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                        color: Colors.black,
+                                      ),
+                                    )
+                                  : Text(
+                                      _currentStepIndex <
+                                              widget.steps.length - 1
+                                          ? 'NEXT'
+                                          : 'GOT IT',
+                                      style: const TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        letterSpacing: 1.1,
+                                      ),
+                                    ),
                             ),
                           ],
                         ),
@@ -161,6 +225,7 @@ class _TutorialHolePainter extends StatefulWidget {
 
 class _TutorialHolePainterState extends State<_TutorialHolePainter> {
   Rect? _targetRect;
+  bool _hasAttempted = false;
 
   @override
   void initState() {
@@ -169,6 +234,9 @@ class _TutorialHolePainterState extends State<_TutorialHolePainter> {
   }
 
   void _updateRect() {
+    if (_hasAttempted && _targetRect != null) return;
+    _hasAttempted = true;
+
     final renderObject = widget.targetKey.currentContext?.findRenderObject();
 
     // Only RenderBox widgets can be highlighted - slivers use a different
@@ -182,11 +250,22 @@ class _TutorialHolePainterState extends State<_TutorialHolePainter> {
       return;
     }
 
-    final box = renderObject as RenderBox;
+    // After the is! check, Dart's type narrowing ensures renderObject is RenderBox
+    final box = renderObject;
     final offset = box.localToGlobal(Offset.zero);
     setState(() {
       _targetRect = offset & box.size;
     });
+  }
+
+  @override
+  void didUpdateWidget(_TutorialHolePainter oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.targetKey != widget.targetKey) {
+      _targetRect = null;
+      _hasAttempted = false;
+      WidgetsBinding.instance.addPostFrameCallback((_) => _updateRect());
+    }
   }
 
   @override

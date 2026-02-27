@@ -17,6 +17,7 @@ class EmergeColors {
   static const Color coral = Color(0xFFf7768e); // Error / warning red
   static const Color yellow = Color(0xFFe0af68); // Accent yellow
   static const Color lime = Color(0xFF2BEE79); // Lime = primary green
+  static const Color warmGold = Color(0xFFFFD700); // Gold for premium features
 
   // ============ GLASSMORPHISM ============
   static const Color glassWhite = Color(0x14FFFFFF); // 8% white

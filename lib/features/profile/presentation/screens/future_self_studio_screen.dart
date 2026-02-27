@@ -193,7 +193,7 @@ class _FutureSelfStudioScreenState
                           Icons.settings,
                           color: AppTheme.textMainDark,
                         ),
-                        onPressed: () => context.push('settings'),
+                        onPressed: () => context.push('/profile/settings'),
                       ),
                     ],
                     title: Column(
@@ -233,8 +233,8 @@ class _FutureSelfStudioScreenState
 
                   // Identity header (archetype + level)
                   SliverToBoxAdapter(
-                    key: _identityKey,
                     child: Container(
+                      key: _identityKey,
                       padding: const EdgeInsets.symmetric(
                         horizontal: 16,
                         vertical: 8,
@@ -295,8 +295,8 @@ class _FutureSelfStudioScreenState
                   // NEW: Evolving Silhouette with 5-tier system + decay/recovery
                   // OR: New 2D Isometric Avatar Renderer (toggle via _useNewAvatarRendererProvider)
                   SliverToBoxAdapter(
-                    key: _avatarKey,
                     child: Center(
+                      key: _avatarKey,
                       child: ref.watch(_useNewAvatarRendererProvider)
                           ? _buildAvatarRenderer(
                               context,
@@ -350,8 +350,8 @@ class _FutureSelfStudioScreenState
 
                   // XP Progress bar
                   SliverToBoxAdapter(
-                    key: _xpKey,
                     child: Padding(
+                      key: _xpKey,
                       padding: const EdgeInsets.symmetric(horizontal: 24),
                       child: Column(
                         children: [
@@ -400,8 +400,8 @@ class _FutureSelfStudioScreenState
 
                   // NEW: Trajectory Timeline (Stitch design)
                   SliverToBoxAdapter(
-                    key: _timelineKey,
                     child: TrajectoryTimeline(
+                      key: _timelineKey,
                       archetype: profile.archetype,
                       currentLevel: stats.level,
                       currentXp:
@@ -423,8 +423,8 @@ class _FutureSelfStudioScreenState
 
                   // Synergy Card with glassmorphism
                   SliverToBoxAdapter(
-                    key: _synergyKey,
                     child: SynergyCard(
+                      key: _synergyKey,
                       primaryAttribute: primaryAttribute,
                       secondaryAttribute: secondaryAttribute,
                       growthMultiplier: growthMultiplier,
@@ -485,27 +485,6 @@ class _FutureSelfStudioScreenState
         ),
       ),
     );
-  }
-
-  IconData _getAttributeIcon(String attribute) {
-    switch (attribute) {
-      case 'Strength':
-        return Icons.fitness_center;
-      case 'Intellect':
-        return Icons.psychology;
-      case 'Vitality':
-        return Icons.favorite;
-      case 'Creativity':
-        return Icons.brush;
-      case 'Focus':
-        return Icons.visibility;
-      case 'Spirit':
-        return Icons.auto_awesome;
-      case 'Resilience':
-        return Icons.shield;
-      default:
-        return Icons.star;
-    }
   }
 
   Map<String, double> _calculateAttributes(UserAvatarStats stats) {
@@ -656,25 +635,6 @@ class _FutureSelfStudioScreenState
       loading: () => const SizedBox.shrink(),
       error: (_, __) => const SizedBox.shrink(),
     );
-  }
-
-  String _getAttributeDisplayName(String attribute) {
-    switch (attribute.toLowerCase()) {
-      case 'vitality':
-        return 'Vitality';
-      case 'intellect':
-        return 'Intellect';
-      case 'creativity':
-        return 'Creativity';
-      case 'focus':
-        return 'Focus';
-      case 'strength':
-        return 'Strength';
-      case 'spirit':
-        return 'Spirit';
-      default:
-        return attribute;
-    }
   }
 
   /// Build the new 2D isometric avatar renderer

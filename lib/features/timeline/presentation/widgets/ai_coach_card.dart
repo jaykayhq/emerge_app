@@ -10,8 +10,10 @@ class AiCoachCard extends StatelessWidget {
   final String? suggestedHabit;
   final VoidCallback? onReflect;
   final VoidCallback? onAddHabit;
+  final VoidCallback? onLockedTap; // Callback when locked premium button is tapped
   final bool isLoading;
   final Color? accentColor; // Optional archetype theming
+  final bool isPremiumLocked; // Whether Reflect is premium locked
 
   const AiCoachCard({
     super.key,
@@ -19,8 +21,10 @@ class AiCoachCard extends StatelessWidget {
     this.suggestedHabit,
     this.onReflect,
     this.onAddHabit,
+    this.onLockedTap,
     this.isLoading = false,
     this.accentColor,
+    this.isPremiumLocked = true, // AI Reflections are premium by default
   });
 
   Color get _accent => accentColor ?? EmergeColors.teal;
@@ -32,7 +36,7 @@ class AiCoachCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Header
+          // Header with premium badge
           Row(
             children: [
               Container(
@@ -44,24 +48,67 @@ class AiCoachCard extends StatelessWidget {
                 child: Icon(Icons.smart_toy, color: _accent, size: 20),
               ),
               const SizedBox(width: 12),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'AI Coach',
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Text(
+                          'AI Coach',
+                          style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        if (isPremiumLocked) ...[
+                          const SizedBox(width: 6),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 6,
+                              vertical: 2,
+                            ),
+                            decoration: BoxDecoration(
+                              color: EmergeColors.warmGold.withValues(alpha: 0.3),
+                              borderRadius: BorderRadius.circular(4),
+                              border: Border.all(
+                                color: EmergeColors.warmGold.withValues(alpha: 0.6),
+                                width: 1,
+                              ),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(
+                                  Icons.lock,
+                                  size: 10,
+                                  color: EmergeColors.warmGold,
+                                ),
+                                const SizedBox(width: 2),
+                                Text(
+                                  'PREMIUM',
+                                  style: TextStyle(
+                                    color: EmergeColors.warmGold,
+                                    fontSize: 8,
+                                    fontWeight: FontWeight.bold,
+                                    letterSpacing: 0.5,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ],
                     ),
-                  ),
-                  Text(
-                    'Personalized insights for your journey',
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: EmergeColors.tealMuted.withValues(alpha: 0.7),
-                      fontSize: 11,
+                    Text(
+                      'Personalized insights for your journey',
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: EmergeColors.tealMuted.withValues(alpha: 0.7),
+                        fontSize: 11,
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ],
           ),
@@ -135,8 +182,10 @@ class AiCoachCard extends StatelessWidget {
                 child: _ActionButton(
                   icon: Icons.chat_bubble_outline,
                   label: 'Reflect',
-                  onTap: onReflect,
+                  onTap: isPremiumLocked ? null : onReflect,
+                  onLockedTap: onLockedTap,
                   color: EmergeColors.violet,
+                  isLocked: isPremiumLocked,
                 ),
               ),
               const SizedBox(width: 12),
@@ -160,25 +209,35 @@ class _ActionButton extends StatelessWidget {
   final IconData icon;
   final String label;
   final VoidCallback? onTap;
+  final VoidCallback? onLockedTap;
   final Color color;
+  final bool isLocked;
 
   const _ActionButton({
     required this.icon,
     required this.label,
     this.onTap,
+    this.onLockedTap,
     required this.color,
+    this.isLocked = false,
   });
 
   @override
   Widget build(BuildContext context) {
+    final isLockedState = isLocked || onTap == null;
+
     return GestureDetector(
-      onTap: onTap,
+      onTap: isLockedState ? onLockedTap : onTap,
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
         decoration: BoxDecoration(
           color: color.withValues(alpha: 0.1),
           borderRadius: BorderRadius.circular(10),
-          border: Border.all(color: color.withValues(alpha: 0.3)),
+          border: Border.all(
+            color: color.withValues(
+              alpha: isLockedState ? 0.15 : 0.3,
+            ),
+          ),
         ),
         child: FittedBox(
           fit: BoxFit.scaleDown,
@@ -186,12 +245,21 @@ class _ActionButton extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.center,
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(icon, color: color, size: 18),
+              if (isLockedState)
+                Icon(
+                  Icons.lock_outline,
+                  color: color.withValues(alpha: 0.5),
+                  size: 16,
+                )
+              else
+                Icon(icon, color: color, size: 18),
               const SizedBox(width: 6),
               Text(
                 label,
                 style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                  color: color,
+                  color: isLockedState
+                      ? color.withValues(alpha: 0.5)
+                      : color,
                   fontWeight: FontWeight.w600,
                 ),
               ),

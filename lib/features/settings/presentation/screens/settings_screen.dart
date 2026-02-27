@@ -1,4 +1,5 @@
 import 'dart:ui';
+import 'package:emerge_app/core/constants/gamification_constants.dart';
 import 'package:emerge_app/core/presentation/widgets/emerge_branding.dart';
 import 'package:emerge_app/core/theme/app_theme.dart';
 import 'package:emerge_app/core/theme/theme_provider.dart';
@@ -468,11 +469,12 @@ class SettingsScreen extends ConsumerWidget {
     final avatarStats = profile.avatarStats;
     final currentLevel = avatarStats.level;
     final totalXp = avatarStats.totalXp;
-    final xpForCurrentLevel = (currentLevel - 1) * 100;
-    final xpForNextLevel = currentLevel * 100;
+    final xpPerLevel = GamificationConstants.xpPerLevel;
+    final xpForCurrentLevel = (currentLevel - 1) * xpPerLevel;
+    final xpForNextLevel = currentLevel * xpPerLevel;
     final xpProgress = totalXp - xpForCurrentLevel;
     final xpNeeded = xpForNextLevel - totalXp;
-    final progressPercent = (xpProgress / 100).clamp(0.0, 1.0);
+    final progressPercent = (xpProgress / xpPerLevel).clamp(0.0, 1.0);
 
     return Row(
       children: [
@@ -545,7 +547,7 @@ class SettingsScreen extends ConsumerWidget {
                         ),
                       ),
                       Text(
-                        '$xpProgress / 100',
+                        '$xpProgress / $xpPerLevel',
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
                           color: AppTheme.textSecondaryDark,
                           fontWeight: FontWeight.w500,

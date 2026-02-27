@@ -525,6 +525,7 @@ class ArchetypeHabitSuggestion {
 
 /// Unified color system for archetypes
 /// Used across world map, profile, and synergy cards
+/// NOTE: These colors must match ArchetypeTheme.darkColors for consistency
 class ArchetypeColors {
   const ArchetypeColors({
     required this.primary,
@@ -539,32 +540,32 @@ class ArchetypeColors {
   static const Map<String, ArchetypeColors> all = {
     'athlete': ArchetypeColors(
       primary: Color(0xFFFF5252),
-      accent: Color(0xFFFF8A80),
+      accent: Color(0xFFFF8E72),
       attributes: ['strength', 'vitality'],
     ),
     'scholar': ArchetypeColors(
-      primary: Color(0xFFE040FB),
-      accent: Color(0xFFEA80FC),
+      primary: Color(0xFF7C3AED),
+      accent: Color(0xFFB794F6),
       attributes: ['intellect', 'focus'],
     ),
     'creator': ArchetypeColors(
-      primary: Color(0xFF76FF03),
-      accent: Color(0xFFB0FF57),
+      primary: Color(0xFFFFD700),
+      accent: Color(0xFFFFD93D),
       attributes: ['creativity', 'vitality'],
     ),
     'stoic': ArchetypeColors(
-      primary: Color(0xFF00E5FF),
-      accent: Color(0xFF80D8FF),
+      primary: Color(0xFF26A69A),
+      accent: Color(0xFF4DD4AC),
       attributes: ['focus', 'spirit'],
     ),
     'zealot': ArchetypeColors(
-      primary: Color(0xFFFFAB00),
-      accent: Color(0xFFFFD54F),
+      primary: Color(0xFF991B1B),
+      accent: Color(0xFFB45309),
       attributes: ['spirit', 'strength'],
     ),
     'explorer': ArchetypeColors(
-      primary: Color(0xFF2BEE79),
-      accent: Color(0xFF7EFFAC),
+      primary: Color(0xFF009688),
+      accent: Color(0xFF64FFDA),
       attributes: ['strength', 'intellect', 'vitality', 'creativity', 'focus', 'spirit'],
     ),
   };
