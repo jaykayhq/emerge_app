@@ -3,10 +3,16 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timezone/data/latest_all.dart' as tz;
 import 'package:timezone/timezone.dart' as tz;
+
+import 'package:emerge_app/core/services/notification_templates.dart';
+import 'package:emerge_app/core/theme/archetype_theme.dart';
+import 'package:emerge_app/features/habits/domain/entities/habit.dart';
+import 'package:emerge_app/features/auth/domain/entities/user_extension.dart';
 
 final notificationServiceProvider = Provider<NotificationService>((ref) {
   return NotificationService();
@@ -260,5 +266,345 @@ class NotificationService {
     } catch (e) {
       debugPrint('Error sending reward notification: $e');
     }
+  }
+
+  // ============ ARCHETYPE-THEMED NOTIFICATIONS ============
+
+  /// Private helper to get archetype-styled Android notification details
+  AndroidNotificationDetails _archetypeNotificationDetails(
+    UserArchetype archetype,
+    String channelId,
+  ) {
+    final theme = ArchetypeTheme.forArchetype(archetype);
+    final primaryColor = theme.primaryColor;
+
+    return AndroidNotificationDetails(
+      channelId,
+      '${archetype.name.toUpperCase()} Habits',
+      channelDescription: 'Archetype-styled habit reminders',
+      importance: Importance.high,
+      priority: Priority.high,
+      color: primaryColor,
+      ledColor: primaryColor,
+      largeIcon: const DrawableResourceAndroidBitmap(
+        '@drawable/push_notification_icon',
+      ),
+      styleInformation: const BigTextStyleInformation(''),
+    );
+  }
+
+  /// Sends immediate welcome notification when a new habit is created
+  Future<void> notifyHabitCreated(Habit habit, UserArchetype archetype) async {
+    try {
+      final channelId = NotificationChannels.channelForArchetype(archetype);
+      final message = NotificationTemplates.welcomeMessage(archetype, habit.title);
+
+      await _localNotifications.show(
+        habit.id.hashCode,
+        'New Habit Started',
+        message,
+        NotificationDetails(
+          android: _archetypeNotificationDetails(archetype, channelId),
+          iOS: const DarwinNotificationDetails(),
+        ),
+        payload: '/habits/${habit.id}',
+      );
+      debugPrint('Habit created notification sent: ${habit.title}');
+    } catch (e) {
+      debugPrint('Error sending habit created notification: $e');
+    }
+  }
+
+  /// Schedules recurring habit reminder with archetype theming
+  Future<void> scheduleHabitReminder(
+    String habitId,
+    String habitTitle,
+    UserArchetype archetype,
+    TimeOfDay reminderTime,
+    HabitFrequency frequency,
+    List<int> specificDays,
+  ) async {
+    try {
+      final channelId = NotificationChannels.channelForArchetype(archetype);
+      final message = NotificationTemplates.reminderMessage(archetype, habitTitle);
+
+      // Calculate next scheduled time based on frequency
+      tz.TZDateTime scheduledTime;
+      DateTimeComponents? matchDateTimeComponents;
+
+      switch (frequency) {
+        case HabitFrequency.daily:
+          scheduledTime = _nextInstanceOfTime(reminderTime.hour, reminderTime.minute);
+          matchDateTimeComponents = DateTimeComponents.time;
+          break;
+        case HabitFrequency.weekly:
+          scheduledTime = _nextInstanceOfDayOfWeek(
+            specificDays.first,
+            reminderTime.hour,
+            reminderTime.minute,
+          );
+          matchDateTimeComponents = DateTimeComponents.dayOfWeekAndTime;
+          break;
+        case HabitFrequency.specificDays:
+          scheduledTime = _nextInstanceOfSpecificDays(
+            specificDays,
+            reminderTime.hour,
+            reminderTime.minute,
+          );
+          matchDateTimeComponents = DateTimeComponents.dayOfWeekAndTime;
+          break;
+      }
+
+      await _localNotifications.zonedSchedule(
+        habitId.hashCode,
+        'Habit Reminder',
+        message,
+        scheduledTime,
+        NotificationDetails(
+          android: _archetypeNotificationDetails(archetype, channelId),
+          iOS: const DarwinNotificationDetails(),
+        ),
+        androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
+        uiLocalNotificationDateInterpretation:
+            UILocalNotificationDateInterpretation.absoluteTime,
+        matchDateTimeComponents: matchDateTimeComponents,
+        payload: '/habits/$habitId',
+      );
+      debugPrint('Habit reminder scheduled: $habitTitle at $reminderTime');
+    } catch (e) {
+      debugPrint('Error scheduling habit reminder: $e');
+    }
+  }
+
+  /// Cancels all notifications for a specific habit
+  Future<void> cancelHabitNotifications(String habitId) async {
+    try {
+      await _localNotifications.cancel(habitId.hashCode);
+      debugPrint('Cancelled notifications for habit: $habitId');
+    } catch (e) {
+      debugPrint('Error cancelling habit notifications: $e');
+    }
+  }
+
+  /// Updates habit notification by cancelling and rescheduling
+  Future<void> updateHabitNotification(
+    String habitId,
+    String habitTitle,
+    UserArchetype archetype,
+    TimeOfDay reminderTime,
+    HabitFrequency frequency,
+    List<int> specificDays,
+  ) async {
+    try {
+      // Cancel existing notification
+      await cancelHabitNotifications(habitId);
+      // Reschedule with new parameters
+      await scheduleHabitReminder(
+        habitId,
+        habitTitle,
+        archetype,
+        reminderTime,
+        frequency,
+        specificDays,
+      );
+      debugPrint('Updated habit notification: $habitTitle');
+    } catch (e) {
+      debugPrint('Error updating habit notification: $e');
+    }
+  }
+
+  /// Schedules streak warning notification (1hr after reminder time)
+  Future<void> scheduleStreakWarning(
+    String habitId,
+    String habitTitle,
+    UserArchetype archetype,
+    TimeOfDay reminderTime,
+    int currentStreak,
+  ) async {
+    try {
+      final channelId = NotificationChannels.channelForArchetype(archetype);
+      final message = NotificationTemplates.streakWarning(archetype, currentStreak);
+
+      // Schedule 1 hour after reminder time
+      final scheduledTime = _nextInstanceOfTime(
+        reminderTime.hour,
+        reminderTime.minute,
+      ).add(const Duration(hours: 1));
+
+      await _localNotifications.zonedSchedule(
+        '${habitId}_streak'.hashCode,
+        '⚠️ Streak at Risk!',
+        message,
+        scheduledTime,
+        NotificationDetails(
+          android: _archetypeNotificationDetails(archetype, channelId),
+          iOS: const DarwinNotificationDetails(),
+        ),
+        androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
+        uiLocalNotificationDateInterpretation:
+            UILocalNotificationDateInterpretation.absoluteTime,
+        payload: '/habits/$habitId',
+      );
+      debugPrint('Streak warning scheduled for: $habitTitle');
+    } catch (e) {
+      debugPrint('Error scheduling streak warning: $e');
+    }
+  }
+
+  /// Sends daily AI insight notification
+  Future<void> sendDailyInsight(
+    String insight,
+    UserArchetype archetype,
+    String habitId,
+  ) async {
+    try {
+      final greeting = NotificationTemplates.aiInsightGreeting(archetype);
+
+      await _localNotifications.show(
+        'insight_$habitId'.hashCode,
+        'Daily Insight',
+        '$greeting\n\n$insight',
+        const NotificationDetails(
+          android: AndroidNotificationDetails(
+            NotificationChannels.aiInsights,
+            'AI Insights',
+            channelDescription: 'Personalized insights and recommendations',
+            importance: Importance.low,
+            priority: Priority.low,
+            styleInformation: BigTextStyleInformation(''),
+          ),
+          iOS: DarwinNotificationDetails(),
+        ),
+        payload: '/habits/$habitId',
+      );
+      debugPrint('Daily insight sent');
+    } catch (e) {
+      debugPrint('Error sending daily insight: $e');
+    }
+  }
+
+  /// Sends level up notification
+  Future<void> notifyLevelUp(
+    UserArchetype archetype,
+    int newLevel,
+    String userId,
+  ) async {
+    try {
+      final message = NotificationTemplates.levelUp(archetype, newLevel);
+
+      await _localNotifications.show(
+        'levelup_$userId'.hashCode,
+        '🏆 Level Up!',
+        message,
+        const NotificationDetails(
+          android: AndroidNotificationDetails(
+            NotificationChannels.rewards,
+            'Rewards',
+            channelDescription: 'Achievements and level-ups',
+            importance: Importance.high,
+            priority: Priority.high,
+            styleInformation: BigTextStyleInformation(''),
+          ),
+          iOS: DarwinNotificationDetails(),
+        ),
+        payload: '/profile',
+      );
+      debugPrint('Level up notification sent: Level $newLevel');
+    } catch (e) {
+      debugPrint('Error sending level up notification: $e');
+    }
+  }
+
+  /// Sends achievement notification
+  Future<void> notifyAchievement(
+    UserArchetype archetype,
+    String achievementName,
+    String userId,
+  ) async {
+    try {
+      final message = NotificationTemplates.achievement(archetype, achievementName);
+
+      await _localNotifications.show(
+        'achievement_${achievementName}_$userId'.hashCode,
+        '🏅 Achievement Unlocked!',
+        message,
+        const NotificationDetails(
+          android: AndroidNotificationDetails(
+            NotificationChannels.rewards,
+            'Rewards',
+            channelDescription: 'Achievements and level-ups',
+            importance: Importance.high,
+            priority: Priority.high,
+            styleInformation: BigTextStyleInformation(''),
+          ),
+          iOS: DarwinNotificationDetails(),
+        ),
+        payload: '/profile',
+      );
+      debugPrint('Achievement notification sent: $achievementName');
+    } catch (e) {
+      debugPrint('Error sending achievement notification: $e');
+    }
+  }
+
+  // ============ TIME CALCULATION HELPERS ============
+
+  /// Returns the next occurrence of a specific time (hour:minute)
+  tz.TZDateTime _nextInstanceOfTime(int hour, int minute) {
+    final now = tz.TZDateTime.now(tz.local);
+    var scheduledDate = tz.TZDateTime(tz.local, now.year, now.month, now.day, hour, minute);
+
+    // If the time has passed today, schedule for tomorrow
+    if (scheduledDate.isBefore(now)) {
+      scheduledDate = scheduledDate.add(const Duration(days: 1));
+    }
+
+    return scheduledDate;
+  }
+
+  /// Returns the next occurrence of a specific day of week and time
+  tz.TZDateTime _nextInstanceOfDayOfWeek(int day, int hour, int minute) {
+    final now = tz.TZDateTime.now(tz.local);
+    var scheduledDate = tz.TZDateTime(tz.local, now.year, now.month, now.day, hour, minute);
+
+    // Find the next occurrence of the specified day
+    while (scheduledDate.weekday != day) {
+      scheduledDate = scheduledDate.add(const Duration(days: 1));
+    }
+
+    // If the time has passed on that day, move to next week
+    if (scheduledDate.isBefore(now)) {
+      scheduledDate = scheduledDate.add(const Duration(days: 7));
+    }
+
+    return scheduledDate;
+  }
+
+  /// Returns the next occurrence from a list of specific days
+  tz.TZDateTime _nextInstanceOfSpecificDays(List<int> days, int hour, int minute) {
+    final now = tz.TZDateTime.now(tz.local);
+    tz.TZDateTime? earliestDate;
+
+    // Check each day to find the next valid occurrence
+    for (final day in days) {
+      var candidateDate = tz.TZDateTime(tz.local, now.year, now.month, now.day, hour, minute);
+
+      // Move to the target day
+      while (candidateDate.weekday != day) {
+        candidateDate = candidateDate.add(const Duration(days: 1));
+      }
+
+      // If this date is in the future, it's a candidate
+      if (candidateDate.isAfter(now)) {
+        if (earliestDate == null || candidateDate.isBefore(earliestDate)) {
+          earliestDate = candidateDate;
+        }
+      }
+    }
+
+    // If no valid date found this week, schedule for the first day next week
+    earliestDate ??= _nextInstanceOfDayOfWeek(days.first, hour, minute);
+
+    return earliestDate;
   }
 }
