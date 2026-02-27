@@ -320,7 +320,7 @@ class NotificationService {
     String habitId,
     String habitTitle,
     UserArchetype archetype,
-    TimeOfDay reminderTime,
+    String reminderTime,
     HabitFrequency frequency,
     List<int> specificDays,
   ) async {
@@ -328,28 +328,33 @@ class NotificationService {
       final channelId = NotificationChannels.channelForArchetype(archetype);
       final message = NotificationTemplates.reminderMessage(archetype, habitTitle);
 
+      // Parse reminder time string (format: "HH:MM")
+      final parts = reminderTime.split(':');
+      final hour = int.parse(parts[0]);
+      final minute = int.parse(parts[1]);
+
       // Calculate next scheduled time based on frequency
       tz.TZDateTime scheduledTime;
       DateTimeComponents? matchDateTimeComponents;
 
       switch (frequency) {
         case HabitFrequency.daily:
-          scheduledTime = _nextInstanceOfTime(reminderTime.hour, reminderTime.minute);
+          scheduledTime = _nextInstanceOfTime(hour, minute);
           matchDateTimeComponents = DateTimeComponents.time;
           break;
         case HabitFrequency.weekly:
           scheduledTime = _nextInstanceOfDayOfWeek(
             specificDays.first,
-            reminderTime.hour,
-            reminderTime.minute,
+            hour,
+            minute,
           );
           matchDateTimeComponents = DateTimeComponents.dayOfWeekAndTime;
           break;
         case HabitFrequency.specificDays:
           scheduledTime = _nextInstanceOfSpecificDays(
             specificDays,
-            reminderTime.hour,
-            reminderTime.minute,
+            hour,
+            minute,
           );
           matchDateTimeComponents = DateTimeComponents.dayOfWeekAndTime;
           break;
@@ -370,7 +375,7 @@ class NotificationService {
         matchDateTimeComponents: matchDateTimeComponents,
         payload: '/habits/$habitId',
       );
-      debugPrint('Habit reminder scheduled: $habitTitle at $reminderTime');
+      debugPrint('Habit reminder scheduled: $habitTitle at $reminderTime ($hour:$minute)');
     } catch (e) {
       debugPrint('Error scheduling habit reminder: $e');
     }
@@ -391,7 +396,7 @@ class NotificationService {
     String habitId,
     String habitTitle,
     UserArchetype archetype,
-    TimeOfDay reminderTime,
+    String reminderTime,
     HabitFrequency frequency,
     List<int> specificDays,
   ) async {
@@ -418,17 +423,22 @@ class NotificationService {
     String habitId,
     String habitTitle,
     UserArchetype archetype,
-    TimeOfDay reminderTime,
+    String reminderTime,
     int currentStreak,
   ) async {
     try {
       final channelId = NotificationChannels.channelForArchetype(archetype);
       final message = NotificationTemplates.streakWarning(archetype, currentStreak);
 
+      // Parse reminder time string (format: "HH:MM")
+      final parts = reminderTime.split(':');
+      final hour = int.parse(parts[0]);
+      final minute = int.parse(parts[1]);
+
       // Schedule 1 hour after reminder time
       final scheduledTime = _nextInstanceOfTime(
-        reminderTime.hour,
-        reminderTime.minute,
+        hour,
+        minute,
       ).add(const Duration(hours: 1));
 
       await _localNotifications.zonedSchedule(
@@ -453,15 +463,15 @@ class NotificationService {
 
   /// Sends daily AI insight notification
   Future<void> sendDailyInsight(
+    String userId,
     String insight,
     UserArchetype archetype,
-    String habitId,
   ) async {
     try {
       final greeting = NotificationTemplates.aiInsightGreeting(archetype);
 
       await _localNotifications.show(
-        'insight_$habitId'.hashCode,
+        'insight_$userId'.hashCode,
         'Daily Insight',
         '$greeting\n\n$insight',
         const NotificationDetails(
@@ -475,9 +485,9 @@ class NotificationService {
           ),
           iOS: DarwinNotificationDetails(),
         ),
-        payload: '/habits/$habitId',
+        payload: '/profile',
       );
-      debugPrint('Daily insight sent');
+      debugPrint('Daily insight sent for user: $userId');
     } catch (e) {
       debugPrint('Error sending daily insight: $e');
     }
@@ -485,9 +495,9 @@ class NotificationService {
 
   /// Sends level up notification
   Future<void> notifyLevelUp(
-    UserArchetype archetype,
-    int newLevel,
     String userId,
+    int newLevel,
+    UserArchetype archetype,
   ) async {
     try {
       final message = NotificationTemplates.levelUp(archetype, newLevel);
@@ -517,9 +527,9 @@ class NotificationService {
 
   /// Sends achievement notification
   Future<void> notifyAchievement(
-    UserArchetype archetype,
-    String achievementName,
     String userId,
+    String achievementName,
+    UserArchetype archetype,
   ) async {
     try {
       final message = NotificationTemplates.achievement(archetype, achievementName);
