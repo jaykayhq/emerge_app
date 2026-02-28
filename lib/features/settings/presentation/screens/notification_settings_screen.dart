@@ -186,6 +186,20 @@ class NotificationSettingsScreen extends ConsumerWidget {
                       settings.copyWith(doNotDisturb: val),
                     ),
                   ),
+                  if (dnd) ...[
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                      child: Text(
+                        '🌙 Quiet hours: 10:00 PM - 7:00 AM',
+                        style: TextStyle(
+                          color: AppTheme.textSecondaryDark,
+                          fontSize: 12,
+                          fontStyle: FontStyle.italic,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                  ],
                 ]),
               ],
             ],
