@@ -1,3 +1,4 @@
+import 'package:emerge_app/core/services/notification_templates.dart';
 import 'package:emerge_app/core/theme/app_theme.dart';
 import 'package:emerge_app/core/presentation/widgets/emerge_branding.dart';
 import 'package:emerge_app/core/utils/app_logger.dart';
@@ -138,9 +139,26 @@ class _AdvancedCreateHabitScreenState
   }
 
   Future<void> _selectTime(BuildContext context) async {
+    final userProfile = ref.read(userStatsStreamProvider).valueOrNull;
+    final archetype = userProfile?.archetype ?? UserArchetype.none;
+    final defaultHour = NotificationTemplates.getDefaultHour(archetype);
+
     final TimeOfDay? picked = await showTimePicker(
       context: context,
-      initialTime: _specificTime ?? TimeOfDay.now(),
+      initialTime: _specificTime ?? TimeOfDay(hour: defaultHour, minute: 0),
+      builder: (context, child) {
+        return Theme(
+          data: Theme.of(context).copyWith(
+            colorScheme: ColorScheme.dark(
+              primary: EmergeColors.teal,
+              onPrimary: Colors.white,
+              surface: AppTheme.surfaceDark,
+              onSurface: AppTheme.textMainDark,
+            ),
+          ),
+          child: child!,
+        );
+      },
     );
     if (picked != null && picked != _specificTime) {
       setState(() {
@@ -569,16 +587,54 @@ class _AdvancedCreateHabitScreenState
                                             ),
                                             const SizedBox(width: 8),
                                             Flexible(
-                                              child: Text(
-                                                _specificTime != null
-                                                    ? _specificTime!.format(
-                                                        context,
-                                                      )
-                                                    : 'Set Time',
-                                                style: TextStyle(
-                                                  color: AppTheme.textMainDark,
-                                                ),
-                                                overflow: TextOverflow.ellipsis,
+                                              child: Column(
+                                                crossAxisAlignment:
+                                                    CrossAxisAlignment.start,
+                                                mainAxisSize: MainAxisSize.min,
+                                                children: [
+                                                  Text(
+                                                    _specificTime != null
+                                                        ? _specificTime!.format(
+                                                            context,
+                                                          )
+                                                        : 'Set Time',
+                                                    style: TextStyle(
+                                                      color:
+                                                          AppTheme.textMainDark,
+                                                      fontWeight:
+                                                          FontWeight.w500,
+                                                    ),
+                                                    overflow:
+                                                        TextOverflow.ellipsis,
+                                                  ),
+                                                  if (_specificTime == null)
+                                                    Builder(
+                                                      builder: (context) {
+                                                        final userProfile = ref
+                                                                .watch(
+                                                          userStatsStreamProvider,
+                                                        )
+                                                                .valueOrNull;
+                                                        final archetype =
+                                                            userProfile?.archetype ??
+                                                                UserArchetype
+                                                                    .none;
+                                                        final defaultHour =
+                                                            NotificationTemplates
+                                                                .getDefaultHour(
+                                                          archetype,
+                                                        );
+                                                        return Text(
+                                                          'Archetype default: $defaultHour:00 ${defaultHour < 12 ? "AM" : "PM"}',
+                                                          style: TextStyle(
+                                                            color: AppTheme
+                                                                .textSecondaryDark,
+                                                            fontSize: 11,
+                                                          ),
+                                                        );
+                                                      },
+                                                    ),
+                                                ],
                                               ),
                                             ),
                                           ],
