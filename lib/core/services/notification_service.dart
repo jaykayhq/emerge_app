@@ -328,53 +328,95 @@ class NotificationService {
       final channelId = NotificationChannels.channelForArchetype(archetype);
       final message = NotificationTemplates.reminderMessage(archetype, habitTitle);
 
-      // Parse reminder time string (format: "HH:MM")
-      final parts = reminderTime.split(':');
-      final hour = int.parse(parts[0]);
-      final minute = int.parse(parts[1]);
+      // Safe parsing with validation
+      int hour, minute;
+      try {
+        final parts = reminderTime.split(':');
+        if (parts.length != 2) throw FormatException('Invalid time format');
+
+        hour = int.parse(parts[0]);
+        minute = int.parse(parts[1]);
+
+        if (hour < 0 || hour > 23 || minute < 0 || minute > 59) {
+          throw FormatException('Invalid time values');
+        }
+      } catch (e) {
+        debugPrint('Invalid reminder time format "$reminderTime": $e');
+        hour = NotificationTemplates.getDefaultHour(archetype);
+        minute = 0;
+      }
 
       // Calculate next scheduled time based on frequency
-      tz.TZDateTime scheduledTime;
-      DateTimeComponents? matchDateTimeComponents;
-
       switch (frequency) {
         case HabitFrequency.daily:
-          scheduledTime = _nextInstanceOfTime(hour, minute);
-          matchDateTimeComponents = DateTimeComponents.time;
+          final scheduledTime = _nextInstanceOfTime(hour, minute);
+          await _localNotifications.zonedSchedule(
+            habitId.hashCode,
+            'Habit Reminder',
+            message,
+            scheduledTime,
+            NotificationDetails(
+              android: _archetypeNotificationDetails(archetype, channelId),
+              iOS: const DarwinNotificationDetails(),
+            ),
+            androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
+            uiLocalNotificationDateInterpretation:
+                UILocalNotificationDateInterpretation.absoluteTime,
+            matchDateTimeComponents: DateTimeComponents.time,
+            payload: '/habits/$habitId',
+          );
           break;
         case HabitFrequency.weekly:
-          scheduledTime = _nextInstanceOfDayOfWeek(
+          if (specificDays.isEmpty) {
+            debugPrint('Cannot schedule weekly habit: no days specified');
+            return;
+          }
+          final weeklyTime = _nextInstanceOfDayOfWeek(
             specificDays.first,
             hour,
             minute,
           );
-          matchDateTimeComponents = DateTimeComponents.dayOfWeekAndTime;
+          await _localNotifications.zonedSchedule(
+            habitId.hashCode,
+            'Habit Reminder',
+            message,
+            weeklyTime,
+            NotificationDetails(
+              android: _archetypeNotificationDetails(archetype, channelId),
+              iOS: const DarwinNotificationDetails(),
+            ),
+            androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
+            uiLocalNotificationDateInterpretation:
+                UILocalNotificationDateInterpretation.absoluteTime,
+            matchDateTimeComponents: DateTimeComponents.dayOfWeekAndTime,
+            payload: '/habits/$habitId',
+          );
           break;
         case HabitFrequency.specificDays:
-          scheduledTime = _nextInstanceOfSpecificDays(
-            specificDays,
-            hour,
-            minute,
-          );
-          matchDateTimeComponents = DateTimeComponents.dayOfWeekAndTime;
-          break;
+          if (specificDays.isEmpty) {
+            debugPrint('Cannot schedule specific days habit: no days specified');
+            return;
+          }
+          // Schedule a separate notification for each day
+          for (final day in specificDays) {
+            final dayTime = _nextInstanceOfDayOfWeek(day, hour, minute);
+            await _localNotifications.zonedSchedule(
+              '${habitId}_$day'.hashCode,
+              'Habit Reminder',
+              message,
+              dayTime,
+              NotificationDetails(
+                android: _archetypeNotificationDetails(archetype, channelId),
+                iOS: const DarwinNotificationDetails(),
+              ),
+              androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
+              uiLocalNotificationDateInterpretation: UILocalNotificationDateInterpretation.absoluteTime,
+              matchDateTimeComponents: DateTimeComponents.dayOfWeekAndTime,
+              payload: '/habits/$habitId',
+            );
+          }
+          return; // Don't execute the single schedule below
       }
-
-      await _localNotifications.zonedSchedule(
-        habitId.hashCode,
-        'Habit Reminder',
-        message,
-        scheduledTime,
-        NotificationDetails(
-          android: _archetypeNotificationDetails(archetype, channelId),
-          iOS: const DarwinNotificationDetails(),
-        ),
-        androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
-        uiLocalNotificationDateInterpretation:
-            UILocalNotificationDateInterpretation.absoluteTime,
-        matchDateTimeComponents: matchDateTimeComponents,
-        payload: '/habits/$habitId',
-      );
       debugPrint('Habit reminder scheduled: $habitTitle at $reminderTime ($hour:$minute)');
     } catch (e) {
       debugPrint('Error scheduling habit reminder: $e');
@@ -430,10 +472,23 @@ class NotificationService {
       final channelId = NotificationChannels.channelForArchetype(archetype);
       final message = NotificationTemplates.streakWarning(archetype, currentStreak);
 
-      // Parse reminder time string (format: "HH:MM")
-      final parts = reminderTime.split(':');
-      final hour = int.parse(parts[0]);
-      final minute = int.parse(parts[1]);
+      // Safe parsing with validation
+      int hour, minute;
+      try {
+        final parts = reminderTime.split(':');
+        if (parts.length != 2) throw FormatException('Invalid time format');
+
+        hour = int.parse(parts[0]);
+        minute = int.parse(parts[1]);
+
+        if (hour < 0 || hour > 23 || minute < 0 || minute > 59) {
+          throw FormatException('Invalid time values');
+        }
+      } catch (e) {
+        debugPrint('Invalid reminder time format "$reminderTime": $e');
+        hour = NotificationTemplates.getDefaultHour(archetype);
+        minute = 0;
+      }
 
       // Schedule 1 hour after reminder time
       final scheduledTime = _nextInstanceOfTime(
@@ -453,6 +508,7 @@ class NotificationService {
         androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
         uiLocalNotificationDateInterpretation:
             UILocalNotificationDateInterpretation.absoluteTime,
+        matchDateTimeComponents: DateTimeComponents.time,
         payload: '/habits/$habitId',
       );
       debugPrint('Streak warning scheduled for: $habitTitle');
