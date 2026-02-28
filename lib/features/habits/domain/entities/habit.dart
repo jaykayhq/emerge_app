@@ -11,6 +11,8 @@ enum HabitAttribute { strength, intellect, vitality, creativity, focus, spirit }
 
 enum TimeOfDayPreference { morning, afternoon, evening, anytime }
 
+enum HabitIntegrationType { none, healthSteps, screenTimeLimit }
+
 class Habit extends Equatable {
   final String id;
   final String userId;
@@ -41,6 +43,8 @@ class Habit extends Equatable {
   final int timerDurationMinutes; // Default: 2 (Two-Minute Rule)
   final List<String> customRules; // User-defined habit rules
   final List<String> environmentPriming; // Environment priming tasks
+  final HabitIntegrationType integrationType;
+  final int? integrationTarget;
 
   const Habit({
     required this.id,
@@ -72,6 +76,8 @@ class Habit extends Equatable {
     this.timerDurationMinutes = 2,
     this.customRules = const [],
     this.environmentPriming = const [],
+    this.integrationType = HabitIntegrationType.none,
+    this.integrationTarget,
   });
 
   static Habit empty() {
@@ -108,6 +114,8 @@ class Habit extends Equatable {
     int? timerDurationMinutes,
     List<String>? customRules,
     List<String>? environmentPriming,
+    HabitIntegrationType? integrationType,
+    int? integrationTarget,
   }) {
     return Habit(
       id: id ?? this.id,
@@ -139,6 +147,8 @@ class Habit extends Equatable {
       timerDurationMinutes: timerDurationMinutes ?? this.timerDurationMinutes,
       customRules: customRules ?? this.customRules,
       environmentPriming: environmentPriming ?? this.environmentPriming,
+      integrationType: integrationType ?? this.integrationType,
+      integrationTarget: integrationTarget ?? this.integrationTarget,
     );
   }
 
@@ -173,5 +183,7 @@ class Habit extends Equatable {
     timerDurationMinutes,
     customRules,
     environmentPriming,
+    integrationType,
+    integrationTarget,
   ];
 }

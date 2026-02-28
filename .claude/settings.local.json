@@ -50,7 +50,15 @@
       "Bash(echo:*)",
       "Bash(/c/src/flutter/bin/flutter.bat:*)",
       "Bash(powershell.exe:*)",
-      "Bash(adb:*)"
+      "Bash(adb:*)",
+      "Bash(git:*)",
+      "Bash(npx tsc:*)",
+      "Bash(npx eslint:*)",
+      "Bash(sort -t: -k2 -n)",
+      "Bash(cp:*)",
+      "Bash(sed:*)",
+      "Bash(rm:*)",
+      "Bash(find lib:*)"
     ],
     "deny": [],
     "ask": []

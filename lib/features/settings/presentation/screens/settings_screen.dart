@@ -9,6 +9,7 @@ import 'package:emerge_app/features/auth/presentation/providers/auth_providers.d
 import 'package:emerge_app/features/gamification/data/repositories/user_stats_repository.dart';
 import 'package:emerge_app/features/gamification/presentation/providers/user_stats_providers.dart';
 import 'package:emerge_app/features/settings/presentation/screens/notification_settings_screen.dart';
+import 'package:emerge_app/features/settings/presentation/providers/digital_wellbeing_provider.dart';
 import 'package:emerge_app/features/tutorial/presentation/providers/tutorial_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -28,6 +29,7 @@ class SettingsScreen extends ConsumerWidget {
 
     final currentTheme = userProfile?.worldTheme ?? 'Default';
     final userSettings = userProfile?.settings ?? const UserSettings();
+    final wellbeingAsync = ref.watch(digitalWellbeingProvider);
 
     return Scaffold(
       backgroundColor: EmergeColors.background,
@@ -183,85 +185,165 @@ class SettingsScreen extends ConsumerWidget {
                 // Integrations & Data
                 _buildSectionHeader(context, 'Integrations & Data'),
                 _buildSectionContainer(context, [
-                  SwitchListTile(
-                    secondary: Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                        color: EmergeColors.teal.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(8),
+                  wellbeingAsync.when(
+                    data: (wellbeingState) => SwitchListTile(
+                      secondary: Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: EmergeColors.teal.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Icon(
+                          Icons.favorite_outline,
+                          color: EmergeColors.teal,
+                        ),
                       ),
-                      child: Icon(
-                        Icons.favorite_outline,
-                        color: EmergeColors.teal,
+                      title: Text(
+                        'Google Fit / Health Connect',
+                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          fontWeight: FontWeight.w500,
+                          color: AppTheme.textMainDark,
+                        ),
                       ),
+                      subtitle: Text(
+                        wellbeingState.isGoogleFitConnected
+                            ? 'Connected'
+                            : 'Not Connected',
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: AppTheme.textSecondaryDark,
+                        ),
+                      ),
+                      value: wellbeingState.isGoogleFitConnected,
+                      onChanged: (value) async {
+                        try {
+                          await ref
+                              .read(digitalWellbeingProvider.notifier)
+                              .toggleGoogleFit(value);
+                          if (context.mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text(
+                                  value
+                                      ? 'Connected to Google Fit'
+                                      : 'Disconnected from Google Fit',
+                                ),
+                                backgroundColor: EmergeColors.teal,
+                              ),
+                            );
+                          }
+                        } catch (e) {
+                          if (context.mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(content: Text('Error: $e')),
+                            );
+                          }
+                        }
+                      },
+                      activeThumbColor: EmergeColors.teal,
+                      activeTrackColor: EmergeColors.teal.withValues(
+                        alpha: 0.5,
+                      ),
+                      tileColor: AppTheme.surfaceDark,
                     ),
-                    title: Text(
-                      'HealthKit',
-                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        fontWeight: FontWeight.w500,
-                        color: AppTheme.textMainDark,
+                    loading: () => const ListTile(
+                      title: Text(
+                        'Google Fit / Health Connect',
+                        style: TextStyle(color: Colors.white),
                       ),
+                      trailing: CircularProgressIndicator(),
+                      tileColor: AppTheme.surfaceDark,
                     ),
-                    subtitle: Text(
-                      userSettings.healthKitConnected
-                          ? 'Connected'
-                          : 'Not Connected',
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: AppTheme.textSecondaryDark,
+                    error: (err, stack) => ListTile(
+                      title: const Text(
+                        'Google Fit / Health Connect',
+                        style: TextStyle(color: Colors.white),
                       ),
+                      subtitle: const Text(
+                        'Error loading status',
+                        style: TextStyle(color: Colors.red),
+                      ),
+                      tileColor: AppTheme.surfaceDark,
                     ),
-                    value: userSettings.healthKitConnected,
-                    onChanged: (value) {
-                      _updateSettings(
-                        context,
-                        ref,
-                        userProfile,
-                        userSettings.copyWith(healthKitConnected: value),
-                      );
-                    },
-                    activeThumbColor: EmergeColors.teal,
-                    activeTrackColor: EmergeColors.teal.withValues(alpha: 0.5),
-                    tileColor: AppTheme.surfaceDark,
                   ),
-                  SwitchListTile(
-                    secondary: Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                        color: EmergeColors.teal.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(8),
+                  wellbeingAsync.when(
+                    data: (wellbeingState) => SwitchListTile(
+                      secondary: Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: EmergeColors.teal.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Icon(
+                          Icons.timer_outlined,
+                          color: EmergeColors.teal,
+                        ),
                       ),
-                      child: Icon(
-                        Icons.timer_outlined,
-                        color: EmergeColors.teal,
+                      title: Text(
+                        'Screen Time API',
+                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          fontWeight: FontWeight.w500,
+                          color: AppTheme.textMainDark,
+                        ),
                       ),
+                      subtitle: Text(
+                        wellbeingState.isScreenTimeConnected
+                            ? 'Connected'
+                            : 'Not Connected',
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: AppTheme.textSecondaryDark,
+                        ),
+                      ),
+                      value: wellbeingState.isScreenTimeConnected,
+                      onChanged: (value) async {
+                        try {
+                          await ref
+                              .read(digitalWellbeingProvider.notifier)
+                              .toggleScreenTime(value);
+                          if (context.mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text(
+                                  value
+                                      ? 'Connected to Screen Time API'
+                                      : 'Disconnected from Screen Time API',
+                                ),
+                                backgroundColor: EmergeColors.teal,
+                              ),
+                            );
+                          }
+                        } catch (e) {
+                          if (context.mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(content: Text('Error: $e')),
+                            );
+                          }
+                        }
+                      },
+                      activeThumbColor: EmergeColors.teal,
+                      activeTrackColor: EmergeColors.teal.withValues(
+                        alpha: 0.5,
+                      ),
+                      tileColor: AppTheme.surfaceDark,
                     ),
-                    title: Text(
-                      'Screen Time',
-                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        fontWeight: FontWeight.w500,
-                        color: AppTheme.textMainDark,
+                    loading: () => const ListTile(
+                      title: Text(
+                        'Screen Time API',
+                        style: TextStyle(color: Colors.white),
                       ),
+                      trailing: CircularProgressIndicator(),
+                      tileColor: AppTheme.surfaceDark,
                     ),
-                    subtitle: Text(
-                      userSettings.screenTimeConnected
-                          ? 'Connected'
-                          : 'Not Connected',
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: AppTheme.textSecondaryDark,
+                    error: (err, stack) => ListTile(
+                      title: const Text(
+                        'Screen Time API',
+                        style: TextStyle(color: Colors.white),
                       ),
+                      subtitle: const Text(
+                        'Error loading status',
+                        style: TextStyle(color: Colors.red),
+                      ),
+                      tileColor: AppTheme.surfaceDark,
                     ),
-                    value: userSettings.screenTimeConnected,
-                    onChanged: (value) {
-                      _updateSettings(
-                        context,
-                        ref,
-                        userProfile,
-                        userSettings.copyWith(screenTimeConnected: value),
-                      );
-                    },
-                    activeThumbColor: EmergeColors.teal,
-                    activeTrackColor: EmergeColors.teal.withValues(alpha: 0.5),
-                    tileColor: AppTheme.surfaceDark,
                   ),
                   _buildListTile(
                     context,

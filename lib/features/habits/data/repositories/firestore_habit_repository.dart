@@ -92,6 +92,11 @@ class FirestoreHabitRepository implements HabitRepository {
               ?.map((e) => e as String)
               .toList() ??
           [],
+      integrationType: HabitIntegrationType.values.firstWhere(
+        (e) => e.name == data['integrationType'],
+        orElse: () => HabitIntegrationType.none,
+      ),
+      integrationTarget: data['integrationTarget'] as int?,
     );
   }
 
@@ -151,6 +156,8 @@ class FirestoreHabitRepository implements HabitRepository {
         'customRules': habit.customRules,
         'environmentPriming': habit.environmentPriming,
         'twoMinuteVersion': habit.twoMinuteVersion,
+        'integrationType': habit.integrationType.name,
+        'integrationTarget': habit.integrationTarget,
       });
 
       // Log success for debugging
@@ -195,6 +202,8 @@ class FirestoreHabitRepository implements HabitRepository {
         'customRules': habit.customRules,
         'environmentPriming': habit.environmentPriming,
         'twoMinuteVersion': habit.twoMinuteVersion,
+        'integrationType': habit.integrationType.name,
+        'integrationTarget': habit.integrationTarget,
       });
       return const Right(unit);
     } catch (e, s) {

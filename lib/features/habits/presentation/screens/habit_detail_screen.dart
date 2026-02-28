@@ -30,6 +30,8 @@ class _HabitDetailScreenState extends ConsumerState<HabitDetailScreen> {
   late int _timerDurationMinutes;
   late List<String> _customRules;
   late List<String> _environmentPriming;
+  late HabitIntegrationType _integrationType;
+  int? _integrationTarget;
   String? _anchorHabitId;
   bool _isInit = false;
   bool _hasChanges = false;
@@ -50,6 +52,8 @@ class _HabitDetailScreenState extends ConsumerState<HabitDetailScreen> {
     _timerDurationMinutes = habit.timerDurationMinutes;
     _customRules = List.from(habit.customRules);
     _environmentPriming = List.from(habit.environmentPriming);
+    _integrationType = habit.integrationType;
+    _integrationTarget = habit.integrationTarget;
     _anchorHabitId = habit.anchorHabitId;
 
     // Listeners to detect changes
@@ -77,6 +81,8 @@ class _HabitDetailScreenState extends ConsumerState<HabitDetailScreen> {
       timerDurationMinutes: _timerDurationMinutes,
       customRules: _customRules,
       environmentPriming: _environmentPriming,
+      integrationType: _integrationType,
+      integrationTarget: _integrationTarget,
       anchorHabitId: _anchorHabitId,
     );
 
@@ -528,7 +534,7 @@ class _HabitDetailScreenState extends ConsumerState<HabitDetailScreen> {
                           ),
                           child: DropdownButtonHideUnderline(
                             child: DropdownButton<HabitIntegrationType>(
-                              value: habit.integrationType,
+                              value: _integrationType,
                               isExpanded: true,
                               dropdownColor: AppTheme.surfaceDark,
                               icon: const Icon(
@@ -541,15 +547,8 @@ class _HabitDetailScreenState extends ConsumerState<HabitDetailScreen> {
                               ),
                               onChanged: (HabitIntegrationType? newValue) {
                                 if (newValue != null) {
-                                  _hasChanges = true;
-                                  ref
-                                      .read(habitsProvider.notifier)
-                                      .updateHabit(
-                                        habit.copyWith(
-                                          integrationType: newValue,
-                                        ),
-                                      );
-                                  setState(() {});
+                                  _integrationType = newValue;
+                                  _checkForChanges();
                                 }
                               },
                               items: const [
@@ -571,27 +570,19 @@ class _HabitDetailScreenState extends ConsumerState<HabitDetailScreen> {
                             ),
                           ),
                         ),
-                        if (habit.integrationType !=
-                            HabitIntegrationType.none) ...[
+                        if (_integrationType != HabitIntegrationType.none) ...[
                           const Gap(16),
                           TextFormField(
-                            initialValue:
-                                habit.integrationTarget?.toString() ?? '',
+                            initialValue: _integrationTarget?.toString() ?? '',
                             keyboardType: TextInputType.number,
                             style: TextStyle(color: AppTheme.textMainDark),
                             onChanged: (val) {
-                              _hasChanges = true;
-                              ref
-                                  .read(habitsProvider.notifier)
-                                  .updateHabit(
-                                    habit.copyWith(
-                                      integrationTarget: int.tryParse(val),
-                                    ),
-                                  );
+                              _integrationTarget = int.tryParse(val);
+                              _checkForChanges();
                             },
                             decoration: InputDecoration(
                               helperText:
-                                  habit.integrationType ==
+                                  _integrationType ==
                                       HabitIntegrationType.healthSteps
                                   ? 'Daily Step Goal (e.g. 10000)'
                                   : 'Daily Screen Time Limit in Minutes (e.g. 120)',
@@ -601,7 +592,7 @@ class _HabitDetailScreenState extends ConsumerState<HabitDetailScreen> {
                                 ),
                               ),
                               prefixIcon: Icon(
-                                habit.integrationType ==
+                                _integrationType ==
                                         HabitIntegrationType.healthSteps
                                     ? Icons.directions_walk
                                     : Icons.timer,
