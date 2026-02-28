@@ -72,9 +72,9 @@ const NOTIFICATION_TEMPLATES = {
   },
   creator: {
     welcome: (title: string) =>
-      `🎨 A new canvas awaits: "${title}". Your creative journey starts today.`,
+      `🎨 Inspiration strikes! Your creative journey with "${title}" starts today.`,
     reminder: (title: string) =>
-      `✨ Inspiration strikes! Time to create: ${title}.`,
+      `🎨 Inspiration strikes! Time for your "${title}" creative flow. Create today.`,
     streakWarning: (days: number) =>
       `⚠️ 🎨 Your ${days}-day creative flow is at risk! Keep the inspiration going—create now.`,
     levelUp: (level: number) =>
@@ -86,9 +86,9 @@ const NOTIFICATION_TEMPLATES = {
   },
   stoic: {
     welcome: (title: string) =>
-      `🏛️ A new trial of discipline begins: "${title}". Master yourself.`,
+      `🏛️ The path to mastery begins with a single step. "${title}" is your practice.`,
     reminder: (title: string) =>
-      `⚖️ Time for your daily practice: ${title}.`,
+      `🏛️ Master yourself! Your "${title}" practice awaits. Show your discipline.`,
     streakWarning: (days: number) =>
       `⚠️ 🏛️ Your ${days}-day practice is imperiled! Maintain your discipline—act now.`,
     levelUp: (level: number) =>
@@ -102,9 +102,9 @@ const NOTIFICATION_TEMPLATES = {
     welcome: (title: string) =>
       `🔥 A sacred commitment! Your devotion to "${title}" has been consecrated.`,
     reminder: (title: string) =>
-      `🌟 Time for spiritual practice: ${title}.`,
+      `🔥 Stay the path! Your sacred "${title}" devotion calls. Honor your commitment.`,
     streakWarning: (days: number) =>
-      `⚠️ 🔥 Your ${days}-day devotion is tested—stay the sacred path.`,
+      `⚠️ 🔥 Your ${days}-day sacred devotion wavers! Rekindle your flame—act now.`,
     levelUp: (level: number) =>
       `🏆 🔥 SACRED ASCENSION! You've reached Level ${level}! Your devotion burns brighter!`,
     aiInsightGreeting: () =>
@@ -114,9 +114,9 @@ const NOTIFICATION_TEMPLATES = {
   },
   none: {
     welcome: (title: string) =>
-      `🗺️ A new adventure awaits: "${title}". Discover your potential.`,
+      `✨ New habit started! "${title}" is now part of your journey.`,
     reminder: (title: string) =>
-      `🧭 Time to explore: ${title}.`,
+      `⏰ Time to focus! Complete "${title}" to stay on track with your goals.`,
     streakWarning: (days: number) =>
       `⚠️ Your ${days}-day streak is at risk! Complete your habit now to keep it alive.`,
     levelUp: (level: number) =>
