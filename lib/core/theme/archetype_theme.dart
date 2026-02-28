@@ -474,7 +474,7 @@ class ArchetypeTheme {
     dailyMantra: 'Every day is a new adventure',
     journeyName: 'Explorer\'s Journey',
     journeyIcon: Icons.explore,
-    assetPath: 'assets/images/emerge_icon.png',
+    assetPath: 'assets/icons/app_icon.png',
     avatarBasePath: 'assets/images/avatars/base/athlete',
     avatarEvolvedPath: null,
     suggestedMotives: const ['I want to explore', 'I want to find my path'],
@@ -535,7 +535,8 @@ class ArchetypeColors {
 
   final Color primary;
   final Color accent;
-  final List<String> attributes; // Attribute names that use this archetype's theming
+  final List<String>
+  attributes; // Attribute names that use this archetype's theming
 
   static const Map<String, ArchetypeColors> all = {
     'athlete': ArchetypeColors(
@@ -566,7 +567,14 @@ class ArchetypeColors {
     'explorer': ArchetypeColors(
       primary: Color(0xFF009688),
       accent: Color(0xFF64FFDA),
-      attributes: ['strength', 'intellect', 'vitality', 'creativity', 'focus', 'spirit'],
+      attributes: [
+        'strength',
+        'intellect',
+        'vitality',
+        'creativity',
+        'focus',
+        'spirit',
+      ],
     ),
   };
 

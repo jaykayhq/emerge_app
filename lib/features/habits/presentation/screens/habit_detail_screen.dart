@@ -966,7 +966,7 @@ class _HabitDetailScreenState extends ConsumerState<HabitDetailScreen> {
                                   await ref
                                       .read(notificationServiceProvider)
                                       .cancelHabitNotifications(habit.id);
-                                  if (mounted) {
+                                  if (context.mounted) {
                                     ScaffoldMessenger.of(context).showSnackBar(
                                       SnackBar(
                                         content: Text(
@@ -980,7 +980,7 @@ class _HabitDetailScreenState extends ConsumerState<HabitDetailScreen> {
                                     ).pop(); // Close detail screen
                                   }
                                 } catch (e) {
-                                  if (mounted) {
+                                  if (context.mounted) {
                                     ScaffoldMessenger.of(context).showSnackBar(
                                       SnackBar(
                                         content: Text(

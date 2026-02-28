@@ -26,7 +26,7 @@ class EmergeHexLogo extends StatelessWidget {
       child: ClipRRect(
         borderRadius: BorderRadius.circular(size * 0.15),
         child: Image.asset(
-          'assets/images/emerge_hex_icon.png',
+          'assets/icons/app_icon.png',
           width: size,
           height: size,
           fit: BoxFit.contain,

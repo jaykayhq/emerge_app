@@ -27,6 +27,7 @@ allprojects {
         options.isFork = true
         options.forkOptions.memoryMaximumSize = "512m"
         options.isIncremental = true
+        options.compilerArgs.add("-Xlint:deprecation")
     }
 }
 

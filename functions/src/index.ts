@@ -121,7 +121,7 @@ export const onUserActivityCreated = functionsV1.firestore
 
     const statsRef = firestore.collection("user_stats").doc(activity.userId);
 
-    return firestore.runTransaction(async (transaction) => {
+    return firestore.runTransaction(async (transaction: admin.firestore.Transaction) => {
       const statsDoc = await transaction.get(statsRef);
       const currentStats = statsDoc.exists ? (statsDoc.data() as AvatarStats) : {};
 

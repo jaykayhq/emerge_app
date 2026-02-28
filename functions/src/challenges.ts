@@ -41,7 +41,7 @@ export const onChallengeRequestCreated = functions.firestore
         .collection("fcm_tokens")
         .get();
 
-      const tokens = tokensSnapshot.docs.map((doc) => doc.data().token);
+      const tokens = tokensSnapshot.docs.map((doc: admin.firestore.QueryDocumentSnapshot) => doc.data().token);
 
       if (tokens.length === 0) {
         console.log(`No tokens found for user ${recipientId}`);
@@ -119,7 +119,7 @@ export const onChallengeRequestUpdated = functions.firestore
         .collection("fcm_tokens")
         .get();
 
-      const tokens = tokensSnapshot.docs.map((doc) => doc.data().token);
+      const tokens = tokensSnapshot.docs.map((doc: admin.firestore.QueryDocumentSnapshot) => doc.data().token);
 
       if (tokens.length === 0) return null;
 
