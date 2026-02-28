@@ -44,11 +44,11 @@ function getDb(): admin.firestore.Firestore {
 const NOTIFICATION_TEMPLATES = {
   athlete: {
     welcome: (title: string) =>
-      `💪 New training protocol: ${title}! Your journey to greatness begins now.`,
+      `💪 Your journey to greatness begins! "${title}" is now part of your training.`,
     reminder: (title: string) =>
-      `⚡ Time to train, Athlete! Your ${title} awaits. Make yourself proud!`,
+      `💪 Time to train! Your "${title}" session awaits. Make yourself proud!`,
     streakWarning: (days: number) =>
-      `🔥 Your ${days}-day training streak is burning! Don't let the flame die—train now!`,
+      `⚠️ 💪 Your ${days}-day training streak is at risk! Don't lose your momentum—train now!`,
     levelUp: (level: number) =>
       `🏆 💪 LEVEL UP! You've reached Level ${level}! Your training yields greatness!`,
     aiInsightGreeting: () =>
@@ -58,11 +58,11 @@ const NOTIFICATION_TEMPLATES = {
   },
   scholar: {
     welcome: (title: string) =>
-      `📚 A new quest for knowledge begins: ${title}. Begin your pursuit of wisdom.`,
+      `📚 A new quest for knowledge begins! Mastering "${title}" starts now.`,
     reminder: (title: string) =>
-      `📖 Knowledge calls, Scholar. Time for ${title}. Begin your quest.`,
+      `📚 Knowledge calls! Your "${title}" study session is ready. Begin the quest.`,
     streakWarning: (days: number) =>
-      `🧠 Your ${days}-day learning streak is at risk! Protect your streak—learn now.`,
+      `⚠️ 📚 Your ${days}-day knowledge quest is fading! Protect your streak—learn now.`,
     levelUp: (level: number) =>
       `🏆 📚 WISDOM GROWS! You've reached Level ${level}! Knowledge expands within you.`,
     aiInsightGreeting: () =>
@@ -72,11 +72,11 @@ const NOTIFICATION_TEMPLATES = {
   },
   creator: {
     welcome: (title: string) =>
-      `🎨 Inspiration strikes! Your creative journey with "${title}" starts today.`,
+      `🎨 A new canvas awaits: "${title}". Your creative journey starts today.`,
     reminder: (title: string) =>
-      `🎨 Creative energy flows! Time for your ${title} session. Create today.`,
+      `✨ Inspiration strikes! Time to create: ${title}.`,
     streakWarning: (days: number) =>
-      `🎨 Your ${days}-day creative flow is at risk! Keep the inspiration going—create now.`,
+      `⚠️ 🎨 Your ${days}-day creative flow is at risk! Keep the inspiration going—create now.`,
     levelUp: (level: number) =>
       `🏆 🎨 MUSE FAVORS YOU! You've reached Level ${level}! Your artistry elevates!`,
     aiInsightGreeting: () =>
@@ -86,11 +86,11 @@ const NOTIFICATION_TEMPLATES = {
   },
   stoic: {
     welcome: (title: string) =>
-      `🏛️ The path to mastery begins with a single step. "${title}" is your practice.`,
+      `🏛️ A new trial of discipline begins: "${title}". Master yourself.`,
     reminder: (title: string) =>
-      `🏛️ Master yourself! Your ${title} practice awaits. Show your discipline.`,
+      `⚖️ Time for your daily practice: ${title}.`,
     streakWarning: (days: number) =>
-      `🏛️ Your ${days}-day practice is imperiled! Maintain your discipline—act now.`,
+      `⚠️ 🏛️ Your ${days}-day practice is imperiled! Maintain your discipline—act now.`,
     levelUp: (level: number) =>
       `🏆 🏛️ MASTERY AWAITS! You've reached Level ${level}! Your discipline strengthens!`,
     aiInsightGreeting: () =>
@@ -102,9 +102,9 @@ const NOTIFICATION_TEMPLATES = {
     welcome: (title: string) =>
       `🔥 A sacred commitment! Your devotion to "${title}" has been consecrated.`,
     reminder: (title: string) =>
-      `🔥 Stay the path! Your sacred ${title} devotion calls. Honor your commitment.`,
+      `🌟 Time for spiritual practice: ${title}.`,
     streakWarning: (days: number) =>
-      `🔥 Your ${days}-day sacred devotion wavers! Rekindle your flame—act now.`,
+      `⚠️ 🔥 Your ${days}-day devotion is tested—stay the sacred path.`,
     levelUp: (level: number) =>
       `🏆 🔥 SACRED ASCENSION! You've reached Level ${level}! Your devotion burns brighter!`,
     aiInsightGreeting: () =>
@@ -114,9 +114,9 @@ const NOTIFICATION_TEMPLATES = {
   },
   none: {
     welcome: (title: string) =>
-      `✨ New habit started! "${title}" is now part of your journey.`,
+      `🗺️ A new adventure awaits: "${title}". Discover your potential.`,
     reminder: (title: string) =>
-      `⏰ Time to focus! Complete "${title}" to stay on track with your goals.`,
+      `🧭 Time to explore: ${title}.`,
     streakWarning: (days: number) =>
       `⚠️ Your ${days}-day streak is at risk! Complete your habit now to keep it alive.`,
     levelUp: (level: number) =>
@@ -141,12 +141,12 @@ function getTemplateMessage(
   ...args: any[]
 ): string {
   const templates = (NOTIFICATION_TEMPLATES as any)[archetype] || NOTIFICATION_TEMPLATES.none;
-  const templateFunc = templates[type];
+  const templateFunc = templates[type] as (...args: any[]) => string;
   if (templateFunc) {
-    return templateFunc.apply(null, args);
+    return templateFunc(...args);
   }
-  const fallbackFunc = NOTIFICATION_TEMPLATES.none[type];
-  return fallbackFunc ? fallbackFunc.apply(null, args) : "";
+  const fallbackFunc = NOTIFICATION_TEMPLATES.none[type] as ((...args: any[]) => string) | undefined;
+  return fallbackFunc ? fallbackFunc(...args) : "";
 }
 
 /**
@@ -577,23 +577,20 @@ export const sendStreakWarnings = functionsV1.pubsub
 // ============================================================================
 
 /**
- * Triggered when user document is updated.
+ * Triggered when user_stats document is updated.
  * Detects level increases and sends celebration notification.
  */
 export const onLevelUp = functionsV1.firestore
-  .document("users/{userId}")
+  .document("user_stats/{userId}")
   .onUpdate(async (change, context) => {
     const before = change.before.data();
     const after = change.after.data();
     const userId = context.params.userId;
+    const firestore = getDb();
 
     try {
-      // Get avatar stats from user_stats collection
-      const statsBefore = before.avatarStats || {};
-      const statsAfter = after.avatarStats || {};
-
-      const levelBefore = statsBefore.level || 1;
-      const levelAfter = statsAfter.level || 1;
+      const levelBefore = before.level || 1;
+      const levelAfter = after.level || 1;
 
       // Check if level increased
       if (levelAfter <= levelBefore) {
@@ -601,15 +598,24 @@ export const onLevelUp = functionsV1.firestore
         return null;
       }
 
+      // Get user document to check preferences and archetype
+      const userDoc = await firestore.collection("users").doc(userId).get();
+      if (!userDoc.exists) {
+        console.warn(`User ${userId} not found for level up notification`);
+        return null;
+      }
+
+      const userData = userDoc.data();
+
       // Check if user has rewards updates enabled
-      const rewardsEnabled = after.rewardsUpdates !== false;
+      const rewardsEnabled = userData?.rewardsUpdates !== false;
 
       if (!rewardsEnabled) {
         console.log(`Rewards updates disabled for user ${userId}`);
         return null;
       }
 
-      const archetype = after.archetype || "none";
+      const archetype = userData?.archetype || "none";
       const title = "Level Up!";
       const body = getTemplateMessage(archetype, "levelUp", levelAfter);
 
