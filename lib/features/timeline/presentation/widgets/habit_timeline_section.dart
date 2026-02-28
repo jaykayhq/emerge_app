@@ -321,29 +321,116 @@ class _IndentedHabitItem extends StatelessWidget {
                 )
               else
                 const SizedBox(width: 12),
-              // Habit item
+              // Habit item container
               Expanded(
-                child: GestureDetector(
-                  onTap: onTap,
-                  onLongPress: !completed ? onToggle : null,
-                  child: Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: completed
-                          ? Colors.white.withValues(alpha: 0.04)
-                          : Colors.white.withValues(alpha: 0.06),
-                      borderRadius: BorderRadius.circular(10),
-                      border: Border.all(
-                        color: completed
-                            ? color.withValues(alpha: 0.3)
-                            : Colors.white.withValues(alpha: 0.1),
-                        width: 1,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Environmental Priming nodes
+                    if (!completed && habit.environmentPriming.isNotEmpty) ...[
+                      for (final priming in habit.environmentPriming)
+                        Padding(
+                          padding: const EdgeInsets.only(
+                            bottom: 8.0,
+                            left: 16.0,
+                          ),
+                          child: Row(
+                            children: [
+                              Icon(
+                                Icons.check_box_outline_blank,
+                                size: 16,
+                                color: color.withValues(alpha: 0.5),
+                              ),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: Text(
+                                  priming,
+                                  style: TextStyle(
+                                    color: Colors.white.withValues(alpha: 0.7),
+                                    fontSize: 12,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                    ],
+
+                    GestureDetector(
+                      onTap: onTap,
+                      onLongPress: !completed ? onToggle : null,
+                      child: Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: completed
+                              ? Colors.white.withValues(alpha: 0.04)
+                              : Colors.white.withValues(alpha: 0.06),
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(
+                            color: completed
+                                ? color.withValues(alpha: 0.3)
+                                : Colors.white.withValues(alpha: 0.1),
+                            width: 1,
+                          ),
+                        ),
+                        child: completed
+                            ? _buildCompleted(color)
+                            : _buildPending(color, label),
                       ),
                     ),
-                    child: completed
-                        ? _buildCompleted(color)
-                        : _buildPending(color, label),
-                  ),
+
+                    // Temptation Bundling (Reward) node
+                    if (habit.reward.isNotEmpty) ...[
+                      const SizedBox(height: 8),
+                      Padding(
+                        padding: const EdgeInsets.only(left: 16.0),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 10,
+                            vertical: 6,
+                          ),
+                          decoration: BoxDecoration(
+                            color: completed
+                                ? color.withValues(alpha: 0.2)
+                                : Colors.white.withValues(alpha: 0.05),
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(
+                              color: completed
+                                  ? color.withValues(alpha: 0.5)
+                                  : Colors.white.withValues(alpha: 0.1),
+                            ),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                completed
+                                    ? Icons.card_giftcard
+                                    : Icons.lock_outline,
+                                size: 14,
+                                color: completed
+                                    ? color
+                                    : Colors.white.withValues(alpha: 0.5),
+                              ),
+                              const SizedBox(width: 6),
+                              Text(
+                                habit.reward,
+                                style: TextStyle(
+                                  color: completed
+                                      ? Colors.white
+                                      : Colors.white.withValues(alpha: 0.5),
+                                  fontSize: 12,
+                                  fontWeight: completed
+                                      ? FontWeight.bold
+                                      : FontWeight.normal,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
+                  ],
                 ),
               ),
             ],
@@ -643,96 +730,185 @@ class _HabitTimelineItem extends StatelessWidget {
                   horizontal: 12,
                   vertical: 10,
                 ),
-                child: completed
-                    ? _buildCompletedState(context, color)
-                    : Opacity(
-                        opacity: 1.0,
-                        child: Row(
-                          children: [
-                            // Checkbox — colored by attribute (non-clickable)
-                            Padding(
-                              padding: const EdgeInsets.only(right: 12),
-                              child: Icon(
-                                Icons.radio_button_unchecked,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Environmental Priming nodes
+                    if (!completed && habit.environmentPriming.isNotEmpty) ...[
+                      for (final priming in habit.environmentPriming)
+                        Padding(
+                          padding: const EdgeInsets.only(bottom: 8.0),
+                          child: Row(
+                            children: [
+                              Icon(
+                                Icons.check_box_outline_blank,
+                                size: 16,
                                 color: color.withValues(alpha: 0.5),
-                                size: 24,
                               ),
-                            ),
-                            // Habit info: attribute label + title + anchor
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  // Attribute label (matches Stitch "STOIC", "SCHOLAR" etc.)
-                                  Row(
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: Text(
+                                  priming,
+                                  style: TextStyle(
+                                    color: Colors.white.withValues(alpha: 0.7),
+                                    fontSize: 12,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                    ],
+
+                    completed
+                        ? _buildCompletedState(context, color)
+                        : Opacity(
+                            opacity: 1.0,
+                            child: Row(
+                              children: [
+                                // Checkbox — colored by attribute (non-clickable)
+                                Padding(
+                                  padding: const EdgeInsets.only(right: 12),
+                                  child: Icon(
+                                    Icons.radio_button_unchecked,
+                                    color: color.withValues(alpha: 0.5),
+                                    size: 24,
+                                  ),
+                                ),
+                                // Habit info: attribute label + title + anchor
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
                                     children: [
-                                      Text(
-                                        label,
-                                        style: TextStyle(
-                                          color: color,
-                                          fontSize: 9,
-                                          fontWeight: FontWeight.bold,
-                                          letterSpacing: 1,
-                                        ),
-                                      ),
-                                      if (habit.timerDurationMinutes > 0) ...[
-                                        Text(
-                                          '  •  ${habit.timerDurationMinutes}M',
-                                          style: TextStyle(
-                                            color: color.withValues(alpha: 0.6),
-                                            fontSize: 9,
-                                            fontWeight: FontWeight.w500,
-                                          ),
-                                        ),
-                                      ],
-                                    ],
-                                  ),
-                                  const SizedBox(height: 2),
-                                  // Habit title
-                                  Text(
-                                    habit.title,
-                                    style: const TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 15,
-                                      fontWeight: FontWeight.w600,
-                                    ),
-                                  ),
-                                  // Anchor indicator
-                                  if (hasAnchor)
-                                    Padding(
-                                      padding: const EdgeInsets.only(top: 2),
-                                      child: Row(
+                                      // Attribute label
+                                      Row(
                                         children: [
-                                          Icon(
-                                            Icons.link,
-                                            size: 12,
-                                            color: color.withValues(alpha: 0.7),
-                                          ),
-                                          const SizedBox(width: 4),
                                           Text(
-                                            'Anchored habit',
+                                            label,
                                             style: TextStyle(
-                                              color: color.withValues(
-                                                alpha: 0.7,
-                                              ),
-                                              fontSize: 11,
-                                              fontWeight: FontWeight.w500,
+                                              color: color,
+                                              fontSize: 9,
+                                              fontWeight: FontWeight.bold,
+                                              letterSpacing: 1,
                                             ),
                                           ),
+                                          if (habit.timerDurationMinutes >
+                                              0) ...[
+                                            Text(
+                                              '  •  ${habit.timerDurationMinutes}M',
+                                              style: TextStyle(
+                                                color: color.withValues(
+                                                  alpha: 0.6,
+                                                ),
+                                                fontSize: 9,
+                                                fontWeight: FontWeight.w500,
+                                              ),
+                                            ),
+                                          ],
                                         ],
                                       ),
-                                    ),
-                                ],
-                              ),
+                                      const SizedBox(height: 2),
+                                      // Habit title
+                                      Text(
+                                        habit.title,
+                                        style: const TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 15,
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                      ),
+                                      // Anchor indicator
+                                      if (hasAnchor)
+                                        Padding(
+                                          padding: const EdgeInsets.only(
+                                            top: 2,
+                                          ),
+                                          child: Row(
+                                            children: [
+                                              Icon(
+                                                Icons.link,
+                                                size: 12,
+                                                color: color.withValues(
+                                                  alpha: 0.7,
+                                                ),
+                                              ),
+                                              const SizedBox(width: 4),
+                                              Text(
+                                                'Anchored habit',
+                                                style: TextStyle(
+                                                  color: color.withValues(
+                                                    alpha: 0.7,
+                                                  ),
+                                                  fontSize: 11,
+                                                  fontWeight: FontWeight.w500,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                    ],
+                                  ),
+                                ),
+                                const Icon(
+                                  Icons.chevron_right,
+                                  color: Colors.white30,
+                                  size: 20,
+                                ),
+                              ],
                             ),
+                          ),
+
+                    // Temptation Bundling (Reward) node
+                    if (habit.reward.isNotEmpty) ...[
+                      const SizedBox(height: 8),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 6,
+                        ),
+                        decoration: BoxDecoration(
+                          color: completed
+                              ? color.withValues(alpha: 0.2)
+                              : Colors.white.withValues(alpha: 0.05),
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(
+                            color: completed
+                                ? color.withValues(alpha: 0.5)
+                                : Colors.white.withValues(alpha: 0.1),
+                          ),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
                             Icon(
-                              Icons.chevron_right,
-                              color: Colors.white30,
-                              size: 20,
+                              completed
+                                  ? Icons.card_giftcard
+                                  : Icons.lock_outline,
+                              size: 14,
+                              color: completed
+                                  ? color
+                                  : Colors.white.withValues(alpha: 0.5),
+                            ),
+                            const SizedBox(width: 6),
+                            Text(
+                              habit.reward,
+                              style: TextStyle(
+                                color: completed
+                                    ? Colors.white
+                                    : Colors.white.withValues(alpha: 0.5),
+                                fontSize: 12,
+                                fontWeight: completed
+                                    ? FontWeight.bold
+                                    : FontWeight.normal,
+                              ),
                             ),
                           ],
                         ),
                       ),
+                    ],
+                  ],
+                ),
               ),
             ),
           ),
