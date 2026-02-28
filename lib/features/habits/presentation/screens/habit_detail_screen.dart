@@ -1,4 +1,5 @@
 import 'package:emerge_app/core/presentation/widgets/emerge_branding.dart';
+import 'package:emerge_app/core/services/notification_service.dart';
 import 'package:emerge_app/core/theme/app_theme.dart';
 import 'package:emerge_app/features/habits/domain/entities/habit.dart';
 import 'package:emerge_app/features/habits/presentation/providers/habit_providers.dart';
@@ -130,6 +131,53 @@ class _HabitDetailScreenState extends ConsumerState<HabitDetailScreen> {
       _environmentPriming.removeAt(index);
       _hasChanges = true;
     });
+  }
+
+  Future<bool> _showDeleteConfirmationDialog(BuildContext context) async {
+    return await showDialog<bool>(
+          context: context,
+          builder: (context) => AlertDialog(
+            backgroundColor: AppTheme.surfaceDark,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+            ),
+            title: Row(
+              children: [
+                Icon(Icons.warning, color: Colors.red, size: 28),
+                const Gap(12),
+                Text(
+                  'Delete Habit?',
+                  style: TextStyle(
+                    color: AppTheme.textMainDark,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
+            ),
+            content: Text(
+              'This will permanently delete this habit and all its history. This action cannot be undone.',
+              style: TextStyle(color: AppTheme.textSecondaryDark),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(false),
+                child: Text(
+                  'Cancel',
+                  style: TextStyle(color: AppTheme.textSecondaryDark),
+                ),
+              ),
+              ElevatedButton(
+                onPressed: () => Navigator.of(context).pop(true),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.red,
+                  foregroundColor: Colors.white,
+                ),
+                child: Text('Delete'),
+              ),
+            ],
+          ),
+        ) ??
+        false;
   }
 
   @override
@@ -451,6 +499,142 @@ class _HabitDetailScreenState extends ConsumerState<HabitDetailScreen> {
 
                   const Gap(24),
 
+                  // Integrations Section
+                  GlassmorphismCard(
+                    padding: const EdgeInsets.all(16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        SectionHeader(
+                          title: 'Data Integration (Auto-Complete)',
+                        ),
+                        const Gap(16),
+                        Text(
+                          'Automatically track progress using device data.',
+                          style: TextStyle(
+                            color: AppTheme.textSecondaryDark,
+                            fontSize: 13,
+                          ),
+                        ),
+                        const Gap(16),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 12),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withValues(alpha: 0.05),
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(
+                              color: Colors.white.withValues(alpha: 0.1),
+                            ),
+                          ),
+                          child: DropdownButtonHideUnderline(
+                            child: DropdownButton<HabitIntegrationType>(
+                              value: habit.integrationType,
+                              isExpanded: true,
+                              dropdownColor: AppTheme.surfaceDark,
+                              icon: const Icon(
+                                Icons.keyboard_arrow_down,
+                                color: EmergeColors.teal,
+                              ),
+                              style: TextStyle(
+                                color: AppTheme.textMainDark,
+                                fontSize: 14,
+                              ),
+                              onChanged: (HabitIntegrationType? newValue) {
+                                if (newValue != null) {
+                                  _hasChanges = true;
+                                  ref
+                                      .read(habitsProvider.notifier)
+                                      .updateHabit(
+                                        habit.copyWith(
+                                          integrationType: newValue,
+                                        ),
+                                      );
+                                  setState(() {});
+                                }
+                              },
+                              items: const [
+                                DropdownMenuItem(
+                                  value: HabitIntegrationType.none,
+                                  child: Text('No Integration (Manual)'),
+                                ),
+                                DropdownMenuItem(
+                                  value: HabitIntegrationType.healthSteps,
+                                  child: Text(
+                                    'Google Fit / Health Connect (Steps)',
+                                  ),
+                                ),
+                                DropdownMenuItem(
+                                  value: HabitIntegrationType.screenTimeLimit,
+                                  child: Text('Android Screen Time (Limit)'),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                        if (habit.integrationType !=
+                            HabitIntegrationType.none) ...[
+                          const Gap(16),
+                          TextFormField(
+                            initialValue:
+                                habit.integrationTarget?.toString() ?? '',
+                            keyboardType: TextInputType.number,
+                            style: TextStyle(color: AppTheme.textMainDark),
+                            onChanged: (val) {
+                              _hasChanges = true;
+                              ref
+                                  .read(habitsProvider.notifier)
+                                  .updateHabit(
+                                    habit.copyWith(
+                                      integrationTarget: int.tryParse(val),
+                                    ),
+                                  );
+                            },
+                            decoration: InputDecoration(
+                              helperText:
+                                  habit.integrationType ==
+                                      HabitIntegrationType.healthSteps
+                                  ? 'Daily Step Goal (e.g. 10000)'
+                                  : 'Daily Screen Time Limit in Minutes (e.g. 120)',
+                              helperStyle: TextStyle(
+                                color: AppTheme.textSecondaryDark.withValues(
+                                  alpha: 0.5,
+                                ),
+                              ),
+                              prefixIcon: Icon(
+                                habit.integrationType ==
+                                        HabitIntegrationType.healthSteps
+                                    ? Icons.directions_walk
+                                    : Icons.timer,
+                                color: EmergeColors.teal,
+                                size: 20,
+                              ),
+                              hintText: 'Enter target number',
+                              border: InputBorder.none,
+                              enabledBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                borderSide: BorderSide(
+                                  color: AppTheme.textSecondaryDark.withValues(
+                                    alpha: 0.3,
+                                  ),
+                                ),
+                              ),
+                              focusedBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                borderSide: BorderSide(
+                                  color: EmergeColors.teal,
+                                ),
+                              ),
+                              filled: true,
+                              fillColor: Colors.black.withValues(alpha: 0.2),
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
+
+                  const Gap(24),
+
                   // Custom Rules Section
                   GlassmorphismCard(
                     padding: const EdgeInsets.all(16),
@@ -743,6 +927,106 @@ class _HabitDetailScreenState extends ConsumerState<HabitDetailScreen> {
                         ],
                       ),
                     ),
+
+                  const Gap(32),
+
+                  // Delete Habit Section
+                  GlassmorphismCard(
+                    padding: const EdgeInsets.all(20),
+                    child: Column(
+                      children: [
+                        Icon(
+                          Icons.delete_forever,
+                          color: Colors.red.withValues(alpha: 0.7),
+                          size: 36,
+                        ),
+                        const Gap(12),
+                        Text(
+                          'Delete Habit',
+                          style: TextStyle(
+                            color: Colors.red,
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const Gap(8),
+                        Text(
+                          'Permanently delete this habit and all its history.',
+                          style: TextStyle(
+                            color: AppTheme.textSecondaryDark,
+                            fontSize: 13,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                        const Gap(16),
+                        SizedBox(
+                          width: double.infinity,
+                          child: ElevatedButton(
+                            onPressed: () async {
+                              final confirmed =
+                                  await _showDeleteConfirmationDialog(context);
+                              if (confirmed) {
+                                try {
+                                  // Delete habit from repository
+                                  await ref
+                                      .read(habitRepositoryProvider)
+                                      .deleteHabit(habit.id);
+                                  // Cancel all notifications
+                                  await ref
+                                      .read(notificationServiceProvider)
+                                      .cancelHabitNotifications(habit.id);
+                                  if (mounted) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(
+                                        content: Text(
+                                          'Habit deleted successfully',
+                                        ),
+                                        backgroundColor: Colors.green,
+                                      ),
+                                    );
+                                    Navigator.of(
+                                      context,
+                                    ).pop(); // Close detail screen
+                                  }
+                                } catch (e) {
+                                  if (mounted) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(
+                                        content: Text(
+                                          'Error deleting habit: $e',
+                                        ),
+                                        backgroundColor: Colors.red,
+                                      ),
+                                    );
+                                  }
+                                }
+                              }
+                            },
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.red.withValues(
+                                alpha: 0.2,
+                              ),
+                              foregroundColor: Colors.red,
+                              side: BorderSide(
+                                color: Colors.red.withValues(alpha: 0.5),
+                              ),
+                              padding: const EdgeInsets.symmetric(vertical: 16),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                            ),
+                            child: Text(
+                              'Delete Forever',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
                 ],
               ),
             );
