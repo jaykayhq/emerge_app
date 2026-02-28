@@ -4,6 +4,7 @@ import 'package:emerge_app/core/presentation/widgets/emerge_branding.dart';
 import 'package:emerge_app/core/utils/app_logger.dart';
 import 'package:emerge_app/features/auth/domain/entities/user_extension.dart';
 import 'package:emerge_app/features/gamification/presentation/providers/user_stats_providers.dart';
+import 'package:emerge_app/features/habits/data/repositories/habit_notification_repository_provider.dart';
 import 'package:emerge_app/features/habits/domain/entities/habit.dart';
 import 'package:emerge_app/features/habits/presentation/providers/habit_providers.dart';
 import 'package:emerge_app/features/habits/presentation/widgets/habit_template_picker.dart';
@@ -220,6 +221,27 @@ class _AdvancedCreateHabitScreenState
         AppLogger.i(
           'Successfully created habit from Advanced Create: ${newHabit.id}',
         );
+
+        // Schedule notifications for the new habit
+        final userProfile = ref.read(userStatsStreamProvider).valueOrNull;
+        if (userProfile != null) {
+          try {
+            await ref.read(notificationRepositoryProvider).scheduleHabitNotifications(
+              newHabit,
+              userProfile.archetype,
+            );
+            AppLogger.i(
+              'Successfully scheduled notifications for habit: ${newHabit.id}',
+            );
+          } catch (notificationError, notificationStack) {
+            // Log notification error but don't fail the habit creation
+            AppLogger.e(
+              'Failed to schedule notifications for habit: ${newHabit.id}',
+              notificationError,
+              notificationStack,
+            );
+          }
+        }
 
         if (context.mounted) {
           final contextRef = context;
