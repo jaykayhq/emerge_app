@@ -122,6 +122,11 @@ service cloud.firestore {
       match /friends/{friendId} {
         allow read, write: if isOwner(userId);
       }
+
+      // Notification Schedules Subcollection
+      match /notificationSchedules/{scheduleId} {
+        allow read, write: if isOwner(userId);
+      }
     }
 
     // Habits (Top-level collection) - Enhanced security

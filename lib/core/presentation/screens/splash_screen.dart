@@ -27,7 +27,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
 
   Future<void> _navigateToNext() async {
     // Wait minimum branding time
-    await Future.delayed(const Duration(milliseconds: 1500));
+    await Future.delayed(const Duration(milliseconds: 4000));
 
     if (!mounted) return;
 
@@ -36,7 +36,9 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
     // Check auth state
     authState.when(
       data: (user) async {
-        final isLoggedIn = user.isNotEmpty;
+        final isLoggedIn = user
+            .id
+            .isNotEmpty; // user extension might return custom User or normal User
 
         if (!isLoggedIn) {
           // Not logged in - check if first launch for welcome or go to login
@@ -74,9 +76,11 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
         }
       },
       loading: () {
-        // If auth is still loading, let the router redirect logic handle it
-        AppLogger.d('Splash: Auth loading, letting router decide');
-        context.go('/');
+        // If auth is still loading, wait a bit and check again
+        AppLogger.d('Splash: Auth loading, waiting...');
+        Future.delayed(const Duration(milliseconds: 500), () {
+          if (mounted) _navigateToNext();
+        });
       },
       error: (_, __) {
         AppLogger.d('Splash: Auth error, going to login');
@@ -106,8 +110,8 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
   Widget build(BuildContext context) {
     return GrowthBackground(
       overrideGradient: const [
-        Color(0xFF2A1B4E), // Deep Violet to match icon background
-        Color(0xFF20153B),
+        Color(0xFF0A0A1A), // Cosmic Void Dark
+        Color(0xFF1A0A2A), // Cosmic Void Center
       ],
       showPattern: false,
       child: Center(
@@ -117,7 +121,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
             // Logo / Icon
             const AnimatedFlameLogo(size: 140),
 
-            const Gap(24),
+            const Gap(40),
 
             // App Name
             Text(

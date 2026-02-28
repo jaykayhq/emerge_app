@@ -37,7 +37,7 @@ class EmergeAppIcon extends StatelessWidget {
       child: ClipRRect(
         borderRadius: BorderRadius.circular(size * 0.22),
         child: Image.asset(
-          'assets/images/emerge_icon.png',
+          'assets/icons/app_icon.png',
           width: size,
           height: size,
           fit: BoxFit.cover,

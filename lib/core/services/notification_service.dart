@@ -3,7 +3,6 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
 
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timezone/data/latest_all.dart' as tz;
@@ -45,10 +44,16 @@ class NotificationService {
     );
 
     // Request Android 13+ notification permissions for local notifications
-    final androidImplementation = _localNotifications.resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>();
+    final androidImplementation = _localNotifications
+        .resolvePlatformSpecificImplementation<
+          AndroidFlutterLocalNotificationsPlugin
+        >();
     if (androidImplementation != null) {
-      final bool? granted = await androidImplementation.requestNotificationsPermission();
-      debugPrint('Local notifications permission ${granted ?? false ? "granted" : "denied"}');
+      final bool? granted = await androidImplementation
+          .requestNotificationsPermission();
+      debugPrint(
+        'Local notifications permission ${granted ?? false ? "granted" : "denied"}',
+      );
     }
 
     await _localNotifications.initialize(
@@ -297,7 +302,10 @@ class NotificationService {
   Future<void> notifyHabitCreated(Habit habit, UserArchetype archetype) async {
     try {
       final channelId = NotificationChannels.channelForArchetype(archetype);
-      final message = NotificationTemplates.welcomeMessage(archetype, habit.title);
+      final message = NotificationTemplates.welcomeMessage(
+        archetype,
+        habit.title,
+      );
 
       await _localNotifications.show(
         habit.id.hashCode,
@@ -326,7 +334,10 @@ class NotificationService {
   ) async {
     try {
       final channelId = NotificationChannels.channelForArchetype(archetype);
-      final message = NotificationTemplates.reminderMessage(archetype, habitTitle);
+      final message = NotificationTemplates.reminderMessage(
+        archetype,
+        habitTitle,
+      );
 
       // Safe parsing with validation
       int hour, minute;
@@ -394,7 +405,9 @@ class NotificationService {
           break;
         case HabitFrequency.specificDays:
           if (specificDays.isEmpty) {
-            debugPrint('Cannot schedule specific days habit: no days specified');
+            debugPrint(
+              'Cannot schedule specific days habit: no days specified',
+            );
             return;
           }
           // Schedule a separate notification for each day
@@ -410,14 +423,17 @@ class NotificationService {
                 iOS: const DarwinNotificationDetails(),
               ),
               androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
-              uiLocalNotificationDateInterpretation: UILocalNotificationDateInterpretation.absoluteTime,
+              uiLocalNotificationDateInterpretation:
+                  UILocalNotificationDateInterpretation.absoluteTime,
               matchDateTimeComponents: DateTimeComponents.dayOfWeekAndTime,
               payload: '/habits/$habitId',
             );
           }
           return; // Don't execute the single schedule below
       }
-      debugPrint('Habit reminder scheduled: $habitTitle at $reminderTime ($hour:$minute)');
+      debugPrint(
+        'Habit reminder scheduled: $habitTitle at $reminderTime ($hour:$minute)',
+      );
     } catch (e) {
       debugPrint('Error scheduling habit reminder: $e');
     }
@@ -470,7 +486,10 @@ class NotificationService {
   ) async {
     try {
       final channelId = NotificationChannels.channelForArchetype(archetype);
-      final message = NotificationTemplates.streakWarning(archetype, currentStreak);
+      final message = NotificationTemplates.streakWarning(
+        archetype,
+        currentStreak,
+      );
 
       // Safe parsing with validation
       int hour, minute;
@@ -588,7 +607,10 @@ class NotificationService {
     UserArchetype archetype,
   ) async {
     try {
-      final message = NotificationTemplates.achievement(archetype, achievementName);
+      final message = NotificationTemplates.achievement(
+        archetype,
+        achievementName,
+      );
 
       await _localNotifications.show(
         'achievement_${achievementName}_$userId'.hashCode,
@@ -618,7 +640,14 @@ class NotificationService {
   /// Returns the next occurrence of a specific time (hour:minute)
   tz.TZDateTime _nextInstanceOfTime(int hour, int minute) {
     final now = tz.TZDateTime.now(tz.local);
-    var scheduledDate = tz.TZDateTime(tz.local, now.year, now.month, now.day, hour, minute);
+    var scheduledDate = tz.TZDateTime(
+      tz.local,
+      now.year,
+      now.month,
+      now.day,
+      hour,
+      minute,
+    );
 
     // If the time has passed today, schedule for tomorrow
     if (scheduledDate.isBefore(now)) {
@@ -631,7 +660,14 @@ class NotificationService {
   /// Returns the next occurrence of a specific day of week and time
   tz.TZDateTime _nextInstanceOfDayOfWeek(int day, int hour, int minute) {
     final now = tz.TZDateTime.now(tz.local);
-    var scheduledDate = tz.TZDateTime(tz.local, now.year, now.month, now.day, hour, minute);
+    var scheduledDate = tz.TZDateTime(
+      tz.local,
+      now.year,
+      now.month,
+      now.day,
+      hour,
+      minute,
+    );
 
     // Find the next occurrence of the specified day
     while (scheduledDate.weekday != day) {
@@ -644,33 +680,5 @@ class NotificationService {
     }
 
     return scheduledDate;
-  }
-
-  /// Returns the next occurrence from a list of specific days
-  tz.TZDateTime _nextInstanceOfSpecificDays(List<int> days, int hour, int minute) {
-    final now = tz.TZDateTime.now(tz.local);
-    tz.TZDateTime? earliestDate;
-
-    // Check each day to find the next valid occurrence
-    for (final day in days) {
-      var candidateDate = tz.TZDateTime(tz.local, now.year, now.month, now.day, hour, minute);
-
-      // Move to the target day
-      while (candidateDate.weekday != day) {
-        candidateDate = candidateDate.add(const Duration(days: 1));
-      }
-
-      // If this date is in the future, it's a candidate
-      if (candidateDate.isAfter(now)) {
-        if (earliestDate == null || candidateDate.isBefore(earliestDate)) {
-          earliestDate = candidateDate;
-        }
-      }
-    }
-
-    // If no valid date found this week, schedule for the first day next week
-    earliestDate ??= _nextInstanceOfDayOfWeek(days.first, hour, minute);
-
-    return earliestDate;
   }
 }

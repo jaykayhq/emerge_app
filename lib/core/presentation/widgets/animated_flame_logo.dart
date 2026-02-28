@@ -61,14 +61,14 @@ class _AnimatedFlameLogoState extends State<AnimatedFlameLogo>
               shape: BoxShape.circle,
               boxShadow: [
                 BoxShadow(
-                  color: const Color(0xFF2BEE79).withValues(alpha: 0.3 * pulse),
-                  blurRadius: 40 * pulse,
-                  spreadRadius: 10 * pulse,
+                  color: const Color(0xFF2BEE79).withValues(alpha: 0.2 * pulse),
+                  blurRadius: 50 * pulse,
+                  spreadRadius: 5 * pulse,
                 ),
                 BoxShadow(
-                  color: const Color(0xFF8E44AD).withValues(alpha: 0.2 * pulse),
-                  blurRadius: 60 * pulse,
-                  spreadRadius: 20 * pulse,
+                  color: const Color(0xFF9D4EDD).withValues(alpha: 0.4 * pulse),
+                  blurRadius: 80 * pulse,
+                  spreadRadius: 15 * pulse,
                 ),
               ],
             ),
@@ -80,41 +80,40 @@ class _AnimatedFlameLogoState extends State<AnimatedFlameLogo>
   }
 
   Widget _buildFlameStack() {
-    // We compose the flame from overlapping custom painted layers
     return Stack(
-      alignment: Alignment.center,
+      alignment: Alignment.bottomCenter,
       children: [
-        // Outer aura/glow (Purple)
-        CustomPaint(
-          size: Size(widget.size, widget.size),
-          painter: FlamePainter(
-            color: const Color(0xFF8E44AD).withValues(alpha: 0.6),
-            flicker: _flickerController.value,
-            scaleY: 1.0,
-            scaleX: 1.0,
-            offsetY: 0.0,
+        // Outer aura/glow (Neon Purple)
+        Padding(
+          padding: EdgeInsets.only(bottom: widget.size * 0.05),
+          child: CustomPaint(
+            size: Size(widget.size, widget.size * 0.95),
+            painter: FlamePainter(
+              color: const Color(0xFF9D4EDD).withValues(alpha: 0.9),
+              flicker: _flickerController.value,
+            ),
           ),
         ),
         // Mid flame (Emerald Green)
-        CustomPaint(
-          size: Size(widget.size * 0.8, widget.size * 0.8),
-          painter: FlamePainter(
-            color: const Color(0xFF2BEE79).withValues(alpha: 0.8),
-            flicker: _flickerController.value * 1.5, // slightly out of phase
-            scaleY: 0.8,
-            scaleX: 0.9,
-            offsetY: widget.size * 0.1,
+        Padding(
+          padding: EdgeInsets.only(bottom: widget.size * 0.05),
+          child: CustomPaint(
+            size: Size(widget.size * 0.75, widget.size * 0.70),
+            painter: FlamePainter(
+              color: const Color(0xFF2BEE79).withValues(alpha: 0.95),
+              flicker: _flickerController.value + 0.33,
+            ),
           ),
         ),
-        // Inner core (Bright white/green)
-        CustomPaint(
-          size: Size(widget.size * 0.5, widget.size * 0.5),
-          painter: FlamePainter(
-            color: Colors.white.withValues(alpha: 0.9),
-            flicker: _flickerController.value * 2.0,
-            scaleY: 0.5,
-            scaleX: 0.7,
-            offsetY: widget.size * 0.25,
+        // Inner core (Bright white)
+        Padding(
+          padding: EdgeInsets.only(bottom: widget.size * 0.05),
+          child: CustomPaint(
+            size: Size(widget.size * 0.45, widget.size * 0.40),
+            painter: FlamePainter(
+              color: Colors.white,
+              flicker: _flickerController.value + 0.66,
+            ),
           ),
         ),
       ],
@@ -125,53 +124,56 @@ class _AnimatedFlameLogoState extends State<AnimatedFlameLogo>
 class FlamePainter extends CustomPainter {
   final Color color;
   final double flicker;
-  final double scaleY;
-  final double scaleX;
-  final double offsetY;
 
-  FlamePainter({
-    required this.color,
-    required this.flicker,
-    required this.scaleY,
-    required this.scaleX,
-    required this.offsetY,
-  });
+  FlamePainter({required this.color, required this.flicker});
 
   @override
   void paint(Canvas canvas, Size size) {
+    final rect = Rect.fromLTWH(0, 0, size.width, size.height);
     final paint = Paint()
-      ..color = color
+      ..shader = LinearGradient(
+        begin: Alignment.bottomCenter,
+        end: Alignment.topCenter,
+        colors: [color, color.withValues(alpha: 0.4)],
+      ).createShader(rect)
       ..style = PaintingStyle.fill
-      ..maskFilter = const MaskFilter.blur(
-        BlurStyle.normal,
-        8.0,
-      ); // Soften the edges
+      ..maskFilter = const MaskFilter.blur(BlurStyle.solid, 2.0);
 
     final w = size.width;
     final h = size.height;
 
-    // Simulate flame lick movement
-    // Uses sine waves driven by the flicker value
-    final lick1 = math.sin(flicker * 2 * math.pi) * w * 0.1;
-    final lick2 = math.cos(flicker * 2 * math.pi + math.pi / 4) * w * 0.15;
+    // Simulate elegant flame waving
+    final time = flicker * math.pi * 2;
+    // Sway the top horizontally
+    final dX1 = math.sin(time) * w * 0.06;
+    final dX2 = math.cos(time * 1.5) * w * 0.04;
+    // Slight vertical bounce
+    final dY = math.sin(time * 2) * h * 0.03;
 
     final path = Path();
 
-    // Base of the flame (rounded)
-    path.moveTo(w * 0.2, h);
-    path.quadraticBezierTo(w * 0.5, h + (w * 0.2), w * 0.8, h);
+    // Start at bottom center
+    path.moveTo(w * 0.5, h);
 
-    // Right side curving up
-    path.quadraticBezierTo(w * 0.9 + lick1, h * 0.6, w * 0.6 + lick2, h * 0.3);
+    // Right side bulb to top tip
+    path.cubicTo(
+      w * 1.1 + dX2,
+      h * 0.9, // Control 1: Pull out to the right
+      w * 0.8 + dX1,
+      h * 0.4, // Control 2: Smooth transition up
+      w * 0.5 + dX1,
+      0 + dY, // End: Taper at the top
+    );
 
-    // Top tip
-    path.quadraticBezierTo(w * 0.5, 0 + lick1, w * 0.5, 0);
-
-    // Left side curving down
-    path.quadraticBezierTo(w * 0.4 + lick2, h * 0.3, w * 0.1 - lick1, h * 0.6);
-
-    // Close back to base
-    path.quadraticBezierTo(w * 0.1, h * 0.8, w * 0.2, h);
+    // Top tip back down left side
+    path.cubicTo(
+      w * 0.2 + dX1,
+      h * 0.4, // Control 1: Smooth transition down
+      0.0 - dX2,
+      h * 0.9, // Control 2: Pull out to the left
+      w * 0.5,
+      h, // End: Back to bottom center
+    );
 
     canvas.drawPath(path, paint);
   }
