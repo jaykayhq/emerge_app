@@ -40,7 +40,7 @@ class _LevelUpListenerState extends ConsumerState<LevelUpListener> {
       if (_isShowingReward) return; // Don't trigger while already showing
 
       next.whenData((userProfile) {
-        final currentLevel = userProfile.avatarStats.level;
+        final currentLevel = userProfile.effectiveLevel;
 
         // Initial load - just track, don't celebrate
         if (_previousLevel == null) {
@@ -63,14 +63,16 @@ class _LevelUpListenerState extends ConsumerState<LevelUpListener> {
   void _checkForLevelUp(UserProfile userProfile) {
     if (_prefs == null) return;
 
-    final currentLevel = userProfile.avatarStats.level;
-    final lastCelebrated = _prefs!.getInt(_lastCelebratedLevelKey) ?? _previousLevel ?? 0;
+    final currentLevel = userProfile.effectiveLevel;
+    final lastCelebrated =
+        _prefs!.getInt(_lastCelebratedLevelKey) ?? _previousLevel ?? 0;
 
     // Check if we've gained any levels since last celebration
-    if (currentLevel > lastCelebrated) {
-      // Celebrate each level we haven't celebrated yet
-      for (int level = lastCelebrated + 1; level <= currentLevel; level++) {
-        // Trigger level-up screen for each level
+    // Only celebrate level 2+ (level 1 is the starting level)
+    if (currentLevel > lastCelebrated && currentLevel >= 2) {
+      // Celebrate each level we haven't celebrated yet (starting from level 2 min)
+      final startLevel = lastCelebrated < 1 ? 2 : lastCelebrated + 1;
+      for (int level = startLevel; level <= currentLevel; level++) {
         _showLevelUpRewardScreen(context, level);
       }
 
@@ -82,8 +84,8 @@ class _LevelUpListenerState extends ConsumerState<LevelUpListener> {
   void _showLevelUpRewardScreen(BuildContext context, int level) {
     _isShowingReward = true;
 
-    // Navigate to the Level Up Reward screen
-    context.push('/profile/level-up-reward').then((_) {
+    // Navigate to the Level Up Reward screen with the specific level
+    context.push('/profile/level-up-reward/$level').then((_) {
       _isShowingReward = false;
     });
   }

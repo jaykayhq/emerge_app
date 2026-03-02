@@ -102,7 +102,7 @@ class _WorldMapScreenState extends ConsumerState<WorldMapScreen> {
         data: (profile) {
           final archetype = profile.archetype;
           final mapConfig = ArchetypeMapsCatalog.getMapForArchetype(archetype);
-          final currentLevel = profile.avatarStats.level;
+          final currentLevel = profile.effectiveLevel;
           final currentBiome = ArchetypeMapConfig.getBiomeForLevel(
             currentLevel,
           );
@@ -232,6 +232,11 @@ class _WorldMapScreenState extends ConsumerState<WorldMapScreen> {
         return node.copyWith(state: NodeState.completed);
       }
 
+      // Check if mission is in progress
+      if (profile.worldState.activeNodes.contains(node.id)) {
+        return node.copyWith(state: NodeState.inProgress);
+      }
+
       final section = getSection(node.requiredLevel);
       final previousSection = section - 1;
 
@@ -246,14 +251,8 @@ class _WorldMapScreenState extends ConsumerState<WorldMapScreen> {
         return node.copyWith(state: NodeState.locked);
       }
 
-      // Rule 2: User Level must be sufficient
-      // if (profile.avatarStats.level >= node.requiredLevel) {
-      //   return node.copyWith(state: NodeState.available);
-      // }
-      // Actually, standard logic implies if previous section is done,
-      // AND we are at the level, it's available.
-
-      if (profile.avatarStats.level >= node.requiredLevel) {
+      // Rule 2: User effective level must be sufficient
+      if (profile.effectiveLevel >= node.requiredLevel) {
         return node.copyWith(state: NodeState.available);
       }
 
@@ -261,24 +260,43 @@ class _WorldMapScreenState extends ConsumerState<WorldMapScreen> {
     }).toList();
   }
 
-  Future<void> _claimNode(WorldNode node, Color primaryColor) async {
+  Future<void> _handleNodeAction(WorldNode node, Color primaryColor) async {
     try {
       Navigator.pop(context);
-      await ref.read(userStatsControllerProvider).claimNode(node.id);
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Claimed ${node.name}!'),
-            backgroundColor: primaryColor,
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
+
+      if (node.state == NodeState.available) {
+        // Start the mission
+        await ref.read(userStatsControllerProvider).startMission(node.id);
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Mission started: ${node.name}'),
+              backgroundColor: primaryColor,
+              behavior: SnackBarBehavior.floating,
+            ),
+          );
+        }
+      } else if (node.state == NodeState.inProgress) {
+        // Complete the mission — distribute XP
+        final xpBoosts = node.xpBoosts.map((k, v) => MapEntry(k.name, v));
+        await ref
+            .read(userStatsControllerProvider)
+            .completeMission(node.id, xpBoosts, node.requiredLevel);
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Mission complete: ${node.name}! XP earned! 🎉'),
+              backgroundColor: primaryColor,
+              behavior: SnackBarBehavior.floating,
+            ),
+          );
+        }
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Failed to claim node: $e'),
+            content: Text('Failed: $e'),
             backgroundColor: Colors.red,
             behavior: SnackBarBehavior.floating,
           ),
@@ -301,8 +319,9 @@ class _WorldMapScreenState extends ConsumerState<WorldMapScreen> {
         primaryColor: config.primaryColor,
         userStats: ref.read(userStatsStreamProvider).value!.avatarStats,
         onAction: () {
-          if (node.state == NodeState.available) {
-            _claimNode(node, config.primaryColor);
+          if (node.state == NodeState.available ||
+              node.state == NodeState.inProgress) {
+            _handleNodeAction(node, config.primaryColor);
           } else {
             Navigator.pop(context);
           }

@@ -261,9 +261,14 @@ GoRouter router(Ref ref) {
                     builder: (context, state) => const LevelingScreen(),
                   ),
                   GoRoute(
-                    path: 'level-up-reward',
+                    path: 'level-up-reward/:level',
                     parentNavigatorKey: _rootNavigatorKey,
-                    builder: (context, state) => const LevelUpRewardScreen(),
+                    builder: (context, state) {
+                      final level =
+                          int.tryParse(state.pathParameters['level'] ?? '1') ??
+                          1;
+                      return LevelUpRewardScreen(celebratedLevel: level);
+                    },
                   ),
                   GoRoute(
                     path: 'goldilocks',

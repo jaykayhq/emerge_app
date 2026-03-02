@@ -1,17 +1,56 @@
 {
-    "name": "emerge_app",
-    "short_name": "emerge_app",
-    "start_url": ".",
+    "name": "Emerge — Identity-First Habit Engine",
+    "short_name": "Emerge",
+    "description": "Transform your habits through identity-first design. Build lasting change with gamified progression, archetypes, and AI-powered coaching.",
+    "start_url": "/",
+    "scope": "/",
+    "id": "/",
     "display": "standalone",
     "background_color": "#2A1B4E",
     "theme_color": "#2A1B4E",
-    "description": "A new Flutter project.",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
+    "categories": [
+        "lifestyle",
+        "health",
+        "productivity"
+    ],
+    "lang": "en",
+    "dir": "ltr",
     "icons": [
+        {
+            "src": "icons/Icon-72.png",
+            "sizes": "72x72",
+            "type": "image/png"
+        },
+        {
+            "src": "icons/Icon-96.png",
+            "sizes": "96x96",
+            "type": "image/png"
+        },
+        {
+            "src": "icons/Icon-128.png",
+            "sizes": "128x128",
+            "type": "image/png"
+        },
+        {
+            "src": "icons/Icon-144.png",
+            "sizes": "144x144",
+            "type": "image/png"
+        },
+        {
+            "src": "icons/Icon-152.png",
+            "sizes": "152x152",
+            "type": "image/png"
+        },
         {
             "src": "icons/Icon-192.png",
             "sizes": "192x192",
+            "type": "image/png"
+        },
+        {
+            "src": "icons/Icon-384.png",
+            "sizes": "384x384",
             "type": "image/png"
         },
         {
@@ -30,6 +69,22 @@
             "sizes": "512x512",
             "type": "image/png",
             "purpose": "maskable"
+        }
+    ],
+    "screenshots": [
+        {
+            "src": "icons/Icon-512.png",
+            "sizes": "512x512",
+            "type": "image/png",
+            "form_factor": "wide",
+            "label": "Emerge App Home"
+        },
+        {
+            "src": "icons/Icon-512.png",
+            "sizes": "512x512",
+            "type": "image/png",
+            "form_factor": "narrow",
+            "label": "Emerge App Mobile"
         }
     ]
 }

@@ -41,7 +41,8 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
   }
 
   Future<void> _signUp() async {
-    if (!_formKey.currentState!.validate()) return;
+    final formState = _formKey.currentState;
+    if (formState == null || !formState.validate()) return;
 
     setState(() => _isLoading = true);
     try {
@@ -467,7 +468,9 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
                         onPressed: _isLoading ? null : _signUpWithGoogle,
                         style: OutlinedButton.styleFrom(
                           padding: const EdgeInsets.symmetric(vertical: 16),
-                          side: BorderSide(color: AppTheme.textSecondaryDark),
+                          side: BorderSide(
+                            color: EmergeColors.teal.withValues(alpha: 0.5),
+                          ),
                           foregroundColor: AppTheme.textMainDark,
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(12),
@@ -475,7 +478,7 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
                         ),
                         icon: const FaIcon(
                           FontAwesomeIcons.google,
-                          color: Colors.red,
+                          color: EmergeColors.teal,
                         ),
                         label: const Text('Sign up with Google'),
                       ),
@@ -555,10 +558,7 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
                         Expanded(
                           child: SingleChildScrollView(
                             child: Form(
-                              key:
-                                  GlobalKey<
-                                    FormState
-                                  >(), // Use a separate key if needed or share logic carefully
+                              key: _formKey,
                               // *Simplification*: The original code duplicated the form.
                               // I'll direct the user to look at the mobile layout for simplicity or duplicate the fields if I must match exact functionality.
                               // I will duplicate the fields with the new styling.
@@ -764,6 +764,34 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
                                     ),
                                   ),
                                   const Gap(16),
+                                  // Google Sign Up
+                                  OutlinedButton.icon(
+                                    onPressed: _isLoading
+                                        ? null
+                                        : _signUpWithGoogle,
+                                    style: OutlinedButton.styleFrom(
+                                      padding: const EdgeInsets.symmetric(
+                                        vertical: 16,
+                                      ),
+                                      side: BorderSide(
+                                        color: EmergeColors.teal.withValues(
+                                          alpha: 0.5,
+                                        ),
+                                      ),
+                                      foregroundColor: AppTheme.textMainDark,
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(12),
+                                      ),
+                                    ),
+                                    icon: const FaIcon(
+                                      FontAwesomeIcons.google,
+                                      color: EmergeColors.teal,
+                                      size: 20,
+                                    ),
+                                    label: const Text('Sign up with Google'),
+                                  ),
+                                  const Gap(24),
+                                  // Login Link
                                   Row(
                                     mainAxisAlignment: MainAxisAlignment.center,
                                     children: [

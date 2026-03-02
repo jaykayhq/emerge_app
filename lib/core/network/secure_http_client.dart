@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:emerge_app/core/config/app_config.dart';
 
 /// Network security configuration for the Emerge app
@@ -24,7 +25,11 @@ class NetworkSecurityConfig {
 
   // User agent string for API requests
   static String get userAgent {
-    final packageInfo = Platform.isIOS ? 'iOS' : 'Android';
+    final packageInfo = kIsWeb
+        ? 'Web'
+        : Platform.isIOS
+        ? 'iOS'
+        : 'Android';
     final version = '1.0.0'; // Get from package_info_plus
     return 'EmergeApp/$packageInfo/$version';
   }

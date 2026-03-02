@@ -227,7 +227,9 @@ class NodeDetailSheet extends StatelessWidget {
                     : node.state == NodeState.completed ||
                           node.state == NodeState.mastered
                     ? Icons.check_circle
-                    : Icons.stars,
+                    : node.state == NodeState.inProgress
+                    ? Icons.task_alt
+                    : Icons.play_arrow,
               ),
               label: Text(_getActionButtonLabel()),
               style: ElevatedButton.styleFrom(
@@ -256,8 +258,9 @@ class NodeDetailSheet extends StatelessWidget {
       case NodeState.locked:
         return 'Locked (Reach Level ${node.requiredLevel})';
       case NodeState.available:
+        return 'Begin Mission';
       case NodeState.inProgress:
-        return 'Claim Reward';
+        return 'Complete Mission';
       case NodeState.completed:
       case NodeState.mastered:
         return 'Completed';

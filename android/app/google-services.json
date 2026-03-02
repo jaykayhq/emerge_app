@@ -14,6 +14,38 @@
       },
       "oauth_client": [
         {
+          "client_id": "359335119695-08q3q3dnoivproladrcsh509enruuofc.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.emerge.emerge_app",
+            "certificate_hash": "d7f5bc2e7c67114c76e7e05273d828e6d7abca61"
+          }
+        },
+        {
+          "client_id": "359335119695-b14jva3048uv7422sanbtpplro3hps4u.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.emerge.emerge_app",
+            "certificate_hash": "06485267caa879f060ab52aa9303bc978f23d795"
+          }
+        },
+        {
+          "client_id": "359335119695-e4kbb66elqltv0kie2h5mkggtghiog4e.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.emerge.emerge_app",
+            "certificate_hash": "386eb7a9d5a07b82921ecc480de03943206fe9ba"
+          }
+        },
+        {
+          "client_id": "359335119695-hkae80fif3jjoj31a6c0rbohrv6rq2a1.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.emerge.emerge_app",
+            "certificate_hash": "41050fb3f292e1d83a64aaab84cb6b5e16b1d38e"
+          }
+        },
+        {
           "client_id": "359335119695-r7bv5g39gv1rga2bkt2bp9nrg4b4cehj.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {

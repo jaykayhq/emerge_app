@@ -3,6 +3,7 @@ import 'package:emerge_app/core/utils/app_logger.dart';
 import 'package:emerge_app/features/auth/domain/entities/auth_user.dart';
 import 'package:emerge_app/features/auth/domain/repositories/auth_repository.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:fpdart/fpdart.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 
@@ -114,26 +115,51 @@ class FirebaseAuthRepository implements AuthRepository {
   @override
   Future<Either<Failure, AuthUser>> signInWithGoogle() async {
     try {
-      final googleSignIn = GoogleSignIn();
-      final googleUser = await googleSignIn.signIn();
+      UserCredential userCredential;
 
-      if (googleUser == null) {
-        return const Left(AuthFailure('Google Sign-In cancelled'));
+      if (kIsWeb) {
+        // On web, use Firebase Auth popup directly
+        final googleProvider = GoogleAuthProvider();
+        googleProvider.addScope('email');
+        googleProvider.addScope('profile');
+        userCredential = await _firebaseAuth.signInWithPopup(googleProvider);
+      } else {
+        // On mobile, use the GoogleSignIn package
+        final googleSignIn = GoogleSignIn();
+        final googleUser = await googleSignIn.signIn();
+
+        if (googleUser == null) {
+          return const Left(AuthFailure('Google Sign-In cancelled'));
+        }
+
+        final googleAuth = await googleUser.authentication;
+        final AuthCredential credential = GoogleAuthProvider.credential(
+          accessToken: googleAuth.accessToken,
+          idToken: googleAuth.idToken,
+        );
+
+        userCredential = await _firebaseAuth.signInWithCredential(credential);
       }
 
-      final googleAuth = await googleUser.authentication;
-      final AuthCredential credential = GoogleAuthProvider.credential(
-        accessToken: googleAuth.accessToken,
-        idToken: googleAuth.idToken,
-      );
-
-      final userCredential = await _firebaseAuth.signInWithCredential(
-        credential,
-      );
       final user = userCredential.user;
 
       if (user == null) {
         return const Left(AuthFailure('User not found'));
+      }
+
+      // Create or update user profile in Firestore
+      final userDoc = await _firestore.collection('users').doc(user.uid).get();
+      if (!userDoc.exists) {
+        final userProfile = UserProfile(uid: user.uid);
+        final profileMap = userProfile.toMap();
+        profileMap['email'] = user.email ?? '';
+        profileMap['displayName'] = user.displayName ?? '';
+        profileMap['createdAt'] = FieldValue.serverTimestamp();
+        await _firestore.collection('users').doc(user.uid).set(profileMap);
+        await _firestore
+            .collection('user_stats')
+            .doc(user.uid)
+            .set(userProfile.toMap());
       }
 
       return Right(
@@ -168,7 +194,9 @@ class FirebaseAuthRepository implements AuthRepository {
 
   @override
   Future<void> signOut() async {
-    await GoogleSignIn().signOut();
+    if (!kIsWeb) {
+      await GoogleSignIn().signOut();
+    }
     await _firebaseAuth.signOut();
   }
 

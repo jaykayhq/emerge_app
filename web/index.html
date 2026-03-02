@@ -1,5 +1,6 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
+
 <head>
   <!--
     If you are serving your web app in a path other than the root, change the
@@ -18,21 +19,285 @@
 
   <meta charset="UTF-8">
   <meta content="IE=Edge" http-equiv="X-UA-Compatible">
-  <meta name="description" content="A new Flutter project.">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+  <meta name="description"
+    content="Emerge — Transform your habits through identity-first design. Build lasting change with gamified progression, archetypes, and AI coaching.">
+  <meta name="theme-color" content="#2A1B4E">
+  <meta name="color-scheme" content="dark light">
 
-  <!-- iOS meta tags & icons -->
-  <meta name="mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black">
-  <meta name="apple-mobile-web-app-title" content="emerge_app">
+  <!-- SEO Meta Tags -->
+  <meta name="keywords" content="habits, productivity, self-improvement, gamification, identity, habit tracker">
+  <meta name="author" content="Emerge">
+  <meta name="robots" content="index, follow">
+
+  <!-- Open Graph / Social Media -->
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="Emerge — Identity-First Habit Engine">
+  <meta property="og:description"
+    content="Transform your habits through identity-first design. Build lasting change with gamified progression.">
+  <meta property="og:image" content="icons/Icon-512.png">
+  <meta name="twitter:card" content="summary_large_image">
+
+  <!-- iOS PWA Meta Tags -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Emerge">
+
+  <!-- iOS Touch Icons (multiple sizes for various devices) -->
   <link rel="apple-touch-icon" href="icons/Icon-192.png">
+  <link rel="apple-touch-icon" sizes="152x152" href="icons/Icon-152.png">
+  <link rel="apple-touch-icon" sizes="144x144" href="icons/Icon-144.png">
+  <link rel="apple-touch-icon" sizes="128x128" href="icons/Icon-128.png">
+
+  <!-- iOS Splash Screen (using apple-touch-startup-image) -->
+  <link rel="apple-touch-startup-image" href="icons/Icon-512.png">
 
   <!-- Favicon -->
-  <link rel="icon" type="image/png" href="favicon.png"/>
+  <link rel="icon" type="image/png" sizes="32x32" href="favicon.png">
+  <link rel="icon" type="image/png" sizes="192x192" href="icons/Icon-192.png">
 
-  <title>emerge_app</title>
+  <!-- Manifest -->
   <link rel="manifest" href="manifest.json">
+
+  <title>Emerge</title>
+
+  <style>
+    /* PWA Install Banner */
+    #pwa-install-banner {
+      display: none;
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: linear-gradient(135deg, #2A1B4E 0%, #3d2570 100%);
+      color: #e8e0f0;
+      padding: 16px 20px;
+      z-index: 99999;
+      box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.3);
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      animation: slideUp 0.4s ease-out;
+    }
+
+    #pwa-install-banner .banner-content {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      max-width: 600px;
+      margin: 0 auto;
+      gap: 12px;
+    }
+
+    #pwa-install-banner .banner-text {
+      flex: 1;
+    }
+
+    #pwa-install-banner .banner-text h3 {
+      font-size: 15px;
+      font-weight: 600;
+      margin: 0 0 4px 0;
+    }
+
+    #pwa-install-banner .banner-text p {
+      font-size: 13px;
+      margin: 0;
+      opacity: 0.75;
+    }
+
+    #pwa-install-btn {
+      background: linear-gradient(135deg, #6c3cb0, #9b59b6);
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+
+    #pwa-dismiss-btn {
+      background: none;
+      border: none;
+      color: #e8e0f0;
+      font-size: 20px;
+      cursor: pointer;
+      opacity: 0.6;
+      padding: 4px;
+    }
+
+    /* Update Notification Banner */
+    #pwa-update-banner {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      background: linear-gradient(135deg, #1a6b3c 0%, #238c4e 100%);
+      color: white;
+      padding: 12px 20px;
+      z-index: 99999;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      text-align: center;
+      font-size: 14px;
+      animation: slideDown 0.4s ease-out;
+    }
+
+    #pwa-update-banner button {
+      background: rgba(255, 255, 255, 0.2);
+      color: white;
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      padding: 6px 16px;
+      border-radius: 6px;
+      margin-left: 12px;
+      font-size: 13px;
+      cursor: pointer;
+      font-weight: 600;
+    }
+
+    @keyframes slideUp {
+      from {
+        transform: translateY(100%);
+      }
+
+      to {
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes slideDown {
+      from {
+        transform: translateY(-100%);
+      }
+
+      to {
+        transform: translateY(0);
+      }
+    }
+  </style>
 </head>
+
 <body>
+  <!-- PWA Install Banner -->
+  <div id="pwa-install-banner">
+    <div class="banner-content">
+      <div class="banner-text">
+        <h3>📲 Install Emerge</h3>
+        <p>Add to your home screen for the full experience</p>
+      </div>
+      <button id="pwa-install-btn">Install</button>
+      <button id="pwa-dismiss-btn" aria-label="Dismiss">&times;</button>
+    </div>
+  </div>
+
+  <!-- Update Notification Banner -->
+  <div id="pwa-update-banner">
+    <span>A new version of Emerge is available!</span>
+    <button id="pwa-update-btn">Update Now</button>
+  </div>
+
+  <!-- Flutter App -->
   <script src="flutter_bootstrap.js" async></script>
+
+  <script>
+    // ─── Service Worker Registration ──────────────────
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', async () => {
+        try {
+          const registration = await navigator.serviceWorker.register('/service-worker.js', {
+            scope: '/',
+          });
+          console.log('[PWA] Service worker registered:', registration.scope);
+
+          // Check for updates periodically (every 60 minutes)
+          setInterval(() => {
+            registration.update();
+          }, 60 * 60 * 1000);
+
+          // Listen for new service worker waiting
+          registration.addEventListener('updatefound', () => {
+            const newWorker = registration.installing;
+            if (newWorker) {
+              newWorker.addEventListener('statechange', () => {
+                if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                  // New version available
+                  showUpdateBanner(registration);
+                }
+              });
+            }
+          });
+        } catch (error) {
+          console.error('[PWA] Service worker registration failed:', error);
+        }
+      });
+
+      // Listen for messages from service worker
+      navigator.serviceWorker.addEventListener('message', (event) => {
+        if (event.data && event.data.type === 'SW_UPDATE_AVAILABLE') {
+          console.log('[PWA] Update available:', event.data.version);
+        }
+      });
+    }
+
+    // ─── Install Prompt Handler ───────────────────────
+    let deferredPrompt = null;
+
+    window.addEventListener('beforeinstallprompt', (e) => {
+      // Prevent the mini-infobar from appearing
+      e.preventDefault();
+      deferredPrompt = e;
+
+      // Show custom install banner (only if not dismissed recently)
+      const dismissed = localStorage.getItem('pwa-install-dismissed');
+      const dismissedTime = dismissed ? parseInt(dismissed, 10) : 0;
+      const daysSinceDismissed = (Date.now() - dismissedTime) / (1000 * 60 * 60 * 24);
+
+      if (!dismissed || daysSinceDismissed > 7) {
+        // Show after a short delay so the app has time to load
+        setTimeout(() => {
+          document.getElementById('pwa-install-banner').style.display = 'block';
+        }, 3000);
+      }
+    });
+
+    // Install button click
+    document.getElementById('pwa-install-btn').addEventListener('click', async () => {
+      if (!deferredPrompt) return;
+
+      document.getElementById('pwa-install-banner').style.display = 'none';
+      deferredPrompt.prompt();
+
+      const { outcome } = await deferredPrompt.userChoice;
+      console.log('[PWA] Install outcome:', outcome);
+      deferredPrompt = null;
+    });
+
+    // Dismiss button click
+    document.getElementById('pwa-dismiss-btn').addEventListener('click', () => {
+      document.getElementById('pwa-install-banner').style.display = 'none';
+      localStorage.setItem('pwa-install-dismissed', Date.now().toString());
+    });
+
+    // Detect successful installation
+    window.addEventListener('appinstalled', () => {
+      console.log('[PWA] App installed successfully');
+      document.getElementById('pwa-install-banner').style.display = 'none';
+      deferredPrompt = null;
+    });
+
+    // ─── Update Banner Handler ────────────────────────
+    function showUpdateBanner(registration) {
+      const banner = document.getElementById('pwa-update-banner');
+      banner.style.display = 'block';
+
+      document.getElementById('pwa-update-btn').addEventListener('click', () => {
+        banner.style.display = 'none';
+        if (registration.waiting) {
+          registration.waiting.postMessage({ type: 'SKIP_WAITING' });
+        }
+        window.location.reload();
+      });
+    }
+  </script>
 </body>
+
 </html>
