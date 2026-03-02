@@ -85,7 +85,7 @@ class _CommunityScreenState extends ConsumerState<CommunityScreen>
                     else
                       Expanded(
                         child: Text(
-                          'COMMUNITY',
+                          'TRIBES',
                           style: Theme.of(context).textTheme.titleMedium
                               ?.copyWith(
                                 color: AppTheme.textMainDark,
