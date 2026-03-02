@@ -26,10 +26,6 @@ import 'package:go_router/go_router.dart';
 /// Provider to track recovery animation state
 final _recoveryAnimatingProvider = StateProvider<bool>((ref) => false);
 
-/// Provider to track if user has "emerged" (pressed EMERGE button at level 5+)
-/// This transforms the Future Self Studio into its evolved state
-final _hasEmergedProvider = StateProvider<bool>((ref) => false);
-
 /// Provider to enable the new 2D isometric avatar renderer
 /// Set to true to use the new AvatarRenderer instead of EvolvingSilhouetteWidget
 final _useNewAvatarRendererProvider = StateProvider<bool>((ref) => false);
@@ -127,7 +123,6 @@ class _FutureSelfStudioScreenState
   Widget build(BuildContext context) {
     final statsAsync = ref.watch(userStatsStreamProvider);
     final isRecovering = ref.watch(_recoveryAnimatingProvider);
-    final hasEmerged = ref.watch(_hasEmergedProvider);
 
     return Scaffold(
       backgroundColor: const Color(0xFF0A0A1A), // Cosmic void dark
@@ -160,10 +155,11 @@ class _FutureSelfStudioScreenState
               : 'Discipline';
 
           // Calculate growth multiplier based on consistency
-          final growthMultiplier = 1.0 + (stats.level * 0.05).clamp(0, 1);
+          final effectiveLevel = profile.effectiveLevel;
+          final growthMultiplier = 1.0 + (effectiveLevel * 0.05).clamp(0, 1);
 
           // Get archetype rank
-          final archetypeRank = _getArchetypeRank(stats.level);
+          final archetypeRank = _getArchetypeRank(effectiveLevel);
 
           // World theme based on archetype
           final worldTheme = _getWorldTheme(profile.archetype);
@@ -176,7 +172,7 @@ class _FutureSelfStudioScreenState
               Positioned.fill(
                 child: FutureSelfCosmicBackground(
                   archetype: profile.archetype,
-                  level: stats.level,
+                  level: effectiveLevel,
                 ),
               ),
 
@@ -277,7 +273,7 @@ class _FutureSelfStudioScreenState
                               ),
                             ),
                             child: Text(
-                              'LVL ${stats.level}',
+                              'LVL $effectiveLevel',
                               style: Theme.of(context).textTheme.titleMedium
                                   ?.copyWith(
                                     color: accentColor,
@@ -301,7 +297,7 @@ class _FutureSelfStudioScreenState
                           ? _buildAvatarRenderer(
                               context,
                               profile.archetype,
-                              stats.level,
+                              effectiveLevel,
                               stats.streak,
                               accentColor,
                               ref,
@@ -324,7 +320,7 @@ class _FutureSelfStudioScreenState
                               child: EvolvingSilhouetteWidget(
                                 evolutionState:
                                     SilhouetteEvolutionState.fromUserStats(
-                                      level: stats.level,
+                                      level: effectiveLevel,
                                       currentStreak: stats.streak,
                                       // Days missed = 0 if active streak, else estimate based on streak reset
                                       daysMissed: stats.streak > 0 ? 0 : 1,
@@ -337,7 +333,7 @@ class _FutureSelfStudioScreenState
                                   HapticFeedback.lightImpact();
                                   _showEvolutionInfo(
                                     context,
-                                    stats.level,
+                                    effectiveLevel,
                                     accentColor,
                                   );
                                 },
@@ -403,7 +399,7 @@ class _FutureSelfStudioScreenState
                     child: TrajectoryTimeline(
                       key: _timelineKey,
                       archetype: profile.archetype,
-                      currentLevel: stats.level,
+                      currentLevel: effectiveLevel,
                       currentXp:
                           (stats.totalXp % GamificationConstants.xpPerLevel)
                               .toDouble(),
@@ -440,7 +436,7 @@ class _FutureSelfStudioScreenState
                   SliverToBoxAdapter(
                     child: Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 16),
-                      child: hasEmerged
+                      child: profile.hasEmerged
                           ? _EmergedStateCard(
                               accentColor: accentColor,
                               phase: SilhouetteEvolutionState.phaseFromLevel(
@@ -448,18 +444,17 @@ class _FutureSelfStudioScreenState
                               ),
                             )
                           : _EmergeButton(
-                              level: stats.level,
+                              level: effectiveLevel,
                               onPressed: () {
-                                // Show splash reveal then transform studio
+                                // Show splash reveal then persist emerge to Firestore
                                 EmergeSplashReveal.show(
                                   context,
                                   primaryColor: accentColor,
-                                  onComplete: () {
-                                    // Transform the studio into emerged state
-                                    ref
-                                            .read(_hasEmergedProvider.notifier)
-                                            .state =
-                                        true;
+                                  onComplete: () async {
+                                    // Persist emerge state via controller
+                                    await ref
+                                        .read(userStatsControllerProvider)
+                                        .emerge();
                                   },
                                 );
                               },

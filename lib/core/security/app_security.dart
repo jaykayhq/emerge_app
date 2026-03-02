@@ -21,7 +21,7 @@ class AppSecurity {
       }
 
       // Check for rooted device (Android)
-      if (Platform.isAndroid && _isDeviceRooted()) {
+      if (!kIsWeb && Platform.isAndroid && _isDeviceRooted()) {
         if (kDebugMode) {
           print('WARNING: Device is rooted');
         }
@@ -29,7 +29,7 @@ class AppSecurity {
       }
 
       // Check for jailbroken device (iOS)
-      if (Platform.isIOS && _isDeviceJailbroken()) {
+      if (!kIsWeb && Platform.isIOS && _isDeviceJailbroken()) {
         if (kDebugMode) {
           print('WARNING: Device is jailbroken');
         }
@@ -56,9 +56,9 @@ class AppSecurity {
   // Check if running in emulator
   static bool _isRunningInEmulator() {
     try {
-      if (Platform.isAndroid) {
+      if (!kIsWeb && Platform.isAndroid) {
         return _checkAndroidEmulator();
-      } else if (Platform.isIOS) {
+      } else if (!kIsWeb && Platform.isIOS) {
         return _checkIOSEmulator();
       }
       return false;
@@ -283,12 +283,18 @@ class AppSecurity {
     final fingerprint = <String, String>{};
 
     try {
-      fingerprint['platform'] = Platform.operatingSystem;
-      fingerprint['version'] = Platform.operatingSystemVersion;
-      fingerprint['localHostname'] = Platform.localHostname;
-      fingerprint['numberOfProcessors'] = Platform.numberOfProcessors
-          .toString();
-      fingerprint['pathSeparator'] = Platform.pathSeparator;
+      if (kIsWeb) {
+        fingerprint['platform'] = 'web';
+        fingerprint['userAgent'] =
+            'web-browser'; // Placeholder for web fingerprinting
+      } else {
+        fingerprint['platform'] = Platform.operatingSystem;
+        fingerprint['version'] = Platform.operatingSystemVersion;
+        fingerprint['localHostname'] = Platform.localHostname;
+        fingerprint['numberOfProcessors'] = Platform.numberOfProcessors
+            .toString();
+        fingerprint['pathSeparator'] = Platform.pathSeparator;
+      }
 
       // Add some obfuscated identifiers
       fingerprint['deviceId'] = generateSecureRandom(32);

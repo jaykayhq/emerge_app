@@ -32,7 +32,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   }
 
   Future<void> _login() async {
-    if (!_formKey.currentState!.validate()) return;
+    final formState = _formKey.currentState;
+    if (formState == null || !formState.validate()) return;
 
     setState(() => _isLoading = true);
     try {
@@ -313,15 +314,19 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         onPressed: _isLoading ? null : _loginWithGoogle,
                         style: OutlinedButton.styleFrom(
                           padding: const EdgeInsets.symmetric(vertical: 16),
-                          side: const BorderSide(color: EmergeColors.hexLine),
+                          side: BorderSide(
+                            color: AppTheme.textSecondaryDark.withValues(
+                              alpha: 0.5,
+                            ),
+                          ),
                           foregroundColor: Colors.white,
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(25),
+                            borderRadius: BorderRadius.circular(12),
                           ),
                         ),
                         icon: const FaIcon(
                           FontAwesomeIcons.google,
-                          color: Colors.white,
+                          color: EmergeColors.teal,
                         ),
                         label: const Text('Sign in with Google'),
                       ),
@@ -580,16 +585,18 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                       padding: const EdgeInsets.symmetric(
                                         vertical: 16,
                                       ),
-                                      side: const BorderSide(
-                                        color: EmergeColors.hexLine,
+                                      side: BorderSide(
+                                        color: AppTheme.textSecondaryDark
+                                            .withValues(alpha: 0.5),
                                       ),
                                       shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(25),
+                                        borderRadius: BorderRadius.circular(12),
                                       ),
                                     ),
                                     icon: const FaIcon(
                                       FontAwesomeIcons.google,
-                                      color: Colors.white,
+                                      color: EmergeColors.teal,
+                                      size: 20,
                                     ),
                                     label: const Text(
                                       'Sign in with Google',

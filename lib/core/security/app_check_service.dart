@@ -18,19 +18,19 @@ class AppCheckService {
 
     try {
       // Configure App Check based on platform and build mode
-      if (kDebugMode) {
+      if (kIsWeb) {
+        // Web mode: ReCaptcha V3 is the standard provider
+        // site key must be obtained from Firebase Console
+        await appCheck.activate(
+          webProvider: ReCaptchaV3Provider(
+            '6LdW940qAAAAAI33f-i5v5y5v5v5v5v5v5v5v5v',
+          ),
+        );
+      } else if (kDebugMode) {
         // Debug mode: Use DebugProvider for development
         await appCheck.activate(
           androidProvider: AndroidProvider.debug,
           appleProvider: AppleProvider.debug,
-        );
-
-        // Print debug token for Firebase Console setup
-        // Wrapped in try-catch to handle rate limiting during hot reloads
-        // Note: Token fetch is commented out to avoid rate limiting during dev
-        debugPrint('🔐 App Check activated in DEBUG mode');
-        debugPrint(
-          'Use "Copy Debug Token" from terminal if needed for Firebase Console',
         );
       } else {
         // Production mode: Use real attestation providers

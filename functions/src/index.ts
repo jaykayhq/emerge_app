@@ -217,6 +217,93 @@ export const resetDailyChallengesOptimized = functionsV1.pubsub
   });
 
 // ============================================================================
+// AI COACH - GROQ PROXY (Callable — no CORS issues)
+// ============================================================================
+
+/**
+ * Firebase Callable function that proxies requests to the Groq AI API.
+ * Using a callable instead of an HTTP function means CORS is handled
+ * automatically by the Firebase SDK on both web and mobile clients.
+ */
+export const getGroqCoachAdvice = functionsV1.runWith({
+  secrets: ["GROQ_API_KEY"],
+}).https.onCall(
+  async (data, context) => {
+    if (!context.auth) {
+      throw new functionsV1.https.HttpsError(
+        "unauthenticated",
+        "User must be logged in to use the AI coach."
+      );
+    }
+
+    const { userContext, userMessage } = data as {
+      userContext?: string;
+      userMessage?: string;
+    };
+
+    if (!userMessage) {
+      throw new functionsV1.https.HttpsError(
+        "invalid-argument",
+        "userMessage is required."
+      );
+    }
+
+    const groqApiKey = process.env.GROQ_API_KEY;
+    if (!groqApiKey) {
+      console.warn("GROQ_API_KEY not configured. Returning fallback response.");
+      return { advice: "Keep building consistent habits — progress over perfection." };
+    }
+
+    try {
+      const payload = {
+        model: "llama3-8b-8192",
+        messages: [
+          {
+            role: "system",
+            content:
+              userContext ||
+              "You are a motivational habit coach. Be concise and encouraging. Max 2 sentences.",
+          },
+          {
+            role: "user",
+            content: userMessage,
+          },
+        ],
+        max_tokens: 256,
+        temperature: 0.7,
+      };
+
+      const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${groqApiKey}`,
+        },
+        body: JSON.stringify(payload),
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error(`Groq API error ${response.status}: ${errorText}`);
+        return { advice: "Your consistency is your superpower. Keep going!" };
+      }
+
+      const result = (await response.json()) as {
+        choices?: { message?: { content?: string } }[];
+      };
+      const advice =
+        result.choices?.[0]?.message?.content?.trim() ??
+        "Every small step counts. Stay the course!";
+
+      return { advice };
+    } catch (error) {
+      console.error("Groq proxy error:", error);
+      return { advice: "Focus on progress, not perfection. You've got this!" };
+    }
+  }
+);
+
+// ============================================================================
 // SUB-MODULE EXPORTS
 // ============================================================================
 export * from "./challenges";

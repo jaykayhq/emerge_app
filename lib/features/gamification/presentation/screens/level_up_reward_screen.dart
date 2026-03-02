@@ -9,7 +9,9 @@ import 'package:go_router/go_router.dart';
 /// Shows when a user completes a level with celebration animation
 /// Features: Persona avatar, level title, XP progress bar, stats panel, and unlocks
 class LevelUpRewardScreen extends ConsumerStatefulWidget {
-  const LevelUpRewardScreen({super.key});
+  final int celebratedLevel;
+
+  const LevelUpRewardScreen({super.key, required this.celebratedLevel});
 
   @override
   ConsumerState<LevelUpRewardScreen> createState() =>
@@ -62,7 +64,7 @@ class _LevelUpRewardScreenState extends ConsumerState<LevelUpRewardScreen>
       body: statsAsync.when(
         data: (profile) {
           final stats = profile.avatarStats;
-          final level = stats.level;
+          final level = widget.celebratedLevel;
           final archetype = profile.archetype;
           final archetypeName = _getArchetypeDisplayName(archetype);
           final title = _getLevelTitle(level);

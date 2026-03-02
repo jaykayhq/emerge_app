@@ -90,12 +90,35 @@ service cloud.firestore {
              post.createdAt is timestamp;
     }
 
+    // Helper to validate gamification stats data written by the client or Cloud Functions
+    function isValidStats(data) {
+      return data.keys().size() <= 25 &&
+             // Numeric fields must be numbers if present
+             (!data.keys().hasAny(['totalXp']) || data.totalXp is number) &&
+             (!data.keys().hasAny(['level']) || data.level is number) &&
+             (!data.keys().hasAny(['streak']) || data.streak is number) &&
+             (!data.keys().hasAny(['strengthXp']) || data.strengthXp is number) &&
+             (!data.keys().hasAny(['intellectXp']) || data.intellectXp is number) &&
+             (!data.keys().hasAny(['vitalityXp']) || data.vitalityXp is number) &&
+             (!data.keys().hasAny(['creativityXp']) || data.creativityXp is number) &&
+             (!data.keys().hasAny(['focusXp']) || data.focusXp is number) &&
+             (!data.keys().hasAny(['spiritXp']) || data.spiritXp is number) &&
+             // Boolean fields must be booleans if present
+             (!data.keys().hasAny(['hasEmerged']) || data.hasEmerged is bool);
+    }
+
     // User Stats / Profile (Gamification & Identity)
-    // Synchronized with UserAvatarStats and UserProfile logic
+    // Written by Cloud Functions (onUserActivityCreated) and client SDK
     match /user_stats/{userId} {
       allow read: if isOwner(userId);
-      allow create: if isOwner(userId) && isValidUser(request.resource.data);
-      allow update: if isOwner(userId) && isValidUser(request.resource.data);
+      allow create: if isOwner(userId) && isValidStats(request.resource.data);
+      allow update: if isOwner(userId) && isValidStats(request.resource.data);
+    }
+
+    // AI Insight Cache (written by Cloud Function, read by owner)
+    match /insight_cache/{userId} {
+      allow read: if isOwner(userId);
+      allow write: if false; // Only Cloud Functions write here
     }
 
     // User Profiles (Archetype, Attributes, etc.)

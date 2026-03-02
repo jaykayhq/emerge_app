@@ -42,10 +42,12 @@ void main() async {
   // Note: Model initialization will happen in the AiService when needed.
   // We just ensure Firebase is ready (which initApp does).
 
-  // Initialize Notification Service
-  final notificationService = container.read(notificationServiceProvider);
-  await notificationService.initialize();
-  await notificationService.scheduleWeeklyRecap();
+  // Initialize Notification Service (not supported on web)
+  if (!kIsWeb) {
+    final notificationService = container.read(notificationServiceProvider);
+    await notificationService.initialize();
+    await notificationService.scheduleWeeklyRecap();
+  }
 
   // Seed data is now handled by Firebase Admin SDK (functions/src/seed.ts)
   // Run: cd functions && npm run seed
@@ -78,8 +80,10 @@ void main() async {
     debugPrint('Failed to sign in anonymously: $e');
   }
 
-  // Register background messaging handler
-  FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
+  // Register background messaging handler (not supported on web)
+  if (!kIsWeb) {
+    FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
+  }
 
   runApp(
     UncontrolledProviderScope(container: container, child: const EmergeApp()),

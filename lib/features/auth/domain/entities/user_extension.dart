@@ -51,7 +51,7 @@ class UserAvatarStats {
       level: map['level'] as int? ?? 1,
       streak: map['streak'] as int? ?? 0,
       attributeXp: Map<String, dynamic>.from(
-        map['attributeXp'] as Map? ?? {}
+        map['attributeXp'] as Map? ?? {},
       ).map((key, value) => MapEntry(key, value as int? ?? 0)),
     );
   }
@@ -117,19 +117,14 @@ class UserAvatarStats {
           creativityXp: creativityXp + amount,
         );
       case 'focus':
-        return copyWith(
-          attributeXp: newAttributeXp,
-          focusXp: focusXp + amount,
-        );
+        return copyWith(attributeXp: newAttributeXp, focusXp: focusXp + amount);
       case 'spirit':
         return copyWith(
           attributeXp: newAttributeXp,
           spiritXp: spiritXp + amount,
         );
       default:
-        return copyWith(
-          attributeXp: newAttributeXp,
-        );
+        return copyWith(attributeXp: newAttributeXp);
     }
   }
 }
@@ -156,6 +151,9 @@ class UserWorldState {
   final WorldTheme worldTheme;
   final WorldSeason seasonalState;
   final List<String> claimedNodes; // ID of nodes claimed on the world map
+  final List<String> activeNodes; // Nodes with missions in progress
+  final int
+  highestCompletedNodeLevel; // Highest requiredLevel among completed nodes
 
   const UserWorldState({
     this.cityLevel = 1,
@@ -171,6 +169,8 @@ class UserWorldState {
     this.worldTheme = WorldTheme.sanctuary,
     this.seasonalState = WorldSeason.spring,
     this.claimedNodes = const [],
+    this.activeNodes = const [],
+    this.highestCompletedNodeLevel = 0,
   });
 
   /// Calculate overall world health (inverse of entropy)
@@ -197,6 +197,8 @@ class UserWorldState {
       'worldTheme': worldTheme.name,
       'seasonalState': seasonalState.name,
       'claimedNodes': claimedNodes,
+      'activeNodes': activeNodes,
+      'highestCompletedNodeLevel': highestCompletedNodeLevel,
     };
   }
 
@@ -232,6 +234,8 @@ class UserWorldState {
         orElse: () => WorldSeason.spring,
       ),
       claimedNodes: List<String>.from(map['claimedNodes'] ?? []),
+      activeNodes: List<String>.from(map['activeNodes'] ?? []),
+      highestCompletedNodeLevel: map['highestCompletedNodeLevel'] as int? ?? 0,
     );
   }
 
@@ -249,6 +253,8 @@ class UserWorldState {
     WorldTheme? worldTheme,
     WorldSeason? seasonalState,
     List<String>? claimedNodes,
+    List<String>? activeNodes,
+    int? highestCompletedNodeLevel,
   }) {
     return UserWorldState(
       cityLevel: cityLevel ?? this.cityLevel,
@@ -265,6 +271,9 @@ class UserWorldState {
       worldTheme: worldTheme ?? this.worldTheme,
       seasonalState: seasonalState ?? this.seasonalState,
       claimedNodes: claimedNodes ?? this.claimedNodes,
+      activeNodes: activeNodes ?? this.activeNodes,
+      highestCompletedNodeLevel:
+          highestCompletedNodeLevel ?? this.highestCompletedNodeLevel,
     );
   }
 
@@ -317,6 +326,8 @@ class UserWorldState {
       },
       lastActiveDate: DateTime.now(),
       claimedNodes: [],
+      activeNodes: [],
+      highestCompletedNodeLevel: 0,
     );
   }
 }
@@ -352,6 +363,18 @@ class UserProfile {
   final Map<String, int> identityVotes; // e.g., {'Runner': 10, 'Reader': 5}
   final UserAvatarStats avatarStats;
   final UserWorldState worldState;
+
+  /// Effective level: min of XP-based level, node-gated level, and emerge gate.
+  /// Users cannot progress past level 5 until they Emerge,
+  /// and cannot progress past a node they haven't completed.
+  int get effectiveLevel {
+    final xpLevel = avatarStats.level;
+    final nodeGate = worldState.highestCompletedNodeLevel + 1;
+    final emergeGate = hasEmerged ? 999 : 5;
+    final candidates = [xpLevel, nodeGate, emergeGate];
+    return candidates.reduce((a, b) => a < b ? a : b);
+  }
+
   final bool reframeMode;
   final String? motive;
   final String? why;
@@ -368,6 +391,7 @@ class UserProfile {
   final Avatar avatar;
   final UserSettings settings;
   final DateTime? accountCreatedAt; // When the user account was created
+  final bool hasEmerged; // Whether user has pressed Emerge at level 5
 
   const UserProfile({
     required this.uid,
@@ -390,6 +414,7 @@ class UserProfile {
     this.worldTheme,
     this.settings = const UserSettings(),
     this.accountCreatedAt,
+    this.hasEmerged = false,
   });
 
   Map<String, dynamic> toMap() {
@@ -414,6 +439,7 @@ class UserProfile {
       'worldTheme': worldTheme,
       'settings': settings.toMap(),
       'accountCreatedAt': accountCreatedAt?.toIso8601String(),
+      'hasEmerged': hasEmerged,
     };
   }
 
@@ -458,6 +484,7 @@ class UserProfile {
       accountCreatedAt: map['accountCreatedAt'] != null
           ? DateTime.tryParse(map['accountCreatedAt'] as String)
           : null,
+      hasEmerged: map['hasEmerged'] as bool? ?? false,
     );
   }
 
@@ -482,6 +509,7 @@ class UserProfile {
     String? worldTheme,
     UserSettings? settings,
     DateTime? accountCreatedAt,
+    bool? hasEmerged,
   }) {
     return UserProfile(
       uid: uid ?? this.uid,
@@ -506,6 +534,7 @@ class UserProfile {
       worldTheme: worldTheme ?? this.worldTheme,
       settings: settings ?? this.settings,
       accountCreatedAt: accountCreatedAt ?? this.accountCreatedAt,
+      hasEmerged: hasEmerged ?? this.hasEmerged,
     );
   }
 }

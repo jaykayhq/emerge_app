@@ -21,7 +21,15 @@ class RevenueCatRepository implements MonetizationRepository {
     _googleApiKey = AppConfig.getRevenueCatApiKey('android');
     _appleApiKey = AppConfig.getRevenueCatApiKey('ios');
 
-    // Skip initialization if keys are not configured (development mode)
+    // Skip initialization if keys are not configured or on web
+    if (kIsWeb) {
+      debugPrint(
+        'ℹ️ RevenueCat not supported on web - skipping initialization',
+      );
+      _isConfigured = false;
+      return;
+    }
+
     final currentKey = Platform.isAndroid ? _googleApiKey : _appleApiKey;
     if (currentKey.isEmpty) {
       debugPrint('⚠️ RevenueCat not configured - skipping initialization');
@@ -41,9 +49,9 @@ class RevenueCatRepository implements MonetizationRepository {
     );
 
     PurchasesConfiguration configuration;
-    if (Platform.isAndroid) {
+    if (!kIsWeb && Platform.isAndroid) {
       configuration = PurchasesConfiguration(_googleApiKey);
-    } else if (Platform.isIOS) {
+    } else if (!kIsWeb && Platform.isIOS) {
       configuration = PurchasesConfiguration(_appleApiKey);
     } else {
       return;
