@@ -7,7 +7,7 @@ import 'package:go_router/go_router.dart';
 
 /// Custom bottom navigation bar with elevated center FAB (diamond shape)
 ///
-/// Navigation order: World → Timeline → [+FAB] → Community → Profile
+/// Navigation order: World → Timeline → [+FAB] → Tribes → Profile
 /// The FAB is elevated above the nav bar in a diamond shape (rotated 45°)
 class EmergeBottomNav extends StatelessWidget {
   final StatefulNavigationShell navigationShell;
@@ -67,14 +67,14 @@ class EmergeBottomNav extends StatelessWidget {
                   ),
                   // Center spacer for FAB
                   const SizedBox(width: 80),
-                  // Right side: Community, Profile
+                  // Right side: Tribes, Profile
                   Expanded(
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                       children: [
                         _NavItem(
                           icon: Icons.groups,
-                          label: 'Community',
+                          label: 'Tribes',
                           isSelected: currentIndex == 2,
                           onTap: () => _onItemTapped(2),
                         ),

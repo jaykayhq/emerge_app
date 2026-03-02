@@ -28,7 +28,7 @@ import 'package:emerge_app/features/onboarding/presentation/screens/world_reveal
 import 'package:emerge_app/features/settings/presentation/screens/settings_screen.dart';
 import 'package:emerge_app/features/settings/presentation/screens/notification_settings_screen.dart';
 import 'package:emerge_app/features/monetization/presentation/screens/paywall_screen.dart';
-import 'package:emerge_app/features/social/presentation/screens/coming_soon_screen.dart';
+import 'package:emerge_app/features/social/presentation/screens/community_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -100,7 +100,7 @@ GoRouter router(Ref ref) {
         if (!isFirstLaunch) {
           if (path == '/' ||
               path == '/timeline' ||
-              path == '/community' ||
+              path == '/tribes' ||
               path == '/profile') {
             return null;
           }
@@ -215,12 +215,12 @@ GoRouter router(Ref ref) {
               ),
             ],
           ),
-          // Branch 3: Community (Coming Soon)
+          // Branch 3: Tribes
           StatefulShellBranch(
             routes: [
               GoRoute(
-                path: '/community',
-                builder: (context, state) => const ComingSoonScreen(),
+                path: '/tribes',
+                builder: (context, state) => const CommunityScreen(),
               ),
             ],
           ),
