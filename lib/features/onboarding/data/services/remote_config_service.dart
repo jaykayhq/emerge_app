@@ -13,6 +13,10 @@ RemoteConfigService remoteConfigService(Ref ref) {
 }
 
 class RemoteConfigService {
+  static final RemoteConfigService _instance = RemoteConfigService._internal();
+  factory RemoteConfigService() => _instance;
+  RemoteConfigService._internal();
+
   final FirebaseRemoteConfig _remoteConfig = FirebaseRemoteConfig.instance;
 
   Future<void> initialize() async {
