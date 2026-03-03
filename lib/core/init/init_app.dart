@@ -18,65 +18,75 @@ Future<void> initApp() async {
     await SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
   }
 
-  // Initialize Firebase
+  // Initialize Firebase (Required before all others)
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
-  // Initialize Remote Config (must be before RevenueCat for API key fetching)
+  // 1. Initialize Remote Config first (as other services may depend on its values)
   try {
     await AppConfig.initializeRemoteConfig();
     debugPrint('✅ Remote Config initialized');
   } catch (e) {
     debugPrint('⚠️ Remote Config initialization failed: $e');
-    debugPrint('💡 Will use compile-time environment variables as fallback');
   }
 
-  // Initialize Firebase App Check
-  try {
-    await AppCheckService.initialize();
-  } catch (e) {
-    debugPrint('⚠️ Continuing without App Check due to initialization error');
-  }
-
-  // Initialize Google Mobile Ads (AdMob) - not supported on web
-  if (!kIsWeb) {
-    await MobileAds.instance.initialize();
-  }
-
-  // Initialize RevenueCat (not supported on web)
-  if (!kIsWeb) {
-    try {
-      final revenueCatRepo = RevenueCatRepository();
-      await revenueCatRepo.initialize();
-
-      debugPrint('✅ RevenueCat initialized successfully');
-
+  // 2. Parallelize the remaining initializations to reduce startup time
+  // Each task is wrapped in its own try-catch to ensure one failure doesn't block the others
+  await Future.wait([
+    // App Check
+    () async {
       try {
-        final customerInfo = await revenueCatRepo.getCustomerInfoRaw();
-        if (customerInfo != null) {
-          debugPrint('✅ RevenueCat API key verified - can fetch customer info');
-          debugPrint('📊 Customer ID: ${customerInfo.originalAppUserId}');
-        } else {
-          debugPrint('ℹ️ RevenueCat not configured - monetization disabled');
-        }
+        await AppCheckService.initialize();
       } catch (e) {
-        debugPrint('⚠️ RevenueCat initialized but API verification failed: $e');
+        debugPrint('⚠️ App Check initialization failed: $e');
       }
-    } catch (e) {
-      debugPrint('⚠️ RevenueCat initialization failed: $e');
-      debugPrint(
-        '💡 Set REVENUECAT_GOOGLE_API_KEY environment variable to enable monetization',
-      );
-      debugPrint(
-        '🔧 The app will continue without RevenueCat. Premium features will be unavailable.',
-      );
-    }
-  }
+    }(),
 
-  // Initialize Hive and Local Settings
-  await LocalSettingsRepository().init();
+    // AdMob
+    () async {
+      if (!kIsWeb) {
+        try {
+          await MobileAds.instance.initialize();
+          debugPrint('✅ AdMob initialized');
+        } catch (e) {
+          debugPrint('⚠️ AdMob initialization failed: $e');
+        }
+      }
+    }(),
 
-  // Initialize FCM (handled differently on web)
-  if (!kIsWeb) {
-    await NotificationService().initialize();
-  }
+    // RevenueCat
+    () async {
+      if (!kIsWeb) {
+        try {
+          final revenueCatRepo = RevenueCatRepository();
+          await revenueCatRepo.initialize();
+          debugPrint('✅ RevenueCat initialized');
+          // Verification check is deferred/moved to internal repository logic or handled lazily
+        } catch (e) {
+          debugPrint('⚠️ RevenueCat initialization failed: $e');
+        }
+      }
+    }(),
+
+    // Local Storage (Hive)
+    () async {
+      try {
+        await LocalSettingsRepository().init();
+        debugPrint('✅ Local Settings initialized');
+      } catch (e) {
+        debugPrint('⚠️ Local Settings initialization failed: $e');
+      }
+    }(),
+
+    // Notifications & FCM
+    () async {
+      if (!kIsWeb) {
+        try {
+          await NotificationService().initialize();
+          debugPrint('✅ Notifications initialized');
+        } catch (e) {
+          debugPrint('⚠️ Notification initialization failed: $e');
+        }
+      }
+    }(),
+  ]);
 }

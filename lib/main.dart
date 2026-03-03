@@ -2,9 +2,9 @@ import 'package:emerge_app/core/init/init_app.dart';
 import 'package:emerge_app/core/router/router.dart';
 import 'package:emerge_app/core/theme/app_theme.dart';
 import 'package:emerge_app/core/theme/theme_provider.dart';
-import 'package:emerge_app/features/onboarding/data/services/remote_config_service.dart';
 import 'package:emerge_app/core/services/notification_service.dart';
 import 'package:flutter/material.dart';
+import 'dart:async';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -34,19 +34,15 @@ void main() async {
     debugPrint('.env file not found - using default configuration');
   }
 
-  // Initialize Remote Config
+  // Initialize ProviderContainer
   final container = ProviderContainer();
-  await container.read(remoteConfigServiceProvider).initialize();
 
-  // Initialize Firebase AI (Gemini)
-  // Note: Model initialization will happen in the AiService when needed.
-  // We just ensure Firebase is ready (which initApp does).
-
-  // Initialize Notification Service (not supported on web)
+  // Remote Config and Notifications are now initialized in parallel within initApp()
+  // We only schedule the weekly recap here (which is fast)
   if (!kIsWeb) {
-    final notificationService = container.read(notificationServiceProvider);
-    await notificationService.initialize();
-    await notificationService.scheduleWeeklyRecap();
+    unawaited(
+      container.read(notificationServiceProvider).scheduleWeeklyRecap(),
+    );
   }
 
   // Seed data is now handled by Firebase Admin SDK (functions/src/seed.ts)
@@ -71,14 +67,17 @@ void main() async {
 
   // Ensure user is signed in anonymously if not already signed in
   // This is required for Firestore permission checks during onboarding
-  try {
-    if (FirebaseAuth.instance.currentUser == null) {
-      await FirebaseAuth.instance.signInAnonymously();
-      debugPrint('Signed in anonymously');
+  // We don't await this to avoid blocking the first frame paint
+  unawaited(() async {
+    try {
+      if (FirebaseAuth.instance.currentUser == null) {
+        await FirebaseAuth.instance.signInAnonymously();
+        debugPrint('Signed in anonymously');
+      }
+    } catch (e) {
+      debugPrint('Failed to sign in anonymously: $e');
     }
-  } catch (e) {
-    debugPrint('Failed to sign in anonymously: $e');
-  }
+  }());
 
   // Register background messaging handler (not supported on web)
   if (!kIsWeb) {

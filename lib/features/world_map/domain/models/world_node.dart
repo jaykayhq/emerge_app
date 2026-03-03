@@ -89,10 +89,12 @@ class WorldNode {
   final String? archetype; // Archetype this node belongs to
   final int stage; // Stage number (1, 2, 3...)
   final int levelInStage; // Level within stage (1-5)
-  final List<String> primaryAttributes; // Attributes this node affects (as strings)
+  final List<String>
+  primaryAttributes; // Attributes this node affects (as strings)
   final int nodeXp; // Current XP toward node completion
   final int nodeXpRequired; // XP required to complete node (default 100)
   final bool missionCompleted; // Has the mission been completed?
+  final String? backgroundImagePath; // Path to AI-generated level background
 
   /// Current tier based on progress
   NodeTier get tier {
@@ -145,6 +147,7 @@ class WorldNode {
     this.nodeXp = 0,
     this.nodeXpRequired = 100,
     this.missionCompleted = false,
+    this.backgroundImagePath,
   });
 
   /// Title alias for name (for compatibility with plan references)
@@ -172,6 +175,7 @@ class WorldNode {
     int? nodeXp,
     int? nodeXpRequired,
     bool? missionCompleted,
+    String? backgroundImagePath,
   }) {
     return WorldNode(
       id: id ?? this.id,
@@ -195,6 +199,7 @@ class WorldNode {
       nodeXp: nodeXp ?? this.nodeXp,
       nodeXpRequired: nodeXpRequired ?? this.nodeXpRequired,
       missionCompleted: missionCompleted ?? this.missionCompleted,
+      backgroundImagePath: backgroundImagePath ?? this.backgroundImagePath,
     );
   }
 
@@ -221,6 +226,7 @@ class WorldNode {
       'nodeXp': nodeXp,
       'nodeXpRequired': nodeXpRequired,
       'missionCompleted': missionCompleted,
+      'backgroundImagePath': backgroundImagePath,
     };
   }
 
@@ -264,13 +270,15 @@ class WorldNode {
       archetype: map['archetype'] as String?,
       stage: map['stage'] as int? ?? 1,
       levelInStage: map['levelInStage'] as int? ?? 1,
-      primaryAttributes: (map['primaryAttributes'] as List<dynamic>?)
+      primaryAttributes:
+          (map['primaryAttributes'] as List<dynamic>?)
               ?.map((e) => e as String)
               .toList() ??
           [],
       nodeXp: map['nodeXp'] as int? ?? 0,
       nodeXpRequired: map['nodeXpRequired'] as int? ?? 100,
       missionCompleted: map['missionCompleted'] as bool? ?? false,
+      backgroundImagePath: map['backgroundImagePath'] as String?,
     );
   }
 

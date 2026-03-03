@@ -18,11 +18,18 @@ final notificationServiceProvider = Provider<NotificationService>((ref) {
 });
 
 class NotificationService {
+  static final NotificationService _instance = NotificationService._internal();
+  factory NotificationService() => _instance;
+  NotificationService._internal();
+
   final FirebaseMessaging _firebaseMessaging = FirebaseMessaging.instance;
   final FlutterLocalNotificationsPlugin _localNotifications =
       FlutterLocalNotificationsPlugin();
 
+  bool _isInitialized = false;
+
   Future<void> initialize() async {
+    if (_isInitialized) return;
     // Initialize Timezone
     tz.initializeTimeZones();
     // Fallback to UTC since flutter_timezone plugin is causing build issues
@@ -120,6 +127,7 @@ class NotificationService {
       // FCM initialization failed, but continue without notifications
       debugPrint('FCM initialization failed: $e');
     }
+    _isInitialized = true;
   }
 
   Future<void> subscribeToTopic(String topic) async {

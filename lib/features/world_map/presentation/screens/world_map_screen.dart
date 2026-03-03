@@ -8,7 +8,8 @@ import 'package:emerge_app/features/world_map/domain/models/archetype_map_config
 import 'package:emerge_app/features/world_map/domain/models/archetype_maps_catalog.dart';
 import 'package:emerge_app/features/world_map/domain/models/world_node.dart';
 import 'package:emerge_app/features/world_map/presentation/widgets/nebula_background.dart';
-import 'package:emerge_app/features/world_map/presentation/widgets/node_detail_sheet.dart';
+import 'package:emerge_app/features/world_map/presentation/widgets/node_quest_dialog.dart';
+import 'package:emerge_app/features/world_map/presentation/screens/level_immersive_screen.dart';
 import 'package:emerge_app/features/world_map/presentation/widgets/curved_map_layout.dart';
 import 'package:emerge_app/features/tutorial/presentation/providers/tutorial_provider.dart';
 import 'package:emerge_app/features/tutorial/presentation/widgets/tutorial_overlay.dart';
@@ -310,20 +311,26 @@ class _WorldMapScreenState extends ConsumerState<WorldMapScreen> {
     WorldNode node,
     ArchetypeMapConfig config,
   ) {
-    showModalBottomSheet(
+    showDialog(
       context: context,
-      backgroundColor: Colors.transparent,
-      isScrollControlled: true,
-      builder: (context) => NodeDetailSheet(
+      barrierColor: Colors.black.withValues(alpha: 0.7),
+      builder: (dialogContext) => NodeQuestDialog(
         node: node,
         primaryColor: config.primaryColor,
-        userStats: ref.read(userStatsStreamProvider).value!.avatarStats,
+        userLevel: ref.read(userStatsStreamProvider).value?.effectiveLevel ?? 1,
+        onEnterLevel: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => LevelImmersiveScreen(node: node, config: config),
+            ),
+          );
+        },
         onAction: () {
           if (node.state == NodeState.available ||
               node.state == NodeState.inProgress) {
+            Navigator.pop(dialogContext);
             _handleNodeAction(node, config.primaryColor);
-          } else {
-            Navigator.pop(context);
           }
         },
       ),
