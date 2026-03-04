@@ -6,14 +6,13 @@ import 'package:emerge_app/features/auth/presentation/providers/auth_providers.d
 import 'package:emerge_app/features/auth/presentation/screens/login_screen.dart';
 import 'package:emerge_app/features/auth/presentation/screens/signup_screen.dart';
 import 'package:emerge_app/features/gamification/presentation/providers/user_stats_providers.dart';
-import 'package:emerge_app/features/gamification/presentation/screens/level_up_reward_screen.dart';
 import 'package:emerge_app/features/world_map/presentation/screens/world_map_screen.dart';
 import 'package:emerge_app/features/timeline/presentation/screens/timeline_screen.dart';
 import 'package:emerge_app/features/ai/presentation/screens/goldilocks_screen.dart';
 import 'package:emerge_app/features/gamification/presentation/screens/leveling_screen.dart';
 import 'package:emerge_app/features/profile/presentation/screens/future_self_studio_screen.dart';
 import 'package:emerge_app/features/gamification/presentation/widgets/level_up_listener.dart';
-import 'package:emerge_app/features/habits/presentation/screens/advanced_create_habit_screen.dart';
+import 'package:emerge_app/features/habits/presentation/screens/advanced_create_habit_dialog.dart';
 import 'package:emerge_app/features/habits/presentation/screens/habit_detail_screen.dart';
 import 'package:emerge_app/features/habits/presentation/screens/environment_priming_screen.dart';
 import 'package:emerge_app/features/gamification/presentation/screens/weekly_recap_screen.dart';
@@ -202,7 +201,7 @@ GoRouter router(Ref ref) {
                   GoRoute(
                     path: 'create-habit',
                     builder: (context, state) =>
-                        const AdvancedCreateHabitScreen(),
+                        const AdvancedCreateHabitDialog(),
                   ),
                   GoRoute(
                     path: 'detail/:habitId',
@@ -259,16 +258,6 @@ GoRouter router(Ref ref) {
                   GoRoute(
                     path: 'leveling',
                     builder: (context, state) => const LevelingScreen(),
-                  ),
-                  GoRoute(
-                    path: 'level-up-reward/:level',
-                    parentNavigatorKey: _rootNavigatorKey,
-                    builder: (context, state) {
-                      final level =
-                          int.tryParse(state.pathParameters['level'] ?? '1') ??
-                          1;
-                      return LevelUpRewardScreen(celebratedLevel: level);
-                    },
                   ),
                   GoRoute(
                     path: 'goldilocks',

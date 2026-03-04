@@ -110,17 +110,32 @@ class _EvolvingSilhouetteWidgetState extends State<EvolvingSilhouetteWidget>
     final phase = widget.evolutionState.phase;
     final glowIntensity = (phase.index + 1) / 5;
 
+    // Phase-specific glow shape and intensity
+    final glowWidth = widget.size * (0.7 + phase.index * 0.06);
+    final glowHeight = widget.size * (0.8 + phase.index * 0.06);
+    final baseAlpha = 0.06 + phase.index * 0.04;
+    final baseBlur = 30.0 + phase.index * 10;
+    final baseSpread = 5.0 + phase.index * 5;
+
     return Container(
-      width: widget.size * 0.9,
-      height: widget.size,
+      width: glowWidth,
+      height: glowHeight,
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(widget.size * 0.45),
         boxShadow: [
+          // Primary glow
           BoxShadow(
-            color: _primaryColor.withValues(alpha: 0.1 * glowIntensity),
-            blurRadius: 40 * glowIntensity,
-            spreadRadius: 10 * glowIntensity,
+            color: _primaryColor.withValues(alpha: baseAlpha * glowIntensity),
+            blurRadius: baseBlur * glowIntensity,
+            spreadRadius: baseSpread * glowIntensity,
           ),
+          // Secondary ambient glow (wider, softer)
+          if (phase.index >= 2)
+            BoxShadow(
+              color: _primaryColor.withValues(alpha: 0.03 * glowIntensity),
+              blurRadius: 60 * glowIntensity,
+              spreadRadius: 20 * glowIntensity,
+            ),
         ],
       ),
     );
@@ -201,32 +216,62 @@ class _EvolvingSilhouetteWidgetState extends State<EvolvingSilhouetteWidget>
 
   Widget _buildPhaseLabel() {
     final state = widget.evolutionState;
+    final phaseIdx = state.phase.index;
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
       decoration: BoxDecoration(
-        color: Colors.black.withValues(alpha: 0.6),
+        color: Colors.black.withValues(alpha: 0.65),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: _primaryColor.withValues(alpha: 0.4),
+          color: _primaryColor.withValues(alpha: 0.35 + phaseIdx * 0.08),
           width: 1,
         ),
+        boxShadow: [
+          BoxShadow(
+            color: _primaryColor.withValues(alpha: 0.12 + phaseIdx * 0.04),
+            blurRadius: 8,
+            spreadRadius: 0,
+          ),
+        ],
       ),
-      child: Column(
+      child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Text(
-            state.phaseName.toUpperCase(),
-            style: TextStyle(
+          // Pulsing phase indicator dot
+          Container(
+            width: 6,
+            height: 6,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
               color: _primaryColor,
-              fontSize: 10,
-              fontWeight: FontWeight.bold,
-              letterSpacing: 2,
+              boxShadow: [
+                BoxShadow(
+                  color: _primaryColor.withValues(alpha: 0.6),
+                  blurRadius: 4,
+                ),
+              ],
             ),
           ),
-          Text(
-            'LVL ${state.level}',
-            style: const TextStyle(color: Colors.white70, fontSize: 9),
+          const SizedBox(width: 8),
+          Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                state.phaseName.toUpperCase(),
+                style: TextStyle(
+                  color: _primaryColor,
+                  fontSize: 10,
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: 2,
+                ),
+              ),
+              Text(
+                'LVL ${state.level}',
+                style: const TextStyle(color: Colors.white70, fontSize: 9),
+              ),
+            ],
           ),
         ],
       ),

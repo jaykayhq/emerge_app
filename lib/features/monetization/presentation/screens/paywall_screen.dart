@@ -14,7 +14,7 @@ class PaywallScreen extends ConsumerWidget {
     final isPremiumAsync = ref.watch(isPremiumProvider);
 
     return GrowthBackground(
-      child: SafeArea(
+      child: SingleChildScrollView(
         child: Padding(
           padding: const EdgeInsets.all(24.0),
           child: Column(
@@ -73,7 +73,7 @@ class PaywallScreen extends ConsumerWidget {
                 title: 'Advanced Analytics',
                 description: 'Deep dive into your progress and trends.',
               ),
-              const Spacer(),
+              const Gap(40),
               SizedBox(
                 width: double.infinity,
                 child: FilledButton(
