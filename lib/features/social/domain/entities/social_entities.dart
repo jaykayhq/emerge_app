@@ -34,7 +34,7 @@ class Challenge {
   });
 }
 
-enum FriendArchetype { athlete, creator, scholar, stoic }
+enum FriendArchetype { athlete, creator, scholar, stoic, zealot }
 
 class Friend {
   final String id;
@@ -45,6 +45,11 @@ class Friend {
   final bool isOnline;
   final String lastSeen;
   final String? avatarUrl;
+  final int xp;
+  final String? equippedTitle;
+  final String? equippedNameplate;
+  final List<String> activeContractIds;
+  final DateTime? lastActiveAt;
 
   const Friend({
     required this.id,
@@ -55,8 +60,12 @@ class Friend {
     this.isOnline = false,
     this.lastSeen = 'Just now',
     this.avatarUrl,
+    this.xp = 0,
+    this.equippedTitle,
+    this.equippedNameplate,
+    this.activeContractIds = const [],
+    this.lastActiveAt,
   });
-  /* ... (existing fields) ... */
 
   factory Friend.fromMap(Map<String, dynamic> map) {
     return Friend(
@@ -71,6 +80,13 @@ class Friend {
       isOnline: map['isOnline'] ?? false,
       lastSeen: map['lastSeen'] ?? 'Just now',
       avatarUrl: map['avatarUrl'],
+      xp: map['xp']?.toInt() ?? 0,
+      equippedTitle: map['equippedTitle'],
+      equippedNameplate: map['equippedNameplate'],
+      activeContractIds: List<String>.from(map['activeContractIds'] ?? []),
+      lastActiveAt: map['lastActiveAt'] != null
+          ? DateTime.tryParse(map['lastActiveAt'] as String)
+          : null,
     );
   }
 
@@ -84,6 +100,64 @@ class Friend {
       'isOnline': isOnline,
       'lastSeen': lastSeen,
       'avatarUrl': avatarUrl,
+      'xp': xp,
+      'equippedTitle': equippedTitle,
+      'equippedNameplate': equippedNameplate,
+      'activeContractIds': activeContractIds,
+      'lastActiveAt': lastActiveAt?.toIso8601String(),
+    };
+  }
+}
+
+/// A partner request (friend request)
+class PartnerRequest {
+  final String id;
+  final String senderId;
+  final String senderName;
+  final String senderArchetype;
+  final int senderLevel;
+  final String recipientId;
+  final String status; // 'pending', 'accepted', 'rejected'
+  final DateTime createdAt;
+
+  const PartnerRequest({
+    required this.id,
+    required this.senderId,
+    required this.senderName,
+    required this.senderArchetype,
+    required this.senderLevel,
+    required this.recipientId,
+    required this.status,
+    required this.createdAt,
+  });
+
+  factory PartnerRequest.fromMap(Map<String, dynamic> map, {String? id}) {
+    return PartnerRequest(
+      id: id ?? map['id'] ?? '',
+      senderId: map['senderId'] ?? '',
+      senderName: map['senderName'] ?? '',
+      senderArchetype: map['senderArchetype'] ?? 'creator',
+      senderLevel: map['senderLevel']?.toInt() ?? 1,
+      recipientId: map['recipientId'] ?? '',
+      status: map['status'] ?? 'pending',
+      createdAt: map['createdAt'] != null
+          ? (map['createdAt'] is DateTime
+                ? map['createdAt']
+                : DateTime.tryParse(map['createdAt'].toString()) ??
+                      DateTime.now())
+          : DateTime.now(),
+    );
+  }
+
+  Map<String, dynamic> toMap() {
+    return {
+      'senderId': senderId,
+      'senderName': senderName,
+      'senderArchetype': senderArchetype,
+      'senderLevel': senderLevel,
+      'recipientId': recipientId,
+      'status': status,
+      'createdAt': createdAt.toIso8601String(),
     };
   }
 }

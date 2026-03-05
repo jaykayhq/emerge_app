@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:emerge_app/features/auth/domain/entities/user_extension.dart';
 import 'package:emerge_app/features/gamification/presentation/providers/user_stats_providers.dart';
 import 'package:emerge_app/features/gamification/presentation/widgets/gamification_world_section.dart';
@@ -10,14 +12,25 @@ void main() {
   testWidgets('GamificationWorldSection renders loading state initially', (
     tester,
   ) async {
+    // Create a stream controller that never emits (simulates loading forever)
+    final streamController = StreamController<UserProfile>.broadcast();
+
     await tester.pumpWidget(
-      const ProviderScope(
-        child: MaterialApp(home: Scaffold(body: GamificationWorldSection())),
+      ProviderScope(
+        overrides: [
+          userStatsStreamProvider.overrideWith(
+            (ref) => streamController.stream,
+          ),
+        ],
+        child: const MaterialApp(home: Scaffold(body: GamificationWorldSection())),
       ),
     );
 
     // Should show loading initially
     expect(find.byType(CircularProgressIndicator), findsOneWidget);
+    
+    // Clean up
+    await streamController.close();
   });
 
   testWidgets(

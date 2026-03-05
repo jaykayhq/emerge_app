@@ -308,7 +308,6 @@ export const getGroqCoachAdvice = functionsV1.runWith({
 // ============================================================================
 export * from "./challenges";
 export * from "./seed_templates";
-export * from "./generateWeeklyChallenge";
 export * from "./refreshQuarterlyChallenges";
 export * from "./revenuecat_webhook";
 export * from "./habit_notifications";

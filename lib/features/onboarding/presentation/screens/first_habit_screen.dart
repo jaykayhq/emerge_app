@@ -29,7 +29,7 @@ class _FirstHabitScreenState extends ConsumerState<FirstHabitScreen> {
   void _completeFirstHabit() {
     final habitTitle = _isCustomHabit
         ? _customHabitTitleController.text.trim()
-        : _selectedHabit?.title;
+        : _selectedHabit?.description; // Use action as the title
 
     if ((habitTitle == null || habitTitle.isEmpty) || _selectedAnchor == null) {
       return;

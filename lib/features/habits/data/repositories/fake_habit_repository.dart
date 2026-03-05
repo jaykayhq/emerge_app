@@ -94,7 +94,7 @@ class FakeHabitRepository implements HabitRepository {
         // Undo completion (toggle off)
         final updatedHabit = habit.copyWith(
           currentStreak: habit.currentStreak > 0 ? habit.currentStreak - 1 : 0,
-          lastCompletedDate: null,
+          clearLastCompletedDate: true,
         );
         _habits[index] = updatedHabit;
         _controller.add(_habits);

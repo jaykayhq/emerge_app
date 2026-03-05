@@ -271,7 +271,7 @@ class _AdvancedCreateHabitDialogState
   void _applyTemplate(HabitTemplate template) {
     HapticFeedback.mediumImpact();
     setState(() {
-      _titleController.text = template.title;
+      _titleController.text = template.description; // Use action as the title
       switch (template.timeOfDay.toLowerCase()) {
         case 'morning':
           _timeOfDay = TimeOfDayPreference.morning;
@@ -412,139 +412,239 @@ class _AdvancedCreateHabitDialogState
   }
 
   Widget _buildHeader(BuildContext context) {
-    return Row(
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Emoji Picker Trigger
-        GestureDetector(
-          onTap: _showEmojiPicker,
-          child: Container(
-            width: 56,
-            height: 56,
-            decoration: BoxDecoration(
-              color: _getAttributeColor(_attribute).withValues(alpha: 0.15),
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(
-                color: _getAttributeColor(_attribute).withValues(alpha: 0.4),
-              ),
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Emoji Section
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'ICON',
+                  style: TextStyle(
+                    color: Colors.white38,
+                    fontSize: 10,
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: 1,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                GestureDetector(
+                  onTap: _showEmojiPicker,
+                  child: Container(
+                    width: 72,
+                    height: 72,
+                    decoration: BoxDecoration(
+                      color: _getAttributeColor(
+                        _attribute,
+                      ).withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(
+                        color: _getAttributeColor(
+                          _attribute,
+                        ).withValues(alpha: 0.3),
+                        width: 1.5,
+                      ),
+                    ),
+                    alignment: Alignment.center,
+                    child: Text(_emoji, style: const TextStyle(fontSize: 32)),
+                  ),
+                ),
+              ],
             ),
-            alignment: Alignment.center,
-            child: Text(_emoji, style: const TextStyle(fontSize: 28)),
-          ),
-        ),
-        const SizedBox(width: 16),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              TextFormField(
-                key: _nameInputKey,
-                controller: _titleController,
-                style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
-                ),
-                decoration: const InputDecoration(
-                  hintText: 'HABIT NAME...',
-                  hintStyle: TextStyle(color: Colors.white38),
-                  border: InputBorder.none,
-                  contentPadding: EdgeInsets.zero,
-                ),
-                validator: (value) =>
-                    value == null || value.isEmpty ? 'Required' : null,
-              ),
-              const SizedBox(height: 8),
-              Row(
+            const SizedBox(width: 16),
+            // Habit Title Section
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  GestureDetector(
-                    onTap: () => _showAttributePicker(),
-                    child: _buildBadge(
-                      _attribute.name.toUpperCase(),
-                      _getAttributeColor(_attribute),
-                      key: _attributeKey,
+                  const Text(
+                    'HABIT TITLE',
+                    style: TextStyle(
+                      color: Colors.white38,
+                      fontSize: 10,
+                      fontWeight: FontWeight.bold,
+                      letterSpacing: 1,
                     ),
                   ),
-                  const SizedBox(width: 8),
-                  GestureDetector(
-                    onTap: () => _showFrequencyPicker(),
-                    child: _buildBadge(
-                      _frequency.name.toUpperCase(),
-                      Colors.white.withValues(alpha: 0.4),
-                      key: _frequencyKey,
+                  const SizedBox(height: 8),
+                  Container(
+                    height: 72,
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.05),
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(
+                        color: Colors.white.withValues(alpha: 0.1),
+                      ),
+                    ),
+                    alignment: Alignment.centerLeft,
+                    child: TextFormField(
+                      key: _nameInputKey,
+                      controller: _titleController,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 18,
+                        fontWeight: FontWeight.w500,
+                      ),
+                      decoration: const InputDecoration(
+                        hintText: 'e.g. Morning Meditation',
+                        hintStyle: TextStyle(
+                          color: Colors.white24,
+                          fontSize: 18,
+                        ),
+                        border: InputBorder.none,
+                        contentPadding: EdgeInsets.zero,
+                        isDense: true,
+                      ),
+                      validator: (value) =>
+                          value == null || value.isEmpty ? 'Required' : null,
                     ),
                   ),
                 ],
               ),
-            ],
-          ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 20),
+        // Badges Row
+        Row(
+          children: [
+            GestureDetector(
+              onTap: () => _showAttributePicker(),
+              child: _buildBadge(
+                _attribute.name.toUpperCase(),
+                _getAttributeColor(_attribute),
+                icon: _getAttributeIcon(_attribute),
+                key: _attributeKey,
+              ),
+            ),
+            const SizedBox(width: 12),
+            GestureDetector(
+              onTap: () => _showFrequencyPicker(),
+              child: _buildBadge(
+                _frequency.name.toUpperCase(),
+                const Color(0xFF2BEE79),
+                icon: Icons.calendar_today,
+                key: _frequencyKey,
+              ),
+            ),
+          ],
         ),
       ],
     );
   }
 
-  Widget _buildBadge(String text, Color color, {Key? key}) {
+  Widget _buildBadge(String text, Color color, {IconData? icon, Key? key}) {
     return Container(
       key: key,
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.2),
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: color.withValues(alpha: 0.5)),
+        color: color.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(30),
+        border: Border.all(color: color.withValues(alpha: 0.4), width: 1.5),
+        boxShadow: [
+          BoxShadow(
+            color: color.withValues(alpha: 0.1),
+            blurRadius: 8,
+            spreadRadius: 1,
+          ),
+        ],
       ),
-      child: Text(
-        text,
-        style: TextStyle(
-          color: color,
-          fontSize: 10,
-          fontWeight: FontWeight.bold,
-          letterSpacing: 0.5,
-        ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (icon != null) ...[
+            Icon(icon, color: color, size: 16),
+            const SizedBox(width: 8),
+          ],
+          Text(
+            text,
+            style: TextStyle(
+              color: color,
+              fontSize: 14,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(width: 4),
+          Icon(
+            Icons.keyboard_arrow_down,
+            color: color.withValues(alpha: 0.5),
+            size: 18,
+          ),
+        ],
       ),
     );
   }
 
   Widget _buildIdentitySection(BuildContext context) {
+    final attributeColor = _getAttributeColor(_attribute);
+
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.05),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
+        color: Colors.white.withValues(alpha: 0.03),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              Icon(
-                _getAttributeIcon(_attribute),
-                color: _getAttributeColor(_attribute),
-                size: 16,
-              ),
-              const SizedBox(width: 8),
-              Text(
-                'IDENTITY CONTRACT',
+              const Text(
+                'Identity',
                 style: TextStyle(
-                  color: _getAttributeColor(_attribute),
-                  fontSize: 10,
+                  color: Colors.white,
+                  fontSize: 18,
                   fontWeight: FontWeight.bold,
-                  letterSpacing: 1.2,
                 ),
               ),
+              const Spacer(),
+              _buildEditButton(),
             ],
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 4),
+          const Text(
+            'Defining your character path...',
+            style: TextStyle(
+              color: Colors.white38,
+              fontSize: 12,
+              letterSpacing: 0.5,
+            ),
+          ),
+          const SizedBox(height: 20),
           ListenableBuilder(
             listenable: _titleController,
             builder: (context, _) {
-              final habitName = _titleController.text.isEmpty
-                  ? '...'
-                  : _titleController.text;
-              return Text(
-                'I am the type of person who stays consistent with my "$habitName" to forge more ${_attribute.name.toLowerCase()}.',
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: Colors.white.withValues(alpha: 0.85),
-                  fontStyle: FontStyle.italic,
-                  height: 1.4,
+              final habitAction = _titleController.text.isEmpty
+                  ? 'prioritizes mental clarity'
+                  : _titleController.text.toLowerCase();
+              return RichText(
+                text: TextSpan(
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 18,
+                    fontWeight: FontWeight.w600,
+                    fontStyle: FontStyle.italic,
+                    height: 1.4,
+                  ),
+                  children: [
+                    const TextSpan(text: '"I am the type of person who '),
+                    TextSpan(
+                      text: '$habitAction...',
+                      style: TextStyle(
+                        color: attributeColor,
+                        decoration: TextDecoration.underline,
+                        decorationColor: attributeColor.withValues(alpha: 0.5),
+                        decorationThickness: 2,
+                      ),
+                    ),
+                    const TextSpan(text: '"'),
+                  ],
                 ),
               );
             },
@@ -554,49 +654,112 @@ class _AdvancedCreateHabitDialogState
     );
   }
 
+  Widget _buildEditButton() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(
+          color: _getAttributeColor(_attribute).withValues(alpha: 0.5),
+        ),
+      ),
+      child: Text(
+        'EDIT',
+        style: TextStyle(
+          color: _getAttributeColor(_attribute),
+          fontSize: 10,
+          fontWeight: FontWeight.bold,
+          letterSpacing: 1,
+        ),
+      ),
+    );
+  }
+
   Widget _buildCoreSettings(BuildContext context) {
     return Row(
       key: _timeLocationKey,
       children: [
         Expanded(
-          child: _buildCompactInput(
-            icon: Icons.access_time,
-            label: _specificTime?.format(context) ?? 'SET TIME',
-            onTap: () => _selectTime(context),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'TRIGGER TIME',
+                style: TextStyle(
+                  color: Colors.white38,
+                  fontSize: 10,
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: 1,
+                ),
+              ),
+              const SizedBox(height: 8),
+              _buildCompactInput(
+                icon: Icons.access_time_filled,
+                label:
+                    _specificTime?.format(context) ??
+                    '07:00 AM', // Default to 7:00 AM if null for UI preview
+                onTap: () => _selectTime(context),
+              ),
+            ],
           ),
         ),
-        const SizedBox(width: 12),
+        const SizedBox(width: 16),
         Expanded(
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12),
-            height: 48,
-            decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.05),
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
-            ),
-            child: Row(
-              children: [
-                Icon(
-                  Icons.place,
-                  color: _getAttributeColor(_attribute),
-                  size: 18,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'SANCTUARY',
+                style: TextStyle(
+                  color: Colors.white38,
+                  fontSize: 10,
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: 1,
                 ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: TextFormField(
-                    controller: _locationController,
-                    style: const TextStyle(color: Colors.white, fontSize: 13),
-                    decoration: const InputDecoration(
-                      hintText: 'LOCATION',
-                      hintStyle: TextStyle(color: Colors.white24, fontSize: 12),
-                      border: InputBorder.none,
-                      isDense: true,
-                    ),
+              ),
+              const SizedBox(height: 8),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                height: 56,
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.05),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: Colors.white.withValues(alpha: 0.1),
                   ),
                 ),
-              ],
-            ),
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.location_on,
+                      color: _getAttributeColor(_attribute),
+                      size: 20,
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: TextFormField(
+                        controller: _locationController,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
+                        ),
+                        decoration: const InputDecoration(
+                          hintText: 'Living Room',
+                          hintStyle: TextStyle(
+                            color: Colors.white12,
+                            fontSize: 14,
+                          ),
+                          border: InputBorder.none,
+                          isDense: true,
+                          contentPadding: EdgeInsets.zero,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
           ),
         ),
       ],
@@ -611,8 +774,8 @@ class _AdvancedCreateHabitDialogState
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        height: 48,
-        padding: const EdgeInsets.symmetric(horizontal: 12),
+        height: 56,
+        padding: const EdgeInsets.symmetric(horizontal: 16),
         decoration: BoxDecoration(
           color: Colors.white.withValues(alpha: 0.05),
           borderRadius: BorderRadius.circular(12),
@@ -620,14 +783,14 @@ class _AdvancedCreateHabitDialogState
         ),
         child: Row(
           children: [
-            Icon(icon, color: _getAttributeColor(_attribute), size: 18),
-            const SizedBox(width: 8),
+            Icon(icon, color: _getAttributeColor(_attribute), size: 20),
+            const SizedBox(width: 12),
             Text(
               label,
               style: const TextStyle(
                 color: Colors.white,
-                fontSize: 12,
-                fontWeight: FontWeight.bold,
+                fontSize: 14,
+                fontWeight: FontWeight.w500,
               ),
             ),
           ],
@@ -717,9 +880,9 @@ class _AdvancedCreateHabitDialogState
         ),
         const SizedBox(height: 16),
 
-        // Anchor Habit
+        // Anchor Time (Time of Day Slot)
         const Text(
-          'ANCHOR HABIT (AFTER I...)',
+          'TIME OF THE DAY (ANCHOR)',
           style: TextStyle(
             color: Colors.white54,
             fontSize: 9,
@@ -727,11 +890,7 @@ class _AdvancedCreateHabitDialogState
           ),
         ),
         const SizedBox(height: 8),
-        habitsAsync.when(
-          data: (habits) => _buildAnchorDropdown(habits),
-          loading: () => const CircularProgressIndicator(),
-          error: (_, __) => const SizedBox.shrink(),
-        ),
+        _buildAnchorTimeDropdown(),
         const SizedBox(height: 16),
 
         // Difficulty & Frequency (Using simpler selects for now)
@@ -947,7 +1106,7 @@ class _AdvancedCreateHabitDialogState
     );
   }
 
-  Widget _buildAnchorDropdown(List<Habit> habits) {
+  Widget _buildAnchorTimeDropdown() {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12),
       decoration: BoxDecoration(
@@ -956,25 +1115,33 @@ class _AdvancedCreateHabitDialogState
         border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
       ),
       child: DropdownButtonHideUnderline(
-        child: DropdownButton<String>(
-          value: _anchorHabitId,
+        child: DropdownButton<TimeOfDayPreference>(
+          value: _timeOfDay,
           isExpanded: true,
           dropdownColor: const Color(0xFF1A1A2E),
-          hint: const Text(
-            'SELECT ANCHOR',
-            style: TextStyle(color: Colors.white12, fontSize: 12),
-          ),
           style: const TextStyle(color: Colors.white, fontSize: 13),
           items: [
-            const DropdownMenuItem(value: null, child: Text('NONE')),
-            ...habits.map(
-              (h) => DropdownMenuItem(
-                value: h.id,
-                child: Text(h.title.toUpperCase()),
-              ),
+            const DropdownMenuItem(
+              value: TimeOfDayPreference.morning,
+              child: Text('AFTER YOU WAKE UP'),
+            ),
+            const DropdownMenuItem(
+              value: TimeOfDayPreference.afternoon,
+              child: Text('DURING LUNCH'),
+            ),
+            const DropdownMenuItem(
+              value: TimeOfDayPreference.evening,
+              child: Text('BEFORE BED'),
             ),
           ],
-          onChanged: (v) => setState(() => _anchorHabitId = v),
+          onChanged: (v) {
+            if (v != null) {
+              setState(() {
+                _timeOfDay = v;
+                _updateIdentityStatement();
+              });
+            }
+          },
         ),
       ),
     );
@@ -1114,18 +1281,18 @@ class _AdvancedCreateHabitDialogState
 
   Color _getAttributeColor(HabitAttribute attr) {
     switch (attr) {
-      case HabitAttribute.vitality:
-        return const Color(0xFF00E5FF);
-      case HabitAttribute.intellect:
-        return const Color(0xFFE040FB);
-      case HabitAttribute.creativity:
-        return const Color(0xFF76FF03);
-      case HabitAttribute.focus:
-        return const Color(0xFFFFAB00);
       case HabitAttribute.strength:
-        return const Color(0xFFFF5252);
+        return const Color(0xFFFF6B6B); // Coral red
+      case HabitAttribute.intellect:
+        return const Color(0xFF6C63FF); // Indigo purple
+      case HabitAttribute.vitality:
+        return const Color(0xFF2BEE79); // Emerge green
+      case HabitAttribute.creativity:
+        return const Color(0xFFE040FB); // Magenta pink
+      case HabitAttribute.focus:
+        return const Color(0xFFFFB74D); // Amber gold
       case HabitAttribute.spirit:
-        return const Color(0xFFFFD700);
+        return const Color(0xFF4DD0E1); // Cyan teal
     }
   }
 

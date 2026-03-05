@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
+import 'package:emerge_app/features/auth/presentation/providers/auth_providers.dart';
+import 'package:emerge_app/features/gamification/presentation/providers/user_stats_providers.dart';
 import 'package:emerge_app/features/social/data/repositories/challenge_repository.dart';
 import 'package:emerge_app/features/social/domain/models/challenge.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -20,10 +21,38 @@ final allChallengesProvider = FutureProvider<List<Challenge>>((ref) async {
 
 final userChallengesProvider = FutureProvider<List<Challenge>>((ref) async {
   final repository = ref.read(challengeRepositoryProvider);
-  final user = FirebaseAuth.instance.currentUser;
+  final user = ref.watch(authStateChangesProvider).value;
   if (user == null) return [];
-  return repository.getUserChallenges(user.uid);
+  return repository.getUserChallenges(user.id);
 });
+
+/// Challenges filtered by the current user's archetype
+final archetypeChallengesProvider = FutureProvider<List<Challenge>>((
+  ref,
+) async {
+  final repository = ref.read(challengeRepositoryProvider);
+  final profile = ref.watch(userStatsStreamProvider).value;
+  if (profile == null) return [];
+  return repository.getChallengesByArchetype(profile.archetype.name);
+});
+
+/// Weekly spotlight challenge for the user's archetype
+final weeklySpotlightProvider = FutureProvider<Challenge?>((ref) async {
+  final repository = ref.read(challengeRepositoryProvider);
+  final profile = ref.watch(userStatsStreamProvider).value;
+  if (profile == null) return null;
+  return repository.getWeeklySpotlight(archetypeId: profile.archetype.name);
+});
+
+/// Leaderboard for a specific challenge
+final challengeLeaderboardProvider =
+    FutureProvider.family<List<Map<String, dynamic>>, String>((
+      ref,
+      challengeId,
+    ) async {
+      final repository = ref.read(challengeRepositoryProvider);
+      return repository.getLeaderboard(challengeId);
+    });
 
 final filteredChallengesProvider =
     FutureProvider.family<List<Challenge>, ChallengeStatus>((

@@ -165,4 +165,52 @@ class RevenueCatRepository implements MonetizationRepository {
       return null;
     }
   }
+
+  @override
+  Future<Either<String, bool>> purchaseConsumable(String productId) async {
+    if (!_isConfigured) {
+      return const Left('RevenueCat not configured');
+    }
+    try {
+      final products = await Purchases.getProducts([
+        productId,
+      ], productCategory: ProductCategory.nonSubscription);
+      if (products.isEmpty) {
+        return Left('Product not found: $productId');
+      }
+      final product = products.first;
+      await Purchases.purchase(PurchaseParams.storeProduct(product));
+      return const Right(true);
+    } on PlatformException catch (e) {
+      final errorCode = PurchasesErrorHelper.getErrorCode(e);
+      if (errorCode == PurchasesErrorCode.purchaseCancelledError) {
+        return const Left('Purchase cancelled');
+      }
+      return Left(e.message ?? 'Purchase failed');
+    } catch (e) {
+      return Left(e.toString());
+    }
+  }
+
+  @override
+  Future<Either<String, Map<String, String>>> getConsumablePrices(
+    List<String> productIds,
+  ) async {
+    if (!_isConfigured) {
+      return const Left('RevenueCat not configured');
+    }
+    try {
+      final products = await Purchases.getProducts(
+        productIds,
+        productCategory: ProductCategory.nonSubscription,
+      );
+      final prices = <String, String>{};
+      for (final product in products) {
+        prices[product.identifier] = product.priceString;
+      }
+      return Right(prices);
+    } catch (e) {
+      return Left(e.toString());
+    }
+  }
 }

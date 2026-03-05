@@ -15,4 +15,13 @@ abstract class MonetizationRepository {
 
   /// Get the price string for the premium package
   Future<String?> get premiumPriceString;
+
+  /// Purchase a consumable item by product ID (e.g., a title or nameplate).
+  /// Returns Right(true) on success.
+  Future<Either<String, bool>> purchaseConsumable(String productId);
+
+  /// Get available consumable products with their price strings.
+  Future<Either<String, Map<String, String>>> getConsumablePrices(
+    List<String> productIds,
+  );
 }

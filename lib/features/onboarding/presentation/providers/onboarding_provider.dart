@@ -13,7 +13,6 @@ import 'package:emerge_app/features/gamification/data/repositories/user_stats_re
 import 'package:emerge_app/features/gamification/presentation/providers/user_stats_providers.dart';
 import 'package:emerge_app/features/habits/domain/entities/habit.dart';
 import 'package:emerge_app/features/habits/presentation/providers/habit_providers.dart';
-import 'package:emerge_app/features/onboarding/data/services/remote_config_service.dart';
 import 'package:emerge_app/features/habits/presentation/providers/dashboard_state_provider.dart';
 import 'package:uuid/uuid.dart';
 
@@ -256,70 +255,75 @@ class OnboardingController extends _$OnboardingController {
       final dashboardNotifier = ref.read(
         dashboardStateNotifierProvider.notifier,
       );
-      final config = ref
-          .read(remoteConfigServiceProvider)
-          .getOnboardingConfig();
-      final suggestions = config.habitSuggestions;
+      // We only create one habit per stack (the action). The anchor is treated as a cue.
+      for (int i = 0; i < state.habitStacks.length; i++) {
+        final stack = state.habitStacks[i];
+        final anchorText = state.anchors.length > i
+            ? state.anchors[i]
+            : 'After waking up';
 
-      // Track created anchors to prevent duplicates: Map<AnchorSuggestionId, CreatedHabitId>
-      final Map<String, String> createdAnchorMap = {};
+        // Map anchor text to TimeOfDayPreference and specify default times
+        TimeOfDayPreference tdp = TimeOfDayPreference.morning;
+        TimeOfDay? reminderTime;
 
-      for (final stack in state.habitStacks) {
-        final anchorSuggestion = suggestions.firstWhere(
-          (s) => s.id == stack.anchorId,
-          orElse: () => suggestions.first,
-        );
-
-        // 1. Create or Get existing Anchor Habit
-        String realAnchorHabitId;
-        if (createdAnchorMap.containsKey(anchorSuggestion.id)) {
-          realAnchorHabitId = createdAnchorMap[anchorSuggestion.id]!;
-        } else {
-          realAnchorHabitId = const Uuid().v4();
-          final anchorHabit = Habit(
-            id: realAnchorHabitId,
-            userId: user!.id,
-            title: anchorSuggestion.title,
-            cue: 'My established routine',
-            createdAt: DateTime.now(),
-            difficulty: HabitDifficulty.easy,
-            impact: HabitImpact.positive,
-            attribute: HabitAttribute.vitality,
-            isArchived: false,
-            identityTags: ['anchor', 'onboarding'], // Tag for limit bypass
-          );
-
-          try {
-            await dashboardNotifier.createHabitOptimistic(anchorHabit);
-            createdAnchorMap[anchorSuggestion.id] = realAnchorHabitId;
-
-            // Log activity
-            final userStatsRepo = ref.read(userStatsRepositoryProvider);
-            await userStatsRepo.logActivity(
-              userId: user.id,
-              type: 'habit_created',
-              habitId: realAnchorHabitId,
-              sourceId: 'onboarding',
-              date: DateTime.now(),
-            );
-          } catch (e) {
-            AppLogger.e('Failed to create anchor habit', e, StackTrace.current);
-          }
+        final lowerAnchor = anchorText.toLowerCase();
+        if (lowerAnchor.contains('wake') || lowerAnchor.contains('morning')) {
+          tdp = TimeOfDayPreference.morning;
+          reminderTime = const TimeOfDay(hour: 8, minute: 0);
+        } else if (lowerAnchor.contains('lunch') ||
+            lowerAnchor.contains('afternoon')) {
+          tdp = TimeOfDayPreference.afternoon;
+          reminderTime = const TimeOfDay(hour: 12, minute: 0);
+        } else if (lowerAnchor.contains('bed') ||
+            lowerAnchor.contains('evening') ||
+            lowerAnchor.contains('night')) {
+          tdp = TimeOfDayPreference.evening;
+          reminderTime = const TimeOfDay(hour: 21, minute: 0);
+        } else if (lowerAnchor.contains('work')) {
+          // Explicitly map After work to Evening as requested
+          tdp = TimeOfDayPreference.evening;
+          reminderTime = const TimeOfDay(hour: 18, minute: 0);
         }
 
-        // 2. Create Stack Habit linked to Anchor
+        // Map attribute based on archetype for consistent coloring
+        HabitAttribute attribute = HabitAttribute.vitality;
+        final archetype = state.selectedArchetype ?? UserArchetype.athlete;
+        switch (archetype) {
+          case UserArchetype.athlete:
+            attribute = HabitAttribute.vitality;
+            break;
+          case UserArchetype.scholar:
+            attribute = HabitAttribute.focus;
+            break;
+          case UserArchetype.creator:
+            attribute = HabitAttribute.creativity;
+            break;
+          case UserArchetype.stoic:
+            attribute = HabitAttribute.focus;
+            break;
+          case UserArchetype.zealot:
+            attribute = HabitAttribute.spirit;
+            break;
+          default:
+            attribute = HabitAttribute.vitality;
+        }
+
+        // Create the Habit linked to the anchor text (cue)
+        // We do NOT create a separate habit for the anchor itself as it's an existing routine
         final newHabit = Habit(
           id: const Uuid().v4(),
           userId: user!.id,
-          title: stack.habitId,
-          cue: 'After I ${anchorSuggestion.title}',
-          anchorHabitId: realAnchorHabitId,
+          title: stack
+              .habitId, // This is now the description/action from FirstHabitScreen
+          cue: 'After I $anchorText',
           createdAt: DateTime.now(),
           difficulty: HabitDifficulty.easy,
           impact: HabitImpact.positive,
-          attribute: HabitAttribute.vitality,
+          attribute: attribute,
           contractActive: false,
           isArchived: false,
+          timeOfDayPreference: tdp,
+          reminderTime: reminderTime,
           identityTags: ['onboarding'], // Tag for limit bypass
         );
 
@@ -332,11 +336,15 @@ class OnboardingController extends _$OnboardingController {
             userId: user.id,
             type: 'habit_created',
             habitId: newHabit.id,
-            sourceId: 'onboarding_stack',
+            sourceId: 'onboarding',
             date: DateTime.now(),
           );
         } catch (e) {
-          AppLogger.e('Failed to create stacked habit', e, StackTrace.current);
+          AppLogger.e(
+            'Failed to create onboarding habit',
+            e,
+            StackTrace.current,
+          );
         }
       }
 

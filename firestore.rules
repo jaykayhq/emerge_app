@@ -92,7 +92,7 @@ service cloud.firestore {
 
     // Helper to validate gamification stats data written by the client or Cloud Functions
     function isValidStats(data) {
-      return data.keys().size() <= 25 &&
+      return data.keys().size() <= 35 &&
              // Numeric fields must be numbers if present
              (!data.keys().hasAny(['totalXp']) || data.totalXp is number) &&
              (!data.keys().hasAny(['level']) || data.level is number) &&
@@ -103,8 +103,16 @@ service cloud.firestore {
              (!data.keys().hasAny(['creativityXp']) || data.creativityXp is number) &&
              (!data.keys().hasAny(['focusXp']) || data.focusXp is number) &&
              (!data.keys().hasAny(['spiritXp']) || data.spiritXp is number) &&
+             (!data.keys().hasAny(['completedChallenges']) || data.completedChallenges is number) &&
+             (!data.keys().hasAny(['completedContracts']) || data.completedContracts is number) &&
+             (!data.keys().hasAny(['successfulReferrals']) || data.successfulReferrals is number) &&
              // Boolean fields must be booleans if present
-             (!data.keys().hasAny(['hasEmerged']) || data.hasEmerged is bool);
+             (!data.keys().hasAny(['hasEmerged']) || data.hasEmerged is bool) &&
+             // List & String fields for rewards
+             (!data.keys().hasAny(['unlockedRewardIds']) || data.unlockedRewardIds is list) &&
+             (!data.keys().hasAny(['equippedTitleId']) || data.equippedTitleId == null || data.equippedTitleId is string) &&
+             (!data.keys().hasAny(['equippedNameplateId']) || data.equippedNameplateId == null || data.equippedNameplateId is string) &&
+             (!data.keys().hasAny(['equippedEmblemIds']) || data.equippedEmblemIds is list);
     }
 
     // User Stats / Profile (Gamification & Identity)
@@ -160,24 +168,55 @@ service cloud.firestore {
       allow delete: if isAuthenticated() && resource.data.userId == request.auth.uid;
     }
 
-    // Habit Contracts
+    // Habit Contracts (Social Contracts between partners)
     match /contracts/{contractId} {
+      // Both the contract owner and partner can read
+      allow read: if isAuthenticated() && 
+                 (resource.data.userId == request.auth.uid || resource.data.partnerId == request.auth.uid);
       allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid;
-      allow read, update, delete: if isAuthenticated() && resource.data.userId == request.auth.uid;
+      // Both sides can update (e.g., mark missed days)
+      allow update: if isAuthenticated() && 
+                   (resource.data.userId == request.auth.uid || resource.data.partnerId == request.auth.uid);
+      allow delete: if isAuthenticated() && resource.data.userId == request.auth.uid;
     }
 
-    // Tribes (Community)
+    // Tribes / Archetype Clubs (fixed, not user-created)
     match /tribes/{tribeId} {
       allow read: if isAuthenticated();
-      allow create: if isAuthenticated() && resource.data.ownerId == request.auth.uid;
-      allow update: if isAuthenticated() && resource.data.ownerId == request.auth.uid;
-      allow delete: if isAuthenticated() && resource.data.ownerId == request.auth.uid; 
+      // Only admin/Cloud Functions can create or delete clubs
+      allow create, delete: if false;
+      // Members can join/leave (updates members array)
       allow update: if isAuthenticated();
-      
+
       match /members/{memberId} {
         allow read: if isAuthenticated();
         allow write: if isOwner(memberId);
       }
+
+      // Club contributor stats
+      match /contributors/{contributorId} {
+        allow read: if isAuthenticated();
+        allow write: if isOwner(contributorId);
+      }
+
+      // Club activity feed
+      match /activity/{activityId} {
+        allow read: if isAuthenticated();
+        allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid;
+      }
+    }
+
+    // Partner Requests (Accountability Partner invitations)
+    match /partner_requests/{requestId} {
+      // Sender can create
+      allow create: if isAuthenticated() && request.resource.data.senderId == request.auth.uid;
+      // Both sender and receiver can read
+      allow read: if isAuthenticated() && 
+                 (resource.data.senderId == request.auth.uid || resource.data.receiverId == request.auth.uid);
+      // Receiver can accept/reject (update status)
+      allow update: if isAuthenticated() && resource.data.receiverId == request.auth.uid;
+      // Sender can cancel (delete)
+      allow delete: if isAuthenticated() && resource.data.senderId == request.auth.uid;
     }
 
     // Challenges
