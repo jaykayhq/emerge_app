@@ -15,6 +15,14 @@ class UserStats extends Equatable {
   final int totalReferralXpEarned; // XP from referrals
   final List<String> referredUserIds; // Users they referred
 
+  // Reward tracking fields
+  final List<String> unlockedRewardIds; // All earned/purchased reward IDs
+  final String? equippedTitleId; // Currently active title
+  final String? equippedNameplateId; // Currently active nameplate
+  final List<String> equippedEmblemIds; // Currently displayed emblems (max 3)
+  final int completedChallenges; // For challenge-based reward unlocks
+  final int completedContracts; // For contract-based reward unlocks
+
   const UserStats({
     required this.userId,
     this.currentXp = 0,
@@ -28,6 +36,13 @@ class UserStats extends Equatable {
     this.successfulReferrals = 0,
     this.totalReferralXpEarned = 0,
     this.referredUserIds = const [],
+    // Reward fields with defaults
+    this.unlockedRewardIds = const [],
+    this.equippedTitleId,
+    this.equippedNameplateId,
+    this.equippedEmblemIds = const [],
+    this.completedChallenges = 0,
+    this.completedContracts = 0,
   });
 
   static const empty = UserStats(userId: '');
@@ -45,6 +60,13 @@ class UserStats extends Equatable {
     int? successfulReferrals,
     int? totalReferralXpEarned,
     List<String>? referredUserIds,
+    // Reward fields
+    List<String>? unlockedRewardIds,
+    String? equippedTitleId,
+    String? equippedNameplateId,
+    List<String>? equippedEmblemIds,
+    int? completedChallenges,
+    int? completedContracts,
   }) {
     return UserStats(
       userId: userId ?? this.userId,
@@ -60,6 +82,13 @@ class UserStats extends Equatable {
       totalReferralXpEarned:
           totalReferralXpEarned ?? this.totalReferralXpEarned,
       referredUserIds: referredUserIds ?? this.referredUserIds,
+      // Reward fields
+      unlockedRewardIds: unlockedRewardIds ?? this.unlockedRewardIds,
+      equippedTitleId: equippedTitleId ?? this.equippedTitleId,
+      equippedNameplateId: equippedNameplateId ?? this.equippedNameplateId,
+      equippedEmblemIds: equippedEmblemIds ?? this.equippedEmblemIds,
+      completedChallenges: completedChallenges ?? this.completedChallenges,
+      completedContracts: completedContracts ?? this.completedContracts,
     );
   }
 
@@ -77,5 +106,12 @@ class UserStats extends Equatable {
     successfulReferrals,
     totalReferralXpEarned,
     referredUserIds,
+    // Reward fields
+    unlockedRewardIds,
+    equippedTitleId,
+    equippedNameplateId,
+    equippedEmblemIds,
+    completedChallenges,
+    completedContracts,
   ];
 }

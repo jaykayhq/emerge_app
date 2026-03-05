@@ -27,15 +27,11 @@ void main() {
       final result = await habitRepository.createHabit(testHabit);
       expect(result.isRight(), true);
 
-      final habitsStream = habitRepository.watchHabits('123');
-      expect(
-        habitsStream,
-        emits(
-          predicate<List<Habit>>(
-            (list) => list.any((h) => h.id == testHabit.id),
-          ),
-        ),
-      );
+      // Verify the habit was added by getting it directly
+      final retrievedHabit = await habitRepository.getHabit(testHabit.id);
+      expect(retrievedHabit, isNotNull);
+      expect(retrievedHabit?.id, testHabit.id);
+      expect(retrievedHabit?.title, 'Test Habit');
     });
 
     test('updateHabit updates existing habit', () async {

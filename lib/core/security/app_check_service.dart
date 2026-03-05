@@ -19,13 +19,19 @@ class AppCheckService {
     try {
       // Configure App Check based on platform and build mode
       if (kIsWeb) {
-        // Web mode: ReCaptcha V3 is the standard provider
-        // site key must be obtained from Firebase Console
-        await appCheck.activate(
-          webProvider: ReCaptchaV3Provider(
-            '6LdW940qAAAAAI33f-i5v5y5v5v5v5v5v5v5v5v',
-          ),
-        );
+        if (kDebugMode) {
+          debugPrint(
+            '🐛 Web Debug Mode: Skipping Firebase App Check to avoid ReCAPTCHA localhost errors',
+          );
+        } else {
+          // Web mode: ReCaptcha V3 is the standard provider
+          // site key must be obtained from Firebase Console
+          await appCheck.activate(
+            webProvider: ReCaptchaV3Provider(
+              '6LdW940qAAAAAI33f-i5v5y5v5v5v5v5v5v5v5v',
+            ),
+          );
+        }
       } else if (kDebugMode) {
         // Debug mode: Use DebugProvider for development
         await appCheck.activate(

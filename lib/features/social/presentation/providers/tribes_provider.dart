@@ -7,7 +7,31 @@ final tribeRepositoryProvider = Provider<TribeRepository>((ref) {
   return FirestoreTribeRepository(FirebaseFirestore.instance);
 });
 
-final tribesProvider = FutureProvider<List<Tribe>>((ref) {
+/// The user's archetype club — auto-joined based on their archetype.
+final userClubProvider = FutureProvider.family<Tribe?, String>((
+  ref,
+  archetypeId,
+) {
   final repository = ref.watch(tribeRepositoryProvider);
-  return repository.getTribes();
+  return repository.getArchetypeClub(archetypeId);
 });
+
+/// All official archetype clubs.
+final allArchetypeClubsProvider = FutureProvider<List<Tribe>>((ref) {
+  final repository = ref.watch(tribeRepositoryProvider);
+  return repository.getArchetypeClubs();
+});
+
+/// Top contributors for a given club.
+final clubContributorsProvider =
+    FutureProvider.family<List<Map<String, dynamic>>, String>((ref, tribeId) {
+      final repository = ref.watch(tribeRepositoryProvider);
+      return repository.getClubContributors(tribeId);
+    });
+
+/// Activity feed for a given club.
+final clubActivityProvider =
+    FutureProvider.family<List<Map<String, dynamic>>, String>((ref, tribeId) {
+      final repository = ref.watch(tribeRepositoryProvider);
+      return repository.getClubActivity(tribeId);
+    });

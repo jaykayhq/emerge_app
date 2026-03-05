@@ -4,6 +4,8 @@ import 'package:emerge_app/features/auth/presentation/providers/auth_providers.d
 import 'package:emerge_app/features/social/data/services/referral_service.dart';
 import 'package:emerge_app/features/social/domain/entities/social_entities.dart';
 import 'package:emerge_app/features/social/presentation/providers/friend_provider.dart';
+import 'package:emerge_app/features/monetization/presentation/providers/contract_provider.dart';
+import 'package:emerge_app/features/monetization/domain/entities/habit_contract.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -11,7 +13,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
 import 'package:share_plus/share_plus.dart';
 
-/// Friends Screen - Exact Stitch Design Match
+/// Friends Screen - Accountability Partners
 class FriendsScreen extends ConsumerStatefulWidget {
   const FriendsScreen({super.key});
 
@@ -30,7 +32,7 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final friendsAsync = ref.watch(friendsListProvider);
+    final friendsAsync = ref.watch(partnersListProvider);
 
     return Scaffold(
       backgroundColor: EmergeColors.background,
@@ -47,7 +49,7 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       const Text(
-                        'FRIENDS',
+                        'PARTNERS',
                         style: TextStyle(
                           fontSize: 24,
                           fontWeight: FontWeight.bold,
@@ -106,7 +108,7 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen> {
                               fontSize: 14,
                             ),
                             decoration: InputDecoration(
-                              hintText: 'Find a cosmic ally...',
+                              hintText: 'Find a partner...',
                               hintStyle: TextStyle(
                                 color: AppTheme.textSecondaryDark,
                                 fontSize: 14,
@@ -127,17 +129,22 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen> {
 
               const SliverToBoxAdapter(child: Gap(24)),
 
-              // Online Orbits Section
-              SliverToBoxAdapter(child: _OnlineOrbitsSection()),
+              // Active Partners Section
+              SliverToBoxAdapter(child: _ActivePartnersSection()),
 
               const SliverToBoxAdapter(child: Gap(24)),
 
-              // Cosmic Invites Section
-              SliverToBoxAdapter(child: _CosmicInvitesSection()),
+              // Partner Requests Section
+              SliverToBoxAdapter(child: _PartnerRequestsSection()),
 
               const SliverToBoxAdapter(child: Gap(24)),
 
-              // Your Constellation Section
+              // Active Contracts Section
+              SliverToBoxAdapter(child: _ActiveContractsSection()),
+
+              const SliverToBoxAdapter(child: Gap(24)),
+
+              // Your Accountability Circle Section
               SliverToBoxAdapter(
                 child: Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -145,7 +152,7 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       const Text(
-                        'Your Constellation',
+                        'Your Accountability Circle',
                         style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
@@ -166,15 +173,59 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen> {
 
               const SliverToBoxAdapter(child: Gap(16)),
 
-              // Friends List
+              // Partners List
               friendsAsync.when(
-                data: (friends) => SliverList(
-                  delegate: SliverChildBuilderDelegate(
-                    (context, index) =>
-                        _ConstellationFriendCard(friend: friends[index]),
-                    childCount: friends.length,
-                  ),
-                ),
+                data: (friends) => friends.isEmpty
+                    ? SliverToBoxAdapter(
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 16),
+                          child: Container(
+                            padding: const EdgeInsets.all(32),
+                            decoration: BoxDecoration(
+                              color: EmergeColors.glassWhite,
+                              borderRadius: BorderRadius.circular(16),
+                              border: Border.all(
+                                color: EmergeColors.glassBorder,
+                              ),
+                            ),
+                            child: Column(
+                              children: [
+                                Icon(
+                                  Icons.people_outline,
+                                  size: 48,
+                                  color: AppTheme.textSecondaryDark.withValues(
+                                    alpha: 0.5,
+                                  ),
+                                ),
+                                const Gap(16),
+                                Text(
+                                  'No accountability partners yet',
+                                  style: TextStyle(
+                                    color: AppTheme.textSecondaryDark,
+                                    fontSize: 14,
+                                  ),
+                                ),
+                                const Gap(4),
+                                Text(
+                                  'Invite someone to hold you accountable!',
+                                  style: TextStyle(
+                                    color: AppTheme.textSecondaryDark
+                                        .withValues(alpha: 0.5),
+                                    fontSize: 12,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      )
+                    : SliverList(
+                        delegate: SliverChildBuilderDelegate(
+                          (context, index) =>
+                              _PartnerCard(friend: friends[index]),
+                          childCount: friends.length,
+                        ),
+                      ),
                 loading: () => const SliverToBoxAdapter(
                   child: Center(
                     child: CircularProgressIndicator(color: EmergeColors.teal),
@@ -183,17 +234,12 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen> {
                 error: (_, __) => const SliverToBoxAdapter(
                   child: Center(
                     child: Text(
-                      'Failed to load friends',
+                      'Failed to load partners',
                       style: TextStyle(color: Colors.white),
                     ),
                   ),
                 ),
               ),
-
-              const SliverToBoxAdapter(child: Gap(24)),
-
-              // Aligned Orbits Section
-              SliverToBoxAdapter(child: _AlignedOrbitsSection()),
 
               const SliverToBoxAdapter(child: Gap(100)),
             ],
@@ -209,7 +255,7 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen> {
 
     if (user == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please sign in to invite friends')),
+        const SnackBar(content: Text('Please sign in to invite partners')),
       );
       return;
     }
@@ -230,7 +276,6 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen> {
           padding: const EdgeInsets.all(24),
           child: Column(
             children: [
-              // Drag handle
               Container(
                 width: 40,
                 height: 4,
@@ -240,10 +285,8 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen> {
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
-
-              // Title
               const Text(
-                'Invite Friends',
+                'Invite Partners',
                 style: TextStyle(
                   fontSize: 24,
                   fontWeight: FontWeight.bold,
@@ -252,11 +295,10 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen> {
               ),
               const Gap(8),
               Text(
-                'Earn 500 XP for each friend who joins!',
+                'Earn 500 XP for each partner who joins!',
                 style: TextStyle(fontSize: 14, color: EmergeColors.teal),
               ),
               const Gap(24),
-
               Expanded(
                 child: SingleChildScrollView(
                   controller: scrollController,
@@ -294,7 +336,6 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen> {
                                 const Gap(8),
                                 GestureDetector(
                                   onTap: () async {
-                                    // Copy referral code to clipboard
                                     final messenger = ScaffoldMessenger.of(
                                       context,
                                     );
@@ -349,7 +390,6 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen> {
                             ),
                           ),
                           const Gap(16),
-
                           // Stats Row
                           Row(
                             children: [
@@ -379,7 +419,6 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen> {
                             ],
                           ),
                           const Gap(24),
-
                           // Share Button
                           GestureDetector(
                             onTap: () {
@@ -423,8 +462,7 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen> {
                             ),
                           ),
                           const Gap(24),
-
-                          // Reward Preview
+                          // Reward Milestones
                           Container(
                             padding: const EdgeInsets.all(16),
                             decoration: BoxDecoration(
@@ -462,7 +500,7 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen> {
                                 const Gap(8),
                                 _MilestoneRow(
                                   count: 5,
-                                  reward: 'Unlock Tribe Creation',
+                                  reward: 'Exclusive Title',
                                   achieved: totalReferrals >= 5,
                                 ),
                                 const Gap(8),
@@ -513,7 +551,7 @@ class _ReferralStatCard extends StatelessWidget {
       child: Column(
         children: [
           Icon(icon, color: EmergeColors.teal, size: 20),
-          const Gap(4),
+          const Gap(6),
           Text(
             value,
             style: const TextStyle(
@@ -522,7 +560,11 @@ class _ReferralStatCard extends StatelessWidget {
               color: Colors.white,
             ),
           ),
-          Text(label, style: TextStyle(fontSize: 10, color: Colors.white54)),
+          const Gap(2),
+          Text(
+            label,
+            style: TextStyle(fontSize: 11, color: AppTheme.textSecondaryDark),
+          ),
         ],
       ),
     );
@@ -545,147 +587,28 @@ class _MilestoneRow extends StatelessWidget {
     return Row(
       children: [
         Container(
-          width: 32,
-          height: 32,
+          width: 24,
+          height: 24,
           decoration: BoxDecoration(
+            shape: BoxShape.circle,
             color: achieved ? EmergeColors.teal : EmergeColors.glassWhite,
-            borderRadius: BorderRadius.circular(8),
             border: Border.all(
               color: achieved ? EmergeColors.teal : EmergeColors.glassBorder,
             ),
           ),
-          child: Center(
-            child: Text(
-              '$count',
-              style: TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.bold,
-                color: achieved ? Colors.white : Colors.white54,
-              ),
-            ),
-          ),
+          child: achieved
+              ? const Icon(Icons.check, size: 14, color: Colors.white)
+              : null,
         ),
         const Gap(12),
         Expanded(
           child: Text(
-            reward,
+            '$count Referrals — $reward',
             style: TextStyle(
               fontSize: 13,
-              color: achieved ? Colors.white : Colors.white54,
+              color: achieved ? Colors.white : AppTheme.textSecondaryDark,
+              fontWeight: achieved ? FontWeight.bold : FontWeight.normal,
             ),
-          ),
-        ),
-        if (achieved)
-          Icon(Icons.check_circle, color: EmergeColors.teal, size: 20)
-        else
-          Icon(Icons.lock, color: Colors.white24, size: 20),
-      ],
-    );
-  }
-}
-
-// ============ ONLINE ORBITS ============
-
-class _OnlineOrbitsSection extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    final onlineUsers = [
-      {'name': 'Kora', 'initial': 'K'},
-      {'name': 'Jax', 'initial': 'J'},
-      {'name': 'Elara', 'initial': 'E'},
-      {'name': 'Vex', 'initial': 'V'},
-      {'name': 'Luna', 'initial': 'L'},
-    ];
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          child: Text(
-            'ONLINE ORBITS',
-            style: TextStyle(
-              fontSize: 11,
-              fontWeight: FontWeight.w600,
-              color: AppTheme.textSecondaryDark,
-              letterSpacing: 1.2,
-            ),
-          ),
-        ),
-        const Gap(12),
-        SizedBox(
-          height: 80,
-          child: ListView.builder(
-            scrollDirection: Axis.horizontal,
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            itemCount: onlineUsers.length,
-            itemBuilder: (context, index) {
-              final user = onlineUsers[index];
-              return Padding(
-                padding: const EdgeInsets.only(right: 20),
-                child: Column(
-                  children: [
-                    // Avatar with online indicator
-                    Stack(
-                      children: [
-                        Container(
-                          width: 52,
-                          height: 52,
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            gradient: LinearGradient(
-                              colors: [
-                                EmergeColors.violet.withValues(alpha: 0.6),
-                                EmergeColors.teal.withValues(alpha: 0.4),
-                              ],
-                            ),
-                            border: Border.all(
-                              color: EmergeColors.glassBorder,
-                              width: 2,
-                            ),
-                          ),
-                          child: Center(
-                            child: Text(
-                              user['initial']!,
-                              style: const TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.white,
-                              ),
-                            ),
-                          ),
-                        ),
-                        // Online dot
-                        Positioned(
-                          right: 2,
-                          bottom: 2,
-                          child: Container(
-                            width: 12,
-                            height: 12,
-                            decoration: BoxDecoration(
-                              color: const Color(0xFF4ADE80),
-                              shape: BoxShape.circle,
-                              border: Border.all(
-                                color: EmergeColors.background,
-                                width: 2,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                    const Gap(6),
-                    Text(
-                      user['name']!,
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: AppTheme.textSecondaryDark,
-                      ),
-                    ),
-                  ],
-                ),
-              ).animate().fadeIn(delay: (index * 60).ms);
-            },
           ),
         ),
       ],
@@ -693,79 +616,240 @@ class _OnlineOrbitsSection extends StatelessWidget {
   }
 }
 
-// ============ COSMIC INVITES ============
+// ============ ACTIVE PARTNERS (Firestore) ============
 
-class _CosmicInvitesSection extends StatelessWidget {
+class _ActivePartnersSection extends ConsumerWidget {
   @override
-  Widget build(BuildContext context) {
-    final invites = [
-      {'name': 'Nebula_Nine', 'archetype': 'The Meditator', 'level': 6},
-      {'name': 'Orion_Pax', 'archetype': 'The Runner', 'level': 8},
-    ];
+  Widget build(BuildContext context, WidgetRef ref) {
+    final onlineAsync = ref.watch(onlinePartnersProvider);
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          child: Row(
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               const Text(
-                'Cosmic Invites',
+                'Active Partners',
                 style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
                   color: Colors.white,
                 ),
               ),
-              const Gap(8),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
-                  color: EmergeColors.violet.withValues(alpha: 0.3),
-                  borderRadius: BorderRadius.circular(10),
+                  color: EmergeColors.teal.withValues(alpha: 0.2),
+                  borderRadius: BorderRadius.circular(8),
                 ),
-                child: Text(
-                  invites.length.toString(),
-                  style: const TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
+                child: onlineAsync.when(
+                  data: (partners) => Text(
+                    '${partners.where((f) => f.isOnline).length} Online',
+                    style: const TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.bold,
+                      color: EmergeColors.teal,
+                    ),
+                  ),
+                  loading: () => const Text(
+                    '...',
+                    style: TextStyle(fontSize: 11, color: EmergeColors.teal),
+                  ),
+                  error: (_, __) => const Text(
+                    '0 Online',
+                    style: TextStyle(fontSize: 11, color: EmergeColors.teal),
                   ),
                 ),
               ),
             ],
           ),
-        ),
-        const Gap(12),
-        ...invites.map(
-          (invite) => _InviteCard(
-            name: invite['name'] as String,
-            archetype: invite['archetype'] as String,
-            level: invite['level'] as int,
+          const Gap(16),
+          onlineAsync.when(
+            data: (partners) {
+              if (partners.isEmpty) {
+                return Container(
+                  padding: const EdgeInsets.all(24),
+                  decoration: BoxDecoration(
+                    color: EmergeColors.glassWhite,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: EmergeColors.glassBorder),
+                  ),
+                  child: const Center(
+                    child: Text(
+                      'No partners yet — invite someone!',
+                      style: TextStyle(color: Colors.white54, fontSize: 13),
+                    ),
+                  ),
+                );
+              }
+              return SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: Row(
+                  children: partners.map((partner) {
+                    return Container(
+                      margin: const EdgeInsets.only(right: 16),
+                      child: Column(
+                        children: [
+                          Stack(
+                            children: [
+                              Container(
+                                width: 56,
+                                height: 56,
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  gradient: LinearGradient(
+                                    colors: partner.isOnline
+                                        ? [
+                                            EmergeColors.teal,
+                                            EmergeColors.violet,
+                                          ]
+                                        : [
+                                            EmergeColors.glassBorder,
+                                            EmergeColors.glassBorder,
+                                          ],
+                                  ),
+                                ),
+                                child: Container(
+                                  margin: const EdgeInsets.all(3),
+                                  decoration: BoxDecoration(
+                                    shape: BoxShape.circle,
+                                    color: EmergeColors.background,
+                                  ),
+                                  child: Center(
+                                    child: Text(
+                                      partner.name.isNotEmpty
+                                          ? partner.name[0].toUpperCase()
+                                          : '?',
+                                      style: const TextStyle(
+                                        fontSize: 20,
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              if (partner.isOnline)
+                                Positioned(
+                                  right: 0,
+                                  bottom: 0,
+                                  child: Container(
+                                    width: 14,
+                                    height: 14,
+                                    decoration: BoxDecoration(
+                                      shape: BoxShape.circle,
+                                      color: EmergeColors.teal,
+                                      border: Border.all(
+                                        color: EmergeColors.background,
+                                        width: 2,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                            ],
+                          ),
+                          const Gap(6),
+                          Text(
+                            partner.name.split(' ').first,
+                            style: const TextStyle(
+                              fontSize: 11,
+                              color: Colors.white70,
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
+                  }).toList(),
+                ),
+              );
+            },
+            loading: () => const SizedBox(
+              height: 70,
+              child: Center(
+                child: CircularProgressIndicator(
+                  color: EmergeColors.teal,
+                  strokeWidth: 2,
+                ),
+              ),
+            ),
+            error: (_, __) => const SizedBox.shrink(),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }
 
-class _InviteCard extends StatelessWidget {
-  final String name;
-  final String archetype;
-  final int level;
+// ============ PARTNER REQUESTS (Firestore) ============
 
-  const _InviteCard({
-    required this.name,
-    required this.archetype,
-    required this.level,
-  });
+class _PartnerRequestsSection extends ConsumerWidget {
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final requestsAsync = ref.watch(pendingPartnerRequestsProvider);
+
+    return requestsAsync.when(
+      data: (requests) {
+        if (requests.isEmpty) return const SizedBox.shrink();
+        return Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  const Text(
+                    'Partner Requests',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                  ),
+                  const Gap(8),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 2,
+                    ),
+                    decoration: BoxDecoration(
+                      color: EmergeColors.coral,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Text(
+                      '${requests.length}',
+                      style: const TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const Gap(12),
+              ...requests.map((req) => _PartnerRequestCard(request: req)),
+            ],
+          ),
+        );
+      },
+      loading: () => const SizedBox.shrink(),
+      error: (_, __) => const SizedBox.shrink(),
+    );
+  }
+}
+
+class _PartnerRequestCard extends ConsumerWidget {
+  final PartnerRequest request;
+  const _PartnerRequestCard({required this.request});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return Container(
-      margin: const EdgeInsets.fromLTRB(16, 0, 16, 8),
-      padding: const EdgeInsets.all(12),
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: EmergeColors.glassWhite,
         borderRadius: BorderRadius.circular(12),
@@ -773,47 +857,44 @@ class _InviteCard extends StatelessWidget {
       ),
       child: Row(
         children: [
-          // Avatar
           Container(
             width: 44,
             height: 44,
-            decoration: BoxDecoration(
+            decoration: const BoxDecoration(
               shape: BoxShape.circle,
               gradient: LinearGradient(
-                colors: [
-                  EmergeColors.violet.withValues(alpha: 0.6),
-                  EmergeColors.teal.withValues(alpha: 0.4),
-                ],
+                colors: [EmergeColors.violet, EmergeColors.teal],
               ),
             ),
             child: Center(
               child: Text(
-                name[0],
+                request.senderName.isNotEmpty
+                    ? request.senderName[0].toUpperCase()
+                    : '?',
                 style: const TextStyle(
-                  fontSize: 16,
                   fontWeight: FontWeight.bold,
                   color: Colors.white,
+                  fontSize: 18,
                 ),
               ),
             ),
           ),
           const Gap(12),
-
-          // Info
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  name,
+                  request.senderName,
                   style: const TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.bold,
                     color: Colors.white,
                   ),
                 ),
+                const Gap(2),
                 Text(
-                  '$archetype • Lvl $level',
+                  'Level ${request.senderLevel} • ${request.senderArchetype}',
                   style: TextStyle(
                     fontSize: 12,
                     color: AppTheme.textSecondaryDark,
@@ -822,40 +903,239 @@ class _InviteCard extends StatelessWidget {
               ],
             ),
           ),
-
-          // Decline button
           GestureDetector(
-            onTap: () {},
+            onTap: () async {
+              await ref
+                  .read(friendRepositoryProvider)
+                  .acceptPartnerRequest(request.id);
+              ref.invalidate(pendingPartnerRequestsProvider);
+              ref.invalidate(partnersListProvider);
+            },
             child: Container(
-              width: 32,
-              height: 32,
-              margin: const EdgeInsets.only(right: 8),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
               decoration: BoxDecoration(
-                color: EmergeColors.coral.withValues(alpha: 0.2),
-                shape: BoxShape.circle,
-              ),
-              child: Icon(Icons.close, size: 16, color: EmergeColors.coral),
-            ),
-          ),
-
-          // Accept button
-          GestureDetector(
-            onTap: () {},
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              decoration: BoxDecoration(
-                border: Border.all(color: EmergeColors.teal),
+                color: EmergeColors.teal,
                 borderRadius: BorderRadius.circular(8),
               ),
               child: const Text(
                 'Accept',
                 style: TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w600,
-                  color: EmergeColors.teal,
+                  fontSize: 12,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
                 ),
               ),
             ),
+          ),
+          const Gap(8),
+          GestureDetector(
+            onTap: () async {
+              await ref
+                  .read(friendRepositoryProvider)
+                  .rejectPartnerRequest(request.id);
+              ref.invalidate(pendingPartnerRequestsProvider);
+            },
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              decoration: BoxDecoration(
+                border: Border.all(color: EmergeColors.glassBorder),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: const Text(
+                'Decline',
+                style: TextStyle(fontSize: 12, color: Colors.white54),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ============ ACTIVE CONTRACTS (Social Contracts) ============
+
+class _ActiveContractsSection extends ConsumerWidget {
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final contractsAsync = ref.watch(activeOnlyContractsProvider);
+
+    return contractsAsync.when(
+      data: (contracts) {
+        if (contracts.isEmpty) return const SizedBox.shrink();
+        return Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  const Icon(
+                    Icons.handshake,
+                    size: 18,
+                    color: EmergeColors.yellow,
+                  ),
+                  const Gap(8),
+                  const Text(
+                    'Active Contracts',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                  ),
+                  const Spacer(),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 2,
+                    ),
+                    decoration: BoxDecoration(
+                      color: EmergeColors.yellow.withValues(alpha: 0.2),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Text(
+                      '${contracts.length}',
+                      style: const TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.bold,
+                        color: EmergeColors.yellow,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const Gap(12),
+              ...contracts.map((contract) => _ContractCard(contract: contract)),
+            ],
+          ),
+        );
+      },
+      loading: () => const SizedBox.shrink(),
+      error: (_, __) => const SizedBox.shrink(),
+    );
+  }
+}
+
+class _ContractCard extends StatelessWidget {
+  final HabitContract contract;
+  const _ContractCard({required this.contract});
+
+  @override
+  Widget build(BuildContext context) {
+    final progress = contract.totalDays > 0
+        ? (contract.totalDays - contract.missedDays) / contract.totalDays
+        : 1.0;
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: EmergeColors.glassWhite,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: EmergeColors.glassBorder),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 36,
+                height: 36,
+                decoration: BoxDecoration(
+                  color: EmergeColors.yellow.withValues(alpha: 0.2),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.description,
+                  size: 18,
+                  color: EmergeColors.yellow,
+                ),
+              ),
+              const Gap(10),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      contract.habitName,
+                      style: const TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                    ),
+                    Text(
+                      'with ${contract.partnerName ?? contract.partnerEmail}',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: AppTheme.textSecondaryDark,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Text(
+                    '\$${contract.penaltyAmount.toStringAsFixed(0)}',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: contract.missedDays > 0
+                          ? EmergeColors.coral
+                          : EmergeColors.teal,
+                    ),
+                  ),
+                  Text(
+                    'at stake',
+                    style: TextStyle(
+                      fontSize: 10,
+                      color: AppTheme.textSecondaryDark,
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+          const Gap(10),
+          // Progress bar
+          ClipRRect(
+            borderRadius: BorderRadius.circular(4),
+            child: LinearProgressIndicator(
+              value: progress.clamp(0.0, 1.0),
+              backgroundColor: EmergeColors.glassWhite,
+              valueColor: AlwaysStoppedAnimation<Color>(
+                contract.missedDays > 2
+                    ? EmergeColors.coral
+                    : EmergeColors.teal,
+              ),
+              minHeight: 6,
+            ),
+          ),
+          const Gap(6),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                '${contract.totalDays - contract.missedDays}/${contract.totalDays} days complete',
+                style: TextStyle(
+                  fontSize: 11,
+                  color: AppTheme.textSecondaryDark,
+                ),
+              ),
+              if (contract.missedDays > 0)
+                Text(
+                  '${contract.missedDays} missed',
+                  style: const TextStyle(
+                    fontSize: 11,
+                    color: EmergeColors.coral,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+            ],
           ),
         ],
       ),
@@ -863,23 +1143,25 @@ class _InviteCard extends StatelessWidget {
   }
 }
 
-// ============ CONSTELLATION FRIEND CARD ============
+// ============ PARTNER CARD ============
 
-class _ConstellationFriendCard extends StatelessWidget {
+class _PartnerCard extends StatelessWidget {
   final Friend friend;
 
-  const _ConstellationFriendCard({required this.friend});
+  const _PartnerCard({required this.friend});
 
   String _archetypeDisplay() {
     switch (friend.archetype) {
       case FriendArchetype.athlete:
-        return 'The Runner';
+        return 'The Athlete';
       case FriendArchetype.creator:
         return 'The Creator';
       case FriendArchetype.scholar:
         return 'The Scholar';
       case FriendArchetype.stoic:
-        return 'The Architect';
+        return 'The Stoic';
+      case FriendArchetype.zealot:
+        return 'The Zealot';
     }
   }
 
@@ -916,7 +1198,7 @@ class _ConstellationFriendCard extends StatelessWidget {
                     ),
                     child: Center(
                       child: Text(
-                        friend.name[0],
+                        friend.name.isNotEmpty ? friend.name[0] : '?',
                         style: const TextStyle(
                           fontSize: 20,
                           fontWeight: FontWeight.bold,
@@ -925,7 +1207,6 @@ class _ConstellationFriendCard extends StatelessWidget {
                       ),
                     ),
                   ),
-                  // Level badge
                   Positioned(
                     left: -4,
                     bottom: -4,
@@ -955,19 +1236,35 @@ class _ConstellationFriendCard extends StatelessWidget {
                 ],
               ),
               const Gap(14),
-
-              // Name and info
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      friend.name.replaceAll(' ', '_'),
-                      style: const TextStyle(
-                        fontSize: 15,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                      ),
+                    Row(
+                      children: [
+                        Flexible(
+                          child: Text(
+                            friend.name,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                              fontSize: 15,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ),
+                        if (friend.equippedTitle != null) ...[
+                          const Gap(4),
+                          Text(
+                            friend.equippedTitle!,
+                            style: TextStyle(
+                              fontSize: 11,
+                              color: EmergeColors.yellow,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
+                      ],
                     ),
                     const Gap(2),
                     Text(
@@ -975,17 +1272,19 @@ class _ConstellationFriendCard extends StatelessWidget {
                       style: TextStyle(fontSize: 12, color: EmergeColors.teal),
                     ),
                     Text(
-                      'Last seen ${friend.lastSeen}',
+                      friend.isOnline
+                          ? 'Online now'
+                          : 'Last seen ${friend.lastSeen}',
                       style: TextStyle(
                         fontSize: 11,
-                        color: AppTheme.textSecondaryDark,
+                        color: friend.isOnline
+                            ? EmergeColors.teal
+                            : AppTheme.textSecondaryDark,
                       ),
                     ),
                   ],
                 ),
               ),
-
-              // Streak
               Column(
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
@@ -1015,13 +1314,10 @@ class _ConstellationFriendCard extends StatelessWidget {
               ),
             ],
           ),
-
           const Gap(14),
-
           // Action buttons row
           Row(
             children: [
-              // Nudge button
               Expanded(
                 child: GestureDetector(
                   onTap: () {},
@@ -1031,16 +1327,16 @@ class _ConstellationFriendCard extends StatelessWidget {
                       border: Border.all(color: EmergeColors.glassBorder),
                       borderRadius: BorderRadius.circular(8),
                     ),
-                    child: Row(
+                    child: const Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        const Icon(
+                        Icon(
                           Icons.notifications_active,
                           size: 14,
                           color: Colors.white,
                         ),
-                        const Gap(6),
-                        const Text(
+                        Gap(6),
+                        Text(
                           'Nudge',
                           style: TextStyle(fontSize: 13, color: Colors.white),
                         ),
@@ -1050,8 +1346,6 @@ class _ConstellationFriendCard extends StatelessWidget {
                 ),
               ),
               const Gap(10),
-
-              // Challenge button
               Expanded(
                 child: GestureDetector(
                   onTap: () {},
@@ -1061,17 +1355,17 @@ class _ConstellationFriendCard extends StatelessWidget {
                       border: Border.all(color: EmergeColors.teal),
                       borderRadius: BorderRadius.circular(8),
                     ),
-                    child: Row(
+                    child: const Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        const Icon(
-                          Icons.offline_bolt,
+                        Icon(
+                          Icons.handshake,
                           size: 14,
                           color: EmergeColors.teal,
                         ),
-                        const Gap(6),
-                        const Text(
-                          'Challenge',
+                        Gap(6),
+                        Text(
+                          'Contract',
                           style: TextStyle(
                             fontSize: 13,
                             color: EmergeColors.teal,
@@ -1083,8 +1377,6 @@ class _ConstellationFriendCard extends StatelessWidget {
                 ),
               ),
               const Gap(10),
-
-              // Link icon
               Container(
                 width: 40,
                 height: 40,
@@ -1093,143 +1385,12 @@ class _ConstellationFriendCard extends StatelessWidget {
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Icon(
-                  Icons.link,
+                  Icons.more_vert,
                   size: 18,
                   color: AppTheme.textSecondaryDark,
                 ),
               ),
             ],
-          ),
-        ],
-      ),
-    ).animate().fadeIn();
-  }
-}
-
-// ============ ALIGNED ORBITS ============
-
-class _AlignedOrbitsSection extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    final suggestions = [
-      {'name': 'ZenMaster_X', 'reason': 'Does Meditation'},
-      {'name': 'Velocity_V', 'reason': 'Does Running'},
-    ];
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Padding(
-          padding: EdgeInsets.symmetric(horizontal: 16),
-          child: Text(
-            'Aligned Orbits',
-            style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
-              color: Colors.white,
-            ),
-          ),
-        ),
-        const Gap(12),
-        ...suggestions.map(
-          (s) => _SuggestionCard(name: s['name']!, reason: s['reason']!),
-        ),
-      ],
-    );
-  }
-}
-
-class _SuggestionCard extends StatelessWidget {
-  final String name;
-  final String reason;
-
-  const _SuggestionCard({required this.name, required this.reason});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.fromLTRB(16, 0, 16, 8),
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: EmergeColors.glassWhite,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: EmergeColors.glassBorder),
-      ),
-      child: Row(
-        children: [
-          // Avatar
-          Container(
-            width: 44,
-            height: 44,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              gradient: LinearGradient(
-                colors: [
-                  EmergeColors.teal.withValues(alpha: 0.4),
-                  EmergeColors.violet.withValues(alpha: 0.4),
-                ],
-              ),
-            ),
-            child: Center(
-              child: Text(
-                name[0],
-                style: const TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
-                ),
-              ),
-            ),
-          ),
-          const Gap(12),
-
-          // Info
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  name,
-                  style: const TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                  ),
-                ),
-                Row(
-                  children: [
-                    Icon(Icons.bolt, size: 12, color: EmergeColors.teal),
-                    const Gap(4),
-                    Expanded(
-                      child: Text(
-                        reason,
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: AppTheme.textSecondaryDark,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-
-          // Add button
-          Container(
-            width: 36,
-            height: 36,
-            decoration: BoxDecoration(
-              color: EmergeColors.teal.withValues(alpha: 0.2),
-              shape: BoxShape.circle,
-              border: Border.all(color: EmergeColors.teal),
-            ),
-            child: const Icon(
-              Icons.person_add,
-              size: 18,
-              color: EmergeColors.teal,
-            ),
           ),
         ],
       ),
@@ -1257,7 +1418,7 @@ class _FriendsTabContentState extends ConsumerState<FriendsTabContent> {
 
   @override
   Widget build(BuildContext context) {
-    final friendsAsync = ref.watch(friendsListProvider);
+    final friendsAsync = ref.watch(partnersListProvider);
 
     return CustomScrollView(
       slivers: [
@@ -1285,7 +1446,7 @@ class _FriendsTabContentState extends ConsumerState<FriendsTabContent> {
                       controller: _searchController,
                       style: const TextStyle(color: Colors.white, fontSize: 14),
                       decoration: InputDecoration(
-                        hintText: 'Find a cosmic ally...',
+                        hintText: 'Find a partner...',
                         hintStyle: TextStyle(
                           color: AppTheme.textSecondaryDark,
                           fontSize: 14,
@@ -1306,17 +1467,17 @@ class _FriendsTabContentState extends ConsumerState<FriendsTabContent> {
 
         const SliverToBoxAdapter(child: Gap(24)),
 
-        // Online Orbits Section
-        SliverToBoxAdapter(child: _OnlineOrbitsSection()),
+        // Active Partners Section
+        SliverToBoxAdapter(child: _ActivePartnersSection()),
 
         const SliverToBoxAdapter(child: Gap(24)),
 
-        // Cosmic Invites Section
-        SliverToBoxAdapter(child: _CosmicInvitesSection()),
+        // Partner Requests Section
+        SliverToBoxAdapter(child: _PartnerRequestsSection()),
 
         const SliverToBoxAdapter(child: Gap(24)),
 
-        // Your Constellation Section
+        // Your Accountability Circle Section
         SliverToBoxAdapter(
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -1324,7 +1485,7 @@ class _FriendsTabContentState extends ConsumerState<FriendsTabContent> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 const Text(
-                  'Your Constellation',
+                  'Your Accountability Circle',
                   style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
@@ -1342,15 +1503,24 @@ class _FriendsTabContentState extends ConsumerState<FriendsTabContent> {
 
         const SliverToBoxAdapter(child: Gap(16)),
 
-        // Friends List
+        // Partners List
         friendsAsync.when(
-          data: (friends) => SliverList(
-            delegate: SliverChildBuilderDelegate(
-              (context, index) =>
-                  _ConstellationFriendCard(friend: friends[index]),
-              childCount: friends.length,
-            ),
-          ),
+          data: (friends) => friends.isEmpty
+              ? const SliverToBoxAdapter(
+                  child: Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 16),
+                    child: Text(
+                      'No accountability partners yet',
+                      style: TextStyle(color: Colors.white54),
+                    ),
+                  ),
+                )
+              : SliverList(
+                  delegate: SliverChildBuilderDelegate(
+                    (context, index) => _PartnerCard(friend: friends[index]),
+                    childCount: friends.length,
+                  ),
+                ),
           loading: () => const SliverToBoxAdapter(
             child: Center(
               child: CircularProgressIndicator(color: EmergeColors.teal),
@@ -1359,17 +1529,12 @@ class _FriendsTabContentState extends ConsumerState<FriendsTabContent> {
           error: (_, __) => const SliverToBoxAdapter(
             child: Center(
               child: Text(
-                'Failed to load friends',
+                'Failed to load partners',
                 style: TextStyle(color: Colors.white),
               ),
             ),
           ),
         ),
-
-        const SliverToBoxAdapter(child: Gap(24)),
-
-        // Aligned Orbits Section
-        SliverToBoxAdapter(child: _AlignedOrbitsSection()),
 
         const SliverToBoxAdapter(child: Gap(80)),
       ],

@@ -465,16 +465,8 @@ class _IndentedHabitItem extends StatelessWidget {
                   fontWeight: FontWeight.w500,
                 ),
               ),
-              if (habit.cue.isNotEmpty) ...[
-                const SizedBox(height: 2),
-                Text(
-                  habit.cue,
-                  style: TextStyle(
-                    color: Colors.white.withValues(alpha: 0.5),
-                    fontSize: 11,
-                  ),
-                ),
-              ],
+
+              // Cue hidden to prevent redundancy with time-of-day headers
             ],
           ),
         ),

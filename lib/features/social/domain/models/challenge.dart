@@ -71,6 +71,9 @@ class Challenge extends Equatable {
   final DateTime? sponsorshipStartDate;
   final DateTime? sponsorshipEndDate;
   final String? archetypeId;
+  final bool isPremium;
+  final String? rewardTitleId;
+  final String? rewardNameplateId;
 
   const Challenge({
     required this.id,
@@ -101,7 +104,77 @@ class Challenge extends Equatable {
     this.sponsorshipStartDate,
     this.sponsorshipEndDate,
     this.archetypeId,
+    this.isPremium = false,
+    this.rewardTitleId,
+    this.rewardNameplateId,
   });
+
+  Challenge copyWith({
+    String? id,
+    String? title,
+    String? description,
+    String? imageUrl,
+    String? reward,
+    int? participants,
+    int? daysLeft,
+    int? totalDays,
+    int? currentDay,
+    ChallengeStatus? status,
+    String? affiliateUrl,
+    int? xpReward,
+    bool? isFeatured,
+    bool? isTeamChallenge,
+    bool? buddyValidationRequired,
+    List<ChallengeStep>? steps,
+    ChallengeCategory? category,
+    String? sponsor,
+    String? sponsorLogoUrl,
+    String? affiliatePartnerId,
+    AffiliateNetwork? affiliateNetwork,
+    double? commissionRate,
+    String? rewardDescription,
+    bool? isSponsored,
+    DateTime? sponsorshipStartDate,
+    DateTime? sponsorshipEndDate,
+    String? archetypeId,
+    bool? isPremium,
+    String? rewardTitleId,
+    String? rewardNameplateId,
+  }) {
+    return Challenge(
+      id: id ?? this.id,
+      title: title ?? this.title,
+      description: description ?? this.description,
+      imageUrl: imageUrl ?? this.imageUrl,
+      reward: reward ?? this.reward,
+      participants: participants ?? this.participants,
+      daysLeft: daysLeft ?? this.daysLeft,
+      totalDays: totalDays ?? this.totalDays,
+      currentDay: currentDay ?? this.currentDay,
+      status: status ?? this.status,
+      affiliateUrl: affiliateUrl ?? this.affiliateUrl,
+      xpReward: xpReward ?? this.xpReward,
+      isFeatured: isFeatured ?? this.isFeatured,
+      isTeamChallenge: isTeamChallenge ?? this.isTeamChallenge,
+      buddyValidationRequired:
+          buddyValidationRequired ?? this.buddyValidationRequired,
+      steps: steps ?? this.steps,
+      category: category ?? this.category,
+      sponsor: sponsor ?? this.sponsor,
+      sponsorLogoUrl: sponsorLogoUrl ?? this.sponsorLogoUrl,
+      affiliatePartnerId: affiliatePartnerId ?? this.affiliatePartnerId,
+      affiliateNetwork: affiliateNetwork ?? this.affiliateNetwork,
+      commissionRate: commissionRate ?? this.commissionRate,
+      rewardDescription: rewardDescription ?? this.rewardDescription,
+      isSponsored: isSponsored ?? this.isSponsored,
+      sponsorshipStartDate: sponsorshipStartDate ?? this.sponsorshipStartDate,
+      sponsorshipEndDate: sponsorshipEndDate ?? this.sponsorshipEndDate,
+      archetypeId: archetypeId ?? this.archetypeId,
+      isPremium: isPremium ?? this.isPremium,
+      rewardTitleId: rewardTitleId ?? this.rewardTitleId,
+      rewardNameplateId: rewardNameplateId ?? this.rewardNameplateId,
+    );
+  }
 
   Map<String, dynamic> toMap() {
     return {
@@ -132,6 +205,9 @@ class Challenge extends Equatable {
       'sponsorshipStartDate': sponsorshipStartDate?.toIso8601String(),
       'sponsorshipEndDate': sponsorshipEndDate?.toIso8601String(),
       'archetypeId': archetypeId,
+      'isPremium': isPremium,
+      'rewardTitleId': rewardTitleId,
+      'rewardNameplateId': rewardNameplateId,
       // steps would be a sub-collection or array usually, simplifying for now
       'steps': steps
           .map(
@@ -217,6 +293,9 @@ class Challenge extends Equatable {
       sponsorshipStartDate: startDate,
       sponsorshipEndDate: endDate,
       archetypeId: map['archetypeId'],
+      isPremium: map['isPremium'] ?? false,
+      rewardTitleId: map['rewardTitleId'],
+      rewardNameplateId: map['rewardNameplateId'],
       steps:
           (map['steps'] as List<dynamic>?)
               ?.map(
@@ -262,58 +341,8 @@ class Challenge extends Equatable {
     sponsorshipStartDate,
     sponsorshipEndDate,
     archetypeId,
+    isPremium,
+    rewardTitleId,
+    rewardNameplateId,
   ];
-
-  Challenge copyWith({
-    String? title,
-    String? description,
-    String? imageUrl,
-    ChallengeStatus? status,
-    int? currentDay,
-    int? participants,
-    List<ChallengeStep>? steps,
-    ChallengeCategory? category,
-    String? sponsor,
-    String? sponsorLogoUrl,
-    // New affiliate fields
-    String? affiliatePartnerId,
-    AffiliateNetwork? affiliateNetwork,
-    double? commissionRate,
-    String? rewardDescription,
-    bool? isSponsored,
-    DateTime? sponsorshipStartDate,
-    DateTime? sponsorshipEndDate,
-    String? archetypeId,
-  }) {
-    return Challenge(
-      id: id,
-      title: title ?? this.title,
-      description: description ?? this.description,
-      imageUrl: imageUrl ?? this.imageUrl,
-      reward: reward,
-      participants: participants ?? this.participants,
-      daysLeft: daysLeft,
-      totalDays: totalDays,
-      currentDay: currentDay ?? this.currentDay,
-      status: status ?? this.status,
-      affiliateUrl: affiliateUrl,
-      xpReward: xpReward,
-      isFeatured: isFeatured,
-      isTeamChallenge: isTeamChallenge,
-      buddyValidationRequired: buddyValidationRequired,
-      steps: steps ?? this.steps,
-      category: category ?? this.category,
-      sponsor: sponsor ?? this.sponsor,
-      sponsorLogoUrl: sponsorLogoUrl ?? this.sponsorLogoUrl,
-      // New affiliate fields
-      affiliatePartnerId: affiliatePartnerId ?? this.affiliatePartnerId,
-      affiliateNetwork: affiliateNetwork ?? this.affiliateNetwork,
-      commissionRate: commissionRate ?? this.commissionRate,
-      rewardDescription: rewardDescription ?? this.rewardDescription,
-      isSponsored: isSponsored ?? this.isSponsored,
-      sponsorshipStartDate: sponsorshipStartDate ?? this.sponsorshipStartDate,
-      sponsorshipEndDate: sponsorshipEndDate ?? this.sponsorshipEndDate,
-      archetypeId: archetypeId ?? this.archetypeId,
-    );
-  }
 }

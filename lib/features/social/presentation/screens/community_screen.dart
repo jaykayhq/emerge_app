@@ -1,16 +1,14 @@
 import 'package:emerge_app/core/presentation/widgets/emerge_branding.dart';
+import 'package:emerge_app/features/auth/domain/entities/user_extension.dart';
 import 'package:emerge_app/core/theme/app_theme.dart';
-import 'package:emerge_app/features/auth/presentation/providers/auth_providers.dart';
+import 'package:emerge_app/core/theme/archetype_theme.dart';
 import 'package:emerge_app/features/gamification/presentation/providers/user_stats_providers.dart';
-import 'package:emerge_app/features/social/domain/models/tribe.dart';
-import 'package:emerge_app/features/social/presentation/providers/tribes_provider.dart';
 import 'package:emerge_app/features/social/presentation/screens/challenges_screen.dart';
 import 'package:emerge_app/features/social/presentation/screens/friends_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
-import 'package:emerge_app/features/social/presentation/screens/create_tribe_screen.dart';
 
 /// Community Screen - Stitch Design "Identity Club Home"
 /// Features: Club stats card, Weekly goal, Top contributors, Activity feed
@@ -158,106 +156,18 @@ class _CommunityScreenState extends ConsumerState<CommunityScreen>
           ),
         ),
       ),
-      floatingActionButton: _buildFab(),
-    );
-  }
-
-  Widget _buildFab() {
-    return AnimatedBuilder(
-      animation: _tabController,
-      builder: (context, child) {
-        if (_tabController.index == 2) return const SizedBox.shrink();
-
-        return Container(
-          decoration: BoxDecoration(
-            gradient: EmergeColors.neonGradient,
-            borderRadius: BorderRadius.circular(16),
-            boxShadow: [
-              BoxShadow(
-                color: EmergeColors.teal.withValues(alpha: 0.4),
-                blurRadius: 16,
-                spreadRadius: 2,
-              ),
-            ],
-          ),
-          child: FloatingActionButton.extended(
-            heroTag: 'community_fab',
-            onPressed: () {
-              if (_tabController.index == 0) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Create Challenge coming soon!'),
-                  ),
-                );
-              } else if (_tabController.index == 1) {
-                _createClub(context, ref);
-              }
-            },
-            label: Text(
-              _tabController.index == 0 ? 'Create Challenge' : 'Create Club',
-              style: const TextStyle(fontWeight: FontWeight.bold),
-            ),
-            icon: const Icon(Icons.add),
-            backgroundColor: Colors.transparent,
-            foregroundColor: Colors.white,
-            elevation: 0,
-          ),
-        ).animate().scale();
-      },
-    );
-  }
-
-  void _createClub(BuildContext context, WidgetRef ref) {
-    final user = ref.read(authStateChangesProvider).value;
-    if (user == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please sign in to create a club.')),
-      );
-      return;
-    }
-
-    final userStatsAsync = ref.read(userStatsStreamProvider);
-    userStatsAsync.when(
-      data: (stats) {
-        if (stats.avatarStats.level >= 5) {
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => const CreateTribeScreen()),
-          );
-        } else {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(
-                'Level 5 required. Current: ${stats.avatarStats.level}',
-              ),
-              backgroundColor: Colors.redAccent,
-            ),
-          );
-        }
-      },
-      loading: () {},
-      error: (e, s) {},
     );
   }
 
   // ==========================================================================
-  // CLUBS TAB - Stitch "Identity Club Home" Design
+  // CLUBS TAB - Fixed Archetype Club
   // ==========================================================================
   Widget _buildClubsTab() {
-    final tribesAsync = ref.watch(tribesProvider);
+    final profileAsync = ref.watch(userStatsStreamProvider);
 
-    return tribesAsync.when(
-      data: (tribes) {
-        if (tribes.isEmpty) {
-          return _EmptyState(
-            message: 'No clubs found.',
-            icon: Icons.groups_outlined,
-            onAction: () => _createClub(context, ref),
-            actionLabel: 'Create First Club',
-          );
-        }
-
-        final club = tribes.first;
+    return profileAsync.when(
+      data: (profile) {
+        final theme = ArchetypeTheme.forArchetype(profile.archetype);
 
         return SingleChildScrollView(
           padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -265,16 +175,16 @@ class _CommunityScreenState extends ConsumerState<CommunityScreen>
             children: [
               const Gap(16),
 
-              // ===== CLUB EMBLEM (Centered, glowing) =====
-              _ClubEmblem(
-                club: club,
+              // ===== CLUB EMBLEM (Archetype-colored) =====
+              _ArchetypeClubEmblem(
+                theme: theme,
               ).animate().fadeIn().scale(begin: const Offset(0.9, 0.9)),
 
               const Gap(16),
 
               // ===== CLUB NAME & SUBTITLE =====
               Text(
-                club.name.toUpperCase(),
+                'THE ${theme.archetypeName.toUpperCase()}S',
                 style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                   fontWeight: FontWeight.bold,
                   color: Colors.white,
@@ -283,26 +193,29 @@ class _CommunityScreenState extends ConsumerState<CommunityScreen>
               ).animate().fadeIn(delay: 100.ms),
               const Gap(4),
               Text(
-                '${club.memberCount} Members • Level ${(club.totalXp / 1000).floor() + 1}',
-                style: TextStyle(fontSize: 14, color: EmergeColors.teal),
+                theme.tagline,
+                style: TextStyle(fontSize: 14, color: theme.primaryColor),
               ).animate().fadeIn(delay: 150.ms),
 
               const Gap(32),
 
-              // ===== STATS ROW (No box, just numbers) =====
-              _StatsRow(club: club).animate().fadeIn(delay: 200.ms),
+              // ===== ARCHETYPE STATS =====
+              _ArchetypeStatsRow(
+                theme: theme,
+                profile: profile,
+              ).animate().fadeIn(delay: 200.ms),
 
               const Gap(32),
 
-              // ===== TOP CONTRIBUTORS (Overlapping avatars) =====
+              // ===== TOP CONTRIBUTORS =====
               _ContributorsSection().animate().fadeIn(delay: 300.ms),
 
               const Gap(32),
 
-              // ===== RECENT ACTIVITY (Simple list, no heavy cards) =====
+              // ===== RECENT ACTIVITY =====
               _ActivitySection().animate().fadeIn(delay: 400.ms),
 
-              const Gap(100), // FAB spacing
+              const Gap(32),
             ],
           ),
         );
@@ -317,10 +230,10 @@ class _CommunityScreenState extends ConsumerState<CommunityScreen>
 
 // ============ CLUB EMBLEM (Centered, glowing ring) ============
 
-class _ClubEmblem extends StatelessWidget {
-  final Tribe club;
+class _ArchetypeClubEmblem extends StatelessWidget {
+  final ArchetypeTheme theme;
 
-  const _ClubEmblem({required this.club});
+  const _ArchetypeClubEmblem({required this.theme});
 
   @override
   Widget build(BuildContext context) {
@@ -329,19 +242,19 @@ class _ClubEmblem extends StatelessWidget {
       height: 100,
       decoration: BoxDecoration(
         shape: BoxShape.circle,
-        gradient: const LinearGradient(
+        gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [EmergeColors.violet, EmergeColors.teal],
+          colors: [theme.primaryColor, theme.accentColor],
         ),
         boxShadow: [
           BoxShadow(
-            color: EmergeColors.violet.withValues(alpha: 0.6),
+            color: theme.primaryColor.withValues(alpha: 0.6),
             blurRadius: 30,
             spreadRadius: 5,
           ),
           BoxShadow(
-            color: EmergeColors.teal.withValues(alpha: 0.4),
+            color: theme.accentColor.withValues(alpha: 0.4),
             blurRadius: 40,
             spreadRadius: 10,
           ),
@@ -353,27 +266,19 @@ class _ClubEmblem extends StatelessWidget {
           shape: BoxShape.circle,
           color: EmergeColors.background,
         ),
-        child: Center(
-          child: Text(
-            club.name.isNotEmpty ? club.name[0].toUpperCase() : '?',
-            style: const TextStyle(
-              fontSize: 36,
-              fontWeight: FontWeight.bold,
-              color: Colors.white,
-            ),
-          ),
-        ),
+        child: Icon(theme.journeyIcon, size: 42, color: theme.primaryColor),
       ),
     );
   }
 }
 
-// ============ STATS ROW (Minimal, no boxes) ============
+// ============ ARCHETYPE STATS ROW ============
 
-class _StatsRow extends StatelessWidget {
-  final Tribe club;
+class _ArchetypeStatsRow extends StatelessWidget {
+  final ArchetypeTheme theme;
+  final UserProfile profile;
 
-  const _StatsRow({required this.club});
+  const _ArchetypeStatsRow({required this.theme, required this.profile});
 
   @override
   Widget build(BuildContext context) {
@@ -387,17 +292,17 @@ class _StatsRow extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: [
           _StatColumn(
-            label: 'Total XP:',
-            value: (club.totalXp / 100).toStringAsFixed(0),
+            label: 'Your Level',
+            value: '${profile.avatarStats.level}',
             trend: '↗',
-            trendColor: EmergeColors.teal,
+            trendColor: theme.primaryColor,
           ),
           Container(width: 1, height: 50, color: EmergeColors.glassBorder),
           _StatColumn(
-            label: 'Weekly Progress:',
-            value: '+${(club.memberCount * 42).toString()}',
-            trend: '↗',
-            trendColor: EmergeColors.teal,
+            label: 'Streak',
+            value: '${profile.avatarStats.streak}',
+            trend: '🔥',
+            trendColor: theme.accentColor,
           ),
         ],
       ),
@@ -656,59 +561,6 @@ class _ActivitySection extends StatelessWidget {
           );
         }),
       ],
-    );
-  }
-}
-
-class _EmptyState extends StatelessWidget {
-  final String message;
-  final IconData icon;
-  final VoidCallback? onAction;
-  final String? actionLabel;
-
-  const _EmptyState({
-    required this.message,
-    required this.icon,
-    this.onAction,
-    this.actionLabel,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(
-            icon,
-            size: 64,
-            color: AppTheme.textSecondaryDark.withValues(alpha: 0.5),
-          ),
-          const Gap(16),
-          Text(
-            message,
-            style: const TextStyle(color: AppTheme.textSecondaryDark),
-          ),
-          if (onAction != null) ...[
-            const Gap(24),
-            Container(
-              decoration: BoxDecoration(
-                gradient: EmergeColors.neonGradient,
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: ElevatedButton(
-                onPressed: onAction,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.transparent,
-                  foregroundColor: Colors.white,
-                  shadowColor: Colors.transparent,
-                ),
-                child: Text(actionLabel ?? 'Action'),
-              ),
-            ),
-          ],
-        ],
-      ),
     );
   }
 }

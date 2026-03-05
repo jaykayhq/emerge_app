@@ -8,10 +8,28 @@ final friendRepositoryProvider = Provider<FriendRepository>((ref) {
   return FirestoreFriendRepository(FirebaseFirestore.instance);
 });
 
-final friendsListProvider = FutureProvider<List<Friend>>((ref) async {
+/// All accountability partners for the current user
+final partnersListProvider = FutureProvider<List<Friend>>((ref) async {
   final user = ref.watch(authStateChangesProvider).value;
   if (user == null) return [];
-
-  final repository = ref.watch(friendRepositoryProvider);
-  return repository.getFriends(user.id);
+  return ref.read(friendRepositoryProvider).getFriends(user.id);
 });
+
+/// Pending partner requests awaiting the user's response
+final pendingPartnerRequestsProvider = FutureProvider<List<PartnerRequest>>((
+  ref,
+) async {
+  final user = ref.watch(authStateChangesProvider).value;
+  if (user == null) return [];
+  return ref.read(friendRepositoryProvider).getPendingRequests(user.id);
+});
+
+/// Online / recently active partners
+final onlinePartnersProvider = FutureProvider<List<Friend>>((ref) async {
+  final user = ref.watch(authStateChangesProvider).value;
+  if (user == null) return [];
+  return ref.read(friendRepositoryProvider).getOnlinePartners(user.id);
+});
+
+// Legacy alias
+final friendsListProvider = partnersListProvider;

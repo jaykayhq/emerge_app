@@ -94,28 +94,37 @@ class Habit extends Equatable {
     HabitFrequency? frequency,
     List<int>? specificDays,
     TimeOfDay? reminderTime,
+    bool clearReminderTime = false,
     HabitDifficulty? difficulty,
     bool? isArchived,
     DateTime? createdAt,
     int? currentStreak,
     int? longestStreak,
     DateTime? lastCompletedDate,
+    bool clearLastCompletedDate = false,
     HabitImpact? impact,
     String? stackParentId,
+    bool clearStackParentId = false,
     String? twoMinuteVersion,
+    bool clearTwoMinuteVersion = false,
     List<String>? identityTags,
     bool? contractActive,
     HabitAttribute? attribute,
     String? imageUrl,
+    bool clearImageUrl = false,
     TimeOfDayPreference? timeOfDayPreference,
+    bool clearTimeOfDayPreference = false,
     String? anchorHabitId,
+    bool clearAnchorHabitId = false,
     int? order,
     String? location,
+    bool clearLocation = false,
     int? timerDurationMinutes,
     List<String>? customRules,
     List<String>? environmentPriming,
     HabitIntegrationType? integrationType,
     int? integrationTarget,
+    bool clearIntegrationTarget = false,
   }) {
     return Habit(
       id: id ?? this.id,
@@ -126,29 +135,43 @@ class Habit extends Equatable {
       reward: reward ?? this.reward,
       frequency: frequency ?? this.frequency,
       specificDays: specificDays ?? this.specificDays,
-      reminderTime: reminderTime ?? this.reminderTime,
+      reminderTime: clearReminderTime
+          ? null
+          : (reminderTime ?? this.reminderTime),
       difficulty: difficulty ?? this.difficulty,
       isArchived: isArchived ?? this.isArchived,
       createdAt: createdAt ?? this.createdAt,
       currentStreak: currentStreak ?? this.currentStreak,
       longestStreak: longestStreak ?? this.longestStreak,
-      lastCompletedDate: lastCompletedDate ?? this.lastCompletedDate,
+      lastCompletedDate: clearLastCompletedDate
+          ? null
+          : (lastCompletedDate ?? this.lastCompletedDate),
       impact: impact ?? this.impact,
-      stackParentId: stackParentId ?? this.stackParentId,
-      twoMinuteVersion: twoMinuteVersion ?? this.twoMinuteVersion,
+      stackParentId: clearStackParentId
+          ? null
+          : (stackParentId ?? this.stackParentId),
+      twoMinuteVersion: clearTwoMinuteVersion
+          ? null
+          : (twoMinuteVersion ?? this.twoMinuteVersion),
       identityTags: identityTags ?? this.identityTags,
       contractActive: contractActive ?? this.contractActive,
       attribute: attribute ?? this.attribute,
-      imageUrl: imageUrl ?? this.imageUrl,
-      timeOfDayPreference: timeOfDayPreference ?? this.timeOfDayPreference,
-      anchorHabitId: anchorHabitId ?? this.anchorHabitId,
+      imageUrl: clearImageUrl ? null : (imageUrl ?? this.imageUrl),
+      timeOfDayPreference: clearTimeOfDayPreference
+          ? null
+          : (timeOfDayPreference ?? this.timeOfDayPreference),
+      anchorHabitId: clearAnchorHabitId
+          ? null
+          : (anchorHabitId ?? this.anchorHabitId),
       order: order ?? this.order,
-      location: location ?? this.location,
+      location: clearLocation ? null : (location ?? this.location),
       timerDurationMinutes: timerDurationMinutes ?? this.timerDurationMinutes,
       customRules: customRules ?? this.customRules,
       environmentPriming: environmentPriming ?? this.environmentPriming,
       integrationType: integrationType ?? this.integrationType,
-      integrationTarget: integrationTarget ?? this.integrationTarget,
+      integrationTarget: clearIntegrationTarget
+          ? null
+          : (integrationTarget ?? this.integrationTarget),
     );
   }
 
@@ -186,4 +209,14 @@ class Habit extends Equatable {
     integrationType,
     integrationTarget,
   ];
+}
+
+extension HabitExtension on Habit {
+  String? get timelineSection {
+    if (timeOfDayPreference == null ||
+        timeOfDayPreference == TimeOfDayPreference.anytime) {
+      return null;
+    }
+    return timeOfDayPreference!.name;
+  }
 }
