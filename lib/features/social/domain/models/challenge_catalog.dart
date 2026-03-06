@@ -637,4 +637,86 @@ class ChallengeCatalog {
     // However, joinChallenge only needs the data.
     return null; // Not needed if we fetch the generated object directly
   }
+
+  /// Daily quest templates by archetype and day of week
+  static final Map<String, List<Map<String, dynamic>>> _dailyTemplates = {
+    'athlete': [
+      {'title': 'Morning Sprint', 'description': 'Complete a 20-minute intense cardio session to start your day with energy.', 'category': ChallengeCategory.fitness},
+      {'title': 'Power Set', 'description': 'Complete 5 sets of 10 pushups throughout the day. Break it up however works for you.', 'category': ChallengeCategory.fitness},
+      {'title': 'Active Recovery', 'description': 'Complete 30 minutes of stretching or mobility work to keep your body primed.', 'category': ChallengeCategory.fitness},
+      {'title': 'Core Crusher', 'description': 'Complete 3 rounds of: 30 crunches, 30 second plank, 20 leg raises.', 'category': ChallengeCategory.fitness},
+      {'title': 'Hydration Challenge', 'description': 'Drink 3 liters of water today. Track your intake and hit the goal.', 'category': ChallengeCategory.nutrition},
+      {'title': 'Movement Snack', 'description': 'Take a 15-minute walk or do light exercises after each meal.', 'category': ChallengeCategory.fitness},
+      {'title': 'Bodyweight Blast', 'description': 'Complete 100 squats, 50 lunges, and 50 jumping jacks today.', 'category': ChallengeCategory.fitness},
+    ],
+    'scholar': [
+      {'title': 'Deep Focus', 'description': 'Complete 2 hours of uninterrupted study or reading on your chosen subject.', 'category': ChallengeCategory.learning},
+      {'title': 'Knowledge Dump', 'description': 'Write a 500-word summary of what you learned this week.', 'category': ChallengeCategory.learning},
+      {'title': 'Mind Map', 'description': 'Create a visual mind map connecting 5+ concepts from your current learning.', 'category': ChallengeCategory.learning},
+      {'title': 'Question Storm', 'description': 'Generate 10 questions about your current topic that you cannot answer yet.', 'category': ChallengeCategory.learning},
+      {'title': 'Teach Back', 'description': 'Explain a concept you learned to someone or write it as if teaching a beginner.', 'category': ChallengeCategory.learning},
+      {'title': 'Source Hunt', 'description': 'Find and read 3 new articles or watch 3 videos on your topic.', 'category': ChallengeCategory.learning},
+      {'title': 'Synthesis Session', 'description': 'Connect ideas from 2+ sources and write your own original insight.', 'category': ChallengeCategory.learning},
+    ],
+    'creator': [
+      {'title': 'Micro Masterpiece', 'description': 'Create something small but complete - a sketch, poem, code snippet, or design.', 'category': ChallengeCategory.creative},
+      {'title': 'Constraint Challenge', 'description': 'Create something using only one color or one tool. Limitation breeds creativity.', 'category': ChallengeCategory.creative},
+      {'title': 'Inspiration Hunt', 'description': 'Find 5 examples of work that inspires you and analyze what makes them work.', 'category': ChallengeCategory.creative},
+      {'title': 'Rapid Prototype', 'description': 'Create 3 quick versions of the same idea. Quantity leads to quality.', 'category': ChallengeCategory.creative},
+      {'title': 'Reimagine', 'description': 'Take something existing and create your own version or remix of it.', 'category': ChallengeCategory.creative},
+      {'title': 'Process Share', 'description': 'Document your creative process today - sketch, notes, drafts, anything goes.', 'category': ChallengeCategory.creative},
+      {'title': 'Finish One', 'description': 'Take an unfinished project and complete it. Ship it!', 'category': ChallengeCategory.creative},
+    ],
+    'stoic': [
+      {'title': 'Morning Reflection', 'description': 'Write about what you are grateful for and what you will focus on today.', 'category': ChallengeCategory.faith},
+      {'title': 'Negative Visualization', 'description': 'Spend 10 minutes visualizing losing what you have. Embrace impermanence.', 'category': ChallengeCategory.faith},
+      {'title': 'Digital Fast', 'description': 'Go 4 hours without checking social media or news. Be present.', 'category': ChallengeCategory.mindfulness},
+      {'title': 'Kindness Quest', 'description': 'Perform 3 anonymous acts of kindness today without expecting anything back.', 'category': ChallengeCategory.faith},
+      {'title': 'Silence Practice', 'description': 'Spend 20 minutes in complete silence. No music, no podcasts, no reading.', 'category': ChallengeCategory.mindfulness},
+      {'title': 'Evening Review', 'description': 'Reflect on your day: What went well? What could you improve? What did you learn?', 'category': ChallengeCategory.faith},
+      {'title': 'Simplicity Day', 'description': 'Live with only what you need. Declutter one area of your space.', 'category': ChallengeCategory.faith},
+    ],
+    'zealot': [
+      {'title': 'Purpose Pulse', 'description': 'Write about your core why. Connect today to your larger mission.', 'category': ChallengeCategory.faith},
+      {'title': 'Community Impact', 'description': 'Share your message or help someone else pursue their passion today.', 'category': ChallengeCategory.productivity},
+      {'title': 'Bold Action', 'description': 'Do one thing today that scares you related to your purpose.', 'category': ChallengeCategory.productivity},
+      {'title': 'Vision Board', 'description': 'Create or update your vision board with where you want to be in 1 year.', 'category': ChallengeCategory.creative},
+      {'title': 'Network Nurture', 'description': 'Reach out to someone who supports your mission. Thank them or collaborate.', 'category': ChallengeCategory.productivity},
+      {'title': 'Declaration', 'description': 'Write a public declaration of your commitment to your purpose.', 'category': ChallengeCategory.faith},
+      {'title': 'Celebration', 'description': 'Acknowledge 3 wins from your journey. Celebrate progress, not just goals.', 'category': ChallengeCategory.faith},
+    ],
+  };
+
+  /// Generates a daily quest based on archetype and day of week
+  static Challenge getDailyQuest(String archetypeId) {
+    final templates = _dailyTemplates[archetypeId.toLowerCase()] ?? _dailyTemplates['athlete']!;
+    final now = DateTime.now().toUtc();
+    final dayOfWeek = now.weekday - 1; // 0 = Monday, 6 = Sunday
+    final template = templates[dayOfWeek % templates.length];
+    
+    return Challenge(
+      id: 'daily_${archetypeId}_${now.year}_${now.month}_${now.day}',
+      title: template['title'] as String,
+      description: template['description'] as String,
+      imageUrl: '',
+      reward: '${100 + (dayOfWeek * 10)} XP',
+      participants: 0,
+      daysLeft: 1,
+      totalDays: 1,
+      currentDay: 0,
+      status: ChallengeStatus.active,
+      xpReward: 100 + (dayOfWeek * 10),
+      category: template['category'] as ChallengeCategory,
+      steps: [
+        ChallengeStep(
+          day: 1,
+          title: template['title'] as String,
+          description: template['description'] as String,
+        ),
+      ],
+      archetypeId: archetypeId,
+      isFeatured: false,
+      isTeamChallenge: false,
+    );
+  }
 }
