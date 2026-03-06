@@ -1,9 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:riverpod_annotation/riverpod_annotation.dart';
+
+part 'focus_mode_service.g.dart';
 
 final focusModeServiceProvider = Provider((ref) => FocusModeService());
 
-final isFocusModeEnabledProvider = StateProvider<bool>((ref) => false);
+@riverpod
+class IsFocusModeEnabled extends _$IsFocusModeEnabled {
+  @override
+  bool build() => false;
+
+  void setEnabled(bool enabled) => state = enabled;
+  void toggle() => state = !state;
+}
 
 class FocusModeService {
   // In a real app, this would use shared_preferences to persist the schedule

@@ -3,6 +3,9 @@ import 'package:emerge_app/features/avatar/domain/models/avatar_config.dart';
 import 'package:emerge_app/features/auth/domain/entities/user_extension.dart';
 import 'package:emerge_app/features/profile/domain/models/silhouette_evolution.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:riverpod_annotation/riverpod_annotation.dart';
+
+part 'avatar_provider.g.dart';
 
 /// Provider for the avatar asset service
 final avatarAssetServiceProvider = Provider<AvatarAssetService>((ref) {
@@ -31,19 +34,14 @@ class AvatarState {
 /// Handles avatar customization (archetype, skin tone, hairstyle) and
 /// evolution state updates. Each config change maps to a different
 /// pre-generated character image.
-final avatarControllerProvider =
-    StateNotifierProvider<AvatarController, AvatarState>((ref) {
-      return AvatarController();
-    });
-
-/// Avatar state notifier
-class AvatarController extends StateNotifier<AvatarState> {
-  AvatarController()
-    : super(
-        AvatarState(
-          config: AvatarConfig.defaultForArchetype(UserArchetype.none),
-        ),
-      );
+@riverpod
+class AvatarController extends _$AvatarController {
+  @override
+  AvatarState build() {
+    return AvatarState(
+      config: AvatarConfig.defaultForArchetype(UserArchetype.none),
+    );
+  }
 
   /// Update avatar configuration
   void updateConfig(AvatarConfig newConfig) {

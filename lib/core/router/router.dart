@@ -62,7 +62,7 @@ GoRouter router(Ref ref) {
       if (path == '/splash') return null;
 
       final authState = ref.read(authStateChangesProvider);
-      final isLoggedIn = authState.valueOrNull?.isNotEmpty ?? false;
+      final isLoggedIn = authState.value?.isNotEmpty ?? false;
       final isFirstLaunch = ref.read(onboardingControllerProvider);
 
       // Define path guards
@@ -85,7 +85,7 @@ GoRouter router(Ref ref) {
 
       // LOGGED IN: Check onboarding progress
       final userStatsAsync = ref.read(userStatsStreamProvider);
-      final userStats = userStatsAsync.valueOrNull;
+      final userStats = userStatsAsync.value;
 
       // If user stats are still loading, allow current path only if it's an onboarding path
       // This prevents landing on the dashboard briefly for new users

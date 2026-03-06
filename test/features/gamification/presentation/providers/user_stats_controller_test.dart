@@ -1,23 +1,11 @@
 import 'package:emerge_app/features/auth/domain/entities/auth_user.dart';
 import 'package:emerge_app/features/auth/domain/entities/user_extension.dart';
-import 'package:emerge_app/features/auth/presentation/providers/auth_providers.dart';
 import 'package:emerge_app/features/gamification/data/repositories/user_stats_repository.dart';
-import 'package:emerge_app/features/gamification/domain/services/gamification_service.dart';
 import 'package:emerge_app/features/gamification/presentation/providers/user_stats_providers.dart';
-
-import 'package:emerge_app/features/habits/domain/repositories/habit_repository.dart';
-import 'package:emerge_app/features/habits/presentation/providers/habit_providers.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
 class MockUserStatsRepository extends Mock implements UserStatsRepository {}
-
-class MockGamificationService extends Mock implements GamificationService {}
-
-class MockHabitRepository extends Mock implements HabitRepository {}
-
-class MockRef extends Mock implements Ref {}
 
 class FakeUserProfile extends Fake implements UserProfile {}
 
@@ -27,9 +15,6 @@ class FakeUserWorldState extends Fake implements UserWorldState {}
 
 void main() {
   late MockUserStatsRepository mockUserStatsRepository;
-  late MockGamificationService mockGamificationService;
-  late MockHabitRepository mockHabitRepository;
-  late MockRef mockRef;
   late UserStatsController controller;
 
   setUpAll(() {
@@ -40,23 +25,6 @@ void main() {
 
   setUp(() {
     mockUserStatsRepository = MockUserStatsRepository();
-    mockGamificationService = MockGamificationService();
-    mockHabitRepository = MockHabitRepository();
-    mockRef = MockRef();
-
-    // Setup default Ref reads
-    when(
-      () => mockRef.read(userStatsRepositoryProvider),
-    ).thenReturn(mockUserStatsRepository);
-    when(
-      () => mockRef.read(gamificationServiceProvider),
-    ).thenReturn(mockGamificationService);
-    when(
-      () => mockRef.read(habitRepositoryProvider),
-    ).thenReturn(mockHabitRepository);
-    when(() => mockRef.read(authStateChangesProvider)).thenReturn(
-      const AsyncValue.data(AuthUser(id: '123', email: 'test@test.com')),
-    );
 
     controller = UserStatsController(
       repository: mockUserStatsRepository,

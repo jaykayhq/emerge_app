@@ -129,7 +129,7 @@ class BlueprintActivationNotifier extends _$BlueprintActivationNotifier {
     try {
       // Use dashboard notifier to create habits with optimistic updates
       final dashboardNotifier = ref.read(
-        dashboardStateNotifierProvider.notifier,
+        dashboardStateProvider.notifier,
       );
       await dashboardNotifier.activateBlueprint(blueprint, user.id);
 
@@ -220,13 +220,13 @@ Future<List<Blueprint>> featuredBlueprints(Ref ref) async {
 /// Provider to check if a blueprint is already activated
 @riverpod
 bool isBlueprintActivated(Ref ref, String blueprintId) {
-  final state = ref.watch(blueprintActivationNotifierProvider);
+  final state = ref.watch(blueprintActivationProvider);
   return state.isActivated(blueprintId);
 }
 
 /// Provider for activation loading state
 @riverpod
 bool isBlueprintActivating(Ref ref) {
-  final state = ref.watch(blueprintActivationNotifierProvider);
+  final state = ref.watch(blueprintActivationProvider);
   return state.isActivating;
 }

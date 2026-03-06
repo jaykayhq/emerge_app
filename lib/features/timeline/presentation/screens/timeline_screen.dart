@@ -105,7 +105,7 @@ class _TimelineScreenState extends ConsumerState<TimelineScreen> {
   Future<void> _loadAiInsight() async {
     try {
       final aiService = ref.read(aiPersonalizationServiceProvider);
-      final habits = ref.read(habitsProvider).valueOrNull ?? [];
+      final habits = ref.read(habitsProvider).value ?? [];
 
       if (habits.isNotEmpty) {
         final insights = await aiService.generateIdentityInsights(habits);
@@ -512,7 +512,7 @@ class _TimelineScreenState extends ConsumerState<TimelineScreen> {
   }
 
   Future<void> _saveReflection(double moodValue, String? note) async {
-    final user = ref.read(authStateChangesProvider).valueOrNull;
+    final user = ref.read(authStateChangesProvider).value;
     if (user == null) return;
 
     final now = DateTime.now();

@@ -36,8 +36,8 @@ class _FirstHabitScreenState extends ConsumerState<FirstHabitScreen> {
     }
 
     // Store habit info in onboarding state
-    final state = ref.read(onboardingStateProvider);
-    ref.read(onboardingStateProvider.notifier).state = state.copyWith(
+    final state = ref.read(onboardingStateControllerProvider);
+    ref.read(onboardingStateControllerProvider.notifier).state = state.copyWith(
       habitStacks: [
         HabitStack(
           anchorId: 'onboarding_anchor', // Pseudo anchor ID for onboarding
@@ -71,7 +71,7 @@ class _FirstHabitScreenState extends ConsumerState<FirstHabitScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final state = ref.watch(onboardingStateProvider);
+    final state = ref.watch(onboardingStateControllerProvider);
     final archetype = state.selectedArchetype ?? UserArchetype.athlete;
     final theme = ArchetypeTheme.forArchetype(archetype);
 

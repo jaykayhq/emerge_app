@@ -81,8 +81,8 @@ class _IdentityStudioScreenState extends ConsumerState<IdentityStudioScreen> {
     }
 
     // Update onboarding state
-    final state = ref.read(onboardingStateProvider);
-    ref.read(onboardingStateProvider.notifier).state = state.copyWith(
+    final state = ref.read(onboardingStateControllerProvider);
+    ref.read(onboardingStateControllerProvider.notifier).state = state.copyWith(
       selectedArchetype: _selectedArchetype,
       motive: motiveToSave,
     );

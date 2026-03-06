@@ -89,7 +89,7 @@ class OnboardingController extends _$OnboardingController {
   }
 
   Future<void> saveOnboardingData() async {
-    final onboardingState = ref.read(onboardingStateProvider);
+    final onboardingState = ref.read(onboardingStateControllerProvider);
     final userAsync = ref.read(authStateChangesProvider);
     final user = userAsync.value;
 
@@ -163,7 +163,7 @@ class OnboardingController extends _$OnboardingController {
   Future<void> skipMilestone(int milestoneIndex) async {
     if (milestoneIndex < 0 || milestoneIndex > 3) return;
 
-    final currentState = ref.read(onboardingStateProvider);
+    final currentState = ref.read(onboardingStateControllerProvider);
     final skipped = List<bool>.from(currentState.skippedMilestones);
 
     // Ensure list is long enough
@@ -173,7 +173,7 @@ class OnboardingController extends _$OnboardingController {
     skipped[milestoneIndex] = true;
 
     ref
-        .read(onboardingStateProvider.notifier)
+        .read(onboardingStateControllerProvider.notifier)
         .update(
           (state) => state.copyWith(
             currentMilestoneStep: milestoneIndex + 1,
@@ -188,7 +188,7 @@ class OnboardingController extends _$OnboardingController {
   Future<void> completeMilestone(int milestoneIndex) async {
     if (milestoneIndex < 0 || milestoneIndex > 3) return;
 
-    final currentState = ref.read(onboardingStateProvider);
+    final currentState = ref.read(onboardingStateControllerProvider);
     final completed = List<bool>.from(currentState.completedMilestones);
 
     // Ensure list is long enough
@@ -202,7 +202,7 @@ class OnboardingController extends _$OnboardingController {
       completedMilestones: completed,
     );
 
-    ref.read(onboardingStateProvider.notifier).update((state) => updatedState);
+    ref.read(onboardingStateControllerProvider.notifier).update((state) => updatedState);
 
     // Save progress to user profile
     await saveOnboardingData();
@@ -247,13 +247,13 @@ class OnboardingController extends _$OnboardingController {
   }
 
   Future<void> createOnboardingHabits() async {
-    final state = ref.read(onboardingStateProvider);
+    final state = ref.read(onboardingStateControllerProvider);
     final user = ref.read(authStateChangesProvider).value;
 
     if (user?.isNotEmpty == true && state.habitStacks.isNotEmpty) {
       // Use DashboardNotifier for optimistic updates
       final dashboardNotifier = ref.read(
-        dashboardStateNotifierProvider.notifier,
+        dashboardStateProvider.notifier,
       );
       // We only create one habit per stack (the action). The anchor is treated as a cue.
       for (int i = 0; i < state.habitStacks.length; i++) {
@@ -434,21 +434,28 @@ class OnboardingState extends Equatable {
   ];
 }
 
-final onboardingStateProvider = StateProvider<OnboardingState>(
-  (ref) => const OnboardingState(),
-);
+@riverpod
+class OnboardingStateController extends _$OnboardingStateController {
+  @override
+  OnboardingState build() => const OnboardingState();
 
-// Keep legacy providers for backward compatibility if needed, or refactor screens to use onboardingStateProvider
-final selectedArchetypeProvider = StateProvider<UserArchetype?>((ref) {
-  return ref.watch(onboardingStateProvider).selectedArchetype;
+  void updateState(OnboardingState newState) => state = newState;
+
+  // Riverpod 3.x: update method for compatibility with existing code
+  void update(OnboardingState Function(OnboardingState) fn) => state = fn(state);
+}
+
+// Keep legacy providers for backward compatibility if needed, or refactor screens to use onboardingStateControllerProvider
+final selectedArchetypeProvider = Provider<UserArchetype?>((ref) {
+  return ref.watch(onboardingStateControllerProvider).selectedArchetype;
 });
 
-final attributePointsProvider = StateProvider<int>((ref) {
-  return ref.watch(onboardingStateProvider).remainingPoints;
+final attributePointsProvider = Provider<int>((ref) {
+  return ref.watch(onboardingStateControllerProvider).remainingPoints;
 });
 
-final attributesProvider = StateProvider<Map<String, int>>((ref) {
-  return ref.watch(onboardingStateProvider).attributes;
+final attributesProvider = Provider<Map<String, int>>((ref) {
+  return ref.watch(onboardingStateControllerProvider).attributes;
 });
 
 /// Provider that returns the currently active onboarding milestones
@@ -462,10 +469,10 @@ List<OnboardingMilestone> activeMilestones(Ref ref) {
 
   // Get progress from either provider (prefer userProfile if available)
   int progress = 0;
-  if (userProfileAsync.valueOrNull != null) {
-    progress = userProfileAsync.valueOrNull?.onboardingProgress ?? 0;
-  } else if (userStatsAsync.valueOrNull != null) {
-    progress = userStatsAsync.valueOrNull?.onboardingProgress ?? 0;
+  if (userProfileAsync.value != null) {
+    progress = userProfileAsync.value?.onboardingProgress ?? 0;
+  } else if (userStatsAsync.value != null) {
+    progress = userStatsAsync.value?.onboardingProgress ?? 0;
   }
 
   // Define the 4 streamlined onboarding milestones

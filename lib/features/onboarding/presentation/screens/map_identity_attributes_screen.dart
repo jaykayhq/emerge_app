@@ -20,10 +20,10 @@ class MapIdentityAttributesScreen extends ConsumerStatefulWidget {
 class _MapIdentityAttributesScreenState
     extends ConsumerState<MapIdentityAttributesScreen> {
   void _incrementAttribute(String key) {
-    final state = ref.read(onboardingStateProvider);
+    final state = ref.read(onboardingStateControllerProvider);
     if (state.remainingPoints > 0) {
       final currentPoints = state.attributes[key] ?? 0;
-      ref.read(onboardingStateProvider.notifier).state = state.copyWith(
+      ref.read(onboardingStateControllerProvider.notifier).state = state.copyWith(
         attributes: {...state.attributes, key: currentPoints + 1},
         remainingPoints: state.remainingPoints - 1,
       );
@@ -32,10 +32,10 @@ class _MapIdentityAttributesScreenState
   }
 
   void _decrementAttribute(String key) {
-    final state = ref.read(onboardingStateProvider);
+    final state = ref.read(onboardingStateControllerProvider);
     final currentPoints = state.attributes[key] ?? 0;
     if (currentPoints > 0) {
-      ref.read(onboardingStateProvider.notifier).state = state.copyWith(
+      ref.read(onboardingStateControllerProvider.notifier).state = state.copyWith(
         attributes: {...state.attributes, key: currentPoints - 1},
         remainingPoints: state.remainingPoints + 1,
       );
@@ -45,7 +45,7 @@ class _MapIdentityAttributesScreenState
 
   @override
   Widget build(BuildContext context) {
-    final state = ref.watch(onboardingStateProvider);
+    final state = ref.watch(onboardingStateControllerProvider);
 
     return Scaffold(
       body: Container(

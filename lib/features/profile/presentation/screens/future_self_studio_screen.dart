@@ -22,13 +22,28 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:riverpod_annotation/riverpod_annotation.dart';
+
+part 'future_self_studio_screen.g.dart';
 
 /// Provider to track recovery animation state
-final _recoveryAnimatingProvider = StateProvider<bool>((ref) => false);
+@riverpod
+class RecoveryAnimating extends _$RecoveryAnimating {
+  @override
+  bool build() => false;
+
+  void setAnimating(bool value) => state = value;
+}
 
 /// Provider to enable the new 2D isometric avatar renderer
 /// Set to true to use the new AvatarRenderer instead of EvolvingSilhouetteWidget
-final _useNewAvatarRendererProvider = StateProvider<bool>((ref) => false);
+@riverpod
+class UseNewAvatarRenderer extends _$UseNewAvatarRenderer {
+  @override
+  bool build() => false;
+
+  void setRenderer(bool value) => state = value;
+}
 
 /// The "Future Self Studio" - the new profile screen
 /// Features: Animated background, archetype avatar with glowing attribute auras,
@@ -122,7 +137,7 @@ class _FutureSelfStudioScreenState
   @override
   Widget build(BuildContext context) {
     final statsAsync = ref.watch(userStatsStreamProvider);
-    final isRecovering = ref.watch(_recoveryAnimatingProvider);
+    final isRecovering = ref.watch(recoveryAnimatingProvider);
 
     return Scaffold(
       backgroundColor: const Color(0xFF0A0A1A), // Cosmic void dark
@@ -136,7 +151,7 @@ class _FutureSelfStudioScreenState
               stats.streak > 0) {
             // Trigger recovery animation
             WidgetsBinding.instance.addPostFrameCallback((_) {
-              ref.read(_recoveryAnimatingProvider.notifier).state = true;
+              ref.read(recoveryAnimatingProvider.notifier).state = true;
             });
           }
           _previousStreak = stats.streak;
@@ -289,11 +304,11 @@ class _FutureSelfStudioScreenState
                   const SliverToBoxAdapter(child: SizedBox(height: 16)),
 
                   // NEW: Evolving Silhouette with 5-tier system + decay/recovery
-                  // OR: New 2D Isometric Avatar Renderer (toggle via _useNewAvatarRendererProvider)
+                  // OR: New 2D Isometric Avatar Renderer (toggle via useNewAvatarRendererProvider)
                   SliverToBoxAdapter(
                     child: Center(
                       key: _avatarKey,
-                      child: ref.watch(_useNewAvatarRendererProvider)
+                      child: ref.watch(useNewAvatarRendererProvider)
                           ? _buildAvatarRenderer(
                               context,
                               profile.archetype,
@@ -312,7 +327,7 @@ class _FutureSelfStudioScreenState
                                 // Reset recovery state after animation
                                 ref
                                         .read(
-                                          _recoveryAnimatingProvider.notifier,
+                                          recoveryAnimatingProvider.notifier,
                                         )
                                         .state =
                                     false;
@@ -653,7 +668,7 @@ class _FutureSelfStudioScreenState
       primaryColor: accentColor,
       isRecovering: isRecovering,
       onRecoveryComplete: () {
-        ref.read(_recoveryAnimatingProvider.notifier).state = false;
+        ref.read(recoveryAnimatingProvider.notifier).state = false;
       },
       child: GestureDetector(
         onTap: () {

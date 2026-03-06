@@ -144,7 +144,7 @@ class _AdvancedCreateHabitDialogState
   }
 
   Future<void> _selectTime(BuildContext context) async {
-    final userProfile = ref.read(userStatsStreamProvider).valueOrNull;
+    final userProfile = ref.read(userStatsStreamProvider).value;
     final archetype = userProfile?.archetype ?? UserArchetype.none;
     final defaultHour = NotificationTemplates.getDefaultHour(archetype);
 
@@ -228,7 +228,7 @@ class _AdvancedCreateHabitDialogState
         );
 
         // Schedule notifications for the new habit
-        final userProfile = ref.read(userStatsStreamProvider).valueOrNull;
+        final userProfile = ref.read(userStatsStreamProvider).value;
         if (userProfile != null) {
           try {
             await ref
@@ -310,7 +310,7 @@ class _AdvancedCreateHabitDialogState
   @override
   Widget build(BuildContext context) {
     final habitsAsync = ref.watch(habitsProvider);
-    final userProfile = ref.watch(userStatsStreamProvider).valueOrNull;
+    final userProfile = ref.watch(userStatsStreamProvider).value;
 
     return Dialog(
       backgroundColor: Colors.transparent,

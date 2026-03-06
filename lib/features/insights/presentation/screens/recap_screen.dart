@@ -39,7 +39,7 @@ class RecapScreen extends ConsumerWidget {
             final completedCount = completedToday.length;
 
             // Calculate XP from user stats
-            final userStats = userStatsAsync.valueOrNull;
+            final userStats = userStatsAsync.value;
             final totalXp = userStats?.avatarStats.totalXp ?? 0;
 
             // Calculate streaks for "perfect days" approximation
