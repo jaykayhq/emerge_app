@@ -3,6 +3,7 @@ import 'package:emerge_app/features/auth/presentation/providers/auth_providers.d
 import 'package:emerge_app/features/gamification/presentation/providers/user_stats_providers.dart';
 import 'package:emerge_app/features/social/data/repositories/challenge_repository.dart';
 import 'package:emerge_app/features/social/domain/models/challenge.dart';
+import 'package:emerge_app/features/social/domain/models/challenge_catalog.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 final challengeRepositoryProvider = Provider<ChallengeRepository>((ref) {
@@ -42,6 +43,13 @@ final weeklySpotlightProvider = FutureProvider<Challenge?>((ref) async {
   final profile = ref.watch(userStatsStreamProvider).value;
   if (profile == null) return null;
   return repository.getWeeklySpotlight(archetypeId: profile.archetype.name);
+});
+
+/// Daily quest for the user's archetype
+final dailyQuestProvider = FutureProvider<Challenge?>((ref) async {
+  final profile = ref.watch(userStatsStreamProvider).value;
+  if (profile == null) return null;
+  return ChallengeCatalog.getDailyQuest(profile.archetype.name);
 });
 
 /// Leaderboard for a specific challenge

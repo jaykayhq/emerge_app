@@ -271,8 +271,30 @@ class FirestoreGamificationRepository implements GamificationRepository {
         final nodeProgress = Map<String, dynamic>.from(
           worldState['nodeProgress'] as Map? ?? {}
         );
+        final previousCompletion = nodeProgress[nodeId]?['completed'] as bool? ?? false;
         final currentNodeXp = (nodeProgress[nodeId]?['xp'] as int? ?? 0) + amount;
         final isCompleted = currentNodeXp >= (nodeProgress[nodeId]?['required'] as int? ?? 100);
+        
+        // Check if this is a first-time completion
+        final isFirstTimeCompletion = isCompleted && !previousCompletion;
+        
+        // Award 100 XP bonus + attribute XP on first-time completion
+        if (isFirstTimeCompletion) {
+          // Award 100 XP to total
+          final newTotalXp = totalXp + 100;
+          avatarStats['totalXp'] = newTotalXp;
+          
+          // Award 100 XP to each target attribute
+          for (final attr in targetAttributes) {
+            final key = attr.toLowerCase();
+            attributeXp[key] = (attributeXp[key] as int? ?? 0) + 100;
+            
+            // Also update the specific attribute field
+            final attrField = '${key}Xp';
+            avatarStats[attrField] = (avatarStats[attrField] as int? ?? 0) + 100;
+          }
+        }
+        
         nodeProgress[nodeId] = {
           'xp': currentNodeXp,
           'completed': isCompleted,

@@ -519,32 +519,39 @@ class _GlassmorphismStatsBar extends StatelessWidget {
               ),
               const SizedBox(height: 8),
 
-              // XP Progress bar
-              ClipRRect(
-                borderRadius: BorderRadius.circular(99),
-                child: Container(
-                  height: 8,
-                  decoration: BoxDecoration(
-                    color: config.primaryColor.withValues(alpha: 0.2),
-                    borderRadius: BorderRadius.circular(99),
-                  ),
-                  child: FractionallySizedBox(
-                    widthFactor: xpProgress,
-                    alignment: Alignment.centerLeft,
-                    child: Container(
-                      decoration: BoxDecoration(
-                        color: config.primaryColor,
-                        borderRadius: BorderRadius.circular(99),
-                        boxShadow: [
-                          BoxShadow(
-                            color: config.primaryColor.withValues(alpha: 0.5),
-                            blurRadius: 8,
-                          ),
-                        ],
+              // XP Progress bar - using LayoutBuilder for proper width constraint
+              LayoutBuilder(
+                builder: (context, constraints) {
+                  return Stack(
+                    children: [
+                      // Background track
+                      Container(
+                        width: constraints.maxWidth,
+                        height: 8,
+                        decoration: BoxDecoration(
+                          color: config.primaryColor.withValues(alpha: 0.2),
+                          borderRadius: BorderRadius.circular(99),
+                        ),
                       ),
-                    ),
-                  ),
-                ),
+                      // Progress fill
+                      AnimatedContainer(
+                        duration: const Duration(milliseconds: 500),
+                        width: constraints.maxWidth * xpProgress,
+                        height: 8,
+                        decoration: BoxDecoration(
+                          color: config.primaryColor,
+                          borderRadius: BorderRadius.circular(99),
+                          boxShadow: [
+                            BoxShadow(
+                              color: config.primaryColor.withValues(alpha: 0.5),
+                              blurRadius: 8,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  );
+                },
               ),
 
               const SizedBox(height: 16),
