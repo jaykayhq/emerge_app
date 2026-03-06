@@ -64,7 +64,12 @@ class NotificationService {
     }
 
     await _localNotifications.initialize(
-      initSettings,
+      settings: const InitializationSettings(
+        android: AndroidInitializationSettings(
+          '@drawable/push_notification_icon',
+        ),
+        iOS: DarwinInitializationSettings(),
+      ),
       onDidReceiveNotificationResponse: (details) {
         // Handle notification tap - navigate to recap
         // implementation would require access to a router or global navigator context
@@ -143,11 +148,11 @@ class NotificationService {
       // Schedule for next Monday at 9:00 AM
 
       await _localNotifications.zonedSchedule(
-        0,
-        'Weekly Recap Ready',
-        'Check out how your world evolved this week!',
-        _nextMondayNineAM(),
-        const NotificationDetails(
+        id: 0,
+        title: 'Weekly Recap Ready',
+        body: 'Check out how your world evolved this week!',
+        scheduledDate: _nextMondayNineAM(),
+        notificationDetails: const NotificationDetails(
           android: AndroidNotificationDetails(
             'weekly_recap',
             'Weekly Recap',
@@ -158,8 +163,6 @@ class NotificationService {
           iOS: DarwinNotificationDetails(),
         ),
         androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
-        uiLocalNotificationDateInterpretation:
-            UILocalNotificationDateInterpretation.absoluteTime,
         matchDateTimeComponents: DateTimeComponents.dayOfWeekAndTime,
         payload: '/world/recap',
       );
@@ -201,10 +204,10 @@ class NotificationService {
   ) async {
     try {
       await _localNotifications.show(
-        challengeId.hashCode,
-        '🔥 New Weekly Challenge!',
-        challengeName,
-        const NotificationDetails(
+        id: challengeId.hashCode,
+        title: '🔥 New Weekly Challenge!',
+        body: challengeName,
+        notificationDetails: const NotificationDetails(
           android: AndroidNotificationDetails(
             'weekly_challenges',
             'Weekly Challenges',
@@ -232,10 +235,10 @@ class NotificationService {
           : '$hoursLeft hours';
 
       await _localNotifications.show(
-        challengeId.hashCode,
-        '⏰ Challenge Ending Soon!',
-        'Only $timeText left to complete your challenge!',
-        const NotificationDetails(
+        id: challengeId.hashCode,
+        title: '⏰ Challenge Ending Soon!',
+        body: 'Only $timeText left to complete your challenge!',
+        notificationDetails: const NotificationDetails(
           android: AndroidNotificationDetails(
             'challenge_reminders',
             'Challenge Reminders',
@@ -260,10 +263,10 @@ class NotificationService {
   ) async {
     try {
       await _localNotifications.show(
-        challengeId.hashCode,
-        '🎁 Reward Available!',
-        rewardDescription,
-        const NotificationDetails(
+        id: challengeId.hashCode,
+        title: '🎁 Reward Available!',
+        body: rewardDescription,
+        notificationDetails: const NotificationDetails(
           android: AndroidNotificationDetails(
             'rewards',
             'Rewards',
@@ -316,10 +319,10 @@ class NotificationService {
       );
 
       await _localNotifications.show(
-        habit.id.hashCode,
-        'New Habit Started',
-        message,
-        NotificationDetails(
+        id: habit.id.hashCode,
+        title: 'New Habit Started',
+        body: message,
+        notificationDetails: NotificationDetails(
           android: _archetypeNotificationDetails(archetype, channelId),
           iOS: const DarwinNotificationDetails(),
         ),
@@ -370,17 +373,15 @@ class NotificationService {
         case HabitFrequency.daily:
           final scheduledTime = _nextInstanceOfTime(hour, minute);
           await _localNotifications.zonedSchedule(
-            habitId.hashCode,
-            'Habit Reminder',
-            message,
-            scheduledTime,
-            NotificationDetails(
+            id: habitId.hashCode,
+            title: 'Habit Reminder',
+            body: message,
+            scheduledDate: scheduledTime,
+            notificationDetails: NotificationDetails(
               android: _archetypeNotificationDetails(archetype, channelId),
               iOS: const DarwinNotificationDetails(),
             ),
             androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
-            uiLocalNotificationDateInterpretation:
-                UILocalNotificationDateInterpretation.absoluteTime,
             matchDateTimeComponents: DateTimeComponents.time,
             payload: '/habits/$habitId',
           );
@@ -396,17 +397,15 @@ class NotificationService {
             minute,
           );
           await _localNotifications.zonedSchedule(
-            habitId.hashCode,
-            'Habit Reminder',
-            message,
-            weeklyTime,
-            NotificationDetails(
+            id: habitId.hashCode,
+            title: 'Habit Reminder',
+            body: message,
+            scheduledDate: weeklyTime,
+            notificationDetails: NotificationDetails(
               android: _archetypeNotificationDetails(archetype, channelId),
               iOS: const DarwinNotificationDetails(),
             ),
             androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
-            uiLocalNotificationDateInterpretation:
-                UILocalNotificationDateInterpretation.absoluteTime,
             matchDateTimeComponents: DateTimeComponents.dayOfWeekAndTime,
             payload: '/habits/$habitId',
           );
@@ -422,17 +421,15 @@ class NotificationService {
           for (final day in specificDays) {
             final dayTime = _nextInstanceOfDayOfWeek(day, hour, minute);
             await _localNotifications.zonedSchedule(
-              '${habitId}_$day'.hashCode,
-              'Habit Reminder',
-              message,
-              dayTime,
-              NotificationDetails(
+              id: '${habitId}_$day'.hashCode,
+              title: 'Habit Reminder',
+              body: message,
+              scheduledDate: dayTime,
+              notificationDetails: NotificationDetails(
                 android: _archetypeNotificationDetails(archetype, channelId),
                 iOS: const DarwinNotificationDetails(),
               ),
               androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
-              uiLocalNotificationDateInterpretation:
-                  UILocalNotificationDateInterpretation.absoluteTime,
               matchDateTimeComponents: DateTimeComponents.dayOfWeekAndTime,
               payload: '/habits/$habitId',
             );
@@ -450,7 +447,7 @@ class NotificationService {
   /// Cancels all notifications for a specific habit
   Future<void> cancelHabitNotifications(String habitId) async {
     try {
-      await _localNotifications.cancel(habitId.hashCode);
+      await _localNotifications.cancel(id: habitId.hashCode);
       debugPrint('Cancelled notifications for habit: $habitId');
     } catch (e) {
       debugPrint('Error cancelling habit notifications: $e');
@@ -524,17 +521,15 @@ class NotificationService {
       ).add(const Duration(hours: 1));
 
       await _localNotifications.zonedSchedule(
-        '${habitId}_streak'.hashCode,
-        '⚠️ Streak at Risk!',
-        message,
-        scheduledTime,
-        NotificationDetails(
+        id: '${habitId}_streak'.hashCode,
+        title: '⚠️ Streak at Risk!',
+        body: message,
+        scheduledDate: scheduledTime,
+        notificationDetails: NotificationDetails(
           android: _archetypeNotificationDetails(archetype, channelId),
           iOS: const DarwinNotificationDetails(),
         ),
         androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
-        uiLocalNotificationDateInterpretation:
-            UILocalNotificationDateInterpretation.absoluteTime,
         matchDateTimeComponents: DateTimeComponents.time,
         payload: '/habits/$habitId',
       );
@@ -554,10 +549,10 @@ class NotificationService {
       final greeting = NotificationTemplates.aiInsightGreeting(archetype);
 
       await _localNotifications.show(
-        'insight_$userId'.hashCode,
-        'Daily Insight',
-        '$greeting\n\n$insight',
-        const NotificationDetails(
+        id: 'insight_$userId'.hashCode,
+        title: 'Daily Insight',
+        body: '$greeting\n\n$insight',
+        notificationDetails: const NotificationDetails(
           android: AndroidNotificationDetails(
             NotificationChannels.aiInsights,
             'AI Insights',
@@ -586,10 +581,10 @@ class NotificationService {
       final message = NotificationTemplates.levelUp(archetype, newLevel);
 
       await _localNotifications.show(
-        'levelup_$userId'.hashCode,
-        '🏆 Level Up!',
-        message,
-        const NotificationDetails(
+        id: 'levelup_$userId'.hashCode,
+        title: '🏆 Level Up!',
+        body: message,
+        notificationDetails: const NotificationDetails(
           android: AndroidNotificationDetails(
             NotificationChannels.rewards,
             'Rewards',
@@ -621,10 +616,10 @@ class NotificationService {
       );
 
       await _localNotifications.show(
-        'achievement_${achievementName}_$userId'.hashCode,
-        '🏅 Achievement Unlocked!',
-        message,
-        const NotificationDetails(
+        id: 'achievement_${achievementName}_$userId'.hashCode,
+        title: '🏅 Achievement Unlocked!',
+        body: message,
+        notificationDetails: const NotificationDetails(
           android: AndroidNotificationDetails(
             NotificationChannels.rewards,
             'Rewards',

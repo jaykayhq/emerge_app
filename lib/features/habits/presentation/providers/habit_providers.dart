@@ -51,7 +51,7 @@ Future<void> createHabit(Ref ref, Habit habit) async {
     final isPremiumAsync = ref.read(isPremiumProvider);
     // Default to false if still loading or error, but ideally we should wait.
     // Since this is a simple provider, we'll try to get the value if available.
-    final isPremium = isPremiumAsync.valueOrNull ?? false;
+    final isPremium = isPremiumAsync.value ?? false;
 
     if (!isPremium) {
       // Check current habit count
@@ -64,7 +64,7 @@ Future<void> createHabit(Ref ref, Habit habit) async {
 
       if (!isOnboarding) {
         final habitsAsync = ref.read(habitsProvider);
-        final currentHabits = habitsAsync.valueOrNull ?? [];
+        final currentHabits = habitsAsync.value ?? [];
         final freeHabitLimit = ref
             .read(remoteConfigServiceProvider)
             .freeHabitLimit;

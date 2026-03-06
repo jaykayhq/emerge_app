@@ -139,7 +139,7 @@ final class CreateHabitProvider
   }
 }
 
-String _$createHabitHash() => r'e0d8d319284184dcdede588549b294c694af40e1';
+String _$createHabitHash() => r'a980185897c45e6a7013d5228da62618c03ffd0e';
 
 final class CreateHabitFamily extends $Family
     with $FunctionalFamilyOverride<FutureOr<void>, Habit> {

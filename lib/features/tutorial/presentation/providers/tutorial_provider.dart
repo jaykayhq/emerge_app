@@ -1,5 +1,8 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:emerge_app/features/onboarding/data/repositories/local_settings_repository.dart';
+
+part 'tutorial_provider.g.dart';
 
 /// Supported tutorial IDs
 enum TutorialStep {
@@ -23,12 +26,22 @@ class TutorialState {
   }
 }
 
-/// Provider for managing tutorial state
-class TutorialNotifier extends StateNotifier<TutorialState> {
-  final LocalSettingsRepository _repository;
+final localSettingsRepositoryProvider = Provider<LocalSettingsRepository>((
+  ref,
+) {
+  return LocalSettingsRepository();
+});
 
-  TutorialNotifier(this._repository) : super(const TutorialState()) {
+/// Provider for managing tutorial state
+@riverpod
+class TutorialNotifier extends _$TutorialNotifier {
+  LocalSettingsRepository get _repository =>
+      ref.read(localSettingsRepositoryProvider);
+
+  @override
+  TutorialState build() {
     _loadState();
+    return const TutorialState();
   }
 
   void _loadState() {
@@ -53,16 +66,3 @@ class TutorialNotifier extends StateNotifier<TutorialState> {
     state = const TutorialState();
   }
 }
-
-final localSettingsRepositoryProvider = Provider<LocalSettingsRepository>((
-  ref,
-) {
-  return LocalSettingsRepository();
-});
-
-final tutorialProvider = StateNotifierProvider<TutorialNotifier, TutorialState>(
-  (ref) {
-    final repository = ref.watch(localSettingsRepositoryProvider);
-    return TutorialNotifier(repository);
-  },
-);

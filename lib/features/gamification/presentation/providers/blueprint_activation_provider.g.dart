@@ -55,7 +55,7 @@ final class BlueprintActivationNotifierProvider
 }
 
 String _$blueprintActivationNotifierHash() =>
-    r'2cbd51e4f310cdb50833b10e4e6b3d1ab42079ab';
+    r'483e6bd5bb130be085d5957ac9dfa13d21ea8a3e';
 
 /// Blueprint Activation Notifier
 /// Handles the flow of selecting and activating blueprints
@@ -319,7 +319,7 @@ final class IsBlueprintActivatedProvider
 }
 
 String _$isBlueprintActivatedHash() =>
-    r'86a7fd75cca332a245b77e59180ce0891e9d7544';
+    r'618db4ffb5a8ab8f3453b08b5f687ab2fe6e9ac4';
 
 /// Provider to check if a blueprint is already activated
 
@@ -388,4 +388,4 @@ final class IsBlueprintActivatingProvider
 }
 
 String _$isBlueprintActivatingHash() =>
-    r'3fbde00e75deec24e2ecc3ac0e08b77755434144';
+    r'ee047d9c080abd6b4e6eeb7e5fb364c07796ac26';

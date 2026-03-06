@@ -35,7 +35,7 @@ class _HabitContractScreenState extends ConsumerState<HabitContractScreen> {
     final habitsAsync = ref.watch(habitsProvider);
 
     // Default to false while loading or if null
-    final isPremium = isPremiumAsync.valueOrNull ?? false;
+    final isPremium = isPremiumAsync.value ?? false;
 
     if (!isPremium) {
       return Scaffold(

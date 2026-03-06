@@ -160,7 +160,7 @@ class EnhancedOnboardingNotifier extends _$EnhancedOnboardingNotifier {
     final isFirstLaunch = localSettings.isFirstLaunch;
 
     // Try to restore state from user profile
-    final profile = ref.read(userProfileProvider).valueOrNull;
+    final profile = ref.read(userProfileProvider).value;
 
     if (profile != null && !isFirstLaunch) {
       final progress = profile.onboardingProgress;
@@ -355,7 +355,7 @@ class EnhancedOnboardingNotifier extends _$EnhancedOnboardingNotifier {
     final user = ref.read(authStateChangesProvider).value;
     if (user == null) return;
 
-    final dashboardNotifier = ref.read(dashboardStateNotifierProvider.notifier);
+    final dashboardNotifier = ref.read(dashboardStateProvider.notifier);
     final config = ref.read(remoteConfigServiceProvider).getOnboardingConfig();
     final suggestions = config.habitSuggestions;
 
@@ -423,7 +423,7 @@ class EnhancedOnboardingNotifier extends _$EnhancedOnboardingNotifier {
   /// Sync state to the legacy onboarding provider for backward compatibility
   void _syncToLegacyProvider() {
     ref
-        .read(onboardingStateProvider.notifier)
+        .read(onboardingStateControllerProvider.notifier)
         .update(
           (legacyState) => legacyState.copyWith(
             selectedArchetype: state.selectedArchetype,
@@ -457,7 +457,7 @@ class EnhancedOnboardingNotifier extends _$EnhancedOnboardingNotifier {
     );
 
     ref
-        .read(dashboardStateNotifierProvider.notifier)
+        .read(dashboardStateProvider.notifier)
         .syncOnboardingState(onboardingState);
   }
 
@@ -545,13 +545,13 @@ class EnhancedOnboardingNotifier extends _$EnhancedOnboardingNotifier {
 /// Provider for checking if onboarding is active
 @riverpod
 bool isOnboardingActive(Ref ref) {
-  final state = ref.watch(enhancedOnboardingNotifierProvider);
+  final state = ref.watch(enhancedOnboardingProvider);
   return state.isOnboardingActive;
 }
 
 /// Provider for onboarding progress percentage
 @riverpod
 double onboardingProgress(Ref ref) {
-  final state = ref.watch(enhancedOnboardingNotifierProvider);
+  final state = ref.watch(enhancedOnboardingProvider);
   return state.progressPercentage;
 }

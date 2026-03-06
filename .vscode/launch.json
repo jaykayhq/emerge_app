@@ -38,6 +38,44 @@
             "request": "launch",
             "url": "http://localhost:8080",
             "webRoot": "${workspaceFolder}"
+        },
+        {
+            "name": "Emerge App (Brave Browser)",
+            "request": "launch",
+            "type": "dart",
+            "args": [
+                "-d",
+                "chrome",
+                "--web-browser-executable",
+                "C:\\Users\\JOSHUA\\AppData\\Local\\BraveSoftware\\Brave-Browser\\Application\\brave.exe"
+            ]
+        },
+        {
+            "name": "Emerge App (Chrome)",
+            "request": "launch",
+            "type": "dart",
+            "args": [
+                "-d",
+                "chrome"
+            ]
+        },
+        {
+            "name": "Emerge App (Edge)",
+            "request": "launch",
+            "type": "dart",
+            "args": [
+                "-d",
+                "edge"
+            ]
+        },
+        {
+            "name": "Emerge App (Web Server)",
+            "request": "launch",
+            "type": "dart",
+            "args": [
+                "-d",
+                "web-server"
+            ]
         }
     ]
 }

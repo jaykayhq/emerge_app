@@ -55,7 +55,7 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
 
       await result.fold((error) => throw Exception(error), (user) async {
         // Create User Profile with initial onboarding state
-        final onboardingState = ref.read(onboardingStateProvider);
+        final onboardingState = ref.read(onboardingStateControllerProvider);
 
         final profile = UserProfile(
           uid: user.id,
@@ -127,7 +127,7 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
       final result = await ref.read(authRepositoryProvider).signInWithGoogle();
       await result.fold((error) => throw Exception(error), (user) async {
         // Create User Profile with initial onboarding state
-        final onboardingState = ref.read(onboardingStateProvider);
+        final onboardingState = ref.read(onboardingStateControllerProvider);
 
         final profile = UserProfile(
           uid: user.id,

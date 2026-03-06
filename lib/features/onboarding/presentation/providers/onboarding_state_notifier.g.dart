@@ -46,7 +46,7 @@ final class EnhancedOnboardingNotifierProvider
 }
 
 String _$enhancedOnboardingNotifierHash() =>
-    r'032dfda0daaf3169bfdaa70e53b5c09a5a9b6269';
+    r'18101e61a66f98b5a150b59581fa5af7e020a0c9';
 
 /// Enhanced Onboarding State Notifier with dashboard sync
 
@@ -115,7 +115,7 @@ final class IsOnboardingActiveProvider
 }
 
 String _$isOnboardingActiveHash() =>
-    r'df48960662433fe9e260555a2db4f215901765e7';
+    r'c3b567cb45e38d30167d144a62161236831f145c';
 
 /// Provider for onboarding progress percentage
 
@@ -162,4 +162,4 @@ final class OnboardingProgressProvider
 }
 
 String _$onboardingProgressHash() =>
-    r'a4ae9eb746b1836bfe98dba90de9122fa441397f';
+    r'bed2c2fa03d6b39c207dc430c1c27372cb1f4f8c';

@@ -182,9 +182,9 @@ class DashboardStateNotifier extends _$DashboardStateNotifier {
     });
 
     // Initialize with current values
-    final habits = ref.read(habitsProvider).valueOrNull ?? [];
+    final habits = ref.read(habitsProvider).value ?? [];
     final milestones = ref.read(activeMilestonesProvider);
-    final profile = ref.read(userProfileProvider).valueOrNull;
+    final profile = ref.read(userProfileProvider).value;
 
     return DashboardState(
       habits: habits,
@@ -374,27 +374,27 @@ class DashboardStateNotifier extends _$DashboardStateNotifier {
 /// Provider for today's habits only (derived from dashboard state)
 @riverpod
 List<Habit> todaysHabits(Ref ref) {
-  final dashboardState = ref.watch(dashboardStateNotifierProvider);
+  final dashboardState = ref.watch(dashboardStateProvider);
   return dashboardState.todaysHabits;
 }
 
 /// Provider for today's completion rate
 @riverpod
 double todayCompletionRate(Ref ref) {
-  final dashboardState = ref.watch(dashboardStateNotifierProvider);
+  final dashboardState = ref.watch(dashboardStateProvider);
   return dashboardState.todayCompletionRate;
 }
 
 /// Provider to check if dashboard is loading
 @riverpod
 bool isDashboardLoading(Ref ref) {
-  final dashboardState = ref.watch(dashboardStateNotifierProvider);
+  final dashboardState = ref.watch(dashboardStateProvider);
   return dashboardState.isCreatingHabit || dashboardState.isActivatingBlueprint;
 }
 
 /// Provider for dashboard error
 @riverpod
 String? dashboardError(Ref ref) {
-  final dashboardState = ref.watch(dashboardStateNotifierProvider);
+  final dashboardState = ref.watch(dashboardStateProvider);
   return dashboardState.error;
 }

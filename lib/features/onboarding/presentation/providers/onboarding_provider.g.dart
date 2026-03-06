@@ -90,7 +90,7 @@ final class OnboardingControllerProvider
 }
 
 String _$onboardingControllerHash() =>
-    r'20d47a40fc3105b0143946bf4d3d437f7e83183c';
+    r'144a7ff6007dd46bc24053cfd327e3370cd532e0';
 
 abstract class _$OnboardingController extends $Notifier<bool> {
   bool build();
@@ -103,6 +103,59 @@ abstract class _$OnboardingController extends $Notifier<bool> {
             as $ClassProviderElement<
               AnyNotifier<bool, bool>,
               bool,
+              Object?,
+              Object?
+            >;
+    element.handleCreate(ref, build);
+  }
+}
+
+@ProviderFor(OnboardingStateController)
+final onboardingStateControllerProvider = OnboardingStateControllerProvider._();
+
+final class OnboardingStateControllerProvider
+    extends $NotifierProvider<OnboardingStateController, OnboardingState> {
+  OnboardingStateControllerProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'onboardingStateControllerProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$onboardingStateControllerHash();
+
+  @$internal
+  @override
+  OnboardingStateController create() => OnboardingStateController();
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(OnboardingState value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<OnboardingState>(value),
+    );
+  }
+}
+
+String _$onboardingStateControllerHash() =>
+    r'743e1cb6b93878749580ab697a674ed31ca95463';
+
+abstract class _$OnboardingStateController extends $Notifier<OnboardingState> {
+  OnboardingState build();
+  @$mustCallSuper
+  @override
+  void runBuild() {
+    final ref = this.ref as $Ref<OnboardingState, OnboardingState>;
+    final element =
+        ref.element
+            as $ClassProviderElement<
+              AnyNotifier<OnboardingState, OnboardingState>,
+              OnboardingState,
               Object?,
               Object?
             >;
@@ -166,4 +219,4 @@ final class ActiveMilestonesProvider
   }
 }
 
-String _$activeMilestonesHash() => r'8de66bb4a0a9be7fb08c64014971115de1a2fd12';
+String _$activeMilestonesHash() => r'5d623f433b7841b8e790dcab9e7dbb11e7709344';
