@@ -6,203 +6,182 @@ part of 'auth_providers.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$authRepositoryHash() => r'924e0a5a942fe03f1f24a306b12cf5f4051d6976';
+// GENERATED CODE - DO NOT MODIFY BY HAND
+// ignore_for_file: type=lint, type=warning
 
-/// See also [authRepository].
 @ProviderFor(authRepository)
-final authRepositoryProvider = Provider<AuthRepository>.internal(
-  authRepository,
-  name: r'authRepositoryProvider',
-  debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
-      ? null
-      : _$authRepositoryHash,
-  dependencies: null,
-  allTransitiveDependencies: null,
-);
+final authRepositoryProvider = AuthRepositoryProvider._();
 
-@Deprecated('Will be removed in 3.0. Use Ref instead')
-// ignore: unused_element
-typedef AuthRepositoryRef = ProviderRef<AuthRepository>;
-String _$authStateChangesHash() => r'8e4ae7b18c2bb57c81d66378c876cd43eded4b30';
-
-/// See also [authStateChanges].
-@ProviderFor(authStateChanges)
-final authStateChangesProvider = StreamProvider<AuthUser>.internal(
-  authStateChanges,
-  name: r'authStateChangesProvider',
-  debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
-      ? null
-      : _$authStateChangesHash,
-  dependencies: null,
-  allTransitiveDependencies: null,
-);
-
-@Deprecated('Will be removed in 3.0. Use Ref instead')
-// ignore: unused_element
-typedef AuthStateChangesRef = StreamProviderRef<AuthUser>;
-String _$signInHash() => r'9abaebc4a7eab1020b4aab3dfd10389f2cb08f45';
-
-/// Copied from Dart SDK
-class _SystemHash {
-  _SystemHash._();
-
-  static int combine(int hash, int value) {
-    // ignore: parameter_assignments
-    hash = 0x1fffffff & (hash + value);
-    // ignore: parameter_assignments
-    hash = 0x1fffffff & (hash + ((0x0007ffff & hash) << 10));
-    return hash ^ (hash >> 6);
-  }
-
-  static int finish(int hash) {
-    // ignore: parameter_assignments
-    hash = 0x1fffffff & (hash + ((0x03ffffff & hash) << 3));
-    // ignore: parameter_assignments
-    hash = hash ^ (hash >> 11);
-    return 0x1fffffff & (hash + ((0x00003fff & hash) << 15));
-  }
-}
-
-/// See also [signIn].
-@ProviderFor(signIn)
-const signInProvider = SignInFamily();
-
-/// See also [signIn].
-class SignInFamily extends Family<AsyncValue<void>> {
-  /// See also [signIn].
-  const SignInFamily();
-
-  /// See also [signIn].
-  SignInProvider call(String email, String password) {
-    return SignInProvider(email, password);
-  }
-
-  @override
-  SignInProvider getProviderOverride(covariant SignInProvider provider) {
-    return call(provider.email, provider.password);
-  }
-
-  static const Iterable<ProviderOrFamily>? _dependencies = null;
-
-  @override
-  Iterable<ProviderOrFamily>? get dependencies => _dependencies;
-
-  static const Iterable<ProviderOrFamily>? _allTransitiveDependencies = null;
-
-  @override
-  Iterable<ProviderOrFamily>? get allTransitiveDependencies =>
-      _allTransitiveDependencies;
-
-  @override
-  String? get name => r'signInProvider';
-}
-
-/// See also [signIn].
-class SignInProvider extends AutoDisposeFutureProvider<void> {
-  /// See also [signIn].
-  SignInProvider(String email, String password)
-    : this._internal(
-        (ref) => signIn(ref as SignInRef, email, password),
-        from: signInProvider,
-        name: r'signInProvider',
-        debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
-            ? null
-            : _$signInHash,
-        dependencies: SignInFamily._dependencies,
-        allTransitiveDependencies: SignInFamily._allTransitiveDependencies,
-        email: email,
-        password: password,
+final class AuthRepositoryProvider
+    extends $FunctionalProvider<AuthRepository, AuthRepository, AuthRepository>
+    with $Provider<AuthRepository> {
+  AuthRepositoryProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'authRepositoryProvider',
+        isAutoDispose: false,
+        dependencies: null,
+        $allTransitiveDependencies: null,
       );
 
-  SignInProvider._internal(
-    super._createNotifier, {
-    required super.name,
-    required super.dependencies,
-    required super.allTransitiveDependencies,
-    required super.debugGetCreateSourceHash,
-    required super.from,
-    required this.email,
-    required this.password,
-  }) : super.internal();
+  @override
+  String debugGetCreateSourceHash() => _$authRepositoryHash();
 
-  final String email;
-  final String password;
+  @$internal
+  @override
+  $ProviderElement<AuthRepository> $createElement($ProviderPointer pointer) =>
+      $ProviderElement(pointer);
 
   @override
-  Override overrideWith(FutureOr<void> Function(SignInRef provider) create) {
-    return ProviderOverride(
-      origin: this,
-      override: SignInProvider._internal(
-        (ref) => create(ref as SignInRef),
-        from: from,
-        name: null,
-        dependencies: null,
-        allTransitiveDependencies: null,
-        debugGetCreateSourceHash: null,
-        email: email,
-        password: password,
-      ),
-    );
+  AuthRepository create(Ref ref) {
+    return authRepository(ref);
   }
 
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(AuthRepository value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<AuthRepository>(value),
+    );
+  }
+}
+
+String _$authRepositoryHash() => r'924e0a5a942fe03f1f24a306b12cf5f4051d6976';
+
+@ProviderFor(authStateChanges)
+final authStateChangesProvider = AuthStateChangesProvider._();
+
+final class AuthStateChangesProvider
+    extends
+        $FunctionalProvider<AsyncValue<AuthUser>, AuthUser, Stream<AuthUser>>
+    with $FutureModifier<AuthUser>, $StreamProvider<AuthUser> {
+  AuthStateChangesProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'authStateChangesProvider',
+        isAutoDispose: false,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
   @override
-  AutoDisposeFutureProviderElement<void> createElement() {
-    return _SignInProviderElement(this);
+  String debugGetCreateSourceHash() => _$authStateChangesHash();
+
+  @$internal
+  @override
+  $StreamProviderElement<AuthUser> $createElement($ProviderPointer pointer) =>
+      $StreamProviderElement(pointer);
+
+  @override
+  Stream<AuthUser> create(Ref ref) {
+    return authStateChanges(ref);
+  }
+}
+
+String _$authStateChangesHash() => r'8e4ae7b18c2bb57c81d66378c876cd43eded4b30';
+
+@ProviderFor(signIn)
+final signInProvider = SignInFamily._();
+
+final class SignInProvider
+    extends $FunctionalProvider<AsyncValue<void>, void, FutureOr<void>>
+    with $FutureModifier<void>, $FutureProvider<void> {
+  SignInProvider._({
+    required SignInFamily super.from,
+    required (String, String) super.argument,
+  }) : super(
+         retry: null,
+         name: r'signInProvider',
+         isAutoDispose: true,
+         dependencies: null,
+         $allTransitiveDependencies: null,
+       );
+
+  @override
+  String debugGetCreateSourceHash() => _$signInHash();
+
+  @override
+  String toString() {
+    return r'signInProvider'
+        ''
+        '$argument';
+  }
+
+  @$internal
+  @override
+  $FutureProviderElement<void> $createElement($ProviderPointer pointer) =>
+      $FutureProviderElement(pointer);
+
+  @override
+  FutureOr<void> create(Ref ref) {
+    final argument = this.argument as (String, String);
+    return signIn(ref, argument.$1, argument.$2);
   }
 
   @override
   bool operator ==(Object other) {
-    return other is SignInProvider &&
-        other.email == email &&
-        other.password == password;
+    return other is SignInProvider && other.argument == argument;
   }
 
   @override
   int get hashCode {
-    var hash = _SystemHash.combine(0, runtimeType.hashCode);
-    hash = _SystemHash.combine(hash, email.hashCode);
-    hash = _SystemHash.combine(hash, password.hashCode);
-
-    return _SystemHash.finish(hash);
+    return argument.hashCode;
   }
 }
 
-@Deprecated('Will be removed in 3.0. Use Ref instead')
-// ignore: unused_element
-mixin SignInRef on AutoDisposeFutureProviderRef<void> {
-  /// The parameter `email` of this provider.
-  String get email;
+String _$signInHash() => r'9abaebc4a7eab1020b4aab3dfd10389f2cb08f45';
 
-  /// The parameter `password` of this provider.
-  String get password;
+final class SignInFamily extends $Family
+    with $FunctionalFamilyOverride<FutureOr<void>, (String, String)> {
+  SignInFamily._()
+    : super(
+        retry: null,
+        name: r'signInProvider',
+        dependencies: null,
+        $allTransitiveDependencies: null,
+        isAutoDispose: true,
+      );
+
+  SignInProvider call(String email, String password) =>
+      SignInProvider._(argument: (email, password), from: this);
+
+  @override
+  String toString() => r'signInProvider';
 }
 
-class _SignInProviderElement extends AutoDisposeFutureProviderElement<void>
-    with SignInRef {
-  _SignInProviderElement(super.provider);
+@ProviderFor(signOut)
+final signOutProvider = SignOutProvider._();
+
+final class SignOutProvider
+    extends $FunctionalProvider<AsyncValue<void>, void, FutureOr<void>>
+    with $FutureModifier<void>, $FutureProvider<void> {
+  SignOutProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'signOutProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
 
   @override
-  String get email => (origin as SignInProvider).email;
+  String debugGetCreateSourceHash() => _$signOutHash();
+
+  @$internal
   @override
-  String get password => (origin as SignInProvider).password;
+  $FutureProviderElement<void> $createElement($ProviderPointer pointer) =>
+      $FutureProviderElement(pointer);
+
+  @override
+  FutureOr<void> create(Ref ref) {
+    return signOut(ref);
+  }
 }
 
 String _$signOutHash() => r'4b280108d412d729ffb848f22e53cee3550fc524';
-
-/// See also [signOut].
-@ProviderFor(signOut)
-final signOutProvider = AutoDisposeFutureProvider<void>.internal(
-  signOut,
-  name: r'signOutProvider',
-  debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
-      ? null
-      : _$signOutHash,
-  dependencies: null,
-  allTransitiveDependencies: null,
-);
-
-@Deprecated('Will be removed in 3.0. Use Ref instead')
-// ignore: unused_element
-typedef SignOutRef = AutoDisposeFutureProviderRef<void>;
-// ignore_for_file: type=lint
-// ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member, deprecated_member_use_from_same_package

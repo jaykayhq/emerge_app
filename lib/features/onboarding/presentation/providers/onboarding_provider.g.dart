@@ -6,63 +6,164 @@ part of 'onboarding_provider.dart';
 // RiverpodGenerator
 // **************************************************************************
 
+// GENERATED CODE - DO NOT MODIFY BY HAND
+// ignore_for_file: type=lint, type=warning
+
+@ProviderFor(localSettingsRepository)
+final localSettingsRepositoryProvider = LocalSettingsRepositoryProvider._();
+
+final class LocalSettingsRepositoryProvider
+    extends
+        $FunctionalProvider<
+          LocalSettingsRepository,
+          LocalSettingsRepository,
+          LocalSettingsRepository
+        >
+    with $Provider<LocalSettingsRepository> {
+  LocalSettingsRepositoryProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'localSettingsRepositoryProvider',
+        isAutoDispose: false,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$localSettingsRepositoryHash();
+
+  @$internal
+  @override
+  $ProviderElement<LocalSettingsRepository> $createElement(
+    $ProviderPointer pointer,
+  ) => $ProviderElement(pointer);
+
+  @override
+  LocalSettingsRepository create(Ref ref) {
+    return localSettingsRepository(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(LocalSettingsRepository value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<LocalSettingsRepository>(value),
+    );
+  }
+}
+
 String _$localSettingsRepositoryHash() =>
     r'4e4bc98b8dbd6be474b714b36bf182061aad78a2';
 
-/// See also [localSettingsRepository].
-@ProviderFor(localSettingsRepository)
-final localSettingsRepositoryProvider =
-    Provider<LocalSettingsRepository>.internal(
-      localSettingsRepository,
-      name: r'localSettingsRepositoryProvider',
-      debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
-          ? null
-          : _$localSettingsRepositoryHash,
-      dependencies: null,
-      allTransitiveDependencies: null,
-    );
+@ProviderFor(OnboardingController)
+final onboardingControllerProvider = OnboardingControllerProvider._();
 
-@Deprecated('Will be removed in 3.0. Use Ref instead')
-// ignore: unused_element
-typedef LocalSettingsRepositoryRef = ProviderRef<LocalSettingsRepository>;
-String _$activeMilestonesHash() => r'8de66bb4a0a9be7fb08c64014971115de1a2fd12';
+final class OnboardingControllerProvider
+    extends $NotifierProvider<OnboardingController, bool> {
+  OnboardingControllerProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'onboardingControllerProvider',
+        isAutoDispose: false,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$onboardingControllerHash();
+
+  @$internal
+  @override
+  OnboardingController create() => OnboardingController();
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(bool value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<bool>(value),
+    );
+  }
+}
+
+String _$onboardingControllerHash() =>
+    r'20d47a40fc3105b0143946bf4d3d437f7e83183c';
+
+abstract class _$OnboardingController extends $Notifier<bool> {
+  bool build();
+  @$mustCallSuper
+  @override
+  void runBuild() {
+    final ref = this.ref as $Ref<bool, bool>;
+    final element =
+        ref.element
+            as $ClassProviderElement<
+              AnyNotifier<bool, bool>,
+              bool,
+              Object?,
+              Object?
+            >;
+    element.handleCreate(ref, build);
+  }
+}
 
 /// Provider that returns the currently active onboarding milestones
 /// Based on user's onboarding progress (0-5)
 /// Returns empty list if onboarding is complete or if user profile isn't loaded
-///
-/// Copied from [activeMilestones].
+
 @ProviderFor(activeMilestones)
-final activeMilestonesProvider =
-    AutoDisposeProvider<List<OnboardingMilestone>>.internal(
-      activeMilestones,
-      name: r'activeMilestonesProvider',
-      debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
-          ? null
-          : _$activeMilestonesHash,
-      dependencies: null,
-      allTransitiveDependencies: null,
+final activeMilestonesProvider = ActiveMilestonesProvider._();
+
+/// Provider that returns the currently active onboarding milestones
+/// Based on user's onboarding progress (0-5)
+/// Returns empty list if onboarding is complete or if user profile isn't loaded
+
+final class ActiveMilestonesProvider
+    extends
+        $FunctionalProvider<
+          List<OnboardingMilestone>,
+          List<OnboardingMilestone>,
+          List<OnboardingMilestone>
+        >
+    with $Provider<List<OnboardingMilestone>> {
+  /// Provider that returns the currently active onboarding milestones
+  /// Based on user's onboarding progress (0-5)
+  /// Returns empty list if onboarding is complete or if user profile isn't loaded
+  ActiveMilestonesProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'activeMilestonesProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$activeMilestonesHash();
+
+  @$internal
+  @override
+  $ProviderElement<List<OnboardingMilestone>> $createElement(
+    $ProviderPointer pointer,
+  ) => $ProviderElement(pointer);
+
+  @override
+  List<OnboardingMilestone> create(Ref ref) {
+    return activeMilestones(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(List<OnboardingMilestone> value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<List<OnboardingMilestone>>(value),
     );
+  }
+}
 
-@Deprecated('Will be removed in 3.0. Use Ref instead')
-// ignore: unused_element
-typedef ActiveMilestonesRef = AutoDisposeProviderRef<List<OnboardingMilestone>>;
-String _$onboardingControllerHash() =>
-    r'a34756a4d366485488739ab2610e34155cb7e00c';
-
-/// See also [OnboardingController].
-@ProviderFor(OnboardingController)
-final onboardingControllerProvider =
-    NotifierProvider<OnboardingController, bool>.internal(
-      OnboardingController.new,
-      name: r'onboardingControllerProvider',
-      debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
-          ? null
-          : _$onboardingControllerHash,
-      dependencies: null,
-      allTransitiveDependencies: null,
-    );
-
-typedef _$OnboardingController = Notifier<bool>;
-// ignore_for_file: type=lint
-// ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member, deprecated_member_use_from_same_package
+String _$activeMilestonesHash() => r'8de66bb4a0a9be7fb08c64014971115de1a2fd12';

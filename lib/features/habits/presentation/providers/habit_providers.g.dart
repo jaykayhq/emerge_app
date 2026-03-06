@@ -6,431 +6,307 @@ part of 'habit_providers.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$habitRepositoryHash() => r'70914bf444ad8f23284fc561655c72d5ac1bdb32';
+// GENERATED CODE - DO NOT MODIFY BY HAND
+// ignore_for_file: type=lint, type=warning
 
-/// See also [habitRepository].
 @ProviderFor(habitRepository)
-final habitRepositoryProvider = Provider<HabitRepository>.internal(
-  habitRepository,
-  name: r'habitRepositoryProvider',
-  debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
-      ? null
-      : _$habitRepositoryHash,
-  dependencies: null,
-  allTransitiveDependencies: null,
-);
+final habitRepositoryProvider = HabitRepositoryProvider._();
 
-@Deprecated('Will be removed in 3.0. Use Ref instead')
-// ignore: unused_element
-typedef HabitRepositoryRef = ProviderRef<HabitRepository>;
-String _$habitsHash() => r'aacd2426f67145a362ccdcfa5c0dad89eea21a6b';
-
-/// See also [habits].
-@ProviderFor(habits)
-final habitsProvider = AutoDisposeStreamProvider<List<Habit>>.internal(
-  habits,
-  name: r'habitsProvider',
-  debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
-      ? null
-      : _$habitsHash,
-  dependencies: null,
-  allTransitiveDependencies: null,
-);
-
-@Deprecated('Will be removed in 3.0. Use Ref instead')
-// ignore: unused_element
-typedef HabitsRef = AutoDisposeStreamProviderRef<List<Habit>>;
-String _$createHabitHash() => r'e0d8d319284184dcdede588549b294c694af40e1';
-
-/// Copied from Dart SDK
-class _SystemHash {
-  _SystemHash._();
-
-  static int combine(int hash, int value) {
-    // ignore: parameter_assignments
-    hash = 0x1fffffff & (hash + value);
-    // ignore: parameter_assignments
-    hash = 0x1fffffff & (hash + ((0x0007ffff & hash) << 10));
-    return hash ^ (hash >> 6);
-  }
-
-  static int finish(int hash) {
-    // ignore: parameter_assignments
-    hash = 0x1fffffff & (hash + ((0x03ffffff & hash) << 3));
-    // ignore: parameter_assignments
-    hash = hash ^ (hash >> 11);
-    return 0x1fffffff & (hash + ((0x00003fff & hash) << 15));
-  }
-}
-
-/// See also [createHabit].
-@ProviderFor(createHabit)
-const createHabitProvider = CreateHabitFamily();
-
-/// See also [createHabit].
-class CreateHabitFamily extends Family<AsyncValue<void>> {
-  /// See also [createHabit].
-  const CreateHabitFamily();
-
-  /// See also [createHabit].
-  CreateHabitProvider call(Habit habit) {
-    return CreateHabitProvider(habit);
-  }
-
-  @override
-  CreateHabitProvider getProviderOverride(
-    covariant CreateHabitProvider provider,
-  ) {
-    return call(provider.habit);
-  }
-
-  static const Iterable<ProviderOrFamily>? _dependencies = null;
-
-  @override
-  Iterable<ProviderOrFamily>? get dependencies => _dependencies;
-
-  static const Iterable<ProviderOrFamily>? _allTransitiveDependencies = null;
-
-  @override
-  Iterable<ProviderOrFamily>? get allTransitiveDependencies =>
-      _allTransitiveDependencies;
-
-  @override
-  String? get name => r'createHabitProvider';
-}
-
-/// See also [createHabit].
-class CreateHabitProvider extends AutoDisposeFutureProvider<void> {
-  /// See also [createHabit].
-  CreateHabitProvider(Habit habit)
-    : this._internal(
-        (ref) => createHabit(ref as CreateHabitRef, habit),
-        from: createHabitProvider,
-        name: r'createHabitProvider',
-        debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
-            ? null
-            : _$createHabitHash,
-        dependencies: CreateHabitFamily._dependencies,
-        allTransitiveDependencies: CreateHabitFamily._allTransitiveDependencies,
-        habit: habit,
+final class HabitRepositoryProvider
+    extends
+        $FunctionalProvider<HabitRepository, HabitRepository, HabitRepository>
+    with $Provider<HabitRepository> {
+  HabitRepositoryProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'habitRepositoryProvider',
+        isAutoDispose: false,
+        dependencies: null,
+        $allTransitiveDependencies: null,
       );
 
-  CreateHabitProvider._internal(
-    super._createNotifier, {
-    required super.name,
-    required super.dependencies,
-    required super.allTransitiveDependencies,
-    required super.debugGetCreateSourceHash,
-    required super.from,
-    required this.habit,
-  }) : super.internal();
+  @override
+  String debugGetCreateSourceHash() => _$habitRepositoryHash();
 
-  final Habit habit;
+  @$internal
+  @override
+  $ProviderElement<HabitRepository> $createElement($ProviderPointer pointer) =>
+      $ProviderElement(pointer);
 
   @override
-  Override overrideWith(
-    FutureOr<void> Function(CreateHabitRef provider) create,
-  ) {
-    return ProviderOverride(
-      origin: this,
-      override: CreateHabitProvider._internal(
-        (ref) => create(ref as CreateHabitRef),
-        from: from,
-        name: null,
-        dependencies: null,
-        allTransitiveDependencies: null,
-        debugGetCreateSourceHash: null,
-        habit: habit,
-      ),
-    );
+  HabitRepository create(Ref ref) {
+    return habitRepository(ref);
   }
 
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(HabitRepository value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<HabitRepository>(value),
+    );
+  }
+}
+
+String _$habitRepositoryHash() => r'70914bf444ad8f23284fc561655c72d5ac1bdb32';
+
+@ProviderFor(habits)
+final habitsProvider = HabitsProvider._();
+
+final class HabitsProvider
+    extends
+        $FunctionalProvider<
+          AsyncValue<List<Habit>>,
+          List<Habit>,
+          Stream<List<Habit>>
+        >
+    with $FutureModifier<List<Habit>>, $StreamProvider<List<Habit>> {
+  HabitsProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'habitsProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
   @override
-  AutoDisposeFutureProviderElement<void> createElement() {
-    return _CreateHabitProviderElement(this);
+  String debugGetCreateSourceHash() => _$habitsHash();
+
+  @$internal
+  @override
+  $StreamProviderElement<List<Habit>> $createElement(
+    $ProviderPointer pointer,
+  ) => $StreamProviderElement(pointer);
+
+  @override
+  Stream<List<Habit>> create(Ref ref) {
+    return habits(ref);
+  }
+}
+
+String _$habitsHash() => r'aacd2426f67145a362ccdcfa5c0dad89eea21a6b';
+
+@ProviderFor(createHabit)
+final createHabitProvider = CreateHabitFamily._();
+
+final class CreateHabitProvider
+    extends $FunctionalProvider<AsyncValue<void>, void, FutureOr<void>>
+    with $FutureModifier<void>, $FutureProvider<void> {
+  CreateHabitProvider._({
+    required CreateHabitFamily super.from,
+    required Habit super.argument,
+  }) : super(
+         retry: null,
+         name: r'createHabitProvider',
+         isAutoDispose: true,
+         dependencies: null,
+         $allTransitiveDependencies: null,
+       );
+
+  @override
+  String debugGetCreateSourceHash() => _$createHabitHash();
+
+  @override
+  String toString() {
+    return r'createHabitProvider'
+        ''
+        '($argument)';
+  }
+
+  @$internal
+  @override
+  $FutureProviderElement<void> $createElement($ProviderPointer pointer) =>
+      $FutureProviderElement(pointer);
+
+  @override
+  FutureOr<void> create(Ref ref) {
+    final argument = this.argument as Habit;
+    return createHabit(ref, argument);
   }
 
   @override
   bool operator ==(Object other) {
-    return other is CreateHabitProvider && other.habit == habit;
+    return other is CreateHabitProvider && other.argument == argument;
   }
 
   @override
   int get hashCode {
-    var hash = _SystemHash.combine(0, runtimeType.hashCode);
-    hash = _SystemHash.combine(hash, habit.hashCode);
-
-    return _SystemHash.finish(hash);
+    return argument.hashCode;
   }
 }
 
-@Deprecated('Will be removed in 3.0. Use Ref instead')
-// ignore: unused_element
-mixin CreateHabitRef on AutoDisposeFutureProviderRef<void> {
-  /// The parameter `habit` of this provider.
-  Habit get habit;
-}
+String _$createHabitHash() => r'e0d8d319284184dcdede588549b294c694af40e1';
 
-class _CreateHabitProviderElement extends AutoDisposeFutureProviderElement<void>
-    with CreateHabitRef {
-  _CreateHabitProviderElement(super.provider);
+final class CreateHabitFamily extends $Family
+    with $FunctionalFamilyOverride<FutureOr<void>, Habit> {
+  CreateHabitFamily._()
+    : super(
+        retry: null,
+        name: r'createHabitProvider',
+        dependencies: null,
+        $allTransitiveDependencies: null,
+        isAutoDispose: true,
+      );
+
+  CreateHabitProvider call(Habit habit) =>
+      CreateHabitProvider._(argument: habit, from: this);
 
   @override
-  Habit get habit => (origin as CreateHabitProvider).habit;
+  String toString() => r'createHabitProvider';
+}
+
+@ProviderFor(completeHabit)
+final completeHabitProvider = CompleteHabitFamily._();
+
+final class CompleteHabitProvider
+    extends $FunctionalProvider<AsyncValue<void>, void, FutureOr<void>>
+    with $FutureModifier<void>, $FutureProvider<void> {
+  CompleteHabitProvider._({
+    required CompleteHabitFamily super.from,
+    required String super.argument,
+  }) : super(
+         retry: null,
+         name: r'completeHabitProvider',
+         isAutoDispose: true,
+         dependencies: null,
+         $allTransitiveDependencies: null,
+       );
+
+  @override
+  String debugGetCreateSourceHash() => _$completeHabitHash();
+
+  @override
+  String toString() {
+    return r'completeHabitProvider'
+        ''
+        '($argument)';
+  }
+
+  @$internal
+  @override
+  $FutureProviderElement<void> $createElement($ProviderPointer pointer) =>
+      $FutureProviderElement(pointer);
+
+  @override
+  FutureOr<void> create(Ref ref) {
+    final argument = this.argument as String;
+    return completeHabit(ref, argument);
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return other is CompleteHabitProvider && other.argument == argument;
+  }
+
+  @override
+  int get hashCode {
+    return argument.hashCode;
+  }
 }
 
 String _$completeHabitHash() => r'b354c2927bf91f508bade3bcd7fc8de6a5c79e19';
 
-/// See also [completeHabit].
-@ProviderFor(completeHabit)
-const completeHabitProvider = CompleteHabitFamily();
-
-/// See also [completeHabit].
-class CompleteHabitFamily extends Family<AsyncValue<void>> {
-  /// See also [completeHabit].
-  const CompleteHabitFamily();
-
-  /// See also [completeHabit].
-  CompleteHabitProvider call(String habitId) {
-    return CompleteHabitProvider(habitId);
-  }
-
-  @override
-  CompleteHabitProvider getProviderOverride(
-    covariant CompleteHabitProvider provider,
-  ) {
-    return call(provider.habitId);
-  }
-
-  static const Iterable<ProviderOrFamily>? _dependencies = null;
-
-  @override
-  Iterable<ProviderOrFamily>? get dependencies => _dependencies;
-
-  static const Iterable<ProviderOrFamily>? _allTransitiveDependencies = null;
-
-  @override
-  Iterable<ProviderOrFamily>? get allTransitiveDependencies =>
-      _allTransitiveDependencies;
-
-  @override
-  String? get name => r'completeHabitProvider';
-}
-
-/// See also [completeHabit].
-class CompleteHabitProvider extends AutoDisposeFutureProvider<void> {
-  /// See also [completeHabit].
-  CompleteHabitProvider(String habitId)
-    : this._internal(
-        (ref) => completeHabit(ref as CompleteHabitRef, habitId),
-        from: completeHabitProvider,
+final class CompleteHabitFamily extends $Family
+    with $FunctionalFamilyOverride<FutureOr<void>, String> {
+  CompleteHabitFamily._()
+    : super(
+        retry: null,
         name: r'completeHabitProvider',
-        debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
-            ? null
-            : _$completeHabitHash,
-        dependencies: CompleteHabitFamily._dependencies,
-        allTransitiveDependencies:
-            CompleteHabitFamily._allTransitiveDependencies,
-        habitId: habitId,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+        isAutoDispose: true,
       );
 
-  CompleteHabitProvider._internal(
-    super._createNotifier, {
-    required super.name,
-    required super.dependencies,
-    required super.allTransitiveDependencies,
-    required super.debugGetCreateSourceHash,
-    required super.from,
-    required this.habitId,
-  }) : super.internal();
-
-  final String habitId;
+  CompleteHabitProvider call(String habitId) =>
+      CompleteHabitProvider._(argument: habitId, from: this);
 
   @override
-  Override overrideWith(
-    FutureOr<void> Function(CompleteHabitRef provider) create,
-  ) {
-    return ProviderOverride(
-      origin: this,
-      override: CompleteHabitProvider._internal(
-        (ref) => create(ref as CompleteHabitRef),
-        from: from,
-        name: null,
-        dependencies: null,
-        allTransitiveDependencies: null,
-        debugGetCreateSourceHash: null,
-        habitId: habitId,
-      ),
-    );
+  String toString() => r'completeHabitProvider';
+}
+
+@ProviderFor(habitActivity)
+final habitActivityProvider = HabitActivityFamily._();
+
+final class HabitActivityProvider
+    extends
+        $FunctionalProvider<
+          AsyncValue<List<HabitActivity>>,
+          List<HabitActivity>,
+          FutureOr<List<HabitActivity>>
+        >
+    with
+        $FutureModifier<List<HabitActivity>>,
+        $FutureProvider<List<HabitActivity>> {
+  HabitActivityProvider._({
+    required HabitActivityFamily super.from,
+    required ({DateTime start, DateTime end}) super.argument,
+  }) : super(
+         retry: null,
+         name: r'habitActivityProvider',
+         isAutoDispose: true,
+         dependencies: null,
+         $allTransitiveDependencies: null,
+       );
+
+  @override
+  String debugGetCreateSourceHash() => _$habitActivityHash();
+
+  @override
+  String toString() {
+    return r'habitActivityProvider'
+        ''
+        '$argument';
   }
 
+  @$internal
   @override
-  AutoDisposeFutureProviderElement<void> createElement() {
-    return _CompleteHabitProviderElement(this);
+  $FutureProviderElement<List<HabitActivity>> $createElement(
+    $ProviderPointer pointer,
+  ) => $FutureProviderElement(pointer);
+
+  @override
+  FutureOr<List<HabitActivity>> create(Ref ref) {
+    final argument = this.argument as ({DateTime start, DateTime end});
+    return habitActivity(ref, start: argument.start, end: argument.end);
   }
 
   @override
   bool operator ==(Object other) {
-    return other is CompleteHabitProvider && other.habitId == habitId;
+    return other is HabitActivityProvider && other.argument == argument;
   }
 
   @override
   int get hashCode {
-    var hash = _SystemHash.combine(0, runtimeType.hashCode);
-    hash = _SystemHash.combine(hash, habitId.hashCode);
-
-    return _SystemHash.finish(hash);
+    return argument.hashCode;
   }
-}
-
-@Deprecated('Will be removed in 3.0. Use Ref instead')
-// ignore: unused_element
-mixin CompleteHabitRef on AutoDisposeFutureProviderRef<void> {
-  /// The parameter `habitId` of this provider.
-  String get habitId;
-}
-
-class _CompleteHabitProviderElement
-    extends AutoDisposeFutureProviderElement<void>
-    with CompleteHabitRef {
-  _CompleteHabitProviderElement(super.provider);
-
-  @override
-  String get habitId => (origin as CompleteHabitProvider).habitId;
 }
 
 String _$habitActivityHash() => r'a3a0cb90b290befbf5d6cb2bf715b7d1b98c1beb';
 
-/// See also [habitActivity].
-@ProviderFor(habitActivity)
-const habitActivityProvider = HabitActivityFamily();
-
-/// See also [habitActivity].
-class HabitActivityFamily extends Family<AsyncValue<List<HabitActivity>>> {
-  /// See also [habitActivity].
-  const HabitActivityFamily();
-
-  /// See also [habitActivity].
-  HabitActivityProvider call({required DateTime start, required DateTime end}) {
-    return HabitActivityProvider(start: start, end: end);
-  }
-
-  @override
-  HabitActivityProvider getProviderOverride(
-    covariant HabitActivityProvider provider,
-  ) {
-    return call(start: provider.start, end: provider.end);
-  }
-
-  static const Iterable<ProviderOrFamily>? _dependencies = null;
-
-  @override
-  Iterable<ProviderOrFamily>? get dependencies => _dependencies;
-
-  static const Iterable<ProviderOrFamily>? _allTransitiveDependencies = null;
-
-  @override
-  Iterable<ProviderOrFamily>? get allTransitiveDependencies =>
-      _allTransitiveDependencies;
-
-  @override
-  String? get name => r'habitActivityProvider';
-}
-
-/// See also [habitActivity].
-class HabitActivityProvider
-    extends AutoDisposeFutureProvider<List<HabitActivity>> {
-  /// See also [habitActivity].
-  HabitActivityProvider({required DateTime start, required DateTime end})
-    : this._internal(
-        (ref) => habitActivity(ref as HabitActivityRef, start: start, end: end),
-        from: habitActivityProvider,
+final class HabitActivityFamily extends $Family
+    with
+        $FunctionalFamilyOverride<
+          FutureOr<List<HabitActivity>>,
+          ({DateTime start, DateTime end})
+        > {
+  HabitActivityFamily._()
+    : super(
+        retry: null,
         name: r'habitActivityProvider',
-        debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
-            ? null
-            : _$habitActivityHash,
-        dependencies: HabitActivityFamily._dependencies,
-        allTransitiveDependencies:
-            HabitActivityFamily._allTransitiveDependencies,
-        start: start,
-        end: end,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+        isAutoDispose: true,
       );
 
-  HabitActivityProvider._internal(
-    super._createNotifier, {
-    required super.name,
-    required super.dependencies,
-    required super.allTransitiveDependencies,
-    required super.debugGetCreateSourceHash,
-    required super.from,
-    required this.start,
-    required this.end,
-  }) : super.internal();
-
-  final DateTime start;
-  final DateTime end;
+  HabitActivityProvider call({
+    required DateTime start,
+    required DateTime end,
+  }) => HabitActivityProvider._(argument: (start: start, end: end), from: this);
 
   @override
-  Override overrideWith(
-    FutureOr<List<HabitActivity>> Function(HabitActivityRef provider) create,
-  ) {
-    return ProviderOverride(
-      origin: this,
-      override: HabitActivityProvider._internal(
-        (ref) => create(ref as HabitActivityRef),
-        from: from,
-        name: null,
-        dependencies: null,
-        allTransitiveDependencies: null,
-        debugGetCreateSourceHash: null,
-        start: start,
-        end: end,
-      ),
-    );
-  }
-
-  @override
-  AutoDisposeFutureProviderElement<List<HabitActivity>> createElement() {
-    return _HabitActivityProviderElement(this);
-  }
-
-  @override
-  bool operator ==(Object other) {
-    return other is HabitActivityProvider &&
-        other.start == start &&
-        other.end == end;
-  }
-
-  @override
-  int get hashCode {
-    var hash = _SystemHash.combine(0, runtimeType.hashCode);
-    hash = _SystemHash.combine(hash, start.hashCode);
-    hash = _SystemHash.combine(hash, end.hashCode);
-
-    return _SystemHash.finish(hash);
-  }
+  String toString() => r'habitActivityProvider';
 }
-
-@Deprecated('Will be removed in 3.0. Use Ref instead')
-// ignore: unused_element
-mixin HabitActivityRef on AutoDisposeFutureProviderRef<List<HabitActivity>> {
-  /// The parameter `start` of this provider.
-  DateTime get start;
-
-  /// The parameter `end` of this provider.
-  DateTime get end;
-}
-
-class _HabitActivityProviderElement
-    extends AutoDisposeFutureProviderElement<List<HabitActivity>>
-    with HabitActivityRef {
-  _HabitActivityProviderElement(super.provider);
-
-  @override
-  DateTime get start => (origin as HabitActivityProvider).start;
-  @override
-  DateTime get end => (origin as HabitActivityProvider).end;
-}
-
-// ignore_for_file: type=lint
-// ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member, deprecated_member_use_from_same_package
