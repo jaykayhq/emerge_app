@@ -6,23 +6,53 @@ part of 'remote_config_service.dart';
 // RiverpodGenerator
 // **************************************************************************
 
+// GENERATED CODE - DO NOT MODIFY BY HAND
+// ignore_for_file: type=lint, type=warning
+
+@ProviderFor(remoteConfigService)
+final remoteConfigServiceProvider = RemoteConfigServiceProvider._();
+
+final class RemoteConfigServiceProvider
+    extends
+        $FunctionalProvider<
+          RemoteConfigService,
+          RemoteConfigService,
+          RemoteConfigService
+        >
+    with $Provider<RemoteConfigService> {
+  RemoteConfigServiceProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'remoteConfigServiceProvider',
+        isAutoDispose: false,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$remoteConfigServiceHash();
+
+  @$internal
+  @override
+  $ProviderElement<RemoteConfigService> $createElement(
+    $ProviderPointer pointer,
+  ) => $ProviderElement(pointer);
+
+  @override
+  RemoteConfigService create(Ref ref) {
+    return remoteConfigService(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(RemoteConfigService value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<RemoteConfigService>(value),
+    );
+  }
+}
+
 String _$remoteConfigServiceHash() =>
     r'2dc343b102f76b91a447a61e2bc0f2edba7c5bb8';
-
-/// See also [remoteConfigService].
-@ProviderFor(remoteConfigService)
-final remoteConfigServiceProvider = Provider<RemoteConfigService>.internal(
-  remoteConfigService,
-  name: r'remoteConfigServiceProvider',
-  debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
-      ? null
-      : _$remoteConfigServiceHash,
-  dependencies: null,
-  allTransitiveDependencies: null,
-);
-
-@Deprecated('Will be removed in 3.0. Use Ref instead')
-// ignore: unused_element
-typedef RemoteConfigServiceRef = ProviderRef<RemoteConfigService>;
-// ignore_for_file: type=lint
-// ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member, deprecated_member_use_from_same_package

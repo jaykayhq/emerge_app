@@ -6,103 +6,253 @@ part of 'dashboard_state_provider.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$todaysHabitsHash() => r'80700c6896d2bdbd7ac191e70c714e21a240ad52';
+// GENERATED CODE - DO NOT MODIFY BY HAND
+// ignore_for_file: type=lint, type=warning
+/// Central Dashboard State Notifier
+/// Orchestrates all state that affects the dashboard view
 
-/// Provider for today's habits only (derived from dashboard state)
-///
-/// Copied from [todaysHabits].
-@ProviderFor(todaysHabits)
-final todaysHabitsProvider = AutoDisposeProvider<List<Habit>>.internal(
-  todaysHabits,
-  name: r'todaysHabitsProvider',
-  debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
-      ? null
-      : _$todaysHabitsHash,
-  dependencies: null,
-  allTransitiveDependencies: null,
-);
+@ProviderFor(DashboardStateNotifier)
+final dashboardStateProvider = DashboardStateNotifierProvider._();
 
-@Deprecated('Will be removed in 3.0. Use Ref instead')
-// ignore: unused_element
-typedef TodaysHabitsRef = AutoDisposeProviderRef<List<Habit>>;
-String _$todayCompletionRateHash() =>
-    r'61eeee6ae732489303830704608452785a91ab39';
+/// Central Dashboard State Notifier
+/// Orchestrates all state that affects the dashboard view
+final class DashboardStateNotifierProvider
+    extends $NotifierProvider<DashboardStateNotifier, DashboardState> {
+  /// Central Dashboard State Notifier
+  /// Orchestrates all state that affects the dashboard view
+  DashboardStateNotifierProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'dashboardStateProvider',
+        isAutoDispose: false,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
 
-/// Provider for today's completion rate
-///
-/// Copied from [todayCompletionRate].
-@ProviderFor(todayCompletionRate)
-final todayCompletionRateProvider = AutoDisposeProvider<double>.internal(
-  todayCompletionRate,
-  name: r'todayCompletionRateProvider',
-  debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
-      ? null
-      : _$todayCompletionRateHash,
-  dependencies: null,
-  allTransitiveDependencies: null,
-);
+  @override
+  String debugGetCreateSourceHash() => _$dashboardStateNotifierHash();
 
-@Deprecated('Will be removed in 3.0. Use Ref instead')
-// ignore: unused_element
-typedef TodayCompletionRateRef = AutoDisposeProviderRef<double>;
-String _$isDashboardLoadingHash() =>
-    r'e270eee14c54b4333413cf34ab4ae8ce26495756';
+  @$internal
+  @override
+  DashboardStateNotifier create() => DashboardStateNotifier();
 
-/// Provider to check if dashboard is loading
-///
-/// Copied from [isDashboardLoading].
-@ProviderFor(isDashboardLoading)
-final isDashboardLoadingProvider = AutoDisposeProvider<bool>.internal(
-  isDashboardLoading,
-  name: r'isDashboardLoadingProvider',
-  debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
-      ? null
-      : _$isDashboardLoadingHash,
-  dependencies: null,
-  allTransitiveDependencies: null,
-);
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(DashboardState value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<DashboardState>(value),
+    );
+  }
+}
 
-@Deprecated('Will be removed in 3.0. Use Ref instead')
-// ignore: unused_element
-typedef IsDashboardLoadingRef = AutoDisposeProviderRef<bool>;
-String _$dashboardErrorHash() => r'd65107ed07d8c6b0ecfa7fd869896bac75002686';
-
-/// Provider for dashboard error
-///
-/// Copied from [dashboardError].
-@ProviderFor(dashboardError)
-final dashboardErrorProvider = AutoDisposeProvider<String?>.internal(
-  dashboardError,
-  name: r'dashboardErrorProvider',
-  debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
-      ? null
-      : _$dashboardErrorHash,
-  dependencies: null,
-  allTransitiveDependencies: null,
-);
-
-@Deprecated('Will be removed in 3.0. Use Ref instead')
-// ignore: unused_element
-typedef DashboardErrorRef = AutoDisposeProviderRef<String?>;
 String _$dashboardStateNotifierHash() =>
     r'1b9e97ce688b57f4ec1f562c47c9c42dc045bbbb';
 
 /// Central Dashboard State Notifier
 /// Orchestrates all state that affects the dashboard view
-///
-/// Copied from [DashboardStateNotifier].
-@ProviderFor(DashboardStateNotifier)
-final dashboardStateNotifierProvider =
-    NotifierProvider<DashboardStateNotifier, DashboardState>.internal(
-      DashboardStateNotifier.new,
-      name: r'dashboardStateNotifierProvider',
-      debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
-          ? null
-          : _$dashboardStateNotifierHash,
-      dependencies: null,
-      allTransitiveDependencies: null,
-    );
 
-typedef _$DashboardStateNotifier = Notifier<DashboardState>;
-// ignore_for_file: type=lint
-// ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member, deprecated_member_use_from_same_package
+abstract class _$DashboardStateNotifier extends $Notifier<DashboardState> {
+  DashboardState build();
+  @$mustCallSuper
+  @override
+  void runBuild() {
+    final ref = this.ref as $Ref<DashboardState, DashboardState>;
+    final element =
+        ref.element
+            as $ClassProviderElement<
+              AnyNotifier<DashboardState, DashboardState>,
+              DashboardState,
+              Object?,
+              Object?
+            >;
+    element.handleCreate(ref, build);
+  }
+}
+
+/// Provider for today's habits only (derived from dashboard state)
+
+@ProviderFor(todaysHabits)
+final todaysHabitsProvider = TodaysHabitsProvider._();
+
+/// Provider for today's habits only (derived from dashboard state)
+
+final class TodaysHabitsProvider
+    extends $FunctionalProvider<List<Habit>, List<Habit>, List<Habit>>
+    with $Provider<List<Habit>> {
+  /// Provider for today's habits only (derived from dashboard state)
+  TodaysHabitsProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'todaysHabitsProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$todaysHabitsHash();
+
+  @$internal
+  @override
+  $ProviderElement<List<Habit>> $createElement($ProviderPointer pointer) =>
+      $ProviderElement(pointer);
+
+  @override
+  List<Habit> create(Ref ref) {
+    return todaysHabits(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(List<Habit> value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<List<Habit>>(value),
+    );
+  }
+}
+
+String _$todaysHabitsHash() => r'80700c6896d2bdbd7ac191e70c714e21a240ad52';
+
+/// Provider for today's completion rate
+
+@ProviderFor(todayCompletionRate)
+final todayCompletionRateProvider = TodayCompletionRateProvider._();
+
+/// Provider for today's completion rate
+
+final class TodayCompletionRateProvider
+    extends $FunctionalProvider<double, double, double>
+    with $Provider<double> {
+  /// Provider for today's completion rate
+  TodayCompletionRateProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'todayCompletionRateProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$todayCompletionRateHash();
+
+  @$internal
+  @override
+  $ProviderElement<double> $createElement($ProviderPointer pointer) =>
+      $ProviderElement(pointer);
+
+  @override
+  double create(Ref ref) {
+    return todayCompletionRate(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(double value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<double>(value),
+    );
+  }
+}
+
+String _$todayCompletionRateHash() =>
+    r'61eeee6ae732489303830704608452785a91ab39';
+
+/// Provider to check if dashboard is loading
+
+@ProviderFor(isDashboardLoading)
+final isDashboardLoadingProvider = IsDashboardLoadingProvider._();
+
+/// Provider to check if dashboard is loading
+
+final class IsDashboardLoadingProvider
+    extends $FunctionalProvider<bool, bool, bool>
+    with $Provider<bool> {
+  /// Provider to check if dashboard is loading
+  IsDashboardLoadingProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'isDashboardLoadingProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$isDashboardLoadingHash();
+
+  @$internal
+  @override
+  $ProviderElement<bool> $createElement($ProviderPointer pointer) =>
+      $ProviderElement(pointer);
+
+  @override
+  bool create(Ref ref) {
+    return isDashboardLoading(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(bool value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<bool>(value),
+    );
+  }
+}
+
+String _$isDashboardLoadingHash() =>
+    r'e270eee14c54b4333413cf34ab4ae8ce26495756';
+
+/// Provider for dashboard error
+
+@ProviderFor(dashboardError)
+final dashboardErrorProvider = DashboardErrorProvider._();
+
+/// Provider for dashboard error
+
+final class DashboardErrorProvider
+    extends $FunctionalProvider<String?, String?, String?>
+    with $Provider<String?> {
+  /// Provider for dashboard error
+  DashboardErrorProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'dashboardErrorProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$dashboardErrorHash();
+
+  @$internal
+  @override
+  $ProviderElement<String?> $createElement($ProviderPointer pointer) =>
+      $ProviderElement(pointer);
+
+  @override
+  String? create(Ref ref) {
+    return dashboardError(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(String? value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<String?>(value),
+    );
+  }
+}
+
+String _$dashboardErrorHash() => r'd65107ed07d8c6b0ecfa7fd869896bac75002686';
