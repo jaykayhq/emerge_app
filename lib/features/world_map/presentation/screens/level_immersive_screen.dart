@@ -138,7 +138,7 @@ class LevelImmersiveScreen extends ConsumerWidget {
       fit: BoxFit.cover,
       width: screenSize.width,
       height: screenSize.height,
-      errorBuilder: (_, __, ___) => _buildFallbackBackground(screenSize),
+      errorBuilder: (_, _, _) => _buildFallbackBackground(screenSize),
     );
   }
 

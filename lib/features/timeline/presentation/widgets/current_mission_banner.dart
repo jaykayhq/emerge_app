@@ -71,7 +71,7 @@ class CurrentMissionBanner extends ConsumerWidget {
         height: 80,
         child: Center(child: CircularProgressIndicator()),
       ),
-      error: (_, __) => const SizedBox.shrink(),
+      error: (_, _) => const SizedBox.shrink(),
     );
   }
 

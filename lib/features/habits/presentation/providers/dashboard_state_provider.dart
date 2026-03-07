@@ -7,7 +7,6 @@ import 'package:emerge_app/features/habits/presentation/providers/habit_provider
 import 'package:emerge_app/features/onboarding/domain/entities/onboarding_milestone.dart';
 import 'package:emerge_app/features/onboarding/presentation/providers/onboarding_provider.dart';
 import 'package:equatable/equatable.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:uuid/uuid.dart';
 

@@ -39,17 +39,6 @@ class NotificationService {
       debugPrint('Could not set local location: $e');
     }
 
-    // Initialize Local Notifications
-    // Use a custom notification icon (white on transparent for Android notification bar)
-    const androidSettings = AndroidInitializationSettings(
-      '@drawable/push_notification_icon',
-    );
-    const iosSettings = DarwinInitializationSettings();
-    const initSettings = InitializationSettings(
-      android: androidSettings,
-      iOS: iosSettings,
-    );
-
     // Request Android 13+ notification permissions for local notifications
     final androidImplementation = _localNotifications
         .resolvePlatformSpecificImplementation<

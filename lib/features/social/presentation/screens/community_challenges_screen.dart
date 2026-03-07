@@ -130,7 +130,7 @@ class _CommunityChallengesScreenState
                 child: CircularProgressIndicator(strokeWidth: 2),
               ),
             ),
-            error: (_, __) => const SizedBox.shrink(),
+            error: (_, _) => const SizedBox.shrink(),
           ),
           IconButton(
             icon: const Icon(Icons.handshake_outlined),
@@ -159,7 +159,7 @@ class _CommunityChallengesScreenState
               scrollDirection: Axis.horizontal,
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               itemCount: _categories.length,
-              separatorBuilder: (_, __) => const Gap(8),
+              separatorBuilder: (_, _) => const Gap(8),
               itemBuilder: (context, index) {
                 final category = _categories[index];
                 final isSelected = _selectedCategory == category;
@@ -342,7 +342,7 @@ class _ChallengeCard extends ConsumerWidget {
                                 width: 24,
                                 height: 24,
                                 fit: BoxFit.cover,
-                                errorBuilder: (_, __, ___) => const Icon(
+                                errorBuilder: (_, _, _) => const Icon(
                                   Icons.local_fire_department,
                                   color: Colors.orange,
                                   size: 20,

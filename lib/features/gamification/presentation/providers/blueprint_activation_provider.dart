@@ -5,7 +5,6 @@ import 'package:emerge_app/features/gamification/data/repositories/user_stats_re
 import 'package:emerge_app/features/gamification/domain/models/blueprint.dart';
 import 'package:emerge_app/features/habits/presentation/providers/dashboard_state_provider.dart';
 import 'package:equatable/equatable.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'blueprint_activation_provider.g.dart';

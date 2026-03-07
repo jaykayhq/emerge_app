@@ -73,7 +73,7 @@ class _GoldilocksScreenState extends ConsumerState<GoldilocksScreen> {
                         return ListView.separated(
                           padding: const EdgeInsets.all(16),
                           itemCount: adjustments.length,
-                          separatorBuilder: (_, __) =>
+                          separatorBuilder: (_, _) =>
                               const SizedBox(height: 16),
                           itemBuilder: (context, index) {
                             return _GoldilocksCard(

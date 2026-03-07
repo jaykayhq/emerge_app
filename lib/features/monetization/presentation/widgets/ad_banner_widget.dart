@@ -84,7 +84,7 @@ class _AdBannerWidgetState extends ConsumerState<AdBannerWidget>
         return const SizedBox(height: 50);
       },
       loading: () => const SizedBox(height: 50),
-      error: (_, __) => const SizedBox.shrink(),
+      error: (_, _) => const SizedBox.shrink(),
     );
   }
 }

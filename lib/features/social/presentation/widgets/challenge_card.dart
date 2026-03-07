@@ -82,7 +82,7 @@ class ChallengeCard extends StatelessWidget {
                         ? Image.network(
                             coverImageUrl!,
                             fit: BoxFit.cover,
-                            errorBuilder: (_, __, ___) => _defaultCover(),
+                            errorBuilder: (_, _, _) => _defaultCover(),
                           )
                         : _defaultCover(),
                   ),

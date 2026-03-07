@@ -799,7 +799,7 @@ class _AdvancedCreateHabitDialogState
     );
   }
 
-  Widget _buildTemplates(userProfile) {
+  Widget _buildTemplates(dynamic userProfile) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [

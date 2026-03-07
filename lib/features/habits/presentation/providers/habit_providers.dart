@@ -8,7 +8,6 @@ import 'package:emerge_app/features/habits/domain/entities/habit.dart';
 import 'package:emerge_app/features/habits/domain/models/habit_activity.dart';
 import 'package:emerge_app/features/habits/domain/repositories/habit_repository.dart';
 import 'package:emerge_app/features/monetization/presentation/providers/subscription_provider.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'habit_providers.g.dart';

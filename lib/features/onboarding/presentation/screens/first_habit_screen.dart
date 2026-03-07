@@ -36,8 +36,7 @@ class _FirstHabitScreenState extends ConsumerState<FirstHabitScreen> {
     }
 
     // Store habit info in onboarding state
-    final state = ref.read(onboardingStateControllerProvider);
-    ref.read(onboardingStateControllerProvider.notifier).state = state.copyWith(
+    ref.read(onboardingStateControllerProvider.notifier).update((s) => s.copyWith(
       habitStacks: [
         HabitStack(
           anchorId: 'onboarding_anchor', // Pseudo anchor ID for onboarding
@@ -46,7 +45,7 @@ class _FirstHabitScreenState extends ConsumerState<FirstHabitScreen> {
         ),
       ],
       anchors: [_selectedAnchor!],
-    );
+    ));
 
     // PERSIST PROGRESS: Complete the third milestone (First Habit)
     ref.read(onboardingControllerProvider.notifier).completeMilestone(2);

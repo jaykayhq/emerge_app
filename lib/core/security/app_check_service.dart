@@ -27,23 +27,23 @@ class AppCheckService {
           // Web mode: ReCaptcha V3 is the standard provider
           // site key must be obtained from Firebase Console
           await appCheck.activate(
-            webProvider: ReCaptchaV3Provider(
+            providerWeb: ReCaptchaV3Provider(
               '6LdW940qAAAAAI33f-i5v5y5v5v5v5v5v5v5v5v',
             ),
           );
         }
       } else if (kDebugMode) {
-        // Debug mode: Use DebugProvider for development
+        // Debug mode: Use debug providers for development
         await appCheck.activate(
-          androidProvider: AndroidProvider.debug,
-          appleProvider: AppleProvider.debug,
+          providerAndroid: AndroidDebugProvider(),
+          providerApple: AppleDebugProvider(),
         );
       } else {
         // Production mode: Use real attestation providers
         // Mobile: Play Integrity (Android) and App Attest (iOS)
         await appCheck.activate(
-          androidProvider: AndroidProvider.playIntegrity,
-          appleProvider: AppleProvider.appAttest,
+          providerAndroid: AndroidPlayIntegrityProvider(),
+          providerApple: AppleAppAttestProvider(),
         );
       }
 

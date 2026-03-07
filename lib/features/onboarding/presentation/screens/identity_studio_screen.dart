@@ -81,11 +81,10 @@ class _IdentityStudioScreenState extends ConsumerState<IdentityStudioScreen> {
     }
 
     // Update onboarding state
-    final state = ref.read(onboardingStateControllerProvider);
-    ref.read(onboardingStateControllerProvider.notifier).state = state.copyWith(
+    ref.read(onboardingStateControllerProvider.notifier).update((s) => s.copyWith(
       selectedArchetype: _selectedArchetype,
       motive: motiveToSave,
-    );
+    ));
 
     // PERSIST PROGRESS: Complete the first milestone (Archetype/Motive)
     ref.read(onboardingControllerProvider.notifier).completeMilestone(0);
