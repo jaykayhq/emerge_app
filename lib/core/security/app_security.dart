@@ -152,12 +152,10 @@ class AppSecurity {
   // SECURE: Proper AES-256 encryption using FlutterSecureStorage
   // FlutterSecureStorage internally uses:
   // - iOS: Keychain Services with AES-256-GCM
-  // - Android: Encrypted SharedPreferences (AES-256-GCM)
+  // - Android: EncryptedSharedPreferences (AES-256-GCM, auto-migrated)
   // - Web: EncryptedLocalStorage (AES-256-CBC)
   static const _secureStorage = FlutterSecureStorage(
-    aOptions: AndroidOptions(
-      encryptedSharedPreferences: true, // Use AES-256 encryption on Android
-    ),
+    aOptions: AndroidOptions(),
   );
 
   /// SECURE: Encrypt sensitive data using platform-native secure storage

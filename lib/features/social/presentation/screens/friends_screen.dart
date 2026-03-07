@@ -231,7 +231,7 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen> {
                     child: CircularProgressIndicator(color: EmergeColors.teal),
                   ),
                 ),
-                error: (_, __) => const SliverToBoxAdapter(
+                error: (_, _) => const SliverToBoxAdapter(
                   child: Center(
                     child: Text(
                       'Failed to load partners',
@@ -658,7 +658,7 @@ class _ActivePartnersSection extends ConsumerWidget {
                     '...',
                     style: TextStyle(fontSize: 11, color: EmergeColors.teal),
                   ),
-                  error: (_, __) => const Text(
+                  error: (_, _) => const Text(
                     '0 Online',
                     style: TextStyle(fontSize: 11, color: EmergeColors.teal),
                   ),
@@ -775,7 +775,7 @@ class _ActivePartnersSection extends ConsumerWidget {
                 ),
               ),
             ),
-            error: (_, __) => const SizedBox.shrink(),
+            error: (_, _) => const SizedBox.shrink(),
           ),
         ],
       ),
@@ -836,7 +836,7 @@ class _PartnerRequestsSection extends ConsumerWidget {
         );
       },
       loading: () => const SizedBox.shrink(),
-      error: (_, __) => const SizedBox.shrink(),
+      error: (_, _) => const SizedBox.shrink(),
     );
   }
 }
@@ -1012,7 +1012,7 @@ class _ActiveContractsSection extends ConsumerWidget {
         );
       },
       loading: () => const SizedBox.shrink(),
-      error: (_, __) => const SizedBox.shrink(),
+      error: (_, _) => const SizedBox.shrink(),
     );
   }
 }
@@ -1526,7 +1526,7 @@ class _FriendsTabContentState extends ConsumerState<FriendsTabContent> {
               child: CircularProgressIndicator(color: EmergeColors.teal),
             ),
           ),
-          error: (_, __) => const SliverToBoxAdapter(
+          error: (_, _) => const SliverToBoxAdapter(
             child: Center(
               child: Text(
                 'Failed to load partners',

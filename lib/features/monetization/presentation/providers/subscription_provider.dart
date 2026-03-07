@@ -1,7 +1,6 @@
 import 'package:emerge_app/core/utils/app_logger.dart';
 import 'package:emerge_app/features/monetization/data/repositories/revenue_cat_repository.dart';
 import 'package:emerge_app/features/monetization/domain/repositories/monetization_repository.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'subscription_provider.g.dart';

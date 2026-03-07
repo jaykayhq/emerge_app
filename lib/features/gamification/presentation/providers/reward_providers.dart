@@ -37,7 +37,7 @@ final eligibleRewardsProvider = Provider<List<RewardItem>>((ref) {
     data: (profile) =>
         service.getEligibleRewards(_profileToRewardStats(profile)),
     loading: () => [],
-    error: (_, __) => [],
+    error: (_, _) => [],
   );
 });
 
@@ -50,7 +50,7 @@ final equippedTitleDisplayProvider = Provider<String>((ref) {
     data: (profile) =>
         service.getEquippedTitleDisplay(_profileToRewardStats(profile)),
     loading: () => '',
-    error: (_, __) => '',
+    error: (_, _) => '',
   );
 });
 
@@ -63,7 +63,7 @@ final equippedNameplateKeyProvider = Provider<String>((ref) {
     data: (profile) =>
         service.getEquippedNameplateKey(_profileToRewardStats(profile)),
     loading: () => 'default',
-    error: (_, __) => 'default',
+    error: (_, _) => 'default',
   );
 });
 

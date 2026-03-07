@@ -290,7 +290,7 @@ class _WeeklySpotlightSection extends ConsumerWidget {
         return _SpotlightCard(challenge: challenge);
       },
       loading: () => _ShimmerCard(height: 220),
-      error: (_, __) => _EmptySpotlightCard(),
+      error: (_, _) => _EmptySpotlightCard(),
     );
   }
 }
@@ -535,7 +535,7 @@ class _DailyQuestSection extends ConsumerWidget {
         return _DailyQuestCard(challenge: challenge, userId: user?.id ?? '');
       },
       loading: () => _ShimmerCard(height: 160),
-      error: (_, __) => _EmptyDailyQuestCard(),
+      error: (_, _) => _EmptyDailyQuestCard(),
     );
   }
 }
@@ -762,7 +762,7 @@ class _QuestCardsSection extends ConsumerWidget {
           _ShimmerCard(height: 140),
         ],
       ),
-      error: (_, __) => const Padding(
+      error: (_, _) => const Padding(
         padding: EdgeInsets.symmetric(horizontal: 16),
         child: Text(
           'Failed to load quests',
@@ -1000,7 +1000,7 @@ class _ArchetypeChallengesSection extends ConsumerWidget {
           _ShimmerCard(height: 100),
         ],
       ),
-      error: (_, __) => const Padding(
+      error: (_, _) => const Padding(
         padding: EdgeInsets.symmetric(horizontal: 16),
         child: Text(
           'Failed to load challenges',
@@ -1287,7 +1287,7 @@ class ChallengesTabContent extends ConsumerWidget {
               ).animate().fadeIn().slideY(begin: 0.05);
             },
             loading: () => _ShimmerCard(height: 140),
-            error: (_, __) => const SizedBox.shrink(),
+            error: (_, _) => const SizedBox.shrink(),
           ),
         ),
 
@@ -1405,7 +1405,7 @@ class ChallengesTabContent extends ConsumerWidget {
               );
             },
             loading: () => _ShimmerCard(height: 80),
-            error: (_, __) => const SizedBox.shrink(),
+            error: (_, _) => const SizedBox.shrink(),
           ),
         ),
 
@@ -1534,7 +1534,7 @@ class ChallengesTabContent extends ConsumerWidget {
               );
             },
             loading: () => _ShimmerCard(height: 80),
-            error: (_, __) => const SizedBox.shrink(),
+            error: (_, _) => const SizedBox.shrink(),
           ),
         ),
 

@@ -130,7 +130,7 @@ class _TemptationBundlingScreenState
                   );
                 },
                 loading: () => const SizedBox(),
-                error: (_, __) => const SizedBox(),
+                error: (_, _) => const SizedBox(),
               ),
             ),
             const Gap(32),

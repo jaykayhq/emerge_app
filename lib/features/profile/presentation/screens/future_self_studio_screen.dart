@@ -151,7 +151,7 @@ class _FutureSelfStudioScreenState
               stats.streak > 0) {
             // Trigger recovery animation
             WidgetsBinding.instance.addPostFrameCallback((_) {
-              ref.read(recoveryAnimatingProvider.notifier).state = true;
+              ref.read(recoveryAnimatingProvider.notifier).setAnimating(true);
             });
           }
           _previousStreak = stats.streak;
@@ -329,8 +329,8 @@ class _FutureSelfStudioScreenState
                                         .read(
                                           recoveryAnimatingProvider.notifier,
                                         )
-                                        .state =
-                                    false;
+                                        .setAnimating(
+                                    false);
                               },
                               child: EvolvingSilhouetteWidget(
                                 evolutionState:
@@ -639,11 +639,11 @@ class _FutureSelfStudioScreenState
             );
           },
           loading: () => const SizedBox.shrink(),
-          error: (_, __) => const SizedBox.shrink(),
+          error: (_, _) => const SizedBox.shrink(),
         );
       },
       loading: () => const SizedBox.shrink(),
-      error: (_, __) => const SizedBox.shrink(),
+      error: (_, _) => const SizedBox.shrink(),
     );
   }
 
@@ -668,7 +668,7 @@ class _FutureSelfStudioScreenState
       primaryColor: accentColor,
       isRecovering: isRecovering,
       onRecoveryComplete: () {
-        ref.read(recoveryAnimatingProvider.notifier).state = false;
+        ref.read(recoveryAnimatingProvider.notifier).setAnimating(false);
       },
       child: GestureDetector(
         onTap: () {

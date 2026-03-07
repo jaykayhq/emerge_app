@@ -414,7 +414,7 @@ class _TimelineScreenState extends ConsumerState<TimelineScreen> {
                             );
                           },
                         ),
-                        error: (_, __) => AiCoachCard(
+                        error: (_, _) => AiCoachCard(
                           key: _aiCoachKey,
                           insight: _aiInsight,
                           suggestedHabit: _suggestedHabit,

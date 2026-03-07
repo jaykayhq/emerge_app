@@ -114,7 +114,7 @@ class AvatarRenderer extends StatelessWidget {
             width: size,
             height: size * 1.2,
             fit: BoxFit.contain,
-            errorBuilder: (_, __, ___) {
+            errorBuilder: (_, _, _) {
               // Ultimate fallback: painted silhouette
               return CustomPaint(
                 size: Size(size, size * 1.2),
@@ -141,7 +141,7 @@ class AvatarRenderer extends StatelessWidget {
             width: size,
             height: size * 1.2,
             fit: BoxFit.contain,
-            errorBuilder: (_, __, ___) => const SizedBox.shrink(),
+            errorBuilder: (_, _, _) => const SizedBox.shrink(),
           ),
           // Colored border effect
           Container(
@@ -169,7 +169,7 @@ class AvatarRenderer extends StatelessWidget {
         width: size,
         height: size * 1.2,
         fit: BoxFit.contain,
-        errorBuilder: (_, __, ___) => const SizedBox.shrink(),
+        errorBuilder: (_, _, _) => const SizedBox.shrink(),
       ),
     );
   }

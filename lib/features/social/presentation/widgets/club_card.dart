@@ -75,7 +75,7 @@ class ClubCard extends StatelessWidget {
                           ? Image.network(
                               coverImageUrl!,
                               fit: BoxFit.cover,
-                              errorBuilder: (_, __, ___) =>
+                              errorBuilder: (_, _, _) =>
                                   const SizedBox.shrink(),
                             )
                           : null,
@@ -101,7 +101,7 @@ class ClubCard extends StatelessWidget {
                               child: Image.network(
                                 logoUrl!,
                                 fit: BoxFit.cover,
-                                errorBuilder: (_, __, ___) => _defaultLogo(),
+                                errorBuilder: (_, _, _) => _defaultLogo(),
                               ),
                             )
                           : _defaultLogo(),

@@ -3,7 +3,6 @@ import 'package:emerge_app/features/auth/domain/entities/auth_user.dart';
 import 'package:emerge_app/features/auth/domain/repositories/auth_repository.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart' as firebase_auth;
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'auth_providers.g.dart';

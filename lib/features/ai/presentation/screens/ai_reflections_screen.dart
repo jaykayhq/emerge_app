@@ -66,7 +66,7 @@ class AiReflectionsScreen extends ConsumerWidget {
                           return ListView.separated(
                             padding: const EdgeInsets.all(16),
                             itemCount: insights.length,
-                            separatorBuilder: (_, __) =>
+                            separatorBuilder: (_, _) =>
                                 const SizedBox(height: 16),
                             itemBuilder: (context, index) {
                               return _InsightCard(insight: insights[index]);

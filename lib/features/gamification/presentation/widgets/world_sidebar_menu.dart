@@ -289,7 +289,7 @@ class _WorldMenuSheet extends ConsumerWidget {
                     child: CircularProgressIndicator(color: AppTheme.primary),
                   ),
                 ),
-                error: (_, __) => const SizedBox.shrink(),
+                error: (_, _) => const SizedBox.shrink(),
               ),
 
               const Divider(height: 1, color: Colors.white10),

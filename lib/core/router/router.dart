@@ -29,7 +29,6 @@ import 'package:emerge_app/features/settings/presentation/screens/notification_s
 import 'package:emerge_app/features/monetization/presentation/screens/paywall_screen.dart';
 import 'package:emerge_app/features/social/presentation/screens/community_screen.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
@@ -44,9 +43,9 @@ GoRouter router(Ref ref) {
   final refreshNotifier = ValueNotifier<int>(0);
 
   // Listen to all dependencies that should trigger a redirect
-  ref.listen(authStateChangesProvider, (_, __) => refreshNotifier.value++);
-  ref.listen(onboardingControllerProvider, (_, __) => refreshNotifier.value++);
-  ref.listen(userStatsStreamProvider, (_, __) => refreshNotifier.value++);
+  ref.listen(authStateChangesProvider, (_, _) => refreshNotifier.value++);
+  ref.listen(onboardingControllerProvider, (_, _) => refreshNotifier.value++);
+  ref.listen(userStatsStreamProvider, (_, _) => refreshNotifier.value++);
 
   // Dispose the notifier when the provider is disposed
   ref.onDispose(refreshNotifier.dispose);

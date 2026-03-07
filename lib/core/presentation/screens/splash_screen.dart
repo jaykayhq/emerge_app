@@ -82,7 +82,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
           if (mounted) _navigateToNext();
         });
       },
-      error: (_, __) {
+      error: (_, _) {
         AppLogger.d('Splash: Auth error, going to login');
         context.go('/login');
       },

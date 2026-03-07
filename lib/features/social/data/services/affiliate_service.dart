@@ -124,7 +124,7 @@ class AffiliateService {
         name: AnalyticsEvents.challengeViewed,
         parameters: {
           AnalyticsParameters.challengeId: challengeId,
-          if (partnerId != null) AnalyticsParameters.partnerId: partnerId,
+          ...partnerId != null ? {AnalyticsParameters.partnerId: partnerId} : {},
         },
       );
 
@@ -171,7 +171,7 @@ class AffiliateService {
         parameters: {
           AnalyticsParameters.challengeId: challengeId,
           AnalyticsParameters.rewardDescription: affiliateUrl,
-          if (partnerId != null) AnalyticsParameters.partnerId: partnerId,
+          ...partnerId != null ? {AnalyticsParameters.partnerId: partnerId} : {},
         },
       );
 

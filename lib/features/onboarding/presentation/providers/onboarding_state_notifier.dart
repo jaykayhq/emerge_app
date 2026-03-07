@@ -8,7 +8,6 @@ import 'package:emerge_app/features/habits/presentation/providers/dashboard_stat
 import 'package:emerge_app/features/onboarding/data/services/remote_config_service.dart';
 import 'package:emerge_app/features/onboarding/presentation/providers/onboarding_provider.dart';
 import 'package:equatable/equatable.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:uuid/uuid.dart';
 

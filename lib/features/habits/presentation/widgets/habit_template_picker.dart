@@ -164,7 +164,7 @@ class HabitTemplateCarousel extends StatelessWidget {
             scrollDirection: Axis.horizontal,
             padding: const EdgeInsets.symmetric(horizontal: 16),
             itemCount: templates.length,
-            separatorBuilder: (_, __) => const Gap(12),
+            separatorBuilder: (_, _) => const Gap(12),
             itemBuilder: (context, index) {
               final template = templates[index];
               return _TemplateCard(
@@ -653,7 +653,7 @@ class _HabitTemplateSheetState extends State<HabitTemplateSheet> {
                   scrollDirection: Axis.horizontal,
                   padding: const EdgeInsets.symmetric(horizontal: 20),
                   itemCount: _categories.length,
-                  separatorBuilder: (_, __) => const Gap(10),
+                  separatorBuilder: (_, _) => const Gap(10),
                   itemBuilder: (context, index) {
                     final category = _categories[index];
                     final isSelected = category == _selectedCategory;
@@ -721,7 +721,7 @@ class _HabitTemplateSheetState extends State<HabitTemplateSheet> {
                   controller: scrollController,
                   padding: const EdgeInsets.fromLTRB(20, 0, 20, 40),
                   itemCount: _filteredTemplates.length,
-                  separatorBuilder: (_, __) => const Gap(12),
+                  separatorBuilder: (_, _) => const Gap(12),
                   itemBuilder: (context, index) {
                     final template = _filteredTemplates[index];
                     return _TemplateListTile(

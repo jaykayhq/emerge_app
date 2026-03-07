@@ -89,7 +89,7 @@ class _FriendsLeaderboardState extends State<FriendsLeaderboard> {
             physics: const NeverScrollableScrollPhysics(),
             padding: const EdgeInsets.symmetric(horizontal: 16),
             itemCount: widget.friends.length,
-            separatorBuilder: (_, __) => const Gap(8),
+            separatorBuilder: (_, _) => const Gap(8),
             itemBuilder: (context, index) {
               final entry = widget.friends[index];
               // Determine action type
@@ -230,7 +230,7 @@ class _FriendRankTile extends StatelessWidget {
             backgroundImage: entry.avatarUrl != null
                 ? NetworkImage(entry.avatarUrl!)
                 : null,
-            onBackgroundImageError: entry.avatarUrl != null ? (_, __) {} : null,
+            onBackgroundImageError: entry.avatarUrl != null ? (_, _) {} : null,
             child: entry.avatarUrl == null
                 ? Text(
                     entry.name.isNotEmpty ? entry.name[0].toUpperCase() : '?',
