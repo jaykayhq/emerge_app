@@ -8,6 +8,16 @@ import 'package:flutter/foundation.dart';
 class ClubActivityService {
   final FirebaseFirestore _firestore;
 
+  // Firestore collection and document path constants
+  static const String _kTribesCollection = 'tribes';
+  static const String _kActivityCollection = 'activity';
+  static const String _kContributorsCollection = 'contributors';
+
+  // Activity type constants
+  static const String _kActivityTypeHabitComplete = 'habit_complete';
+  static const String _kActivityTypeLevelUp = 'level_up';
+  static const String _kActivityTypeChallengeComplete = 'challenge_complete';
+
   ClubActivityService({FirebaseFirestore? firestore})
       : _firestore = firestore ?? FirebaseFirestore.instance;
 
@@ -35,12 +45,12 @@ class ClubActivityService {
       final clubId = _getClubIdForArchetype(archetype);
 
       await _firestore.runTransaction((transaction) async {
-        final clubRef = _firestore.collection('tribes').doc(clubId);
+        final clubRef = _firestore.collection(_kTribesCollection).doc(clubId);
 
         // Create activity document
-        final activityRef = clubRef.collection('activity').doc();
+        final activityRef = clubRef.collection(_kActivityCollection).doc();
         transaction.set(activityRef, {
-          'type': 'habit_complete',
+          'type': _kActivityTypeHabitComplete,
           'userId': userId,
           'userName': userName,
           'timestamp': FieldValue.serverTimestamp(),
@@ -50,7 +60,7 @@ class ClubActivityService {
         });
 
         // Update contributor stats with merge
-        final contributorRef = clubRef.collection('contributors').doc(userId);
+        final contributorRef = clubRef.collection(_kContributorsCollection).doc(userId);
         transaction.set(
           contributorRef,
           {
@@ -83,11 +93,11 @@ class ClubActivityService {
       final clubId = _getClubIdForArchetype(archetype);
 
       await _firestore.runTransaction((transaction) async {
-        final clubRef = _firestore.collection('tribes').doc(clubId);
-        final activityRef = clubRef.collection('activity').doc();
+        final clubRef = _firestore.collection(_kTribesCollection).doc(clubId);
+        final activityRef = clubRef.collection(_kActivityCollection).doc();
 
         transaction.set(activityRef, {
-          'type': 'level_up',
+          'type': _kActivityTypeLevelUp,
           'userId': userId,
           'userName': userName,
           'timestamp': FieldValue.serverTimestamp(),
@@ -115,11 +125,11 @@ class ClubActivityService {
       final clubId = _getClubIdForArchetype(archetype);
 
       await _firestore.runTransaction((transaction) async {
-        final clubRef = _firestore.collection('tribes').doc(clubId);
-        final activityRef = clubRef.collection('activity').doc();
+        final clubRef = _firestore.collection(_kTribesCollection).doc(clubId);
+        final activityRef = clubRef.collection(_kActivityCollection).doc();
 
         transaction.set(activityRef, {
-          'type': 'challenge_complete',
+          'type': _kActivityTypeChallengeComplete,
           'userId': userId,
           'userName': userName,
           'timestamp': FieldValue.serverTimestamp(),
