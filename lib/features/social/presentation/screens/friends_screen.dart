@@ -4,8 +4,6 @@ import 'package:emerge_app/features/auth/presentation/providers/auth_providers.d
 import 'package:emerge_app/features/social/data/services/referral_service.dart';
 import 'package:emerge_app/features/social/domain/entities/social_entities.dart';
 import 'package:emerge_app/features/social/presentation/providers/friend_provider.dart';
-import 'package:emerge_app/features/social/presentation/providers/friend_stream_provider.dart'
-    as stream;
 import 'package:emerge_app/features/monetization/presentation/providers/contract_provider.dart';
 import 'package:emerge_app/features/monetization/domain/entities/habit_contract.dart';
 import 'package:flutter/material.dart';
@@ -34,7 +32,7 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final friendsAsync = ref.watch(partnersListProvider);
+    final friendsAsync = ref.watch(partnersListStreamProvider);
 
     return Scaffold(
       backgroundColor: EmergeColors.background,
@@ -623,7 +621,7 @@ class _MilestoneRow extends StatelessWidget {
 class _ActivePartnersSection extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final onlineAsync = ref.watch(stream.onlinePartnersStreamProvider);
+    final onlineAsync = ref.watch(onlinePartnersStreamProvider);
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -790,7 +788,7 @@ class _ActivePartnersSection extends ConsumerWidget {
 class _PartnerRequestsSection extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final requestsAsync = ref.watch(stream.pendingPartnerRequestsStreamProvider);
+    final requestsAsync = ref.watch(pendingPartnerRequestsStreamProvider);
 
     return requestsAsync.when(
       data: (requests) {
@@ -1454,7 +1452,7 @@ class _FriendsTabContentState extends ConsumerState<FriendsTabContent> {
 
   @override
   Widget build(BuildContext context) {
-    final friendsAsync = ref.watch(partnersListProvider);
+    final friendsAsync = ref.watch(partnersListStreamProvider);
 
     return CustomScrollView(
       slivers: [

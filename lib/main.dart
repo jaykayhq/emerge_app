@@ -112,7 +112,7 @@ class _EmergeAppState extends ConsumerState<EmergeApp> {
     // Defer user stats loading to avoid blocking initial render
     // Use a lazy load pattern - only load when auth state is available
     final authState = ref.watch(authStateChangesProvider);
-    final isLoggedIn = authState.value?.isNotEmpty ?? false;
+    final isLoggedIn = authState.hasValue && authState.value != null;
 
     // Default to Explorer theme initially, will update when user stats load
     ArchetypeTheme archetype = ArchetypeTheme.forArchetype(UserArchetype.none);

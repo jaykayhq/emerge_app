@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import 'package:emerge_app/core/domain/entities/app_notification.dart';
+import 'package:emerge_app/core/utils/app_logger.dart';
 
 part 'social_notification_service.g.dart';
 
@@ -122,16 +123,33 @@ class SocialNotificationService {
 
   /// Deletes all notifications for a user.
   Future<void> deleteAllNotifications(String userId) async {
-    await _notificationsCollection(userId).get().then((snapshot) {
-      for (final doc in snapshot.docs) {
-        doc.reference.delete();
-      }
-    });
+    try {
+      final snapshot = await _notificationsCollection(userId).get();
 
-    // Reset unread count to 0
-    await _firestore.collection('users').doc(userId).update({
-      'unreadNotificationCount': 0,
-    });
+      if (snapshot.docs.isEmpty) {
+        // No notifications to delete
+        return;
+      }
+
+      // Create a batch for atomic operations
+      final batch = _firestore.batch();
+      for (final doc in snapshot.docs) {
+        batch.delete(doc.reference);
+      }
+
+      // Commit the batch (this awaits all deletes)
+      await batch.commit();
+
+      // Reset unread count to 0
+      await _firestore.collection('users').doc(userId).update({
+        'unreadNotificationCount': 0,
+      });
+
+      AppLogger.i('Deleted ${snapshot.docs.length} notifications for user $userId');
+    } catch (e, stack) {
+      AppLogger.e('Failed to delete all notifications', e, stack);
+      // Don't throw - silently handle the error to prevent UI crashes
+    }
   }
 
   /// Deletes expired notifications (cleanup job).
