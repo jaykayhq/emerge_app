@@ -4,6 +4,8 @@ import 'package:emerge_app/features/auth/presentation/providers/auth_providers.d
 import 'package:emerge_app/features/social/data/services/referral_service.dart';
 import 'package:emerge_app/features/social/domain/entities/social_entities.dart';
 import 'package:emerge_app/features/social/presentation/providers/friend_provider.dart';
+import 'package:emerge_app/features/social/presentation/providers/friend_stream_provider.dart'
+    as stream;
 import 'package:emerge_app/features/monetization/presentation/providers/contract_provider.dart';
 import 'package:emerge_app/features/monetization/domain/entities/habit_contract.dart';
 import 'package:flutter/material.dart';
@@ -621,7 +623,7 @@ class _MilestoneRow extends StatelessWidget {
 class _ActivePartnersSection extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final onlineAsync = ref.watch(onlinePartnersProvider);
+    final onlineAsync = ref.watch(stream.onlinePartnersProvider);
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -788,7 +790,7 @@ class _ActivePartnersSection extends ConsumerWidget {
 class _PartnerRequestsSection extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final requestsAsync = ref.watch(pendingPartnerRequestsProvider);
+    final requestsAsync = ref.watch(stream.pendingPartnerRequestsProvider);
 
     return requestsAsync.when(
       data: (requests) {
@@ -905,11 +907,28 @@ class _PartnerRequestCard extends ConsumerWidget {
           ),
           GestureDetector(
             onTap: () async {
-              await ref
-                  .read(friendRepositoryProvider)
-                  .acceptPartnerRequest(request.id);
-              ref.invalidate(pendingPartnerRequestsProvider);
-              ref.invalidate(partnersListProvider);
+              try {
+                await ref
+                    .read(friendRepositoryProvider)
+                    .acceptPartnerRequest(request.id);
+                if (!context.mounted) return;
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Partner request accepted!'),
+                    backgroundColor: EmergeColors.teal,
+                    duration: Duration(seconds: 2),
+                  ),
+                );
+              } catch (e) {
+                if (!context.mounted) return;
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text('Failed to accept request: $e'),
+                    backgroundColor: EmergeColors.coral,
+                    duration: const Duration(seconds: 3),
+                  ),
+                );
+              }
             },
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
@@ -930,10 +949,27 @@ class _PartnerRequestCard extends ConsumerWidget {
           const Gap(8),
           GestureDetector(
             onTap: () async {
-              await ref
-                  .read(friendRepositoryProvider)
-                  .rejectPartnerRequest(request.id);
-              ref.invalidate(pendingPartnerRequestsProvider);
+              try {
+                await ref
+                    .read(friendRepositoryProvider)
+                    .rejectPartnerRequest(request.id);
+                if (!context.mounted) return;
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Partner request declined'),
+                    duration: Duration(seconds: 2),
+                  ),
+                );
+              } catch (e) {
+                if (!context.mounted) return;
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text('Failed to decline request: $e'),
+                    backgroundColor: EmergeColors.coral,
+                    duration: const Duration(seconds: 3),
+                  ),
+                );
+              }
             },
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
