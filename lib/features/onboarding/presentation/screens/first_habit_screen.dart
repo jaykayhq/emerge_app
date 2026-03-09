@@ -68,6 +68,39 @@ class _FirstHabitScreenState extends ConsumerState<FirstHabitScreen> {
     super.dispose();
   }
 
+  /// Helper to map IconData to emoji string
+  String _getEmojiForIcon(IconData icon) {
+    final iconMap = {
+      Icons.fitness_center: '💪',
+      Icons.water_drop: '💧',
+      Icons.directions_walk: '🚶',
+      Icons.sports_gymnastics: '🏋️',
+      Icons.bedtime: '😴',
+      Icons.spa: '🧘',
+      Icons.favorite: '❤️',
+      Icons.air: '🌬️',
+      Icons.phone_disabled: '📵',
+      Icons.nights_stay: '🌙',
+      Icons.menu_book: '📖',
+      Icons.school: '🎓',
+      Icons.podcasts: '🎙️',
+      Icons.edit_note: '✍️',
+      Icons.psychology: '🧠',
+      Icons.checklist: '✅',
+      Icons.timer: '⏱️',
+      Icons.email: '📧',
+      Icons.calendar_month: '📅',
+      Icons.today: '📆',
+      Icons.palette: '🎨',
+      Icons.lightbulb: '💡',
+      Icons.rocket_launch: '🚀',
+      Icons.explore: '🔍',
+      Icons.brush: '🖌️',
+    };
+
+    return iconMap[icon] ?? '🔥';
+  }
+
   @override
   Widget build(BuildContext context) {
     final state = ref.watch(onboardingStateControllerProvider);
@@ -177,7 +210,7 @@ class _FirstHabitScreenState extends ConsumerState<FirstHabitScreen> {
                         return _buildHabitCard(
                           title: habit.title,
                           subtitle: habit.description,
-                          icon: habit.icon,
+                          emoji: _getEmojiForIcon(habit.icon),
                           isSelected: isSelected,
                           onTap: () {
                             setState(() {
@@ -372,7 +405,7 @@ class _FirstHabitScreenState extends ConsumerState<FirstHabitScreen> {
   Widget _buildHabitCard({
     required String title,
     required String subtitle,
-    required IconData icon,
+    required String emoji,
     required bool isSelected,
     required VoidCallback onTap,
   }) {
@@ -403,10 +436,12 @@ class _FirstHabitScreenState extends ConsumerState<FirstHabitScreen> {
                       : Colors.white.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: Icon(
-                  icon,
-                  color: isSelected ? const Color(0xFF2BEE79) : Colors.white70,
-                  size: 20,
+                child: Text(
+                  emoji,
+                  style: TextStyle(
+                    fontSize: 20,
+                    color: isSelected ? const Color(0xFF2BEE79) : Colors.white70,
+                  ),
                 ),
               ),
               const Gap(16),

@@ -121,7 +121,7 @@ class ErrorBoundaryState extends State<ErrorBoundary> {
         ),
         const Gap(8),
         Text(
-          widget.errorMessage ?? _error.toString(),
+          widget.errorMessage ?? _getSanitizedErrorMessage(),
           style: theme.textTheme.bodyMedium?.copyWith(
             color: AppTheme.textSecondaryDark.withValues(alpha: 0.7),
           ),
@@ -151,6 +151,25 @@ class ErrorBoundaryState extends State<ErrorBoundary> {
       ],
     );
   }
+
+  /// Returns a user-friendly error message without exposing sensitive information.
+  ///
+  /// Never use `_error.toString()` directly as it may expose:
+  /// - File paths and directory structures
+  /// - Database connection strings
+  /// - API keys or tokens
+  /// - Internal implementation details
+  /// - Stack traces that could aid attackers
+  String _getSanitizedErrorMessage() {
+    // If a custom error message is provided, use it
+    if (widget.errorMessage != null) {
+      return widget.errorMessage!;
+    }
+
+    // Otherwise, return a generic user-friendly message
+    // The raw error is still sent to onError callback for logging/analytics
+    return 'An unexpected error occurred. Please try again.';
+  }
 }
 
 /// Internal widget that wraps the child and catches errors during build.
@@ -170,6 +189,7 @@ class ErrorWidgetBuilder extends StatefulWidget {
 
 class ErrorWidgetBuilderState extends State<ErrorWidgetBuilder> {
   Object? _error;
+  final List<VoidCallback> _postFrameCallbacks = [];
 
   @override
   void didChangeDependencies() {
@@ -178,15 +198,37 @@ class ErrorWidgetBuilderState extends State<ErrorWidgetBuilder> {
   }
 
   @override
+  void dispose() {
+    // Clean up tracking list to prevent memory leaks
+    // Note: We can't actually cancel post-frame callbacks that were already
+    // scheduled to WidgetsBinding, but we can clear our tracking list
+    // The callbacks themselves check mounted, so they're safe
+    _postFrameCallbacks.clear();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     try {
       return widget.child;
     } catch (error, stackTrace) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
+      // Schedule error callback for after the current frame
+      // This prevents calling setState during build
+      // ignore: prefer_function_declarations_over_variables
+      final callback = () {
         if (mounted && _error == null) {
+          _error = error;
           widget.onError(error, stackTrace);
         }
+      };
+
+      _postFrameCallbacks.add(callback);
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        callback();
+        // Remove callback from our tracking list after execution
+        _postFrameCallbacks.remove(callback);
       });
+
       return const SizedBox.shrink();
     }
   }

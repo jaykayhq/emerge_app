@@ -69,7 +69,9 @@
       "Bash(mkdir:*)",
       "Bash(/c/Users/HP/Downloads/run_update.bat:*)",
       "Bash(python3:*)",
-      "mcp__dart__analyze_files"
+      "mcp__dart__analyze_files",
+      "Bash(grep:*)",
+      "mcp__ide__getDiagnostics"
     ],
     "deny": [],
     "ask": []

@@ -16,6 +16,8 @@ abstract class FriendRepository {
   Future<void> rejectPartnerRequest(String requestId);
   Future<List<PartnerRequest>> getPendingRequests(String userId);
   Future<List<Friend>> getOnlinePartners(String userId);
+  Stream<List<PartnerRequest>> watchPendingRequests(String userId);
+  Stream<List<Friend>> watchOnlinePartners(String userId);
 }
 
 class FirestoreFriendRepository implements FriendRepository {
@@ -200,5 +202,36 @@ class FirestoreFriendRepository implements FriendRepository {
     } catch (e) {
       return [];
     }
+  }
+
+  @override
+  Stream<List<PartnerRequest>> watchPendingRequests(String userId) {
+    return _firestore
+        .collection('partner_requests')
+        .where('recipientId', isEqualTo: userId)
+        .where('status', isEqualTo: 'pending')
+        .snapshots()
+        .map((snapshot) {
+      return snapshot.docs
+          .map((doc) => PartnerRequest.fromMap(doc.data(), id: doc.id))
+          .toList();
+    });
+  }
+
+  @override
+  Stream<List<Friend>> watchOnlinePartners(String userId) {
+    return _firestore
+        .collection('users')
+        .doc(userId)
+        .collection('friends')
+        .where('isOnline', isEqualTo: true)
+        .snapshots()
+        .map((snapshot) {
+      return snapshot.docs.map((doc) {
+        final data = doc.data();
+        data['id'] = doc.id;
+        return Friend.fromMap(data);
+      }).toList();
+    });
   }
 }

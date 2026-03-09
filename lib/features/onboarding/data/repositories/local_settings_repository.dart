@@ -7,6 +7,7 @@ class LocalSettingsRepository {
   static const _boxName = 'settings';
   static const _keyIsFirstLaunch = 'isFirstLaunch';
   static const _keyThemeMode = 'themeMode';
+  static const _keyTutorialsEnabled = 'tutorialsEnabled';
   static const _secureStorageKey = 'hive_encryption_key';
 
   Future<void> init() async {
@@ -70,6 +71,16 @@ class LocalSettingsRepository {
   Future<void> setThemeMode(String mode) async {
     final box = Hive.box(_boxName);
     await box.put(_keyThemeMode, mode);
+  }
+
+  bool get tutorialsEnabled {
+    final box = Hive.box(_boxName);
+    return box.get(_keyTutorialsEnabled, defaultValue: false);
+  }
+
+  Future<void> setTutorialsEnabled(bool enabled) async {
+    final box = Hive.box(_boxName);
+    await box.put(_keyTutorialsEnabled, enabled);
   }
 
   bool isTutorialCompleted(String tutorialId) {

@@ -222,38 +222,64 @@ class _TutorialOverlayState extends State<TutorialOverlay> {
                                   fontSize: 12,
                                 ),
                               ),
-                              TextButton(
-                                onPressed: _isScrolling ? null : _nextStep,
-                                style: TextButton.styleFrom(
-                                  backgroundColor: const Color(0xFF2BEE79),
-                                  foregroundColor: Colors.black,
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 24,
-                                    vertical: 12,
-                                  ),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
-                                ),
-                                child: _isScrolling
-                                    ? const SizedBox(
-                                        width: 16,
-                                        height: 16,
-                                        child: CircularProgressIndicator(
-                                          strokeWidth: 2,
-                                          color: Colors.black,
-                                        ),
-                                      )
-                                    : Text(
-                                        _currentStepIndex <
-                                                widget.steps.length - 1
-                                            ? 'NEXT'
-                                            : 'GOT IT',
-                                        style: const TextStyle(
-                                          fontWeight: FontWeight.bold,
-                                          letterSpacing: 1.1,
-                                        ),
+                              Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  TextButton(
+                                    onPressed: _isScrolling
+                                        ? null
+                                        : widget.onCompleted,
+                                    style: TextButton.styleFrom(
+                                      foregroundColor: Colors.white54,
+                                      padding: EdgeInsets.zero,
+                                      minimumSize: const Size(60, 36),
+                                      tapTargetSize:
+                                          MaterialTapTargetSize.shrinkWrap,
+                                    ),
+                                    child: Text(
+                                      'SKIP',
+                                      style: GoogleFonts.splineSans(
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 12,
+                                        letterSpacing: 1.1,
                                       ),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  TextButton(
+                                    onPressed: _isScrolling ? null : _nextStep,
+                                    style: TextButton.styleFrom(
+                                      backgroundColor: const Color(0xFF2BEE79),
+                                      foregroundColor: Colors.black,
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 24,
+                                        vertical: 12,
+                                      ),
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(12),
+                                      ),
+                                    ),
+                                    child: _isScrolling
+                                        ? const SizedBox(
+                                            width: 16,
+                                            height: 16,
+                                            child: CircularProgressIndicator(
+                                              strokeWidth: 2,
+                                              color: Colors.black,
+                                            ),
+                                          )
+                                        : Text(
+                                            _currentStepIndex <
+                                                    widget.steps.length - 1
+                                                ? 'NEXT'
+                                                : 'GOT IT',
+                                            style: const TextStyle(
+                                              fontWeight: FontWeight.bold,
+                                              letterSpacing: 1.1,
+                                            ),
+                                          ),
+                                  ),
+                                ],
                               ),
                             ],
                           ),

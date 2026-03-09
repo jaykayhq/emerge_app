@@ -69,7 +69,7 @@ class _IdentityStudioScreenState extends ConsumerState<IdentityStudioScreen> {
     }
   }
 
-  void _completeIdentityStudio() {
+  void _completeIdentityStudio() async {
     final motiveToSave = _isCustomMotive
         ? _customMotiveController.text.trim()
         : _selectedMotive;
@@ -86,11 +86,16 @@ class _IdentityStudioScreenState extends ConsumerState<IdentityStudioScreen> {
       motive: motiveToSave,
     ));
 
+    // Ensure state is persisted before proceeding
+    await Future.delayed(const Duration(milliseconds: 100));
+
     // PERSIST PROGRESS: Complete the first milestone (Archetype/Motive)
-    ref.read(onboardingControllerProvider.notifier).completeMilestone(0);
+    await ref.read(onboardingControllerProvider.notifier).completeMilestone(0);
 
     // Navigate to map attributes screen
-    context.push('/onboarding/map-attributes');
+    if (mounted) {
+      context.push('/onboarding/map-attributes');
+    }
   }
 
   void _showArchetypeDetails(ArchetypeTheme theme) {

@@ -5,24 +5,28 @@ import 'package:emerge_app/features/onboarding/data/repositories/local_settings_
 part 'tutorial_provider.g.dart';
 
 /// Supported tutorial IDs
-enum TutorialStep {
-  timeline,
-  worldMap,
-  profile,
-  community,
-  createHabit,
-}
+enum TutorialStep { timeline, worldMap, profile, community, createHabit }
 
 /// State for tracking completed tutorials
 class TutorialState {
   final Map<TutorialStep, bool> completedSteps;
+  final bool enabled;
 
-  const TutorialState({this.completedSteps = const {}});
+  const TutorialState({
+    this.completedSteps = const {},
+    this.enabled = false,
+  });
 
   bool isCompleted(TutorialStep step) => completedSteps[step] ?? false;
 
-  TutorialState copyWith({Map<TutorialStep, bool>? completedSteps}) {
-    return TutorialState(completedSteps: completedSteps ?? this.completedSteps);
+  TutorialState copyWith({
+    Map<TutorialStep, bool>? completedSteps,
+    bool? enabled,
+  }) {
+    return TutorialState(
+      completedSteps: completedSteps ?? this.completedSteps,
+      enabled: enabled ?? this.enabled,
+    );
   }
 }
 
@@ -33,23 +37,23 @@ final localSettingsRepositoryProvider = Provider<LocalSettingsRepository>((
 });
 
 /// Provider for managing tutorial state
-@riverpod
+@Riverpod(keepAlive: true)
 class TutorialNotifier extends _$TutorialNotifier {
   LocalSettingsRepository get _repository =>
       ref.read(localSettingsRepositoryProvider);
 
   @override
   TutorialState build() {
-    _loadState();
-    return const TutorialState();
-  }
-
-  void _loadState() {
+    // Load initial state synchronously
     final completed = <TutorialStep, bool>{};
     for (final step in TutorialStep.values) {
       completed[step] = _repository.isTutorialCompleted(step.name);
     }
-    state = TutorialState(completedSteps: completed);
+
+    return TutorialState(
+      completedSteps: completed,
+      enabled: _repository.tutorialsEnabled,
+    );
   }
 
   Future<void> completeStep(TutorialStep step) async {
@@ -63,6 +67,27 @@ class TutorialNotifier extends _$TutorialNotifier {
 
   Future<void> resetTutorials() async {
     await _repository.resetTutorials();
-    state = const TutorialState();
+    // Reload state after reset
+    final completed = <TutorialStep, bool>{};
+    for (final step in TutorialStep.values) {
+      completed[step] = _repository.isTutorialCompleted(step.name);
+    }
+    state = TutorialState(
+      completedSteps: completed,
+      enabled: _repository.tutorialsEnabled,
+    );
+  }
+
+  Future<void> setTutorialsEnabled(bool enabled) async {
+    await _repository.setTutorialsEnabled(enabled);
+    // Reload state to ensure sync with repository
+    final completed = <TutorialStep, bool>{};
+    for (final step in TutorialStep.values) {
+      completed[step] = _repository.isTutorialCompleted(step.name);
+    }
+    state = TutorialState(
+      completedSteps: completed,
+      enabled: _repository.tutorialsEnabled,
+    );
   }
 }

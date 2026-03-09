@@ -4,6 +4,7 @@ import 'package:emerge_app/features/gamification/presentation/providers/user_sta
 import 'package:emerge_app/features/social/data/repositories/challenge_repository.dart';
 import 'package:emerge_app/features/social/domain/models/challenge.dart';
 import 'package:emerge_app/features/social/domain/models/challenge_catalog.dart';
+import 'package:emerge_app/features/social/domain/repositories/challenge_repository.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 final challengeRepositoryProvider = Provider<ChallengeRepository>((ref) {

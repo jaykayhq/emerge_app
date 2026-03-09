@@ -24,5 +24,8 @@ abstract class AuthRepository {
 
   Future<Either<Failure, void>> updateDisplayName(String displayName);
 
+  @Deprecated(
+    'Anonymous sign-in is disabled. Use email or Google sign-in instead.',
+  )
   Future<Either<Failure, AuthUser>> signInAnonymously();
 }

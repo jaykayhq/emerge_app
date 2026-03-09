@@ -115,7 +115,7 @@ final class TodaysHabitsProvider
   }
 }
 
-String _$todaysHabitsHash() => r'80700c6896d2bdbd7ac191e70c714e21a240ad52';
+String _$todaysHabitsHash() => r'abe07da0a811c5e376a17ef669fee32a2fe6d153';
 
 /// Provider for today's completion rate
 
@@ -162,7 +162,7 @@ final class TodayCompletionRateProvider
 }
 
 String _$todayCompletionRateHash() =>
-    r'61eeee6ae732489303830704608452785a91ab39';
+    r'a173f2a6bfe25661b6e6df03160bec346b6f7eaa';
 
 /// Provider to check if dashboard is loading
 
@@ -209,7 +209,7 @@ final class IsDashboardLoadingProvider
 }
 
 String _$isDashboardLoadingHash() =>
-    r'e270eee14c54b4333413cf34ab4ae8ce26495756';
+    r'40d58079297d812a6d96bd054f5187140ebc27ab';
 
 /// Provider for dashboard error
 
@@ -255,4 +255,4 @@ final class DashboardErrorProvider
   }
 }
 
-String _$dashboardErrorHash() => r'd65107ed07d8c6b0ecfa7fd869896bac75002686';
+String _$dashboardErrorHash() => r'7c0ea10409ba3768bcb4e218336e46c277741e5b';

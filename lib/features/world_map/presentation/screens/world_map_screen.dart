@@ -38,11 +38,17 @@ class _WorldMapScreenState extends ConsumerState<WorldMapScreen> {
   }
 
   void _checkTutorial() {
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      final tutorialState = ref.read(tutorialProvider);
-      if (!tutorialState.isCompleted(TutorialStep.worldMap)) {
-        _showTutorial();
-      }
+    // Add delay to ensure screen has fully settled and navigation is complete
+    Future.delayed(const Duration(milliseconds: 500), () {
+      if (!mounted) return;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        final tutorialState = ref.read(tutorialProvider);
+        // Only show tutorial if not completed AND tutorials are enabled
+        if (!tutorialState.isCompleted(TutorialStep.worldMap) && tutorialState.enabled) {
+          _showTutorial();
+        }
+      });
     });
   }
 
@@ -204,7 +210,7 @@ class _WorldMapScreenState extends ConsumerState<WorldMapScreen> {
     final sectionNodes = <int, List<WorldNode>>{};
     for (var node in sortedNodes) {
       final section = getSection(node.requiredLevel);
-      sectionNodes.putIfAbsent(section, () => []).add(node);
+      if ((sectionNodes[section]?.length ?? 0) >= 5) continue; sectionNodes.putIfAbsent(section, () => []).add(node);
     }
 
     // Check completion for each section
@@ -228,7 +234,7 @@ class _WorldMapScreenState extends ConsumerState<WorldMapScreen> {
     }
 
     // 4. Hydrate Nodes based on Rules
-    return sortedNodes.map((node) {
+    final filteredNodes = sectionNodes.values.expand((e) => e).toList(); return filteredNodes.map((node) {
       if (profile.worldState.claimedNodes.contains(node.id)) {
         return node.copyWith(state: NodeState.completed);
       }
@@ -629,3 +635,4 @@ class _StatItem extends StatelessWidget {
     );
   }
 }
+

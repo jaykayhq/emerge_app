@@ -50,20 +50,6 @@ interface UserActivity {
   streakDay?: number;
 }
 
-interface AvatarStats {
-  strengthXp?: number;
-  intellectXp?: number;
-  vitalityXp?: number;
-  creativityXp?: number;
-  focusXp?: number;
-  spiritXp?: number;
-  level?: number;
-  streak?: number;
-  totalXp?: number;
-  lastUpdate?: admin.firestore.FieldValue;
-  [key: string]: number | admin.firestore.FieldValue | undefined;
-}
-
 /**
  * Calculates user level using 500 XP linear scaling.
  * @param {number} totalXp - The total experience points.
@@ -123,22 +109,34 @@ export const onUserActivityCreated = functionsV1.firestore
 
     return firestore.runTransaction(async (transaction: admin.firestore.Transaction) => {
       const statsDoc = await transaction.get(statsRef);
-      const currentStats = statsDoc.exists ? (statsDoc.data() as AvatarStats) : {};
+      const currentData = statsDoc.exists ? (statsDoc.data() as any) : {};
 
-      const updates: AvatarStats = {
-        totalXp: (currentStats.totalXp || 0) + xpGain,
-        lastUpdate: admin.firestore.FieldValue.serverTimestamp(),
+      // Get current avatarStats or initialize empty
+      const currentAvatarStats = currentData.avatarStats || {};
+
+      // Calculate new values
+      const currentTotalXp = currentAvatarStats.totalXp || 0;
+      const newTotalXp = currentTotalXp + xpGain;
+
+      const updates: any = {
+        avatarStats: {
+          ...currentAvatarStats,
+          totalXp: newTotalXp,
+          lastUpdate: admin.firestore.FieldValue.serverTimestamp(),
+        }
       };
 
+      // Update specific attribute XP
       if (activity.attribute) {
         const attrXpKey = `${activity.attribute}Xp`;
-        const currentAttrXp = (currentStats[attrXpKey] as number) || 0;
-        updates[attrXpKey] = currentAttrXp + xpGain;
+        const currentAttrXp = (currentAvatarStats[attrXpKey] as number) || 0;
+        updates.avatarStats[attrXpKey] = currentAttrXp + xpGain;
       }
 
-      const newLevel = calculateLevel(updates.totalXp as number);
-      if (newLevel !== currentStats.level) {
-        updates.level = newLevel;
+      // Update level if needed
+      const newLevel = calculateLevel(newTotalXp);
+      if (newLevel !== (currentAvatarStats.level || 1)) {
+        updates.avatarStats.level = newLevel;
       }
 
       transaction.set(statsRef, updates, { merge: true });

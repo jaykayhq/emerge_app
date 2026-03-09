@@ -8,6 +8,59 @@ part of 'notification_provider.dart';
 
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint, type=warning
+/// Provider for the social notification service instance
+
+@ProviderFor(socialNotificationService)
+final socialNotificationServiceProvider = SocialNotificationServiceProvider._();
+
+/// Provider for the social notification service instance
+
+final class SocialNotificationServiceProvider
+    extends
+        $FunctionalProvider<
+          SocialNotificationService,
+          SocialNotificationService,
+          SocialNotificationService
+        >
+    with $Provider<SocialNotificationService> {
+  /// Provider for the social notification service instance
+  SocialNotificationServiceProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'socialNotificationServiceProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$socialNotificationServiceHash();
+
+  @$internal
+  @override
+  $ProviderElement<SocialNotificationService> $createElement(
+    $ProviderPointer pointer,
+  ) => $ProviderElement(pointer);
+
+  @override
+  SocialNotificationService create(Ref ref) {
+    return socialNotificationService(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(SocialNotificationService value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<SocialNotificationService>(value),
+    );
+  }
+}
+
+String _$socialNotificationServiceHash() =>
+    r'e08785853ecf8dc40eb72c3ff5f06066d5b05488';
+
 /// Stream provider for unread notifications for the current user
 ///
 /// Usage:
@@ -83,7 +136,7 @@ final class UnreadNotificationsProvider
 }
 
 String _$unreadNotificationsHash() =>
-    r'3e870fe1bae46a991320d8115fa7f84954ee9da4';
+    r'101460624cbd98c8921e750aa470f4282f64d1fc';
 
 /// Stream provider for all notifications (paginated) for the current user
 ///
@@ -144,7 +197,7 @@ final class NotificationsProvider
   }
 }
 
-String _$notificationsHash() => r'a3b2fa5ccc3afc622e1d063b73fcb75484caca26';
+String _$notificationsHash() => r'27d750b578120719d8a36f8865cec31cfcf017d6';
 
 /// Stream provider for unread notification count
 ///
@@ -154,7 +207,7 @@ String _$notificationsHash() => r'a3b2fa5ccc3afc622e1d063b73fcb75484caca26';
 /// unreadCount.when(
 ///   data: (count) => Badge(count: count),
 ///   loading: () => Badge(count: 0),
-///   error: (_, __) => Badge(count: 0),
+///   error: (_, _) => Badge(count: 0),
 /// );
 /// ```
 
@@ -169,7 +222,7 @@ final unreadCountProvider = UnreadCountProvider._();
 /// unreadCount.when(
 ///   data: (count) => Badge(count: count),
 ///   loading: () => Badge(count: 0),
-///   error: (_, __) => Badge(count: 0),
+///   error: (_, _) => Badge(count: 0),
 /// );
 /// ```
 
@@ -184,7 +237,7 @@ final class UnreadCountProvider
   /// unreadCount.when(
   ///   data: (count) => Badge(count: count),
   ///   loading: () => Badge(count: 0),
-  ///   error: (_, __) => Badge(count: 0),
+  ///   error: (_, _) => Badge(count: 0),
   /// );
   /// ```
   UnreadCountProvider._()
@@ -212,7 +265,7 @@ final class UnreadCountProvider
   }
 }
 
-String _$unreadCountHash() => r'30740735b6c4ba3af0d39dce35c76b8a2686fba8';
+String _$unreadCountHash() => r'0563893fd6429051e308d8f18ef2537e1c62e99d';
 
 /// Future provider for one-time unread count fetch
 ///
@@ -268,708 +321,4 @@ final class UnreadCountFutureProvider
   }
 }
 
-String _$unreadCountFutureHash() => r'0c34f34c8df86b0c75205951815293f7816b2b8c';
-
-/// Action provider to mark a notification as read
-///
-/// Usage:
-/// ```dart
-/// ref.read(markAsReadProvider(notificationId).notifier)(notificationId);
-/// ```
-
-@ProviderFor(markAsRead)
-final markAsReadProvider = MarkAsReadFamily._();
-
-/// Action provider to mark a notification as read
-///
-/// Usage:
-/// ```dart
-/// ref.read(markAsReadProvider(notificationId).notifier)(notificationId);
-/// ```
-
-final class MarkAsReadProvider
-    extends $FunctionalProvider<AsyncValue<void>, void, FutureOr<void>>
-    with $FutureModifier<void>, $FutureProvider<void> {
-  /// Action provider to mark a notification as read
-  ///
-  /// Usage:
-  /// ```dart
-  /// ref.read(markAsReadProvider(notificationId).notifier)(notificationId);
-  /// ```
-  MarkAsReadProvider._({
-    required MarkAsReadFamily super.from,
-    required String super.argument,
-  }) : super(
-         retry: null,
-         name: r'markAsReadProvider',
-         isAutoDispose: true,
-         dependencies: null,
-         $allTransitiveDependencies: null,
-       );
-
-  @override
-  String debugGetCreateSourceHash() => _$markAsReadHash();
-
-  @override
-  String toString() {
-    return r'markAsReadProvider'
-        ''
-        '($argument)';
-  }
-
-  @$internal
-  @override
-  $FutureProviderElement<void> $createElement($ProviderPointer pointer) =>
-      $FutureProviderElement(pointer);
-
-  @override
-  FutureOr<void> create(Ref ref) {
-    final argument = this.argument as String;
-    return markAsRead(ref, argument);
-  }
-
-  @override
-  bool operator ==(Object other) {
-    return other is MarkAsReadProvider && other.argument == argument;
-  }
-
-  @override
-  int get hashCode {
-    return argument.hashCode;
-  }
-}
-
-String _$markAsReadHash() => r'962981bb8eff7d7e0d260ac49b31c27e4cf94348';
-
-/// Action provider to mark a notification as read
-///
-/// Usage:
-/// ```dart
-/// ref.read(markAsReadProvider(notificationId).notifier)(notificationId);
-/// ```
-
-final class MarkAsReadFamily extends $Family
-    with $FunctionalFamilyOverride<FutureOr<void>, String> {
-  MarkAsReadFamily._()
-    : super(
-        retry: null,
-        name: r'markAsReadProvider',
-        dependencies: null,
-        $allTransitiveDependencies: null,
-        isAutoDispose: true,
-      );
-
-  /// Action provider to mark a notification as read
-  ///
-  /// Usage:
-  /// ```dart
-  /// ref.read(markAsReadProvider(notificationId).notifier)(notificationId);
-  /// ```
-
-  MarkAsReadProvider call(String notificationId) =>
-      MarkAsReadProvider._(argument: notificationId, from: this);
-
-  @override
-  String toString() => r'markAsReadProvider';
-}
-
-/// Action provider to mark all notifications as read
-///
-/// Usage:
-/// ```dart
-/// ref.read(markAllAsReadProvider.notifier)();
-/// ```
-
-@ProviderFor(markAllAsRead)
-final markAllAsReadProvider = MarkAllAsReadProvider._();
-
-/// Action provider to mark all notifications as read
-///
-/// Usage:
-/// ```dart
-/// ref.read(markAllAsReadProvider.notifier)();
-/// ```
-
-final class MarkAllAsReadProvider
-    extends $FunctionalProvider<AsyncValue<void>, void, FutureOr<void>>
-    with $FutureModifier<void>, $FutureProvider<void> {
-  /// Action provider to mark all notifications as read
-  ///
-  /// Usage:
-  /// ```dart
-  /// ref.read(markAllAsReadProvider.notifier)();
-  /// ```
-  MarkAllAsReadProvider._()
-    : super(
-        from: null,
-        argument: null,
-        retry: null,
-        name: r'markAllAsReadProvider',
-        isAutoDispose: true,
-        dependencies: null,
-        $allTransitiveDependencies: null,
-      );
-
-  @override
-  String debugGetCreateSourceHash() => _$markAllAsReadHash();
-
-  @$internal
-  @override
-  $FutureProviderElement<void> $createElement($ProviderPointer pointer) =>
-      $FutureProviderElement(pointer);
-
-  @override
-  FutureOr<void> create(Ref ref) {
-    return markAllAsRead(ref);
-  }
-}
-
-String _$markAllAsReadHash() => r'20605661208ca642625d3d7bbef70a4820752248';
-
-/// Action provider to delete a notification
-///
-/// Usage:
-/// ```dart
-/// ref.read(deleteNotificationProvider(notificationId).notifier)(notificationId);
-/// ```
-
-@ProviderFor(deleteNotification)
-final deleteNotificationProvider = DeleteNotificationFamily._();
-
-/// Action provider to delete a notification
-///
-/// Usage:
-/// ```dart
-/// ref.read(deleteNotificationProvider(notificationId).notifier)(notificationId);
-/// ```
-
-final class DeleteNotificationProvider
-    extends $FunctionalProvider<AsyncValue<void>, void, FutureOr<void>>
-    with $FutureModifier<void>, $FutureProvider<void> {
-  /// Action provider to delete a notification
-  ///
-  /// Usage:
-  /// ```dart
-  /// ref.read(deleteNotificationProvider(notificationId).notifier)(notificationId);
-  /// ```
-  DeleteNotificationProvider._({
-    required DeleteNotificationFamily super.from,
-    required String super.argument,
-  }) : super(
-         retry: null,
-         name: r'deleteNotificationProvider',
-         isAutoDispose: true,
-         dependencies: null,
-         $allTransitiveDependencies: null,
-       );
-
-  @override
-  String debugGetCreateSourceHash() => _$deleteNotificationHash();
-
-  @override
-  String toString() {
-    return r'deleteNotificationProvider'
-        ''
-        '($argument)';
-  }
-
-  @$internal
-  @override
-  $FutureProviderElement<void> $createElement($ProviderPointer pointer) =>
-      $FutureProviderElement(pointer);
-
-  @override
-  FutureOr<void> create(Ref ref) {
-    final argument = this.argument as String;
-    return deleteNotification(ref, argument);
-  }
-
-  @override
-  bool operator ==(Object other) {
-    return other is DeleteNotificationProvider && other.argument == argument;
-  }
-
-  @override
-  int get hashCode {
-    return argument.hashCode;
-  }
-}
-
-String _$deleteNotificationHash() =>
-    r'c53e9c6d17125a24742447f6d13904fa49546d89';
-
-/// Action provider to delete a notification
-///
-/// Usage:
-/// ```dart
-/// ref.read(deleteNotificationProvider(notificationId).notifier)(notificationId);
-/// ```
-
-final class DeleteNotificationFamily extends $Family
-    with $FunctionalFamilyOverride<FutureOr<void>, String> {
-  DeleteNotificationFamily._()
-    : super(
-        retry: null,
-        name: r'deleteNotificationProvider',
-        dependencies: null,
-        $allTransitiveDependencies: null,
-        isAutoDispose: true,
-      );
-
-  /// Action provider to delete a notification
-  ///
-  /// Usage:
-  /// ```dart
-  /// ref.read(deleteNotificationProvider(notificationId).notifier)(notificationId);
-  /// ```
-
-  DeleteNotificationProvider call(String notificationId) =>
-      DeleteNotificationProvider._(argument: notificationId, from: this);
-
-  @override
-  String toString() => r'deleteNotificationProvider';
-}
-
-/// Action provider to send a notification to a specific user
-///
-/// Usage:
-/// ```dart
-/// final service = ref.read(socialNotificationServiceProvider);
-/// final notification = service.createFriendRequestNotification(
-///   senderName: 'John',
-///   senderId: 'user123',
-/// );
-/// await ref.read(sendNotificationProvider.notifier)(targetUserId, notification);
-/// ```
-
-@ProviderFor(sendNotification)
-final sendNotificationProvider = SendNotificationFamily._();
-
-/// Action provider to send a notification to a specific user
-///
-/// Usage:
-/// ```dart
-/// final service = ref.read(socialNotificationServiceProvider);
-/// final notification = service.createFriendRequestNotification(
-///   senderName: 'John',
-///   senderId: 'user123',
-/// );
-/// await ref.read(sendNotificationProvider.notifier)(targetUserId, notification);
-/// ```
-
-final class SendNotificationProvider
-    extends $FunctionalProvider<AsyncValue<void>, void, FutureOr<void>>
-    with $FutureModifier<void>, $FutureProvider<void> {
-  /// Action provider to send a notification to a specific user
-  ///
-  /// Usage:
-  /// ```dart
-  /// final service = ref.read(socialNotificationServiceProvider);
-  /// final notification = service.createFriendRequestNotification(
-  ///   senderName: 'John',
-  ///   senderId: 'user123',
-  /// );
-  /// await ref.read(sendNotificationProvider.notifier)(targetUserId, notification);
-  /// ```
-  SendNotificationProvider._({
-    required SendNotificationFamily super.from,
-    required (String, AppNotification) super.argument,
-  }) : super(
-         retry: null,
-         name: r'sendNotificationProvider',
-         isAutoDispose: true,
-         dependencies: null,
-         $allTransitiveDependencies: null,
-       );
-
-  @override
-  String debugGetCreateSourceHash() => _$sendNotificationHash();
-
-  @override
-  String toString() {
-    return r'sendNotificationProvider'
-        ''
-        '$argument';
-  }
-
-  @$internal
-  @override
-  $FutureProviderElement<void> $createElement($ProviderPointer pointer) =>
-      $FutureProviderElement(pointer);
-
-  @override
-  FutureOr<void> create(Ref ref) {
-    final argument = this.argument as (String, AppNotification);
-    return sendNotification(ref, argument.$1, argument.$2);
-  }
-
-  @override
-  bool operator ==(Object other) {
-    return other is SendNotificationProvider && other.argument == argument;
-  }
-
-  @override
-  int get hashCode {
-    return argument.hashCode;
-  }
-}
-
-String _$sendNotificationHash() => r'e1104934d676c2ef19667fc37843b82cc59ac46c';
-
-/// Action provider to send a notification to a specific user
-///
-/// Usage:
-/// ```dart
-/// final service = ref.read(socialNotificationServiceProvider);
-/// final notification = service.createFriendRequestNotification(
-///   senderName: 'John',
-///   senderId: 'user123',
-/// );
-/// await ref.read(sendNotificationProvider.notifier)(targetUserId, notification);
-/// ```
-
-final class SendNotificationFamily extends $Family
-    with $FunctionalFamilyOverride<FutureOr<void>, (String, AppNotification)> {
-  SendNotificationFamily._()
-    : super(
-        retry: null,
-        name: r'sendNotificationProvider',
-        dependencies: null,
-        $allTransitiveDependencies: null,
-        isAutoDispose: true,
-      );
-
-  /// Action provider to send a notification to a specific user
-  ///
-  /// Usage:
-  /// ```dart
-  /// final service = ref.read(socialNotificationServiceProvider);
-  /// final notification = service.createFriendRequestNotification(
-  ///   senderName: 'John',
-  ///   senderId: 'user123',
-  /// );
-  /// await ref.read(sendNotificationProvider.notifier)(targetUserId, notification);
-  /// ```
-
-  SendNotificationProvider call(
-    String targetUserId,
-    AppNotification notification,
-  ) => SendNotificationProvider._(
-    argument: (targetUserId, notification),
-    from: this,
-  );
-
-  @override
-  String toString() => r'sendNotificationProvider';
-}
-
-/// Action provider to send a notification to multiple users
-///
-/// Usage:
-/// ```dart
-/// final service = ref.read(socialNotificationServiceProvider);
-/// final notification = service.createTribeActivityNotification(
-///   tribeName: 'Warriors',
-///   tribeId: 'tribe123',
-///   activityDescription: 'Weekly challenge completed!',
-/// );
-/// await ref.read(sendNotificationToMultipleProvider.notifier)(userIds, notification);
-/// ```
-
-@ProviderFor(sendNotificationToMultiple)
-final sendNotificationToMultipleProvider = SendNotificationToMultipleFamily._();
-
-/// Action provider to send a notification to multiple users
-///
-/// Usage:
-/// ```dart
-/// final service = ref.read(socialNotificationServiceProvider);
-/// final notification = service.createTribeActivityNotification(
-///   tribeName: 'Warriors',
-///   tribeId: 'tribe123',
-///   activityDescription: 'Weekly challenge completed!',
-/// );
-/// await ref.read(sendNotificationToMultipleProvider.notifier)(userIds, notification);
-/// ```
-
-final class SendNotificationToMultipleProvider
-    extends $FunctionalProvider<AsyncValue<void>, void, FutureOr<void>>
-    with $FutureModifier<void>, $FutureProvider<void> {
-  /// Action provider to send a notification to multiple users
-  ///
-  /// Usage:
-  /// ```dart
-  /// final service = ref.read(socialNotificationServiceProvider);
-  /// final notification = service.createTribeActivityNotification(
-  ///   tribeName: 'Warriors',
-  ///   tribeId: 'tribe123',
-  ///   activityDescription: 'Weekly challenge completed!',
-  /// );
-  /// await ref.read(sendNotificationToMultipleProvider.notifier)(userIds, notification);
-  /// ```
-  SendNotificationToMultipleProvider._({
-    required SendNotificationToMultipleFamily super.from,
-    required (List<String>, AppNotification) super.argument,
-  }) : super(
-         retry: null,
-         name: r'sendNotificationToMultipleProvider',
-         isAutoDispose: true,
-         dependencies: null,
-         $allTransitiveDependencies: null,
-       );
-
-  @override
-  String debugGetCreateSourceHash() => _$sendNotificationToMultipleHash();
-
-  @override
-  String toString() {
-    return r'sendNotificationToMultipleProvider'
-        ''
-        '$argument';
-  }
-
-  @$internal
-  @override
-  $FutureProviderElement<void> $createElement($ProviderPointer pointer) =>
-      $FutureProviderElement(pointer);
-
-  @override
-  FutureOr<void> create(Ref ref) {
-    final argument = this.argument as (List<String>, AppNotification);
-    return sendNotificationToMultiple(ref, argument.$1, argument.$2);
-  }
-
-  @override
-  bool operator ==(Object other) {
-    return other is SendNotificationToMultipleProvider &&
-        other.argument == argument;
-  }
-
-  @override
-  int get hashCode {
-    return argument.hashCode;
-  }
-}
-
-String _$sendNotificationToMultipleHash() =>
-    r'ac84f5e0402e1ae3fe0baae15da6e825599b1eb2';
-
-/// Action provider to send a notification to multiple users
-///
-/// Usage:
-/// ```dart
-/// final service = ref.read(socialNotificationServiceProvider);
-/// final notification = service.createTribeActivityNotification(
-///   tribeName: 'Warriors',
-///   tribeId: 'tribe123',
-///   activityDescription: 'Weekly challenge completed!',
-/// );
-/// await ref.read(sendNotificationToMultipleProvider.notifier)(userIds, notification);
-/// ```
-
-final class SendNotificationToMultipleFamily extends $Family
-    with
-        $FunctionalFamilyOverride<
-          FutureOr<void>,
-          (List<String>, AppNotification)
-        > {
-  SendNotificationToMultipleFamily._()
-    : super(
-        retry: null,
-        name: r'sendNotificationToMultipleProvider',
-        dependencies: null,
-        $allTransitiveDependencies: null,
-        isAutoDispose: true,
-      );
-
-  /// Action provider to send a notification to multiple users
-  ///
-  /// Usage:
-  /// ```dart
-  /// final service = ref.read(socialNotificationServiceProvider);
-  /// final notification = service.createTribeActivityNotification(
-  ///   tribeName: 'Warriors',
-  ///   tribeId: 'tribe123',
-  ///   activityDescription: 'Weekly challenge completed!',
-  /// );
-  /// await ref.read(sendNotificationToMultipleProvider.notifier)(userIds, notification);
-  /// ```
-
-  SendNotificationToMultipleProvider call(
-    List<String> userIds,
-    AppNotification notification,
-  ) => SendNotificationToMultipleProvider._(
-    argument: (userIds, notification),
-    from: this,
-  );
-
-  @override
-  String toString() => r'sendNotificationToMultipleProvider';
-}
-
-/// Combined provider that returns both unread count and notifications
-/// Useful for notification screens that need both pieces of data
-///
-/// Usage:
-/// ```dart
-/// final notificationData = ref.watch(notificationDataProvider);
-/// notificationData.when(
-///   data: (data) {
-///     final count = data.$1;
-///     final notifications = data.$2;
-///     // Render UI
-///   },
-///   loading: () => CircularProgressIndicator(),
-///   error: (err, stack) => Text('Error: $err'),
-/// );
-/// ```
-
-@ProviderFor(notificationData)
-final notificationDataProvider = NotificationDataProvider._();
-
-/// Combined provider that returns both unread count and notifications
-/// Useful for notification screens that need both pieces of data
-///
-/// Usage:
-/// ```dart
-/// final notificationData = ref.watch(notificationDataProvider);
-/// notificationData.when(
-///   data: (data) {
-///     final count = data.$1;
-///     final notifications = data.$2;
-///     // Render UI
-///   },
-///   loading: () => CircularProgressIndicator(),
-///   error: (err, stack) => Text('Error: $err'),
-/// );
-/// ```
-
-final class NotificationDataProvider
-    extends
-        $FunctionalProvider<
-          AsyncValue<(int, List<AppNotification>)>,
-          (int, List<AppNotification>),
-          Stream<(int, List<AppNotification>)>
-        >
-    with
-        $FutureModifier<(int, List<AppNotification>)>,
-        $StreamProvider<(int, List<AppNotification>)> {
-  /// Combined provider that returns both unread count and notifications
-  /// Useful for notification screens that need both pieces of data
-  ///
-  /// Usage:
-  /// ```dart
-  /// final notificationData = ref.watch(notificationDataProvider);
-  /// notificationData.when(
-  ///   data: (data) {
-  ///     final count = data.$1;
-  ///     final notifications = data.$2;
-  ///     // Render UI
-  ///   },
-  ///   loading: () => CircularProgressIndicator(),
-  ///   error: (err, stack) => Text('Error: $err'),
-  /// );
-  /// ```
-  NotificationDataProvider._()
-    : super(
-        from: null,
-        argument: null,
-        retry: null,
-        name: r'notificationDataProvider',
-        isAutoDispose: true,
-        dependencies: null,
-        $allTransitiveDependencies: null,
-      );
-
-  @override
-  String debugGetCreateSourceHash() => _$notificationDataHash();
-
-  @$internal
-  @override
-  $StreamProviderElement<(int, List<AppNotification>)> $createElement(
-    $ProviderPointer pointer,
-  ) => $StreamProviderElement(pointer);
-
-  @override
-  Stream<(int, List<AppNotification>)> create(Ref ref) {
-    return notificationData(ref);
-  }
-}
-
-String _$notificationDataHash() => r'8b97e2074065692e376e45fbd4f0b90a6f4443a0';
-
-/// Provider for cleaning up expired notifications
-/// Should be called on app startup or periodically
-///
-/// Usage:
-/// ```dart
-/// ref.listen(deleteExpiredNotificationsProvider, (previous, next) {
-///   next.when(
-///     data: (_) => print('Expired notifications cleaned up'),
-///     error: (err, _) => print('Cleanup error: $err'),
-///     loading: () {},
-///   );
-/// });
-/// ```
-
-@ProviderFor(deleteExpiredNotifications)
-final deleteExpiredNotificationsProvider =
-    DeleteExpiredNotificationsProvider._();
-
-/// Provider for cleaning up expired notifications
-/// Should be called on app startup or periodically
-///
-/// Usage:
-/// ```dart
-/// ref.listen(deleteExpiredNotificationsProvider, (previous, next) {
-///   next.when(
-///     data: (_) => print('Expired notifications cleaned up'),
-///     error: (err, _) => print('Cleanup error: $err'),
-///     loading: () {},
-///   );
-/// });
-/// ```
-
-final class DeleteExpiredNotificationsProvider
-    extends $FunctionalProvider<AsyncValue<void>, void, FutureOr<void>>
-    with $FutureModifier<void>, $FutureProvider<void> {
-  /// Provider for cleaning up expired notifications
-  /// Should be called on app startup or periodically
-  ///
-  /// Usage:
-  /// ```dart
-  /// ref.listen(deleteExpiredNotificationsProvider, (previous, next) {
-  ///   next.when(
-  ///     data: (_) => print('Expired notifications cleaned up'),
-  ///     error: (err, _) => print('Cleanup error: $err'),
-  ///     loading: () {},
-  ///   );
-  /// });
-  /// ```
-  DeleteExpiredNotificationsProvider._()
-    : super(
-        from: null,
-        argument: null,
-        retry: null,
-        name: r'deleteExpiredNotificationsProvider',
-        isAutoDispose: true,
-        dependencies: null,
-        $allTransitiveDependencies: null,
-      );
-
-  @override
-  String debugGetCreateSourceHash() => _$deleteExpiredNotificationsHash();
-
-  @$internal
-  @override
-  $FutureProviderElement<void> $createElement($ProviderPointer pointer) =>
-      $FutureProviderElement(pointer);
-
-  @override
-  FutureOr<void> create(Ref ref) {
-    return deleteExpiredNotifications(ref);
-  }
-}
-
-String _$deleteExpiredNotificationsHash() =>
-    r'c9037c7875f34a49cf980ddfe65714a9e5e02793';
+String _$unreadCountFutureHash() => r'3654386e098274f7731a1efcde201129c615c3b8';

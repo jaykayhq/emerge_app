@@ -1,6 +1,5 @@
 import 'package:emerge_app/core/theme/app_theme.dart';
 import 'package:emerge_app/core/theme/archetype_theme.dart';
-import 'package:emerge_app/core/presentation/widgets/emerge_branding.dart';
 import 'package:emerge_app/features/auth/domain/entities/user_extension.dart';
 import 'package:emerge_app/features/habits/domain/entities/habit.dart';
 import 'package:emerge_app/features/timeline/presentation/widgets/habit_timeline_section.dart';
@@ -17,7 +16,7 @@ class HabitTemplate {
   final String description;
   final String anchor;
   final String category;
-  final IconData icon;
+  final String emoji; // Changed from icon to emoji
   final String frequency;
   final String timeOfDay;
   final HabitAttribute attribute;
@@ -27,7 +26,7 @@ class HabitTemplate {
     required this.description,
     required this.anchor,
     required this.category,
-    required this.icon,
+    required this.emoji,
     this.frequency = 'Daily',
     this.timeOfDay = 'Morning',
     this.attribute = HabitAttribute.vitality,
@@ -46,8 +45,42 @@ class HabitTemplate {
       description: suggestion.description,
       anchor: suggestion.anchor,
       category: category,
-      icon: suggestion.icon,
+      emoji: _getEmojiForIcon(suggestion.icon), // Convert icon to emoji
     );
+  }
+
+  /// Helper to map IconData to emoji string
+  static String _getEmojiForIcon(IconData icon) {
+    // Map common icons to their emoji equivalents
+    final iconMap = {
+      Icons.fitness_center: '💪',
+      Icons.water_drop: '💧',
+      Icons.directions_walk: '🚶',
+      Icons.sports_gymnastics: '🏋️',
+      Icons.bedtime: '😴',
+      Icons.spa: '🧘',
+      Icons.favorite: '❤️',
+      Icons.air: '🌬️',
+      Icons.phone_disabled: '📵',
+      Icons.nights_stay: '🌙',
+      Icons.menu_book: '📖',
+      Icons.school: '🎓',
+      Icons.podcasts: '🎙️',
+      Icons.edit_note: '✍️',
+      Icons.psychology: '🧠',
+      Icons.checklist: '✅',
+      Icons.timer: '⏱️',
+      Icons.email: '📧',
+      Icons.calendar_month: '📅',
+      Icons.today: '📆',
+      Icons.palette: '🎨',
+      Icons.lightbulb: '💡',
+      Icons.rocket_launch: '🚀',
+      Icons.explore: '🔍',
+      Icons.brush: '🖌️',
+    };
+
+    return iconMap[icon] ?? '🔥';
   }
 }
 
@@ -88,12 +121,12 @@ class HabitTemplateCarousel extends StatelessWidget {
                     Container(
                       padding: const EdgeInsets.all(6),
                       decoration: BoxDecoration(
-                        color: EmergeColors.teal.withValues(alpha: 0.15),
+                        color: theme.primaryColor.withValues(alpha: 0.15),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Icon(
                         Icons.auto_awesome,
-                        color: EmergeColors.teal,
+                        color: theme.primaryColor,
                         size: 16,
                       ),
                     ),
@@ -127,10 +160,10 @@ class HabitTemplateCarousel extends StatelessWidget {
                     vertical: 6,
                   ),
                   decoration: BoxDecoration(
-                    color: EmergeColors.teal.withValues(alpha: 0.1),
+                    color: theme.primaryColor.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(16),
                     border: Border.all(
-                      color: EmergeColors.teal.withValues(alpha: 0.3),
+                      color: theme.primaryColor.withValues(alpha: 0.3),
                     ),
                   ),
                   child: Row(
@@ -139,7 +172,7 @@ class HabitTemplateCarousel extends StatelessWidget {
                       Text(
                         'See All',
                         style: TextStyle(
-                          color: EmergeColors.teal,
+                          color: theme.primaryColor,
                           fontWeight: FontWeight.w600,
                           fontSize: 12,
                         ),
@@ -147,7 +180,7 @@ class HabitTemplateCarousel extends StatelessWidget {
                       const Gap(4),
                       Icon(
                         Icons.arrow_forward_ios,
-                        color: EmergeColors.teal,
+                        color: theme.primaryColor,
                         size: 10,
                       ),
                     ],
@@ -159,7 +192,7 @@ class HabitTemplateCarousel extends StatelessWidget {
         ),
         const Gap(12),
         SizedBox(
-          height: 115, // Increased from 100 to prevent 1px overflow
+          height: 95, // Reduced from 115 for earthy theme compact design
           child: ListView.separated(
             scrollDirection: Axis.horizontal,
             padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -216,12 +249,12 @@ class _TemplateCard extends StatelessWidget {
       onTap: onTap,
       child: Container(
         width: 140,
-        padding: const EdgeInsets.all(12),
+        padding: const EdgeInsets.all(8),
         decoration: BoxDecoration(
           color: Colors.white.withValues(alpha: 0.05),
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
-            color: accentColor.withValues(alpha: 0.2),
+            color: Colors.white.withValues(alpha: 0.1),
             width: 1,
           ),
           boxShadow: [
@@ -255,7 +288,10 @@ class _TemplateCard extends StatelessWidget {
                   ),
                 ],
               ),
-              child: Icon(template.icon, color: accentColor, size: 16),
+              child: Text(
+                template.emoji,
+                style: const TextStyle(fontSize: 16),
+              ),
             ),
             const Gap(8),
             Text(
@@ -303,6 +339,27 @@ class HabitTemplateSheet extends StatefulWidget {
 class _HabitTemplateSheetState extends State<HabitTemplateSheet> {
   String _selectedCategory = 'All';
 
+  /// Get the color for a category based on its associated attribute
+  Color _getCategoryColor(String category) {
+    switch (category) {
+      case 'Strength':
+        return attributeColor(HabitAttribute.strength);
+      case 'Vitality':
+        return attributeColor(HabitAttribute.vitality);
+      case 'Spirit':
+        return attributeColor(HabitAttribute.spirit);
+      case 'Intellect':
+        return attributeColor(HabitAttribute.intellect);
+      case 'Focus':
+        return attributeColor(HabitAttribute.focus);
+      case 'Creativity':
+        return attributeColor(HabitAttribute.creativity);
+      default:
+        // Use archetype theme color for 'All'
+        return ArchetypeTheme.forArchetype(widget.archetype).primaryColor;
+    }
+  }
+
   /// Expanded template library with categories
   List<HabitTemplate> get _allTemplates => [
     // ═══ STRENGTH & VITALITY (Physical) ═══
@@ -311,7 +368,7 @@ class _HabitTemplateSheetState extends State<HabitTemplateSheet> {
       description: '10 minutes of stretching or exercise',
       anchor: 'After waking up',
       category: 'Vitality',
-      icon: Icons.fitness_center,
+      emoji: '🏃',
       timeOfDay: 'Morning',
       attribute: HabitAttribute.vitality,
     ),
@@ -320,7 +377,7 @@ class _HabitTemplateSheetState extends State<HabitTemplateSheet> {
       description: 'Drink a full glass of water',
       anchor: 'After waking up',
       category: 'Vitality',
-      icon: Icons.water_drop,
+      emoji: '💧',
       timeOfDay: 'Morning',
       attribute: HabitAttribute.vitality,
     ),
@@ -329,7 +386,7 @@ class _HabitTemplateSheetState extends State<HabitTemplateSheet> {
       description: '15 minute walk to decompress',
       anchor: 'After dinner',
       category: 'Vitality',
-      icon: Icons.directions_walk,
+      emoji: '🚶',
       timeOfDay: 'Evening',
       attribute: HabitAttribute.vitality,
     ),
@@ -338,7 +395,7 @@ class _HabitTemplateSheetState extends State<HabitTemplateSheet> {
       description: '30 minute strength training',
       anchor: 'After work',
       category: 'Strength',
-      icon: Icons.sports_gymnastics,
+      emoji: '🏋️',
       timeOfDay: 'Afternoon',
       attribute: HabitAttribute.strength,
     ),
@@ -347,7 +404,7 @@ class _HabitTemplateSheetState extends State<HabitTemplateSheet> {
       description: 'Prepare for restful sleep',
       anchor: 'Before bed',
       category: 'Vitality',
-      icon: Icons.bedtime,
+      emoji: '😴',
       timeOfDay: 'Night',
       attribute: HabitAttribute.vitality,
     ),
@@ -358,7 +415,7 @@ class _HabitTemplateSheetState extends State<HabitTemplateSheet> {
       description: '5 minutes of silent reflection',
       anchor: 'After waking up',
       category: 'Spirit',
-      icon: Icons.spa,
+      emoji: '🧘',
       timeOfDay: 'Morning',
       attribute: HabitAttribute.spirit,
     ),
@@ -367,7 +424,7 @@ class _HabitTemplateSheetState extends State<HabitTemplateSheet> {
       description: 'Write 3 things you\'re grateful for',
       anchor: 'After morning coffee',
       category: 'Spirit',
-      icon: Icons.favorite,
+      emoji: '❤️',
       timeOfDay: 'Morning',
       attribute: HabitAttribute.spirit,
     ),
@@ -376,7 +433,7 @@ class _HabitTemplateSheetState extends State<HabitTemplateSheet> {
       description: '5 deep breaths to reset',
       anchor: 'Before meetings',
       category: 'Spirit',
-      icon: Icons.air,
+      emoji: '🌬️',
       timeOfDay: 'Anytime',
       attribute: HabitAttribute.spirit,
     ),
@@ -385,7 +442,7 @@ class _HabitTemplateSheetState extends State<HabitTemplateSheet> {
       description: 'No screens 1 hour before bed',
       anchor: 'Before bed',
       category: 'Spirit',
-      icon: Icons.phone_disabled,
+      emoji: '📵',
       timeOfDay: 'Night',
       attribute: HabitAttribute.spirit,
     ),
@@ -394,7 +451,7 @@ class _HabitTemplateSheetState extends State<HabitTemplateSheet> {
       description: 'Review your day mindfully',
       anchor: 'Before bed',
       category: 'Spirit',
-      icon: Icons.nights_stay,
+      emoji: '🌙',
       timeOfDay: 'Night',
       attribute: HabitAttribute.spirit,
     ),
@@ -405,7 +462,7 @@ class _HabitTemplateSheetState extends State<HabitTemplateSheet> {
       description: 'Read 10 pages of a book',
       anchor: 'After morning coffee',
       category: 'Intellect',
-      icon: Icons.menu_book,
+      emoji: '📖',
       timeOfDay: 'Morning',
       attribute: HabitAttribute.intellect,
     ),
@@ -414,7 +471,7 @@ class _HabitTemplateSheetState extends State<HabitTemplateSheet> {
       description: '20 minutes of focused study',
       anchor: 'After lunch',
       category: 'Intellect',
-      icon: Icons.school,
+      emoji: '🎓',
       timeOfDay: 'Afternoon',
       attribute: HabitAttribute.intellect,
     ),
@@ -423,7 +480,7 @@ class _HabitTemplateSheetState extends State<HabitTemplateSheet> {
       description: 'Listen to educational content',
       anchor: 'During commute',
       category: 'Intellect',
-      icon: Icons.podcasts,
+      emoji: '🎙️',
       timeOfDay: 'Morning',
       attribute: HabitAttribute.intellect,
     ),
@@ -432,7 +489,7 @@ class _HabitTemplateSheetState extends State<HabitTemplateSheet> {
       description: 'Write 3 things you learned',
       anchor: 'Before bed',
       category: 'Intellect',
-      icon: Icons.edit_note,
+      emoji: '✍️',
       timeOfDay: 'Night',
       attribute: HabitAttribute.intellect,
     ),
@@ -441,7 +498,7 @@ class _HabitTemplateSheetState extends State<HabitTemplateSheet> {
       description: '15 minutes practicing a skill',
       anchor: 'After work',
       category: 'Intellect',
-      icon: Icons.psychology,
+      emoji: '🧠',
       timeOfDay: 'Evening',
       attribute: HabitAttribute.intellect,
     ),
@@ -452,7 +509,7 @@ class _HabitTemplateSheetState extends State<HabitTemplateSheet> {
       description: 'Set top 3 priorities for today',
       anchor: 'After waking up',
       category: 'Focus',
-      icon: Icons.checklist,
+      emoji: '✅',
       timeOfDay: 'Morning',
       attribute: HabitAttribute.focus,
     ),
@@ -461,7 +518,7 @@ class _HabitTemplateSheetState extends State<HabitTemplateSheet> {
       description: '90 minutes of focused work',
       anchor: 'After morning coffee',
       category: 'Focus',
-      icon: Icons.timer,
+      emoji: '⏱️',
       timeOfDay: 'Morning',
       attribute: HabitAttribute.focus,
     ),
@@ -470,7 +527,7 @@ class _HabitTemplateSheetState extends State<HabitTemplateSheet> {
       description: 'Process all messages to zero',
       anchor: 'After lunch',
       category: 'Focus',
-      icon: Icons.email,
+      emoji: '📧',
       timeOfDay: 'Afternoon',
       attribute: HabitAttribute.focus,
     ),
@@ -479,7 +536,7 @@ class _HabitTemplateSheetState extends State<HabitTemplateSheet> {
       description: 'Review and plan your week',
       anchor: 'Sunday evening',
       category: 'Focus',
-      icon: Icons.calendar_month,
+      emoji: '📅',
       timeOfDay: 'Evening',
       frequency: 'Weekly',
       attribute: HabitAttribute.focus,
@@ -489,7 +546,7 @@ class _HabitTemplateSheetState extends State<HabitTemplateSheet> {
       description: 'Prepare for the next day',
       anchor: 'Before bed',
       category: 'Focus',
-      icon: Icons.today,
+      emoji: '📆',
       timeOfDay: 'Night',
       attribute: HabitAttribute.focus,
     ),
@@ -500,7 +557,7 @@ class _HabitTemplateSheetState extends State<HabitTemplateSheet> {
       description: '15 minutes of creative work',
       anchor: 'After waking up',
       category: 'Creativity',
-      icon: Icons.palette,
+      emoji: '🎨',
       timeOfDay: 'Morning',
       attribute: HabitAttribute.creativity,
     ),
@@ -509,7 +566,7 @@ class _HabitTemplateSheetState extends State<HabitTemplateSheet> {
       description: 'Write down 3 new ideas',
       anchor: 'After morning coffee',
       category: 'Creativity',
-      icon: Icons.lightbulb,
+      emoji: '💡',
       timeOfDay: 'Morning',
       attribute: HabitAttribute.creativity,
     ),
@@ -518,7 +575,7 @@ class _HabitTemplateSheetState extends State<HabitTemplateSheet> {
       description: 'Complete and share one creation',
       anchor: 'Before bed',
       category: 'Creativity',
-      icon: Icons.rocket_launch,
+      emoji: '🚀',
       timeOfDay: 'Night',
       attribute: HabitAttribute.creativity,
     ),
@@ -527,7 +584,7 @@ class _HabitTemplateSheetState extends State<HabitTemplateSheet> {
       description: 'Seek out creative inspiration',
       anchor: 'After lunch',
       category: 'Creativity',
-      icon: Icons.explore,
+      emoji: '🔍',
       timeOfDay: 'Afternoon',
       attribute: HabitAttribute.creativity,
     ),
@@ -536,7 +593,7 @@ class _HabitTemplateSheetState extends State<HabitTemplateSheet> {
       description: 'Draw or design for 10 minutes',
       anchor: 'After work',
       category: 'Creativity',
-      icon: Icons.brush,
+      emoji: '🖌️',
       timeOfDay: 'Evening',
       attribute: HabitAttribute.creativity,
     ),
@@ -602,14 +659,14 @@ class _HabitTemplateSheetState extends State<HabitTemplateSheet> {
                       decoration: BoxDecoration(
                         gradient: LinearGradient(
                           colors: [
-                            EmergeColors.teal.withValues(alpha: 0.2),
-                            EmergeColors.teal.withValues(alpha: 0.1),
+                            _getCategoryColor(_selectedCategory).withValues(alpha: 0.2),
+                            _getCategoryColor(_selectedCategory).withValues(alpha: 0.1),
                           ],
                         ),
                         borderRadius: BorderRadius.circular(12),
                         boxShadow: [
                           BoxShadow(
-                            color: EmergeColors.teal.withValues(alpha: 0.2),
+                            color: _getCategoryColor(_selectedCategory).withValues(alpha: 0.2),
                             blurRadius: 12,
                             spreadRadius: -2,
                           ),
@@ -617,7 +674,7 @@ class _HabitTemplateSheetState extends State<HabitTemplateSheet> {
                       ),
                       child: Icon(
                         Icons.auto_stories,
-                        color: EmergeColors.teal,
+                        color: _getCategoryColor(_selectedCategory),
                         size: 22,
                       ),
                     ),
@@ -672,8 +729,8 @@ class _HabitTemplateSheetState extends State<HabitTemplateSheet> {
                           gradient: isSelected
                               ? LinearGradient(
                                   colors: [
-                                    EmergeColors.teal,
-                                    EmergeColors.teal.withValues(alpha: 0.8),
+                                    _getCategoryColor(category),
+                                    _getCategoryColor(category).withValues(alpha: 0.8),
                                   ],
                                 )
                               : null,
@@ -683,13 +740,13 @@ class _HabitTemplateSheetState extends State<HabitTemplateSheet> {
                           borderRadius: BorderRadius.circular(20),
                           border: Border.all(
                             color: isSelected
-                                ? EmergeColors.teal
+                                ? _getCategoryColor(category)
                                 : Colors.white.withValues(alpha: 0.1),
                           ),
                           boxShadow: isSelected
                               ? [
                                   BoxShadow(
-                                    color: EmergeColors.teal.withValues(
+                                    color: _getCategoryColor(category).withValues(
                                       alpha: 0.3,
                                     ),
                                     blurRadius: 12,
@@ -793,7 +850,10 @@ class _TemplateListTile extends StatelessWidget {
                   ),
                 ],
               ),
-              child: Icon(template.icon, color: accentColor, size: 22),
+              child: Text(
+                template.emoji,
+                style: const TextStyle(fontSize: 22),
+              ),
             ),
             const Gap(16),
             Expanded(

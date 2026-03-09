@@ -466,7 +466,16 @@ class EnhancedOnboardingNotifier extends _$EnhancedOnboardingNotifier {
     if (user?.isNotEmpty != true) return;
 
     final userProfileRepo = ref.read(userProfileRepositoryProvider);
-    final existingProfile = await ref.read(userProfileProvider.future);
+
+    // Get existing profile or create new one
+    // Use try-catch to handle provider disposal
+    UserProfile? existingProfile;
+    try {
+      existingProfile = await ref.read(userProfileProvider.future);
+    } catch (_) {
+      // Provider was disposed, create a new profile
+      existingProfile = null;
+    }
 
     final updatedProfile =
         existingProfile?.copyWith(
@@ -493,6 +502,10 @@ class EnhancedOnboardingNotifier extends _$EnhancedOnboardingNotifier {
         );
 
     await userProfileRepo.updateProfile(updatedProfile);
+
+    // Also save to user_stats for compatibility with userStatsStreamProvider
+    final userStatsRepo = ref.read(userStatsRepositoryProvider);
+    await userStatsRepo.saveUserStats(updatedProfile);
   }
 
   List<String> _getSkippedStepNames() {

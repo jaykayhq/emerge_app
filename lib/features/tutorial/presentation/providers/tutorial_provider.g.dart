@@ -23,7 +23,7 @@ final class TutorialNotifierProvider
         argument: null,
         retry: null,
         name: r'tutorialProvider',
-        isAutoDispose: true,
+        isAutoDispose: false,
         dependencies: null,
         $allTransitiveDependencies: null,
       );
@@ -44,7 +44,7 @@ final class TutorialNotifierProvider
   }
 }
 
-String _$tutorialNotifierHash() => r'bd358413a68394a49a71627a538ced1b190ed87d';
+String _$tutorialNotifierHash() => r'4cb5f78c7ffaf7c1f724674f64653f939751cf96';
 
 /// Provider for managing tutorial state
 

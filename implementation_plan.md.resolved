@@ -1,0 +1,220 @@
+# Emerge Social Architecture — Revised Production Plan
+
+## Architecture Pivot Summary
+
+| Concept | Old (Broken) | New (Production) |
+|---------|-------------|------------------|
+| **Clubs** | User-created tribes | 5 fixed archetype clubs (Athlete, Scholar, Creator, Stoic, Zealot) |
+| **Challenges** | Generic, unfiltered | Archetype-based — filtered to user's identity |
+| **Friends** | Generic friend list | Accountability Partners with Social Contracts |
+| **Create flows** | FABs for "Create Club" / "Create Challenge" | **Removed entirely** |
+
+### The 5 Archetype Clubs (Fixed)
+| Club | Tagline | Color |
+|------|---------|-------|
+| The Athletes | "Strength through discipline" | `#FF5252` |
+| The Scholars | "Knowledge is power" | `#7C3AED` |
+| The Creators | "Make something today" | `#FFD700` |
+| The Stoics | "Master your mind" | `#26A69A` |
+| The Zealots | "Passion through unwavering faith" | `#991B1B` |
+
+Users auto-join the club matching their archetype on signup. The Clubs tab shows your archetype club's stats, top contributors, and archetype-specific activity.
+
+---
+
+## Proposed Changes — 6 Phases
+
+### Phase 1: Remove Create Flows + Seed Archetype Clubs
+
+> **Goal**: Delete user-created tribe/challenge flows. Replace with fixed archetype clubs.
+
+#### [DELETE] [create_tribe_screen.dart](file:///c:/Users/HP/Downloads/emerge_app/lib/features/social/presentation/screens/create_tribe_screen.dart)
+Remove entirely — clubs are fixed archetype-based, not user-created.
+
+#### [MODIFY] [community_screen.dart](file:///c:/Users/HP/Downloads/emerge_app/lib/features/social/presentation/screens/community_screen.dart)
+- Remove FAB entirely (`_buildFab()` method + `floatingActionButton` property)
+- Remove `_createClub()` method and its Level 5 gate
+- Remove import of [create_tribe_screen.dart](file:///c:/Users/HP/Downloads/emerge_app/lib/features/social/presentation/screens/create_tribe_screen.dart)
+- Replace [_buildClubsTab()](file:///c:/Users/HP/Downloads/emerge_app/lib/features/social/presentation/screens/community_screen.dart#164-228) — instead of `ref.watch(tribesProvider)`, show the user's archetype club directly using `userStatsStreamProvider` → `profile.archetype` → `ArchetypeTheme.forArchetype()`
+- Remove "Create First Club" empty state — user always has a club (their archetype)
+
+#### [MODIFY] [tribe_repository.dart](file:///c:/Users/HP/Downloads/emerge_app/lib/features/social/data/repositories/tribe_repository.dart)
+- Remove [createTribe()](file:///c:/Users/HP/Downloads/emerge_app/lib/features/social/data/repositories/tribe_repository.dart#49-54) method
+- Add [getArchetypeClub(UserArchetype archetype)](file:///c:/Users/HP/Downloads/emerge_app/lib/features/social/data/repositories/tribe_repository.dart#8-9) — fetches the fixed club for the archetype
+- Keep [joinTribe()](file:///c:/Users/HP/Downloads/emerge_app/lib/features/social/data/repositories/tribe_repository.dart#56-80) / [leaveTribe()](file:///c:/Users/HP/Downloads/emerge_app/lib/features/social/data/repositories/tribe_repository.dart#82-104) (used for auto-join on archetype selection)
+
+#### [MODIFY] [tribes_provider.dart](file:///c:/Users/HP/Downloads/emerge_app/lib/features/social/presentation/providers/tribes_provider.dart)
+- Replace `tribesProvider` with `userClubProvider` — returns the single club for the user's archetype
+- Add `clubContributorsProvider(archetype)` — top XP earners in that archetype club
+- Add `clubActivityProvider(archetype)` — recent activity in the club
+
+---
+
+### Phase 2: Wire ChallengesScreen to Archetype-Filtered Data
+
+> **Goal**: ChallengesScreen shows real challenges filtered by user's archetype.
+
+#### [MODIFY] [challenges_screen.dart](file:///c:/Users/HP/Downloads/emerge_app/lib/features/social/presentation/screens/challenges_screen.dart)
+- Make it a `ConsumerStatefulWidget` reading from providers (already is, but ignores them)
+- Replace `_WeeklySpotlightCard` hardcoded → `featuredChallengesProvider` filtered by archetype
+- Replace `_QuestCardsList` hardcoded → `userChallengesProvider` (real active challenges)
+- Replace `_LeaderboardSection` hardcoded → `challengeLeaderboardProvider`
+- Remove FAB "Create Challenge" (line 24-28)
+- Wire "Check In" to `challengeRepository.updateProgress()`
+- Add shimmer loading skeletons + error boundaries
+
+#### [MODIFY] [challenge_provider.dart](file:///c:/Users/HP/Downloads/emerge_app/lib/features/social/presentation/providers/challenge_provider.dart)
+- Add `archetypeChallengesProvider` — challenges filtered by user's archetype
+- Add `challengeLeaderboardProvider(challengeId)` — top participants
+
+#### [MODIFY] [challenge_repository.dart](file:///c:/Users/HP/Downloads/emerge_app/lib/features/social/data/repositories/challenge_repository.dart)
+- Add [getChallengesByArchetype(UserArchetype archetype)](file:///c:/Users/HP/Downloads/emerge_app/lib/features/social/data/repositories/challenge_repository.dart#119-123) — filters by archetype field
+- Add [getLeaderboard(String challengeId, {int limit = 3})](file:///c:/Users/HP/Downloads/emerge_app/lib/features/social/data/repositories/challenge_repository.dart#13-17)
+- Add [getWeeklySpotlight({UserArchetype? archetype})](file:///c:/Users/HP/Downloads/emerge_app/lib/features/social/domain/models/challenge_catalog.dart#538-581)
+
+#### [MODIFY] [challenge.dart](file:///c:/Users/HP/Downloads/emerge_app/lib/features/social/domain/models/challenge.dart)
+- Add `UserArchetype? archetype` field — which archetype this challenge belongs to
+- Add `bool isPremium` (default false) — for future reward phase
+- Add `String? rewardTitleId` — title granted on completion
+
+---
+
+### Phase 3: Accountability Partner Friends System
+
+> **Goal**: Transform friends into accountability partners with social contracts.
+
+#### [MODIFY] [friends_screen.dart](file:///c:/Users/HP/Downloads/emerge_app/lib/features/social/presentation/screens/friends_screen.dart)
+- Rename "Friends" → "Partners" throughout
+- Rename "Your Constellation" → "Your Accountability Circle"
+- Replace hardcoded [_OnlineOrbitsSection](file:///c:/Users/HP/Downloads/emerge_app/lib/features/social/presentation/screens/friends_screen.dart#589-695) → `onlinePartnersProvider`
+- Replace hardcoded [_CosmicInvitesSection](file:///c:/Users/HP/Downloads/emerge_app/lib/features/social/presentation/screens/friends_screen.dart#698-752) → `pendingPartnerRequestsProvider`
+- Add "Active Contracts" section showing [HabitContract](file:///c:/Users/HP/Downloads/emerge_app/lib/features/monetization/domain/entities/habit_contract.dart#3-108) cards between partners
+- Wire accept/reject buttons on invites to real repository methods
+- Add "Create Contract" flow when tapping a partner → opens contract creation
+
+#### [MODIFY] [social_entities.dart](file:///c:/Users/HP/Downloads/emerge_app/lib/features/social/domain/entities/social_entities.dart)
+- Update [Friend](file:///c:/Users/HP/Downloads/emerge_app/lib/features/social/domain/entities/social_entities.dart#39-111) entity → `AccountabilityPartner`:
+  - [id](file:///c:/Users/HP/Downloads/emerge_app/lib/features/gamification/presentation/screens/reward_showcase_screen.dart#108-120), `name`, [archetype](file:///c:/Users/HP/Downloads/emerge_app/lib/features/social/presentation/screens/friends_screen.dart#1153-1167), [level](file:///c:/Users/HP/Downloads/emerge_app/lib/features/gamification/domain/services/gamification_service.dart#286-294), `streak`, `xp`
+  - `equippedTitle`, `equippedNameplate`
+  - `List<String> activeContractIds` — contracts between you and this partner
+  - `bool isOnline`
+  - `DateTime lastActiveAt`
+- Add [PartnerRequest](file:///c:/Users/HP/Downloads/emerge_app/lib/features/social/domain/entities/social_entities.dart#113-164) entity (id, senderId, senderName, senderArchetype, senderLevel, status, createdAt)
+
+#### [MODIFY] [friend_repository.dart](file:///c:/Users/HP/Downloads/emerge_app/lib/features/social/data/repositories/friend_repository.dart)
+- Implement [addFriend()](file:///c:/Users/HP/Downloads/emerge_app/lib/features/social/data/repositories/friend_repository.dart#6-7) (currently `UnimplementedError`) → creates mutual partner records
+- Add [sendPartnerRequest(String fromId, String toId)](file:///c:/Users/HP/Downloads/emerge_app/lib/features/social/data/repositories/friend_repository.dart#8-15)
+- Add [acceptPartnerRequest(String requestId)](file:///c:/Users/HP/Downloads/emerge_app/lib/features/social/data/repositories/friend_repository.dart#147-164) → creates mutual friend docs + notification
+- Add [rejectPartnerRequest(String requestId)](file:///c:/Users/HP/Downloads/emerge_app/lib/features/social/data/repositories/friend_repository.dart#16-17)
+- Add [getPendingRequests(String userId)](file:///c:/Users/HP/Downloads/emerge_app/lib/features/social/data/repositories/friend_repository.dart#173-188)
+- Add [getOnlinePartners(String userId)](file:///c:/Users/HP/Downloads/emerge_app/lib/features/social/data/repositories/friend_repository.dart#190-204)
+
+#### [MODIFY] [friend_provider.dart](file:///c:/Users/HP/Downloads/emerge_app/lib/features/social/presentation/providers/friend_provider.dart)
+- Rename `friendsListProvider` → `partnersListProvider`
+- Add `pendingPartnerRequestsProvider`
+- Add `onlinePartnersProvider`
+- Add `partnerContractsProvider(partnerId)` — active HabitContracts between users
+
+#### [MODIFY] [habit_contract.dart](file:///c:/Users/HP/Downloads/emerge_app/lib/features/monetization/domain/entities/habit_contract.dart)
+Extend for accountability system:
+- Add `String partnerName` (display name)
+- Add `String? partnerId` (Firebase UID, replaces email-only approach)
+- Add `DateTime contractStart`, `DateTime contractEnd`
+- Add `int missedDays`, `int totalDays`
+- Add `String status` (active, paused, completed, broken)
+
+#### [MODIFY] [firestore.rules](file:///c:/Users/HP/Downloads/emerge_app/firestore.rules)
+- Add `partner_requests` collection rules
+- Add `contracts` subcollection validation for partner fields
+
+---
+
+### Phase 4: Core Reward Models & Service
+
+#### [MODIFY] [user_extension.dart](file:///c:/Users/HP/Downloads/emerge_app/lib/features/auth/domain/entities/user_extension.dart)
+Add: `premiumCurrency`, `graceTokens`, `equippedTitle`, `equippedNameplate`, `equippedCrest`, `unlockedTitles`, `unlockedNameplates`, `unlockedPerks`.
+
+#### [NEW] [reward_catalog.dart](file:///c:/Users/HP/Downloads/emerge_app/lib/features/gamification/domain/models/reward_catalog.dart)
+Static catalog: `TitleDefinition`, `NameplateDefinition`, `CrestDefinition`.
+
+#### [NEW] [reward_service.dart](file:///c:/Users/HP/Downloads/emerge_app/lib/features/gamification/domain/services/reward_service.dart)
+Pure Dart: `getUnlockableTitles()`, `grantTitle()`, [equipTitle()](file:///c:/Users/HP/Downloads/emerge_app/lib/features/gamification/domain/services/reward_service.dart#58-67), `useGraceToken()`, `addPremiumCurrency()`.
+
+---
+
+### Phase 5: Social UI Flexes
+
+#### [MODIFY] [friends_leaderboard.dart](file:///c:/Users/HP/Downloads/emerge_app/lib/features/social/presentation/widgets/friends_leaderboard.dart)
+Add `equippedTitle` + `equippedNameplate` to [FriendRankEntry](file:///c:/Users/HP/Downloads/emerge_app/lib/features/social/presentation/widgets/friends_leaderboard.dart#157-174). Render in tiles.
+
+#### [NEW] [nameplate_renderer.dart](file:///c:/Users/HP/Downloads/emerge_app/lib/features/social/presentation/widgets/nameplate_renderer.dart)
+Widget rendering nameplate decoration styles.
+
+#### [NEW] [reward_showcase_screen.dart](file:///c:/Users/HP/Downloads/emerge_app/lib/features/gamification/presentation/screens/reward_showcase_screen.dart)
+Browse/equip titles & nameplates.
+
+---
+
+### Phase 6: Consumable IAP & Shop
+
+#### [MODIFY] [monetization_repository.dart](file:///c:/Users/HP/Downloads/emerge_app/lib/features/monetization/domain/repositories/monetization_repository.dart) + [revenue_cat_repository.dart](file:///c:/Users/HP/Downloads/emerge_app/lib/features/monetization/data/repositories/revenue_cat_repository.dart)
+Add consumable purchasing (Grace Tokens, Premium Currency).
+
+#### [NEW] [shop_screen.dart](file:///c:/Users/HP/Downloads/emerge_app/lib/features/monetization/presentation/screens/shop_screen.dart)
+"The Bazaar" — consumables and premium cosmetics.
+
+#### [MODIFY] [firestore.rules](file:///c:/Users/HP/Downloads/emerge_app/firestore.rules)
+Validate reward fields on user document.
+
+---
+
+## Verification Plan
+
+### Automated Tests
+```
+flutter test test/features/gamification/domain/services/gamification_service_test.dart
+flutter test test/features/gamification/integration/level_progression_test.dart
+flutter test test/features/gamification/domain/services/reward_service_test.dart  # NEW
+flutter analyze
+```
+
+### Manual Verification
+1. **Clubs tab**: Shows user's archetype club automatically (no "Create" button)
+2. **Challenges tab**: Shows archetype-filtered challenges from Firestore (no hardcoded data)
+3. **Partners tab**: Shows real accountability partners, pending requests, active contracts
+4. **Leaderboard**: Partners display titles and styled nameplates
+
+> [!WARNING]
+> Phase 6 (consumable IAP) requires RevenueCat dashboard configuration. Code ready, E2E testing requires sandbox.
+
+## Build Order
+
+| Priority | Phase | Deliverable |
+|----------|-------|-------------|
+| 🔴 1 | Phase 1 | Remove create flows, seed archetype clubs |
+| 🔴 2 | Phase 2 | ChallengesScreen wired to archetype data |
+| 🔴 3 | Phase 3 | Accountability partner friends system |
+| 🟡 4 | Phase 4 | Reward models + service |
+| 🟢 5 | Phase 5 | Titles/nameplates in UI |
+| 🟢 6 | Phase 6 | IAP shop |
+| 🟢 7 | Phase 7 | Localized Generation & RevenueCat fixes |
+| 🔵 8 | Phase 8 | Solo Challenge Creation |
+
+---
+
+### Phase 8: Solo Challenge Creation
+
+> **Goal**: Allow users to create custom solo challenges for themselves, adhering to the "only solo individuals" constraint.
+
+#### [MODIFY] [challenge_repository.dart](file:///c:/Users/HP/Downloads/emerge_app/lib/features/social/data/repositories/challenge_repository.dart)
+- Add abstract method: `Future<void> createSoloChallenge(String userId, Challenge challenge);`
+- Implement it in [FirestoreChallengeRepository](file:///c:/Users/HP/Downloads/emerge_app/lib/features/social/data/repositories/challenge_repository.dart#12-131) to save the generated [Challenge](file:///c:/Users/HP/Downloads/emerge_app/lib/features/social/domain/entities/social_entities.dart#17-36) directly into the user's `users/{userId}/challenges` subcollection so it appears immediately in their active quests.
+
+#### [NEW] [create_solo_challenge_dialog.dart](file:///c:/Users/HP/Downloads/emerge_app/lib/features/social/presentation/screens/create_solo_challenge_dialog.dart)
+- A streamlined, floating dialog mimicking the `AdvancedCreateHabitScreen` aesthetic.
+- Fields: Title, Description, Category (Fitness, Mindfulness, etc.), Duration (7, 14, 21, 30 days).
+- Automatically initializes the [Challenge](file:///c:/Users/HP/Downloads/emerge_app/lib/features/social/domain/entities/social_entities.dart#17-36) object with `isTeamChallenge = false`, generates placeholder/template steps based on duration, and calls the repository to save.
+
+#### [MODIFY] [challenges_screen.dart](file:///c:/Users/HP/Downloads/emerge_app/lib/features/social/presentation/screens/challenges_screen.dart)
+- Add a FloatingActionButton (FAB) with a "+" icon.
+- Tapping the FAB opens the `CreateSoloChallengeDialog`.

@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:emerge_app/core/utils/app_logger.dart';
+import 'package:emerge_app/features/auth/domain/entities/user_extension.dart';
 import 'package:emerge_app/features/auth/presentation/providers/auth_providers.dart';
 import 'package:emerge_app/features/gamification/data/repositories/user_stats_repository.dart';
 import 'package:emerge_app/features/world_map/domain/services/world_health_service.dart';
@@ -42,21 +43,28 @@ final worldHealthStreamProvider = StreamProvider<double>((ref) {
   final repository = ref.watch(userStatsRepositoryProvider);
   final service = ref.watch(worldHealthServiceProvider);
 
-  // Create a stream that combines profile updates with periodic refreshes
-  final profileStream = repository.watchUserStats(user.id);
+  // Create a merged stream using StreamController
+  final controller = StreamController<UserProfile>.broadcast();
 
-  // Create a periodic refresh stream (every 5 minutes)
-  final periodicStream = Stream.periodic(
+  // Profile update stream
+  final profileSub = repository.watchUserStats(user.id).listen(controller.add);
+
+  // Periodic refresh stream (every 5 minutes)
+  final periodicSub = Stream.periodic(
     const Duration(minutes: 5),
     (_) => user.id,
-  ).asyncMap((userId) => repository.getUserStats(userId));
+  ).asyncMap((userId) => repository.getUserStats(userId))
+   .listen(controller.add);
 
-  // Merge both streams and calculate health for each update
-  return Stream.merge([
-    profileStream,
-    periodicStream,
-  ]).asyncMap((profile) async {
-    // Calculate fresh health using the service
+  // Clean up when provider is disposed
+  ref.onDispose(() {
+    profileSub.cancel();
+    periodicSub.cancel();
+    controller.close();
+  });
+
+  // Calculate health for each profile update
+  return controller.stream.asyncMap((profile) async {
     final health = await service.calculateWorldHealth(profile);
     AppLogger.d('World health updated: ${health.toStringAsFixed(2)}');
     return health.clamp(0.0, 1.0);

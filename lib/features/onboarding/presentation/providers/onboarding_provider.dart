@@ -97,7 +97,14 @@ class OnboardingController extends _$OnboardingController {
       final userProfileRepo = ref.read(userProfileRepositoryProvider);
 
       // Fetch existing profile or create new one
-      final existingProfileAsync = await ref.read(userProfileProvider.future);
+      // Use try-catch to handle provider disposal
+      UserProfile? existingProfileAsync;
+      try {
+        existingProfileAsync = await ref.read(userProfileProvider.future);
+      } catch (_) {
+        // Provider was disposed, create a new profile
+        existingProfileAsync = null;
+      }
 
       final updatedProfile =
           existingProfileAsync?.copyWith(
@@ -204,8 +211,16 @@ class OnboardingController extends _$OnboardingController {
 
     ref.read(onboardingStateControllerProvider.notifier).update((state) => updatedState);
 
-    // Save progress to user profile
+    // Save progress to user profile FIRST (includes archetype, motive, etc.)
+    // This ensures the archetype is saved before we do anything else
     await saveOnboardingData();
+
+    // Log the current state for debugging
+    final stateAfterSave = ref.read(onboardingStateControllerProvider);
+    AppLogger.i('After saveOnboardingData: selectedArchetype=${stateAfterSave.selectedArchetype}, motive=${stateAfterSave.motive}');
+
+    // Small delay to ensure Firestore write has propagated
+    await Future.delayed(const Duration(milliseconds: 300));
 
     // Connect to gamification system by logging the milestone completion
     final user = ref.read(authStateChangesProvider).value;
@@ -222,20 +237,20 @@ class OnboardingController extends _$OnboardingController {
           date: DateTime.now(),
         );
 
-        // Update user stats to reflect progress
-        final profileResult = await userProfileRepo.getProfile(user.id);
-        final currentProfile = profileResult.fold(
-          (failure) => UserProfile(uid: user.id),
-          (profile) => profile,
-        );
+        // Read from user_stats collection (not users collection) to get the archetype that was just saved
+        final statsProfile = await userStatsRepo.getUserStats(user.id);
+        AppLogger.i('Fetched from user_stats: archetype=${statsProfile.archetype}, motive=${statsProfile.motive}');
 
-        final updatedProfile = currentProfile.copyWith(
+        // Use the profile from user_stats (which has the correct archetype) and only update onboardingProgress
+        final updatedProfile = statsProfile.copyWith(
           onboardingProgress: milestoneIndex + 1,
         );
 
-        // Upsert profile to BOTH collections to ensure sync
+        // Save to BOTH collections to ensure sync
         await userProfileRepo.createProfile(updatedProfile);
         await userStatsRepo.saveUserStats(updatedProfile);
+
+        AppLogger.i('Milestone $milestoneIndex completed: progress=${updatedProfile.onboardingProgress}, archetype=${updatedProfile.archetype}');
       } catch (e, stack) {
         AppLogger.e(
           'Error updating gamification stats for milestone completion',

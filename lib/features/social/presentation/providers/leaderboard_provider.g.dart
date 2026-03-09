@@ -59,7 +59,7 @@ final class LeaderboardRepositoryProvider
 }
 
 String _$leaderboardRepositoryHash() =>
-    r'3790361f3c08bec7fc8e7b1af36c9b30b135c7db';
+    r'84a9d3da348d03766aa3311d9d112b2a0e71b2b4';
 
 /// Stream provider for club leaderboard
 /// Returns empty stream if user is not authenticated
@@ -126,7 +126,7 @@ final class ClubLeaderboardProvider
   }
 }
 
-String _$clubLeaderboardHash() => r'eee00455cc392fa18499e337ca77a238be58e7f3';
+String _$clubLeaderboardHash() => r'b70916aa5c24310a374867e3050fa7be1a5109b3';
 
 /// Stream provider for club leaderboard
 /// Returns empty stream if user is not authenticated
@@ -218,7 +218,7 @@ final class ChallengeLeaderboardProvider
 }
 
 String _$challengeLeaderboardHash() =>
-    r'ad4aeb9601bbd922a9e6a5d76eaa1a5c67e518ee';
+    r'9518ab4945c2e2b03cf55a32dbcda451a0658762';
 
 /// Stream provider for challenge leaderboard
 /// Returns empty stream if user is not authenticated

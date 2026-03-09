@@ -1,5 +1,4 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:emerge_app/features/auth/presentation/providers/auth_providers.dart';
 import 'package:emerge_app/features/social/data/repositories/firestore_leaderboard_repository.dart';
 import 'package:emerge_app/features/social/domain/entities/leaderboard_entry.dart';
 import 'package:emerge_app/features/social/domain/repositories/leaderboard_repository.dart';
@@ -9,7 +8,7 @@ part 'leaderboard_provider.g.dart';
 
 /// Provides the LeaderboardRepository instance
 @riverpod
-LeaderboardRepository leaderboardRepository(LeaderboardRepositoryRef ref) {
+LeaderboardRepository leaderboardRepository(Ref ref) {
   final firestore = FirebaseFirestore.instance;
   return FirestoreLeaderboardRepository(firestore);
 }
@@ -18,7 +17,7 @@ LeaderboardRepository leaderboardRepository(LeaderboardRepositoryRef ref) {
 /// Returns empty stream if user is not authenticated
 @riverpod
 Stream<List<LeaderboardEntry>> clubLeaderboard(
-  ClubLeaderboardRef ref,
+  Ref ref,
   String clubId,
 ) {
   if (clubId.isEmpty) {
@@ -33,7 +32,7 @@ Stream<List<LeaderboardEntry>> clubLeaderboard(
 /// Returns empty stream if user is not authenticated
 @riverpod
 Stream<List<LeaderboardEntry>> challengeLeaderboard(
-  ChallengeLeaderboardRef ref,
+  Ref ref,
   String challengeId,
 ) {
   if (challengeId.isEmpty) {
