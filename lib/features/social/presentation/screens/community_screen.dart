@@ -1,8 +1,10 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:emerge_app/core/presentation/widgets/emerge_branding.dart';
 import 'package:emerge_app/features/auth/domain/entities/user_extension.dart';
 import 'package:emerge_app/core/theme/app_theme.dart';
 import 'package:emerge_app/core/theme/archetype_theme.dart';
 import 'package:emerge_app/features/gamification/presentation/providers/user_stats_providers.dart';
+import 'package:emerge_app/features/social/presentation/providers/tribes_provider.dart';
 import 'package:emerge_app/features/social/presentation/screens/challenges_screen.dart';
 import 'package:emerge_app/features/social/presentation/screens/friends_screen.dart';
 import 'package:flutter/material.dart';
@@ -162,12 +164,18 @@ class _CommunityScreenState extends ConsumerState<CommunityScreen>
   // ==========================================================================
   // CLUBS TAB - Fixed Archetype Club
   // ==========================================================================
+
+  String _getClubId(UserArchetype archetype) {
+    return '${archetype.name}_club';
+  }
+
   Widget _buildClubsTab() {
     final profileAsync = ref.watch(userStatsStreamProvider);
 
     return profileAsync.when(
       data: (profile) {
         final theme = ArchetypeTheme.forArchetype(profile.archetype);
+        final clubId = _getClubId(profile.archetype);
 
         return SingleChildScrollView(
           padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -208,12 +216,12 @@ class _CommunityScreenState extends ConsumerState<CommunityScreen>
               const Gap(32),
 
               // ===== TOP CONTRIBUTORS =====
-              _ContributorsSection().animate().fadeIn(delay: 300.ms),
+              _ContributorsSection(clubId: clubId).animate().fadeIn(delay: 300.ms),
 
               const Gap(32),
 
               // ===== RECENT ACTIVITY =====
-              _ActivitySection().animate().fadeIn(delay: 400.ms),
+              _ActivitySection(clubId: clubId).animate().fadeIn(delay: 400.ms),
 
               const Gap(32),
             ],
@@ -364,77 +372,102 @@ class _StatColumn extends StatelessWidget {
 
 // ============ TOP CONTRIBUTORS (Overlapping avatars) ============
 
-class _ContributorsSection extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    final contributors = [
-      {'name': 'Sarah', 'status': 'Online'},
-      {'name': 'Leo', 'status': 'Online'},
-      {'name': 'Maya', 'status': 'Top 1'},
-      {'name': 'Kai', 'status': 'Online'},
-      {'name': 'Elena', 'status': 'Top 1'},
-    ];
+class _ContributorsSection extends ConsumerWidget {
+  final String clubId;
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+  const _ContributorsSection({required this.clubId});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final contributorsAsync = ref.watch(clubContributorsProvider(clubId));
+
+    return contributorsAsync.when(
+      data: (contributors) {
+        if (contributors.isEmpty) {
+          return const SizedBox.shrink();
+        }
+
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
-              'Top Contributors',
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-                color: Colors.white,
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text(
+                  'Top Contributors',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
+                ),
+                Text(
+                  'View All >',
+                  style: TextStyle(fontSize: 12, color: EmergeColors.teal),
+                ),
+              ],
+            ),
+            const Gap(16),
+
+            // Overlapping avatars row - horizontally scrollable
+            SizedBox(
+              height: 90,
+              child: ListView.builder(
+                scrollDirection: Axis.horizontal,
+                itemCount: contributors.length,
+                itemBuilder: (context, index) {
+                  final c = contributors[index];
+                  final name = c['displayName'] as String? ?? 'User';
+                  final xp = c['contributionCount'] as int? ?? 0;
+                  final isOnline = c['isOnline'] as bool? ?? false;
+
+                  return Transform.translate(
+                    offset: Offset(index == 0 ? 0 : -index * 15.0, 0),
+                    child: _ContributorAvatar(
+                      name: name,
+                      xp: xp,
+                      isOnline: isOnline,
+                      rank: index + 1,
+                    ),
+                  );
+                },
               ),
             ),
-            Text(
-              'View All >',
-              style: TextStyle(fontSize: 12, color: EmergeColors.teal),
-            ),
           ],
+        );
+      },
+      loading: () => const SizedBox(
+        height: 80,
+        child: Center(
+          child: CircularProgressIndicator(color: EmergeColors.teal),
         ),
-        const Gap(16),
-
-        // Overlapping avatars row - horizontally scrollable
-        SizedBox(
-          height: 80,
-          child: ListView.builder(
-            scrollDirection: Axis.horizontal,
-            itemCount: contributors.length,
-            itemBuilder: (context, index) {
-              final c = contributors[index];
-              final isOnline = c['status'] == 'Online';
-              return Transform.translate(
-                offset: Offset(index == 0 ? 0 : -index * 15.0, 0),
-                child: _ContributorAvatar(
-                  name: c['name']!,
-                  status: c['status']!,
-                  isOnline: isOnline,
-                ),
-              );
-            },
-          ),
-        ),
-      ],
+      ),
+      error: (error, _) => _SectionErrorState(
+        message: 'Failed to load contributors',
+        onRetry: () => ref.invalidate(clubContributorsProvider(clubId)),
+      ),
     );
   }
 }
 
 class _ContributorAvatar extends StatelessWidget {
   final String name;
-  final String status;
+  final int xp;
   final bool isOnline;
+  final int rank;
 
   const _ContributorAvatar({
     required this.name,
-    required this.status,
+    required this.xp,
     required this.isOnline,
+    required this.rank,
   });
 
   @override
   Widget build(BuildContext context) {
+    final isTopThree = rank <= 3;
+    final statusText = isTopThree ? 'Top $rank' : '${xp}XP';
+
     return Column(
       children: [
         Stack(
@@ -448,7 +481,9 @@ class _ContributorAvatar extends StatelessWidget {
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                   colors: [
-                    EmergeColors.violet.withValues(alpha: 0.6),
+                    isTopThree
+                        ? EmergeColors.yellow.withValues(alpha: 0.8)
+                        : EmergeColors.violet.withValues(alpha: 0.6),
                     EmergeColors.teal.withValues(alpha: 0.4),
                   ],
                 ),
@@ -456,7 +491,7 @@ class _ContributorAvatar extends StatelessWidget {
               ),
               child: Center(
                 child: Text(
-                  name[0],
+                  name.isNotEmpty ? name[0].toUpperCase() : '?',
                   style: const TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
@@ -482,85 +517,238 @@ class _ContributorAvatar extends StatelessWidget {
                   ),
                 ),
               ),
+            if (isTopThree)
+              Positioned(
+                left: 0,
+                top: 0,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: _getRankColor(rank),
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(
+                      color: EmergeColors.background,
+                      width: 1,
+                    ),
+                  ),
+                  child: Text(
+                    '#$rank',
+                    style: const TextStyle(
+                      fontSize: 8,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+              ),
           ],
         ),
         const Gap(4),
         Text(
-          status,
+          statusText,
           style: TextStyle(
             fontSize: 9,
-            color: isOnline ? EmergeColors.teal : EmergeColors.yellow,
+            color: isOnline
+                ? EmergeColors.teal
+                : isTopThree
+                    ? EmergeColors.yellow
+                    : AppTheme.textSecondaryDark,
+            fontWeight: isTopThree ? FontWeight.bold : FontWeight.normal,
           ),
         ),
       ],
     );
   }
+
+  Color _getRankColor(int rank) {
+    switch (rank) {
+      case 1:
+        return EmergeColors.yellow;
+      case 2:
+        return Colors.grey.shade300;
+      case 3:
+        return Colors.brown.shade400;
+      default:
+        return EmergeColors.violet;
+    }
+  }
 }
 
 // ============ RECENT ACTIVITY (Simple list, no heavy cards) ============
 
-class _ActivitySection extends StatelessWidget {
+class _ActivitySection extends ConsumerWidget {
+  final String clubId;
+
+  const _ActivitySection({required this.clubId});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final activityAsync = ref.watch(clubActivityProvider(clubId));
+
+    return activityAsync.when(
+      data: (activities) {
+        if (activities.isEmpty) {
+          return const SizedBox.shrink();
+        }
+
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Recent Activity',
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+              ),
+            ),
+            const Gap(16),
+
+            ...activities.map((activity) {
+              return _ActivityTile(activity: activity);
+            }),
+          ],
+        );
+      },
+      loading: () => const SizedBox(
+        height: 80,
+        child: Center(
+          child: CircularProgressIndicator(color: EmergeColors.teal),
+        ),
+      ),
+      error: (error, _) => _SectionErrorState(
+        message: 'Failed to load activity',
+        onRetry: () => ref.invalidate(clubActivityProvider(clubId)),
+      ),
+    );
+  }
+}
+
+class _ActivityTile extends StatelessWidget {
+  final Map<String, dynamic> activity;
+
+  const _ActivityTile({required this.activity});
+
   @override
   Widget build(BuildContext context) {
-    final activities = [
-      {
-        'icon': '🏆',
-        'text': 'Alex T. earned "Cosmic Pioneer" badge',
-        'time': '1:30 pm',
-      },
-      {
-        'icon': '💬',
-        'text': 'Sarah M. posted in "Stargazing" discussion',
-        'time': '1:00 pm',
-      },
-      {'icon': '🎯', 'text': 'New Club Goal: Reach Level 11', 'time': ''},
-    ];
+    final type = activity['type'] as String? ?? 'unknown';
+    final userName = activity['userName'] as String? ?? 'Someone';
+    final actionText = activity['actionText'] as String? ?? 'did something';
+    final timestamp = activity['timestamp'] as Timestamp?;
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Text(
-          'Recent Activity',
-          style: TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.bold,
-            color: Colors.white,
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 16),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            _getActivityIcon(type),
+            style: const TextStyle(fontSize: 20),
           ),
-        ),
-        const Gap(16),
-
-        ...activities.asMap().entries.map((entry) {
-          final activity = entry.value;
-          return Padding(
-            padding: const EdgeInsets.only(bottom: 16),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(activity['icon']!, style: const TextStyle(fontSize: 20)),
-                const Gap(12),
-                Expanded(
-                  child: Text(
-                    activity['text']!,
-                    style: const TextStyle(
-                      fontSize: 14,
-                      color: Colors.white,
-                      height: 1.4,
-                    ),
-                  ),
-                ),
-                if (activity['time']!.isNotEmpty)
-                  Text(
-                    activity['time']!,
-                    style: TextStyle(
-                      fontSize: 11,
-                      color: AppTheme.textSecondaryDark.withValues(alpha: 0.6),
-                    ),
-                  ),
-              ],
+          const Gap(12),
+          Expanded(
+            child: Text(
+              '$userName $actionText',
+              style: const TextStyle(
+                fontSize: 14,
+                color: Colors.white,
+                height: 1.4,
+              ),
             ),
-          );
-        }),
-      ],
+          ),
+          if (timestamp != null)
+            Text(
+              _formatTimestamp(timestamp),
+              style: TextStyle(
+                fontSize: 11,
+                color: AppTheme.textSecondaryDark.withValues(alpha: 0.6),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  String _getActivityIcon(String type) {
+    switch (type) {
+      case 'habit_complete':
+        return '✅';
+      case 'level_up':
+        return '🎖️';
+      case 'challenge_complete':
+        return '🏆';
+      case 'badge_earned':
+        return '🎖️';
+      case 'streak_milestone':
+        return '🔥';
+      case 'club_goal':
+        return '🎯';
+      case 'member_joined':
+        return '👋';
+      default:
+        return '📌';
+    }
+  }
+
+  String _formatTimestamp(Timestamp timestamp) {
+    final now = DateTime.now();
+    final activityTime = timestamp.toDate();
+    final difference = now.difference(activityTime);
+
+    if (difference.inSeconds < 60) {
+      return 'Just now';
+    } else if (difference.inMinutes < 60) {
+      return '${difference.inMinutes}m ago';
+    } else if (difference.inHours < 24) {
+      return '${difference.inHours}h ago';
+    } else if (difference.inDays < 7) {
+      return '${difference.inDays}d ago';
+    } else {
+      return '${activityTime.day}/${activityTime.month}';
+    }
+  }
+}
+
+class _SectionErrorState extends ConsumerWidget {
+  final String message;
+  final VoidCallback onRetry;
+
+  const _SectionErrorState({
+    required this.message,
+    required this.onRetry,
+  });
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: EmergeColors.glassWhite.withValues(alpha: 0.3),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: EmergeColors.coral.withValues(alpha: 0.3)),
+      ),
+      child: Column(
+        children: [
+          Icon(Icons.warning_outlined, size: 24, color: EmergeColors.coral),
+          const Gap(8),
+          Text(
+            message,
+            style: TextStyle(
+              fontSize: 12,
+              color: AppTheme.textSecondaryDark,
+            ),
+          ),
+          const Gap(8),
+          TextButton.icon(
+            onPressed: onRetry,
+            icon: const Icon(Icons.refresh, size: 14),
+            label: const Text('Retry'),
+            style: TextButton.styleFrom(
+              foregroundColor: EmergeColors.teal,
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
