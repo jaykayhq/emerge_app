@@ -8,6 +8,7 @@ import 'package:emerge_app/features/habits/domain/entities/habit.dart';
 import 'package:emerge_app/features/habits/domain/models/habit_activity.dart';
 import 'package:emerge_app/features/habits/domain/repositories/habit_repository.dart';
 import 'package:emerge_app/features/monetization/presentation/providers/subscription_provider.dart';
+import 'package:emerge_app/features/social/presentation/providers/global_activity_provider.dart';
 import 'package:emerge_app/features/social/presentation/providers/tribes_provider.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
@@ -24,9 +25,11 @@ class SubscriptionLimitReachedException implements Exception {
 @Riverpod(keepAlive: true)
 HabitRepository habitRepository(Ref ref) {
   final clubActivityService = ref.watch(clubActivityServiceProvider);
+  final globalActivityService = ref.watch(globalActivityServiceProvider);
   return FirestoreHabitRepository(
     FirebaseFirestore.instance,
     clubActivityService,
+    globalActivityService,
   );
 }
 

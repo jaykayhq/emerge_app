@@ -7,15 +7,18 @@ import 'package:emerge_app/features/habits/domain/entities/habit.dart';
 import 'package:emerge_app/features/habits/domain/models/habit_activity.dart';
 import 'package:emerge_app/features/habits/domain/repositories/habit_repository.dart';
 import 'package:emerge_app/features/social/domain/services/club_activity_service.dart';
+import 'package:emerge_app/features/social/domain/services/global_activity_service.dart';
 import 'package:fpdart/fpdart.dart';
 
 class FirestoreHabitRepository implements HabitRepository {
   final FirebaseFirestore _firestore;
   final ClubActivityService? _clubActivityService;
+  final GlobalActivityService? _globalActivityService;
 
   FirestoreHabitRepository(
     this._firestore, [
     this._clubActivityService,
+    this._globalActivityService,
   ]);
 
   /// Defensive mapping from a Firestore document to a [Habit] entity.
@@ -344,6 +347,39 @@ class FirestoreHabitRepository implements HabitRepository {
             'Failed to log habit completion to club activity',
             clubError,
             clubStack,
+          );
+        }
+
+        // Log to global activity feed if service is available
+        try {
+          final habit = await getHabit(habitId);
+          if (habit != null && _globalActivityService != null) {
+            // Get user data for global activity logging
+            final userDoc = await _firestore.collection('users').doc(uid).get();
+            if (userDoc.exists) {
+              final userData = userDoc.data() as Map<String, dynamic>;
+              final userName = userData['displayName'] as String? ?? 'Anonymous';
+              final archetype = userData['archetype'] as String? ?? 'none';
+
+              final streakDay = completionData['streakDay'] as int? ?? 1;
+              final attribute = completionData['attribute'] as String? ?? 'vitality';
+
+              await _globalActivityService.logHabitComplete(
+                userId: uid,
+                userName: userName,
+                archetypeId: archetype,
+                habitId: habitId,
+                habitTitle: habit.title,
+                streakDay: streakDay,
+                attribute: attribute,
+              );
+            }
+          }
+        } catch (globalError, globalStack) {
+          AppLogger.e(
+            'Failed to log habit completion to global activity',
+            globalError,
+            globalStack,
           );
         }
       }
