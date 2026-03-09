@@ -49,7 +49,7 @@ final class HabitRepositoryProvider
   }
 }
 
-String _$habitRepositoryHash() => r'70914bf444ad8f23284fc561655c72d5ac1bdb32';
+String _$habitRepositoryHash() => r'fea1b92e8a45053d693b3f0381be6f76fb207b90';
 
 @ProviderFor(habits)
 final habitsProvider = HabitsProvider._();
@@ -208,7 +208,7 @@ final class CompleteHabitProvider
   }
 }
 
-String _$completeHabitHash() => r'b354c2927bf91f508bade3bcd7fc8de6a5c79e19';
+String _$completeHabitHash() => r'f36d3bba810f7442928d60e7eec0a9b9d16e2e1d';
 
 final class CompleteHabitFamily extends $Family
     with $FunctionalFamilyOverride<FutureOr<void>, String> {

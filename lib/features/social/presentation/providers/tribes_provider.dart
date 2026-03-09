@@ -1,10 +1,16 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:emerge_app/features/social/data/repositories/tribe_repository.dart';
 import 'package:emerge_app/features/social/domain/models/tribe.dart';
+import 'package:emerge_app/features/social/domain/services/club_activity_service.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 final tribeRepositoryProvider = Provider<TribeRepository>((ref) {
   return FirestoreTribeRepository(FirebaseFirestore.instance);
+});
+
+/// Provider for ClubActivityService - logs user activities to their archetype club.
+final clubActivityServiceProvider = Provider<ClubActivityService>((ref) {
+  return ClubActivityService(firestore: FirebaseFirestore.instance);
 });
 
 /// The user's archetype club — auto-joined based on their archetype.

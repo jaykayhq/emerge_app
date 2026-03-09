@@ -8,6 +8,7 @@ import 'package:emerge_app/features/habits/domain/entities/habit.dart';
 import 'package:emerge_app/features/habits/domain/models/habit_activity.dart';
 import 'package:emerge_app/features/habits/domain/repositories/habit_repository.dart';
 import 'package:emerge_app/features/monetization/presentation/providers/subscription_provider.dart';
+import 'package:emerge_app/features/social/presentation/providers/tribes_provider.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'habit_providers.g.dart';
@@ -22,7 +23,11 @@ class SubscriptionLimitReachedException implements Exception {
 
 @Riverpod(keepAlive: true)
 HabitRepository habitRepository(Ref ref) {
-  return FirestoreHabitRepository(FirebaseFirestore.instance);
+  final clubActivityService = ref.watch(clubActivityServiceProvider);
+  return FirestoreHabitRepository(
+    FirebaseFirestore.instance,
+    clubActivityService,
+  );
 }
 
 @riverpod
@@ -96,6 +101,9 @@ Future<void> createHabit(Ref ref, Habit habit) async {
 @riverpod
 Future<void> completeHabit(Ref ref, String habitId) async {
   final repository = ref.read(habitRepositoryProvider);
+  final userAsync = ref.read(authStateChangesProvider);
+  final userId = userAsync.value?.id;
+
   final result = await repository.completeHabit(habitId, DateTime.now());
 
   result.fold(
@@ -106,19 +114,10 @@ Future<void> completeHabit(Ref ref, String habitId) async {
     (isCompleted) async {
       if (isCompleted) {
         AppLogger.i('Successfully completed habit: $habitId');
-        final userAsync = ref.read(authStateChangesProvider);
-        final userId = userAsync.value?.id;
         if (userId != null) {
           // Fetch the habit to calculate XP
           final habit = await repository.getHabit(habitId);
           if (habit != null) {
-            // Log activity for gamification system
-            // The actual XP calculation happens in backend Cloud Functions
-            // but we can still connect to the leveling system for UI updates
-
-            // INTEGRATION: XP is now handled authoritatively by Cloud Functions
-            // triggered by the 'user_activity' log in the repository.
-            // Client-side direct write removed to prevent double XP.
             AppLogger.i(
               'Habit activity logged for user $userId. XP will be processed by Cloud Functions.',
             );
