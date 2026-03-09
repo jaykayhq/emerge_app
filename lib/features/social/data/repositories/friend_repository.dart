@@ -3,6 +3,7 @@ import 'package:emerge_app/features/social/domain/entities/social_entities.dart'
 
 abstract class FriendRepository {
   Future<List<Friend>> getFriends(String userId);
+  Stream<List<Friend>> watchFriends(String userId);
   Future<void> addFriend(String userId, String friendId);
   Future<void> removeFriend(String userId, String friendId);
   Future<void> sendPartnerRequest(
@@ -42,6 +43,22 @@ class FirestoreFriendRepository implements FriendRepository {
     } catch (e) {
       return [];
     }
+  }
+
+  @override
+  Stream<List<Friend>> watchFriends(String userId) {
+    return _firestore
+        .collection('users')
+        .doc(userId)
+        .collection('friends')
+        .snapshots()
+        .map((snapshot) {
+      return snapshot.docs.map((doc) {
+        final data = doc.data();
+        data['id'] = doc.id;
+        return Friend.fromMap(data);
+      }).toList();
+    });
   }
 
   @override

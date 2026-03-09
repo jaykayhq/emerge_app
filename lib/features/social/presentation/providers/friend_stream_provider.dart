@@ -24,3 +24,14 @@ final onlinePartnersStreamProvider =
   final repository = ref.watch(friendRepositoryProvider);
   return repository.watchOnlinePartners(user.id);
 });
+
+/// Stream of all accountability partners for the current user
+/// Returns empty stream if user is not logged in
+final partnersListStreamProvider =
+    StreamProvider.autoDispose<List<Friend>>((ref) {
+  final user = ref.watch(authStateChangesProvider).value;
+  if (user == null) return Stream.value([]);
+
+  final repository = ref.watch(friendRepositoryProvider);
+  return repository.watchFriends(user.id);
+});

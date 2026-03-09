@@ -16,6 +16,9 @@ class MockCollectionReference extends Mock implements CollectionReference<Map<St
 class MockQuery extends Mock implements Query<Map<String, dynamic>> {}
 
 // ignore: subtype_of_sealed_class
+class MockQueryChained extends Mock implements Query<Map<String, dynamic>> {}
+
+// ignore: subtype_of_sealed_class
 class MockQuerySnapshot extends Mock implements QuerySnapshot<Map<String, dynamic>> {}
 
 // ignore: subtype_of_sealed_class
@@ -28,6 +31,7 @@ void main() {
   late MockFirebaseFirestore mockFirestore;
   late MockCollectionReference mockCollectionRef;
   late MockQuery mockQuery;
+  late MockQueryChained mockQueryChained;
   late MockQuerySnapshot mockQuerySnapshot;
   late FirestoreLeaderboardRepository repository;
 
@@ -35,6 +39,7 @@ void main() {
     mockFirestore = MockFirebaseFirestore();
     mockCollectionRef = MockCollectionReference();
     mockQuery = MockQuery();
+    mockQueryChained = MockQueryChained();
     mockQuerySnapshot = MockQuerySnapshot();
     repository = FirestoreLeaderboardRepository(mockFirestore);
   });
@@ -85,9 +90,9 @@ void main() {
         when(() => mockCollectionRef.where('clubId', isEqualTo: any(named: 'isEqualTo')))
             .thenReturn(mockQuery);
         when(() => mockQuery.orderBy('xp', descending: any(named: 'descending')))
-            .thenReturn(mockQuery);
-        when(() => mockQuery.limit(any())).thenReturn(mockQuery);
-        when(() => mockQuery.snapshots()).thenAnswer(
+            .thenReturn(mockQueryChained);
+        when(() => mockQueryChained.limit(any())).thenReturn(mockQueryChained);
+        when(() => mockQueryChained.snapshots()).thenAnswer(
           (_) => Stream.value(mockQuerySnapshot),
         );
 
@@ -152,9 +157,9 @@ void main() {
         when(() => mockCollectionRef.where('clubId', isEqualTo: any(named: 'isEqualTo')))
             .thenReturn(mockQuery);
         when(() => mockQuery.orderBy('xp', descending: any(named: 'descending')))
-            .thenReturn(mockQuery);
-        when(() => mockQuery.limit(any())).thenReturn(mockQuery);
-        when(() => mockQuery.snapshots()).thenAnswer(
+            .thenReturn(mockQueryChained);
+        when(() => mockQueryChained.limit(any())).thenReturn(mockQueryChained);
+        when(() => mockQueryChained.snapshots()).thenAnswer(
           (_) => Stream.value(mockQuerySnapshot),
         );
         when(() => mockQuerySnapshot.docs).thenReturn(mockDocSnapshots);
@@ -221,9 +226,9 @@ void main() {
         when(() => mockCollectionRef.where('challengeId', isEqualTo: any(named: 'isEqualTo')))
             .thenReturn(mockQuery);
         when(() => mockQuery.orderBy('xp', descending: any(named: 'descending')))
-            .thenReturn(mockQuery);
-        when(() => mockQuery.limit(any())).thenReturn(mockQuery);
-        when(() => mockQuery.snapshots()).thenAnswer(
+            .thenReturn(mockQueryChained);
+        when(() => mockQueryChained.limit(any())).thenReturn(mockQueryChained);
+        when(() => mockQueryChained.snapshots()).thenAnswer(
           (_) => Stream.value(mockQuerySnapshot),
         );
 

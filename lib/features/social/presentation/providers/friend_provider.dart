@@ -12,26 +12,30 @@ final friendRepositoryProvider = Provider<FriendRepository>((ref) {
 });
 
 /// All accountability partners for the current user
-final partnersListProvider = FutureProvider<List<Friend>>((ref) async {
+final partnersListProvider = StreamProvider.autoDispose<List<Friend>>((ref) {
   final user = ref.watch(authStateChangesProvider).value;
-  if (user == null) return [];
-  return ref.read(friendRepositoryProvider).getFriends(user.id);
+  if (user == null) return Stream.value([]);
+
+  final repository = ref.watch(friendRepositoryProvider);
+  return repository.watchFriends(user.id);
 });
 
 /// Pending partner requests awaiting the user's response
-final pendingPartnerRequestsProvider = FutureProvider<List<PartnerRequest>>((
-  ref,
-) async {
+final pendingPartnerRequestsProvider = StreamProvider.autoDispose<List<PartnerRequest>>((ref) {
   final user = ref.watch(authStateChangesProvider).value;
-  if (user == null) return [];
-  return ref.read(friendRepositoryProvider).getPendingRequests(user.id);
+  if (user == null) return Stream.value([]);
+
+  final repository = ref.watch(friendRepositoryProvider);
+  return repository.watchPendingRequests(user.id);
 });
 
 /// Online / recently active partners
-final onlinePartnersProvider = FutureProvider<List<Friend>>((ref) async {
+final onlinePartnersProvider = StreamProvider.autoDispose<List<Friend>>((ref) {
   final user = ref.watch(authStateChangesProvider).value;
-  if (user == null) return [];
-  return ref.read(friendRepositoryProvider).getOnlinePartners(user.id);
+  if (user == null) return Stream.value([]);
+
+  final repository = ref.watch(friendRepositoryProvider);
+  return repository.watchOnlinePartners(user.id);
 });
 
 // Legacy alias

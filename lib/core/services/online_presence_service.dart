@@ -19,10 +19,10 @@ class OnlinePresenceService {
   ///
   /// If a heartbeat is already running for a different user, it will be
   /// stopped before starting the new one.
-  void startHeartbeat(String userId) {
+  Future<void> startHeartbeat(String userId) async {
     // Stop existing heartbeat if running for a different user
     if (_currentUserId != null && _currentUserId != userId) {
-      stopHeartbeat();
+      await stopHeartbeat();
     }
 
     // Don't start if already running for this user
@@ -33,19 +33,21 @@ class OnlinePresenceService {
     _currentUserId = userId;
 
     // Send immediate heartbeat
-    _updateOnlineStatus(userId);
+    await _updateOnlineStatus(userId);
 
     // Start periodic heartbeat every 2 minutes
     _heartbeatTimer = Timer.periodic(
       const Duration(minutes: 2),
-      (_) => _updateOnlineStatus(userId),
+      (_) async {
+        await _updateOnlineStatus(userId);
+      },
     );
   }
 
   /// Stops the heartbeat timer.
   ///
   /// Call this when the user signs out or the app is being destroyed.
-  void stopHeartbeat() {
+  Future<void> stopHeartbeat() async {
     _heartbeatTimer?.cancel();
     _heartbeatTimer = null;
     _currentUserId = null;

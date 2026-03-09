@@ -129,7 +129,16 @@ class FirestoreChallengeRepository implements ChallengeRepository {
           );
         }
 
-        final data = snapshot.data()!;
+        final data = snapshot.data();
+        if (data == null) {
+          AppLogger.e(
+            'Challenge data became null during transaction',
+            'Challenge $challengeId not found for user $userId',
+            StackTrace.current,
+          );
+          return Left(ServerFailure('Challenge data became null during transaction'));
+        }
+
         final currentDay = data['currentDay'] as int? ?? 0;
         final totalDays = data['totalDays'] as int? ?? 1;
         final currentStatus = data['status'] as String?;
@@ -226,7 +235,16 @@ class FirestoreChallengeRepository implements ChallengeRepository {
           );
         }
 
-        final challengeData = challengeSnapshot.data()!;
+        final challengeData = challengeSnapshot.data();
+        if (challengeData == null) {
+          AppLogger.e(
+            'Challenge data became null during transaction',
+            'Challenge $challengeId not found for user $userId',
+            StackTrace.current,
+          );
+          return Left(ServerFailure('Challenge data became null during transaction'));
+        }
+
         final currentStatus = challengeData['status'] as String?;
         final currentDay = challengeData['currentDay'] as int? ?? 0;
         final totalDays = challengeData['totalDays'] as int? ?? 1;
@@ -263,65 +281,62 @@ class FirestoreChallengeRepository implements ChallengeRepository {
           final userStatsSnapshot = await transaction.get(userStatsRef);
 
           if (userStatsSnapshot.exists) {
-            final userData = userStatsSnapshot.data()!;
-            final avatarStats = Map<String, dynamic>.from(
-              userData['avatarStats'] as Map? ?? {},
-            );
+            final userData = userStatsSnapshot.data();
+            if (userData == null) {
+              AppLogger.e(
+                'User stats data became null during transaction',
+                'User stats not found for user $userId',
+                StackTrace.current,
+              );
+            } else {
+              final avatarStats = Map<String, dynamic>.from(
+                userData['avatarStats'] as Map? ?? {},
+              );
 
-            // Determine the primary attribute for this challenge
-            // Default to 'vitality' if not specified
-            final primaryAttribute = challengeData['attribute'] as String? ?? 'vitality';
-            final attributeKey = '${primaryAttribute}Xp';
+              // Determine the primary attribute for this challenge
+              // Default to 'vitality' if not specified
+              final primaryAttribute = challengeData['attribute'] as String? ?? 'vitality';
+              final attributeKey = '${primaryAttribute}Xp';
 
-            // Add XP to the challenge's primary attribute
-            final currentAttributeXp = (avatarStats[attributeKey] as int?) ?? 0;
-            avatarStats[attributeKey] = currentAttributeXp + xpReward;
+              // Add XP to the challenge's primary attribute
+              final currentAttributeXp = (avatarStats[attributeKey] as int?) ?? 0;
+              avatarStats[attributeKey] = currentAttributeXp + xpReward;
 
-            // Recalculate total XP
-            int totalXp = 0;
-            final keys = [
-              'strengthXp',
-              'intellectXp',
-              'vitalityXp',
-              'creativityXp',
-              'focusXp',
-              'spiritXp',
-            ];
-            for (final key in keys) {
-              totalXp += (avatarStats[key] as int?) ?? 0;
+              // Recalculate total XP
+              int totalXp = 0;
+              final keys = [
+                'strengthXp',
+                'intellectXp',
+                'vitalityXp',
+                'creativityXp',
+                'focusXp',
+                'spiritXp',
+              ];
+              for (final key in keys) {
+                totalXp += (avatarStats[key] as int?) ?? 0;
+              }
+
+              // Update user stats
+              transaction.set(
+                userStatsRef,
+                {
+                  'avatarStats': avatarStats,
+                  'currentXp': totalXp,
+                  'currentLevel': avatarStats['level'] as int? ?? 1,
+                },
+                SetOptions(merge: true),
+              );
+
+              AppLogger.i(
+                'XP awarded for challenge completion: User $userId, Challenge $challengeId, '
+                'Attribute: $attributeKey, XP: $xpReward',
+              );
             }
-
-            // Update user stats
-            transaction.set(
-              userStatsRef,
-              {
-                'avatarStats': avatarStats,
-                'currentXp': totalXp,
-                'currentLevel': avatarStats['level'] as int? ?? 1,
-              },
-              SetOptions(merge: true),
-            );
-
-            AppLogger.i(
-              'XP awarded for challenge completion: User $userId, Challenge $challengeId, '
-              'Attribute: $attributeKey, XP: $xpReward',
-            );
           } else {
             AppLogger.w(
               'User stats document not found for XP award: User $userId',
             );
           }
-        }
-
-        // Update global challenge participants count
-        final globalChallengeRef = _firestore.collection('challenges').doc(challengeId);
-        final globalChallengeSnapshot = await transaction.get(globalChallengeRef);
-
-        if (globalChallengeSnapshot.exists) {
-          transaction.update(
-            globalChallengeRef,
-            {'completedCount': FieldValue.increment(1)},
-          );
         }
 
         AppLogger.i(
