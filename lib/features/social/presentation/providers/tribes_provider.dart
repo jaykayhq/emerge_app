@@ -22,16 +22,38 @@ final allArchetypeClubsProvider = FutureProvider<List<Tribe>>((ref) {
   return repository.getArchetypeClubs();
 });
 
-/// Top contributors for a given club.
+/// Real-time stream of top contributors for a given club.
+///
+/// Takes a [tribeId] as parameter and streams the contributors collection,
+/// ordered by contributionCount descending, limited to 10 items.
 final clubContributorsProvider =
-    FutureProvider.family<List<Map<String, dynamic>>, String>((ref, tribeId) {
-      final repository = ref.watch(tribeRepositoryProvider);
-      return repository.getClubContributors(tribeId);
-    });
+    StreamProvider.family<List<Map<String, dynamic>>, String>((ref, tribeId) {
+  final firestore = FirebaseFirestore.instance;
 
-/// Activity feed for a given club.
+  return firestore
+      .collection('tribes')
+      .doc(tribeId)
+      .collection('contributors')
+      .orderBy('contributionCount', descending: true)
+      .limit(10)
+      .snapshots()
+      .map((snapshot) => snapshot.docs.map((doc) => doc.data()).toList());
+});
+
+/// Real-time stream of activity feed for a given club.
+///
+/// Takes a [tribeId] as parameter and streams the activity collection,
+/// ordered by timestamp descending, limited to 20 items.
 final clubActivityProvider =
-    FutureProvider.family<List<Map<String, dynamic>>, String>((ref, tribeId) {
-      final repository = ref.watch(tribeRepositoryProvider);
-      return repository.getClubActivity(tribeId);
-    });
+    StreamProvider.family<List<Map<String, dynamic>>, String>((ref, tribeId) {
+  final firestore = FirebaseFirestore.instance;
+
+  return firestore
+      .collection('tribes')
+      .doc(tribeId)
+      .collection('activity')
+      .orderBy('timestamp', descending: true)
+      .limit(20)
+      .snapshots()
+      .map((snapshot) => snapshot.docs.map((doc) => doc.data()).toList());
+});
