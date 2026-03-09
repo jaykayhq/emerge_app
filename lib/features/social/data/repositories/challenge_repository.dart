@@ -1,14 +1,25 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:emerge_app/core/error/failure.dart';
+import 'package:emerge_app/core/utils/app_logger.dart';
 import 'package:emerge_app/features/social/domain/models/challenge.dart';
 import 'package:emerge_app/features/social/domain/models/challenge_catalog.dart';
+import 'package:fpdart/fpdart.dart';
 
 abstract class ChallengeRepository {
   Future<List<Challenge>> getChallenges({bool featuredOnly = false});
   Future<List<Challenge>> getUserChallenges(String userId);
   Future<void> joinChallenge(String userId, String challengeId);
   Future<void> createSoloChallenge(String userId, Challenge challenge);
-  Future<void> updateProgress(String userId, String challengeId, int progress);
+  Future<Either<Failure, Unit>> updateProgress(
+    String userId,
+    String challengeId,
+    int progress,
+  );
   Future<void> completeChallenge(String userId, String challengeId);
+  Future<Either<Failure, Unit>> completeChallengeWithReward(
+    String userId,
+    String challengeId,
+  );
   Future<List<Challenge>> getChallengesByArchetype(String archetypeId);
   Future<Challenge?> getWeeklySpotlight({String? archetypeId});
   Future<List<Map<String, dynamic>>> getLeaderboard(
@@ -113,17 +124,91 @@ class FirestoreChallengeRepository implements ChallengeRepository {
   }
 
   @override
-  Future<void> updateProgress(
+  Future<Either<Failure, Unit>> updateProgress(
     String userId,
     String challengeId,
     int progress,
   ) async {
-    await _firestore
-        .collection('users')
-        .doc(userId)
-        .collection('challenges')
-        .doc(challengeId)
-        .update({'currentDay': progress});
+    try {
+      return await _firestore.runTransaction((transaction) async {
+        // Get the user's challenge document
+        final userChallengeRef = _firestore
+            .collection('users')
+            .doc(userId)
+            .collection('challenges')
+            .doc(challengeId);
+
+        final snapshot = await transaction.get(userChallengeRef);
+
+        if (!snapshot.exists) {
+          AppLogger.e(
+            'Challenge progress update failed: Challenge not found',
+            'Challenge $challengeId not found for user $userId',
+            StackTrace.current,
+          );
+          return Left(
+            ServerFailure('Challenge not found. Please join the challenge first.'),
+          );
+        }
+
+        final data = snapshot.data()!;
+        final currentDay = data['currentDay'] as int? ?? 0;
+        final totalDays = data['totalDays'] as int? ?? 1;
+        final currentStatus = data['status'] as String?;
+
+        // Validation 1: Only allow incrementing by 1 (prevent cheating)
+        if (progress != currentDay + 1) {
+          AppLogger.w(
+            'Invalid progress increment attempted: User $userId, Challenge $challengeId, '
+            'Current: $currentDay, Attempted: $progress',
+          );
+          return Left(
+            ServerFailure('Progress can only be incremented by 1 day at a time.'),
+          );
+        }
+
+        // Validation 2: Progress cannot exceed totalDays (cannot exceed 100%)
+        if (progress > totalDays) {
+          AppLogger.w(
+            'Progress exceeds total days: User $userId, Challenge $challengeId, '
+            'Progress: $progress, Total: $totalDays',
+          );
+          return Left(
+            ServerFailure('Challenge progress cannot exceed total days.'),
+          );
+        }
+
+        // Validation 3: Check if challenge is already completed
+        if (currentStatus == ChallengeStatus.completed.name) {
+          AppLogger.w(
+            'Attempted to update completed challenge: User $userId, Challenge $challengeId',
+          );
+          return Left(ServerFailure('This challenge is already completed.'));
+        }
+
+        // Update progress
+        final updateData = <String, dynamic>{'currentDay': progress};
+
+        // Auto-mark as completed when progress >= totalDays
+        if (progress >= totalDays) {
+          updateData['status'] = ChallengeStatus.completed.name;
+          AppLogger.i(
+            'Challenge automatically marked as completed: User $userId, Challenge $challengeId',
+          );
+        }
+
+        transaction.update(userChallengeRef, updateData);
+
+        AppLogger.d(
+          'Challenge progress updated: User $userId, Challenge $challengeId, Day $progress/$totalDays',
+        );
+
+        return const Right(unit);
+      });
+    } catch (e, stackTrace) {
+      AppLogger.e('Challenge progress update failed', e, stackTrace);
+      return Left(ServerFailure('Failed to update challenge progress: ${e.toString()}'));
+    }
   }
 
   @override
@@ -134,6 +219,137 @@ class FirestoreChallengeRepository implements ChallengeRepository {
         .collection('challenges')
         .doc(challengeId)
         .update({'status': ChallengeStatus.completed.name});
+  }
+
+  @override
+  Future<Either<Failure, Unit>> completeChallengeWithReward(
+    String userId,
+    String challengeId,
+  ) async {
+    try {
+      return await _firestore.runTransaction((transaction) async {
+        // Get the user's challenge document
+        final userChallengeRef = _firestore
+            .collection('users')
+            .doc(userId)
+            .collection('challenges')
+            .doc(challengeId);
+
+        final challengeSnapshot = await transaction.get(userChallengeRef);
+
+        if (!challengeSnapshot.exists) {
+          AppLogger.e(
+            'Challenge completion failed: Challenge not found',
+            'Challenge $challengeId not found for user $userId',
+            StackTrace.current,
+          );
+          return Left(
+            ServerFailure('Challenge not found. Please join the challenge first.'),
+          );
+        }
+
+        final challengeData = challengeSnapshot.data()!;
+        final currentStatus = challengeData['status'] as String?;
+        final currentDay = challengeData['currentDay'] as int? ?? 0;
+        final totalDays = challengeData['totalDays'] as int? ?? 1;
+        final xpReward = challengeData['xpReward'] as int? ?? 0;
+
+        // Validation: Check if challenge is already completed
+        if (currentStatus == ChallengeStatus.completed.name) {
+          AppLogger.w(
+            'Attempted to complete already completed challenge: User $userId, Challenge $challengeId',
+          );
+          return Left(ServerFailure('This challenge is already completed.'));
+        }
+
+        // Validation: Ensure challenge is fully completed
+        if (currentDay < totalDays) {
+          AppLogger.w(
+            'Attempted to complete incomplete challenge: User $userId, Challenge $challengeId, '
+            'Progress: $currentDay/$totalDays',
+          );
+          return Left(
+            ServerFailure('Complete all days before finishing the challenge.'),
+          );
+        }
+
+        // Update challenge status to completed
+        transaction.update(
+          userChallengeRef,
+          {'status': ChallengeStatus.completed.name},
+        );
+
+        // Award XP to user if reward > 0
+        if (xpReward > 0) {
+          final userStatsRef = _firestore.collection('user_stats').doc(userId);
+          final userStatsSnapshot = await transaction.get(userStatsRef);
+
+          if (userStatsSnapshot.exists) {
+            final userData = userStatsSnapshot.data()!;
+            final avatarStats = Map<String, dynamic>.from(
+              userData['avatarStats'] as Map? ?? {},
+            );
+
+            // Add XP to vitalityXp (default attribute for challenges)
+            final currentVitalityXp = (avatarStats['vitalityXp'] as int?) ?? 0;
+            avatarStats['vitalityXp'] = currentVitalityXp + xpReward;
+
+            // Recalculate total XP
+            int totalXp = 0;
+            final keys = [
+              'strengthXp',
+              'intellectXp',
+              'vitalityXp',
+              'creativityXp',
+              'focusXp',
+              'spiritXp',
+            ];
+            for (final key in keys) {
+              totalXp += (avatarStats[key] as int?) ?? 0;
+            }
+
+            // Update user stats
+            transaction.set(
+              userStatsRef,
+              {
+                'avatarStats': avatarStats,
+                'currentXp': totalXp,
+                'currentLevel': avatarStats['level'] as int? ?? 1,
+              },
+              SetOptions(merge: true),
+            );
+
+            AppLogger.i(
+              'XP awarded for challenge completion: User $userId, Challenge $challengeId, XP: $xpReward',
+            );
+          } else {
+            AppLogger.w(
+              'User stats document not found for XP award: User $userId',
+            );
+          }
+        }
+
+        // Update global challenge participants count
+        final globalChallengeRef = _firestore.collection('challenges').doc(challengeId);
+        final globalChallengeSnapshot = await transaction.get(globalChallengeRef);
+
+        if (globalChallengeSnapshot.exists) {
+          transaction.update(
+            globalChallengeRef,
+            {'completedCount': FieldValue.increment(1)},
+          );
+        }
+
+        AppLogger.i(
+          'Challenge completed with reward: User $userId, Challenge $challengeId',
+        );
+
+        return const Right(unit);
+      });
+    } catch (e, stackTrace) {
+      AppLogger.e('Challenge completion failed', e, stackTrace);
+      return Left(ServerFailure('Failed to complete challenge: ${e.toString()}'));
+    }
   }
 
   @override
