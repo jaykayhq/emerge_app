@@ -62,4 +62,4 @@ final class SocialNotificationServiceProvider
 }
 
 String _$socialNotificationServiceHash() =>
-    r'ef4a6d7e2e551bd5afd0efc4a9e587239c8abfc8';
+    r'342eebb2fdf600c434df4e86fae429ed4faf27b3';

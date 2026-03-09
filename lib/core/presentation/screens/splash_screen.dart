@@ -26,67 +26,71 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
   }
 
   Future<void> _navigateToNext() async {
-    // Wait minimum branding time
-    await Future.delayed(const Duration(milliseconds: 4000));
+    // UNCONDITIONAL 3 second splash screen for branding
+    await Future.delayed(const Duration(seconds: 3));
 
     if (!mounted) return;
 
+    // Check auth state after splash completes
     final authState = ref.read(authStateChangesProvider);
 
-    // Check auth state
+    bool isLoggedIn = false;
     authState.when(
-      data: (user) async {
-        final isLoggedIn = user
-            .id
-            .isNotEmpty; // user extension might return custom User or normal User
-
-        if (!isLoggedIn) {
-          // Not logged in - check if first launch for welcome or go to login
-          final isFirstLaunch = ref.read(onboardingControllerProvider);
-          AppLogger.d('Splash: Not logged in, isFirstLaunch=$isFirstLaunch');
-          if (isFirstLaunch) {
-            context.go('/welcome');
-          } else {
-            context.go('/login');
-          }
-          return;
-        }
-
-        // Logged in - WAIT for user stats to load before deciding
-        AppLogger.d('Splash: Logged in, waiting for user stats...');
-        final userStatsAsync = await ref.read(userStatsStreamProvider.future);
-
-        if (!mounted) return;
-
-        final onboardingProgress = userStatsAsync.onboardingProgress;
-
-        AppLogger.d(
-          'Splash: User stats loaded, onboardingProgress=$onboardingProgress',
-        );
-
-        if (onboardingProgress >= 4) {
-          // Onboarding complete - go directly to dashboard
-          AppLogger.d('Splash: Onboarding complete, going to dashboard');
-          context.go('/');
-        } else {
-          // Onboarding incomplete - resume from appropriate step
-          final nextRoute = _getOnboardingRouteForProgress(onboardingProgress);
-          AppLogger.d('Splash: Redirecting to $nextRoute');
-          context.go(nextRoute);
-        }
+      data: (user) {
+        isLoggedIn = user.id.isNotEmpty;
       },
       loading: () {
-        // If auth is still loading, wait a bit and check again
-        AppLogger.d('Splash: Auth loading, waiting...');
-        Future.delayed(const Duration(milliseconds: 500), () {
-          if (mounted) _navigateToNext();
-        });
+        // Auth still loading, wait briefly and check again
+        isLoggedIn = false;
       },
       error: (_, _) {
-        AppLogger.d('Splash: Auth error, going to login');
-        context.go('/login');
+        isLoggedIn = false;
       },
     );
+
+    // If auth is still loading, wait briefly and check again
+    if (!isLoggedIn) {
+      await Future.delayed(const Duration(milliseconds: 200));
+      if (!mounted) return;
+      final state = ref.read(authStateChangesProvider);
+      isLoggedIn = state.value?.id.isNotEmpty ?? false;
+    }
+
+    if (!mounted) return;
+
+    if (!isLoggedIn) {
+      // Not logged in - check if first launch
+      final isFirstLaunch = ref.read(onboardingControllerProvider);
+      AppLogger.d('Splash: Not logged in, isFirstLaunch=$isFirstLaunch');
+      if (!mounted) return;
+      if (isFirstLaunch) {
+        context.go('/welcome');
+      } else {
+        context.go('/login');
+      }
+      return;
+    }
+
+    // Logged in - load user stats and navigate
+    AppLogger.d('Splash: Logged in, loading user stats...');
+    final userStatsAsync = await ref.read(userStatsStreamProvider.future);
+
+    if (!mounted) return;
+
+    final onboardingProgress = userStatsAsync.onboardingProgress;
+
+    AppLogger.d(
+      'Splash: Navigation ready, onboardingProgress=$onboardingProgress',
+    );
+
+    final nextRoute = onboardingProgress >= 4
+        ? '/'
+        : _getOnboardingRouteForProgress(onboardingProgress);
+
+    AppLogger.d('Splash: Navigating to $nextRoute');
+    if (mounted) {
+      context.go(nextRoute);
+    }
   }
 
   /// Helper function to get the onboarding route for a given progress level

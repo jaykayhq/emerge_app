@@ -58,7 +58,7 @@ class LevelImmersiveScreen extends ConsumerWidget {
     final healthPercent = worldHealthAsync.when(
       data: (health) => health,
       loading: () => profile.worldState.worldHealth.clamp(0.0, 1.0),
-      error: (_, __) => profile.worldState.worldHealth.clamp(0.0, 1.0),
+      error: (_, _) => profile.worldState.worldHealth.clamp(0.0, 1.0),
     );
 
     return Stack(

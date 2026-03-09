@@ -2,7 +2,6 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:emerge_app/core/error/failure.dart';
 import 'package:emerge_app/core/utils/app_logger.dart';
 import 'package:emerge_app/features/auth/domain/entities/user_extension.dart';
-import 'package:emerge_app/features/social/data/repositories/firestore_leaderboard_repository.dart';
 import 'package:emerge_app/features/social/domain/entities/leaderboard_entry.dart';
 import 'package:emerge_app/features/social/domain/repositories/leaderboard_repository.dart';
 import 'package:fpdart/fpdart.dart';
@@ -22,40 +21,36 @@ class FirestoreLeaderboardRepository implements LeaderboardRepository {
       return const Stream.empty();
     }
 
-    try {
-      return _firestore
-          .collection('club_leaderboards')
-          .where('clubId', isEqualTo: clubId)
-          .orderBy('xp', descending: true)
-          .limit(100)
-          .snapshots()
-          .handleError((error, stack) {
-        AppLogger.e('Error watching club leaderboard', error, stack);
-      }).map((snapshot) {
-        // Calculate rank based on position in sorted list
-        return snapshot.docs.map((doc) {
-          final data = doc.data();
-          final index = snapshot.docs.indexOf(doc);
-          return LeaderboardEntry(
-            userId: data['userId'] as String? ?? '',
-            userName: data['userName'] as String? ?? 'Anonymous',
-            xp: data['xp'] as int? ?? 0,
-            level: data['level'] as int? ?? 1,
-            archetype: UserArchetype.values.firstWhere(
-              (e) => e.name == data['archetype'],
-              orElse: () => UserArchetype.none,
-            ),
-            rank: index + 1, // 1-based rank
-            lastUpdated: data['lastUpdated'] != null
-                ? DateTime.tryParse(data['lastUpdated'] as String)
-                : null,
-          );
-        }).toList();
-      });
-    } catch (e, s) {
-      AppLogger.e('Failed to setup club leaderboard watch', e, s);
-      return const Stream.empty();
-    }
+    return _firestore
+        .collection('club_leaderboards')
+        .where('clubId', isEqualTo: clubId)
+        .orderBy('xp', descending: true)
+        .orderBy('lastUpdated', descending: true)
+        .limit(100)
+        .snapshots()
+        .handleError((error, stack) {
+      AppLogger.e('Error watching club leaderboard', error, stack);
+    }).map((snapshot) {
+      // Calculate rank based on position in sorted list
+      return snapshot.docs.map((doc) {
+        final data = doc.data();
+        final index = snapshot.docs.indexOf(doc);
+        return LeaderboardEntry(
+          userId: data['userId'] as String? ?? '',
+          userName: data['userName'] as String? ?? 'Anonymous',
+          xp: data['xp'] as int? ?? 0,
+          level: data['level'] as int? ?? 1,
+          archetype: UserArchetype.values.firstWhere(
+            (e) => e.name == data['archetype'],
+            orElse: () => UserArchetype.none,
+          ),
+          rank: index + 1, // 1-based rank
+          lastUpdated: data['lastUpdated'] != null
+              ? DateTime.tryParse(data['lastUpdated'] as String)
+              : null,
+        );
+      }).toList();
+    });
   }
 
   @override
@@ -66,40 +61,36 @@ class FirestoreLeaderboardRepository implements LeaderboardRepository {
       return const Stream.empty();
     }
 
-    try {
-      return _firestore
-          .collection('challenge_leaderboards')
-          .where('challengeId', isEqualTo: challengeId)
-          .orderBy('xp', descending: true)
-          .limit(100)
-          .snapshots()
-          .handleError((error, stack) {
-        AppLogger.e('Error watching challenge leaderboard', error, stack);
-      }).map((snapshot) {
-        // Calculate rank based on position in sorted list
-        return snapshot.docs.map((doc) {
-          final data = doc.data();
-          final index = snapshot.docs.indexOf(doc);
-          return LeaderboardEntry(
-            userId: data['userId'] as String? ?? '',
-            userName: data['userName'] as String? ?? 'Anonymous',
-            xp: data['xp'] as int? ?? 0,
-            level: data['level'] as int? ?? 1,
-            archetype: UserArchetype.values.firstWhere(
-              (e) => e.name == data['archetype'],
-              orElse: () => UserArchetype.none,
-            ),
-            rank: index + 1, // 1-based rank
-            lastUpdated: data['lastUpdated'] != null
-                ? DateTime.tryParse(data['lastUpdated'] as String)
-                : null,
-          );
-        }).toList();
-      });
-    } catch (e, s) {
-      AppLogger.e('Failed to setup challenge leaderboard watch', e, s);
-      return const Stream.empty();
-    }
+    return _firestore
+        .collection('challenge_leaderboards')
+        .where('challengeId', isEqualTo: challengeId)
+        .orderBy('xp', descending: true)
+        .orderBy('lastUpdated', descending: true)
+        .limit(100)
+        .snapshots()
+        .handleError((error, stack) {
+      AppLogger.e('Error watching challenge leaderboard', error, stack);
+    }).map((snapshot) {
+      // Calculate rank based on position in sorted list
+      return snapshot.docs.map((doc) {
+        final data = doc.data();
+        final index = snapshot.docs.indexOf(doc);
+        return LeaderboardEntry(
+          userId: data['userId'] as String? ?? '',
+          userName: data['userName'] as String? ?? 'Anonymous',
+          xp: data['xp'] as int? ?? 0,
+          level: data['level'] as int? ?? 1,
+          archetype: UserArchetype.values.firstWhere(
+            (e) => e.name == data['archetype'],
+            orElse: () => UserArchetype.none,
+          ),
+          rank: index + 1, // 1-based rank
+          lastUpdated: data['lastUpdated'] != null
+              ? DateTime.tryParse(data['lastUpdated'] as String)
+              : null,
+        );
+      }).toList();
+    });
   }
 
   @override

@@ -6,7 +6,7 @@ import '../../domain/services/global_activity_service.dart';
 part 'global_activity_provider.g.dart';
 
 @riverpod
-GlobalActivityService globalActivityService(GlobalActivityServiceRef ref) {
+GlobalActivityService globalActivityService(Ref ref) {
   return GlobalActivityService(FirebaseFirestore.instance);
 }
 
@@ -24,23 +24,4 @@ class GlobalActivity extends _$GlobalActivity {
       return _service.getGlobalActivityFeed(limit: limit);
     }
   }
-}
-
-/// Auto-disposing stream provider for global activity feed
-/// Usage: ref.watch(globalActivityFeedProvider)
-@Riverpod(keepAlive: false)
-Stream<List<Activity>> globalActivityFeed(GlobalActivityFeedRef ref) {
-  final service = ref.watch(globalActivityServiceProvider);
-  return service.getGlobalActivityFeed(limit: 50);
-}
-
-/// Auto-disposing family stream provider for club-specific activity feeds
-/// Usage: ref.watch(clubActivityFeedProvider('athlete_club'))
-@Riverpod(keepAlive: false)
-Stream<List<Activity>> clubActivityFeed(
-  ClubActivityFeedRef ref,
-  String clubId,
-) {
-  final service = ref.watch(globalActivityServiceProvider);
-  return service.getClubActivityFeed(clubId, limit: 50);
 }

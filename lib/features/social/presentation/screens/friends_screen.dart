@@ -623,7 +623,7 @@ class _MilestoneRow extends StatelessWidget {
 class _ActivePartnersSection extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final onlineAsync = ref.watch(stream.onlinePartnersProvider);
+    final onlineAsync = ref.watch(stream.onlinePartnersStreamProvider);
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -790,7 +790,7 @@ class _ActivePartnersSection extends ConsumerWidget {
 class _PartnerRequestsSection extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final requestsAsync = ref.watch(stream.pendingPartnerRequestsProvider);
+    final requestsAsync = ref.watch(stream.pendingPartnerRequestsStreamProvider);
 
     return requestsAsync.when(
       data: (requests) {

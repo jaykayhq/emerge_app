@@ -315,9 +315,20 @@ class FirestoreHabitRepository implements HabitRepository {
           );
         }
 
+        // Fetch habit once for both activity services (optimization: single Firestore read)
+        Habit? habit;
+        try {
+          habit = await getHabit(habitId);
+        } catch (habitError, habitStack) {
+          AppLogger.e(
+            'Failed to fetch habit for activity logging',
+            habitError,
+            habitStack,
+          );
+        }
+
         // Log to club activity feed if service is available
         try {
-          final habit = await getHabit(habitId);
           if (habit != null && _clubActivityService != null) {
             // Get user data for club activity logging
             final userDoc = await _firestore.collection('users').doc(uid).get();
@@ -352,7 +363,6 @@ class FirestoreHabitRepository implements HabitRepository {
 
         // Log to global activity feed if service is available
         try {
-          final habit = await getHabit(habitId);
           if (habit != null && _globalActivityService != null) {
             // Get user data for global activity logging
             final userDoc = await _firestore.collection('users').doc(uid).get();

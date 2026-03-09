@@ -1,4 +1,5 @@
 import 'package:emerge_app/core/theme/app_theme.dart';
+import 'package:emerge_app/core/theme/emerge_earthy_theme.dart';
 import 'package:emerge_app/core/presentation/widgets/emerge_branding.dart';
 import 'package:emerge_app/core/presentation/widgets/emerge_semantics.dart';
 import 'package:emerge_app/core/theme/emerge_dimensions.dart';
@@ -42,11 +43,9 @@ class _WeekCalendarStripState extends State<WeekCalendarStrip> {
 
   void _generateWeekDays() {
     final now = DateTime.now();
-    // Calculate Monday of the current week
-    final monday = now.subtract(Duration(days: now.weekday - 1));
-    // Generate 7 days from Monday to Sunday
+    // Generate the last 7 days ending with today (progressive reveal)
     _weekDays = List.generate(7, (index) {
-      return monday.add(Duration(days: index));
+      return now.subtract(Duration(days: 6 - index));
     });
   }
 
@@ -97,19 +96,19 @@ class _WeekCalendarStripState extends State<WeekCalendarStrip> {
         padding: const EdgeInsets.symmetric(vertical: 8),
         decoration: BoxDecoration(
           color: isSelected
-              ? EmergeColors.teal
+              ? EmergeEarthyColors.terracotta
               : isToday
-              ? EmergeColors.teal.withValues(alpha: 0.15)
+              ? EmergeEarthyColors.terracotta.withValues(alpha: 0.15)
               : Colors.transparent,
           borderRadius: BorderRadius.circular(12),
           border: isToday && !isSelected
-              ? Border.all(color: EmergeColors.teal.withValues(alpha: 0.5))
+              ? Border.all(color: EmergeEarthyColors.terracotta.withValues(alpha: 0.5))
               : null,
           // Glow effect for today
           boxShadow: isToday
               ? [
                   BoxShadow(
-                    color: EmergeColors.teal.withValues(alpha: 0.3),
+                    color: EmergeEarthyColors.terracotta.withValues(alpha: 0.3),
                     blurRadius: 8,
                     spreadRadius: -2,
                   ),
@@ -135,7 +134,7 @@ class _WeekCalendarStripState extends State<WeekCalendarStrip> {
                 color: isSelected
                     ? Colors.white
                     : isToday
-                    ? EmergeColors.teal
+                    ? EmergeEarthyColors.terracotta
                     : AppTheme.textMainDark,
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
@@ -161,8 +160,8 @@ class _WeekCalendarStripState extends State<WeekCalendarStrip> {
     }
 
     final color = status == DayCompletionStatus.complete
-        ? (isSelected ? Colors.white : EmergeColors.teal)
-        : (isSelected ? Colors.white70 : EmergeColors.coral);
+        ? (isSelected ? Colors.white : EmergeEarthyColors.terracotta)
+        : (isSelected ? Colors.white70 : EmergeEarthyColors.sienna);
 
     return Container(
       width: 8,

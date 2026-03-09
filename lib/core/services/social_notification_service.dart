@@ -1,5 +1,4 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import 'package:emerge_app/core/domain/entities/app_notification.dart';
@@ -9,7 +8,7 @@ part 'social_notification_service.g.dart';
 /// Service for managing in-app notifications for social interactions.
 /// Stores notifications in Firestore subcollection: users/{userId}/notifications
 @Riverpod(keepAlive: true)
-SocialNotificationService socialNotificationService(SocialNotificationServiceRef ref) {
+SocialNotificationService socialNotificationService(Ref ref) {
   return SocialNotificationService(FirebaseFirestore.instance);
 }
 

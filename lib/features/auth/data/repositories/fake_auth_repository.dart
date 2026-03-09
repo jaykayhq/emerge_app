@@ -89,14 +89,7 @@ class FakeAuthRepository implements AuthRepository {
 
   @override
   Future<Either<Failure, AuthUser>> signInAnonymously() async {
-    await Future.delayed(const Duration(milliseconds: 500));
-    _currentUser = const AuthUser(
-      id: 'anon-123',
-      email: '',
-      displayName: 'Anonymous User',
-    );
-    _controller.add(_currentUser);
-    return Right(_currentUser);
+    return const Left(AuthFailure('Anonymous sign-in has been disabled.'));
   }
 
   void dispose() {

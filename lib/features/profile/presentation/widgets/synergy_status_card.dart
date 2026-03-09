@@ -1,13 +1,46 @@
 import 'dart:ui';
 import 'package:emerge_app/core/theme/app_theme.dart';
-import 'package:emerge_app/core/theme/archetype_theme.dart';
 import 'package:emerge_app/features/auth/domain/entities/user_extension.dart';
+import 'package:emerge_app/features/gamification/presentation/providers/attribute_progress_provider.dart';
 import 'package:emerge_app/features/habits/domain/entities/habit.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+/// Maps a [HabitAttribute] to its identity color.
+Color attributeColor(HabitAttribute attribute) {
+  switch (attribute) {
+    case HabitAttribute.strength:
+      return const Color(0xFFFF6B6B); // Coral red
+    case HabitAttribute.intellect:
+      return const Color(0xFF6C63FF); // Indigo purple
+    case HabitAttribute.vitality:
+      return const Color(0xFF2BEE79); // Emerge green
+    case HabitAttribute.creativity:
+      return const Color(0xFFE040FB); // Magenta pink
+    case HabitAttribute.focus:
+      return const Color(0xFFFFB74D); // Amber gold
+    case HabitAttribute.spirit:
+      return const Color(0xFF4DD0E1); // Cyan teal
+  }
+}
+
+/// Utility function to get attribute icon
+IconData _getAttributeIcon(String attribute) {
+  switch (attribute.toLowerCase()) {
+    case 'strength': return Icons.fitness_center;
+    case 'intellect': return Icons.psychology;
+    case 'vitality': return Icons.favorite;
+    case 'creativity': return Icons.palette;
+    case 'focus': return Icons.center_focus_strong;
+    case 'spirit': return Icons.auto_awesome;
+    default: return Icons.stars;
+  }
+}
 
 /// Synergy Status widget - displays top 2 attributes with XP
 /// Shows "See More" button to view all attributes breakdown
-class SynergyStatusCard extends StatelessWidget {
+/// Now uses actual avatarStats to show contribution to overall level
+class SynergyStatusCard extends ConsumerWidget {
   final UserProfile profile;
   final Color accentColor;
   final List<Habit> habits; // For showing which habits contribute to attributes
@@ -20,7 +53,7 @@ class SynergyStatusCard extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16),
       child: ClipRRect(
@@ -73,7 +106,7 @@ class SynergyStatusCard extends StatelessWidget {
                 const SizedBox(height: 20),
 
                 // Content
-                _buildCardContent(context),
+                _buildCardContent(context, ref),
               ],
             ),
           ),
@@ -82,17 +115,18 @@ class SynergyStatusCard extends StatelessWidget {
     );
   }
 
-  Widget _buildCardContent(BuildContext context) {
-    final attributeXp = profile.avatarStats.attributeXp;
+  Widget _buildCardContent(BuildContext context, WidgetRef ref) {
+    // Watch the new attribute progress provider
+    final attributeProgress = ref.watch(attributeProgressFromHabitsProvider);
     final attributes = ['strength', 'intellect', 'vitality', 'creativity', 'focus', 'spirit'];
 
-    // Sort by XP descending, take top 2
+    // Sort by total XP descending, take top 2 (include 0 XP attributes)
     final sortedAttrs = attributes
-        .where((a) => attributeXp.containsKey(a) && (attributeXp[a] ?? 0) > 0)
+        .where((a) => attributeProgress.containsKey(a))
         .toList()
-      ..sort((a, b) => (attributeXp[b] ?? 0).compareTo(attributeXp[a] ?? 0));
+      ..sort((a, b) => (attributeProgress[b]?.totalXp ?? 0).compareTo(attributeProgress[a]?.totalXp ?? 0));
 
-    // If no attributes with XP, show empty state
+    // If no attributes at all, show empty state
     if (sortedAttrs.isEmpty) {
       return _buildEmptyState();
     }
@@ -106,8 +140,7 @@ class SynergyStatusCard extends StatelessWidget {
           children: topAttrs.map((attr) => Expanded(
             child: _AttributeDisplay(
               attribute: attr,
-              xp: attributeXp[attr] ?? 0,
-              habits: _getHabitsForAttribute(attr),
+              progress: attributeProgress[attr]!,
             ),
           )).toList(),
         ),
@@ -117,7 +150,7 @@ class SynergyStatusCard extends StatelessWidget {
         // See More button
         if (sortedAttrs.length > 2)
           GestureDetector(
-            onTap: () => _showAttributeBreakdownSheet(context),
+            onTap: () => _showAttributeBreakdownSheet(context, ref),
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               decoration: BoxDecoration(
@@ -169,20 +202,13 @@ class SynergyStatusCard extends StatelessWidget {
     );
   }
 
-  List<Habit> _getHabitsForAttribute(String attribute) {
-    // Return habits that contribute to this attribute
-    return habits.where((h) =>
-      h.attribute.name.toLowerCase() == attribute.toLowerCase()
-    ).take(3).toList();
-  }
-
-  void _showAttributeBreakdownSheet(BuildContext context) {
-    final attributeXp = profile.avatarStats.attributeXp;
+  void _showAttributeBreakdownSheet(BuildContext context, WidgetRef ref) {
+    final attributeProgress = ref.watch(attributeProgressFromHabitsProvider);
     final attributes = ['strength', 'intellect', 'vitality', 'creativity', 'focus', 'spirit'];
     final sortedAttrs = attributes
-        .where((a) => attributeXp.containsKey(a))
+        .where((a) => attributeProgress.containsKey(a))
         .toList()
-      ..sort((a, b) => (attributeXp[b] ?? 0).compareTo(attributeXp[a] ?? 0));
+      ..sort((a, b) => (attributeProgress[b]?.totalXp ?? 0).compareTo(attributeProgress[a]?.totalXp ?? 0));
 
     showModalBottomSheet(
       context: context,
@@ -241,19 +267,23 @@ class SynergyStatusCard extends StatelessWidget {
                 itemCount: sortedAttrs.length,
                 itemBuilder: (context, index) {
                   final attr = sortedAttrs[index];
-                  final xp = attributeXp[attr] ?? 0;
+                  final progress = attributeProgress[attr]!;
+                  final color = attributeColor(HabitAttribute.values.firstWhere(
+                    (e) => e.name.toLowerCase() == attr,
+                    orElse: () => HabitAttribute.strength,
+                  ));
 
                   return ListTile(
                     leading: Container(
                       width: 40,
                       height: 40,
                       decoration: BoxDecoration(
-                        color: ArchetypeColors.forAttribute(attr).withValues(alpha: 0.2),
+                        color: color.withValues(alpha: 0.2),
                         shape: BoxShape.circle,
                       ),
                       child: Icon(
                         _getAttributeIcon(attr),
-                        color: ArchetypeColors.forAttribute(attr),
+                        color: color,
                       ),
                     ),
                     title: Text(
@@ -263,13 +293,51 @@ class SynergyStatusCard extends StatelessWidget {
                         fontWeight: FontWeight.bold,
                       ),
                     ),
-                    trailing: Text(
-                      '$xp XP',
-                      style: TextStyle(
-                        color: ArchetypeColors.forAttribute(attr),
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                      ),
+                    subtitle: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const SizedBox(height: 4),
+                        Text(
+                          '${progress.totalXp} XP • ${(progress.contributionPercent * 100).toStringAsFixed(1)}% of total',
+                          style: TextStyle(
+                            color: Colors.white.withValues(alpha: 0.7),
+                            fontSize: 12,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        // Progress bar showing contribution to overall level
+                        Stack(
+                          children: [
+                            // Background track
+                            Container(
+                              height: 4,
+                              decoration: BoxDecoration(
+                                color: Colors.white.withValues(alpha: 0.2),
+                                borderRadius: BorderRadius.circular(2),
+                              ),
+                            ),
+                            // Progress fill
+                            FractionallySizedBox(
+                              widthFactor: progress.progressPercent.clamp(0.0, 1.0),
+                              child: Container(
+                                height: 4,
+                                decoration: BoxDecoration(
+                                  color: color,
+                                  borderRadius: BorderRadius.circular(2),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          'Contributes ${progress.contributionToOverall} XP to Level ${progress.overallLevel}',
+                          style: TextStyle(
+                            color: Colors.white.withValues(alpha: 0.5),
+                            fontSize: 10,
+                          ),
+                        ),
+                      ],
                     ),
                   );
                 },
@@ -282,34 +350,24 @@ class SynergyStatusCard extends StatelessWidget {
       ),
     );
   }
-
-  IconData _getAttributeIcon(String attribute) {
-    switch (attribute.toLowerCase()) {
-      case 'strength': return Icons.fitness_center;
-      case 'intellect': return Icons.psychology;
-      case 'vitality': return Icons.favorite;
-      case 'creativity': return Icons.palette;
-      case 'focus': return Icons.center_focus_strong;
-      case 'spirit': return Icons.auto_awesome;
-      default: return Icons.stars;
-    }
-  }
 }
 
 class _AttributeDisplay extends StatelessWidget {
   final String attribute;
-  final int xp;
-  final List<Habit> habits;
+  final AttributeProgress progress;
 
   const _AttributeDisplay({
     required this.attribute,
-    required this.xp,
-    required this.habits,
+    required this.progress,
   });
 
   @override
   Widget build(BuildContext context) {
-    final color = ArchetypeColors.forAttribute(attribute);
+    final attrEnum = HabitAttribute.values.firstWhere(
+      (e) => e.name.toLowerCase() == attribute,
+      orElse: () => HabitAttribute.strength,
+    );
+    final color = attributeColor(attrEnum);
     final icon = _getAttributeIcon(attribute);
 
     return Container(
@@ -321,52 +379,65 @@ class _AttributeDisplay extends StatelessWidget {
         border: Border.all(color: color.withValues(alpha: 0.3)),
       ),
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(icon, color: color, size: 20),
+          Row(
+            children: [
+              Icon(icon, color: color, size: 18),
+              const SizedBox(width: 6),
+              Text(
+                attribute.toUpperCase(),
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 10,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          // Progress bar showing contribution to overall level
+          Stack(
+            children: [
+              // Background track
+              Container(
+                height: 6,
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.2),
+                  borderRadius: BorderRadius.circular(3),
+                ),
+              ),
+              // Progress fill
+              FractionallySizedBox(
+                widthFactor: progress.progressPercent.clamp(0.0, 1.0),
+                child: Container(
+                  height: 6,
+                  decoration: BoxDecoration(
+                    color: color,
+                    borderRadius: BorderRadius.circular(3),
+                  ),
+                ),
+              ),
+            ],
+          ),
           const SizedBox(height: 4),
           Text(
-            attribute.toUpperCase(),
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 10,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          const SizedBox(height: 2),
-          Text(
-            '$xp XP',
+            '${progress.totalXp} XP',
             style: TextStyle(
               color: color,
-              fontSize: 14,
+              fontSize: 11,
               fontWeight: FontWeight.bold,
             ),
           ),
-          if (habits.isNotEmpty) ...[
-            const SizedBox(height: 4),
-            Text(
-              '+${habits.first.impact} from ${habits.first.title}',
-              style: TextStyle(
-                color: Colors.white.withValues(alpha: 0.7),
-                fontSize: 9,
-              ),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
+          Text(
+            'Contributes ${progress.contributionToOverall} to Level ${progress.overallLevel}',
+            style: TextStyle(
+              color: Colors.white.withValues(alpha: 0.6),
+              fontSize: 9,
             ),
-          ],
+          ),
         ],
       ),
     );
-  }
-
-  IconData _getAttributeIcon(String attribute) {
-    switch (attribute.toLowerCase()) {
-      case 'strength': return Icons.fitness_center;
-      case 'intellect': return Icons.psychology;
-      case 'vitality': return Icons.favorite;
-      case 'creativity': return Icons.palette;
-      case 'focus': return Icons.center_focus_strong;
-      case 'spirit': return Icons.auto_awesome;
-      default: return Icons.stars;
-    }
   }
 }

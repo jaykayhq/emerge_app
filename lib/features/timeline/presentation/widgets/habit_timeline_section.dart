@@ -47,12 +47,14 @@ String attributeLabel(HabitAttribute attribute) {
 /// indented underneath. Shows completion count per category and attributes.
 class HierarchicalHabitTimeline extends StatelessWidget {
   final Map<String, List<Habit>> groupedHabits;
+  final DateTime selectedDate;
   final void Function(Habit habit) onHabitTap;
   final void Function(Habit habit) onHabitToggle;
 
   const HierarchicalHabitTimeline({
     super.key,
     required this.groupedHabits,
+    required this.selectedDate,
     required this.onHabitTap,
     required this.onHabitToggle,
   });
@@ -78,6 +80,7 @@ class HierarchicalHabitTimeline extends StatelessWidget {
             _HabitCategorySection(
               slot: slot,
               habits: groupedHabits[slot]!,
+              selectedDate: selectedDate,
               onHabitTap: onHabitTap,
               onHabitToggle: onHabitToggle,
               isLast: slot == slotsWithHabits.last,
@@ -117,6 +120,7 @@ class HierarchicalHabitTimeline extends StatelessWidget {
 class _HabitCategorySection extends StatelessWidget {
   final String slot;
   final List<Habit> habits;
+  final DateTime selectedDate;
   final void Function(Habit) onHabitTap;
   final void Function(Habit) onHabitToggle;
   final bool isLast;
@@ -124,6 +128,7 @@ class _HabitCategorySection extends StatelessWidget {
   const _HabitCategorySection({
     required this.slot,
     required this.habits,
+    required this.selectedDate,
     required this.onHabitTap,
     required this.onHabitToggle,
     required this.isLast,
@@ -187,6 +192,7 @@ class _HabitCategorySection extends StatelessWidget {
           final habit = entry.value;
           return _IndentedHabitItem(
             habit: habit,
+            selectedDate: selectedDate,
             onTap: () => onHabitTap(habit),
             onToggle: () => onHabitToggle(habit),
             showConnector: index < habits.length - 1,
@@ -267,12 +273,14 @@ class _CategoryHeader extends StatelessWidget {
 /// Indented habit item with connector line
 class _IndentedHabitItem extends StatelessWidget {
   final Habit habit;
+  final DateTime selectedDate;
   final VoidCallback onTap;
   final VoidCallback onToggle;
   final bool showConnector;
 
   const _IndentedHabitItem({
     required this.habit,
+    required this.selectedDate,
     required this.onTap,
     required this.onToggle,
     required this.showConnector,
@@ -281,10 +289,9 @@ class _IndentedHabitItem extends StatelessWidget {
   bool get _isCompletedToday {
     final last = habit.lastCompletedDate;
     if (last == null) return false;
-    final now = DateTime.now();
-    return last.year == now.year &&
-        last.month == now.month &&
-        last.day == now.day;
+    return last.year == selectedDate.year &&
+        last.month == selectedDate.month &&
+        last.day == selectedDate.day;
   }
 
   @override
@@ -539,6 +546,7 @@ class HabitTimelineSection extends StatelessWidget {
   final String description;
   final IconData icon;
   final List<Habit> habits;
+  final DateTime selectedDate;
   final Color accentColor;
   final void Function(Habit habit) onHabitTap;
   final void Function(Habit habit) onHabitToggle;
@@ -550,6 +558,7 @@ class HabitTimelineSection extends StatelessWidget {
     required this.description,
     required this.icon,
     required this.habits,
+    required this.selectedDate,
     required this.accentColor,
     required this.onHabitTap,
     required this.onHabitToggle,
@@ -561,10 +570,9 @@ class HabitTimelineSection extends StatelessWidget {
     final completedCount = habits.where((h) {
       final last = h.lastCompletedDate;
       if (last == null) return false;
-      final now = DateTime.now();
-      return last.year == now.year &&
-          last.month == now.month &&
-          last.day == now.day;
+      return last.year == selectedDate.year &&
+          last.month == selectedDate.month &&
+          last.day == selectedDate.day;
     }).length;
 
     final allDone = completedCount == habits.length && habits.isNotEmpty;
@@ -648,6 +656,7 @@ class HabitTimelineSection extends StatelessWidget {
                     ...habits.map(
                       (habit) => _HabitTimelineItem(
                         habit: habit,
+                        selectedDate: selectedDate,
                         onTap: () => onHabitTap(habit),
                         onToggle: () => onHabitToggle(habit),
                       ),
@@ -668,11 +677,13 @@ class HabitTimelineSection extends StatelessWidget {
 /// and XP badge. Glassmorphism card style matching the Stitch design.
 class _HabitTimelineItem extends StatelessWidget {
   final Habit habit;
+  final DateTime selectedDate;
   final VoidCallback onTap;
   final VoidCallback onToggle;
 
   const _HabitTimelineItem({
     required this.habit,
+    required this.selectedDate,
     required this.onTap,
     required this.onToggle,
   });
@@ -680,10 +691,9 @@ class _HabitTimelineItem extends StatelessWidget {
   bool get _isCompletedToday {
     final last = habit.lastCompletedDate;
     if (last == null) return false;
-    final now = DateTime.now();
-    return last.year == now.year &&
-        last.month == now.month &&
-        last.day == now.day;
+    return last.year == selectedDate.year &&
+        last.month == selectedDate.month &&
+        last.day == selectedDate.day;
   }
 
   @override

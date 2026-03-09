@@ -104,15 +104,17 @@ class WelcomeScreen extends ConsumerWidget {
                       // Google Continue
                       OutlinedButton.icon(
                         onPressed: () async {
+                          final navigator = GoRouter.of(context);
+                          final messenger = ScaffoldMessenger.of(context);
+
                           final result = await ref
                               .read(authRepositoryProvider)
                               .signInWithGoogle();
                           result.fold(
-                            (error) =>
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(content: Text(error.toString())),
-                                ),
-                            (_) => context.go('/'),
+                            (error) => messenger.showSnackBar(
+                              SnackBar(content: Text(error.toString())),
+                            ),
+                            (_) => navigator.go('/'),
                           );
                         },
                         style: OutlinedButton.styleFrom(

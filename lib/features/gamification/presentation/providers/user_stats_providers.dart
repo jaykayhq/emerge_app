@@ -160,18 +160,35 @@ class UserStatsController {
         return;
       }
 
-      // 1. Apply XP boosts to each targeted attribute
+      // 1. Apply 100 Base XP evenly across targeted attributes, plus the specific boosts
       var updatedStats = currentProfile.avatarStats;
-      for (final entry in xpBoosts.entries) {
-        final attribute = HabitAttribute.values.firstWhere(
-          (a) => a.name == entry.key,
-          orElse: () => HabitAttribute.strength,
-        );
+
+      final baseAttributeXp =
+          100 ~/ (xpBoosts.isNotEmpty ? xpBoosts.length : 1);
+      final remainder = 100 % (xpBoosts.isNotEmpty ? xpBoosts.length : 1);
+
+      int i = 0;
+      if (xpBoosts.isEmpty) {
         updatedStats = gamificationService.addXp(
           updatedStats,
-          entry.value,
-          attribute,
+          100,
+          HabitAttribute.strength,
         );
+      } else {
+        for (final entry in xpBoosts.entries) {
+          final attribute = HabitAttribute.values.firstWhere(
+            (a) => a.name == entry.key,
+            orElse: () => HabitAttribute.strength,
+          );
+
+          final baseAddition = baseAttributeXp + (i == 0 ? remainder : 0);
+          updatedStats = gamificationService.addXp(
+            updatedStats,
+            entry.value + baseAddition,
+            attribute,
+          );
+          i++;
+        }
       }
 
       // 2. Update world state: move from active to claimed

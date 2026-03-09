@@ -4,10 +4,13 @@ import 'package:mocktail/mocktail.dart';
 import 'package:emerge_app/features/social/domain/services/club_activity_service.dart';
 
 // Mock classes
+// ignore: subtype_of_sealed_class
 class MockFirestore extends Mock implements FirebaseFirestore {}
 
+// ignore: subtype_of_sealed_class
 class MockCollectionReference extends Mock implements CollectionReference<Map<String, dynamic>> {}
 
+// ignore: subtype_of_sealed_class
 class MockDocumentReference extends Mock implements DocumentReference<Map<String, dynamic>> {}
 
 class MockTransaction extends Mock implements Transaction {

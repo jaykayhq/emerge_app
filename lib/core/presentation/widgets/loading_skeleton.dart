@@ -61,7 +61,45 @@ class LoadingSkeleton extends StatefulWidget {
           'Must specify width, height, or child',
         );
 
-  /// Creates a skeleton that matches the size of the given child widget.
+  /// DEPRECATED: Creates a skeleton that matches the size of the given child widget.
+  ///
+  /// **This factory constructor is deprecated and will be removed in a future version.**
+  ///
+  /// Why it doesn't work: Measuring a widget's size before rendering requires
+  /// the widget to be laid out first, which creates a circular dependency.
+  /// The previous implementation attempted to use `MeasureSize` + `Offstage`,
+  /// but this approach has fundamental issues:
+  /// - Offstage widgets still participate in layout but don't render
+  /// - Size information isn't available until after the first frame
+  /// - This causes flickering and incorrect sizing
+  ///
+  /// Instead, use one of these approaches:
+  /// 1. **Specify explicit dimensions**: `LoadingSkeleton(width: 200, height: 100)`
+  /// 2. **Use predefined shapes**: `SkeletonShapes.card()`, `SkeletonShapes.avatar()`, etc.
+  /// 3. **Use LayoutBuilder directly**: Wrap your content in a LayoutBuilder and pass
+  ///    the constraints to LoadingSkeleton
+  ///
+  /// Example of correct usage:
+  /// ```dart
+  /// // Good: Explicit dimensions
+  /// LoadingSkeleton(width: 200, height: 100)
+  ///
+  /// // Good: Predefined shape
+  /// SkeletonShapes.card()
+  ///
+  /// // Good: LayoutBuilder pattern
+  /// LayoutBuilder(
+  ///   builder: (context, constraints) => LoadingSkeleton(
+  ///     width: constraints.maxWidth,
+  ///     height: constraints.maxHeight,
+  ///   ),
+  /// )
+  /// ```
+  @Deprecated(
+    'fromWidget is deprecated due to fundamental widget measurement limitations. '
+    'Use explicit dimensions, SkeletonShapes, or LayoutBuilder instead. '
+    'This will be removed in v2.0.0',
+  )
   factory LoadingSkeleton.fromWidget({
     Key? key,
     required Widget child,
@@ -71,14 +109,16 @@ class LoadingSkeleton extends StatefulWidget {
     Color? baseColor,
     Color? highlightColor,
   }) {
+    // Fallback to a default size since we can't reliably measure the child
     return LoadingSkeleton(
       key: key,
+      width: 200, // Default fallback width
+      height: 100, // Default fallback height
       borderRadius: borderRadius,
       shimmerDirection: shimmerDirection,
       shimmerDuration: shimmerDuration,
       baseColor: baseColor,
       highlightColor: highlightColor,
-      child: child,
     );
   }
 
@@ -114,20 +154,9 @@ class _LoadingSkeletonState extends State<LoadingSkeleton>
     final highlightColor =
         widget.highlightColor ?? theme.colorScheme.surface;
 
-    if (widget.child != null) {
-      return _LayoutBuilderWrapper(
-        child: widget.child!,
-        builder: (constraints) => _ShimmerContainer(
-          width: constraints.maxWidth,
-          height: constraints.maxHeight,
-          borderRadius: widget.borderRadius,
-          baseColor: baseColor,
-          highlightColor: highlightColor,
-          shimmerController: _shimmerController,
-          shimmerDirection: widget.shimmerDirection,
-        ),
-      );
-    }
+    // child parameter is now only used by the deprecated fromWidget factory
+    // which provides fallback dimensions, so we can render directly
+    // No need for the broken _LayoutBuilderWrapper approach
 
     return _ShimmerContainer(
       width: widget.width,
@@ -193,79 +222,18 @@ class _ShimmerContainer extends StatelessWidget {
   }
 }
 
-/// Wrapper to measure child widget size.
-class _LayoutBuilderWrapper extends StatelessWidget {
-  final Widget child;
-  final Widget Function(BoxConstraints) builder;
-
-  const _LayoutBuilderWrapper({
-    required this.child,
-    required this.builder,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        // Measure child by rendering it off-screen
-        return MeasureSize(
-          onChange: (size) {
-            // Size captured by MeasureSize
-          },
-          child: Offstage(
-            child: child,
-          ),
-        );
-      },
-    );
-  }
-}
-
-/// A widget that measures its child's size.
-class MeasureSize extends StatefulWidget {
-  final Widget child;
-  final void Function(Size) onChange;
-
-  const MeasureSize({
-    super.key,
-    required this.child,
-    required this.onChange,
-  });
-
-  @override
-  State<MeasureSize> createState() => _MeasureSizeState();
-}
-
-class _MeasureSizeState extends State<MeasureSize> {
-  final _key = GlobalKey();
-  Size? _oldSize;
-
-  @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) => _notifySize());
-  }
-
-  void _notifySize() {
-    final context = _key.currentContext;
-    if (context == null) return;
-
-    final size = context.size;
-    if (size != null && _oldSize != size) {
-      _oldSize = size;
-      widget.onChange(size);
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    WidgetsBinding.instance.addPostFrameCallback((_) => _notifySize());
-    return Container(
-      key: _key,
-      child: widget.child,
-    );
-  }
-}
+// REMOVED: _LayoutBuilderWrapper and MeasureSize classes
+//
+// These were part of the broken fromWidget implementation.
+// They have been removed because:
+// 1. The fromWidget approach is fundamentally flawed (see deprecation notice above)
+// 2. MeasureSize had memory leak issues with post-frame callbacks
+// 3. The complexity wasn't justified given the limitations
+//
+// If you need to measure widgets, consider:
+// - Using LayoutBuilder directly to get constraints
+// - Using RenderBox with a GlobalKey for one-time measurements
+// - Using flutter_measure package for advanced measurement needs
 
 /// Pre-defined skeleton shapes for common UI patterns.
 class SkeletonShapes {

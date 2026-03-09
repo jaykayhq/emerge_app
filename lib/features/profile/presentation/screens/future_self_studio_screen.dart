@@ -72,11 +72,17 @@ class _FutureSelfStudioScreenState
   }
 
   void _checkTutorial() {
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      final tutorialState = ref.read(tutorialProvider);
-      if (!tutorialState.isCompleted(TutorialStep.profile)) {
-        _showTutorial();
-      }
+    // Add delay to ensure screen has fully settled and navigation is complete
+    Future.delayed(const Duration(milliseconds: 500), () {
+      if (!mounted) return;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        final tutorialState = ref.read(tutorialProvider);
+        // Only show tutorial if not completed AND tutorials are enabled
+        if (!tutorialState.isCompleted(TutorialStep.profile) && tutorialState.enabled) {
+          _showTutorial();
+        }
+      });
     });
   }
 
@@ -326,11 +332,8 @@ class _FutureSelfStudioScreenState
                               onRecoveryComplete: () {
                                 // Reset recovery state after animation
                                 ref
-                                        .read(
-                                          recoveryAnimatingProvider.notifier,
-                                        )
-                                        .setAnimating(
-                                    false);
+                                    .read(recoveryAnimatingProvider.notifier)
+                                    .setAnimating(false);
                               },
                               child: EvolvingSilhouetteWidget(
                                 evolutionState:
@@ -498,8 +501,20 @@ class _FutureSelfStudioScreenState
   }
 
   Map<String, double> _calculateAttributes(UserAvatarStats stats) {
-    // Normalize stats to 0-1 range (cap at 500 XP per attribute)
-    final maxXp = 500.0;
+    // Determine the max xp scaling based on the highest attribute, with a minimum floor
+    final highestAttributeXp = [
+      stats.strengthXp,
+      stats.intellectXp,
+      stats.creativityXp,
+      stats.focusXp,
+      stats.vitalityXp,
+      stats.spiritXp,
+    ].reduce((a, b) => a > b ? a : b);
+
+    // Scale dynamically, but ensure at least level 1 max (500)
+    final maxXp = highestAttributeXp > 500.0
+        ? highestAttributeXp.toDouble()
+        : 500.0;
     return {
       'Strength': (stats.strengthXp / maxXp).clamp(0.0, 1.0),
       'Intellect': (stats.intellectXp / maxXp).clamp(0.0, 1.0),

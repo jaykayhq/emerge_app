@@ -1,4 +1,3 @@
-import 'dart:ui';
 import 'package:emerge_app/core/services/notification_templates.dart';
 import 'package:emerge_app/core/theme/app_theme.dart';
 import 'package:emerge_app/core/presentation/widgets/emerge_branding.dart';
@@ -9,6 +8,7 @@ import 'package:emerge_app/features/habits/data/repositories/habit_notification_
 import 'package:emerge_app/features/habits/domain/entities/habit.dart';
 import 'package:emerge_app/features/habits/presentation/providers/habit_providers.dart';
 import 'package:emerge_app/features/habits/presentation/widgets/habit_template_picker.dart';
+import 'package:emerge_app/features/timeline/presentation/widgets/habit_timeline_section.dart';
 import 'package:emerge_app/features/tutorial/presentation/providers/tutorial_provider.dart';
 import 'package:emerge_app/features/tutorial/presentation/widgets/tutorial_overlay.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -63,11 +63,17 @@ class _AdvancedCreateHabitDialogState
   }
 
   void _checkTutorial() {
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      final tutorialState = ref.read(tutorialProvider);
-      if (!tutorialState.isCompleted(TutorialStep.createHabit)) {
-        _showTutorial();
-      }
+    // Add delay to ensure dialog has fully settled and animations are complete
+    Future.delayed(const Duration(milliseconds: 500), () {
+      if (!mounted) return;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        final tutorialState = ref.read(tutorialProvider);
+        // Only show tutorial if not completed AND tutorials are enabled
+        if (!tutorialState.isCompleted(TutorialStep.createHabit) && tutorialState.enabled) {
+          _showTutorial();
+        }
+      });
     });
   }
 
@@ -168,6 +174,23 @@ class _AdvancedCreateHabitDialogState
     if (picked != null && picked != _specificTime) {
       setState(() {
         _specificTime = picked;
+
+        // Auto-select time of day based on the time picked
+        final hour = picked.hour;
+        if (hour >= 5 && hour < 12) {
+          // 5AM-12PM: After you wake up
+          _timeOfDay = TimeOfDayPreference.morning;
+        } else if (hour >= 12 && hour < 15) {
+          // 12PM-3PM: During lunch
+          _timeOfDay = TimeOfDayPreference.afternoon;
+        } else if (hour >= 15 && hour < 21) {
+          // 3PM-8PM: After work
+          _timeOfDay = TimeOfDayPreference.evening;
+        } else {
+          // 9PM-5AM: Before bed
+          _timeOfDay = TimeOfDayPreference.anytime;
+        }
+
         _updateIdentityStatement();
       });
     }
@@ -213,6 +236,7 @@ class _AdvancedCreateHabitDialogState
         attribute: _attribute,
         createdAt: DateTime.now(),
         difficulty: _difficulty,
+        currentStreak: 1,
         twoMinuteVersion: _twoMinuteVersion,
         reward: 'Complete and enjoy your progress!', // Default reward
         timerDurationMinutes: _timerDuration,
@@ -272,6 +296,7 @@ class _AdvancedCreateHabitDialogState
     HapticFeedback.mediumImpact();
     setState(() {
       _titleController.text = template.description; // Use action as the title
+      _emoji = template.emoji; // Set emoji from template
       switch (template.timeOfDay.toLowerCase()) {
         case 'morning':
           _timeOfDay = TimeOfDayPreference.morning;
@@ -314,7 +339,7 @@ class _AdvancedCreateHabitDialogState
 
     return Dialog(
       backgroundColor: Colors.transparent,
-      insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
+      insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 40),
       child: Stack(
         clipBehavior: Clip.none,
         children: [
@@ -370,43 +395,45 @@ class _AdvancedCreateHabitDialogState
     userProfile,
     AsyncValue<List<Habit>> habitsAsync,
   ) {
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(24),
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
-        child: Container(
-          padding: const EdgeInsets.all(24),
-          decoration: BoxDecoration(
-            color: const Color(0xFF1A1A2E).withValues(alpha: 0.92),
-            borderRadius: BorderRadius.circular(24),
-            border: Border.all(
-              color: _getAttributeColor(_attribute).withValues(alpha: 0.4),
-              width: 1.5,
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: _getAttributeColor(_attribute).withValues(alpha: 0.15),
-                blurRadius: 32,
-                spreadRadius: 2,
-              ),
-            ],
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _buildHeader(context),
-              const SizedBox(height: 20),
-              _buildIdentitySection(context),
-              const SizedBox(height: 20),
-              _buildCoreSettings(context),
-              const SizedBox(height: 20),
-              _buildTemplates(userProfile),
-              const SizedBox(height: 20),
-              _buildAdvancedToggle(context, habitsAsync),
-            ],
-          ),
+    final primaryColor = _getAttributeColor(_attribute);
+    return Container(
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [
+            const Color(0xFF1A1A2E),
+            const Color(0xFF0F0F1A),
+          ],
         ),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(
+          color: primaryColor.withValues(alpha: 0.3),
+          width: 1.5,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: primaryColor.withValues(alpha: 0.2),
+            blurRadius: 20,
+            spreadRadius: -5,
+          ),
+        ],
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _buildHeader(context),
+          const SizedBox(height: 20),
+          _buildIdentitySection(context),
+          const SizedBox(height: 20),
+          _buildCoreSettings(context),
+          const SizedBox(height: 20),
+          _buildTemplates(userProfile),
+          const SizedBox(height: 20),
+          _buildAdvancedToggle(context, habitsAsync),
+        ],
       ),
     );
   }
@@ -435,8 +462,8 @@ class _AdvancedCreateHabitDialogState
                 GestureDetector(
                   onTap: _showEmojiPicker,
                   child: Container(
-                    width: 72,
-                    height: 72,
+                    width: 60,
+                    height: 60,
                     decoration: BoxDecoration(
                       color: _getAttributeColor(
                         _attribute,
@@ -472,7 +499,7 @@ class _AdvancedCreateHabitDialogState
                   ),
                   const SizedBox(height: 8),
                   Container(
-                    height: 72,
+                    height: 64,
                     padding: const EdgeInsets.symmetric(horizontal: 16),
                     decoration: BoxDecoration(
                       color: Colors.white.withValues(alpha: 0.05),
@@ -527,7 +554,7 @@ class _AdvancedCreateHabitDialogState
               onTap: () => _showFrequencyPicker(),
               child: _buildBadge(
                 _frequency.name.toUpperCase(),
-                const Color(0xFF2BEE79),
+                EmergeColors.teal,
                 icon: Icons.calendar_today,
                 key: _frequencyKey,
               ),
@@ -541,7 +568,7 @@ class _AdvancedCreateHabitDialogState
   Widget _buildBadge(String text, Color color, {IconData? icon, Key? key}) {
     return Container(
       key: key,
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(30),
@@ -720,7 +747,7 @@ class _AdvancedCreateHabitDialogState
               const SizedBox(height: 8),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
-                height: 56,
+                height: 48,
                 decoration: BoxDecoration(
                   color: Colors.white.withValues(alpha: 0.05),
                   borderRadius: BorderRadius.circular(12),
@@ -1123,15 +1150,19 @@ class _AdvancedCreateHabitDialogState
           items: [
             const DropdownMenuItem(
               value: TimeOfDayPreference.morning,
-              child: Text('AFTER YOU WAKE UP'),
+              child: Text('AFTER YOU WAKE UP (5AM-12PM)'),
             ),
             const DropdownMenuItem(
               value: TimeOfDayPreference.afternoon,
-              child: Text('DURING LUNCH'),
+              child: Text('DURING LUNCH (12PM-3PM)'),
             ),
             const DropdownMenuItem(
               value: TimeOfDayPreference.evening,
-              child: Text('BEFORE BED'),
+              child: Text('AFTER WORK (3PM-8PM)'),
+            ),
+            const DropdownMenuItem(
+              value: TimeOfDayPreference.anytime,
+              child: Text('BEFORE BED (9PM-5AM)'),
             ),
           ],
           onChanged: (v) {
@@ -1151,6 +1182,7 @@ class _AdvancedCreateHabitDialogState
     return Row(
       children: HabitDifficulty.values.map((d) {
         final isSelected = _difficulty == d;
+        final displayName = d.name[0].toUpperCase() + d.name.substring(1);
         return Expanded(
           child: GestureDetector(
             onTap: () => setState(() => _difficulty = d),
@@ -1165,7 +1197,7 @@ class _AdvancedCreateHabitDialogState
               ),
               child: Center(
                 child: Text(
-                  d.name[0].toUpperCase(),
+                  displayName,
                   style: TextStyle(
                     color: isSelected ? Colors.white : Colors.white54,
                     fontSize: 10,
@@ -1280,20 +1312,7 @@ class _AdvancedCreateHabitDialogState
   }
 
   Color _getAttributeColor(HabitAttribute attr) {
-    switch (attr) {
-      case HabitAttribute.strength:
-        return const Color(0xFFFF6B6B); // Coral red
-      case HabitAttribute.intellect:
-        return const Color(0xFF6C63FF); // Indigo purple
-      case HabitAttribute.vitality:
-        return const Color(0xFF2BEE79); // Emerge green
-      case HabitAttribute.creativity:
-        return const Color(0xFFE040FB); // Magenta pink
-      case HabitAttribute.focus:
-        return const Color(0xFFFFB74D); // Amber gold
-      case HabitAttribute.spirit:
-        return const Color(0xFF4DD0E1); // Cyan teal
-    }
+    return attributeColor(attr);
   }
 
   IconData _getAttributeIcon(HabitAttribute attr) {

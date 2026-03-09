@@ -90,16 +90,17 @@ class _EmergeAppState extends ConsumerState<EmergeApp> {
   void initState() {
     super.initState();
     // Listen to auth state changes to start/stop heartbeat
-    ref.listen<AuthUser>(authStateChangesProvider, (previous, next) {
+    ref.listen(authStateChangesProvider, (previous, next) {
       final presenceService = ref.read(onlinePresenceServiceProvider);
 
-      if (next.isNotEmpty) {
-        // User signed in - start heartbeat
-        presenceService.startHeartbeat(next.id);
-      } else {
-        // User signed out - stop heartbeat
-        presenceService.stopHeartbeat();
-      }
+      next.when(
+        data: (user) {
+          // User signed in - start heartbeat
+          presenceService.startHeartbeat(user.id);
+        },
+        loading: () => null,
+        error: (_, _) => presenceService.stopHeartbeat(),
+      );
     });
   }
 

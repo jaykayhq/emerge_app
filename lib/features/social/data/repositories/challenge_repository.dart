@@ -3,30 +3,8 @@ import 'package:emerge_app/core/error/failure.dart';
 import 'package:emerge_app/core/utils/app_logger.dart';
 import 'package:emerge_app/features/social/domain/models/challenge.dart';
 import 'package:emerge_app/features/social/domain/models/challenge_catalog.dart';
+import 'package:emerge_app/features/social/domain/repositories/challenge_repository.dart';
 import 'package:fpdart/fpdart.dart';
-
-abstract class ChallengeRepository {
-  Future<List<Challenge>> getChallenges({bool featuredOnly = false});
-  Future<List<Challenge>> getUserChallenges(String userId);
-  Future<void> joinChallenge(String userId, String challengeId);
-  Future<void> createSoloChallenge(String userId, Challenge challenge);
-  Future<Either<Failure, Unit>> updateProgress(
-    String userId,
-    String challengeId,
-    int progress,
-  );
-  Future<void> completeChallenge(String userId, String challengeId);
-  Future<Either<Failure, Unit>> completeChallengeWithReward(
-    String userId,
-    String challengeId,
-  );
-  Future<List<Challenge>> getChallengesByArchetype(String archetypeId);
-  Future<Challenge?> getWeeklySpotlight({String? archetypeId});
-  Future<List<Map<String, dynamic>>> getLeaderboard(
-    String challengeId, {
-    int limit = 3,
-  });
-}
 
 class FirestoreChallengeRepository implements ChallengeRepository {
   final FirebaseFirestore _firestore;
@@ -290,9 +268,14 @@ class FirestoreChallengeRepository implements ChallengeRepository {
               userData['avatarStats'] as Map? ?? {},
             );
 
-            // Add XP to vitalityXp (default attribute for challenges)
-            final currentVitalityXp = (avatarStats['vitalityXp'] as int?) ?? 0;
-            avatarStats['vitalityXp'] = currentVitalityXp + xpReward;
+            // Determine the primary attribute for this challenge
+            // Default to 'vitality' if not specified
+            final primaryAttribute = challengeData['attribute'] as String? ?? 'vitality';
+            final attributeKey = '${primaryAttribute}Xp';
+
+            // Add XP to the challenge's primary attribute
+            final currentAttributeXp = (avatarStats[attributeKey] as int?) ?? 0;
+            avatarStats[attributeKey] = currentAttributeXp + xpReward;
 
             // Recalculate total XP
             int totalXp = 0;
@@ -320,7 +303,8 @@ class FirestoreChallengeRepository implements ChallengeRepository {
             );
 
             AppLogger.i(
-              'XP awarded for challenge completion: User $userId, Challenge $challengeId, XP: $xpReward',
+              'XP awarded for challenge completion: User $userId, Challenge $challengeId, '
+              'Attribute: $attributeKey, XP: $xpReward',
             );
           } else {
             AppLogger.w(

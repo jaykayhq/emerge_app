@@ -28,6 +28,7 @@ import 'package:emerge_app/features/settings/presentation/screens/settings_scree
 import 'package:emerge_app/features/settings/presentation/screens/notification_settings_screen.dart';
 import 'package:emerge_app/features/monetization/presentation/screens/paywall_screen.dart';
 import 'package:emerge_app/features/social/presentation/screens/community_screen.dart';
+import 'package:emerge_app/features/social/presentation/screens/challenges_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
@@ -42,10 +43,21 @@ GoRouter router(Ref ref) {
   // Create a ValueNotifier to trigger router refreshes
   final refreshNotifier = ValueNotifier<int>(0);
 
+  // Cache onboarding completion to avoid redundant checks
+  bool? cachedOnboardingComplete;
+
   // Listen to all dependencies that should trigger a redirect
-  ref.listen(authStateChangesProvider, (_, _) => refreshNotifier.value++);
+  ref.listen(authStateChangesProvider, (_, _) {
+    cachedOnboardingComplete = null; // Reset cache on auth change
+    refreshNotifier.value++;
+  });
   ref.listen(onboardingControllerProvider, (_, _) => refreshNotifier.value++);
-  ref.listen(userStatsStreamProvider, (_, _) => refreshNotifier.value++);
+  ref.listen(userStatsStreamProvider, (_, _) {
+    // Don't reset cache if we already know onboarding is complete
+    if (cachedOnboardingComplete != true) {
+      refreshNotifier.value++;
+    }
+  });
 
   // Dispose the notifier when the provider is disposed
   ref.onDispose(refreshNotifier.dispose);
@@ -83,6 +95,14 @@ GoRouter router(Ref ref) {
       }
 
       // LOGGED IN: Check onboarding progress
+      // Skip user stats check if we've already confirmed onboarding is complete
+      if (cachedOnboardingComplete == true) {
+        // Onboarding known to be complete - allow all paths
+        AppLogger.d('Router: Using cached onboarding complete=true');
+        if (isAuthScreen) return '/';
+        return null;
+      }
+
       final userStatsAsync = ref.read(userStatsStreamProvider);
       final userStats = userStatsAsync.value;
 
@@ -109,6 +129,11 @@ GoRouter router(Ref ref) {
 
       final onboardingProgress = userStats.onboardingProgress;
       final isOnboardingComplete = onboardingProgress >= 4;
+
+      // Cache the result if onboarding is complete
+      if (isOnboardingComplete) {
+        cachedOnboardingComplete = true;
+      }
 
       AppLogger.d(
         'Router: onboardingProgress=$onboardingProgress, isOnboardingComplete=$isOnboardingComplete, path=$path',
@@ -219,6 +244,12 @@ GoRouter router(Ref ref) {
               GoRoute(
                 path: '/tribes',
                 builder: (context, state) => const CommunityScreen(),
+                routes: [
+                  GoRoute(
+                    path: 'challenges',
+                    builder: (context, state) => const ChallengesScreen(),
+                  ),
+                ],
               ),
             ],
           ),

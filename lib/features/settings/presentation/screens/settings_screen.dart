@@ -26,6 +26,7 @@ class SettingsScreen extends ConsumerWidget {
     final authUserAsync = ref.watch(authStateChangesProvider);
     final userProfile = userProfileAsync.value;
     final authUser = authUserAsync.value;
+    final tutorialState = ref.watch(tutorialProvider);
 
     final currentTheme = userProfile?.worldTheme ?? 'Default';
     final userSettings = userProfile?.settings ?? const UserSettings();
@@ -415,6 +416,43 @@ class SettingsScreen extends ConsumerWidget {
                         userProfile,
                         userSettings.copyWith(soundsEnabled: value),
                       );
+                    },
+                    activeThumbColor: EmergeColors.teal,
+                    activeTrackColor: EmergeColors.teal.withValues(alpha: 0.5),
+                    tileColor: AppTheme.surfaceDark,
+                  ),
+                  SwitchListTile(
+                    secondary: Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: EmergeColors.teal.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Icon(
+                        Icons.school_outlined,
+                        color: EmergeColors.teal,
+                      ),
+                    ),
+                    title: Text(
+                      'Enable Tutorials',
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        fontWeight: FontWeight.w500,
+                        color: AppTheme.textMainDark,
+                      ),
+                    ),
+                    subtitle: Text(
+                      'Show tutorials when entering screens',
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: AppTheme.textSecondaryDark,
+                      ),
+                    ),
+                    value: tutorialState.enabled,
+                    onChanged: (value) async {
+                      await ref.read(tutorialProvider.notifier).setTutorialsEnabled(value);
+                      // If enabling tutorials, reset them so they show again
+                      if (value) {
+                        await ref.read(tutorialProvider.notifier).resetTutorials();
+                      }
                     },
                     activeThumbColor: EmergeColors.teal,
                     activeTrackColor: EmergeColors.teal.withValues(alpha: 0.5),

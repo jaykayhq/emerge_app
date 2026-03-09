@@ -8,10 +8,10 @@ import 'package:emerge_app/features/auth/presentation/providers/auth_providers.d
 part 'notification_provider.g.dart';
 
 /// Provider for the social notification service instance
-///
-/// This is already provided by socialNotificationServiceProvider
-/// but re-exported here for convenience in the core presentation layer
-final socialNotificationServiceProvider = socialNotificationServiceProvider;
+@riverpod
+SocialNotificationService socialNotificationService(Ref ref) {
+  return SocialNotificationService(FirebaseFirestore.instance);
+}
 
 /// Stream provider for unread notifications for the current user
 ///
@@ -25,19 +25,19 @@ final socialNotificationServiceProvider = socialNotificationServiceProvider;
 /// );
 /// ```
 @riverpod
-Stream<List<AppNotification>> unreadNotifications(UnreadNotificationsRef ref) {
+Stream<List<AppNotification>> unreadNotifications(Ref ref) {
   final authState = ref.watch(authStateChangesProvider);
 
   return authState.when(
     data: (user) {
-      if (user == null) {
+      if (user.isEmpty) {
         return const Stream.empty();
       }
       final service = ref.watch(socialNotificationServiceProvider);
       return service.unreadNotificationsStream(user.id);
     },
     loading: () => const Stream.empty(),
-    error: (_, __) => const Stream.empty(),
+    error: (_, _) => const Stream.empty(),
   );
 }
 
@@ -48,19 +48,19 @@ Stream<List<AppNotification>> unreadNotifications(UnreadNotificationsRef ref) {
 /// final notificationsAsync = ref.watch(notificationsProvider);
 /// ```
 @riverpod
-Stream<List<AppNotification>> notifications(NotificationsRef ref) {
+Stream<List<AppNotification>> notifications(Ref ref) {
   final authState = ref.watch(authStateChangesProvider);
 
   return authState.when(
     data: (user) {
-      if (user == null) {
+      if (user.isEmpty) {
         return const Stream.empty();
       }
       final service = ref.watch(socialNotificationServiceProvider);
       return service.notificationsStream(user.id, limit: 20);
     },
     loading: () => const Stream.empty(),
-    error: (_, __) => const Stream.empty(),
+    error: (_, _) => const Stream.empty(),
   );
 }
 
@@ -72,23 +72,23 @@ Stream<List<AppNotification>> notifications(NotificationsRef ref) {
 /// unreadCount.when(
 ///   data: (count) => Badge(count: count),
 ///   loading: () => Badge(count: 0),
-///   error: (_, __) => Badge(count: 0),
+///   error: (_, _) => Badge(count: 0),
 /// );
 /// ```
 @riverpod
-Stream<int> unreadCount(UnreadCountRef ref) {
+Stream<int> unreadCount(Ref ref) {
   final authState = ref.watch(authStateChangesProvider);
 
   return authState.when(
     data: (user) {
-      if (user == null) {
-        return const Stream.value(0);
+      if (user.isEmpty) {
+        return Stream.value(0);
       }
       final service = ref.watch(socialNotificationServiceProvider);
       return service.unreadCountStream(user.id);
     },
-    loading: () => const Stream.value(0),
-    error: (_, __) => const Stream.value(0),
+    loading: () => Stream.value(0),
+    error: (_, _) => Stream.value(0),
   );
 }
 
@@ -100,173 +100,11 @@ Stream<int> unreadCount(UnreadCountRef ref) {
 /// final count = countAsync.value ?? 0;
 /// ```
 @riverpod
-Future<int> unreadCountFuture(UnreadCountFutureRef ref) async {
+Future<int> unreadCountFuture(Ref ref) async {
   final authState = ref.watch(authStateChangesProvider);
-
   final user = authState.value;
-  if (user == null) {
-    return 0;
-  }
+  if (user == null || user.isEmpty) return 0;
 
   final service = ref.watch(socialNotificationServiceProvider);
   return service.getUnreadCount(user.id);
-}
-
-/// Action provider to mark a notification as read
-///
-/// Usage:
-/// ```dart
-/// ref.read(markAsReadProvider(notificationId).notifier)(notificationId);
-/// ```
-@riverpod
-Future<void> markAsRead(
-  MarkAsReadRef ref,
-  String notificationId,
-) async {
-  final authState = ref.read(authStateChangesProvider);
-  final user = authState.value;
-  if (user == null) {
-    throw Exception('User not authenticated');
-  }
-
-  final service = ref.read(socialNotificationServiceProvider);
-  await service.markAsRead(user.id, notificationId);
-}
-
-/// Action provider to mark all notifications as read
-///
-/// Usage:
-/// ```dart
-/// ref.read(markAllAsReadProvider.notifier)();
-/// ```
-@riverpod
-Future<void> markAllAsRead(MarkAllAsReadRef ref) async {
-  final authState = ref.read(authStateChangesProvider);
-  final user = authState.value;
-  if (user == null) {
-    throw Exception('User not authenticated');
-  }
-
-  final service = ref.read(socialNotificationServiceProvider);
-  await service.markAllAsRead(user.id);
-}
-
-/// Action provider to delete a notification
-///
-/// Usage:
-/// ```dart
-/// ref.read(deleteNotificationProvider(notificationId).notifier)(notificationId);
-/// ```
-@riverpod
-Future<void> deleteNotification(
-  DeleteNotificationRef ref,
-  String notificationId,
-) async {
-  final authState = ref.read(authStateChangesProvider);
-  final user = authState.value;
-  if (user == null) {
-    throw Exception('User not authenticated');
-  }
-
-  final service = ref.read(socialNotificationServiceProvider);
-  await service.deleteNotification(user.id, notificationId);
-}
-
-/// Action provider to send a notification to a specific user
-///
-/// Usage:
-/// ```dart
-/// final service = ref.read(socialNotificationServiceProvider);
-/// final notification = service.createFriendRequestNotification(
-///   senderName: 'John',
-///   senderId: 'user123',
-/// );
-/// await ref.read(sendNotificationProvider.notifier)(targetUserId, notification);
-/// ```
-@riverpod
-Future<void> sendNotification(
-  SendNotificationRef ref,
-  String targetUserId,
-  AppNotification notification,
-) async {
-  final service = ref.read(socialNotificationServiceProvider);
-  await service.sendNotification(targetUserId, notification);
-}
-
-/// Action provider to send a notification to multiple users
-///
-/// Usage:
-/// ```dart
-/// final service = ref.read(socialNotificationServiceProvider);
-/// final notification = service.createTribeActivityNotification(
-///   tribeName: 'Warriors',
-///   tribeId: 'tribe123',
-///   activityDescription: 'Weekly challenge completed!',
-/// );
-/// await ref.read(sendNotificationToMultipleProvider.notifier)(userIds, notification);
-/// ```
-@riverpod
-Future<void> sendNotificationToMultiple(
-  SendNotificationToMultipleRef ref,
-  List<String> userIds,
-  AppNotification notification,
-) async {
-  final service = ref.read(socialNotificationServiceProvider);
-  await service.sendNotificationToMultiple(userIds, notification);
-}
-
-/// Combined provider that returns both unread count and notifications
-/// Useful for notification screens that need both pieces of data
-///
-/// Usage:
-/// ```dart
-/// final notificationData = ref.watch(notificationDataProvider);
-/// notificationData.when(
-///   data: (data) {
-///     final count = data.$1;
-///     final notifications = data.$2;
-///     // Render UI
-///   },
-///   loading: () => CircularProgressIndicator(),
-///   error: (err, stack) => Text('Error: $err'),
-/// );
-/// ```
-@riverpod
-Stream<(int count, List<AppNotification> notifications)> notificationData(
-  NotificationDataRef ref,
-) {
-  final countStream = ref.watch(unreadCountProvider);
-  final notificationsStream = ref.watch(unreadNotificationsProvider);
-
-  // Combine both streams using async* generator
-  return Stream.asyncExpand((count) {
-    return notificationsStream.map((notifications) => (count, notifications));
-  }).asyncExpand((data) async* {
-    yield data;
-  });
-}
-
-/// Provider for cleaning up expired notifications
-/// Should be called on app startup or periodically
-///
-/// Usage:
-/// ```dart
-/// ref.listen(deleteExpiredNotificationsProvider, (previous, next) {
-///   next.when(
-///     data: (_) => print('Expired notifications cleaned up'),
-///     error: (err, _) => print('Cleanup error: $err'),
-///     loading: () {},
-///   );
-/// });
-/// ```
-@riverpod
-Future<void> deleteExpiredNotifications(DeleteExpiredNotificationsRef ref) async {
-  final authState = ref.read(authStateChangesProvider);
-  final user = authState.value;
-  if (user == null) {
-    return;
-  }
-
-  final service = ref.read(socialNotificationServiceProvider);
-  await service.deleteExpiredNotifications(user.id);
 }
