@@ -4,6 +4,9 @@ import 'package:emerge_app/features/social/data/repositories/friend_repository.d
 import 'package:emerge_app/features/social/domain/entities/social_entities.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+// Legacy stream provider
+export 'friend_stream_provider.dart';
+
 final friendRepositoryProvider = Provider<FriendRepository>((ref) {
   return FirestoreFriendRepository(FirebaseFirestore.instance);
 });
