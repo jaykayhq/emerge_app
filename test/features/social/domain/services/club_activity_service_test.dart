@@ -33,28 +33,6 @@ void main() {
   });
 
   group('ClubActivityService', () {
-    group('getClubIdForArchetype', () {
-      test('returns correct club ID format for athlete archetype', () {
-        expect(service.getClubIdForArchetype('athlete'), 'athlete_club');
-      });
-
-      test('returns correct club ID format for scholar archetype', () {
-        expect(service.getClubIdForArchetype('scholar'), 'scholar_club');
-      });
-
-      test('returns correct club ID format for creator archetype', () {
-        expect(service.getClubIdForArchetype('creator'), 'creator_club');
-      });
-
-      test('returns correct club ID format for stoic archetype', () {
-        expect(service.getClubIdForArchetype('stoic'), 'stoic_club');
-      });
-
-      test('returns correct club ID format for zealot archetype', () {
-        expect(service.getClubIdForArchetype('zealot'), 'zealot_club');
-      });
-    });
-
     group('logHabitCompletion', () {
       test('executes successfully with valid transaction handler', () async {
         // Arrange

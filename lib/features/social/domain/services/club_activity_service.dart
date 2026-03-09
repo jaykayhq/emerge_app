@@ -14,7 +14,7 @@ class ClubActivityService {
   /// Gets the club ID for a given archetype.
   ///
   /// Club IDs follow the pattern `{archetypeId}_club`.
-  String getClubIdForArchetype(String archetype) {
+  String _getClubIdForArchetype(String archetype) {
     return '${archetype}_club';
   }
 
@@ -32,7 +32,7 @@ class ClubActivityService {
     required int xpGained,
   }) async {
     try {
-      final clubId = getClubIdForArchetype(archetype);
+      final clubId = _getClubIdForArchetype(archetype);
 
       await _firestore.runTransaction((transaction) async {
         final clubRef = _firestore.collection('tribes').doc(clubId);
@@ -80,7 +80,7 @@ class ClubActivityService {
     required int newLevel,
   }) async {
     try {
-      final clubId = getClubIdForArchetype(archetype);
+      final clubId = _getClubIdForArchetype(archetype);
 
       await _firestore.runTransaction((transaction) async {
         final clubRef = _firestore.collection('tribes').doc(clubId);
@@ -112,7 +112,7 @@ class ClubActivityService {
     required String challengeTitle,
   }) async {
     try {
-      final clubId = getClubIdForArchetype(archetype);
+      final clubId = _getClubIdForArchetype(archetype);
 
       await _firestore.runTransaction((transaction) async {
         final clubRef = _firestore.collection('tribes').doc(clubId);
