@@ -2,6 +2,7 @@ import 'dart:io';
 import 'dart:ui';
 
 import 'package:emerge_app/core/presentation/widgets/emerge_branding.dart';
+import 'package:emerge_app/core/utils/app_logger.dart';
 import 'package:emerge_app/features/auth/domain/entities/user_extension.dart';
 import 'package:emerge_app/features/auth/presentation/providers/auth_providers.dart';
 import 'package:emerge_app/features/habits/domain/entities/habit.dart';
@@ -9,10 +10,12 @@ import 'package:emerge_app/features/social/domain/models/challenge.dart';
 import 'package:emerge_app/features/social/presentation/providers/challenge_provider.dart';
 import 'package:emerge_app/features/world_map/domain/models/archetype_map_config.dart';
 import 'package:emerge_app/features/world_map/domain/models/world_node.dart';
+import 'package:emerge_app/features/world_map/presentation/providers/world_health_provider.dart';
 import 'package:emerge_app/features/world_map/presentation/widgets/world_health_bar.dart';
 import 'package:emerge_app/features/gamification/presentation/providers/user_stats_providers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 /// Full-screen immersive level view with AI-generated background
 /// Shows habits, stats, health bar, and mission controls
@@ -29,11 +32,12 @@ class LevelImmersiveScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final statsAsync = ref.watch(userStatsStreamProvider);
+    final worldHealthAsync = ref.watch(worldHealthStreamProvider);
 
     return Scaffold(
       backgroundColor: const Color(0xFF0A0A1A),
       body: statsAsync.when(
-        data: (profile) => _buildContent(context, ref, profile),
+        data: (profile) => _buildContent(context, ref, profile, worldHealthAsync),
         loading: () => const Center(
           child: CircularProgressIndicator(color: Color(0xFF00FFCC)),
         ),
@@ -48,9 +52,14 @@ class LevelImmersiveScreen extends ConsumerWidget {
     BuildContext context,
     WidgetRef ref,
     UserProfile profile,
+    AsyncValue<double> worldHealthAsync,
   ) {
     final screenSize = MediaQuery.of(context).size;
-    final healthPercent = _calculateWorldHealth(profile);
+    final healthPercent = worldHealthAsync.when(
+      data: (health) => health,
+      loading: () => profile.worldState.worldHealth.clamp(0.0, 1.0),
+      error: (_, __) => profile.worldState.worldHealth.clamp(0.0, 1.0),
+    );
 
     return Stack(
       fit: StackFit.expand,
@@ -669,11 +678,6 @@ class LevelImmersiveScreen extends ConsumerWidget {
     );
   }
 
-  double _calculateWorldHealth(UserProfile profile) {
-    // Use the existing worldHealth (1.0 - entropy)
-    return profile.worldState.worldHealth.clamp(0.0, 1.0);
-  }
-
   Color _getTypeColor() {
     switch (node.type) {
       case NodeType.waypoint:
@@ -748,7 +752,7 @@ class LevelImmersiveScreen extends ConsumerWidget {
     return challenges.where((challenge) {
       // Match by archetype if node has one
       if (nodeArchetype != null && challenge.archetypeId != null) {
-        return challenge.archetypeId!.toLowerCase() == nodeArchetype;
+        return challenge.archetypeId?.toLowerCase() == nodeArchetype;
       }
 
       // Fallback: match by attributes
@@ -814,10 +818,11 @@ class LevelImmersiveScreen extends ConsumerWidget {
         },
       );
     } catch (e) {
+      AppLogger.e('Failed to check in challenge', e);
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Error: $e'),
+            content: const Text('Failed to check in. Please try again.'),
             backgroundColor: Colors.red,
             behavior: SnackBarBehavior.floating,
           ),
@@ -829,7 +834,7 @@ class LevelImmersiveScreen extends ConsumerWidget {
   /// Show dialog to create a new solo challenge
   void _showCreateChallengeDialog(BuildContext context) {
     // Navigate to challenges screen where user can create solo challenges
-    Navigator.pushNamed(context, '/challenges');
+    context.push('/tribes/challenges');
   }
 }
 
