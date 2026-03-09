@@ -11,10 +11,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:flutter/foundation.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:emerge_app/core/theme/archetype_theme.dart';
+import 'package:emerge_app/core/presentation/providers/online_presence_provider.dart';
 import 'package:emerge_app/features/auth/domain/entities/user_extension.dart';
+import 'package:emerge_app/features/auth/presentation/providers/auth_providers.dart';
 import 'package:emerge_app/features/gamification/presentation/providers/user_stats_providers.dart';
 
 @pragma('vm:entry-point')
@@ -65,19 +66,7 @@ void main() async {
     };
   }
 
-  // Ensure user is signed in anonymously if not already signed in
-  // This is required for Firestore permission checks during onboarding
-  // We don't await this to avoid blocking the first frame paint
-  unawaited(() async {
-    try {
-      if (FirebaseAuth.instance.currentUser == null) {
-        await FirebaseAuth.instance.signInAnonymously();
-        debugPrint('Signed in anonymously');
-      }
-    } catch (e) {
-      debugPrint('Failed to sign in anonymously: $e');
-    }
-  }());
+  // Anonymous sign-in code removed to prevent uncontrolled sign-in
 
   // Register background messaging handler (not supported on web)
   if (!kIsWeb) {
@@ -89,20 +78,53 @@ void main() async {
   );
 }
 
-class EmergeApp extends ConsumerWidget {
+class EmergeApp extends ConsumerStatefulWidget {
   const EmergeApp({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<EmergeApp> createState() => _EmergeAppState();
+}
+
+class _EmergeAppState extends ConsumerState<EmergeApp> {
+  @override
+  void initState() {
+    super.initState();
+    // Listen to auth state changes to start/stop heartbeat
+    ref.listen<AuthUser>(authStateChangesProvider, (previous, next) {
+      final presenceService = ref.read(onlinePresenceServiceProvider);
+
+      if (next.isNotEmpty) {
+        // User signed in - start heartbeat
+        presenceService.startHeartbeat(next.id);
+      } else {
+        // User signed out - stop heartbeat
+        presenceService.stopHeartbeat();
+      }
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final router = ref.watch(routerProvider);
     final themeMode = ref.watch(themeControllerProvider);
-    final userStatsAsync = ref.watch(userStatsStreamProvider);
 
-    // Default to Explorer if loading/error or no archetype
-    final archetype = userStatsAsync.maybeWhen(
-      data: (profile) => ArchetypeTheme.forArchetype(profile.archetype),
-      orElse: () => ArchetypeTheme.forArchetype(UserArchetype.none),
-    );
+    // Defer user stats loading to avoid blocking initial render
+    // Use a lazy load pattern - only load when auth state is available
+    final authState = ref.watch(authStateChangesProvider);
+    final isLoggedIn = authState.value?.isNotEmpty ?? false;
+
+    // Default to Explorer theme initially, will update when user stats load
+    ArchetypeTheme archetype = ArchetypeTheme.forArchetype(UserArchetype.none);
+
+    // Only watch userStatsStreamProvider if user is logged in
+    // This prevents unnecessary Firestore reads on splash/login screens
+    if (isLoggedIn) {
+      final userStatsAsync = ref.watch(userStatsStreamProvider);
+      archetype = userStatsAsync.maybeWhen(
+        data: (profile) => ArchetypeTheme.forArchetype(profile.archetype),
+        orElse: () => ArchetypeTheme.forArchetype(UserArchetype.none),
+      );
+    }
 
     return MaterialApp.router(
       title: 'Emerge',
