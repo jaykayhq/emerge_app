@@ -6,12 +6,17 @@ import 'package:emerge_app/core/utils/app_logger.dart';
 import 'package:emerge_app/features/habits/domain/entities/habit.dart';
 import 'package:emerge_app/features/habits/domain/models/habit_activity.dart';
 import 'package:emerge_app/features/habits/domain/repositories/habit_repository.dart';
+import 'package:emerge_app/features/social/domain/services/club_activity_service.dart';
 import 'package:fpdart/fpdart.dart';
 
 class FirestoreHabitRepository implements HabitRepository {
   final FirebaseFirestore _firestore;
+  final ClubActivityService? _clubActivityService;
 
-  FirestoreHabitRepository(this._firestore);
+  FirestoreHabitRepository(
+    this._firestore, [
+    this._clubActivityService,
+  ]);
 
   /// Defensive mapping from a Firestore document to a [Habit] entity.
   /// Uses null coalescing on all fields to prevent crashes on malformed data.
@@ -306,6 +311,41 @@ class FirestoreHabitRepository implements HabitRepository {
             activityStack,
           );
         }
+
+        // Log to club activity feed if service is available
+        try {
+          final habit = await getHabit(habitId);
+          if (habit != null && _clubActivityService != null) {
+            // Get user data for club activity logging
+            final userDoc = await _firestore.collection('users').doc(uid).get();
+            if (userDoc.exists) {
+              final userData = userDoc.data() as Map<String, dynamic>;
+              final userName = userData['displayName'] as String? ?? 'Anonymous';
+              final archetype = userData['archetype'] as String? ?? 'none';
+
+              // Calculate XP based on difficulty and streak
+              final difficulty = completionData['difficulty'] as String?;
+              final baseXp = _getBaseXpForDifficulty(difficulty);
+              final streakDay = completionData['streakDay'] as int? ?? 1;
+              final xpGained = baseXp + (streakDay > 1 ? 5 : 0);
+
+              await _clubActivityService.logHabitCompletion(
+                userId: uid,
+                userName: userName,
+                archetype: archetype,
+                habitId: habitId,
+                habitTitle: habit.title,
+                xpGained: xpGained,
+              );
+            }
+          }
+        } catch (clubError, clubStack) {
+          AppLogger.e(
+            'Failed to log habit completion to club activity',
+            clubError,
+            clubStack,
+          );
+        }
       }
 
       AppLogger.i('Successfully completed habit: $habitId for user: $userId');
@@ -378,6 +418,21 @@ class FirestoreHabitRepository implements HabitRepository {
     } catch (e, s) {
       AppLogger.e('Get activity failed', e, s);
       return [];
+    }
+  }
+
+  /// Calculate base XP for habit difficulty.
+  /// Used for club activity logging.
+  int _getBaseXpForDifficulty(String? difficulty) {
+    switch (difficulty) {
+      case 'easy':
+        return 10;
+      case 'medium':
+        return 15;
+      case 'hard':
+        return 25;
+      default:
+        return 15;
     }
   }
 }
