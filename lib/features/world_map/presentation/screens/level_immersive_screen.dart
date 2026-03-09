@@ -3,7 +3,10 @@ import 'dart:ui';
 
 import 'package:emerge_app/core/presentation/widgets/emerge_branding.dart';
 import 'package:emerge_app/features/auth/domain/entities/user_extension.dart';
+import 'package:emerge_app/features/auth/presentation/providers/auth_providers.dart';
 import 'package:emerge_app/features/habits/domain/entities/habit.dart';
+import 'package:emerge_app/features/social/domain/models/challenge.dart';
+import 'package:emerge_app/features/social/presentation/providers/challenge_provider.dart';
 import 'package:emerge_app/features/world_map/domain/models/archetype_map_config.dart';
 import 'package:emerge_app/features/world_map/domain/models/world_node.dart';
 import 'package:emerge_app/features/world_map/presentation/widgets/world_health_bar.dart';
@@ -93,7 +96,7 @@ class LevelImmersiveScreen extends ConsumerWidget {
                 const SizedBox(height: 24),
 
                 // Habit Cards (staggered)
-                _buildHabitSection(context, profile),
+                _buildHabitSection(context, ref, profile),
 
                 const SizedBox(height: 24),
 
@@ -397,18 +400,15 @@ class LevelImmersiveScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildHabitSection(BuildContext context, UserProfile profile) {
-    // Get habits related to this node's attributes
-    final attributeNames = node.targetedAttributes.map((a) => a.name).toList();
-
-    // Example habits based on attributes (in real app, these come from user's habit list)
-    final mockHabits = _getRelevantHabits(attributeNames);
+  Widget _buildHabitSection(BuildContext context, WidgetRef ref, UserProfile profile) {
+    // Filter user challenges by node attributes/archetype
+    final challengesAsync = ref.watch(userChallengesProvider);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'TODAY\'S MISSIONS',
+          'QUEST CHALLENGES',
           style: TextStyle(
             color: Colors.white.withValues(alpha: 0.5),
             fontSize: 10,
@@ -417,90 +417,59 @@ class LevelImmersiveScreen extends ConsumerWidget {
           ),
         ),
         const SizedBox(height: 10),
-        ...mockHabits.asMap().entries.map((entry) {
-          final idx = entry.key;
-          final habit = entry.value;
-          final isCompleted = idx == 1; // Demo: second habit done
+            challengesAsync.when(
+          data: (challenges) {
+            // Filter challenges by node archetype
+            final filteredChallenges = _filterChallengesByNode(challenges);
 
-          return Padding(
-            padding: EdgeInsets.only(
-              left: idx.isOdd ? 24.0 : 0.0, // Stagger
-              bottom: 8,
-            ),
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(12),
-              child: BackdropFilter(
-                filter: ImageFilter.blur(sigmaX: 6, sigmaY: 6),
-                child: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 14,
-                    vertical: 12,
+            if (filteredChallenges.isEmpty) {
+              return _EmptyMissionsState(
+                onCreate: () => _showCreateChallengeDialog(context),
+              );
+            }
+
+            return Column(
+              children: filteredChallenges.asMap().entries.map((entry) {
+                final idx = entry.key;
+                final challenge = entry.value;
+                final progress = challenge.currentDay / challenge.totalDays;
+
+                return Padding(
+                  padding: EdgeInsets.only(
+                    left: idx.isOdd ? 24.0 : 0.0, // Stagger
+                    bottom: 8,
                   ),
-                  decoration: BoxDecoration(
-                    color: isCompleted
-                        ? Colors.green.withValues(alpha: 0.1)
-                        : Colors.white.withValues(alpha: 0.05),
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(
-                      color: isCompleted
-                          ? Colors.green.withValues(alpha: 0.3)
-                          : Colors.white.withValues(alpha: 0.08),
-                    ),
+                  child: _ChallengeQuestCard(
+                    challenge: challenge,
+                    progress: progress,
+                    accentColor: config.primaryColor,
+                    onCheckIn: () => _checkInChallenge(context, ref, challenge),
                   ),
-                  child: Row(
-                    children: [
-                      Text(
-                        habit['emoji'] as String,
-                        style: const TextStyle(fontSize: 18),
-                      ),
-                      const SizedBox(width: 10),
-                      Expanded(
-                        child: Text(
-                          habit['name'] as String,
-                          style: TextStyle(
-                            color: Colors.white.withValues(
-                              alpha: isCompleted ? 0.6 : 0.9,
-                            ),
-                            fontSize: 14,
-                            fontWeight: FontWeight.w500,
-                            decoration: isCompleted
-                                ? TextDecoration.lineThrough
-                                : null,
-                          ),
-                        ),
-                      ),
-                      if (isCompleted)
-                        Icon(
-                          Icons.check_circle,
-                          color: Colors.green.withValues(alpha: 0.8),
-                          size: 20,
-                        )
-                      else
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 8,
-                            vertical: 3,
-                          ),
-                          decoration: BoxDecoration(
-                            color: config.primaryColor.withValues(alpha: 0.15),
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: Text(
-                            '+${habit['xp']} XP',
-                            style: TextStyle(
-                              color: config.primaryColor,
-                              fontSize: 10,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ),
-                    ],
-                  ),
+                );
+              }).toList(),
+            );
+          },
+          loading: () => Center(
+            child: SizedBox(
+              height: 100,
+              child: Center(
+                child: CircularProgressIndicator(
+                  color: config.primaryColor,
+                  strokeWidth: 2,
                 ),
               ),
             ),
-          );
-        }),
+          ),
+          error: (e, _) => Center(
+            child: Text(
+              'Failed to load challenges: $e',
+              style: TextStyle(
+                color: Colors.red.withValues(alpha: 0.7),
+                fontSize: 12,
+              ),
+            ),
+          ),
+        ),
       ],
     );
   }
@@ -705,45 +674,6 @@ class LevelImmersiveScreen extends ConsumerWidget {
     return profile.worldState.worldHealth.clamp(0.0, 1.0);
   }
 
-  List<Map<String, dynamic>> _getRelevantHabits(List<String> attributes) {
-    // Map attributes to sample habits
-    final habitMap = <String, List<Map<String, dynamic>>>{
-      'vitality': [
-        {'emoji': '💧', 'name': 'Drink Water', 'xp': 3},
-        {'emoji': '🥗', 'name': 'Healthy Meal', 'xp': 5},
-      ],
-      'strength': [
-        {'emoji': '💪', 'name': 'Push-ups', 'xp': 8},
-        {'emoji': '🏋️', 'name': 'Workout', 'xp': 10},
-      ],
-      'focus': [
-        {'emoji': '🧘', 'name': 'Meditation', 'xp': 5},
-        {'emoji': '📵', 'name': 'No Phone', 'xp': 4},
-      ],
-      'intellect': [
-        {'emoji': '📚', 'name': 'Read 10 Pages', 'xp': 6},
-        {'emoji': '✍️', 'name': 'Journal', 'xp': 5},
-      ],
-      'creativity': [
-        {'emoji': '🎨', 'name': 'Create Something', 'xp': 8},
-        {'emoji': '📝', 'name': 'Write', 'xp': 6},
-      ],
-      'spirit': [
-        {'emoji': '🙏', 'name': 'Prayer', 'xp': 5},
-        {'emoji': '🌅', 'name': 'Sunrise Watch', 'xp': 4},
-      ],
-    };
-
-    final habits = <Map<String, dynamic>>[];
-    for (final attr in attributes) {
-      final attrHabits = habitMap[attr];
-      if (attrHabits != null) {
-        habits.addAll(attrHabits);
-      }
-    }
-    return habits.take(4).toList();
-  }
-
   Color _getTypeColor() {
     switch (node.type) {
       case NodeType.waypoint:
@@ -805,6 +735,327 @@ class LevelImmersiveScreen extends ConsumerWidget {
         return Icons.fitness_center;
       case HabitAttribute.spirit:
         return Icons.auto_awesome;
+    }
+  }
+
+  // ─── Challenge Quests Methods ────────────────────────────────
+
+  /// Filter user challenges by node archetype/attributes
+  List<Challenge> _filterChallengesByNode(List<Challenge> challenges) {
+    // Filter challenges that match the node's archetype
+    final nodeArchetype = node.archetype?.toLowerCase();
+
+    return challenges.where((challenge) {
+      // Match by archetype if node has one
+      if (nodeArchetype != null && challenge.archetypeId != null) {
+        return challenge.archetypeId!.toLowerCase() == nodeArchetype;
+      }
+
+      // Fallback: match by attributes
+      final nodeAttrs = node.targetedAttributes.map((a) => a.name).toList();
+      return nodeAttrs.any((attr) =>
+          challenge.description.toLowerCase().contains(attr.toLowerCase()) ||
+          challenge.title.toLowerCase().contains(attr.toLowerCase()));
+    }).toList();
+  }
+
+  /// Check in to a challenge, updating progress
+  Future<void> _checkInChallenge(
+    BuildContext context,
+    WidgetRef ref,
+    Challenge challenge,
+  ) async {
+    try {
+      final authUser = ref.read(authStateChangesProvider).value;
+      if (authUser == null) {
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('You must be logged in to check in'),
+              backgroundColor: Colors.red,
+              behavior: SnackBarBehavior.floating,
+            ),
+          );
+        }
+        return;
+      }
+
+      final repository = ref.read(challengeRepositoryProvider);
+      final newProgress = challenge.currentDay + 1;
+
+      final result = await repository.updateProgress(
+        authUser.id,
+        challenge.id,
+        newProgress,
+      );
+
+      result.fold(
+        (failure) {
+          if (context.mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('Failed to check in: ${failure.message}'),
+                backgroundColor: Colors.red,
+                behavior: SnackBarBehavior.floating,
+              ),
+            );
+          }
+        },
+        (_) {
+          if (context.mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('Checked in to ${challenge.title}! +${challenge.xpReward} XP'),
+                backgroundColor: config.primaryColor,
+                behavior: SnackBarBehavior.floating,
+              ),
+            );
+          }
+        },
+      );
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error: $e'),
+            backgroundColor: Colors.red,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    }
+  }
+
+  /// Show dialog to create a new solo challenge
+  void _showCreateChallengeDialog(BuildContext context) {
+    // Navigate to challenges screen where user can create solo challenges
+    Navigator.pushNamed(context, '/challenges');
+  }
+}
+
+// ─── Challenge Quest Widgets ─────────────────────────────────────
+
+class _EmptyMissionsState extends StatelessWidget {
+  final VoidCallback onCreate;
+
+  const _EmptyMissionsState({required this.onCreate});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.03),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+      ),
+      child: Column(
+        children: [
+          Icon(
+            Icons.emoji_events_outlined,
+            color: Colors.white.withValues(alpha: 0.3),
+            size: 40,
+          ),
+          const SizedBox(height: 12),
+          Text(
+            'No active quests for this archetype',
+            style: TextStyle(
+              color: Colors.white.withValues(alpha: 0.6),
+              fontSize: 13,
+            ),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 12),
+          ElevatedButton.icon(
+            onPressed: onCreate,
+            icon: const Icon(Icons.add, size: 16),
+            label: const Text('Create Solo Quest'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF00FFCC).withValues(alpha: 0.15),
+              foregroundColor: const Color(0xFF00FFCC),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+              elevation: 0,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ChallengeQuestCard extends StatelessWidget {
+  final Challenge challenge;
+  final double progress;
+  final Color accentColor;
+  final VoidCallback onCheckIn;
+
+  const _ChallengeQuestCard({
+    required this.challenge,
+    required this.progress,
+    required this.accentColor,
+    required this.onCheckIn,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final isCompleted = progress >= 1.0;
+
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(12),
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 6, sigmaY: 6),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+          decoration: BoxDecoration(
+            color: isCompleted
+                ? Colors.green.withValues(alpha: 0.1)
+                : Colors.white.withValues(alpha: 0.05),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color: isCompleted
+                  ? Colors.green.withValues(alpha: 0.3)
+                  : Colors.white.withValues(alpha: 0.08),
+            ),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  // Challenge category icon or emoji
+                  Container(
+                    width: 36,
+                    height: 36,
+                    decoration: BoxDecoration(
+                      color: accentColor.withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    alignment: Alignment.center,
+                    child: _getCategoryIcon(),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          challenge.title,
+                          style: TextStyle(
+                            color: Colors.white.withValues(
+                              alpha: isCompleted ? 0.6 : 0.9,
+                            ),
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                            decoration: isCompleted
+                                ? TextDecoration.lineThrough
+                                : null,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          '${challenge.currentDay}/${challenge.totalDays} days',
+                          style: TextStyle(
+                            color: Colors.white.withValues(alpha: 0.5),
+                            fontSize: 11,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  if (isCompleted)
+                    Icon(
+                      Icons.check_circle,
+                      color: Colors.green.withValues(alpha: 0.8),
+                      size: 20,
+                    )
+                  else
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 3,
+                      ),
+                      decoration: BoxDecoration(
+                        color: accentColor.withValues(alpha: 0.15),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Text(
+                        '+${challenge.xpReward} XP',
+                        style: TextStyle(
+                          color: accentColor,
+                          fontSize: 10,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+              if (!isCompleted) ...[
+                const SizedBox(height: 10),
+                // Progress bar
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(4),
+                  child: LinearProgressIndicator(
+                    value: progress,
+                    backgroundColor: Colors.white.withValues(alpha: 0.1),
+                    valueColor: AlwaysStoppedAnimation(accentColor),
+                    minHeight: 4,
+                  ),
+                ),
+                const SizedBox(height: 10),
+                // Check-in button
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: onCheckIn,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: accentColor.withValues(alpha: 0.15),
+                      foregroundColor: accentColor,
+                      padding: const EdgeInsets.symmetric(vertical: 8),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      elevation: 0,
+                    ),
+                    child: const Text(
+                      'Check In',
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _getCategoryIcon() {
+    switch (challenge.category) {
+      case ChallengeCategory.fitness:
+        return const Text('💪', style: TextStyle(fontSize: 18));
+      case ChallengeCategory.mindfulness:
+        return const Text('🧘', style: TextStyle(fontSize: 18));
+      case ChallengeCategory.learning:
+        return const Text('📚', style: TextStyle(fontSize: 18));
+      case ChallengeCategory.nutrition:
+        return const Text('🥗', style: TextStyle(fontSize: 18));
+      case ChallengeCategory.productivity:
+        return const Text('🎯', style: TextStyle(fontSize: 18));
+      case ChallengeCategory.creative:
+        return const Text('🎨', style: TextStyle(fontSize: 18));
+      case ChallengeCategory.faith:
+        return const Text('🙏', style: TextStyle(fontSize: 18));
+      case ChallengeCategory.all:
+        return const Text('⚔️', style: TextStyle(fontSize: 18));
     }
   }
 }
