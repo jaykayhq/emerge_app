@@ -1,7 +1,68 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:emerge_app/core/theme/emerge_colors.dart';
 import 'package:emerge_app/features/auth/domain/entities/auth_user.dart';
 import 'package:emerge_app/features/gamification/domain/models/avatar.dart';
+import 'package:flutter/material.dart';
+
+/// Helper to convert dynamic timestamp values to DateTime
+/// Handles both Timestamp (from Firestore) and String (ISO8601)
+DateTime? _parseDateTime(dynamic value) {
+  if (value == null) return null;
+
+  if (value is Timestamp) {
+    return value.toDate();
+  }
+
+  if (value is DateTime) {
+    return value;
+  }
+
+  if (value is String) {
+    return DateTime.tryParse(value);
+  }
+
+  return null;
+}
 
 enum UserArchetype { athlete, creator, scholar, stoic, zealot, none }
+
+extension UserArchetypeExtension on UserArchetype {
+  String get displayName => name[0].toUpperCase() + name.substring(1);
+
+  Color get color {
+    switch (this) {
+      case UserArchetype.athlete:
+        return EmergeColors.coral;
+      case UserArchetype.creator:
+        return EmergeColors.purple;
+      case UserArchetype.scholar:
+        return EmergeColors.blue;
+      case UserArchetype.stoic:
+        return EmergeColors.teal;
+      case UserArchetype.zealot:
+        return EmergeColors.yellow;
+      case UserArchetype.none:
+        return Colors.grey;
+    }
+  }
+
+  IconData get icon {
+    switch (this) {
+      case UserArchetype.athlete:
+        return Icons.fitness_center;
+      case UserArchetype.creator:
+        return Icons.palette;
+      case UserArchetype.scholar:
+        return Icons.menu_book;
+      case UserArchetype.stoic:
+        return Icons.self_improvement;
+      case UserArchetype.zealot:
+        return Icons.flash_on;
+      case UserArchetype.none:
+        return Icons.person_outline;
+    }
+  }
+}
 
 class UserAvatarStats {
   final int strengthXp;
@@ -222,9 +283,7 @@ class UserWorldState {
           [],
       unlockedLandPlots: List<String>.from(map['unlockedLandPlots'] ?? []),
       totalBuildingsConstructed: map['totalBuildingsConstructed'] as int? ?? 0,
-      lastActiveDate: map['lastActiveDate'] != null
-          ? DateTime.tryParse(map['lastActiveDate'] as String)
-          : null,
+      lastActiveDate: _parseDateTime(map['lastActiveDate']),
       worldTheme: WorldTheme.values.firstWhere(
         (t) => t.name == map['worldTheme'],
         orElse: () => WorldTheme.sanctuary,
@@ -466,12 +525,8 @@ class UserProfile {
       skippedOnboardingSteps: List<String>.from(
         map['skippedOnboardingSteps'] ?? [],
       ),
-      onboardingStartedAt: map['onboardingStartedAt'] != null
-          ? DateTime.tryParse(map['onboardingStartedAt'] as String)
-          : null,
-      onboardingCompletedAt: map['onboardingCompletedAt'] != null
-          ? DateTime.tryParse(map['onboardingCompletedAt'] as String)
-          : null,
+      onboardingStartedAt: _parseDateTime(map['onboardingStartedAt']),
+      onboardingCompletedAt: _parseDateTime(map['onboardingCompletedAt']),
       equipment: List<String>.from(map['equipment'] ?? []),
       characterClass: map['characterClass'] as String?,
       avatar: map['avatar'] is Map<String, dynamic>
@@ -481,9 +536,7 @@ class UserProfile {
       settings: map['settings'] != null
           ? UserSettings.fromMap(map['settings'] as Map<String, dynamic>)
           : const UserSettings(),
-      accountCreatedAt: map['accountCreatedAt'] != null
-          ? DateTime.tryParse(map['accountCreatedAt'] as String)
-          : null,
+      accountCreatedAt: _parseDateTime(map['accountCreatedAt']),
       hasEmerged: map['hasEmerged'] as bool? ?? false,
     );
   }

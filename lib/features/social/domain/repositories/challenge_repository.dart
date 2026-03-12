@@ -12,7 +12,10 @@ abstract class ChallengeRepository {
   Future<List<Challenge>> getUserChallenges(String userId);
 
   /// Join a challenge - adds it to user's active challenges
-  Future<void> joinChallenge(String userId, String challengeId);
+  Future<Either<Failure, Unit>> joinChallenge(
+    String userId,
+    String challengeId,
+  );
 
   /// Create a solo challenge specific to a user
   Future<void> createSoloChallenge(String userId, Challenge challenge);

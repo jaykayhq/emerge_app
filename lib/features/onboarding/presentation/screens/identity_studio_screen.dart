@@ -1,4 +1,5 @@
 import 'package:emerge_app/core/theme/archetype_theme.dart';
+import 'package:emerge_app/core/utils/app_logger.dart';
 import 'package:emerge_app/features/auth/domain/entities/user_extension.dart';
 import 'package:emerge_app/features/onboarding/presentation/providers/onboarding_provider.dart';
 import 'package:flutter/material.dart';
@@ -81,10 +82,16 @@ class _IdentityStudioScreenState extends ConsumerState<IdentityStudioScreen> {
     }
 
     // Update onboarding state
-    ref.read(onboardingStateControllerProvider.notifier).update((s) => s.copyWith(
-      selectedArchetype: _selectedArchetype,
-      motive: motiveToSave,
-    ));
+    ref.read(onboardingStateControllerProvider.notifier).update((s) {
+      final newState = s.copyWith(
+        selectedArchetype: _selectedArchetype,
+        motive: motiveToSave,
+      );
+      AppLogger.i(
+        'Identity Studio: Updated onboarding state: selectedArchetype=${newState.selectedArchetype}, motive=${newState.motive}',
+      );
+      return newState;
+    });
 
     // Ensure state is persisted before proceeding
     await Future.delayed(const Duration(milliseconds: 100));
@@ -92,9 +99,9 @@ class _IdentityStudioScreenState extends ConsumerState<IdentityStudioScreen> {
     // PERSIST PROGRESS: Complete the first milestone (Archetype/Motive)
     await ref.read(onboardingControllerProvider.notifier).completeMilestone(0);
 
-    // Navigate to map attributes screen
+    // Navigate directly to first habit screen (skip map attributes)
     if (mounted) {
-      context.push('/onboarding/map-attributes');
+      context.push('/onboarding/first-habit');
     }
   }
 
@@ -285,7 +292,7 @@ class _IdentityStudioScreenState extends ConsumerState<IdentityStudioScreen> {
                         border: Border.all(color: Colors.white10),
                       ),
                       child: Text(
-                        'STEP ${_currentStep + 1} OF 4',
+                        'STEP ${_currentStep + 1} OF 3',
                         style: GoogleFonts.splineSans(
                           color: Colors.white54,
                           fontSize: 10,
@@ -695,11 +702,11 @@ class _IdentityStudioScreenState extends ConsumerState<IdentityStudioScreen> {
   // ===========================================================================
   Widget _buildMotiveSelection() {
     final theme = ArchetypeTheme.forArchetype(
-      _selectedArchetype ?? UserArchetype.athlete,
+      _selectedArchetype ?? UserArchetype.none,
     );
 
     return SingleChildScrollView(
-      physics: const BouncingScrollPhysics(), // Elastic scroll
+      physics: const BouncingScrollPhysics(),
       padding: const EdgeInsets.symmetric(horizontal: 24),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -724,22 +731,23 @@ class _IdentityStudioScreenState extends ConsumerState<IdentityStudioScreen> {
 
           const Gap(32),
 
-          // Defined Motives
-          ...theme.suggestedMotives.map((motive) {
-            final isSelected = _selectedMotive == motive && !_isCustomMotive;
-            return _buildMotiveCard(
-              title: motive,
-              isSelected: isSelected,
-              onTap: () {
-                setState(() {
-                  _selectedMotive = motive;
-                  _isCustomMotive = false;
-                  _customMotiveController.clear();
-                });
-                HapticFeedback.lightImpact();
-              },
-            );
-          }),
+          // Suggested Motives
+          if (theme.suggestedMotives.isNotEmpty)
+            ...theme.suggestedMotives.map((motive) {
+              final isSelected = _selectedMotive == motive && !_isCustomMotive;
+              return _buildMotiveCard(
+                title: motive,
+                isSelected: isSelected,
+                onTap: () {
+                  setState(() {
+                    _selectedMotive = motive;
+                    _isCustomMotive = false;
+                    _customMotiveController.clear();
+                  });
+                  HapticFeedback.lightImpact();
+                },
+              );
+            }),
 
           // Custom Motive
           AnimatedContainer(
@@ -783,10 +791,7 @@ class _IdentityStudioScreenState extends ConsumerState<IdentityStudioScreen> {
                     },
                   ),
                 ),
-                if (_isCustomMotive)
-                  const Icon(Icons.edit, color: Color(0xFF2BEE79), size: 20)
-                else
-                  const Icon(Icons.edit, color: Colors.white30, size: 20),
+                const Icon(Icons.edit, color: Colors.white30, size: 20),
               ],
             ),
           ).animate().fadeIn(delay: 400.ms),
@@ -824,7 +829,7 @@ class _IdentityStudioScreenState extends ConsumerState<IdentityStudioScreen> {
             ),
           ).animate().fadeIn(delay: 500.ms),
 
-          const Gap(40), // Bottom padding
+          const Gap(40),
         ],
       ),
     );

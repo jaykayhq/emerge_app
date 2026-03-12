@@ -1,6 +1,7 @@
 import 'dart:ui';
 
 import 'package:emerge_app/core/theme/app_theme.dart';
+import 'package:emerge_app/core/utils/app_logger.dart';
 import 'package:emerge_app/core/presentation/widgets/emerge_branding.dart';
 import 'package:emerge_app/features/auth/domain/entities/user_extension.dart';
 import 'package:emerge_app/features/gamification/presentation/providers/user_stats_providers.dart';
@@ -108,6 +109,8 @@ class _WorldMapScreenState extends ConsumerState<WorldMapScreen> {
       body: statsAsync.when(
         data: (profile) {
           final archetype = profile.archetype;
+          // DEBUG: Log archetype being loaded
+          AppLogger.i('WorldMapScreen: Loaded archetype=$archetype, effectiveLevel=${profile.effectiveLevel}');
           final mapConfig = ArchetypeMapsCatalog.getMapForArchetype(archetype);
           final currentLevel = profile.effectiveLevel;
           final currentBiome = ArchetypeMapConfig.getBiomeForLevel(

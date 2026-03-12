@@ -93,22 +93,42 @@ service cloud.firestore {
     // Helper to validate gamification stats data written by the client or Cloud Functions
     function isValidStats(data) {
       return data.keys().size() <= 35 &&
-             // Numeric fields must be numbers if present
+             // Legacy numeric fields at root
              (!data.keys().hasAny(['totalXp']) || data.totalXp is number) &&
-             (!data.keys().hasAny(['level']) || data.level is number) &&
+             (!data.keys().hasAny(['level', 'currentLevel']) || data.get('level', 1) is number) &&
              (!data.keys().hasAny(['streak']) || data.streak is number) &&
-             (!data.keys().hasAny(['strengthXp']) || data.strengthXp is number) &&
-             (!data.keys().hasAny(['intellectXp']) || data.intellectXp is number) &&
-             (!data.keys().hasAny(['vitalityXp']) || data.vitalityXp is number) &&
-             (!data.keys().hasAny(['creativityXp']) || data.creativityXp is number) &&
-             (!data.keys().hasAny(['focusXp']) || data.focusXp is number) &&
-             (!data.keys().hasAny(['spiritXp']) || data.spiritXp is number) &&
+             
+             // New avatarStats nested structure
+             (!data.keys().hasAny(['avatarStats']) || (
+               data.avatarStats is map &&
+               (!data.avatarStats.keys().hasAny(['level']) || data.avatarStats.level is number) &&
+               (!data.avatarStats.keys().hasAny(['streak']) || data.avatarStats.streak is number) &&
+               (!data.avatarStats.keys().hasAny(['totalXp']) || data.avatarStats.totalXp is number) &&
+               (!data.avatarStats.keys().hasAny(['strengthXp']) || data.avatarStats.strengthXp is number) &&
+               (!data.avatarStats.keys().hasAny(['intellectXp']) || data.avatarStats.intellectXp is number) &&
+               (!data.avatarStats.keys().hasAny(['vitalityXp']) || data.avatarStats.vitalityXp is number) &&
+               (!data.avatarStats.keys().hasAny(['creativityXp']) || data.avatarStats.creativityXp is number) &&
+               (!data.avatarStats.keys().hasAny(['focusXp']) || data.avatarStats.focusXp is number) &&
+               (!data.avatarStats.keys().hasAny(['spiritXp']) || data.avatarStats.spiritXp is number)
+             )) &&
+             
+             // New worldState nested structure
+             (!data.keys().hasAny(['worldState']) || (
+               data.worldState is map &&
+               (!data.worldState.keys().hasAny(['entropy']) || data.worldState.entropy is number) &&
+               (!data.worldState.keys().hasAny(['cityLevel']) || data.worldState.cityLevel is number) &&
+               (!data.worldState.keys().hasAny(['forestLevel']) || data.worldState.forestLevel is number) &&
+               (!data.worldState.keys().hasAny(['worldTheme']) || data.worldState.worldTheme is string) &&
+               (!data.worldState.keys().hasAny(['seasonalState']) || data.worldState.seasonalState is string)
+             )) &&
+
+             // Other Gamification stats at root
              (!data.keys().hasAny(['completedChallenges']) || data.completedChallenges is number) &&
              (!data.keys().hasAny(['completedContracts']) || data.completedContracts is number) &&
              (!data.keys().hasAny(['successfulReferrals']) || data.successfulReferrals is number) &&
-             // Boolean fields must be booleans if present
              (!data.keys().hasAny(['hasEmerged']) || data.hasEmerged is bool) &&
-             // List & String fields for rewards
+             
+             // Reward arrays and strings
              (!data.keys().hasAny(['unlockedRewardIds']) || data.unlockedRewardIds is list) &&
              (!data.keys().hasAny(['equippedTitleId']) || data.equippedTitleId == null || data.equippedTitleId is string) &&
              (!data.keys().hasAny(['equippedNameplateId']) || data.equippedNameplateId == null || data.equippedNameplateId is string) &&
@@ -158,6 +178,12 @@ service cloud.firestore {
       match /notificationSchedules/{scheduleId} {
         allow read, write: if isOwner(userId);
       }
+
+      // Online Presence Subcollection (for heartbeat service)
+      match /presence/{documentId} {
+        allow read: if isAuthenticated();
+        allow write: if isOwner(userId);
+      }
     }
 
     // Habits (Top-level collection) - Enhanced security
@@ -183,8 +209,13 @@ service cloud.firestore {
     // Tribes / Archetype Clubs (fixed, not user-created)
     match /tribes/{tribeId} {
       allow read: if isAuthenticated();
-      // Only admin/Cloud Functions can create or delete clubs
-      allow create, delete: if false;
+      // Allow creation for initial seeding of official clubs
+      // Clubs have type: 'official' and are seeded once
+      allow create: if isAuthenticated() &&
+                       request.resource.data.keys().hasAll(['name', 'type', 'archetypeId']) &&
+                       request.resource.data.type == 'official';
+      // Prevent deletion of official clubs
+      allow delete: if false;
       // Members can join/leave (updates members array)
       allow update: if isAuthenticated();
 
@@ -210,11 +241,11 @@ service cloud.firestore {
     match /partner_requests/{requestId} {
       // Sender can create
       allow create: if isAuthenticated() && request.resource.data.senderId == request.auth.uid;
-      // Both sender and receiver can read
-      allow read: if isAuthenticated() && 
-                 (resource.data.senderId == request.auth.uid || resource.data.receiverId == request.auth.uid);
-      // Receiver can accept/reject (update status)
-      allow update: if isAuthenticated() && resource.data.receiverId == request.auth.uid;
+      // Both sender and recipient can read
+      allow read: if isAuthenticated() &&
+                 (resource.data.senderId == request.auth.uid || resource.data.recipientId == request.auth.uid);
+      // Recipient can accept/reject (update status)
+      allow update: if isAuthenticated() && resource.data.recipientId == request.auth.uid;
       // Sender can cancel (delete)
       allow delete: if isAuthenticated() && resource.data.senderId == request.auth.uid;
     }
@@ -229,6 +260,18 @@ service cloud.firestore {
         allow read: if isAuthenticated();
         allow write: if isOwner(participantId);
       }
+    }
+
+    // Club Leaderboards
+    match /club_leaderboards/{leaderboardId} {
+      allow read: if isAuthenticated();
+      allow write: if false; // Cloud Functions handle updates
+    }
+
+    // Challenge Leaderboards
+    match /challenge_leaderboards/{leaderboardId} {
+      allow read: if isAuthenticated();
+      allow write: if false; // Cloud Functions handle updates
     }
 
     // Social Posts (Feed)
@@ -304,6 +347,14 @@ service cloud.firestore {
       allow read: if isAuthenticated() && resource.data.userId == request.auth.uid;
       allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid;
       allow update, delete: if isAuthenticated() && resource.data.userId == request.auth.uid;
+    }
+
+    // Global Activity Feed
+    match /global_activities/{activityId} {
+      // Must allow ordering by arbitrary authenticated users
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid;
+      allow update, delete: if false;
     }
   }
 }

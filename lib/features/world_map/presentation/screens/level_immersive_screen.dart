@@ -37,7 +37,8 @@ class LevelImmersiveScreen extends ConsumerWidget {
     return Scaffold(
       backgroundColor: const Color(0xFF0A0A1A),
       body: statsAsync.when(
-        data: (profile) => _buildContent(context, ref, profile, worldHealthAsync),
+        data: (profile) =>
+            _buildContent(context, ref, profile, worldHealthAsync),
         loading: () => const Center(
           child: CircularProgressIndicator(color: Color(0xFF00FFCC)),
         ),
@@ -64,8 +65,8 @@ class LevelImmersiveScreen extends ConsumerWidget {
     return Stack(
       fit: StackFit.expand,
       children: [
-        // Layer 1: AI-generated background image
-        _buildBackground(screenSize),
+        // Layer 1: AI-generated background image (with decay filters)
+        _buildBackground(screenSize, healthPercent),
 
         // Layer 2: Dark gradient overlay for readability
         _buildGradientOverlay(),
@@ -126,22 +127,46 @@ class LevelImmersiveScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildBackground(Size screenSize) {
+  Widget _buildBackground(Size screenSize, double healthPercent) {
+    Widget imageWidget;
     // Try to load AI-generated background
     if (node.backgroundImagePath != null &&
         node.backgroundImagePath!.isNotEmpty) {
       final file = File(node.backgroundImagePath!);
       if (file.existsSync()) {
-        return Image.file(
+        imageWidget = Image.file(
           file,
           fit: BoxFit.cover,
           width: screenSize.width,
           height: screenSize.height,
         );
+      } else {
+        imageWidget = _loadAssetBackground(screenSize);
       }
+    } else {
+      imageWidget = _loadAssetBackground(screenSize);
     }
 
-    // Check for asset-bundled background
+    // Apply Entropy/Decay Visual Filter based on Health Percentage
+    // 1.0 (Health) -> 0.0 (Grayscale factor)
+    // 0.0 (Health) -> 1.0 (Full Grayscale/Dim)
+    final decayFactor = (1.0 - healthPercent).clamp(0.0, 1.0);
+    
+    // Matrix for desaturation and slight dimming
+    final matrix = <double>[
+        1 - 0.7 * decayFactor, 0.3 * decayFactor, 0.3 * decayFactor, 0, 0,
+        0.3 * decayFactor, 1 - 0.7 * decayFactor, 0.3 * decayFactor, 0, 0,
+        0.3 * decayFactor, 0.3 * decayFactor, 1 - 0.7 * decayFactor, 0, 0,
+        0, 0, 0, 1, 0,
+    ];
+
+    return ColorFiltered(
+      colorFilter: ColorFilter.matrix(matrix),
+      child: imageWidget,
+    );
+  }
+
+  Widget _loadAssetBackground(Size screenSize) {
     final assetPath =
         'assets/images/levels/${node.archetype ?? 'default'}/${node.id}.png';
 
@@ -409,9 +434,14 @@ class LevelImmersiveScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildHabitSection(BuildContext context, WidgetRef ref, UserProfile profile) {
+  Widget _buildHabitSection(
+    BuildContext context,
+    WidgetRef ref,
+    UserProfile profile,
+  ) {
     // Filter user challenges by node attributes/archetype
-    final challengesAsync = ref.watch(userChallengesProvider);
+    final userChallengesAsync = ref.watch(userChallengesProvider);
+    final dailyQuestAsync = ref.watch(dailyQuestProvider);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -426,19 +456,25 @@ class LevelImmersiveScreen extends ConsumerWidget {
           ),
         ),
         const SizedBox(height: 10),
-            challengesAsync.when(
-          data: (challenges) {
-            // Filter challenges by node archetype
-            final filteredChallenges = _filterChallengesByNode(challenges);
+        userChallengesAsync.when(
+          data: (userChallenges) {
+            final dailyQuest = dailyQuestAsync.value;
 
-            if (filteredChallenges.isEmpty) {
+            // Combine user's active challenges with the daily quest if it matches the node's archetype
+            final filteredQuests = _filterQuestsForNode(
+              userChallenges,
+              dailyQuest,
+              profile,
+            );
+
+            if (filteredQuests.isEmpty) {
               return _EmptyMissionsState(
                 onCreate: () => _showCreateChallengeDialog(context),
               );
             }
 
             return Column(
-              children: filteredChallenges.asMap().entries.map((entry) {
+              children: filteredQuests.asMap().entries.map((entry) {
                 final idx = entry.key;
                 final challenge = entry.value;
                 final progress = challenge.currentDay / challenge.totalDays;
@@ -471,7 +507,7 @@ class LevelImmersiveScreen extends ConsumerWidget {
           ),
           error: (e, _) => Center(
             child: Text(
-              'Failed to load challenges: $e',
+              'Failed to load quests: $e',
               style: TextStyle(
                 color: Colors.red.withValues(alpha: 0.7),
                 fontSize: 12,
@@ -744,23 +780,41 @@ class LevelImmersiveScreen extends ConsumerWidget {
 
   // ─── Challenge Quests Methods ────────────────────────────────
 
-  /// Filter user challenges by node archetype/attributes
-  List<Challenge> _filterChallengesByNode(List<Challenge> challenges) {
-    // Filter challenges that match the node's archetype
+  /// Filter quests (User challenges + Daily) by node archetype/attributes
+  List<Challenge> _filterQuestsForNode(
+    List<Challenge> userChallenges,
+    Challenge? dailyQuest,
+    UserProfile profile,
+  ) {
     final nodeArchetype = node.archetype?.toLowerCase();
+    final profileArchetype = profile.archetype.name.toLowerCase();
 
-    return challenges.where((challenge) {
-      // Match by archetype if node has one
+    // 1. Get active user challenges for this archetype/node
+    final activeUserChallenges = userChallenges.where((challenge) {
+      if (challenge.status != ChallengeStatus.active) return false;
+
+      // Match by node archetype if specified
       if (nodeArchetype != null && challenge.archetypeId != null) {
         return challenge.archetypeId?.toLowerCase() == nodeArchetype;
       }
-
-      // Fallback: match by attributes
-      final nodeAttrs = node.targetedAttributes.map((a) => a.name).toList();
-      return nodeAttrs.any((attr) =>
-          challenge.description.toLowerCase().contains(attr.toLowerCase()) ||
-          challenge.title.toLowerCase().contains(attr.toLowerCase()));
+      // Match by profile archetype
+      return challenge.archetypeId?.toLowerCase() == profileArchetype;
     }).toList();
+
+    // 2. Add Daily Quest if it's not already in userChallenges and matches archetype
+    if (dailyQuest != null) {
+      final isAlreadyJoined = userChallenges.any((c) => c.id == dailyQuest.id);
+      final matchesArchetype =
+          dailyQuest.archetypeId?.toLowerCase() == nodeArchetype ||
+          (nodeArchetype == null &&
+              dailyQuest.archetypeId?.toLowerCase() == profileArchetype);
+
+      if (!isAlreadyJoined && matchesArchetype) {
+        activeUserChallenges.add(dailyQuest);
+      }
+    }
+
+    return activeUserChallenges;
   }
 
   /// Check in to a challenge, updating progress
@@ -785,8 +839,39 @@ class LevelImmersiveScreen extends ConsumerWidget {
       }
 
       final repository = ref.read(challengeRepositoryProvider);
-      final newProgress = challenge.currentDay + 1;
 
+      // Check if user has joined this challenge yet
+      final userChallengesAsync = ref.read(userChallengesProvider);
+      final isJoined = userChallengesAsync.when(
+        data: (list) => list.any((c) => c.id == challenge.id),
+        loading: () => false,
+        error: (err, stack) => false,
+      );
+
+      // 1. If not joined, join first
+      if (!isJoined) {
+        final joinResult = await repository.joinChallenge(
+          authUser.id,
+          challenge.id,
+        );
+
+        final failure = joinResult.fold((f) => f, (_) => null);
+        if (failure != null) {
+          if (context.mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('Failed to join quest: ${failure.message}'),
+                backgroundColor: Colors.red,
+                behavior: SnackBarBehavior.floating,
+              ),
+            );
+          }
+          return;
+        }
+      }
+
+      // 2. Refresh count and update progress
+      final newProgress = challenge.currentDay + 1;
       final result = await repository.updateProgress(
         authUser.id,
         challenge.id,
@@ -809,7 +894,9 @@ class LevelImmersiveScreen extends ConsumerWidget {
           if (context.mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
-                content: Text('Checked in to ${challenge.title}! +${challenge.xpReward} XP'),
+                content: Text(
+                  'Checked in to ${challenge.title}! +${challenge.xpReward} XP',
+                ),
                 backgroundColor: config.primaryColor,
                 behavior: SnackBarBehavior.floating,
               ),
@@ -863,7 +950,7 @@ class _EmptyMissionsState extends StatelessWidget {
           ),
           const SizedBox(height: 12),
           Text(
-            'No active quests for this archetype',
+            'No active solo quests for this archetype',
             style: TextStyle(
               color: Colors.white.withValues(alpha: 0.6),
               fontSize: 13,

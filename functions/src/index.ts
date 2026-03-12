@@ -117,14 +117,58 @@ export const onUserActivityCreated = functionsV1.firestore
       // Calculate new values
       const currentTotalXp = currentAvatarStats.totalXp || 0;
       const newTotalXp = currentTotalXp + xpGain;
+      
+      // Calculate global streak and update lastActiveDate
+      let newStreak = currentAvatarStats.streak || 0;
+      let newLastActiveDate = null;
+      let worldStateUpdates: any = null;
+
+      if (activity.type === "habit_completion") {
+        const currentWorldState = currentData.worldState || {};
+        const lastActiveDate = currentWorldState.lastActiveDate as admin.firestore.Timestamp | undefined;
+        const now = admin.firestore.Timestamp.now();
+        const nowDate = now.toDate();
+
+        if (lastActiveDate) {
+          const lastDate = lastActiveDate.toDate();
+          
+          // Use YYYY-MM-DD for simple UTC day comparisons
+          const lastDateStr = lastDate.toISOString().split('T')[0];
+          const todayStr = nowDate.toISOString().split('T')[0];
+          
+          const yesterday = new Date(nowDate);
+          yesterday.setUTCDate(yesterday.getUTCDate() - 1);
+          const yesterdayStr = yesterday.toISOString().split('T')[0];
+
+          if (lastDateStr === yesterdayStr) {
+            newStreak += 1; // Continued streak
+          } else if (lastDateStr !== todayStr && lastDateStr < yesterdayStr) {
+            newStreak = 1; // Missed a day, reset and start over
+          }
+          // If lastDateStr === todayStr, streak remains the same (already counted for today)
+        } else {
+          newStreak = 1; // First habit completion ever
+        }
+
+        newLastActiveDate = admin.firestore.FieldValue.serverTimestamp();
+        worldStateUpdates = {
+          ...currentWorldState,
+          lastActiveDate: newLastActiveDate,
+        };
+      }
 
       const updates: any = {
         avatarStats: {
           ...currentAvatarStats,
           totalXp: newTotalXp,
+          streak: newStreak,
           lastUpdate: admin.firestore.FieldValue.serverTimestamp(),
         }
       };
+
+      if (worldStateUpdates) {
+        updates.worldState = worldStateUpdates;
+      }
 
       // Update specific attribute XP
       if (activity.attribute) {

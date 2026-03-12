@@ -94,16 +94,14 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
   }
 
   /// Helper function to get the onboarding route for a given progress level
-  /// Flow: 0 = identity-studio, 1 = map-attributes, 2 = first-habit, 3 = world-reveal, 4+ = complete
+  /// Flow: 0 = identity-studio, 1 = first-habit, 2 = world-reveal, 3+ = complete
   String _getOnboardingRouteForProgress(int progress) {
     switch (progress) {
       case 0:
         return '/onboarding/identity-studio';
       case 1:
-        return '/onboarding/map-attributes';
-      case 2:
         return '/onboarding/first-habit';
-      case 3:
+      case 2:
         return '/onboarding/world-reveal';
       default:
         return '/';

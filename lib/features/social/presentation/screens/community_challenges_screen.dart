@@ -487,27 +487,45 @@ class _ChallengeCard extends ConsumerWidget {
                               );
 
                               // 1. Join Challenge
-                              await repo.joinChallenge(user.id, challenge.id);
-
-                              await userStatsRepo.logActivity(
-                                userId: user.id,
-                                type: 'joined_challenge',
-                                sourceId: challenge.id,
-                                date: DateTime.now(),
+                              final result = await repo.joinChallenge(
+                                user.id,
+                                challenge.id,
                               );
 
-                              if (context.mounted) {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(
-                                    content: Text(
-                                      'Joined challenge! Check Active tab.',
-                                    ),
-                                  ),
-                                );
-                              }
-                              // Invalidate providers to refresh
-                              ref.invalidate(userChallengesProvider);
-                              ref.invalidate(filteredChallengesProvider);
+                              await result.fold(
+                                (failure) async {
+                                  if (context.mounted) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(
+                                        content: Text(
+                                          'Failed to join: ${failure.message}',
+                                        ),
+                                      ),
+                                    );
+                                  }
+                                },
+                                (_) async {
+                                  await userStatsRepo.logActivity(
+                                    userId: user.id,
+                                    type: 'joined_challenge',
+                                    sourceId: challenge.id,
+                                    date: DateTime.now(),
+                                  );
+
+                                  if (context.mounted) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(
+                                        content: Text(
+                                          'Joined challenge! Check Active tab.',
+                                        ),
+                                      ),
+                                    );
+                                  }
+                                  // Invalidate providers to refresh
+                                  ref.invalidate(userChallengesProvider);
+                                  ref.invalidate(filteredChallengesProvider);
+                                },
+                              );
                             } else {
                               if (context.mounted) {
                                 ScaffoldMessenger.of(context).showSnackBar(

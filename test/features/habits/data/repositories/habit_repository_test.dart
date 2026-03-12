@@ -1,4 +1,4 @@
-import 'package:emerge_app/features/habits/data/repositories/fake_habit_repository.dart';
+import 'fake_habit_repository.dart';
 import 'package:emerge_app/features/habits/domain/entities/habit.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:fpdart/fpdart.dart';

@@ -7,6 +7,8 @@ import 'package:emerge_app/features/auth/presentation/providers/auth_providers.d
 import 'package:emerge_app/features/gamification/data/repositories/user_stats_repository.dart';
 import 'package:emerge_app/features/gamification/domain/services/gamification_service.dart';
 import 'package:emerge_app/features/habits/domain/entities/habit.dart';
+import 'package:emerge_app/features/social/domain/services/club_activity_service.dart';
+import 'package:emerge_app/features/social/presentation/providers/tribes_provider.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 final gamificationServiceProvider = Provider((ref) => GamificationService());
@@ -22,11 +24,17 @@ final userStatsStreamProvider = StreamProvider<UserProfile>((ref) {
 
 final userStatsControllerProvider = Provider((ref) {
   final repository = ref.watch(userStatsRepositoryProvider);
+  final socialActivityService = ref.watch(socialActivityServiceProvider);
   final userAsync = ref.watch(authStateChangesProvider);
-  final userId = userAsync.value?.id ?? '';
+  final user = userAsync.value;
+  final userId = user?.id ?? '';
+  final userName = user?.displayName ?? 'Anonymous';
+
   final controller = UserStatsController(
     repository: repository,
+    socialActivityService: socialActivityService,
     userId: userId,
+    userName: userName,
   );
   ref.onDispose(controller.dispose);
   return controller;
@@ -34,10 +42,17 @@ final userStatsControllerProvider = Provider((ref) {
 
 class UserStatsController {
   final UserStatsRepository repository;
+  final SocialActivityService socialActivityService;
   final String userId;
+  final String userName;
   StreamSubscription? _subscription;
 
-  UserStatsController({required this.repository, required this.userId}) {
+  UserStatsController({
+    required this.repository,
+    required this.socialActivityService,
+    required this.userId,
+    required this.userName,
+  }) {
     _init();
   }
 
@@ -220,6 +235,26 @@ class UserStatsController {
         avatarStats: updatedStats,
       );
       await repository.saveUserStats(updatedProfile);
+
+      // 5. Social Activity Logging
+      final currentLevel = currentProfile.avatarStats.level;
+      if (effectiveLevel > currentLevel) {
+        await socialActivityService.logLevelUp(
+          userId: userId,
+          userName: userName,
+          archetype: currentProfile.archetype.name,
+          newLevel: effectiveLevel,
+          totalXp: updatedStats.totalXp,
+        );
+      }
+
+      await socialActivityService.logNodeClaim(
+        userId: userId,
+        userName: userName,
+        archetype: currentProfile.archetype.name,
+        nodeId: nodeId,
+        nodeName: nodeId.split('_').last,
+      );
 
       AppLogger.d(
         'Mission completed: $nodeId — XP distributed, level: $effectiveLevel',

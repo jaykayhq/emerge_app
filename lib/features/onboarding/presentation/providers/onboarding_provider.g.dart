@@ -90,7 +90,7 @@ final class OnboardingControllerProvider
 }
 
 String _$onboardingControllerHash() =>
-    r'086aa06fde650b4e084c483816b2184cab0c1f4e';
+    r'1c5a37223b014dafa657bcc8dfa10ace70a9f231';
 
 abstract class _$OnboardingController extends $Notifier<bool> {
   bool build();
@@ -121,7 +121,7 @@ final class OnboardingStateControllerProvider
         argument: null,
         retry: null,
         name: r'onboardingStateControllerProvider',
-        isAutoDispose: true,
+        isAutoDispose: false,
         dependencies: null,
         $allTransitiveDependencies: null,
       );
@@ -143,7 +143,7 @@ final class OnboardingStateControllerProvider
 }
 
 String _$onboardingStateControllerHash() =>
-    r'a342fb44e3cf19f6c7fae12ab7aea3f8c31288c8';
+    r'ec4914212d4e82863a3f5b8f973eb543b565ab26';
 
 abstract class _$OnboardingStateController extends $Notifier<OnboardingState> {
   OnboardingState build();
@@ -219,4 +219,4 @@ final class ActiveMilestonesProvider
   }
 }
 
-String _$activeMilestonesHash() => r'5d623f433b7841b8e790dcab9e7dbb11e7709344';
+String _$activeMilestonesHash() => r'0d4a7322fd2cacceb717ad25d3ddc31371edaad5';

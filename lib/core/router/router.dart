@@ -29,6 +29,9 @@ import 'package:emerge_app/features/settings/presentation/screens/notification_s
 import 'package:emerge_app/features/monetization/presentation/screens/paywall_screen.dart';
 import 'package:emerge_app/features/social/presentation/screens/community_screen.dart';
 import 'package:emerge_app/features/social/presentation/screens/challenges_screen.dart';
+import 'package:emerge_app/features/social/presentation/screens/friends_screen.dart';
+import 'package:emerge_app/features/social/presentation/screens/tribes_screen.dart';
+import 'package:emerge_app/features/social/presentation/screens/leaderboard_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
@@ -249,6 +252,24 @@ GoRouter router(Ref ref) {
                     path: 'challenges',
                     builder: (context, state) => const ChallengesScreen(),
                   ),
+                  GoRoute(
+                    path: 'tribe',
+                    builder: (context, state) => const TribesScreen(),
+                  ),
+                  GoRoute(
+                    path: 'friends',
+                    builder: (context, state) => const FriendsScreen(),
+                  ),
+                  GoRoute(
+                    path: 'leaderboard',
+                    builder: (context, state) {
+                      final tab = state.uri.queryParameters['tab'];
+                      int index = 0;
+                      if (tab == 'tribe') index = 1;
+                      if (tab == 'world') index = 2;
+                      return LeaderboardScreen(initialTabIndex: index);
+                    },
+                  ),
                 ],
               ),
             ],
@@ -308,16 +329,14 @@ GoRouter router(Ref ref) {
 }
 
 /// Helper function to get the onboarding route for a given progress level
-/// New flow: 0 = identity-studio, 1 = map-attributes, 2 = first-habit, 3 = world-reveal, 4+ = complete
+/// New flow: 0 = identity-studio, 1 = first-habit, 2 = world-reveal, 3+ = complete
 String _getOnboardingRouteForProgress(int progress) {
   switch (progress) {
     case 0:
       return '/onboarding/identity-studio';
     case 1:
-      return '/onboarding/map-attributes';
-    case 2:
       return '/onboarding/first-habit';
-    case 3:
+    case 2:
       return '/onboarding/world-reveal';
     default:
       return '/'; // All onboarding complete, go to world

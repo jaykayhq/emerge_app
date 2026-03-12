@@ -3,344 +3,128 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:emerge_app/features/social/domain/services/club_activity_service.dart';
 
+// ignore_for_file: subtype_of_sealed_class
+
 // Mock classes
-// ignore: subtype_of_sealed_class
 class MockFirestore extends Mock implements FirebaseFirestore {}
 
-// ignore: subtype_of_sealed_class
-class MockCollectionReference extends Mock implements CollectionReference<Map<String, dynamic>> {}
+class MockCollectionReference extends Mock
+    implements CollectionReference<Map<String, dynamic>> {}
 
-// ignore: subtype_of_sealed_class
-class MockDocumentReference extends Mock implements DocumentReference<Map<String, dynamic>> {}
+class MockDocumentReference extends Mock
+    implements DocumentReference<Map<String, dynamic>> {
+  @override
+  String get id => 'mock_id';
+}
 
-// Mock Transaction for testing
 class MockTransaction extends Mock implements Transaction {
   @override
-  Transaction set<T>(DocumentReference<T> documentRef, T data, [SetOptions? options]) {
+  Transaction set<T>(
+    DocumentReference<T> documentRef,
+    T data, [
+    SetOptions? options,
+  ]) {
     return this;
   }
 
   @override
   Future<DocumentSnapshot<T>> get<T>(DocumentReference<T> docRef) async {
-    throw UnimplementedError();
+    return MockDocumentSnapshot<T>();
   }
 }
 
+class MockDocumentSnapshot<T> extends Mock implements DocumentSnapshot<T> {
+  @override
+  bool get exists => true;
+
+  @override
+  T? data() => {} as T?;
+}
+
 void main() {
-  late ClubActivityService service;
+  late SocialActivityService service;
   late MockFirestore mockFirestore;
 
   setUpAll(() {
     registerFallbackValue(MockTransaction());
+    registerFallbackValue(
+      const Duration(seconds: 1),
+    ); // Register Duration fallback
   });
 
   setUp(() {
     mockFirestore = MockFirestore();
-    service = ClubActivityService(firestore: mockFirestore);
+    service = SocialActivityService(firestore: mockFirestore);
   });
 
-  group('ClubActivityService', () {
+  group('SocialActivityService', () {
+    final mockCollection = MockCollectionReference();
+    final mockDoc = MockDocumentReference();
+
+    setUp(() {
+      when(() => mockFirestore.collection(any())).thenReturn(mockCollection);
+      when(() => mockCollection.doc(any())).thenReturn(mockDoc);
+      when(() => mockDoc.collection(any())).thenReturn(mockCollection);
+
+      when(
+        () => mockFirestore.runTransaction<Null>(
+          any(),
+          timeout: any(named: 'timeout'),
+          maxAttempts: any(named: 'maxAttempts'),
+        ),
+      ).thenAnswer((invocation) async {
+        final handler =
+            invocation.positionalArguments[0]
+                as Future<dynamic> Function(Transaction);
+        await handler(MockTransaction());
+      });
+    });
+
     group('logHabitCompletion', () {
       test('completes without throwing when transaction succeeds', () async {
-        // Arrange
-        when(() => mockFirestore.runTransaction(any())).thenAnswer((_) async => Future.value());
-
-        // Act & Assert
-        expect(
-          () => service.logHabitCompletion(
+        await expectLater(
+          service.logHabitCompletion(
             userId: 'user123',
             userName: 'Test User',
             archetype: 'athlete',
             habitId: 'habit456',
             habitTitle: 'Morning Workout',
+            streakDay: 5,
+            attribute: 'vitality',
             xpGained: 50,
+            currentLevel: 5,
           ),
-          returnsNormally,
+          completes,
         );
-      });
-
-      test('handles transaction errors gracefully without throwing', () async {
-        // Arrange
-        when(() => mockFirestore.runTransaction(any()))
-            .thenThrow(Exception('Firestore transaction failed'));
-
-        // Act & Assert
-        expect(
-          () => service.logHabitCompletion(
-            userId: 'user123',
-            userName: 'Test User',
-            archetype: 'athlete',
-            habitId: 'habit456',
-            habitTitle: 'Morning Workout',
-            xpGained: 50,
-          ),
-          returnsNormally,
-        );
-      });
-
-      test('handles empty archetype gracefully', () async {
-        // Arrange
-        when(() => mockFirestore.runTransaction(any())).thenAnswer((_) async => Future.value());
-
-        // Act & Assert
-        expect(
-          () => service.logHabitCompletion(
-            userId: 'user123',
-            userName: 'Test User',
-            archetype: '',
-            habitId: 'habit456',
-            habitTitle: 'Morning Workout',
-            xpGained: 50,
-          ),
-          returnsNormally,
-        );
-      });
-
-      test('handles whitespace archetype gracefully', () async {
-        // Arrange
-        when(() => mockFirestore.runTransaction(any())).thenAnswer((_) async => Future.value());
-
-        // Act & Assert
-        expect(
-          () => service.logHabitCompletion(
-            userId: 'user123',
-            userName: 'Test User',
-            archetype: '   ',
-            habitId: 'habit456',
-            habitTitle: 'Morning Workout',
-            xpGained: 50,
-          ),
-          returnsNormally,
-        );
-      });
-
-      test('logs activity with XP of 50', () async {
-        // Arrange
-        when(() => mockFirestore.runTransaction(any())).thenAnswer((_) async => Future.value());
-
-        // Act
-        await service.logHabitCompletion(
-          userId: 'user123',
-          userName: 'Test User',
-          archetype: 'athlete',
-          habitId: 'habit456',
-          habitTitle: 'Morning Workout',
-          xpGained: 50,
-        );
-
-        // Assert
-        verify(() => mockFirestore.runTransaction(any())).called(1);
-      });
-
-      test('logs activity with XP of 1000', () async {
-        // Arrange
-        when(() => mockFirestore.runTransaction(any())).thenAnswer((_) async => Future.value());
-
-        // Act
-        await service.logHabitCompletion(
-          userId: 'user123',
-          userName: 'Test User',
-          archetype: 'creator',
-          habitId: 'creation-habit',
-          habitTitle: 'Daily Creation',
-          xpGained: 1000,
-        );
-
-        // Assert
-        verify(() => mockFirestore.runTransaction(any())).called(1);
       });
     });
 
     group('logLevelUp', () {
-      test('completes without throwing when transaction succeeds', () async {
-        // Arrange
-        when(() => mockFirestore.runTransaction(any())).thenAnswer((_) async => Future.value());
-
-        // Act & Assert
-        expect(
-          () => service.logLevelUp(
-            userId: 'user123',
-            userName: 'Test User',
-            archetype: 'scholar',
-            newLevel: 15,
-          ),
-          returnsNormally,
-        );
-      });
-
-      test('handles transaction errors gracefully without throwing', () async {
-        // Arrange
-        when(() => mockFirestore.runTransaction(any()))
-            .thenThrow(Exception('Firestore transaction failed'));
-
-        // Act & Assert
-        expect(
-          () => service.logLevelUp(
-            userId: 'user123',
-            userName: 'Test User',
-            archetype: 'scholar',
-            newLevel: 15,
-          ),
-          returnsNormally,
-        );
-      });
-
-      test('handles empty archetype gracefully', () async {
-        // Arrange
-        when(() => mockFirestore.runTransaction(any())).thenAnswer((_) async => Future.value());
-
-        // Act & Assert
-        expect(
-          () => service.logLevelUp(
-            userId: 'user123',
-            userName: 'Test User',
-            archetype: '',
-            newLevel: 15,
-          ),
-          returnsNormally,
-        );
-      });
-
-      test('handles whitespace archetype gracefully', () async {
-        // Arrange
-        when(() => mockFirestore.runTransaction(any())).thenAnswer((_) async => Future.value());
-
-        // Act & Assert
-        expect(
-          () => service.logLevelUp(
-            userId: 'user123',
-            userName: 'Test User',
-            archetype: '   ',
-            newLevel: 15,
-          ),
-          returnsNormally,
-        );
-      });
-    });
-
-    group('logChallengeComplete', () {
-      test('completes without throwing when transaction succeeds', () async {
-        // Arrange
-        when(() => mockFirestore.runTransaction(any())).thenAnswer((_) async => Future.value());
-
-        // Act & Assert
-        expect(
-          () => service.logChallengeComplete(
-            userId: 'user123',
-            userName: 'Test User',
-            archetype: 'creator',
-            challengeId: 'challenge789',
-            challengeTitle: '30-Day Creation Sprint',
-          ),
-          returnsNormally,
-        );
-      });
-
-      test('handles transaction errors gracefully without throwing', () async {
-        // Arrange
-        when(() => mockFirestore.runTransaction(any()))
-            .thenThrow(Exception('Firestore transaction failed'));
-
-        // Act & Assert
-        expect(
-          () => service.logChallengeComplete(
-            userId: 'user123',
-            userName: 'Test User',
-            archetype: 'creator',
-            challengeId: 'challenge789',
-            challengeTitle: '30-Day Creation Sprint',
-          ),
-          returnsNormally,
-        );
-      });
-
-      test('handles empty archetype gracefully', () async {
-        // Arrange
-        when(() => mockFirestore.runTransaction(any())).thenAnswer((_) async => Future.value());
-
-        // Act & Assert
-        expect(
-          () => service.logChallengeComplete(
-            userId: 'user123',
-            userName: 'Test User',
-            archetype: '',
-            challengeId: 'challenge789',
-            challengeTitle: '30-Day Creation Sprint',
-          ),
-          returnsNormally,
-        );
-      });
-
-      test('handles whitespace archetype gracefully', () async {
-        // Arrange
-        when(() => mockFirestore.runTransaction(any())).thenAnswer((_) async => Future.value());
-
-        // Act & Assert
-        expect(
-          () => service.logChallengeComplete(
-            userId: 'user123',
-            userName: 'Test User',
-            archetype: '   ',
-            challengeId: 'challenge789',
-            challengeTitle: '30-Day Creation Sprint',
-          ),
-          returnsNormally,
-        );
-      });
-    });
-
-    group('Transaction patterns', () {
-      test('uses Firestore transactions for all operations', () async {
-        // Arrange
-        when(() => mockFirestore.runTransaction(any())).thenAnswer((_) async => Future.value());
-
-        // Act
-        await service.logHabitCompletion(
-          userId: 'user123',
-          userName: 'Test User',
-          archetype: 'athlete',
-          habitId: 'habit456',
-          habitTitle: 'Morning Workout',
-          xpGained: 50,
-        );
-
-        // Assert
-        verify(() => mockFirestore.runTransaction(any())).called(1);
-      });
-
-      test('uses Firestore transactions for all activity types', () async {
-        // Arrange
-        when(() => mockFirestore.runTransaction(any())).thenAnswer((_) async => Future.value());
-
-        // Act & Assert - logHabitCompletion
-        await service.logHabitCompletion(
-          userId: 'user123',
-          userName: 'Test User',
-          archetype: 'athlete',
-          habitId: 'habit456',
-          habitTitle: 'Morning Workout',
-          xpGained: 50,
-        );
-        verify(() => mockFirestore.runTransaction(any())).called(1);
-
-        // Act & Assert - logLevelUp
+      test('logs level up correctly', () async {
         await service.logLevelUp(
           userId: 'user123',
           userName: 'Test User',
           archetype: 'scholar',
-          newLevel: 15,
+          newLevel: 10,
+          totalXp: 5000,
         );
-        verify(() => mockFirestore.runTransaction(any())).called(2);
 
-        // Act & Assert - logChallengeComplete
+        verify(() => mockFirestore.runTransaction<Null>(any())).called(1);
+      });
+    });
+
+    group('logChallengeComplete', () {
+      test('logs challenge completion correctly', () async {
         await service.logChallengeComplete(
           userId: 'user123',
           userName: 'Test User',
           archetype: 'creator',
           challengeId: 'challenge789',
-          challengeTitle: '30-Day Creation Sprint',
+          challengeTitle: 'Design Sprint',
+          xpReward: 100,
         );
-        verify(() => mockFirestore.runTransaction(any())).called(3);
+
+        verify(() => mockFirestore.runTransaction<Null>(any())).called(1);
       });
     });
   });

@@ -7,19 +7,13 @@ import 'package:emerge_app/features/habits/domain/entities/habit.dart';
 import 'package:emerge_app/features/habits/domain/models/habit_activity.dart';
 import 'package:emerge_app/features/habits/domain/repositories/habit_repository.dart';
 import 'package:emerge_app/features/social/domain/services/club_activity_service.dart';
-import 'package:emerge_app/features/social/domain/services/global_activity_service.dart';
 import 'package:fpdart/fpdart.dart';
 
 class FirestoreHabitRepository implements HabitRepository {
   final FirebaseFirestore _firestore;
-  final ClubActivityService? _clubActivityService;
-  final GlobalActivityService? _globalActivityService;
+  final SocialActivityService? _socialActivityService;
 
-  FirestoreHabitRepository(
-    this._firestore, [
-    this._clubActivityService,
-    this._globalActivityService,
-  ]);
+  FirestoreHabitRepository(this._firestore, [this._socialActivityService]);
 
   /// Defensive mapping from a Firestore document to a [Habit] entity.
   /// Uses null coalescing on all fields to prevent crashes on malformed data.
@@ -327,69 +321,45 @@ class FirestoreHabitRepository implements HabitRepository {
           );
         }
 
-        // Log to club activity feed if service is available
+        // Log to social activity feed if service is available
         try {
-          if (habit != null && _clubActivityService != null) {
-            // Get user data for club activity logging
+          if (habit != null && _socialActivityService != null) {
+            // Get user data for activity logging
             final userDoc = await _firestore.collection('users').doc(uid).get();
             if (userDoc.exists) {
               final userData = userDoc.data() as Map<String, dynamic>;
-              final userName = userData['displayName'] as String? ?? 'Anonymous';
+              final userName =
+                  userData['displayName'] as String? ?? 'Anonymous';
               final archetype = userData['archetype'] as String? ?? 'none';
 
-              // Calculate XP based on difficulty and streak
+              final streakDay = completionData['streakDay'] as int? ?? 1;
+              final attribute =
+                  completionData['attribute'] as String? ?? 'vitality';
+
+              // Calculate XP for leaderboard
               final difficulty = completionData['difficulty'] as String?;
               final baseXp = _getBaseXpForDifficulty(difficulty);
-              final streakDay = completionData['streakDay'] as int? ?? 1;
               final xpGained = baseXp + (streakDay > 1 ? 5 : 0);
+              final currentLevel = userData['level'] as int? ?? 1;
 
-              await _clubActivityService.logHabitCompletion(
+              await _socialActivityService.logHabitCompletion(
                 userId: uid,
                 userName: userName,
                 archetype: archetype,
                 habitId: habitId,
                 habitTitle: habit.title,
-                xpGained: xpGained,
-              );
-            }
-          }
-        } catch (clubError, clubStack) {
-          AppLogger.e(
-            'Failed to log habit completion to club activity',
-            clubError,
-            clubStack,
-          );
-        }
-
-        // Log to global activity feed if service is available
-        try {
-          if (habit != null && _globalActivityService != null) {
-            // Get user data for global activity logging
-            final userDoc = await _firestore.collection('users').doc(uid).get();
-            if (userDoc.exists) {
-              final userData = userDoc.data() as Map<String, dynamic>;
-              final userName = userData['displayName'] as String? ?? 'Anonymous';
-              final archetype = userData['archetype'] as String? ?? 'none';
-
-              final streakDay = completionData['streakDay'] as int? ?? 1;
-              final attribute = completionData['attribute'] as String? ?? 'vitality';
-
-              await _globalActivityService.logHabitComplete(
-                userId: uid,
-                userName: userName,
-                archetypeId: archetype,
-                habitId: habitId,
-                habitTitle: habit.title,
                 streakDay: streakDay,
                 attribute: attribute,
+                xpGained: xpGained,
+                currentLevel: currentLevel,
               );
             }
           }
-        } catch (globalError, globalStack) {
+        } catch (socialError, socialStack) {
           AppLogger.e(
-            'Failed to log habit completion to global activity',
-            globalError,
-            globalStack,
+            'Failed to log habit completion to social activity',
+            socialError,
+            socialStack,
           );
         }
       }

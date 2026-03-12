@@ -623,6 +623,9 @@ class ChallengeCatalog {
       final weekly = getWeeklySpotlight(archetype);
       if (weekly.id == id) return weekly;
 
+      final daily = getDailyQuest(archetype);
+      if (daily.id == id) return daily;
+
       final available = getAvailableChallenges(archetype);
       for (final challenge in available) {
         if (challenge.id == id) return challenge;
