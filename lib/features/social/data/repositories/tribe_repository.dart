@@ -10,6 +10,9 @@ abstract class TribeRepository {
   /// Get all official archetype clubs.
   Future<List<Tribe>> getArchetypeClubs();
 
+  /// Watch all official archetype clubs.
+  Stream<List<Tribe>> watchArchetypeClubs();
+
   /// Get top contributors for a club.
   Future<List<Map<String, dynamic>>> getClubContributors(
     String tribeId, {
@@ -56,6 +59,18 @@ class FirestoreTribeRepository implements TribeRepository {
         .get();
 
     return snapshot.docs.map((doc) => Tribe.fromMap(doc.data())).toList();
+  }
+
+  @override
+  Stream<List<Tribe>> watchArchetypeClubs() {
+    return _firestore
+        .collection('tribes')
+        .where('type', isEqualTo: TribeType.official.name)
+        .orderBy('archetypeId')
+        .snapshots()
+        .map(
+          (snapshot) => snapshot.docs.map((doc) => Tribe.fromMap(doc.data())).toList(),
+        );
   }
 
   @override

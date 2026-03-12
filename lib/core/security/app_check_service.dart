@@ -28,7 +28,7 @@ class AppCheckService {
           // site key must be obtained from Firebase Console
           await appCheck.activate(
             providerWeb: ReCaptchaV3Provider(
-              '6LdW940qAAAAAI33f-i5v5y5v5v5v5v5v5v5v5v',
+              '6LeaJoQsAAAAAAzo1mB0j_BxaL2BMymsRi-tU3b_',
             ),
           );
         }

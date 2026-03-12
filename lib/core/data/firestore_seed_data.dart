@@ -4,84 +4,25 @@
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
+import 'package:emerge_app/features/social/data/seeds/official_clubs_seed.dart';
 
 class FirestoreSeedData {
   final FirebaseFirestore _firestore;
 
   FirestoreSeedData(this._firestore);
 
-  /// Seeds the 'tribes' collection with data matching the design mockups
+  /// Seeds the 'tribes' collection with official archetype clubs
+  /// Uses OfficialClubsSeed data which includes proper type and archetypeId fields
   Future<void> seedTribes() async {
-    final tribes = [
-      {
-        'id': 'tribe_meditation_guild',
-        'name': 'Meditation Guild',
-        'description':
-            'A sanctuary for mindfulness practitioners. Build your daily meditation habit with 2,500+ like-minded souls seeking inner peace.',
-        'imageUrl':
-            'https://lh3.googleusercontent.com/aida-public/AB6AXuCQPv10oFu2sDwJG5HnbqYGpxbA0wnzkC6vDlQDKULU6jqd1GFbAvaHlVR8HP5FFbKR_csCaRnpfWctY_KWyR2M1ncSIaVW8yWh3FvINl5K1powi1_HlOHAdAb70KYF1Zh17eHisSvHT7K9zpZ0cKwQM8R59grDPZrlwAwNoWvxJHM6s6Hh9KaFhsxOLvyRPLwbBAQmGzjp2zSF306Ho62WsKQR1Hk5Ym5Xjqyx8XMPXH__xq3jmOHuKvKiBVEfaZO5_BgmfJhgQuo',
-        'memberCount': 2511,
-        'ownerId': 'admin',
-        'tags': ['Meditation', 'Mindfulness', 'Mental Health'],
-        'levelRequirement': 1,
-        'rank': 1,
-        'totalXp': 15420,
-        'members': [],
-      },
-      {
-        'id': 'tribe_5am_writers',
-        'name': '5 AM Writers',
-        'description':
-            'Early risers who write before the world wakes. Join us to build a consistent writing practice and become the Writer you aspire to be.',
-        'imageUrl':
-            'https://lh3.googleusercontent.com/aida-public/AB6AXuClgA57GDCz5sdk2ZI7AfSAhkSv7hUoB_Wp-Tpa7zqU-A4H5UePzeWr9LE-xfPLVIA2BRUV6pfaZqqoRd29PuxlnRtuIfQPcO3YOCNI9LyL8GGugh3z_M99nsW62fAhd23x9IwcXZMazbVh3E2rVfFtwriLMAPGcAunjMZlwhRb7kiLAcDNR6P8IfadiZf0IwqQ_V-wbAHN3UhB3hHkmExRjo7uAWRE69oQhKcn3ez2YCynQ7Q7rhEsAIVE0sU7-YYjf1srOVEo-pk',
-        'memberCount': 1204,
-        'ownerId': 'admin',
-        'tags': ['Writing', 'Creativity', 'Morning Routine'],
-        'levelRequirement': 1,
-        'rank': 2,
-        'totalXp': 12890,
-        'members': [],
-      },
-      {
-        'id': 'tribe_fitness_guilds',
-        'name': 'Fitness Guilds',
-        'description':
-            'Building physical vitality, endurance, and strength together. Every workout is a vote for your identity as an Athlete.',
-        'imageUrl':
-            'https://lh3.googleusercontent.com/aida-public/AB6AXuAcblAAnG3M4wmuLF9ZQ8PcI3vpkkp-Tsb9lPuwS3R9yyoz9p-9RzXs7SEnt-xumWZXp5M6ezwTrS7kdGjT_J5wxc5FJSVdFWFo8C_X_BEw89X-ADBiEMfX5WwTw3BgEvC5lPrczPdMpAiA5khGBQKAw-Wjspg94vy1I0Vomf6HklnNjg7NdPFWfylP5gxFDLqP-mV8MM8ch2D_j95CEZ03Cb48pHa87E9BV68ZUDoQQRHgsDfefC_MYIFgE28uPzaRJFxSreS0tZk',
-        'memberCount': 1980,
-        'ownerId': 'admin',
-        'tags': ['Fitness', 'Strength', 'Vitality'],
-        'levelRequirement': 1,
-        'rank': 3,
-        'totalXp': 11550,
-        'members': [],
-      },
-      {
-        'id': 'tribe_plant_based_parents',
-        'name': 'Plant-Based Parents',
-        'description':
-            'Parents building healthy eating habits for themselves and their families. Share recipes, tips, and support on the plant-based journey.',
-        'imageUrl':
-            'https://lh3.googleusercontent.com/aida-public/AB6AXuCL4J9tsC-b5pwJGqxpGob7_-OkXHHv9dtL8P0XxMsL7FdqL9VnQzh8sU5wduI8XNiXnbz1PCsCCBXJzRqSyZPKm4cG4YXA24-a3ipyODG4a31uLncKAJkuVo3f70_-r3k4uYdgeSduK7Q5olfcgWpyA7gwbOFkyzDFtw1vKhBTu2wp-FiouVWnFKbOnTe2iE5K0xKdu-9SLaGNAYnn19aFnbJAxDMiGa_7sbQWynEOkHn3FS0h0ttwuAeV_uKEN3S5FbtrqIrbnh8',
-        'memberCount': 856,
-        'ownerId': 'admin',
-        'tags': ['Nutrition', 'Family', 'Health'],
-        'levelRequirement': 1,
-        'rank': 4,
-        'totalXp': 8500,
-        'members': [],
-      },
-    ];
+    final clubsMap = OfficialClubsSeed.getOfficialClubsMap();
 
     final batch = _firestore.batch();
-    for (final tribe in tribes) {
-      final docRef = _firestore.collection('tribes').doc(tribe['id'] as String);
-      batch.set(docRef, tribe);
+    for (final entry in clubsMap.entries) {
+      final docRef = _firestore.collection('tribes').doc(entry.key);
+      batch.set(docRef, entry.value);
     }
     await batch.commit();
-    debugPrint('Seeded ${tribes.length} tribes');
+    debugPrint('Seeded ${clubsMap.length} official clubs');
   }
 
   /// Seeds the 'challenges' collection matching the design mockups

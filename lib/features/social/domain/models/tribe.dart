@@ -14,6 +14,7 @@ class Tribe {
   final TribeType type;
   final String? archetypeId;
   final bool isVerified;
+  final int level; // Add level for ranking and display
   final DateTime? createdAt;
 
   // New affiliate/club fields
@@ -38,6 +39,7 @@ class Tribe {
     this.type = TribeType.userPublic,
     this.archetypeId,
     this.isVerified = false,
+    this.level = 1, // Default level
     this.createdAt,
     // New fields with defaults
     this.affiliatePartnerId,
@@ -63,6 +65,7 @@ class Tribe {
       'type': type.name, // Enum to string
       'archetypeId': archetypeId,
       'isVerified': isVerified,
+      'level': level,
       'createdAt': createdAt?.toIso8601String(),
       // New affiliate/club fields
       'affiliatePartnerId': affiliatePartnerId,
@@ -107,6 +110,7 @@ class Tribe {
       ),
       archetypeId: map['archetypeId'],
       isVerified: map['isVerified'] ?? false,
+      level: map['level']?.toInt() ?? 1,
       createdAt: map['createdAt'] != null
           ? DateTime.tryParse(map['createdAt'])
           : null,

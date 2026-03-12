@@ -1,10 +1,13 @@
 import 'package:emerge_app/features/auth/domain/entities/user_extension.dart';
 import 'package:emerge_app/features/gamification/data/repositories/user_stats_repository.dart';
 import 'package:emerge_app/features/gamification/presentation/providers/user_stats_providers.dart';
+import 'package:emerge_app/features/social/domain/services/club_activity_service.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
 class MockUserStatsRepository extends Mock implements UserStatsRepository {}
+
+class MockSocialActivityService extends Mock implements SocialActivityService {}
 
 class FakeUserProfile extends Fake implements UserProfile {}
 
@@ -14,6 +17,7 @@ class FakeUserWorldState extends Fake implements UserWorldState {}
 
 void main() {
   late MockUserStatsRepository mockUserStatsRepository;
+  late MockSocialActivityService mockSocialActivityService;
   late UserStatsController controller;
 
   setUpAll(() {
@@ -24,10 +28,13 @@ void main() {
 
   setUp(() {
     mockUserStatsRepository = MockUserStatsRepository();
+    mockSocialActivityService = MockSocialActivityService();
 
     controller = UserStatsController(
       repository: mockUserStatsRepository,
+      socialActivityService: mockSocialActivityService,
       userId: '123',
+      userName: 'Test User',
     );
   });
 

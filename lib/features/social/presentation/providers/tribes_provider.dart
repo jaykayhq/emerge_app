@@ -8,9 +8,9 @@ final tribeRepositoryProvider = Provider<TribeRepository>((ref) {
   return FirestoreTribeRepository(FirebaseFirestore.instance);
 });
 
-/// Provider for ClubActivityService - logs user activities to their archetype club.
-final clubActivityServiceProvider = Provider<ClubActivityService>((ref) {
-  return ClubActivityService(firestore: FirebaseFirestore.instance);
+/// Provider for SocialActivityService - logs user activities to archetype clubs and global feed.
+final socialActivityServiceProvider = Provider<SocialActivityService>((ref) {
+  return SocialActivityService(firestore: FirebaseFirestore.instance);
 });
 
 /// The user's archetype club — auto-joined based on their archetype.
@@ -22,10 +22,10 @@ final userClubProvider = FutureProvider.family<Tribe?, String>((
   return repository.getArchetypeClub(archetypeId);
 });
 
-/// All official archetype clubs.
-final allArchetypeClubsProvider = FutureProvider<List<Tribe>>((ref) {
+/// All official archetype clubs (Real-time).
+final allArchetypeClubsProvider = StreamProvider<List<Tribe>>((ref) {
   final repository = ref.watch(tribeRepositoryProvider);
-  return repository.getArchetypeClubs();
+  return repository.watchArchetypeClubs();
 });
 
 /// Real-time stream of top contributors for a given club.
@@ -34,17 +34,17 @@ final allArchetypeClubsProvider = FutureProvider<List<Tribe>>((ref) {
 /// ordered by contributionCount descending, limited to 10 items.
 final clubContributorsProvider =
     StreamProvider.family<List<Map<String, dynamic>>, String>((ref, tribeId) {
-  final firestore = FirebaseFirestore.instance;
+      final firestore = FirebaseFirestore.instance;
 
-  return firestore
-      .collection('tribes')
-      .doc(tribeId)
-      .collection('contributors')
-      .orderBy('contributionCount', descending: true)
-      .limit(10)
-      .snapshots()
-      .map((snapshot) => snapshot.docs.map((doc) => doc.data()).toList());
-});
+      return firestore
+          .collection('tribes')
+          .doc(tribeId)
+          .collection('contributors')
+          .orderBy('contributionCount', descending: true)
+          .limit(10)
+          .snapshots()
+          .map((snapshot) => snapshot.docs.map((doc) => doc.data()).toList());
+    });
 
 /// Real-time stream of activity feed for a given club.
 ///
@@ -52,14 +52,40 @@ final clubContributorsProvider =
 /// ordered by timestamp descending, limited to 20 items.
 final clubActivityProvider =
     StreamProvider.family<List<Map<String, dynamic>>, String>((ref, tribeId) {
+      final firestore = FirebaseFirestore.instance;
+
+      return firestore
+          .collection('tribes')
+          .doc(tribeId)
+          .collection('activity')
+          .orderBy('timestamp', descending: true)
+          .limit(20)
+          .snapshots()
+          .map((snapshot) => snapshot.docs.map((doc) => doc.data()).toList());
+    });
+
+/// Real-time stream of the global activity feed.
+final globalActivityProvider = StreamProvider<List<Map<String, dynamic>>>((
+  ref,
+) {
   final firestore = FirebaseFirestore.instance;
 
   return firestore
-      .collection('tribes')
-      .doc(tribeId)
-      .collection('activity')
+      .collection('global_activities')
       .orderBy('timestamp', descending: true)
-      .limit(20)
+      .limit(30)
       .snapshots()
       .map((snapshot) => snapshot.docs.map((doc) => doc.data()).toList());
 });
+
+/// Real-time stream of tribe aggregate stats (totalHabitsCompleted, etc.)
+final tribeAggregateProvider =
+    StreamProvider.family<Map<String, dynamic>, String>((ref, tribeId) {
+      final firestore = FirebaseFirestore.instance;
+
+      return firestore
+          .collection('tribes')
+          .doc(tribeId)
+          .snapshots()
+          .map((doc) => doc.data() ?? <String, dynamic>{});
+    });

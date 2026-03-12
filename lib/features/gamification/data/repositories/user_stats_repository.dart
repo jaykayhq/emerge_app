@@ -20,7 +20,31 @@ class UserStatsRepository {
     await _firestore
         .collection('user_stats')
         .doc(profile.uid)
-        .set(profile.toMap());
+        .set(profile.toMap(), SetOptions(merge: true));
+  }
+
+  /// Atomically syncs the profile to BOTH `users` and `user_stats` collections
+  Future<void> syncUserIdentity(UserProfile profile) async {
+    if (profile.uid.isEmpty) {
+      AppLogger.w('Cannot sync identity: profile.uid is empty');
+      return;
+    }
+
+    final data = profile.toMap();
+    final batch = _firestore.batch();
+
+    batch.set(
+      _firestore.collection('users').doc(profile.uid),
+      data,
+      SetOptions(merge: true),
+    );
+    batch.set(
+      _firestore.collection('user_stats').doc(profile.uid),
+      data,
+      SetOptions(merge: true),
+    );
+
+    await batch.commit();
   }
 
   Stream<UserProfile> watchUserStats(String uid) {

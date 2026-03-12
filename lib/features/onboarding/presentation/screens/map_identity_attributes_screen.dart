@@ -1,5 +1,7 @@
+import 'package:emerge_app/core/utils/app_logger.dart';
 import 'package:emerge_app/features/habits/domain/entities/habit.dart';
 import 'package:emerge_app/features/onboarding/presentation/providers/onboarding_provider.dart';
+import 'package:emerge_app/features/gamification/presentation/providers/user_stats_providers.dart';
 import 'package:emerge_app/features/timeline/presentation/widgets/habit_timeline_section.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -46,6 +48,14 @@ class _MapIdentityAttributesScreenState
   @override
   Widget build(BuildContext context) {
     final state = ref.watch(onboardingStateControllerProvider);
+
+    // DEBUG: Log archetype at build time
+    AppLogger.i('MapIdentityAttributesScreen build: selectedArchetype=${state.selectedArchetype}');
+
+    // Also log from Firestore to compare
+    ref.read(userStatsStreamProvider).whenData((profile) {
+      AppLogger.i('MapIdentityAttributesScreen: Firestore archetype=${profile.archetype}');
+    });
 
     return Scaffold(
       body: Container(

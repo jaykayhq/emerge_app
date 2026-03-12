@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:emerge_app/core/utils/app_logger.dart';
 import 'package:emerge_app/features/auth/domain/entities/user_extension.dart';
 import 'package:emerge_app/features/gamification/data/repositories/user_stats_repository.dart';
@@ -95,7 +96,19 @@ class WorldHealthService {
     // Group by day
     final Map<String, int> dailyCompletions = {};
     for (final act in activity) {
-      final date = act['date'] as DateTime;
+      // Handle both Timestamp (from Firestore) and DateTime types
+      final dateValue = act['date'];
+      final DateTime date;
+
+      if (dateValue is Timestamp) {
+        date = dateValue.toDate();
+      } else if (dateValue is DateTime) {
+        date = dateValue;
+      } else {
+        AppLogger.w('Invalid date type: ${dateValue.runtimeType}, skipping');
+        continue;
+      }
+
       final dayKey = '${date.year}-${date.month}-${date.day}';
       dailyCompletions[dayKey] = (dailyCompletions[dayKey] ?? 0) + 1;
     }

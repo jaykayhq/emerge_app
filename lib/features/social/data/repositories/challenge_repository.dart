@@ -4,12 +4,14 @@ import 'package:emerge_app/core/utils/app_logger.dart';
 import 'package:emerge_app/features/social/domain/models/challenge.dart';
 import 'package:emerge_app/features/social/domain/models/challenge_catalog.dart';
 import 'package:emerge_app/features/social/domain/repositories/challenge_repository.dart';
+import 'package:emerge_app/features/social/domain/services/club_activity_service.dart';
 import 'package:fpdart/fpdart.dart';
 
 class FirestoreChallengeRepository implements ChallengeRepository {
   final FirebaseFirestore _firestore;
+  final SocialActivityService? _socialActivityService;
 
-  FirestoreChallengeRepository(this._firestore);
+  FirestoreChallengeRepository(this._firestore, [this._socialActivityService]);
 
   @override
   Future<List<Challenge>> getChallenges({bool featuredOnly = false}) async {
@@ -36,49 +38,61 @@ class FirestoreChallengeRepository implements ChallengeRepository {
   }
 
   @override
-  Future<void> joinChallenge(String userId, String challengeId) async {
-    final challengeDoc = await _firestore
-        .collection('challenges')
-        .doc(challengeId)
-        .get();
-
-    Map<String, dynamic>? challengeData;
-
-    // Fallback to local ChallengeCatalog if the global doc hasn't been created yet
-    if (!challengeDoc.exists) {
-      final localChallenge = ChallengeCatalog.getChallengeById(challengeId);
-      if (localChallenge == null) {
-        throw Exception('Challenge not found globally or locally.');
-      }
-      challengeData = localChallenge.toMap();
-      // Write the global doc instantly so other users can see participants
-      await _firestore
+  Future<Either<Failure, Unit>> joinChallenge(
+    String userId,
+    String challengeId,
+  ) async {
+    try {
+      final challengeDoc = await _firestore
           .collection('challenges')
           .doc(challengeId)
-          .set(challengeData);
-    } else {
-      challengeData = challengeDoc.data();
+          .get();
+
+      Map<String, dynamic>? challengeData;
+
+      // Fallback to local ChallengeCatalog if the global doc hasn't been created yet
+      if (!challengeDoc.exists) {
+        final localChallenge = ChallengeCatalog.getChallengeById(challengeId);
+        if (localChallenge == null) {
+          return Left(
+            ServerFailure('Challenge not found globally or locally.'),
+          );
+        }
+        challengeData = localChallenge.toMap();
+        // Write the global doc instantly so other users can see participants
+        await _firestore
+            .collection('challenges')
+            .doc(challengeId)
+            .set(challengeData);
+      } else {
+        challengeData = challengeDoc.data();
+      }
+
+      if (challengeData == null) {
+        return Left(ServerFailure('Challenge data is null'));
+      }
+
+      await _firestore
+          .collection('users')
+          .doc(userId)
+          .collection('challenges')
+          .doc(challengeId)
+          .set({
+            ...challengeData,
+            'joinedAt': FieldValue.serverTimestamp(),
+            'status': ChallengeStatus.active.name,
+            'currentDay': 0,
+          });
+
+      await _firestore.collection('challenges').doc(challengeId).update({
+        'participants': FieldValue.increment(1),
+      });
+
+      return const Right(unit);
+    } catch (e) {
+      AppLogger.e('Error joining challenge', e.toString(), StackTrace.current);
+      return Left(ServerFailure(e.toString()));
     }
-
-    if (challengeData == null) {
-      throw Exception('Challenge data is null');
-    }
-
-    await _firestore
-        .collection('users')
-        .doc(userId)
-        .collection('challenges')
-        .doc(challengeId)
-        .set({
-          ...challengeData,
-          'joinedAt': FieldValue.serverTimestamp(),
-          'status': ChallengeStatus.active.name,
-          'currentDay': 0,
-        });
-
-    await _firestore.collection('challenges').doc(challengeId).update({
-      'participants': FieldValue.increment(1),
-    });
   }
 
   @override
@@ -108,7 +122,7 @@ class FirestoreChallengeRepository implements ChallengeRepository {
     int progress,
   ) async {
     try {
-      return await _firestore.runTransaction((transaction) async {
+      final result = await _firestore.runTransaction<Either<Failure, Unit>>((transaction) async {
         // Get the user's challenge document
         final userChallengeRef = _firestore
             .collection('users')
@@ -125,7 +139,9 @@ class FirestoreChallengeRepository implements ChallengeRepository {
             StackTrace.current,
           );
           return Left(
-            ServerFailure('Challenge not found. Please join the challenge first.'),
+            ServerFailure(
+              'Challenge not found. Please join the challenge first.',
+            ),
           );
         }
 
@@ -136,7 +152,9 @@ class FirestoreChallengeRepository implements ChallengeRepository {
             'Challenge $challengeId not found for user $userId',
             StackTrace.current,
           );
-          return Left(ServerFailure('Challenge data became null during transaction'));
+          return Left(
+            ServerFailure('Challenge data became null during transaction'),
+          );
         }
 
         final currentDay = data['currentDay'] as int? ?? 0;
@@ -150,7 +168,9 @@ class FirestoreChallengeRepository implements ChallengeRepository {
             'Current: $currentDay, Attempted: $progress',
           );
           return Left(
-            ServerFailure('Progress can only be incremented by 1 day at a time.'),
+            ServerFailure(
+              'Progress can only be incremented by 1 day at a time.',
+            ),
           );
         }
 
@@ -192,9 +212,54 @@ class FirestoreChallengeRepository implements ChallengeRepository {
 
         return const Right(unit);
       });
+
+      // After successful transaction, log social activity + XP for completion
+      if (result.isRight() && _socialActivityService != null) {
+        final checkDoc = await _firestore
+            .collection('users')
+            .doc(userId)
+            .collection('challenges')
+            .doc(challengeId)
+            .get();
+        final checkData = checkDoc.data();
+        if (checkData != null &&
+            checkData['status'] == ChallengeStatus.completed.name) {
+          try {
+            final userDoc = await _firestore.collection('users').doc(userId).get();
+            if (userDoc.exists) {
+              final userData = userDoc.data() as Map<String, dynamic>;
+              final userName = userData['displayName'] as String? ?? 'Anonymous';
+              final archetype = userData['archetype'] as String? ?? 'none';
+              final xpReward = checkData['xpReward'] as int? ?? 50;
+              final title = checkData['title'] as String? ?? 'a challenge';
+
+              await _socialActivityService.logChallengeComplete(
+                userId: userId,
+                userName: userName,
+                archetype: archetype,
+                challengeId: challengeId,
+                challengeTitle: title,
+                xpReward: xpReward,
+              );
+              AppLogger.i(
+                'Logged challenge completion to social activity + XP: $challengeId',
+              );
+            }
+          } catch (socialError, socialStack) {
+            AppLogger.e(
+              'Failed to log challenge completion to social activity',
+              socialError,
+              socialStack,
+            );
+          }
+        }
+      }
+      return result;
     } catch (e, stackTrace) {
       AppLogger.e('Challenge progress update failed', e, stackTrace);
-      return Left(ServerFailure('Failed to update challenge progress: ${e.toString()}'));
+      return Left(
+        ServerFailure('Failed to update challenge progress: ${e.toString()}'),
+      );
     }
   }
 
@@ -231,7 +296,9 @@ class FirestoreChallengeRepository implements ChallengeRepository {
             StackTrace.current,
           );
           return Left(
-            ServerFailure('Challenge not found. Please join the challenge first.'),
+            ServerFailure(
+              'Challenge not found. Please join the challenge first.',
+            ),
           );
         }
 
@@ -242,7 +309,9 @@ class FirestoreChallengeRepository implements ChallengeRepository {
             'Challenge $challengeId not found for user $userId',
             StackTrace.current,
           );
-          return Left(ServerFailure('Challenge data became null during transaction'));
+          return Left(
+            ServerFailure('Challenge data became null during transaction'),
+          );
         }
 
         final currentStatus = challengeData['status'] as String?;
@@ -270,10 +339,9 @@ class FirestoreChallengeRepository implements ChallengeRepository {
         }
 
         // Update challenge status to completed
-        transaction.update(
-          userChallengeRef,
-          {'status': ChallengeStatus.completed.name},
-        );
+        transaction.update(userChallengeRef, {
+          'status': ChallengeStatus.completed.name,
+        });
 
         // Award XP to user if reward > 0
         if (xpReward > 0) {
@@ -295,11 +363,13 @@ class FirestoreChallengeRepository implements ChallengeRepository {
 
               // Determine the primary attribute for this challenge
               // Default to 'vitality' if not specified
-              final primaryAttribute = challengeData['attribute'] as String? ?? 'vitality';
+              final primaryAttribute =
+                  challengeData['attribute'] as String? ?? 'vitality';
               final attributeKey = '${primaryAttribute}Xp';
 
               // Add XP to the challenge's primary attribute
-              final currentAttributeXp = (avatarStats[attributeKey] as int?) ?? 0;
+              final currentAttributeXp =
+                  (avatarStats[attributeKey] as int?) ?? 0;
               avatarStats[attributeKey] = currentAttributeXp + xpReward;
 
               // Recalculate total XP
@@ -317,15 +387,11 @@ class FirestoreChallengeRepository implements ChallengeRepository {
               }
 
               // Update user stats
-              transaction.set(
-                userStatsRef,
-                {
-                  'avatarStats': avatarStats,
-                  'currentXp': totalXp,
-                  'currentLevel': avatarStats['level'] as int? ?? 1,
-                },
-                SetOptions(merge: true),
-              );
+              transaction.set(userStatsRef, {
+                'avatarStats': avatarStats,
+                'currentXp': totalXp,
+                'currentLevel': avatarStats['level'] as int? ?? 1,
+              }, SetOptions(merge: true));
 
               AppLogger.i(
                 'XP awarded for challenge completion: User $userId, Challenge $challengeId, '
@@ -347,7 +413,9 @@ class FirestoreChallengeRepository implements ChallengeRepository {
       });
     } catch (e, stackTrace) {
       AppLogger.e('Challenge completion failed', e, stackTrace);
-      return Left(ServerFailure('Failed to complete challenge: ${e.toString()}'));
+      return Left(
+        ServerFailure('Failed to complete challenge: ${e.toString()}'),
+      );
     }
   }
 

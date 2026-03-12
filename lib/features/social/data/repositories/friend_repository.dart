@@ -1,25 +1,7 @@
+import 'dart:math' as math;
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:emerge_app/features/social/domain/entities/social_entities.dart';
-
-abstract class FriendRepository {
-  Future<List<Friend>> getFriends(String userId);
-  Stream<List<Friend>> watchFriends(String userId);
-  Future<void> addFriend(String userId, String friendId);
-  Future<void> removeFriend(String userId, String friendId);
-  Future<void> sendPartnerRequest(
-    String fromId,
-    String toId,
-    String senderName,
-    String senderArchetype,
-    int senderLevel,
-  );
-  Future<void> acceptPartnerRequest(String requestId);
-  Future<void> rejectPartnerRequest(String requestId);
-  Future<List<PartnerRequest>> getPendingRequests(String userId);
-  Future<List<Friend>> getOnlinePartners(String userId);
-  Stream<List<PartnerRequest>> watchPendingRequests(String userId);
-  Stream<List<Friend>> watchOnlinePartners(String userId);
-}
+import 'package:emerge_app/features/social/domain/repositories/friend_repository.dart';
 
 class FirestoreFriendRepository implements FriendRepository {
   final FirebaseFirestore _firestore;
@@ -53,12 +35,12 @@ class FirestoreFriendRepository implements FriendRepository {
         .collection('friends')
         .snapshots()
         .map((snapshot) {
-      return snapshot.docs.map((doc) {
-        final data = doc.data();
-        data['id'] = doc.id;
-        return Friend.fromMap(data);
-      }).toList();
-    });
+          return snapshot.docs.map((doc) {
+            final data = doc.data();
+            data['id'] = doc.id;
+            return Friend.fromMap(data);
+          }).toList();
+        });
   }
 
   @override
@@ -229,10 +211,10 @@ class FirestoreFriendRepository implements FriendRepository {
         .where('status', isEqualTo: 'pending')
         .snapshots()
         .map((snapshot) {
-      return snapshot.docs
-          .map((doc) => PartnerRequest.fromMap(doc.data(), id: doc.id))
-          .toList();
-    });
+          return snapshot.docs
+              .map((doc) => PartnerRequest.fromMap(doc.data(), id: doc.id))
+              .toList();
+        });
   }
 
   @override
@@ -244,11 +226,102 @@ class FirestoreFriendRepository implements FriendRepository {
         .where('isOnline', isEqualTo: true)
         .snapshots()
         .map((snapshot) {
-      return snapshot.docs.map((doc) {
-        final data = doc.data();
-        data['id'] = doc.id;
-        return Friend.fromMap(data);
-      }).toList();
+          return snapshot.docs.map((doc) {
+            final data = doc.data();
+            data['id'] = doc.id;
+            return Friend.fromMap(data);
+          }).toList();
+        });
+  }
+
+  @override
+  Stream<bool> watchOnlineStatus(String userId) {
+    return _firestore
+        .collection('users')
+        .doc(userId)
+        .collection('presence')
+        .doc('status')
+        .snapshots()
+        .map((snapshot) {
+          if (!snapshot.exists) return false;
+          final data = snapshot.data();
+          if (data == null) return false;
+
+          final isOnline = data['online'] as bool? ?? false;
+          final lastSeen = data['lastSeen'] as Timestamp?;
+
+          if (!isOnline || lastSeen == null) return false;
+
+          // Double check: if last heartbeat was > 5 minutes ago, consider offline
+          final fiveMinutesAgo = DateTime.now().subtract(
+            const Duration(minutes: 5),
+          );
+          return lastSeen.toDate().isAfter(fiveMinutesAgo);
+        });
+  }
+
+  // ============ INVITATIONS ============
+
+  @override
+  Future<String> generateInviteCode(String userId) async {
+    // Generate a simple 6-character alphanumeric code
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+    final random = math.Random();
+    final code = String.fromCharCodes(
+      Iterable.generate(
+        6,
+        (_) => chars.codeUnitAt(random.nextInt(chars.length)),
+      ),
+    );
+
+    // Store in invite_codes collection
+    await _firestore.collection('invite_codes').doc(code).set({
+      'userId': userId,
+      'createdAt': FieldValue.serverTimestamp(),
     });
+
+    return code;
+  }
+
+  @override
+  Future<void> redeemInviteCode(String userId, String code) async {
+    final cleanCode = code.trim().toUpperCase();
+    if (cleanCode.isEmpty) {
+      throw Exception('Invite code cannot be empty.');
+    }
+
+    final doc = await _firestore
+        .collection('invite_codes')
+        .doc(cleanCode)
+        .get();
+
+    if (!doc.exists) {
+      throw Exception('Invalid or expired invite code.');
+    }
+
+    final data = doc.data()!;
+    final partnerId = data['userId'] as String;
+
+    if (partnerId == userId) {
+      throw Exception('You cannot use your own invite code.');
+    }
+
+    // Check if already friends
+    final friendDoc = await _firestore
+        .collection('users')
+        .doc(userId)
+        .collection('friends')
+        .doc(partnerId)
+        .get();
+
+    if (friendDoc.exists) {
+      throw Exception('You are already partners with this user.');
+    }
+
+    // Add friend connections in both directions
+    await addFriend(userId, partnerId);
+
+    // Delete code (single-use) to prevent abuse
+    await doc.reference.delete();
   }
 }

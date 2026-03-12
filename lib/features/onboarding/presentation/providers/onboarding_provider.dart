@@ -14,6 +14,7 @@ import 'package:emerge_app/features/gamification/presentation/providers/user_sta
 import 'package:emerge_app/features/habits/domain/entities/habit.dart';
 import 'package:emerge_app/features/habits/presentation/providers/habit_providers.dart';
 import 'package:emerge_app/features/habits/presentation/providers/dashboard_state_provider.dart';
+import 'package:emerge_app/features/social/presentation/providers/tribes_provider.dart';
 import 'package:uuid/uuid.dart';
 
 part 'onboarding_provider.g.dart';
@@ -55,15 +56,13 @@ class OnboardingController extends _$OnboardingController {
 
         // Update the profile to mark onboarding as complete
         final updatedProfile = currentProfile.copyWith(
-          onboardingProgress: 4, // Mark as completed (was 5)
+          onboardingProgress:
+              4, // Mark as completed (3 pre-reveal steps + reveal)
           onboardingCompletedAt: DateTime.now(),
         );
 
-        // Save using UserProfileRepository (upsert)
-        await userProfileRepo.createProfile(updatedProfile);
-
-        // SYNC: Also save to user_stats collection for the router to see it
-        await userStatsRepo.saveUserStats(updatedProfile);
+        // SYNC: Atomically save to both users and user_stats collections
+        await userStatsRepo.syncUserIdentity(updatedProfile);
 
         // Log the onboarding completion activity
         await userStatsRepo.logActivity(
@@ -96,23 +95,29 @@ class OnboardingController extends _$OnboardingController {
     if (user?.isNotEmpty == true) {
       final userProfileRepo = ref.read(userProfileRepositoryProvider);
 
-      // Fetch existing profile or create new one
-      // Use try-catch to handle provider disposal
-      UserProfile? existingProfileAsync;
-      try {
-        existingProfileAsync = await ref.read(userProfileProvider.future);
-      } catch (_) {
-        // Provider was disposed, create a new profile
-        existingProfileAsync = null;
-      }
+      // Fetch existing profile directly from repository (not provider) to avoid disposal issues
+      // The provider might be disposed during navigation, but repository always works
+      final existingProfileResult = await userProfileRepo.getProfile(user!.id);
 
+      // Get existing profile or use onboarding state as source of truth
+      final UserProfile? existingProfile = existingProfileResult.fold(
+        (failure) => null,
+        (profile) => profile,
+      );
+
+      // Prefer onboarding state values (most recent user selections) over stored values
       final updatedProfile =
-          existingProfileAsync?.copyWith(
-            archetype: onboardingState.selectedArchetype ?? UserArchetype.none,
-            motive: onboardingState.motive,
-            why: onboardingState.why,
-            anchors: onboardingState.anchors,
-            habitStacks: onboardingState.habitStacks,
+          existingProfile?.copyWith(
+            archetype:
+                onboardingState.selectedArchetype ?? existingProfile.archetype,
+            motive: onboardingState.motive ?? existingProfile.motive,
+            why: onboardingState.why ?? existingProfile.why,
+            anchors: onboardingState.anchors.isNotEmpty
+                ? onboardingState.anchors
+                : existingProfile.anchors,
+            habitStacks: onboardingState.habitStacks.isNotEmpty
+                ? onboardingState.habitStacks
+                : existingProfile.habitStacks,
             onboardingProgress: onboardingState.currentMilestoneStep,
             skippedOnboardingSteps: _getSkippedStepsList(onboardingState),
             onboardingCompletedAt: onboardingState.currentMilestoneStep >= 4
@@ -120,7 +125,7 @@ class OnboardingController extends _$OnboardingController {
                 : null,
           ) ??
           UserProfile(
-            uid: user!.id,
+            uid: user.id,
             archetype: onboardingState.selectedArchetype ?? UserArchetype.none,
             motive: onboardingState.motive,
             why: onboardingState.why,
@@ -134,19 +139,23 @@ class OnboardingController extends _$OnboardingController {
                 : null,
           );
 
-      // Use createProfile for upsert behavior (merges if exists)
-      final result = await userProfileRepo.createProfile(updatedProfile);
-
-      // SYNC: Also save to user_stats collection for the router/gamification systems
+      // SYNC: Atomically save to both users and user_stats collections
       final userStatsRepo = ref.read(userStatsRepositoryProvider);
-      await userStatsRepo.saveUserStats(updatedProfile);
-
-      result.fold(
-        (error) => AppLogger.e('Failed to save onboarding data: $error'),
-        (_) => null,
-      );
+      await userStatsRepo.syncUserIdentity(updatedProfile);
 
       if (onboardingState.currentMilestoneStep >= 4) {
+        // Officially join the archetype club
+        if (updatedProfile.archetype != UserArchetype.none) {
+          try {
+            final tribeRepo = ref.read(tribeRepositoryProvider);
+            final club = await tribeRepo.getArchetypeClub(updatedProfile.archetype.name);
+            if (club != null) {
+              await tribeRepo.joinClub(user.id, club.id);
+            }
+          } catch (e, stack) {
+            AppLogger.e('Failed to join official club during onboarding', e, stack);
+          }
+        }
         await completeOnboarding();
       }
     }
@@ -209,25 +218,19 @@ class OnboardingController extends _$OnboardingController {
       completedMilestones: completed,
     );
 
-    ref.read(onboardingStateControllerProvider.notifier).update((state) => updatedState);
+    ref
+        .read(onboardingStateControllerProvider.notifier)
+        .update((state) => updatedState);
 
-    // Save progress to user profile FIRST (includes archetype, motive, etc.)
-    // This ensures the archetype is saved before we do anything else
+    // Save progress to user profile (includes archetype, motive, progress, etc.)
+    // Uses atomic batch write to both users and user_stats under the hood
     await saveOnboardingData();
-
-    // Log the current state for debugging
-    final stateAfterSave = ref.read(onboardingStateControllerProvider);
-    AppLogger.i('After saveOnboardingData: selectedArchetype=${stateAfterSave.selectedArchetype}, motive=${stateAfterSave.motive}');
-
-    // Small delay to ensure Firestore write has propagated
-    await Future.delayed(const Duration(milliseconds: 300));
 
     // Connect to gamification system by logging the milestone completion
     final user = ref.read(authStateChangesProvider).value;
     if (user?.isNotEmpty == true) {
       try {
         final userStatsRepo = ref.read(userStatsRepositoryProvider);
-        final userProfileRepo = ref.read(userProfileRepositoryProvider);
 
         // Log the milestone completion activity
         await userStatsRepo.logActivity(
@@ -237,20 +240,7 @@ class OnboardingController extends _$OnboardingController {
           date: DateTime.now(),
         );
 
-        // Read from user_stats collection (not users collection) to get the archetype that was just saved
-        final statsProfile = await userStatsRepo.getUserStats(user.id);
-        AppLogger.i('Fetched from user_stats: archetype=${statsProfile.archetype}, motive=${statsProfile.motive}');
-
-        // Use the profile from user_stats (which has the correct archetype) and only update onboardingProgress
-        final updatedProfile = statsProfile.copyWith(
-          onboardingProgress: milestoneIndex + 1,
-        );
-
-        // Save to BOTH collections to ensure sync
-        await userProfileRepo.createProfile(updatedProfile);
-        await userStatsRepo.saveUserStats(updatedProfile);
-
-        AppLogger.i('Milestone $milestoneIndex completed: progress=${updatedProfile.onboardingProgress}, archetype=${updatedProfile.archetype}');
+        AppLogger.i('Milestone $milestoneIndex completed');
       } catch (e, stack) {
         AppLogger.e(
           'Error updating gamification stats for milestone completion',
@@ -267,9 +257,7 @@ class OnboardingController extends _$OnboardingController {
 
     if (user?.isNotEmpty == true && state.habitStacks.isNotEmpty) {
       // Use DashboardNotifier for optimistic updates
-      final dashboardNotifier = ref.read(
-        dashboardStateProvider.notifier,
-      );
+      final dashboardNotifier = ref.read(dashboardStateProvider.notifier);
       // We only create one habit per stack (the action). The anchor is treated as a cue.
       for (int i = 0; i < state.habitStacks.length; i++) {
         final stack = state.habitStacks[i];
@@ -379,7 +367,8 @@ class OnboardingState extends Equatable {
   final String? why;
   final List<String> anchors;
   final List<HabitStack> habitStacks;
-  final int currentMilestoneStep; // 0-4 (4-step flow)
+  final int
+  currentMilestoneStep; // 0-3 (3-step flow: identity, first-habit, world-reveal)
   final List<bool>
   completedMilestones; // [archetype, attributes, first_habit, world_reveal]
   final List<bool> skippedMilestones; // Track which steps user skipped
@@ -401,8 +390,8 @@ class OnboardingState extends Equatable {
     this.anchors = const [],
     this.habitStacks = const [],
     this.currentMilestoneStep = 0,
-    this.completedMilestones = const [false, false, false, false],
-    this.skippedMilestones = const [false, false, false, false],
+    this.completedMilestones = const [false, false, false, false, false],
+    this.skippedMilestones = const [false, false, false, false, false],
   });
 
   OnboardingState copyWith({
@@ -449,7 +438,7 @@ class OnboardingState extends Equatable {
   ];
 }
 
-@riverpod
+@Riverpod(keepAlive: true)
 class OnboardingStateController extends _$OnboardingStateController {
   @override
   OnboardingState build() => const OnboardingState();
@@ -457,7 +446,8 @@ class OnboardingStateController extends _$OnboardingStateController {
   void updateState(OnboardingState newState) => state = newState;
 
   // Riverpod 3.x: update method for compatibility with existing code
-  void update(OnboardingState Function(OnboardingState) fn) => state = fn(state);
+  void update(OnboardingState Function(OnboardingState) fn) =>
+      state = fn(state);
 }
 
 // Keep legacy providers for backward compatibility if needed, or refactor screens to use onboardingStateControllerProvider
@@ -490,31 +480,30 @@ List<OnboardingMilestone> activeMilestones(Ref ref) {
     progress = userStatsAsync.value?.onboardingProgress ?? 0;
   }
 
-  // Define the 4 streamlined onboarding milestones
-  // 1. Identity Studio (Archetype)
-  // 2. Shape Your Identity (Attributes)
-  // 3. First Identity Vote (First Habit)
-  // 4. World Reveal
+  // Define the 4 steps in the flow
+  // 1. Identity Select (Identity Studio Page 0)
+  // 2. Motive Select (Identity Studio Page 1)
+  // 3. First Identity Vote (First Habit Screen)
+  // 4. Reveal Your World (World Reveal Screen)
   final allMilestones = [
     OnboardingMilestone(
       order: 1,
-      title: 'Choose Your North Star',
-      description:
-          'Select the identity archetype that resonates with who you want to become',
+      title: 'Define Your Archetype',
+      description: 'Select the identity that resonates with you',
       routePath: '/onboarding/identity-studio',
-      icon: Icons.wb_sunny,
+      icon: Icons.person_outline,
       isCompleted: progress > 0,
-      canSkip: true,
+      canSkip: false,
       backgroundImageUrl: null,
     ),
     OnboardingMilestone(
       order: 2,
-      title: 'Shape Your Identity',
-      description: 'Allocate points to your core attributes',
-      routePath: '/onboarding/map-attributes',
-      icon: Icons.psychology,
+      title: 'Find Your Motive',
+      description: 'Why do you want to embark on this journey?',
+      routePath: '/onboarding/identity-studio',
+      icon: Icons.auto_awesome,
       isCompleted: progress > 1,
-      canSkip: true,
+      canSkip: false,
       backgroundImageUrl: null,
     ),
     OnboardingMilestone(
@@ -522,7 +511,7 @@ List<OnboardingMilestone> activeMilestones(Ref ref) {
       title: 'Your First Identity Vote',
       description: 'Prove to yourself you are becoming who you aspire to be',
       routePath: '/onboarding/first-habit',
-      icon: Icons.link,
+      icon: Icons.check_circle_outline,
       isCompleted: progress > 2,
       canSkip: true,
       backgroundImageUrl: null,
@@ -539,7 +528,6 @@ List<OnboardingMilestone> activeMilestones(Ref ref) {
     ),
   ];
 
-  // Return only the current uncompleted milestone for active onboarding
   // If all milestones completed, return empty list
   if (progress >= 4) return [];
 

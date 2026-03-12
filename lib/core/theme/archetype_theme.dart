@@ -477,15 +477,8 @@ class ArchetypeTheme {
     assetPath: 'assets/icons/app_icon.png',
     avatarBasePath: 'assets/images/avatars/base/athlete',
     avatarEvolvedPath: null,
-    suggestedMotives: const ['I want to explore', 'I want to find my path'],
-    suggestedHabits: const [
-      ArchetypeHabitSuggestion(
-        title: 'Walk',
-        description: 'Go for a walk',
-        anchor: 'After lunch',
-        icon: Icons.directions_walk,
-      ),
-    ],
+    suggestedMotives: const [],
+    suggestedHabits: const [],
     strengths: const ['Adaptability', 'Curiosity'],
     weaknesses: const ['Lack of specialization'],
     habitLoop: 'Exploration leads to variety.',

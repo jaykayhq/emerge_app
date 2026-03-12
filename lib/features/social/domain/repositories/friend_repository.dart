@@ -18,4 +18,9 @@ abstract class FriendRepository {
   Future<List<Friend>> getOnlinePartners(String userId);
   Stream<List<PartnerRequest>> watchPendingRequests(String userId);
   Stream<List<Friend>> watchOnlinePartners(String userId);
+  Stream<bool> watchOnlineStatus(String userId);
+
+  // Invitation System
+  Future<String> generateInviteCode(String userId);
+  Future<void> redeemInviteCode(String userId, String code);
 }

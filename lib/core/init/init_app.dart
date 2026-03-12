@@ -1,4 +1,5 @@
 import 'package:emerge_app/core/config/app_config.dart';
+import 'package:emerge_app/core/data/seed_runner.dart';
 import 'package:emerge_app/core/security/app_check_service.dart';
 import 'package:emerge_app/core/services/notification_service.dart';
 import 'package:emerge_app/features/monetization/data/repositories/revenue_cat_repository.dart';
@@ -6,7 +7,7 @@ import 'package:emerge_app/features/onboarding/data/repositories/local_settings_
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:flutter/foundation.dart' show kDebugMode, kIsWeb;
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:emerge_app/firebase_options.dart';
 
@@ -21,6 +22,28 @@ Future<void> initApp() async {
   // Initialize Firebase (Required before all others)
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
+  // Initialize App Check immediately after Firebase and BEFORE any other Firebase service
+  if (AppConfig.enableFirebaseAppCheck) {
+    try {
+      await AppCheckService.initialize();
+      debugPrint('✅ App Check initialized');
+    } catch (e) {
+      debugPrint('⚠️ App Check initialization failed: $e');
+    }
+  } else {
+    debugPrint('⚠️ Firebase App Check is disabled via config');
+  }
+
+  // Seed initial data (clubs and challenges) - safe to run multiple times
+  if (kDebugMode && !kIsWeb) {
+    try {
+      await seedOfficialClubs();
+      await seedChallenges();
+    } catch (e) {
+      debugPrint('⚠️ Seeding initial data failed: $e');
+    }
+  }
+
   // 1. Initialize Remote Config first (as other services may depend on its values)
   try {
     await AppConfig.initializeRemoteConfig();
@@ -32,15 +55,6 @@ Future<void> initApp() async {
   // 2. Parallelize the remaining initializations to reduce startup time
   // Each task is wrapped in its own try-catch to ensure one failure doesn't block the others
   await Future.wait([
-    // App Check
-    () async {
-      try {
-        await AppCheckService.initialize();
-      } catch (e) {
-        debugPrint('⚠️ App Check initialization failed: $e');
-      }
-    }(),
-
     // AdMob
     () async {
       if (!kIsWeb) {

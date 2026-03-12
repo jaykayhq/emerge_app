@@ -1,17 +1,18 @@
+import 'package:emerge_app/core/presentation/widgets/app_error_widget.dart';
 import 'package:emerge_app/core/presentation/widgets/emerge_branding.dart';
+import 'package:emerge_app/core/presentation/widgets/emerge_loading_skeleton.dart';
 import 'package:emerge_app/core/theme/app_theme.dart';
 import 'package:emerge_app/features/auth/presentation/providers/auth_providers.dart';
-import 'package:emerge_app/features/social/data/services/referral_service.dart';
 import 'package:emerge_app/features/social/domain/entities/social_entities.dart';
 import 'package:emerge_app/features/social/presentation/providers/friend_provider.dart';
+import 'package:emerge_app/features/social/presentation/screens/invite_code_dialog.dart';
 import 'package:emerge_app/features/monetization/presentation/providers/contract_provider.dart';
 import 'package:emerge_app/features/monetization/domain/entities/habit_contract.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
-import 'package:share_plus/share_plus.dart';
+import 'package:go_router/go_router.dart';
 
 /// Friends Screen - Accountability Partners
 class FriendsScreen extends ConsumerStatefulWidget {
@@ -227,16 +228,12 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen> {
                         ),
                       ),
                 loading: () => const SliverToBoxAdapter(
-                  child: Center(
-                    child: CircularProgressIndicator(color: EmergeColors.teal),
-                  ),
+                  child: EmergeLoadingSkeleton(itemCount: 5, showAvatar: true),
                 ),
-                error: (_, _) => const SliverToBoxAdapter(
-                  child: Center(
-                    child: Text(
-                      'Failed to load partners',
-                      style: TextStyle(color: Colors.white),
-                    ),
+                error: (error, _) => SliverToBoxAdapter(
+                  child: AppErrorWidget(
+                    message: 'Could not load your accountability circle',
+                    onRetry: () => ref.invalidate(partnersListStreamProvider),
                   ),
                 ),
               ),
@@ -260,358 +257,11 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen> {
       return;
     }
 
-    showModalBottomSheet(
+    showDialog(
       context: context,
-      backgroundColor: EmergeColors.background,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      isScrollControlled: true,
-      builder: (context) => DraggableScrollableSheet(
-        initialChildSize: 0.6,
-        minChildSize: 0.4,
-        maxChildSize: 0.9,
-        expand: false,
-        builder: (context, scrollController) => Container(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            children: [
-              Container(
-                width: 40,
-                height: 4,
-                margin: const EdgeInsets.only(bottom: 20),
-                decoration: BoxDecoration(
-                  color: EmergeColors.glassBorder,
-                  borderRadius: BorderRadius.circular(2),
-                ),
-              ),
-              const Text(
-                'Invite Partners',
-                style: TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
-                ),
-              ),
-              const Gap(8),
-              Text(
-                'Earn 500 XP for each partner who joins!',
-                style: TextStyle(fontSize: 14, color: EmergeColors.teal),
-              ),
-              const Gap(24),
-              Expanded(
-                child: SingleChildScrollView(
-                  controller: scrollController,
-                  child: FutureBuilder<ReferralStats>(
-                    future: ReferralService().getReferralStats(user.id),
-                    builder: (context, snapshot) {
-                      final referralCode =
-                          snapshot.data?.referralCode ?? 'Loading...';
-                      final totalReferrals = snapshot.data?.totalReferrals ?? 0;
-                      final pendingReferrals =
-                          snapshot.data?.pendingReferrals ?? 0;
-                      final xpEarned = snapshot.data?.xpEarned ?? 0;
-
-                      return Column(
-                        children: [
-                          // Referral Code Card
-                          Container(
-                            padding: const EdgeInsets.all(20),
-                            decoration: BoxDecoration(
-                              color: EmergeColors.glassWhite,
-                              borderRadius: BorderRadius.circular(16),
-                              border: Border.all(
-                                color: EmergeColors.glassBorder,
-                              ),
-                            ),
-                            child: Column(
-                              children: [
-                                const Text(
-                                  'Your Referral Code',
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    color: Colors.white70,
-                                  ),
-                                ),
-                                const Gap(8),
-                                GestureDetector(
-                                  onTap: () async {
-                                    final messenger = ScaffoldMessenger.of(
-                                      context,
-                                    );
-                                    await Clipboard.setData(
-                                      ClipboardData(text: referralCode),
-                                    );
-                                    if (!mounted) return;
-                                    messenger.showSnackBar(
-                                      SnackBar(
-                                        content: Text(
-                                          'Referral code copied: $referralCode',
-                                        ),
-                                        duration: const Duration(seconds: 2),
-                                        behavior: SnackBarBehavior.floating,
-                                      ),
-                                    );
-                                  },
-                                  child: Container(
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 24,
-                                      vertical: 12,
-                                    ),
-                                    decoration: BoxDecoration(
-                                      color: EmergeColors.teal.withValues(
-                                        alpha: 0.2,
-                                      ),
-                                      borderRadius: BorderRadius.circular(8),
-                                      border: Border.all(
-                                        color: EmergeColors.teal,
-                                      ),
-                                    ),
-                                    child: Text(
-                                      referralCode,
-                                      style: const TextStyle(
-                                        fontSize: 20,
-                                        fontWeight: FontWeight.bold,
-                                        color: EmergeColors.teal,
-                                        letterSpacing: 2,
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                                const Gap(8),
-                                Text(
-                                  'Tap to copy',
-                                  style: TextStyle(
-                                    fontSize: 11,
-                                    color: Colors.white54,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          const Gap(16),
-                          // Stats Row
-                          Row(
-                            children: [
-                              Expanded(
-                                child: _ReferralStatCard(
-                                  icon: Icons.people,
-                                  label: 'Successful',
-                                  value: '$totalReferrals',
-                                ),
-                              ),
-                              const Gap(12),
-                              Expanded(
-                                child: _ReferralStatCard(
-                                  icon: Icons.pending,
-                                  label: 'Pending',
-                                  value: '$pendingReferrals',
-                                ),
-                              ),
-                              const Gap(12),
-                              Expanded(
-                                child: _ReferralStatCard(
-                                  icon: Icons.bolt,
-                                  label: 'XP Earned',
-                                  value: '$xpEarned',
-                                ),
-                              ),
-                            ],
-                          ),
-                          const Gap(24),
-                          // Share Button
-                          GestureDetector(
-                            onTap: () {
-                              final link =
-                                  'https://emerge.app/referral?code=$referralCode';
-                              SharePlus.instance.share(
-                                ShareParams(
-                                  text:
-                                      'Join me on Emerge! Let\'s build better habits together. '
-                                      'Use my code: $referralCode 🚀\n\n$link',
-                                ),
-                              );
-                            },
-                            child: Container(
-                              width: double.infinity,
-                              padding: const EdgeInsets.all(16),
-                              decoration: BoxDecoration(
-                                gradient: LinearGradient(
-                                  colors: [
-                                    EmergeColors.teal,
-                                    EmergeColors.coral,
-                                  ],
-                                ),
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              child: const Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Icon(Icons.share, color: Colors.white),
-                                  Gap(12),
-                                  Text(
-                                    'Share Referral Link',
-                                    style: TextStyle(
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.bold,
-                                      color: Colors.white,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                          const Gap(24),
-                          // Reward Milestones
-                          Container(
-                            padding: const EdgeInsets.all(16),
-                            decoration: BoxDecoration(
-                              color: EmergeColors.glassWhite,
-                              borderRadius: BorderRadius.circular(12),
-                              border: Border.all(
-                                color: EmergeColors.glassBorder,
-                              ),
-                            ),
-                            child: Column(
-                              children: [
-                                Row(
-                                  children: [
-                                    Icon(
-                                      Icons.card_giftcard,
-                                      color: Colors.amber.shade700,
-                                    ),
-                                    const Gap(8),
-                                    const Text(
-                                      'Reward Milestones',
-                                      style: TextStyle(
-                                        fontSize: 14,
-                                        fontWeight: FontWeight.bold,
-                                        color: Colors.white,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                                const Gap(12),
-                                _MilestoneRow(
-                                  count: 3,
-                                  reward: '1,500 XP',
-                                  achieved: totalReferrals >= 3,
-                                ),
-                                const Gap(8),
-                                _MilestoneRow(
-                                  count: 5,
-                                  reward: 'Exclusive Title',
-                                  achieved: totalReferrals >= 5,
-                                ),
-                                const Gap(8),
-                                _MilestoneRow(
-                                  count: 10,
-                                  reward: 'Exclusive Badge',
-                                  achieved: totalReferrals >= 10,
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      );
-                    },
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-// ============ REFERRAL WIDGETS ============
-
-class _ReferralStatCard extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final String value;
-
-  const _ReferralStatCard({
-    required this.icon,
-    required this.label,
-    required this.value,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: EmergeColors.glassWhite,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: EmergeColors.glassBorder),
-      ),
-      child: Column(
-        children: [
-          Icon(icon, color: EmergeColors.teal, size: 20),
-          const Gap(6),
-          Text(
-            value,
-            style: const TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-              color: Colors.white,
-            ),
-          ),
-          const Gap(2),
-          Text(
-            label,
-            style: TextStyle(fontSize: 11, color: AppTheme.textSecondaryDark),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _MilestoneRow extends StatelessWidget {
-  final int count;
-  final String reward;
-  final bool achieved;
-
-  const _MilestoneRow({
-    required this.count,
-    required this.reward,
-    required this.achieved,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Container(
-          width: 24,
-          height: 24,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            color: achieved ? EmergeColors.teal : EmergeColors.glassWhite,
-            border: Border.all(
-              color: achieved ? EmergeColors.teal : EmergeColors.glassBorder,
-            ),
-          ),
-          child: achieved
-              ? const Icon(Icons.check, size: 14, color: Colors.white)
-              : null,
-        ),
-        const Gap(12),
-        Expanded(
-          child: Text(
-            '$count Referrals — $reward',
-            style: TextStyle(
-              fontSize: 13,
-              color: achieved ? Colors.white : AppTheme.textSecondaryDark,
-              fontWeight: achieved ? FontWeight.bold : FontWeight.normal,
-            ),
-          ),
-        ),
-      ],
+      barrierDismissible: true,
+      barrierColor: Colors.black.withValues(alpha: 0.6),
+      builder: (context) => const InviteCodeDialog(),
     );
   }
 }
@@ -658,8 +308,8 @@ class _ActivePartnersSection extends ConsumerWidget {
                     '...',
                     style: TextStyle(fontSize: 11, color: EmergeColors.teal),
                   ),
-                  error: (_, _) => const Text(
-                    '0 Online',
+                  error: (error, _) => const Text(
+                    'Offline',
                     style: TextStyle(fontSize: 11, color: EmergeColors.teal),
                   ),
                 ),
@@ -766,16 +416,15 @@ class _ActivePartnersSection extends ConsumerWidget {
                 ),
               );
             },
-            loading: () => const SizedBox(
-              height: 70,
-              child: Center(
-                child: CircularProgressIndicator(
-                  color: EmergeColors.teal,
-                  strokeWidth: 2,
-                ),
-              ),
+            loading: () => const EmergeLoadingSkeleton(
+              itemCount: 1,
+              showAvatar: true,
+              itemHeight: 80,
             ),
-            error: (_, _) => const SizedBox.shrink(),
+            error: (error, _) => AppErrorWidget(
+              message: 'Could not load active partners',
+              onRetry: () => ref.invalidate(onlinePartnersStreamProvider),
+            ),
           ),
         ],
       ),
@@ -835,8 +484,11 @@ class _PartnerRequestsSection extends ConsumerWidget {
           ),
         );
       },
-      loading: () => const SizedBox.shrink(),
-      error: (_, _) => const SizedBox.shrink(),
+      loading: () => const EmergeLoadingSkeleton(itemCount: 1, showAvatar: true),
+      error: (error, _) => AppErrorWidget(
+        message: 'Could not load partner requests',
+        onRetry: () => ref.invalidate(pendingPartnerRequestsStreamProvider),
+      ),
     );
   }
 }
@@ -1045,8 +697,11 @@ class _ActiveContractsSection extends ConsumerWidget {
           ),
         );
       },
-      loading: () => const SizedBox.shrink(),
-      error: (_, _) => const SizedBox.shrink(),
+      loading: () => const EmergeLoadingSkeleton(itemCount: 1, showAvatar: true),
+      error: (error, _) => AppErrorWidget(
+        message: 'Could not load active contracts',
+        onRetry: () => ref.invalidate(activeOnlyContractsProvider),
+      ),
     );
   }
 }
@@ -1456,6 +1111,60 @@ class _FriendsTabContentState extends ConsumerState<FriendsTabContent> {
 
     return CustomScrollView(
       slivers: [
+        // Header with Invite Button
+        SliverToBoxAdapter(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text(
+                  'PARTNERS',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                    letterSpacing: 1,
+                  ),
+                ),
+                Row(
+                  children: [
+                    TextButton(
+                      onPressed: () => context.push('/tribes/leaderboard?tab=friends'),
+                      child: const Text(
+                        'View Rankings',
+                        style: TextStyle(
+                          color: EmergeColors.teal,
+                          fontSize: 13,
+                        ),
+                      ),
+                    ),
+                    const Gap(8),
+                    GestureDetector(
+                      onTap: () => _showInviteSheet(context),
+                      child: Container(
+                        width: 36,
+                        height: 36,
+                        decoration: const BoxDecoration(
+                          color: EmergeColors.teal,
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(
+                          Icons.add,
+                          color: Colors.white,
+                          size: 20,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ),
+
+        const SliverToBoxAdapter(child: Gap(16)),
+
         // Search Bar
         SliverToBoxAdapter(
           child: Padding(
@@ -1511,6 +1220,11 @@ class _FriendsTabContentState extends ConsumerState<FriendsTabContent> {
 
         const SliverToBoxAdapter(child: Gap(24)),
 
+        // Active Contracts Section
+        SliverToBoxAdapter(child: _ActiveContractsSection()),
+
+        const SliverToBoxAdapter(child: Gap(24)),
+
         // Your Accountability Circle Section
         SliverToBoxAdapter(
           child: Padding(
@@ -1540,12 +1254,46 @@ class _FriendsTabContentState extends ConsumerState<FriendsTabContent> {
         // Partners List
         friendsAsync.when(
           data: (friends) => friends.isEmpty
-              ? const SliverToBoxAdapter(
+              ? SliverToBoxAdapter(
                   child: Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 16),
-                    child: Text(
-                      'No accountability partners yet',
-                      style: TextStyle(color: Colors.white54),
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    child: Container(
+                      padding: const EdgeInsets.all(32),
+                      decoration: BoxDecoration(
+                        color: EmergeColors.glassWhite,
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(
+                          color: EmergeColors.glassBorder,
+                        ),
+                      ),
+                      child: Column(
+                        children: [
+                          Icon(
+                            Icons.people_outline,
+                            size: 48,
+                            color: AppTheme.textSecondaryDark.withValues(
+                              alpha: 0.5,
+                            ),
+                          ),
+                          const Gap(16),
+                          Text(
+                            'No accountability partners yet',
+                            style: TextStyle(
+                              color: AppTheme.textSecondaryDark,
+                              fontSize: 14,
+                            ),
+                          ),
+                          const Gap(4),
+                          Text(
+                            'Invite someone to hold you accountable!',
+                            style: TextStyle(
+                              color: AppTheme.textSecondaryDark
+                                  .withValues(alpha: 0.5),
+                              fontSize: 12,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 )
@@ -1556,22 +1304,37 @@ class _FriendsTabContentState extends ConsumerState<FriendsTabContent> {
                   ),
                 ),
           loading: () => const SliverToBoxAdapter(
-            child: Center(
-              child: CircularProgressIndicator(color: EmergeColors.teal),
-            ),
+            child: EmergeLoadingSkeleton(itemCount: 3, showAvatar: true),
           ),
-          error: (_, _) => const SliverToBoxAdapter(
-            child: Center(
-              child: Text(
-                'Failed to load partners',
-                style: TextStyle(color: Colors.white),
-              ),
+          error: (error, _) => SliverToBoxAdapter(
+            child: AppErrorWidget(
+              message: 'Could not load partners',
+              onRetry: () => ref.invalidate(partnersListStreamProvider),
             ),
           ),
         ),
 
         const SliverToBoxAdapter(child: Gap(80)),
       ],
+    );
+  }
+
+  void _showInviteSheet(BuildContext context) {
+    final authState = ref.read(authStateChangesProvider);
+    final user = authState.value;
+
+    if (user == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please sign in to invite partners')),
+      );
+      return;
+    }
+
+    showDialog(
+      context: context,
+      barrierDismissible: true,
+      barrierColor: Colors.black.withValues(alpha: 0.6),
+      builder: (context) => const InviteCodeDialog(),
     );
   }
 }

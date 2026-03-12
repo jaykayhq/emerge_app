@@ -89,6 +89,10 @@ class _EmergeAppState extends ConsumerState<EmergeApp> {
   @override
   void initState() {
     super.initState();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     // Listen to auth state changes to start/stop heartbeat
     ref.listen(authStateChangesProvider, (previous, next) {
       final presenceService = ref.read(onlinePresenceServiceProvider);
@@ -102,10 +106,6 @@ class _EmergeAppState extends ConsumerState<EmergeApp> {
         error: (_, _) => presenceService.stopHeartbeat(),
       );
     });
-  }
-
-  @override
-  Widget build(BuildContext context) {
     final router = ref.watch(routerProvider);
     final themeMode = ref.watch(themeControllerProvider);
 
