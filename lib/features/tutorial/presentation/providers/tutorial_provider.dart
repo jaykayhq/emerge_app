@@ -11,10 +11,12 @@ enum TutorialStep { timeline, worldMap, profile, community, createHabit }
 class TutorialState {
   final Map<TutorialStep, bool> completedSteps;
   final bool enabled;
+  final bool autoShow;
 
   const TutorialState({
     this.completedSteps = const {},
     this.enabled = false,
+    this.autoShow = false,
   });
 
   bool isCompleted(TutorialStep step) => completedSteps[step] ?? false;
@@ -22,10 +24,12 @@ class TutorialState {
   TutorialState copyWith({
     Map<TutorialStep, bool>? completedSteps,
     bool? enabled,
+    bool? autoShow,
   }) {
     return TutorialState(
       completedSteps: completedSteps ?? this.completedSteps,
       enabled: enabled ?? this.enabled,
+      autoShow: autoShow ?? this.autoShow,
     );
   }
 }
@@ -53,6 +57,7 @@ class TutorialNotifier extends _$TutorialNotifier {
     return TutorialState(
       completedSteps: completed,
       enabled: _repository.tutorialsEnabled,
+      autoShow: _repository.tutorialAutoShow,
     );
   }
 
@@ -60,8 +65,11 @@ class TutorialNotifier extends _$TutorialNotifier {
     if (state.isCompleted(step)) return;
 
     await _repository.completeTutorial(step.name);
+    // Disable auto-show after completing a tutorial (one-time show per screen visit)
+    await _repository.disableTutorialAutoShow();
     state = state.copyWith(
       completedSteps: {...state.completedSteps, step: true},
+      autoShow: false,
     );
   }
 
@@ -75,6 +83,7 @@ class TutorialNotifier extends _$TutorialNotifier {
     state = TutorialState(
       completedSteps: completed,
       enabled: _repository.tutorialsEnabled,
+      autoShow: _repository.tutorialAutoShow,
     );
   }
 
@@ -88,6 +97,19 @@ class TutorialNotifier extends _$TutorialNotifier {
     state = TutorialState(
       completedSteps: completed,
       enabled: _repository.tutorialsEnabled,
+      autoShow: _repository.tutorialAutoShow,
     );
+  }
+
+  /// Re-enable auto-show for tutorials (called when navigating to a new screen)
+  Future<void> enableTutorialAutoShow() async {
+    if (!state.enabled) return;
+    await _repository.enableTutorialAutoShow();
+    state = state.copyWith(autoShow: true);
+  }
+
+  /// Check if tutorial should auto-show on current screen visit
+  bool shouldShowTutorial() {
+    return state.enabled && state.autoShow;
   }
 }

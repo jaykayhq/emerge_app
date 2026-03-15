@@ -44,7 +44,7 @@ final class TutorialNotifierProvider
   }
 }
 
-String _$tutorialNotifierHash() => r'4cb5f78c7ffaf7c1f724674f64653f939751cf96';
+String _$tutorialNotifierHash() => r'3d865199eb296aa51c5c8abb4f406383c2a5cb4f';
 
 /// Provider for managing tutorial state
 

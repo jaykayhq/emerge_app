@@ -12,6 +12,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
 import 'package:go_router/go_router.dart';
 
+export 'package:emerge_app/features/social/presentation/providers/tribes_provider.dart' show TribeStats;
+
 class LeaderboardScreen extends ConsumerStatefulWidget {
   final int initialTabIndex;
 
@@ -246,86 +248,50 @@ class _WorldLeaderboardTab extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final tribesAsync = ref.watch(allArchetypeClubsProvider);
-    
+
     return tribesAsync.when(
       data: (tribes) {
-        // Sort tribes by total XP for the world leaderboard
-        final sortedTribes = List.from(tribes)
-          ..sort((a, b) => b.totalXp.compareTo(a.totalXp));
-          
         return ListView.builder(
           padding: const EdgeInsets.symmetric(horizontal: 16),
-          itemCount: sortedTribes.length,
+          itemCount: tribes.length,
           itemBuilder: (context, index) {
-            final tribe = sortedTribes[index];
+            final tribe = tribes[index];
+            // Watch real-time stats for each tribe
+            final statsAsync = ref.watch(realTimeTribeStatsProvider(tribe.id));
+
             return Padding(
               padding: const EdgeInsets.only(bottom: 12),
-              child: Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: AppTheme.surfaceDark,
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(
-                    color: Colors.white.withValues(alpha: 0.1),
+              child: statsAsync.when(
+                data: (stats) {
+                  // Sort by real-time total XP
+                  final sortedIndex = tribes.indexWhere((t) => t.id == tribe.id);
+                  return _TribeLeaderboardItem(
+                    tribe: tribe,
+                    stats: stats,
+                    rank: sortedIndex + 1,
+                  );
+                },
+                loading: () => _TribeLeaderboardItem(
+                  tribe: tribe,
+                  stats: TribeStats(
+                    memberCount: 0,
+                    totalXp: 0,
+                    totalHabitsCompleted: 0,
+                    totalChallengesCompleted: 0,
                   ),
+                  rank: index + 1,
+                  isLoading: true,
                 ),
-                child: Row(
-                  children: [
-                    Text(
-                      '${index + 1}',
-                      style: TextStyle(
-                        color: index < 3 ? AppTheme.primary : AppTheme.textSecondaryDark,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 18,
-                      ),
-                    ),
-                    const Gap(16),
-                    CircleAvatar(
-                      backgroundColor: AppTheme.primary.withValues(alpha: 0.2),
-                      child: Icon(Icons.shield, color: AppTheme.primary, size: 20),
-                    ),
-                    const Gap(16),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            tribe.name,
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          Text(
-                            '${tribe.memberCount} members',
-                            style: TextStyle(
-                              color: AppTheme.textSecondaryDark,
-                              fontSize: 12,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.end,
-                      children: [
-                        Text(
-                          '${tribe.totalXp} XP',
-                          style: TextStyle(
-                            color: AppTheme.primary,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        Text(
-                          'LEVEL ${tribe.level}',
-                          style: TextStyle(
-                            color: AppTheme.textSecondaryDark,
-                            fontSize: 10,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
+                error: (_, _) => _TribeLeaderboardItem(
+                  tribe: tribe,
+                  stats: TribeStats(
+                    memberCount: 0,
+                    totalXp: 0,
+                    totalHabitsCompleted: 0,
+                    totalChallengesCompleted: 0,
+                  ),
+                  rank: index + 1,
+                  isError: true,
                 ),
               ),
             );
@@ -336,6 +302,97 @@ class _WorldLeaderboardTab extends ConsumerWidget {
       error: (err, _) => AppErrorWidget(
         message: 'Could not load world rankings',
         onRetry: () => ref.invalidate(allArchetypeClubsProvider),
+      ),
+    );
+  }
+}
+
+class _TribeLeaderboardItem extends StatelessWidget {
+  final dynamic tribe;
+  final TribeStats stats;
+  final int rank;
+  final bool isLoading;
+  final bool isError;
+
+  const _TribeLeaderboardItem({
+    required this.tribe,
+    required this.stats,
+    required this.rank,
+    this.isLoading = false,
+    this.isError = false,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final displayXp = isLoading ? '...' : isError ? 'Error' : '${stats.totalXp} XP';
+    final displayMembers = isLoading ? '...' : isError ? 'Error' : '${stats.memberCount} members';
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppTheme.surfaceDark,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: Colors.white.withValues(alpha: 0.1),
+        ),
+      ),
+      child: Row(
+        children: [
+          Text(
+            '$rank',
+            style: TextStyle(
+              color: rank <= 3 ? AppTheme.primary : AppTheme.textSecondaryDark,
+              fontWeight: FontWeight.bold,
+              fontSize: 18,
+            ),
+          ),
+          const Gap(16),
+          CircleAvatar(
+            backgroundColor: AppTheme.primary.withValues(alpha: 0.2),
+            child: Icon(Icons.shield, color: AppTheme.primary, size: 20),
+          ),
+          const Gap(16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  tribe.name,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                Text(
+                  displayMembers,
+                  style: TextStyle(
+                    color: AppTheme.textSecondaryDark,
+                    fontSize: 12,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Text(
+                displayXp,
+                style: TextStyle(
+                  color: AppTheme.primary,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              Text(
+                'LEVEL ${tribe.level}',
+                style: TextStyle(
+                  color: AppTheme.textSecondaryDark,
+                  fontSize: 10,
+                ),
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }

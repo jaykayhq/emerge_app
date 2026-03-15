@@ -90,7 +90,7 @@ final class OnboardingControllerProvider
 }
 
 String _$onboardingControllerHash() =>
-    r'1c5a37223b014dafa657bcc8dfa10ace70a9f231';
+    r'064de57729c240a43fef208a91a71fae209b8681';
 
 abstract class _$OnboardingController extends $Notifier<bool> {
   bool build();
@@ -219,4 +219,4 @@ final class ActiveMilestonesProvider
   }
 }
 
-String _$activeMilestonesHash() => r'0d4a7322fd2cacceb717ad25d3ddc31371edaad5';
+String _$activeMilestonesHash() => r'bf5d4f785aafde4401d942dc95dd36faac3a006d';

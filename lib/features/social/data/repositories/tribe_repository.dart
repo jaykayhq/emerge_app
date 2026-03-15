@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:emerge_app/features/social/domain/models/tribe.dart';
+import 'package:flutter/foundation.dart';
 
 /// Repository for archetype-based clubs (tribes).
 /// Users are auto-assigned to their archetype club — no user creation.
@@ -109,24 +110,32 @@ class FirestoreTribeRepository implements TribeRepository {
   Future<void> joinClub(String userId, String tribeId) async {
     final tribeRef = _firestore.collection('tribes').doc(tribeId);
 
-    await _firestore.runTransaction((transaction) async {
-      final snapshot = await transaction.get(tribeRef);
-      if (!snapshot.exists) {
-        throw Exception('Club does not exist!');
-      }
+    try {
+      await _firestore.runTransaction((transaction) async {
+        final snapshot = await transaction.get(tribeRef);
+        if (!snapshot.exists) {
+          debugPrint('❌ Tribe $tribeId does not exist!');
+          throw Exception('Club does not exist!');
+        }
 
-      transaction.update(tribeRef, {
-        'members': FieldValue.arrayUnion([userId]),
-        'memberCount': FieldValue.increment(1),
+        transaction.update(tribeRef, {
+          'members': FieldValue.arrayUnion([userId]),
+          'memberCount': FieldValue.increment(1),
+        });
+
+        final userTribeRef = _firestore
+            .collection('users')
+            .doc(userId)
+            .collection('tribes')
+            .doc(tribeId);
+        transaction.set(userTribeRef, {'joinedAt': FieldValue.serverTimestamp()});
+
+        debugPrint('✅ User $userId joined tribe $tribeId successfully');
       });
-
-      final userTribeRef = _firestore
-          .collection('users')
-          .doc(userId)
-          .collection('tribes')
-          .doc(tribeId);
-      transaction.set(userTribeRef, {'joinedAt': FieldValue.serverTimestamp()});
-    });
+    } catch (e) {
+      debugPrint('❌ Error joining tribe $tribeId: $e');
+      rethrow;
+    }
   }
 
   @override

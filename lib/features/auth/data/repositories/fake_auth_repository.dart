@@ -87,11 +87,6 @@ class FakeAuthRepository implements AuthRepository {
     return const Right(null);
   }
 
-  @override
-  Future<Either<Failure, AuthUser>> signInAnonymously() async {
-    return const Left(AuthFailure('Anonymous sign-in has been disabled.'));
-  }
-
   void dispose() {
     _controller.close();
   }
