@@ -4,7 +4,6 @@ import 'package:emerge_app/core/presentation/widgets/emerge_loading_skeleton.dar
 import 'package:emerge_app/core/theme/app_theme.dart';
 import 'package:emerge_app/core/theme/archetype_theme.dart';
 import 'package:emerge_app/core/presentation/widgets/emerge_branding.dart';
-import 'package:emerge_app/features/social/domain/models/tribe.dart';
 import 'package:emerge_app/features/social/presentation/providers/tribes_provider.dart';
 import 'package:emerge_app/features/gamification/presentation/providers/user_stats_providers.dart';
 import 'package:emerge_app/features/social/presentation/providers/friend_provider.dart';
@@ -81,22 +80,8 @@ class _TribeTabContentState extends ConsumerState<TribeTabContent> {
 
                   const Gap(16),
 
-                  // ===== MEMBER COUNT =====
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(Icons.people, color: theme.primaryColor, size: 16),
-                      const Gap(4),
-                      Text(
-                        '${userClub.memberCount} Members',
-                        style: const TextStyle(
-                          fontSize: 12,
-                          color: Colors.white70,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ],
-                  ).animate().fadeIn(delay: 200.ms),
+                  // ===== MEMBER COUNT (Real-time from members array) =====
+                  _RealTimeMemberCount(tribeId: userClub.id).animate().fadeIn(delay: 200.ms),
 
                   const Gap(32),
 
@@ -107,10 +92,11 @@ class _TribeTabContentState extends ConsumerState<TribeTabContent> {
 
                   const Gap(32),
 
-                  // ===== PROGRESS METRICS =====
-                  _TribeProgressMetrics(
+                  // ===== PROGRESS METRICS (Real-time stats) =====
+                  _RealTimeTribeProgressMetrics(
                     isGlobal: _showGlobalActivity,
-                    tribeStats: userClub, // Use tribe totalXp
+                    tribeId: userClub.id,
+                    theme: theme,
                   ).animate().fadeIn(delay: 350.ms),
 
                   const Gap(32),
@@ -226,6 +212,212 @@ class _ArchetypeClubEmblem extends StatelessWidget {
         child: Icon(theme.journeyIcon, size: 42, color: theme.primaryColor),
       ),
     );
+  }
+}
+
+// ============ REAL-TIME MEMBER COUNT ============
+
+class _RealTimeMemberCount extends ConsumerWidget {
+  final String tribeId;
+
+  const _RealTimeMemberCount({required this.tribeId});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final statsAsync = ref.watch(realTimeTribeStatsProvider(tribeId));
+
+    return statsAsync.when(
+      data: (stats) {
+        return Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.people, color: Theme.of(context).primaryColor, size: 16),
+            const Gap(4),
+            Text(
+              '${stats.memberCount} Members',
+              style: const TextStyle(
+                fontSize: 12,
+                color: Colors.white70,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ],
+        );
+      },
+      loading: () => Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.people, color: Theme.of(context).primaryColor, size: 16),
+          const Gap(4),
+          const Text(
+            'Loading...',
+            style: TextStyle(
+              fontSize: 12,
+              color: Colors.white70,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ],
+      ),
+      error: (error, _) => Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.people, color: Theme.of(context).primaryColor, size: 16),
+          const Gap(4),
+          const Text(
+            '-- Members',
+            style: TextStyle(
+              fontSize: 12,
+              color: Colors.white70,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ============ REAL-TIME PROGRESS METRICS ============
+
+class _RealTimeTribeProgressMetrics extends ConsumerWidget {
+  final bool isGlobal;
+  final String tribeId;
+  final ArchetypeTheme theme;
+
+  const _RealTimeTribeProgressMetrics({
+    required this.isGlobal,
+    required this.tribeId,
+    required this.theme,
+  });
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final statsAsync = ref.watch(realTimeTribeStatsProvider(tribeId));
+
+    return statsAsync.when(
+      data: (stats) {
+        final xpScore = stats.totalXp;
+        final habitsCount = stats.totalHabitsCompleted;
+        final questsCount = stats.totalChallengesCompleted;
+
+        return Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                EmergeColors.glassWhite.withValues(alpha: 0.1),
+                EmergeColors.glassWhite.withValues(alpha: 0.05),
+              ],
+            ),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: EmergeColors.glassBorder),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Icon(
+                    isGlobal ? Icons.public : Icons.local_fire_department,
+                    color: isGlobal ? EmergeColors.teal : EmergeColors.coral,
+                    size: 20,
+                  ),
+                  const Gap(8),
+                  Text(
+                    isGlobal ? 'Global Collective Power' : 'Tribe Ascendancy',
+                    style: const TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                      letterSpacing: 1,
+                    ),
+                  ),
+                ],
+              ),
+              const Gap(16),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                children: [
+                  _StatOrb(
+                    label: 'Total XP',
+                    value:
+                        '${xpScore >= 1000 ? '${(xpScore / 1000).toStringAsFixed(1)}k' : xpScore}',
+                    color: EmergeColors.yellow,
+                    icon: Icons.electric_bolt,
+                  ),
+                  _StatOrb(
+                    label: isGlobal ? 'Habits Overcome' : 'Habits Conquered',
+                    value: _formatCount(habitsCount),
+                    color: EmergeColors.teal,
+                    icon: Icons.check_circle_outline,
+                  ),
+                  _StatOrb(
+                    label: 'Quests Beaten',
+                    value: _formatCount(questsCount),
+                    color: EmergeColors.violet,
+                    icon: Icons.emoji_events,
+                  ),
+                ],
+              ),
+            ],
+          ),
+        );
+      },
+      loading: () => Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              EmergeColors.glassWhite.withValues(alpha: 0.1),
+              EmergeColors.glassWhite.withValues(alpha: 0.05),
+            ],
+          ),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: EmergeColors.glassBorder),
+        ),
+        child: const Row(
+          mainAxisAlignment: MainAxisAlignment.spaceAround,
+          children: [
+            _StatOrb(label: 'Total XP', value: '...', color: Colors.grey, icon: Icons.electric_bolt),
+            _StatOrb(label: 'Habits Conquered', value: '...', color: Colors.grey, icon: Icons.check_circle_outline),
+            _StatOrb(label: 'Quests Beaten', value: '...', color: Colors.grey, icon: Icons.emoji_events),
+          ],
+        ),
+      ),
+      error: (error, _) => Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              EmergeColors.glassWhite.withValues(alpha: 0.1),
+              EmergeColors.glassWhite.withValues(alpha: 0.05),
+            ],
+          ),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: EmergeColors.glassBorder),
+        ),
+        child: const Row(
+          mainAxisAlignment: MainAxisAlignment.spaceAround,
+          children: [
+            _StatOrb(label: 'Total XP', value: 'Error', color: Colors.red, icon: Icons.electric_bolt),
+            _StatOrb(label: 'Habits Conquered', value: 'Error', color: Colors.red, icon: Icons.check_circle_outline),
+            _StatOrb(label: 'Quests Beaten', value: 'Error', color: Colors.red, icon: Icons.emoji_events),
+          ],
+        ),
+      ),
+    );
+  }
+
+  String _formatCount(int count) {
+    if (count >= 1000) return '${(count / 1000).toStringAsFixed(1)}k';
+    return '$count';
   }
 }
 
@@ -435,109 +627,6 @@ class _ContributorAvatar extends ConsumerWidget {
       default:
         return EmergeColors.violet;
     }
-  }
-}
-
-// ============ PROGRESS METRICS ============
-
-class _TribeProgressMetrics extends ConsumerWidget {
-  final bool isGlobal;
-  final Tribe tribeStats;
-
-  const _TribeProgressMetrics({
-    required this.isGlobal,
-    required this.tribeStats,
-  });
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final xpScore = tribeStats.totalXp;
-
-    // Fetch real aggregate stats from the tribe document
-    final tribeDocAsync = ref.watch(
-      tribeAggregateProvider(tribeStats.id),
-    );
-
-    final habitsCount = tribeDocAsync.when(
-      data: (data) => data['totalHabitsCompleted'] as int? ?? 0,
-      loading: () => 0,
-      error: (_, _) => 0,
-    );
-    final questsCount = tribeDocAsync.when(
-      data: (data) => data['totalChallengesCompleted'] as int? ?? 0,
-      loading: () => 0,
-      error: (_, _) => 0,
-    );
-
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            EmergeColors.glassWhite.withValues(alpha: 0.1),
-            EmergeColors.glassWhite.withValues(alpha: 0.05),
-          ],
-        ),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: EmergeColors.glassBorder),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Icon(
-                isGlobal ? Icons.public : Icons.local_fire_department,
-                color: isGlobal ? EmergeColors.teal : EmergeColors.coral,
-                size: 20,
-              ),
-              const Gap(8),
-              Text(
-                isGlobal ? 'Global Collective Power' : 'Tribe Ascendancy',
-                style: const TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
-                  letterSpacing: 1,
-                ),
-              ),
-            ],
-          ),
-          const Gap(16),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: [
-              _StatOrb(
-                label: 'Total XP',
-                value:
-                    '${xpScore >= 1000 ? '${(xpScore / 1000).toStringAsFixed(1)}k' : xpScore}',
-                color: EmergeColors.yellow,
-                icon: Icons.electric_bolt,
-              ),
-              _StatOrb(
-                label: isGlobal ? 'Habits Overcome' : 'Habits Conquered',
-                value: _formatCount(habitsCount),
-                color: EmergeColors.teal,
-                icon: Icons.check_circle_outline,
-              ),
-              _StatOrb(
-                label: 'Quests Beaten',
-                value: _formatCount(questsCount),
-                color: EmergeColors.violet,
-                icon: Icons.emoji_events,
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  String _formatCount(int count) {
-    if (count >= 1000) return '${(count / 1000).toStringAsFixed(1)}k';
-    return '$count';
   }
 }
 

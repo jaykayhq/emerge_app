@@ -55,9 +55,14 @@ class _TimelineScreenState extends ConsumerState<TimelineScreen> {
       if (!mounted) return;
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (!mounted) return;
-        final tutorialState = ref.read(tutorialProvider);
-        // Only show tutorial if not completed AND tutorials are enabled
-        if (!tutorialState.isCompleted(TutorialStep.timeline) && tutorialState.enabled) {
+        final tutorialNotifier = ref.read(tutorialProvider.notifier);
+        final tutorialState = ref.watch(tutorialProvider);
+        // Re-enable auto-show when entering this screen (for one-time show per visit)
+        tutorialNotifier.enableTutorialAutoShow();
+
+        // Only show tutorial if not completed AND tutorials are enabled AND auto-show is active
+        if (!tutorialState.isCompleted(TutorialStep.timeline) &&
+            tutorialNotifier.shouldShowTutorial()) {
           _showTutorial();
         }
       });

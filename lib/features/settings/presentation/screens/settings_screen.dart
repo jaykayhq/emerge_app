@@ -441,7 +441,9 @@ class SettingsScreen extends ConsumerWidget {
                       ),
                     ),
                     subtitle: Text(
-                      'Show tutorials when entering screens',
+                      tutorialState.enabled
+                          ? 'Tutorials show once per screen visit'
+                          : 'Disabled until you complete onboarding',
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
                         color: AppTheme.textSecondaryDark,
                       ),
@@ -1044,7 +1046,7 @@ class SettingsScreen extends ConsumerWidget {
           style: TextStyle(color: Colors.white),
         ),
         content: const Text(
-          'This will reset all onboarding tutorials so they appear again on each screen.',
+          'This will reset all tutorials. They will show once the next time you visit each screen.',
           style: TextStyle(color: Colors.white70),
         ),
         actions: [

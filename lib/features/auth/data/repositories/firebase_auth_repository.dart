@@ -219,9 +219,4 @@ class FirebaseAuthRepository implements AuthRepository {
       return Left(ServerFailure(e.toString()));
     }
   }
-
-  @override
-  Future<Either<Failure, AuthUser>> signInAnonymously() async {
-    return const Left(AuthFailure('Anonymous sign-in has been disabled.'));
-  }
 }

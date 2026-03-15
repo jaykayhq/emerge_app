@@ -149,11 +149,17 @@ class OnboardingController extends _$OnboardingController {
           try {
             final tribeRepo = ref.read(tribeRepositoryProvider);
             final club = await tribeRepo.getArchetypeClub(updatedProfile.archetype.name);
+            debugPrint('🔍 Looking for club for archetype: ${updatedProfile.archetype.name}');
             if (club != null) {
+              debugPrint('🔍 Found club: ${club.id}, joining user ${user.id}...');
               await tribeRepo.joinClub(user.id, club.id);
+              debugPrint('✅ Successfully joined club ${club.id}');
+            } else {
+              debugPrint('❌ Club not found for archetype: ${updatedProfile.archetype.name}');
             }
           } catch (e, stack) {
             AppLogger.e('Failed to join official club during onboarding', e, stack);
+            debugPrint('❌ Stack trace: $stack');
           }
         }
         await completeOnboarding();

@@ -8,6 +8,7 @@ class LocalSettingsRepository {
   static const _keyIsFirstLaunch = 'isFirstLaunch';
   static const _keyThemeMode = 'themeMode';
   static const _keyTutorialsEnabled = 'tutorialsEnabled';
+  static const _keyTutorialAutoShow = 'tutorialAutoShow';
   static const _secureStorageKey = 'hive_encryption_key';
 
   Future<void> init() async {
@@ -54,6 +55,10 @@ class LocalSettingsRepository {
   Future<void> completeOnboarding() async {
     final box = Hive.box(_boxName);
     await box.put(_keyIsFirstLaunch, false);
+    // Enable tutorials after onboarding completion
+    await box.put(_keyTutorialsEnabled, true);
+    // Enable auto-show for tutorials (will show once per screen visit)
+    await box.put(_keyTutorialAutoShow, true);
   }
 
   /// Resets the onboarding state to allow re-triggering the flow.
@@ -81,6 +86,28 @@ class LocalSettingsRepository {
   Future<void> setTutorialsEnabled(bool enabled) async {
     final box = Hive.box(_boxName);
     await box.put(_keyTutorialsEnabled, enabled);
+    // When enabling tutorials, also enable auto-show
+    if (enabled) {
+      await box.put(_keyTutorialAutoShow, true);
+    }
+  }
+
+  /// Returns true if tutorials should auto-show on screen visit (one-time behavior)
+  bool get tutorialAutoShow {
+    final box = Hive.box(_boxName);
+    return box.get(_keyTutorialAutoShow, defaultValue: false);
+  }
+
+  /// Disables the auto-show behavior after a tutorial has been shown
+  Future<void> disableTutorialAutoShow() async {
+    final box = Hive.box(_boxName);
+    await box.put(_keyTutorialAutoShow, false);
+  }
+
+  /// Re-enables auto-show for tutorials (called when user re-enables in settings)
+  Future<void> enableTutorialAutoShow() async {
+    final box = Hive.box(_boxName);
+    await box.put(_keyTutorialAutoShow, true);
   }
 
   bool isTutorialCompleted(String tutorialId) {
@@ -99,5 +126,7 @@ class LocalSettingsRepository {
     for (final key in keys) {
       await box.delete(key);
     }
+    // Re-enable auto-show when resetting tutorials
+    await box.put(_keyTutorialAutoShow, true);
   }
 }
