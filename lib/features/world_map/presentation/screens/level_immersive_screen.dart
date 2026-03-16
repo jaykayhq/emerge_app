@@ -872,6 +872,7 @@ class LevelImmersiveScreen extends ConsumerWidget {
 
       // 2. Refresh count and update progress
       final newProgress = challenge.currentDay + 1;
+      final xpPerDay = (challenge.xpReward / challenge.totalDays).round();
       final result = await repository.updateProgress(
         authUser.id,
         challenge.id,
@@ -892,10 +893,13 @@ class LevelImmersiveScreen extends ConsumerWidget {
         },
         (_) {
           if (context.mounted) {
+            final isComplete = newProgress >= challenge.totalDays;
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
                 content: Text(
-                  'Checked in to ${challenge.title}! +${challenge.xpReward} XP',
+                  isComplete
+                      ? 'Quest completed! +${challenge.xpReward} XP earned!'
+                      : 'Day $newProgress/${challenge.totalDays} complete! +$xpPerDay XP',
                 ),
                 backgroundColor: config.primaryColor,
                 behavior: SnackBarBehavior.floating,

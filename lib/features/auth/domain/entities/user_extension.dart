@@ -71,6 +71,7 @@ class UserAvatarStats {
   final int creativityXp;
   final int focusXp;
   final int spiritXp;
+  final int challengeXp;
   final int level;
   final int streak;
   final Map<String, int> attributeXp; // ADD THIS
@@ -82,6 +83,7 @@ class UserAvatarStats {
     this.creativityXp = 0,
     this.focusXp = 0,
     this.spiritXp = 0,
+    this.challengeXp = 0,
     this.level = 1,
     this.streak = 0,
     this.attributeXp = const {}, // ADD THIS
@@ -95,6 +97,7 @@ class UserAvatarStats {
       'creativityXp': creativityXp,
       'focusXp': focusXp,
       'spiritXp': spiritXp,
+      'challengeXp': challengeXp,
       'level': level,
       'streak': streak,
       'attributeXp': attributeXp,
@@ -109,6 +112,7 @@ class UserAvatarStats {
       creativityXp: map['creativityXp'] as int? ?? 0,
       focusXp: map['focusXp'] as int? ?? 0,
       spiritXp: map['spiritXp'] as int? ?? 0,
+      challengeXp: map['challengeXp'] as int? ?? 0,
       level: map['level'] as int? ?? 1,
       streak: map['streak'] as int? ?? 0,
       attributeXp: Map<String, dynamic>.from(

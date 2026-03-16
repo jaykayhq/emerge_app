@@ -163,8 +163,15 @@ final class CreateHabitFamily extends $Family
 final completeHabitProvider = CompleteHabitFamily._();
 
 final class CompleteHabitProvider
-    extends $FunctionalProvider<AsyncValue<void>, void, FutureOr<void>>
-    with $FutureModifier<void>, $FutureProvider<void> {
+    extends
+        $FunctionalProvider<
+          AsyncValue<HabitCompletionResult>,
+          HabitCompletionResult,
+          FutureOr<HabitCompletionResult>
+        >
+    with
+        $FutureModifier<HabitCompletionResult>,
+        $FutureProvider<HabitCompletionResult> {
   CompleteHabitProvider._({
     required CompleteHabitFamily super.from,
     required String super.argument,
@@ -188,11 +195,12 @@ final class CompleteHabitProvider
 
   @$internal
   @override
-  $FutureProviderElement<void> $createElement($ProviderPointer pointer) =>
-      $FutureProviderElement(pointer);
+  $FutureProviderElement<HabitCompletionResult> $createElement(
+    $ProviderPointer pointer,
+  ) => $FutureProviderElement(pointer);
 
   @override
-  FutureOr<void> create(Ref ref) {
+  FutureOr<HabitCompletionResult> create(Ref ref) {
     final argument = this.argument as String;
     return completeHabit(ref, argument);
   }
@@ -208,10 +216,10 @@ final class CompleteHabitProvider
   }
 }
 
-String _$completeHabitHash() => r'f36d3bba810f7442928d60e7eec0a9b9d16e2e1d';
+String _$completeHabitHash() => r'3e22cb2e5288fc16c8d422adea8ea411d553c589';
 
 final class CompleteHabitFamily extends $Family
-    with $FunctionalFamilyOverride<FutureOr<void>, String> {
+    with $FunctionalFamilyOverride<FutureOr<HabitCompletionResult>, String> {
   CompleteHabitFamily._()
     : super(
         retry: null,

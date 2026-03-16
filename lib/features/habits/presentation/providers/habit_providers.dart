@@ -7,6 +7,8 @@ import 'package:emerge_app/features/auth/presentation/providers/auth_providers.d
 import 'package:emerge_app/features/habits/domain/entities/habit.dart';
 import 'package:emerge_app/features/habits/domain/models/habit_activity.dart';
 import 'package:emerge_app/features/habits/domain/repositories/habit_repository.dart';
+import 'package:emerge_app/features/habits/domain/services/variable_reward_service.dart';
+import 'package:emerge_app/features/habits/presentation/providers/cue_providers.dart';
 import 'package:emerge_app/features/monetization/presentation/providers/subscription_provider.dart';
 import 'package:emerge_app/features/social/presentation/providers/tribes_provider.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
@@ -99,14 +101,14 @@ Future<void> createHabit(Ref ref, Habit habit) async {
 }
 
 @riverpod
-Future<void> completeHabit(Ref ref, String habitId) async {
+Future<HabitCompletionResult> completeHabit(Ref ref, String habitId) async {
   final repository = ref.read(habitRepositoryProvider);
   final userAsync = ref.read(authStateChangesProvider);
   final userId = userAsync.value?.id;
 
   final result = await repository.completeHabit(habitId, DateTime.now());
 
-  result.fold(
+  return result.fold(
     (failure) {
       AppLogger.e('Failed to complete habit', failure, StackTrace.current);
       throw Exception(failure.message);
@@ -115,19 +117,55 @@ Future<void> completeHabit(Ref ref, String habitId) async {
       if (isCompleted) {
         AppLogger.i('Successfully completed habit: $habitId');
         if (userId != null) {
-          // Fetch the habit to calculate XP
           final habit = await repository.getHabit(habitId);
           if (habit != null) {
+            final baseXp = _calculateBaseXp(habit);
+            final currentStreak = habit.currentStreak;
+            final newStreak = currentStreak + 1;
+            
+            final xpResult = calculateXpBreakdown(
+              habit: habit,
+              baseXp: baseXp,
+              currentStreak: newStreak,
+            );
+            
+            final isMilestone = VariableRewardService.isStreakMilestone(newStreak);
+            
+            if (isMilestone) {
+              AppLogger.i('Streak milestone reached: $newStreak days for habit $habitId');
+              ref.read(cueNotifierProvider.notifier).queueMilestoneCue(habit, newStreak);
+            }
+            
             AppLogger.i(
-              'Habit activity logged for user $userId. XP will be processed by Cloud Functions.',
+              'Habit completed: $habitId. XP: ${xpResult.totalXp}, Streak: $newStreak, Milestone: $isMilestone',
+            );
+            
+            return HabitCompletionResult(
+              xpEarned: xpResult.totalXp,
+              newStreak: newStreak,
+              isStreakMilestone: isMilestone,
+              breakdown: xpResult,
             );
           }
         }
+        return HabitCompletionResult(xpEarned: 0, newStreak: 0);
       } else {
         AppLogger.i('Habit completion undone: $habitId');
+        return HabitCompletionResult(xpEarned: 0, newStreak: 0, isUndo: true);
       }
     },
   );
+}
+
+int _calculateBaseXp(Habit habit) {
+  switch (habit.difficulty) {
+    case HabitDifficulty.easy:
+      return 10;
+    case HabitDifficulty.medium:
+      return 20;
+    case HabitDifficulty.hard:
+      return 30;
+  }
 }
 
 @riverpod
@@ -142,4 +180,20 @@ Future<List<HabitActivity>> habitActivity(
   if (user == null) return [];
 
   return repository.getActivity(user.id, start, end);
+}
+
+class HabitCompletionResult {
+  final int xpEarned;
+  final int newStreak;
+  final bool isStreakMilestone;
+  final XpRewardBreakdown? breakdown;
+  final bool isUndo;
+
+  const HabitCompletionResult({
+    required this.xpEarned,
+    required this.newStreak,
+    this.isStreakMilestone = false,
+    this.breakdown,
+    this.isUndo = false,
+  });
 }
