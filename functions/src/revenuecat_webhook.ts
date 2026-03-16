@@ -1,4 +1,5 @@
 import * as functions from "firebase-functions/v1";
+import { onCustomEventPublished } from "firebase-functions/v2/eventarc";
 import * as admin from "firebase-admin";
 import * as crypto from "crypto";
 
@@ -292,3 +293,38 @@ function calculateExpiryDate(entitlements: Record<string, any>): admin.firestore
     ? admin.firestore.Timestamp.fromDate(earliestExpiry)
     : null;
 }
+
+/**
+ * Eventarc trigger for RevenueCat Firebase extension custom events.
+ * This listens for "com.revenuecat.v1.billing_issue" events.
+ */
+export const revenuecatBillingIssueHandler = onCustomEventPublished(
+  "com.revenuecat.v1.billing_issue",
+  async (event) => {
+    console.log("RevenueCat billing issue event received:", event.data);
+    const data = event.data as any;
+    const appUserId = data?.app_user_id;
+
+    if (!appUserId) {
+      console.error("No app_user_id found in billing issue event data.");
+      return;
+    }
+
+    const firestore = getDb();
+    const userDoc = await firestore.collection("users").doc(appUserId).get();
+
+    if (!userDoc.exists) {
+      console.warn(`No user found for app_user_id: ${appUserId}`);
+      return;
+    }
+
+    const userId = userDoc.id;
+
+    // Log the billing issue or trigger a push notification here
+    // For now, we update the user document if needed or keep a record
+    console.log(`Billing issue processed for user ${userId}. Consider sending a push notification.`);
+    
+    // Example: remove premium status since billing failed?
+    // Wait for actual cancellation/expiration webhook or handle grace periods appropriately.
+  }
+);
