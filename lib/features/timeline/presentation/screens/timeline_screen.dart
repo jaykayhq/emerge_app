@@ -14,6 +14,8 @@ import 'package:emerge_app/features/timeline/presentation/widgets/ai_coach_card.
 import 'package:emerge_app/features/timeline/presentation/widgets/current_mission_banner.dart';
 import 'package:emerge_app/features/timeline/presentation/widgets/habit_timeline_section.dart';
 import 'package:emerge_app/features/timeline/presentation/widgets/timeline_share_preview.dart';
+import 'package:emerge_app/features/timeline/presentation/widgets/streak_flame_widget.dart';
+import 'package:emerge_app/features/timeline/presentation/widgets/completion_celebration.dart';
 import 'package:emerge_app/features/gamification/presentation/providers/user_stats_providers.dart';
 import 'package:emerge_app/features/timeline/presentation/widgets/reflection_card.dart';
 import 'package:emerge_app/features/tutorial/presentation/providers/tutorial_provider.dart';
@@ -257,11 +259,17 @@ class _TimelineScreenState extends ConsumerState<TimelineScreen> {
                         CurrentMissionBanner(key: _missionKey),
                         const SizedBox(height: 12),
                         Row(
-                          mainAxisAlignment: MainAxisAlignment.end,
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            _buildVoteIcon(habits),
-                            const SizedBox(width: 12),
-                            _buildStreakIcon(habits),
+                            _buildTotalStreakWidget(habits),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.end,
+                              children: [
+                                _buildVoteIcon(habits),
+                                const SizedBox(width: 12),
+                                _buildStreakIcon(habits),
+                              ],
+                            ),
                           ],
                         ),
                       ],
@@ -485,34 +493,66 @@ class _TimelineScreenState extends ConsumerState<TimelineScreen> {
         habit.lastCompletedDate!.day == now.day;
 
     if (!isCompleted) {
-      // Mark as completed
-      ref.read(completeHabitProvider(habit.id));
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('${habit.title} completed! +${_calculateXp(habit)} XP'),
-          backgroundColor: EmergeColors.teal,
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
-          duration: const Duration(seconds: 2),
-        ),
-      );
+      _completeHabitWithCelebration(habit);
     } else {
-      // Undo completion
       ref.read(completeHabitProvider(habit.id));
     }
   }
 
-  int _calculateXp(dynamic habit) {
-    int base = 10;
-    if (habit.difficulty.toString().contains('medium')) {
-      base = 20;
-    } else if (habit.difficulty.toString().contains('hard')) {
-      base = 30;
+  Future<void> _completeHabitWithCelebration(Habit habit) async {
+    try {
+      final result = await ref.read(completeHabitProvider(habit.id).future);
+      
+      if (!result.isUndo && result.xpEarned > 0) {
+        _showCompletionCelebration(
+          xpEarned: result.xpEarned,
+          newStreak: result.newStreak,
+          isMilestone: result.isStreakMilestone,
+        );
+      } else if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('${habit.title} completed! +${result.xpEarned} XP'),
+            backgroundColor: EmergeColors.teal,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('${habit.title} completed!'),
+            backgroundColor: EmergeColors.teal,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
     }
-    final streakBonus = (habit.currentStreak * 0.1).clamp(0.0, 0.5);
-    return (base * (1 + streakBonus)).toInt();
+  }
+
+  void _showCompletionCelebration({
+    required int xpEarned,
+    required int newStreak,
+    required bool isMilestone,
+  }) {
+    showDialog(
+      context: context,
+      barrierColor: Colors.black.withValues(alpha: 0.7),
+      barrierDismissible: true,
+      builder: (context) => CompletionCelebration(
+        xpEarned: xpEarned,
+        newStreak: newStreak,
+        isStreakMilestone: isMilestone,
+        accentColor: EmergeColors.teal,
+        onComplete: () {
+          Navigator.of(context).pop();
+        },
+      ),
+    );
   }
 
   Future<void> _saveReflection(double moodValue, String? note) async {
@@ -611,6 +651,47 @@ class _TimelineScreenState extends ConsumerState<TimelineScreen> {
           ),
         ),
       ),
+    );
+  }
+
+  Widget _buildTotalStreakWidget(List<Habit> habits) {
+    // Calculate the best streak across all habits
+    int maxStreak = 0;
+    for (final habit in habits) {
+      if (habit.currentStreak > maxStreak) {
+        maxStreak = habit.currentStreak;
+      }
+    }
+
+    return Row(
+      children: [
+        StreakFlameWidget(
+          streakCount: maxStreak,
+          isActive: maxStreak > 0,
+          size: 40,
+        ),
+        const SizedBox(width: 12),
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              maxStreak > 0 ? 'Best Streak' : 'Start Streak',
+              style: TextStyle(
+                color: Colors.white.withValues(alpha: 0.5),
+                fontSize: 10,
+              ),
+            ),
+            Text(
+              '$maxStreak days',
+              style: const TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+                fontSize: 14,
+              ),
+            ),
+          ],
+        ),
+      ],
     );
   }
 

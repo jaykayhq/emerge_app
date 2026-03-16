@@ -206,11 +206,56 @@ class FirestoreChallengeRepository implements ChallengeRepository {
 
         transaction.update(userChallengeRef, updateData);
 
+        // Award XP ONLY on the final day (when challenge is completed)
+        final totalXpReward = data['xpReward'] as int? ?? 50;
+        
+        if (progress >= totalDays) {
+          // Award full XP on completion
+          if (totalXpReward > 0) {
+            final userStatsRef = _firestore.collection('users').doc(userId).collection('stats').doc('main');
+            final userStatsSnapshot = await transaction.get(userStatsRef);
+
+            if (userStatsSnapshot.exists) {
+              final userStatsData = userStatsSnapshot.data();
+              if (userStatsData != null) {
+                final avatarStats = Map<String, dynamic>.from(
+                  userStatsData['avatarStats'] as Map? ?? {},
+                );
+
+                final primaryAttribute = data['attribute'] as String? ?? 'vitality';
+                final attributeKey = '${primaryAttribute}Xp';
+
+                final currentAttributeXp = (avatarStats[attributeKey] as int?) ?? 0;
+                avatarStats[attributeKey] = currentAttributeXp + totalXpReward;
+                
+                // Track challenge XP separately
+                final currentChallengeXp = (avatarStats['challengeXp'] as int?) ?? 0;
+                avatarStats['challengeXp'] = currentChallengeXp + totalXpReward;
+
+                int totalXp = 0;
+                final xpKeys = ['strengthXp', 'intellectXp', 'vitalityXp', 'creativityXp', 'focusXp', 'spiritXp'];
+                for (final key in xpKeys) {
+                  totalXp += (avatarStats[key] as int?) ?? 0;
+                }
+
+                transaction.set(userStatsRef, {
+                  'avatarStats': avatarStats,
+                  'currentXp': totalXp,
+                }, SetOptions(merge: true));
+
+                AppLogger.i(
+                  'Challenge completed! Full XP awarded: User $userId, Challenge $challengeId, XP: $totalXpReward',
+                );
+              }
+            }
+          }
+        }
+
         AppLogger.d(
           'Challenge progress updated: User $userId, Challenge $challengeId, Day $progress/$totalDays',
         );
 
-        return const Right(unit);
+        return Right(unit);
       });
 
       // After successful transaction, log social activity + XP for completion

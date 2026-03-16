@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:emerge_app/core/config/app_config.dart';
@@ -14,6 +15,11 @@ class RevenueCatRepository implements MonetizationRepository {
 
   static const _entitlementId =
       'premium'; // The identifier you set in RevenueCat
+
+  final _premiumStatusController = StreamController<bool>.broadcast();
+
+  @override
+  Stream<bool> get premiumStatusStream => _premiumStatusController.stream;
 
   @override
   Future<void> initialize() async {
@@ -59,6 +65,11 @@ class RevenueCatRepository implements MonetizationRepository {
 
     await Purchases.configure(configuration);
     _isConfigured = true;
+
+    Purchases.addCustomerInfoUpdateListener((customerInfo) {
+      final isPremium = customerInfo.entitlements.all[_entitlementId]?.isActive ?? false;
+      _premiumStatusController.add(isPremium);
+    });
   }
 
   bool _validateProductionConfig() {

@@ -8,6 +8,7 @@ import 'package:emerge_app/features/auth/domain/entities/user_extension.dart';
 import 'package:emerge_app/features/auth/presentation/providers/auth_providers.dart';
 import 'package:emerge_app/features/gamification/data/repositories/user_stats_repository.dart';
 import 'package:emerge_app/features/gamification/presentation/providers/user_stats_providers.dart';
+import 'package:emerge_app/features/monetization/presentation/providers/subscription_provider.dart';
 import 'package:emerge_app/features/settings/presentation/screens/notification_settings_screen.dart';
 import 'package:emerge_app/features/settings/presentation/providers/digital_wellbeing_provider.dart';
 import 'package:emerge_app/features/tutorial/presentation/providers/tutorial_provider.dart';
@@ -702,12 +703,36 @@ class SettingsScreen extends ConsumerWidget {
                     ],
                   ),
                   const SizedBox(height: 4),
-                  Text(
-                    '$xpNeeded XP to next level • Total: $totalXp XP',
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: AppTheme.textSecondaryDark,
-                      fontSize: 11,
-                    ),
+                  Row(
+                    children: [
+                      Text(
+                        '$xpNeeded XP to next level • Total: $totalXp XP',
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: AppTheme.textSecondaryDark,
+                          fontSize: 11,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 4),
+                  // Challenge XP
+                  Row(
+                    children: [
+                      const Icon(
+                        Icons.emoji_events,
+                        size: 12,
+                        color: Colors.amber,
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        'Challenge XP: ${profile.avatarStats.challengeXp}',
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: Colors.amber,
+                          fontSize: 11,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),
@@ -807,6 +832,11 @@ class SettingsScreen extends ConsumerWidget {
     UserProfile? profile,
   ) {
     if (profile == null) return;
+    
+    // Check premium status directly if possible from inside dialog, or pass it in. 
+    // Wait, the dialog is shown using showDialog, which creates a new context, so we read it inside builder or pass it.
+    final isPremium = ref.read(isPremiumProvider).value ?? false;
+    
     showDialog(
       context: context,
       builder: (context) {
@@ -842,9 +872,11 @@ class SettingsScreen extends ConsumerWidget {
                   profile,
                   'city',
                   'Futuristic City',
-                  'Neon-lit cyberpunk metropolis',
+                  'Neon-lit metropolis',
                   Icons.location_city,
                   Colors.cyan,
+                  isPremium: isPremium,
+                  requiresPremium: false,
                 ),
                 _buildThemeOption(
                   context,
@@ -852,9 +884,11 @@ class SettingsScreen extends ConsumerWidget {
                   profile,
                   'forest',
                   'Enchanted Forest',
-                  'Enchanted Forest sanctuary',
+                  'Lush overgrowth',
                   Icons.forest,
                   Colors.green,
+                  isPremium: isPremium,
+                  requiresPremium: false,
                 ),
                 _buildThemeOption(
                   context,
@@ -865,6 +899,20 @@ class SettingsScreen extends ConsumerWidget {
                   'Serene sky islands',
                   Icons.cloud,
                   Colors.purple,
+                  isPremium: isPremium,
+                  requiresPremium: true,
+                ),
+                _buildThemeOption(
+                  context,
+                  ref,
+                  profile,
+                  'cosmic',
+                  'Cosmic Void',
+                  'Deep space anomaly',
+                  Icons.public,
+                  Colors.deepPurpleAccent,
+                  isPremium: isPremium,
+                  requiresPremium: true,
                 ),
                 _buildThemeOption(
                   context,
@@ -872,9 +920,11 @@ class SettingsScreen extends ConsumerWidget {
                   profile,
                   null,
                   'Default (Archetype)',
-                  'Based on your character',
+                  'Based on character',
                   Icons.auto_awesome,
                   EmergeColors.teal,
+                  isPremium: isPremium,
+                  requiresPremium: false,
                 ),
               ],
             ),
@@ -892,13 +942,23 @@ class SettingsScreen extends ConsumerWidget {
     String title,
     String subtitle,
     IconData icon,
-    Color color,
-  ) {
+    Color color, {
+    required bool isPremium,
+    required bool requiresPremium,
+  }) {
     final currentTheme = profile.worldTheme;
     final isSelected = currentTheme == themeValue;
+    final isLocked = requiresPremium && !isPremium;
 
     return GestureDetector(
-      onTap: () => _updateWorldTheme(context, ref, profile, themeValue),
+      onTap: () {
+        if (isLocked) {
+          Navigator.pop(context);
+          context.push('/paywall');
+          return;
+        }
+        _updateWorldTheme(context, ref, profile, themeValue);
+      },
       child: Container(
         margin: const EdgeInsets.only(bottom: 12),
         padding: const EdgeInsets.all(16),
@@ -918,25 +978,40 @@ class SettingsScreen extends ConsumerWidget {
               width: 48,
               height: 48,
               decoration: BoxDecoration(
-                color: color.withValues(alpha: 0.2),
+                color: isLocked ? Colors.grey.withValues(alpha: 0.2) : color.withValues(alpha: 0.2),
                 borderRadius: BorderRadius.circular(10),
               ),
-              child: Icon(icon, color: color, size: 24),
+              child: Icon(isLocked ? Icons.lock : icon, color: isLocked ? Colors.grey : color, size: 24),
             ),
             const SizedBox(width: 16),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    title,
-                    style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                      color: AppTheme.textMainDark,
-                      fontWeight: FontWeight.w600,
-                    ),
+                  Row(
+                    children: [
+                      Text(
+                        title,
+                        style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                          color: isLocked ? AppTheme.textSecondaryDark : AppTheme.textMainDark,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      if (requiresPremium) ...[
+                        const SizedBox(width: 8),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: Colors.amber.withValues(alpha: 0.2),
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                          child: const Text('PRO', style: TextStyle(color: Colors.amber, fontSize: 10, fontWeight: FontWeight.bold)),
+                        ),
+                      ],
+                    ],
                   ),
                   Text(
-                    subtitle,
+                    isLocked ? 'Unlock with Emerge Pro' : subtitle,
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
                       color: AppTheme.textSecondaryDark,
                     ),

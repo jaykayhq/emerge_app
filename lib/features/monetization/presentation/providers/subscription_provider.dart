@@ -18,32 +18,16 @@ class IsPremium extends _$IsPremium {
     // Initialize SDK on first build
     await repo.initialize();
 
+    // Listen to real-time subscription changes
+    final sub = repo.premiumStatusStream.listen((isPremium) {
+      state = AsyncValue.data(isPremium);
+    });
+    ref.onDispose(() => sub.cancel());
+
     final result = await repo.isPremium;
     return result.fold((error) {
       AppLogger.e('Failed to check premium status', error);
       throw error;
     }, (isPremium) => isPremium);
-  }
-
-  Future<void> purchase() async {
-    state = const AsyncValue.loading();
-    final repo = ref.read(monetizationRepositoryProvider);
-    final result = await repo.purchasePremium();
-
-    result.fold(
-      (error) => state = AsyncValue.error(error, StackTrace.current),
-      (isPremium) => state = AsyncValue.data(isPremium),
-    );
-  }
-
-  Future<void> restore() async {
-    state = const AsyncValue.loading();
-    final repo = ref.read(monetizationRepositoryProvider);
-    final result = await repo.restorePurchases();
-
-    result.fold(
-      (error) => state = AsyncValue.error(error, StackTrace.current),
-      (isPremium) => state = AsyncValue.data(isPremium),
-    );
   }
 }

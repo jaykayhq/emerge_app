@@ -587,6 +587,12 @@ class _GlassmorphismStatsBar extends StatelessWidget {
                     color: config.primaryColor,
                   ),
                   _StatItem(
+                    label: 'Challenges',
+                    value: '${stats.challengeXp}',
+                    icon: Icons.emoji_events,
+                    color: const Color(0xFFFFD700), // Gold
+                  ),
+                  _StatItem(
                     label: 'World',
                     value: profile.worldState.isThriving
                         ? 'Thriving'
