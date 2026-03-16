@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:emerge_app/core/utils/app_logger.dart';
 import 'package:emerge_app/features/auth/domain/entities/user_extension.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:rxdart/rxdart.dart';
 
 final userStatsRepositoryProvider = Provider<UserStatsRepository>((ref) {
   return UserStatsRepository(FirebaseFirestore.instance);
@@ -51,10 +52,13 @@ class UserStatsRepository {
     if (uid.isEmpty) {
       return Stream.value(const UserProfile(uid: ''));
     }
+    // Debounce rapid updates to prevent rebuild storms
+    // 300ms delay balances responsiveness with performance
     return _firestore
         .collection('user_stats')
         .doc(uid)
         .snapshots()
+        .debounceTime(const Duration(milliseconds: 300))
         .map((snapshot) {
           try {
             if (snapshot.exists && snapshot.data() != null) {

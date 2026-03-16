@@ -5,7 +5,18 @@ import 'package:emerge_app/features/onboarding/data/repositories/local_settings_
 part 'tutorial_provider.g.dart';
 
 /// Supported tutorial IDs
-enum TutorialStep { timeline, worldMap, profile, community, createHabit }
+enum TutorialStep {
+  timeline,
+  worldMap,
+  profile,
+  community,
+  createHabit,
+  insights,
+  aiCoach,
+  gamification,
+  challenges,
+  friends,
+}
 
 /// State for tracking completed tutorials
 class TutorialState {

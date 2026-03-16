@@ -194,11 +194,13 @@ class _FutureSelfStudioScreenState
 
           return Stack(
             children: [
-              // Animated Cosmic Background
+              // Animated Cosmic Background - isolated with RepaintBoundary
               Positioned.fill(
-                child: FutureSelfCosmicBackground(
-                  archetype: profile.archetype,
-                  level: effectiveLevel,
+                child: RepaintBoundary(
+                  child: FutureSelfCosmicBackground(
+                    archetype: profile.archetype,
+                    level: effectiveLevel,
+                  ),
                 ),
               ),
 
@@ -316,52 +318,55 @@ class _FutureSelfStudioScreenState
 
                   // NEW: Evolving Silhouette with 5-tier system + decay/recovery
                   // OR: New 2D Isometric Avatar Renderer (toggle via useNewAvatarRendererProvider)
+                  // Wrapped in RepaintBoundary to isolate animation repaints
                   SliverToBoxAdapter(
-                    child: Center(
-                      key: _avatarKey,
-                      child: ref.watch(useNewAvatarRendererProvider)
-                          ? _buildAvatarRenderer(
-                              context,
-                              profile.archetype,
-                              effectiveLevel,
-                              stats.streak,
-                              accentColor,
-                              ref,
-                              isRecovering,
-                            )
-                          : DecayRecoveryOverlay(
-                              entropyLevel: stats.streak > 0 ? 0.0 : 0.5,
-                              daysMissed: stats.streak > 0 ? 0 : 1,
-                              primaryColor: accentColor,
-                              isRecovering: isRecovering,
-                              onRecoveryComplete: () {
-                                // Reset recovery state after animation
-                                ref
-                                    .read(recoveryAnimatingProvider.notifier)
-                                    .setAnimating(false);
-                              },
-                              child: EvolvingSilhouetteWidget(
-                                evolutionState:
-                                    SilhouetteEvolutionState.fromUserStats(
-                                      level: effectiveLevel,
-                                      currentStreak: stats.streak,
-                                      // Days missed = 0 if active streak, else estimate based on streak reset
-                                      daysMissed: stats.streak > 0 ? 0 : 1,
-                                      habitVotes: _calculateHabitVotes(stats),
-                                    ),
-                                archetype: profile.archetype,
-                                attributes: attributes,
-                                size: 280,
-                                onEvolutionTap: () {
-                                  HapticFeedback.lightImpact();
-                                  _showEvolutionInfo(
-                                    context,
-                                    effectiveLevel,
-                                    accentColor,
-                                  );
+                    child: RepaintBoundary(
+                      child: Center(
+                        key: _avatarKey,
+                        child: ref.watch(useNewAvatarRendererProvider)
+                            ? _buildAvatarRenderer(
+                                context,
+                                profile.archetype,
+                                effectiveLevel,
+                                stats.streak,
+                                accentColor,
+                                ref,
+                                isRecovering,
+                              )
+                            : DecayRecoveryOverlay(
+                                entropyLevel: stats.streak > 0 ? 0.0 : 0.5,
+                                daysMissed: stats.streak > 0 ? 0 : 1,
+                                primaryColor: accentColor,
+                                isRecovering: isRecovering,
+                                onRecoveryComplete: () {
+                                  // Reset recovery state after animation
+                                  ref
+                                      .read(recoveryAnimatingProvider.notifier)
+                                      .setAnimating(false);
                                 },
+                                child: EvolvingSilhouetteWidget(
+                                  evolutionState:
+                                      SilhouetteEvolutionState.fromUserStats(
+                                        level: effectiveLevel,
+                                        currentStreak: stats.streak,
+                                        // Days missed = 0 if active streak, else estimate based on streak reset
+                                        daysMissed: stats.streak > 0 ? 0 : 1,
+                                        habitVotes: _calculateHabitVotes(stats),
+                                      ),
+                                  archetype: profile.archetype,
+                                  attributes: attributes,
+                                  size: 280,
+                                  onEvolutionTap: () {
+                                    HapticFeedback.lightImpact();
+                                    _showEvolutionInfo(
+                                      context,
+                                      effectiveLevel,
+                                      accentColor,
+                                    );
+                                  },
+                                ),
                               ),
-                            ),
+                      ),
                     ),
                   ),
 
@@ -447,17 +452,19 @@ class _FutureSelfStudioScreenState
 
                   const SliverToBoxAdapter(child: SizedBox(height: 24)),
 
-                  // NEW: Trajectory Timeline (Stitch design)
+                  // NEW: Trajectory Timeline (Stitch design) - isolated with RepaintBoundary
                   SliverToBoxAdapter(
-                    child: TrajectoryTimeline(
-                      key: _timelineKey,
-                      archetype: profile.archetype,
-                      currentLevel: effectiveLevel,
-                      currentXp:
-                          (stats.totalXp % GamificationConstants.xpPerLevel)
-                              .toDouble(),
-                      xpForNextLevel: GamificationConstants.xpPerLevel
-                          .toDouble(),
+                    child: RepaintBoundary(
+                      child: TrajectoryTimeline(
+                        key: _timelineKey,
+                        archetype: profile.archetype,
+                        currentLevel: effectiveLevel,
+                        currentXp:
+                            (stats.totalXp % GamificationConstants.xpPerLevel)
+                                .toDouble(),
+                        xpForNextLevel: GamificationConstants.xpPerLevel
+                            .toDouble(),
+                      ),
                     ),
                   ),
 

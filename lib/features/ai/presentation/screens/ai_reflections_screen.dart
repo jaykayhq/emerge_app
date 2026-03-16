@@ -2,15 +2,74 @@ import 'package:emerge_app/core/presentation/widgets/emerge_branding.dart';
 import 'package:emerge_app/core/theme/app_theme.dart';
 import 'package:emerge_app/features/ai/domain/services/ai_personalization_service.dart';
 import 'package:emerge_app/features/habits/presentation/providers/habit_providers.dart';
+import 'package:emerge_app/features/tutorial/presentation/providers/tutorial_provider.dart';
+import 'package:emerge_app/features/tutorial/presentation/widgets/tutorial_overlay.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-class AiReflectionsScreen extends ConsumerWidget {
+class AiReflectionsScreen extends ConsumerStatefulWidget {
   const AiReflectionsScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<AiReflectionsScreen> createState() => _AiReflectionsScreenState();
+}
+
+class _AiReflectionsScreenState extends ConsumerState<AiReflectionsScreen> {
+  final GlobalKey _sageKey = GlobalKey();
+  final GlobalKey _wisdomKey = GlobalKey();
+
+  @override
+  void initState() {
+    super.initState();
+    _checkTutorial();
+  }
+
+  void _checkTutorial() {
+    Future.delayed(const Duration(milliseconds: 500), () {
+      if (!mounted) return;
+      final tutorialNotifier = ref.read(tutorialProvider.notifier);
+      final tutorialState = ref.watch(tutorialProvider);
+      tutorialNotifier.enableTutorialAutoShow();
+
+      if (!tutorialState.isCompleted(TutorialStep.aiCoach) &&
+          tutorialNotifier.shouldShowTutorial()) {
+        _showTutorial();
+      }
+    });
+  }
+
+  void _showTutorial() {
+    late OverlayEntry entry;
+    entry = OverlayEntry(
+      builder: (context) => TutorialOverlay(
+        steps: [
+          TutorialStepInfo(
+            title: "The Sage's Council",
+            description:
+                "Our AI core analyzes your habit patterns to provide guidance on your identity evolution.",
+            targetKey: _sageKey,
+          ),
+          TutorialStepInfo(
+            title: "Actionable Wisdom",
+            description:
+                "Beyond mere observations, the Coach suggests specific recalibrations for your schedule.",
+            targetKey: _wisdomKey,
+          ),
+        ],
+        onCompleted: () {
+          ref
+              .read(tutorialProvider.notifier)
+              .completeStep(TutorialStep.aiCoach);
+          entry.remove();
+        },
+      ),
+    );
+    Overlay.of(context).insert(entry);
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final habitsAsync = ref.watch(habitsProvider);
 
     return Scaffold(
@@ -64,6 +123,7 @@ class AiReflectionsScreen extends ConsumerWidget {
                           }
 
                           return ListView.separated(
+                            key: _wisdomKey,
                             padding: const EdgeInsets.all(16),
                             itemCount: insights.length,
                             separatorBuilder: (_, _) =>
@@ -95,6 +155,7 @@ class AiReflectionsScreen extends ConsumerWidget {
 
   Widget _buildHeader(BuildContext context) {
     return Padding(
+      key: _sageKey,
       padding: const EdgeInsets.all(16),
       child: Column(
         children: [
@@ -125,7 +186,6 @@ class AiReflectionsScreen extends ConsumerWidget {
     );
   }
 }
-
 class _InsightCard extends StatelessWidget {
   final AiInsight insight;
 

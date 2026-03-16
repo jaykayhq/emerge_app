@@ -2,28 +2,94 @@ import 'package:emerge_app/core/presentation/widgets/growth_background.dart';
 import 'package:emerge_app/core/theme/app_theme.dart';
 import 'package:emerge_app/features/insights/data/repositories/insights_repository.dart';
 import 'package:emerge_app/features/monetization/presentation/providers/subscription_provider.dart';
+import 'package:emerge_app/features/tutorial/presentation/providers/tutorial_provider.dart';
+import 'package:emerge_app/features/tutorial/presentation/widgets/tutorial_overlay.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
 import 'package:go_router/go_router.dart';
 
-class ReflectionsScreen extends ConsumerWidget {
+class ReflectionsScreen extends ConsumerStatefulWidget {
   const ReflectionsScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<ReflectionsScreen> createState() => _ReflectionsScreenState();
+}
+
+class _ReflectionsScreenState extends ConsumerState<ReflectionsScreen> {
+  final GlobalKey _mirrorKey = GlobalKey();
+  final GlobalKey _insightsKey = GlobalKey();
+
+  @override
+  void initState() {
+    super.initState();
+    _checkTutorial();
+  }
+
+  void _checkTutorial() {
+    Future.delayed(const Duration(milliseconds: 500), () {
+      if (!mounted) return;
+      final tutorialNotifier = ref.read(tutorialProvider.notifier);
+      final tutorialState = ref.watch(tutorialProvider);
+      tutorialNotifier.enableTutorialAutoShow();
+
+      if (!tutorialState.isCompleted(TutorialStep.insights) &&
+          tutorialNotifier.shouldShowTutorial()) {
+        _showTutorial();
+      }
+    });
+  }
+
+  void _showTutorial() {
+    late OverlayEntry entry;
+    entry = OverlayEntry(
+      builder: (context) => TutorialOverlay(
+        steps: [
+          TutorialStepInfo(
+            title: 'The Mirror of Truth',
+            description:
+                'These reflections are the crystalized essence of your journey. They show you exactly where you stand.',
+            targetKey: _mirrorKey,
+          ),
+          TutorialStepInfo(
+            title: 'Identity Patterns',
+            description:
+                'Look for recurring themes in your insights to discover your core identity drivers.',
+            targetKey: _insightsKey,
+          ),
+          const TutorialStepInfo(
+            title: 'Active Reflection',
+            description:
+                'Wisdom unapplied is just noise. Use these insights to calibrate your next habits.',
+          ),
+        ],
+        onCompleted: () {
+          ref
+              .read(tutorialProvider.notifier)
+              .completeStep(TutorialStep.insights);
+          entry.remove();
+        },
+      ),
+    );
+    Overlay.of(context).insert(entry);
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final reflectionsAsync = ref.watch(reflectionsProvider);
     final isPremium = ref.watch(isPremiumProvider).value ?? false;
 
     return GrowthBackground(
       appBar: AppBar(
+        key: _mirrorKey,
         title: const Text('Reflections ✦ Insights'),
         backgroundColor: Colors.transparent,
       ),
       child: isPremium 
         ? reflectionsAsync.when(
             data: (reflections) => ListView.separated(
+              key: _insightsKey,
               padding: const EdgeInsets.all(16),
               itemCount: reflections.length,
               separatorBuilder: (context, index) => const Gap(16),
