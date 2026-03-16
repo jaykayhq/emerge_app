@@ -9,6 +9,8 @@ import 'package:emerge_app/features/auth/presentation/providers/auth_providers.d
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
+import 'package:emerge_app/features/tutorial/presentation/providers/tutorial_provider.dart';
+import 'package:emerge_app/features/tutorial/presentation/widgets/tutorial_overlay.dart';
 
 /// Community Screen - Stitch Design "Identity Club Home"
 /// Features: Club stats card, Weekly goal, Top contributors, Activity feed
@@ -25,6 +27,10 @@ class _CommunityScreenState extends ConsumerState<CommunityScreen>
   final TextEditingController _searchController = TextEditingController();
   bool _isSearching = false;
 
+  final GlobalKey _challengesTabKey = GlobalKey();
+  final GlobalKey _tribeTabKey = GlobalKey();
+  final GlobalKey _friendsTabKey = GlobalKey();
+
   @override
   void initState() {
     super.initState();
@@ -39,7 +45,62 @@ class _CommunityScreenState extends ConsumerState<CommunityScreen>
       if (user != null && user.isNotEmpty) {
         ref.read(onlinePresenceServiceProvider).startHeartbeat(user.id);
       }
+      _checkTutorial();
     });
+  }
+
+  void _checkTutorial() {
+    Future.delayed(const Duration(milliseconds: 500), () {
+      if (!mounted) return;
+      final tutorialNotifier = ref.read(tutorialProvider.notifier);
+      final tutorialState = ref.watch(tutorialProvider);
+      tutorialNotifier.enableTutorialAutoShow();
+
+      // Check if any of the social tutorials need to be shown
+      if (tutorialNotifier.shouldShowTutorial()) {
+        if (!tutorialState.isCompleted(TutorialStep.community) ||
+            !tutorialState.isCompleted(TutorialStep.challenges) ||
+            !tutorialState.isCompleted(TutorialStep.friends)) {
+          _showSocialTutorial();
+        }
+      }
+    });
+  }
+
+  void _showSocialTutorial() {
+    late OverlayEntry entry;
+    entry = OverlayEntry(
+      builder: (context) => TutorialOverlay(
+        steps: [
+          TutorialStepInfo(
+            title: 'The Collective Forge',
+            description:
+                'Your Tribe is your core identity support system. Together, you manifest collective growth and compete for archetype dominance.',
+            targetKey: _tribeTabKey,
+          ),
+          TutorialStepInfo(
+            title: 'Heroic Feats',
+            description:
+                'Join community challenges to push your limits and earn massive XP. Shared growth is accelerated growth.',
+            targetKey: _challengesTabKey,
+          ),
+          TutorialStepInfo(
+            title: 'Bonding in the Cosmos',
+            description:
+                'Forge direct links with other explorers. Accountability vows ensure you never drift alone into the void.',
+            targetKey: _friendsTabKey,
+          ),
+        ],
+        onCompleted: () {
+          final notifier = ref.read(tutorialProvider.notifier);
+          notifier.completeStep(TutorialStep.community);
+          notifier.completeStep(TutorialStep.challenges);
+          notifier.completeStep(TutorialStep.friends);
+          entry.remove();
+        },
+      ),
+    );
+    Overlay.of(context).insert(entry);
   }
 
   @override
@@ -159,10 +220,10 @@ class _CommunityScreenState extends ConsumerState<CommunityScreen>
                     fontWeight: FontWeight.bold,
                     fontSize: 13,
                   ),
-                  tabs: const [
-                    Tab(text: 'Challenges'),
-                    Tab(text: 'Tribe'),
-                    Tab(text: 'Friends'),
+                  tabs: [
+                    Tab(key: _challengesTabKey, text: 'Challenges'),
+                    Tab(key: _tribeTabKey, text: 'Tribe'),
+                    Tab(key: _friendsTabKey, text: 'Friends'),
                   ],
                 ),
               ),

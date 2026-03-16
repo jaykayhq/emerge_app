@@ -1,0 +1,16 @@
+Analyzing emerge_app...                                         
+
+   info - The local variable '_error' starts with an underscore - lib\features\gamification\presentation\providers\user_stats_providers.dart:36:13 - no_leading_underscores_for_local_identifiers
+   info - The local variable '_stackTrace' starts with an underscore - lib\features\gamification\presentation\providers\user_stats_providers.dart:36:21 - no_leading_underscores_for_local_identifiers
+   info - The local variable '_error' starts with an underscore - lib\features\gamification\presentation\providers\user_stats_providers.dart:48:13 - no_leading_underscores_for_local_identifiers
+   info - The local variable '_stackTrace' starts with an underscore - lib\features\gamification\presentation\providers\user_stats_providers.dart:48:21 - no_leading_underscores_for_local_identifiers
+   info - The local variable '_error' starts with an underscore - lib\features\gamification\presentation\providers\user_stats_providers.dart:60:13 - no_leading_underscores_for_local_identifiers
+   info - The local variable '_stackTrace' starts with an underscore - lib\features\gamification\presentation\providers\user_stats_providers.dart:60:21 - no_leading_underscores_for_local_identifiers
+warning - Unused import: 'package:emerge_app/features/social/domain/repositories/challenge_repository.dart' - lib\features\social\presentation\providers\challenge_bundle_provider.dart:6:8 - unused_import
+  error - Undefined name 'ref' - lib\features\social\presentation\screens\challenges_screen.dart:1306:30 - undefined_identifier
+  error - Undefined name 'ref' - lib\features\social\presentation\screens\challenges_screen.dart:1308:36 - undefined_identifier
+warning - The declaration '_ShimmerCard' isn't referenced - lib\features\social\presentation\screens\challenges_screen.dart:1372:7 - unused_element
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\social\presentation\widgets\challenges_skeleton.dart:95:45 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\social\presentation\widgets\challenges_skeleton.dart:96:45 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\social\presentation\widgets\challenges_skeleton.dart:97:45 - deprecated_member_use
+

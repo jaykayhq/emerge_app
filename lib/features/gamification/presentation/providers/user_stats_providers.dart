@@ -10,6 +10,9 @@ import 'package:emerge_app/features/habits/domain/entities/habit.dart';
 import 'package:emerge_app/features/social/domain/services/club_activity_service.dart';
 import 'package:emerge_app/features/social/presentation/providers/tribes_provider.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:riverpod_annotation/riverpod_annotation.dart';
+
+part 'user_stats_providers.g.dart';
 
 final gamificationServiceProvider = Provider((ref) => GamificationService());
 
@@ -21,6 +24,42 @@ final userStatsStreamProvider = StreamProvider<UserProfile>((ref) {
   final repository = ref.watch(userStatsRepositoryProvider);
   return repository.watchUserStats(user.id);
 });
+
+/// Split provider that only watches avatarStats field
+/// Prevents full profile rebuilds when only avatar stats change
+@riverpod
+Stream<UserAvatarStats> userAvatarStats(Ref ref) {
+  final profileAsync = ref.watch(userStatsStreamProvider);
+  return profileAsync.when(
+    data: (profile) => Stream.value(profile.avatarStats),
+    loading: () => Stream.value(const UserAvatarStats()),
+    error: (error, stackTrace) => Stream.value(const UserAvatarStats()),
+  );
+}
+
+/// Split provider that only watches level field
+/// Useful for UI elements that only need level info
+@riverpod
+Stream<int> userLevel(Ref ref) {
+  final profileAsync = ref.watch(userStatsStreamProvider);
+  return profileAsync.when(
+    data: (profile) => Stream.value(profile.avatarStats.level),
+    loading: () => Stream.value(1),
+    error: (error, stackTrace) => Stream.value(1),
+  );
+}
+
+/// Split provider that only watches streak field
+/// Useful for streak-specific UI components
+@riverpod
+Stream<int> userStreak(Ref ref) {
+  final profileAsync = ref.watch(userStatsStreamProvider);
+  return profileAsync.when(
+    data: (profile) => Stream.value(profile.avatarStats.streak),
+    loading: () => Stream.value(0),
+    error: (error, stackTrace) => Stream.value(0),
+  );
+}
 
 final userStatsControllerProvider = Provider((ref) {
   final repository = ref.watch(userStatsRepositoryProvider);

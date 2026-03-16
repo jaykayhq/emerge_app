@@ -2,15 +2,19 @@ import 'package:emerge_app/core/presentation/widgets/emerge_branding.dart';
 import 'package:emerge_app/core/theme/app_theme.dart';
 import 'package:emerge_app/features/auth/presentation/providers/auth_providers.dart';
 import 'package:emerge_app/features/social/domain/models/challenge.dart';
+import 'package:emerge_app/features/social/domain/models/challenge_bundle.dart';
+import 'package:emerge_app/features/social/presentation/providers/challenge_bundle_provider.dart';
 import 'package:emerge_app/features/social/presentation/providers/challenge_provider.dart';
 import 'package:emerge_app/features/social/presentation/screens/challenge_detail_screen.dart';
 import 'package:emerge_app/features/social/presentation/screens/create_solo_challenge_dialog.dart';
+import 'package:emerge_app/features/social/presentation/widgets/challenges_skeleton.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
 
-/// Challenges Screen - Wired to Firestore via providers
+/// Challenges Screen - Optimized with bundle provider to prevent double refresh
+/// Uses single consolidated data fetch instead of multiple independent providers
 class ChallengesScreen extends ConsumerStatefulWidget {
   const ChallengesScreen({super.key});
 
@@ -29,6 +33,9 @@ class _ChallengesScreenState extends ConsumerState<ChallengesScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // Watch the consolidated bundle - single async operation
+    final bundleAsync = ref.watch(challengeBundleProvider);
+
     return Scaffold(
       backgroundColor: EmergeColors.background,
       floatingActionButton: FloatingActionButton(
@@ -47,202 +54,230 @@ class _ChallengesScreenState extends ConsumerState<ChallengesScreen> {
       body: Container(
         decoration: const BoxDecoration(gradient: AppTheme.cosmicGradient),
         child: SafeArea(
-          child: CustomScrollView(
-            slivers: [
-              // App Bar
-              SliverAppBar(
-                backgroundColor: Colors.transparent,
-                floating: true,
-                leading: IconButton(
-                  icon: const Icon(Icons.arrow_back, color: Colors.white),
-                  onPressed: () => Navigator.of(context).pop(),
-                ),
-                title: const Text(
-                  'ACTIVE CHALLENGES',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 16,
-                    letterSpacing: 1,
-                  ),
-                ),
-                centerTitle: true,
-              ),
-
-              // Filter Pills
-              SliverToBoxAdapter(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 8,
-                  ),
-                  child: _FilterPillsRow(
-                    filters: _filters,
-                    selected: _selectedFilter,
-                    onSelected: (i) => setState(() => _selectedFilter = i),
-                  ),
+          child: Stack(
+            children: [
+              // Main content - hidden during initial load
+              Opacity(
+                opacity: bundleAsync.isLoading ? 0.0 : 1.0,
+                child: IgnorePointer(
+                  ignoring: bundleAsync.isLoading,
+                  child: _buildContent(bundleAsync.value),
                 ),
               ),
-
-              const SliverToBoxAdapter(child: Gap(20)),
-
-              if (_selectedFilter == 0 || _selectedFilter == 2) ...[
-                // Weekly Spotlight Section
-                SliverToBoxAdapter(
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    child: Row(
-                      children: [
-                        const Icon(
-                          Icons.auto_awesome,
-                          size: 18,
-                          color: EmergeColors.yellow,
-                        ),
-                        const Gap(8),
-                        const Text(
-                          'Weekly Spotlight',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 16,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-                const SliverToBoxAdapter(child: Gap(12)),
-                SliverToBoxAdapter(child: _WeeklySpotlightSection()),
-                const SliverToBoxAdapter(child: Gap(28)),
-              ],
-
-              if (_selectedFilter == 0) ...[
-                // Daily Quest Section
-                SliverToBoxAdapter(
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    child: Row(
-                      children: [
-                        const Icon(
-                          Icons.today,
-                          size: 18,
-                          color: EmergeColors.coral,
-                        ),
-                        const Gap(8),
-                        const Text(
-                          'Daily Quest',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 16,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-                const SliverToBoxAdapter(child: Gap(12)),
-                SliverToBoxAdapter(child: _DailyQuestSection()),
-                const SliverToBoxAdapter(child: Gap(28)),
-              ],
-
-              if (_selectedFilter == 0 || _selectedFilter == 1) ...[
-                // Your Quests Section
-                SliverToBoxAdapter(
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        const Text(
-                          'Solo Quests',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 16,
-                          ),
-                        ),
-                        Text(
-                          'View All',
-                          style: TextStyle(
-                            color: EmergeColors.teal,
-                            fontSize: 13,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-                const SliverToBoxAdapter(child: Gap(16)),
-                SliverToBoxAdapter(child: _QuestCardsSection()),
-                const SliverToBoxAdapter(child: Gap(28)),
-              ],
-
-              if (_selectedFilter == 0) ...[
-                // Archetype Challenges Section
-                SliverToBoxAdapter(
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    child: Row(
-                      children: [
-                        const Icon(
-                          Icons.emoji_events,
-                          size: 18,
-                          color: EmergeColors.yellow,
-                        ),
-                        const Gap(8),
-                        const Text(
-                          'For Your Path',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 16,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-                const SliverToBoxAdapter(child: Gap(16)),
-                SliverToBoxAdapter(child: _ArchetypeChallengesSection()),
-                const SliverToBoxAdapter(child: Gap(28)),
-              ],
-
-              if (_selectedFilter == 3) ...[
-                // Completed Challenges Section
-                SliverToBoxAdapter(
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    child: Row(
-                      children: [
-                        const Icon(
-                          Icons.verified,
-                          size: 18,
-                          color: EmergeColors.teal,
-                        ),
-                        const Gap(8),
-                        const Text(
-                          'Completed',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 16,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-                const SliverToBoxAdapter(child: Gap(16)),
-                SliverToBoxAdapter(child: _CompletedChallengesSection()),
-                const SliverToBoxAdapter(child: Gap(28)),
-              ],
-
-              const SliverToBoxAdapter(child: Gap(80)),
+              // Unified skeleton loader during initial load
+              if (bundleAsync.isLoading)
+                const ChallengesSkeletonLoader(),
             ],
           ),
         ),
       ),
+    );
+  }
+
+  Widget _buildContent(ChallengeBundleData? bundle) {
+    return CustomScrollView(
+      slivers: [
+        // App Bar
+        SliverAppBar(
+          backgroundColor: Colors.transparent,
+          floating: true,
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back, color: Colors.white),
+            onPressed: () => Navigator.of(context).pop(),
+          ),
+          title: const Text(
+            'ACTIVE CHALLENGES',
+            style: TextStyle(
+              color: Colors.white,
+              fontWeight: FontWeight.bold,
+              fontSize: 16,
+              letterSpacing: 1,
+            ),
+          ),
+          centerTitle: true,
+        ),
+
+        // Filter Pills
+        SliverToBoxAdapter(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(
+              horizontal: 16,
+              vertical: 8,
+            ),
+            child: _FilterPillsRow(
+              filters: _filters,
+              selected: _selectedFilter,
+              onSelected: (i) => setState(() => _selectedFilter = i),
+            ),
+          ),
+        ),
+
+        const SliverToBoxAdapter(child: Gap(20)),
+
+        if (_selectedFilter == 0 || _selectedFilter == 2) ...[
+          // Weekly Spotlight Section
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Row(
+                children: [
+                  const Icon(
+                    Icons.auto_awesome,
+                    size: 18,
+                    color: EmergeColors.yellow,
+                  ),
+                  const Gap(8),
+                  const Text(
+                    'Weekly Spotlight',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          const SliverToBoxAdapter(child: Gap(12)),
+          SliverToBoxAdapter(
+            child: _WeeklySpotlightSection(bundle: bundle),
+          ),
+          const SliverToBoxAdapter(child: Gap(28)),
+        ],
+
+        if (_selectedFilter == 0) ...[
+          // Daily Quest Section
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Row(
+                children: [
+                  const Icon(
+                    Icons.today,
+                    size: 18,
+                    color: EmergeColors.coral,
+                  ),
+                  const Gap(8),
+                  const Text(
+                    'Daily Quest',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          const SliverToBoxAdapter(child: Gap(12)),
+          SliverToBoxAdapter(
+            child: _DailyQuestSection(bundle: bundle),
+          ),
+          const SliverToBoxAdapter(child: Gap(28)),
+        ],
+
+        if (_selectedFilter == 0 || _selectedFilter == 1) ...[
+          // Your Quests Section
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text(
+                    'Solo Quests',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                    ),
+                  ),
+                  Text(
+                    'View All',
+                    style: TextStyle(
+                      color: EmergeColors.teal,
+                      fontSize: 13,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          const SliverToBoxAdapter(child: Gap(16)),
+          SliverToBoxAdapter(
+            child: _QuestCardsSection(bundle: bundle),
+          ),
+          const SliverToBoxAdapter(child: Gap(28)),
+        ],
+
+        if (_selectedFilter == 0) ...[
+          // Archetype Challenges Section
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Row(
+                children: [
+                  const Icon(
+                    Icons.emoji_events,
+                    size: 18,
+                    color: EmergeColors.yellow,
+                  ),
+                  const Gap(8),
+                  const Text(
+                    'For Your Path',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          const SliverToBoxAdapter(child: Gap(16)),
+          SliverToBoxAdapter(
+            child: _ArchetypeChallengesSection(bundle: bundle),
+          ),
+          const SliverToBoxAdapter(child: Gap(28)),
+        ],
+
+        if (_selectedFilter == 3) ...[
+          // Completed Challenges Section
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Row(
+                children: [
+                  const Icon(
+                    Icons.verified,
+                    size: 18,
+                    color: EmergeColors.teal,
+                  ),
+                  const Gap(8),
+                  const Text(
+                    'Completed',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          const SliverToBoxAdapter(child: Gap(16)),
+          SliverToBoxAdapter(
+            child: _CompletedChallengesSection(bundle: bundle),
+          ),
+          const SliverToBoxAdapter(child: Gap(28)),
+        ],
+
+        const SliverToBoxAdapter(child: Gap(80)),
+      ],
     );
   }
 }
@@ -304,23 +339,21 @@ class _FilterPillsRow extends StatelessWidget {
   }
 }
 
-// ============ WEEKLY SPOTLIGHT (Firestore) ============
+// ============ WEEKLY SPOTLIGHT (from Bundle) ============
 
-class _WeeklySpotlightSection extends ConsumerWidget {
+class _WeeklySpotlightSection extends StatelessWidget {
+  final ChallengeBundleData? bundle;
+
+  const _WeeklySpotlightSection({this.bundle});
+
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final spotlightAsync = ref.watch(weeklySpotlightProvider);
-
-    return spotlightAsync.when(
-      data: (challenge) {
-        if (challenge == null) {
-          return _EmptySpotlightCard();
-        }
-        return _SpotlightCard(challenge: challenge);
-      },
-      loading: () => _ShimmerCard(height: 220),
-      error: (_, _) => _EmptySpotlightCard(),
-    );
+  Widget build(BuildContext context) {
+    final challenge = bundle?.weeklySpotlight;
+    
+    if (challenge == null) {
+      return _EmptySpotlightCard();
+    }
+    return _SpotlightCard(challenge: challenge);
   }
 }
 
@@ -569,24 +602,31 @@ class _EmptySpotlightCard extends StatelessWidget {
   }
 }
 
-// ============ DAILY QUEST SECTION ============
+// ============ DAILY QUEST SECTION (from Bundle) ============
 
-class _DailyQuestSection extends ConsumerWidget {
+class _DailyQuestSection extends ConsumerStatefulWidget {
+  final ChallengeBundleData? bundle;
+
+  const _DailyQuestSection({this.bundle});
+
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final dailyAsync = ref.watch(dailyQuestProvider);
-    final user = ref.watch(authStateChangesProvider).value;
+  ConsumerState<_DailyQuestSection> createState() => _DailyQuestSectionState();
+}
 
-    return dailyAsync.when(
-      data: (challenge) {
-        if (challenge == null) {
-          return _EmptyDailyQuestCard();
-        }
-        return _DailyQuestCard(challenge: challenge, userId: user?.id ?? '');
-      },
-      loading: () => _ShimmerCard(height: 160),
-      error: (_, _) => _EmptyDailyQuestCard(),
-    );
+class _DailyQuestSectionState extends ConsumerState<_DailyQuestSection> {
+  @override
+  Widget build(BuildContext context) {
+    final challenge = widget.bundle?.dailyQuest;
+    
+    if (challenge == null) {
+      return _EmptyDailyQuestCard();
+    }
+    
+    // Get user ID from auth state
+    final user = ref.watch(authStateChangesProvider).value;
+    final userId = user?.id ?? '';
+    
+    return _DailyQuestCard(challenge: challenge, userId: userId);
   }
 }
 
@@ -810,155 +850,120 @@ class _EmptyDailyQuestCard extends StatelessWidget {
   }
 }
 
-// ============ QUEST CARDS (Firestore) ============
+// ============ QUEST CARDS (from Bundle) ============
 
-class _QuestCardsSection extends ConsumerWidget {
+class _QuestCardsSection extends StatelessWidget {
+  final ChallengeBundleData? bundle;
+
+  const _QuestCardsSection({this.bundle});
+
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final questsAsync = ref.watch(userChallengesProvider);
-
-    return questsAsync.when(
-      data: (challenges) {
-        final active = challenges
-            .where((c) => c.status == ChallengeStatus.active)
-            .toList();
-        if (active.isEmpty) {
-          return Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: Container(
-              padding: const EdgeInsets.all(24),
-              decoration: BoxDecoration(
-                color: EmergeColors.glassWhite,
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: EmergeColors.glassBorder),
-              ),
-              child: Center(
-                child: Column(
-                  children: [
-                    Icon(
-                      Icons.explore,
-                      size: 40,
-                      color: AppTheme.textSecondaryDark.withValues(alpha: 0.5),
-                    ),
-                    const Gap(12),
-                    Text(
-                      'No active solo quests yet',
-                      style: TextStyle(
-                        color: AppTheme.textSecondaryDark,
-                        fontSize: 14,
-                      ),
-                    ),
-                    const Gap(4),
-                    Text(
-                      'Browse archetype challenges below to get started',
-                      style: TextStyle(
-                        color: AppTheme.textSecondaryDark.withValues(
-                          alpha: 0.5,
-                        ),
-                        fontSize: 12,
-                      ),
-                    ),
-                  ],
+  Widget build(BuildContext context) {
+    final active = bundle?.activeSoloChallenges ?? [];
+    
+    if (active.isEmpty) {
+      return Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        child: Container(
+          padding: const EdgeInsets.all(24),
+          decoration: BoxDecoration(
+            color: EmergeColors.glassWhite,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: EmergeColors.glassBorder),
+          ),
+          child: Center(
+            child: Column(
+              children: [
+                Icon(
+                  Icons.explore,
+                  size: 40,
+                  color: AppTheme.textSecondaryDark.withValues(alpha: 0.5),
                 ),
-              ),
+                const Gap(12),
+                Text(
+                  'No active solo quests yet',
+                  style: TextStyle(
+                    color: AppTheme.textSecondaryDark,
+                    fontSize: 14,
+                  ),
+                ),
+                const Gap(4),
+                Text(
+                  'Browse archetype challenges below to get started',
+                  style: TextStyle(
+                    color: AppTheme.textSecondaryDark.withValues(
+                      alpha: 0.5,
+                    ),
+                    fontSize: 12,
+                  ),
+                ),
+              ],
             ),
-          );
-        }
-        return Column(
-          children: active
-              .map(
-                (quest) => Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-                  child: _QuestCard(challenge: quest),
-                ),
-              )
-              .toList(),
-        );
-      },
-      loading: () => Column(
-        children: [
-          _ShimmerCard(height: 140),
-          const Gap(16),
-          _ShimmerCard(height: 140),
-        ],
-      ),
-      error: (_, _) => const Padding(
-        padding: EdgeInsets.symmetric(horizontal: 16),
-        child: Text(
-          'Failed to load quests',
-          style: TextStyle(color: Colors.white70),
+          ),
         ),
-      ),
+      );
+    }
+    return Column(
+      children: active
+          .map(
+            (quest) => Padding(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+              child: _QuestCard(challenge: quest),
+            ),
+          )
+          .toList(),
     );
   }
 }
 
-class _CompletedChallengesSection extends ConsumerWidget {
+class _CompletedChallengesSection extends StatelessWidget {
+  final ChallengeBundleData? bundle;
+
+  const _CompletedChallengesSection({this.bundle});
+
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final questsAsync = ref.watch(userChallengesProvider);
+  Widget build(BuildContext context) {
+    final completed = bundle?.completedChallenges ?? [];
 
-    return questsAsync.when(
-      data: (challenges) {
-        final completed = challenges
-            .where((c) => c.status == ChallengeStatus.completed)
-            .toList();
-
-        if (completed.isEmpty) {
-          return Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: Container(
-              padding: const EdgeInsets.all(24),
-              decoration: BoxDecoration(
-                color: EmergeColors.glassWhite,
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: EmergeColors.glassBorder),
-              ),
-              child: const Center(
-                child: Column(
-                  children: [
-                    Icon(
-                      Icons.verified_outlined,
-                      size: 40,
-                      color: EmergeColors.teal,
-                    ),
-                    Gap(12),
-                    Text(
-                      'No completed quests yet.',
-                      style: TextStyle(color: Colors.white70, fontSize: 14),
-                    ),
-                  ],
+    if (completed.isEmpty) {
+      return Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        child: Container(
+          padding: const EdgeInsets.all(24),
+          decoration: BoxDecoration(
+            color: EmergeColors.glassWhite,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: EmergeColors.glassBorder),
+          ),
+          child: const Center(
+            child: Column(
+              children: [
+                Icon(
+                  Icons.verified_outlined,
+                  size: 40,
+                  color: EmergeColors.teal,
                 ),
-              ),
+                Gap(12),
+                Text(
+                  'No completed quests yet.',
+                  style: TextStyle(color: Colors.white70, fontSize: 14),
+                ),
+              ],
             ),
-          );
-        }
-
-        return Column(
-          children: completed
-              .map(
-                (quest) => Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-                  child: _QuestCard(challenge: quest),
-                ),
-              )
-              .toList(),
-        );
-      },
-      loading: () => Column(
-        children: [
-          _ShimmerCard(height: 140),
-          const Gap(16),
-          _ShimmerCard(height: 140),
-        ],
-      ),
-      error: (_, _) => const Padding(
-        padding: EdgeInsets.symmetric(horizontal: 16),
-        child: Text(
-          'Failed to load completed quests',
-          style: TextStyle(color: Colors.white70),
+          ),
         ),
-      ),
+      );
+    }
+
+    return Column(
+      children: completed
+          .map(
+            (quest) => Padding(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+              child: _QuestCard(challenge: quest),
+            ),
+          )
+          .toList(),
     );
   }
 }
@@ -1140,79 +1145,64 @@ class _QuestCard extends StatelessWidget {
   }
 }
 
-// ============ ARCHETYPE CHALLENGES (Firestore) ============
+// ============ ARCHETYPE CHALLENGES (from Bundle) ============
 
-class _ArchetypeChallengesSection extends ConsumerWidget {
+class _ArchetypeChallengesSection extends StatelessWidget {
+  final ChallengeBundleData? bundle;
+
+  const _ArchetypeChallengesSection({this.bundle});
+
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final challengesAsync = ref.watch(archetypeChallengesProvider);
-
-    return challengesAsync.when(
-      data: (challenges) {
-        if (challenges.isEmpty) {
-          return Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: Container(
-              padding: const EdgeInsets.all(24),
-              decoration: BoxDecoration(
-                color: EmergeColors.glassWhite,
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: EmergeColors.glassBorder),
-              ),
-              child: Center(
-                child: Column(
-                  children: [
-                    Icon(
-                      Icons.emoji_events,
-                      size: 40,
-                      color: AppTheme.textSecondaryDark.withValues(alpha: 0.5),
-                    ),
-                    const Gap(12),
-                    Text(
-                      'Coming soon for your archetype',
-                      style: TextStyle(
-                        color: AppTheme.textSecondaryDark,
-                        fontSize: 14,
-                      ),
-                    ),
-                  ],
+  Widget build(BuildContext context) {
+    final challenges = bundle?.archetypeChallenges ?? [];
+    
+    if (challenges.isEmpty) {
+      return Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        child: Container(
+          padding: const EdgeInsets.all(24),
+          decoration: BoxDecoration(
+            color: EmergeColors.glassWhite,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: EmergeColors.glassBorder),
+          ),
+          child: Center(
+            child: Column(
+              children: [
+                Icon(
+                  Icons.emoji_events,
+                  size: 40,
+                  color: AppTheme.textSecondaryDark.withValues(alpha: 0.5),
                 ),
-              ),
+                const Gap(12),
+                Text(
+                  'Coming soon for your archetype',
+                  style: TextStyle(
+                    color: AppTheme.textSecondaryDark,
+                    fontSize: 14,
+                  ),
+                ),
+              ],
             ),
-          );
-        }
-        return Column(
-          children: challenges
-              .map((c) => _ArchetypeChallengeCard(challenge: c, ref: ref))
-              .toList(),
-        );
-      },
-      loading: () => Column(
-        children: [
-          _ShimmerCard(height: 100),
-          const Gap(12),
-          _ShimmerCard(height: 100),
-        ],
-      ),
-      error: (_, _) => const Padding(
-        padding: EdgeInsets.symmetric(horizontal: 16),
-        child: Text(
-          'Failed to load challenges',
-          style: TextStyle(color: Colors.white70),
+          ),
         ),
-      ),
+      );
+    }
+    return Column(
+      children: challenges
+          .map((c) => _ArchetypeChallengeCard(challenge: c))
+          .toList(),
     );
   }
 }
 
-class _ArchetypeChallengeCard extends StatelessWidget {
+class _ArchetypeChallengeCard extends ConsumerWidget {
   final Challenge challenge;
-  final WidgetRef ref;
 
-  const _ArchetypeChallengeCard({required this.challenge, required this.ref});
+  const _ArchetypeChallengeCard({required this.challenge});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return GestureDetector(
       onTap: () {
         Navigator.of(context).push(
@@ -1374,30 +1364,6 @@ class _ArchetypeChallengeCard extends StatelessWidget {
         ),
       ),
     ).animate().fadeIn(delay: 100.ms);
-  }
-}
-
-// ============ SHIMMER LOADER ============
-
-class _ShimmerCard extends StatelessWidget {
-  final double height;
-  const _ShimmerCard({required this.height});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-          margin: const EdgeInsets.symmetric(horizontal: 16),
-          height: height,
-          decoration: BoxDecoration(
-            color: EmergeColors.glassWhite,
-            borderRadius: BorderRadius.circular(16),
-          ),
-        )
-        .animate(onPlay: (c) => c.repeat())
-        .shimmer(
-          duration: 1200.ms,
-          color: Colors.white.withValues(alpha: 0.08),
-        );
   }
 }
 

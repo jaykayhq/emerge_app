@@ -2,16 +2,75 @@ import 'package:emerge_app/core/presentation/widgets/growth_background.dart';
 import 'package:emerge_app/core/theme/app_theme.dart';
 import 'package:emerge_app/features/gamification/presentation/providers/user_stats_providers.dart';
 import 'package:emerge_app/core/constants/gamification_constants.dart';
+import 'package:emerge_app/features/tutorial/presentation/providers/tutorial_provider.dart';
+import 'package:emerge_app/features/tutorial/presentation/widgets/tutorial_overlay.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
 
-class LevelingScreen extends ConsumerWidget {
+class LevelingScreen extends ConsumerStatefulWidget {
   const LevelingScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<LevelingScreen> createState() => _LevelingScreenState();
+}
+
+class _LevelingScreenState extends ConsumerState<LevelingScreen> {
+  final GlobalKey _progressKey = GlobalKey();
+  final GlobalKey _rewardsKey = GlobalKey();
+
+  @override
+  void initState() {
+    super.initState();
+    _checkTutorial();
+  }
+
+  void _checkTutorial() {
+    Future.delayed(const Duration(milliseconds: 500), () {
+      if (!mounted) return;
+      final tutorialNotifier = ref.read(tutorialProvider.notifier);
+      final tutorialState = ref.watch(tutorialProvider);
+      tutorialNotifier.enableTutorialAutoShow();
+
+      if (!tutorialState.isCompleted(TutorialStep.gamification) &&
+          tutorialNotifier.shouldShowTutorial()) {
+        _showTutorial();
+      }
+    });
+  }
+
+  void _showTutorial() {
+    late OverlayEntry entry;
+    entry = OverlayEntry(
+      builder: (context) => TutorialOverlay(
+        steps: [
+          TutorialStepInfo(
+            title: 'The Progression Engine',
+            description:
+                'Every breath and every action fuels your evolution. Your level represents the gravity of your identity in this world.',
+            targetKey: _progressKey,
+          ),
+          TutorialStepInfo(
+            title: 'Unlocking Potential',
+            description:
+                'Each milestone reached unlocks new dimensions of power, from attribute points to unique avatar manifestations.',
+            targetKey: _rewardsKey,
+          ),
+        ],
+        onCompleted: () {
+          ref
+              .read(tutorialProvider.notifier)
+              .completeStep(TutorialStep.gamification);
+          entry.remove();
+        },
+      ),
+    );
+    Overlay.of(context).insert(entry);
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final statsAsync = ref.watch(userStatsStreamProvider);
     final theme = Theme.of(context);
 
@@ -36,6 +95,7 @@ class LevelingScreen extends ConsumerWidget {
                 const Gap(24),
                 // Level Circle
                 Container(
+                  key: _progressKey,
                   width: 120,
                   height: 120,
                   decoration: BoxDecoration(
@@ -112,6 +172,7 @@ class LevelingScreen extends ConsumerWidget {
 
                 // Rewards Section
                 Container(
+                  key: _rewardsKey,
                   padding: const EdgeInsets.all(24),
                   decoration: BoxDecoration(
                     color: AppTheme.surfaceDark.withValues(alpha: 0.8),
@@ -166,7 +227,6 @@ class LevelingScreen extends ConsumerWidget {
     );
   }
 }
-
 class _RewardItem extends StatelessWidget {
   final IconData icon;
   final String text;
