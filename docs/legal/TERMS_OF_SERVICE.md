@@ -1,69 +1,112 @@
 # Terms of Service — Emerge
 
-> **Last updated:** [DATE]
+**Effective Date: March 17, 2026**
+
+Please read these Terms of Service ("Terms") carefully before using the Emerge mobile application ("App") operated by Emerge ("we", "us", or "our").
 
 ## 1. Acceptance of Terms
 
-By using the Emerge app, you agree to these Terms of Service. If you do not agree, do not use the app.
+By downloading, installing, or using the App, you agree to be bound by these Terms. If you do not agree, do not use the App.
 
 ## 2. Description of Service
 
-Emerge is a habit-building application that uses gamification and identity psychology to help you build lasting habits. The app includes:
-- Habit tracking and streak management
-- Gamified world building and XP progression
-- AI-powered reflections and insights
+Emerge is a habit-building application that uses gamification and identity psychology to help you build lasting habits. The App includes:
+- Habit tracking with customizable reminders and streak management
+- A gamified world that evolves based on your consistency
+- XP progression, leveling, and archetype-based identity systems
+- AI-powered reflections and coaching insights
+- Community features including archetype clubs and accountability partners
 - Free and premium subscription tiers
 
-## 3. User Accounts
+## 3. Eligibility
 
-- You must create an account to use Emerge
-- You are responsible for maintaining the security of your account
-- You must provide accurate and complete registration information
-- One person per account; accounts are non-transferable
+You must be at least 13 years of age to use the App. By using the App, you represent and warrant that you meet this age requirement. If you are under 18, you must have the consent of a parent or legal guardian.
 
-## 4. Subscriptions & Payments
+## 4. User Accounts
 
-### 4.1 Free Tier
-- Limited to a set number of active habits
-- Includes ads via Google AdMob
+- You must create an account using a valid email address or Google Sign-In to access the App.
+- You are responsible for maintaining the confidentiality and security of your account credentials.
+- You must provide accurate and complete registration information.
+- Each person may maintain only one account. Accounts are non-transferable.
+- You are responsible for all activity that occurs under your account.
 
-### 4.2 Premium Tier
-- Unlimited habits, ad-free experience, AI features
-- Billed through Apple App Store or Google Play Store
-- Auto-renews unless cancelled 24 hours before the end of the current period
-- Managed via your device's subscription settings
+## 5. Subscriptions & Payments
 
-### 4.3 Refunds
-- Refund requests follow Apple/Google's respective policies
+### 5.1 Free Tier
+- Includes core habit tracking features with a limited number of active habits.
+- Displays advertisements via Google AdMob.
 
-## 5. Acceptable Use
+### 5.2 Premium Tier ("Emerge Premium")
+- Offers unlimited habits, ad-free experience, advanced AI coaching, and premium gamification features.
+- Billed through Google Play Store or Apple App Store on a monthly or annual basis.
+- Subscriptions auto-renew unless cancelled at least 24 hours before the end of the current billing period.
+- Manage or cancel subscriptions through your device's app store subscription settings.
 
-You agree not to:
-- Use the app for any unlawful purpose
-- Attempt to reverse-engineer or tamper with the app
-- Create multiple accounts to circumvent free tier limits
-- Automate interactions with the app
+### 5.3 Refunds
+- Refund requests are processed according to Google Play and Apple App Store refund policies.
+- We do not process refunds directly.
 
-## 6. Intellectual Property
+## 6. Acceptable Use
 
-All content, design, gamification systems, and code are owned by [YOUR_COMPANY]. You receive a limited, personal, non-transferable license to use the app.
+You agree NOT to:
+- Use the App for any unlawful, harmful, or fraudulent purpose.
+- Attempt to reverse-engineer, decompile, or tamper with the App's code or systems.
+- Create multiple accounts to circumvent free-tier limitations.
+- Use automated scripts, bots, or tools to interact with the App.
+- Harass, abuse, or harm other users through community features.
+- Upload or share content that is offensive, defamatory, or violates any third-party rights.
+- Attempt to gain unauthorized access to other users' accounts or data.
 
-## 7. Disclaimer of Warranties
+## 7. User-Generated Content
 
-The app is provided "AS IS" without warranty of any kind. We do not guarantee uninterrupted or error-free operation.
+- You retain ownership of content you create within the App (habit titles, reflections, social posts).
+- By posting content through community features, you grant us a non-exclusive, royalty-free license to display, distribute, and moderate that content within the App.
+- We reserve the right to remove content that violates these Terms or our community guidelines.
 
-## 8. Limitation of Liability
+## 8. Intellectual Property
 
-To the maximum extent permitted by law, [YOUR_COMPANY] shall not be liable for indirect, incidental, or consequential damages arising from your use of the app.
+All App content, design, gamification systems, branding, and source code are the exclusive property of Emerge and are protected by applicable intellectual property laws. You receive a limited, personal, non-commercial, non-transferable, revocable license to use the App for its intended purpose.
 
-## 9. Termination
+## 9. Third-Party Services
 
-We may suspend or terminate your account if you violate these terms. You may delete your account at any time through the app settings.
+The App integrates with third-party services including:
+- **Google Firebase** (infrastructure, authentication, analytics)
+- **Google AdMob** (advertising)
+- **RevenueCat** (subscription management)
+- **Google Fit / Health Connect** (optional health data integration)
 
-## 10. Changes to Terms
+Your use of these services is subject to their respective terms and privacy policies.
 
-We reserve the right to modify these terms. Continued use after changes constitutes acceptance of the updated terms.
+## 10. Disclaimer of Warranties
 
-## 11. Contact
+THE APP IS PROVIDED ON AN "AS IS" AND "AS AVAILABLE" BASIS WITHOUT WARRANTIES OF ANY KIND, EITHER EXPRESS OR IMPLIED. WE DO NOT WARRANT THAT THE APP WILL BE UNINTERRUPTED, ERROR-FREE, OR SECURE. THE APP IS NOT A MEDICAL DEVICE AND SHOULD NOT BE USED AS A SUBSTITUTE FOR PROFESSIONAL HEALTH ADVICE.
 
-For questions about these terms: **[YOUR_EMAIL]**
+## 11. Limitation of Liability
+
+TO THE MAXIMUM EXTENT PERMITTED BY APPLICABLE LAW, EMERGE SHALL NOT BE LIABLE FOR ANY INDIRECT, INCIDENTAL, SPECIAL, CONSEQUENTIAL, OR PUNITIVE DAMAGES ARISING OUT OF OR RELATING TO YOUR USE OF THE APP, INCLUDING BUT NOT LIMITED TO LOSS OF DATA, LOSS OF PROFITS, OR PERSONAL INJURY.
+
+## 12. Indemnification
+
+You agree to indemnify, defend, and hold harmless Emerge and its officers, directors, and employees from and against any claims, liabilities, damages, losses, or expenses arising from your violation of these Terms or misuse of the App.
+
+## 13. Termination
+
+- We may suspend or terminate your account at our sole discretion if you violate these Terms.
+- You may delete your account at any time through the App's settings.
+- Upon termination, your right to use the App immediately ceases. We may retain anonymized, aggregated data for analytical purposes.
+
+## 14. Governing Law
+
+These Terms shall be governed by and construed in accordance with the laws of England and Wales, without regard to its conflict-of-law provisions.
+
+## 15. Changes to Terms
+
+We reserve the right to modify these Terms at any time. When we make material changes, we will notify you via in-app notification or email. Continued use of the App after changes are posted constitutes your acceptance of the updated Terms.
+
+## 16. Severability
+
+If any provision of these Terms is found to be unenforceable, the remaining provisions shall remain in full force and effect.
+
+## 17. Contact Us
+
+For questions about these Terms, please contact us at: **joeukpai55@gmail.com**

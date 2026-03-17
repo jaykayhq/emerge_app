@@ -87,6 +87,17 @@ class FakeAuthRepository implements AuthRepository {
     return const Right(null);
   }
 
+  @override
+  Future<Either<Failure, void>> deleteAccount() async {
+    await Future.delayed(const Duration(milliseconds: 500));
+    if (_currentUser == AuthUser.empty) {
+      return const Left(AuthFailure('User not logged in'));
+    }
+    _currentUser = AuthUser.empty;
+    _controller.add(_currentUser);
+    return const Right(null);
+  }
+
   void dispose() {
     _controller.close();
   }
