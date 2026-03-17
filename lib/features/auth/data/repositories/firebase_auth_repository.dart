@@ -219,4 +219,61 @@ class FirebaseAuthRepository implements AuthRepository {
       return Left(ServerFailure(e.toString()));
     }
   }
+
+  @override
+  Future<Either<Failure, void>> deleteAccount() async {
+    try {
+      final user = _firebaseAuth.currentUser;
+      if (user == null) {
+        return const Left(AuthFailure('User not logged in'));
+      }
+      final uid = user.uid;
+
+      // Delete user's habits subcollection
+      final habitsSnapshot = await _firestore
+          .collection('users')
+          .doc(uid)
+          .collection('habits')
+          .get();
+      for (final doc in habitsSnapshot.docs) {
+        await doc.reference.delete();
+      }
+
+      // Delete user profile from 'users' collection
+      await _firestore.collection('users').doc(uid).delete();
+
+      // Delete from 'user_stats' collection (legacy mirror)
+      await _firestore.collection('user_stats').doc(uid).delete();
+
+      // Remove from any tribes
+      final tribeQuery = await _firestore
+          .collection('tribes')
+          .where('memberIds', arrayContains: uid)
+          .get();
+      for (final tribeDoc in tribeQuery.docs) {
+        await tribeDoc.reference.update({
+          'memberIds': FieldValue.arrayRemove([uid]),
+          'memberCount': FieldValue.increment(-1),
+        });
+      }
+
+      // Finally delete the Firebase Auth account
+      await user.delete();
+
+      return const Right(null);
+    } on FirebaseAuthException catch (e) {
+      AppLogger.e('Delete account failed', e);
+      if (e.code == 'requires-recent-login') {
+        return const Left(
+          AuthFailure(
+            'For security, please log out and log back in before deleting your account.',
+          ),
+        );
+      }
+      return Left(AuthFailure(e.message ?? 'Delete failed'));
+    } catch (e, s) {
+      AppLogger.e('Delete account failed', e, s);
+      return Left(ServerFailure(e.toString()));
+    }
+  }
 }

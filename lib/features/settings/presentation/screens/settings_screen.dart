@@ -15,6 +15,7 @@ import 'package:emerge_app/features/tutorial/presentation/providers/tutorial_pro
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class SettingsScreen extends ConsumerWidget {
   const SettingsScreen({super.key});
@@ -496,18 +497,25 @@ class SettingsScreen extends ConsumerWidget {
                       _showFaqDialog(context);
                     },
                   ),
-                  _buildListTile(
+                _buildListTile(
                     context,
                     Icons.privacy_tip_outlined,
                     'Privacy Policy',
-                    onTap: () {},
+                    onTap: () => launchUrl(
+                      Uri.parse('https://docs.google.com/document/d/e/2PACX-1vRt5cCpFS7PLmh_nwhxq3ec9YtRWQZk7mrOqbVN7aThrclpjgYL3q5r-nAqlftQJVkOSWzxnG_FDfjo/pub'),
+                      mode: LaunchMode.externalApplication,
+                    ),
                   ),
                   _buildListTile(
                     context,
                     Icons.description_outlined,
                     'Terms of Service',
-                    onTap: () {},
+                    onTap: () => launchUrl(
+                      Uri.parse('https://docs.google.com/document/d/e/2PACX-1vQX-5ydyuD3ZYp_-8b_2rVyyuKW9zF2NaMm1CBxxwE5s1LXASy1P7Plxf8axNGc_TFJw-OnZrULmjgP/pub'),
+                      mode: LaunchMode.externalApplication,
+                    ),
                   ),
+                  _buildDeleteAccountTile(context, ref),
                 ]),
                 const SizedBox(height: 32),
 
@@ -1220,6 +1228,181 @@ class SettingsScreen extends ConsumerWidget {
             style: const TextStyle(color: Colors.white70, fontSize: 13),
           ),
           const Divider(color: Colors.white10, height: 16),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDeleteAccountTile(BuildContext context, WidgetRef ref) {
+    return ListTile(
+      onTap: () => _showDeleteAccountDialog(context, ref),
+      leading: Container(
+        padding: const EdgeInsets.all(8),
+        decoration: BoxDecoration(
+          color: Colors.red.withValues(alpha: 0.1),
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: const Icon(Icons.delete_forever, color: Colors.red),
+      ),
+      title: Text(
+        'Delete Account',
+        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+          fontWeight: FontWeight.w500,
+          color: Colors.red,
+        ),
+      ),
+      subtitle: Text(
+        'Permanently delete your account and all data',
+        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+          color: Colors.red.withValues(alpha: 0.6),
+          fontSize: 11,
+        ),
+      ),
+      trailing: const Icon(
+        Icons.chevron_right,
+        color: Colors.red,
+      ),
+      tileColor: AppTheme.surfaceDark,
+    );
+  }
+
+  void _showDeleteAccountDialog(BuildContext context, WidgetRef ref) {
+    final confirmController = TextEditingController();
+    showDialog(
+      context: context,
+      builder: (dialogContext) => StatefulBuilder(
+        builder: (context, setState) {
+          return AlertDialog(
+            backgroundColor: EmergeColors.background,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+              side: BorderSide(color: Colors.red.withValues(alpha: 0.3)),
+            ),
+            title: Row(
+              children: [
+                const Icon(Icons.warning_amber_rounded, color: Colors.red, size: 28),
+                const SizedBox(width: 8),
+                Text(
+                  'Delete Account',
+                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                    color: Colors.red,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
+            ),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'This action is permanent and cannot be undone. All of your data will be deleted, including:',
+                  style: TextStyle(color: Colors.white70, fontSize: 14),
+                ),
+                const SizedBox(height: 12),
+                _buildDeleteItem('Your profile and account'),
+                _buildDeleteItem('All habits and streaks'),
+                _buildDeleteItem('XP, levels, and world progress'),
+                _buildDeleteItem('Club memberships'),
+                const SizedBox(height: 16),
+                const Text(
+                  'Type DELETE to confirm:',
+                  style: TextStyle(
+                    color: Colors.white54,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                TextField(
+                  controller: confirmController,
+                  onChanged: (_) => setState(() {}),
+                  style: const TextStyle(color: Colors.white),
+                  decoration: InputDecoration(
+                    hintText: 'DELETE',
+                    hintStyle: TextStyle(color: Colors.white24),
+                    filled: true,
+                    fillColor: AppTheme.surfaceDark,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide: BorderSide(color: Colors.red.withValues(alpha: 0.3)),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide: const BorderSide(color: Colors.red),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(dialogContext),
+                child: const Text('Cancel', style: TextStyle(color: Colors.white54)),
+              ),
+              FilledButton(
+                onPressed: confirmController.text.trim() == 'DELETE'
+                    ? () async {
+                        Navigator.pop(dialogContext);
+                        // Show loading
+                        showDialog(
+                          context: context,
+                          barrierDismissible: false,
+                          builder: (_) => const Center(
+                            child: CircularProgressIndicator(color: Colors.red),
+                          ),
+                        );
+                        final result =
+                            await ref.read(authRepositoryProvider).deleteAccount();
+                        if (context.mounted) {
+                          Navigator.of(context).pop(); // Dismiss loading
+                          result.fold(
+                            (failure) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text(failure.message),
+                                  backgroundColor: Colors.red,
+                                ),
+                              );
+                            },
+                            (_) {
+                              // Account deleted — router will redirect to login
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text(
+                                    'Account deleted. We\'re sorry to see you go.',
+                                  ),
+                                ),
+                              );
+                            },
+                          );
+                        }
+                      }
+                    : null,
+                style: FilledButton.styleFrom(
+                  backgroundColor: Colors.red,
+                  disabledBackgroundColor: Colors.red.withValues(alpha: 0.2),
+                ),
+                child: const Text(
+                  'Delete Forever',
+                  style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                ),
+              ),
+            ],
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildDeleteItem(String text) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 2),
+      child: Row(
+        children: [
+          const Icon(Icons.close, color: Colors.red, size: 14),
+          const SizedBox(width: 8),
+          Text(text, style: const TextStyle(color: Colors.white60, fontSize: 13)),
         ],
       ),
     );

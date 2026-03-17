@@ -13,6 +13,7 @@ import 'package:emerge_app/features/gamification/presentation/providers/gamifica
 import 'package:emerge_app/features/onboarding/presentation/providers/onboarding_provider.dart';
 import 'package:emerge_app/features/gamification/domain/services/gamification_service.dart';
 import 'package:go_router/go_router.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class SignUpScreen extends ConsumerStatefulWidget {
   const SignUpScreen({super.key});
@@ -503,6 +504,62 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
                             ),
                           ),
                         ],
+                      ),
+                      const Gap(8),
+                      // Legal Links
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          GestureDetector(
+                            onTap: () => launchUrl(
+                              Uri.parse('https://docs.google.com/document/d/e/2PACX-1vQX-5ydyuD3ZYp_-8b_2rVyyuKW9zF2NaMm1CBxxwE5s1LXASy1P7Plxf8axNGc_TFJw-OnZrULmjgP/pub'),
+                              mode: LaunchMode.externalApplication,
+                            ),
+                            child: const Text(
+                              'Terms of Service',
+                              style: TextStyle(
+                                color: Colors.white54,
+                                fontSize: 12,
+                                decoration: TextDecoration.underline,
+                                decorationColor: Colors.white54,
+                              ),
+                            ),
+                          ),
+                          const Padding(
+                            padding: EdgeInsets.symmetric(horizontal: 8),
+                            child: Text(
+                              '•',
+                              style: TextStyle(color: Colors.white38, fontSize: 12),
+                            ),
+                          ),
+                          GestureDetector(
+                            onTap: () => launchUrl(
+                              Uri.parse('https://docs.google.com/document/d/e/2PACX-1vRt5cCpFS7PLmh_nwhxq3ec9YtRWQZk7mrOqbVN7aThrclpjgYL3q5r-nAqlftQJVkOSWzxnG_FDfjo/pub'),
+                              mode: LaunchMode.externalApplication,
+                            ),
+                            child: const Text(
+                              'Privacy Policy',
+                              style: TextStyle(
+                                color: Colors.white54,
+                                fontSize: 12,
+                                decoration: TextDecoration.underline,
+                                decorationColor: Colors.white54,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      // Signup agreement note
+                      const Padding(
+                        padding: EdgeInsets.only(top: 8),
+                        child: Text(
+                          'By signing up, you agree to our Terms of Service and Privacy Policy.',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            color: Colors.white38,
+                            fontSize: 11,
+                          ),
+                        ),
                       ),
                     ],
                   ),

@@ -9,6 +9,7 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:gap/gap.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
@@ -352,6 +353,50 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                             ],
                           ),
                         ),
+                      ),
+                      const Gap(16),
+                      // Legal Links
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          GestureDetector(
+                            onTap: () => launchUrl(
+                              Uri.parse('https://docs.google.com/document/d/e/2PACX-1vQX-5ydyuD3ZYp_-8b_2rVyyuKW9zF2NaMm1CBxxwE5s1LXASy1P7Plxf8axNGc_TFJw-OnZrULmjgP/pub'),
+                              mode: LaunchMode.externalApplication,
+                            ),
+                            child: const Text(
+                              'Terms of Service',
+                              style: TextStyle(
+                                color: Colors.white54,
+                                fontSize: 12,
+                                decoration: TextDecoration.underline,
+                                decorationColor: Colors.white54,
+                              ),
+                            ),
+                          ),
+                          const Padding(
+                            padding: EdgeInsets.symmetric(horizontal: 8),
+                            child: Text(
+                              '•',
+                              style: TextStyle(color: Colors.white38, fontSize: 12),
+                            ),
+                          ),
+                          GestureDetector(
+                            onTap: () => launchUrl(
+                              Uri.parse('https://docs.google.com/document/d/e/2PACX-1vRt5cCpFS7PLmh_nwhxq3ec9YtRWQZk7mrOqbVN7aThrclpjgYL3q5r-nAqlftQJVkOSWzxnG_FDfjo/pub'),
+                              mode: LaunchMode.externalApplication,
+                            ),
+                            child: const Text(
+                              'Privacy Policy',
+                              style: TextStyle(
+                                color: Colors.white54,
+                                fontSize: 12,
+                                decoration: TextDecoration.underline,
+                                decorationColor: Colors.white54,
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
                     ],
                   ),
