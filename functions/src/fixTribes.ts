@@ -8,12 +8,12 @@ admin.initializeApp({
 const db = admin.firestore();
 
 const clubMap: Record<string, string> = {
-  athlete: 'morning_warriors',
-  scholar: 'deep_work_society',
-  stoic: 'mindful_masters',
-  creator: 'creative_collective',
-  zealot: 'lunar_seekers',
-  mystic: 'lunar_seekers',
+  athlete: "morning_warriors",
+  scholar: "deep_work_society",
+  stoic: "mindful_masters",
+  creator: "creative_collective",
+  zealot: "lunar_seekers",
+  mystic: "lunar_seekers",
 };
 
 async function fixTribes(): Promise<void> {
@@ -45,7 +45,7 @@ async function fixTribes(): Promise<void> {
     if (archetype && archetype !== "none") {
       const clubId = clubMap[archetype.toLowerCase()] || `${archetype}_club`;
       
-      const tribeRef = db.collection('tribes').doc(clubId);
+      const tribeRef = db.collection("tribes").doc(clubId);
       const tribeDoc = await tribeRef.get();
 
       if (tribeDoc.exists) {
@@ -56,7 +56,7 @@ async function fixTribes(): Promise<void> {
         });
 
         // Add user-tribe doc
-        const userTribeRef = db.collection('users').doc(userId).collection('tribes').doc(clubId);
+        const userTribeRef = db.collection("users").doc(userId).collection("tribes").doc(clubId);
         await userTribeRef.set({ joinedAt: admin.firestore.FieldValue.serverTimestamp() });
 
         updatedCount++;

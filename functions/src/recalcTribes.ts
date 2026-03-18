@@ -8,12 +8,12 @@ admin.initializeApp({
 const db = admin.firestore();
 
 const clubMap: Record<string, string> = {
-  athlete: 'morning_warriors',
-  scholar: 'deep_work_society',
-  stoic: 'mindful_masters',
-  creator: 'creative_collective',
-  zealot: 'lunar_seekers',
-  mystic: 'lunar_seekers',
+  athlete: "morning_warriors",
+  scholar: "deep_work_society",
+  stoic: "mindful_masters",
+  creator: "creative_collective",
+  zealot: "lunar_seekers",
+  mystic: "lunar_seekers",
 };
 
 async function recalcTribes(): Promise<void> {
@@ -47,9 +47,9 @@ async function recalcTribes(): Promise<void> {
         if (statsDoc.exists) {
           const stats = statsDoc.data() || {};
           let xp = 0;
-          if (stats.avatarStats && typeof stats.avatarStats.totalXp === 'number') {
+          if (stats.avatarStats && typeof stats.avatarStats.totalXp === "number") {
             xp = stats.avatarStats.totalXp;
-          } else if (typeof stats.totalXp === 'number') {
+          } else if (typeof stats.totalXp === "number") {
             xp = stats.totalXp;
           }
           clubData[clubId].totalXp += xp;
@@ -70,9 +70,9 @@ async function recalcTribes(): Promise<void> {
     const act = doc.data();
     const clubId = act.clubId;
     if (clubId && clubActivityCounts[clubId]) {
-      if (act.type === 'habit_complete' || act.type === 'habit_completion') {
+      if (act.type === "habit_complete" || act.type === "habit_completion") {
         clubActivityCounts[clubId].habits++;
-      } else if (act.type === 'challenge_complete') {
+      } else if (act.type === "challenge_complete") {
         clubActivityCounts[clubId].challenges++;
       }
     }
@@ -81,7 +81,7 @@ async function recalcTribes(): Promise<void> {
   // 3. Apply updates to the 'tribes' collection
   let updatedCount = 0;
   for (const [clubId, data] of Object.entries(clubData)) {
-    const tribeRef = db.collection('tribes').doc(clubId);
+    const tribeRef = db.collection("tribes").doc(clubId);
     const tribeDoc = await tribeRef.get();
 
     if (tribeDoc.exists) {

@@ -52,7 +52,7 @@ const NOTIFICATION_TEMPLATES = {
     levelUp: (level: number) =>
       `🏆 💪 LEVEL UP! You've reached Level ${level}! Your training yields greatness!`,
     aiInsightGreeting: () =>
-      `💪 Your training insights are ready! Optimize your performance today.`,
+      "💪 Your training insights are ready! Optimize your performance today.",
     achievement: (name: string) =>
       `🏅 💪 ACHIEVEMENT UNLOCKED: ${name}! Your dedication knows no bounds!`,
   },
@@ -66,7 +66,7 @@ const NOTIFICATION_TEMPLATES = {
     levelUp: (level: number) =>
       `🏆 📚 WISDOM GROWS! You've reached Level ${level}! Knowledge expands within you.`,
     aiInsightGreeting: () =>
-      `📚 Wisdom awaits! Your personalized learning insights have arrived.`,
+      "📚 Wisdom awaits! Your personalized learning insights have arrived.",
     achievement: (name: string) =>
       `🏅 📚 KNOWLEDGE CONQUERED: ${name}! Your quest for wisdom succeeds!`,
   },
@@ -80,7 +80,7 @@ const NOTIFICATION_TEMPLATES = {
     levelUp: (level: number) =>
       `🏆 🎨 MUSE FAVORS YOU! You've reached Level ${level}! Your artistry elevates!`,
     aiInsightGreeting: () =>
-      `🎨 Creative inspiration delivered! Your muse has new insights for you.`,
+      "🎨 Creative inspiration delivered! Your muse has new insights for you.",
     achievement: (name: string) =>
       `🏅 🎨 MASTERPIECE CREATED: ${name}! Your creative vision manifests!`,
   },
@@ -94,7 +94,7 @@ const NOTIFICATION_TEMPLATES = {
     levelUp: (level: number) =>
       `🏆 🏛️ MASTERY AWAITS! You've reached Level ${level}! Your discipline strengthens!`,
     aiInsightGreeting: () =>
-      `🏛️ Clarity awaits! Your daily reflection on mastery and discipline is here.`,
+      "🏛️ Clarity awaits! Your daily reflection on mastery and discipline is here.",
     achievement: (name: string) =>
       `🏅 🏛️ VIRTUE ATTAINED: ${name}! Your stoic practice bears fruit!`,
   },
@@ -108,7 +108,7 @@ const NOTIFICATION_TEMPLATES = {
     levelUp: (level: number) =>
       `🏆 🔥 SACRED ASCENSION! You've reached Level ${level}! Your devotion burns brighter!`,
     aiInsightGreeting: () =>
-      `🔥 Divine guidance! Your sacred insights for the path have been revealed.`,
+      "🔥 Divine guidance! Your sacred insights for the path have been revealed.",
     achievement: (name: string) =>
       `🏅 🔥 SACRED HONOR EARNED: ${name}! Your devotion is recognized!`,
   },
@@ -122,7 +122,7 @@ const NOTIFICATION_TEMPLATES = {
     levelUp: (level: number) =>
       `🏆 LEVEL UP! You've reached Level ${level}! Keep up the amazing work!`,
     aiInsightGreeting: () =>
-      `✨ Your daily insights are ready! Discover what's possible today.`,
+      "✨ Your daily insights are ready! Discover what's possible today.",
     achievement: (name: string) =>
       `🏅 ACHIEVEMENT UNLOCKED: ${name}! You're making incredible progress!`,
   },
@@ -787,34 +787,34 @@ export const testNotificationTemplates = functionsV1.https.onCall(
       let notificationType = "test";
 
       switch (type) {
-        case "welcome":
-          body = getTemplateMessage(archetype, "welcome", "Test Habit");
-          notificationType = "habit_welcome";
-          break;
-        case "reminder":
-          body = getTemplateMessage(archetype, "reminder", "Test Habit");
-          notificationType = "habit_reminder";
-          break;
-        case "streakWarning":
-          body = getTemplateMessage(archetype, "streakWarning", 7);
-          notificationType = "streak_warning";
-          break;
-        case "levelUp":
-          body = getTemplateMessage(archetype, "levelUp", 10);
-          title = "Level Up!";
-          notificationType = "level_up";
-          break;
-        case "aiInsight":
-          body = getTemplateMessage(archetype, "aiInsightGreeting");
-          notificationType = "ai_insight";
-          break;
-        case "achievement":
-          body = getTemplateMessage(archetype, "achievement", "Test Achievement");
-          title = "Achievement Unlocked!";
-          notificationType = "achievement";
-          break;
-        default:
-          body = "Test notification from Emerge";
+      case "welcome":
+        body = getTemplateMessage(archetype, "welcome", "Test Habit");
+        notificationType = "habit_welcome";
+        break;
+      case "reminder":
+        body = getTemplateMessage(archetype, "reminder", "Test Habit");
+        notificationType = "habit_reminder";
+        break;
+      case "streakWarning":
+        body = getTemplateMessage(archetype, "streakWarning", 7);
+        notificationType = "streak_warning";
+        break;
+      case "levelUp":
+        body = getTemplateMessage(archetype, "levelUp", 10);
+        title = "Level Up!";
+        notificationType = "level_up";
+        break;
+      case "aiInsight":
+        body = getTemplateMessage(archetype, "aiInsightGreeting");
+        notificationType = "ai_insight";
+        break;
+      case "achievement":
+        body = getTemplateMessage(archetype, "achievement", "Test Achievement");
+        title = "Achievement Unlocked!";
+        notificationType = "achievement";
+        break;
+      default:
+        body = "Test notification from Emerge";
       }
 
       await sendNotification(userId, title, body, notificationType, {
@@ -829,7 +829,7 @@ export const testNotificationTemplates = functionsV1.https.onCall(
         message: body,
       };
     } catch (error) {
-      console.error(`Error in testNotificationTemplates:`, error);
+      console.error("Error in testNotificationTemplates:", error);
       throw new functionsV1.https.HttpsError(
         "internal",
         "Failed to send test notification"
