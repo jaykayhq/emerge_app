@@ -102,6 +102,9 @@ class UserStatsRepository {
     String? habitId,
     String? sourceId,
     required DateTime date,
+    String? difficulty,
+    String? attribute,
+    int? streakDay,
   }) async {
     final data = {
       'userId': userId,
@@ -112,6 +115,9 @@ class UserStatsRepository {
 
     if (habitId != null) data['habitId'] = habitId;
     if (sourceId != null) data['sourceId'] = sourceId;
+    if (difficulty != null) data['difficulty'] = difficulty;
+    if (attribute != null) data['attribute'] = attribute;
+    if (streakDay != null) data['streakDay'] = streakDay;
 
     await _firestore.collection('user_activity').add(data);
   }

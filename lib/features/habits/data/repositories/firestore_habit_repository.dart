@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:emerge_app/core/error/failure.dart';
 import 'package:emerge_app/core/services/event_bus.dart';
 import 'package:emerge_app/core/utils/app_logger.dart';
+import 'package:emerge_app/features/gamification/data/repositories/user_stats_repository.dart';
 import 'package:emerge_app/features/habits/domain/entities/habit.dart';
 import 'package:emerge_app/features/habits/domain/models/habit_activity.dart';
 import 'package:emerge_app/features/habits/domain/repositories/habit_repository.dart';
@@ -12,8 +13,9 @@ import 'package:fpdart/fpdart.dart';
 class FirestoreHabitRepository implements HabitRepository {
   final FirebaseFirestore _firestore;
   final SocialActivityService? _socialActivityService;
+  final UserStatsRepository? _userStatsRepository;
 
-  FirestoreHabitRepository(this._firestore, [this._socialActivityService]);
+  FirestoreHabitRepository(this._firestore, [this._socialActivityService, this._userStatsRepository]);
 
   /// Defensive mapping from a Firestore document to a [Habit] entity.
   /// Uses null coalescing on all fields to prevent crashes on malformed data.
@@ -291,16 +293,29 @@ class FirestoreHabitRepository implements HabitRepository {
         );
 
         try {
-          await _firestore.collection('user_activity').add({
-            'userId': uid,
-            'habitId': habitId,
-            'date': Timestamp.fromDate(date),
-            'type': 'habit_completion',
-            'difficulty': completionData['difficulty'],
-            'attribute': completionData['attribute'],
-            'streakDay': completionData['streakDay'],
-            'createdAt': FieldValue.serverTimestamp(),
-          });
+          if (_userStatsRepository != null) {
+            await _userStatsRepository.logActivity(
+              userId: uid,
+              habitId: habitId,
+              date: date,
+              type: 'habit_completion',
+              difficulty: completionData['difficulty'],
+              attribute: completionData['attribute'],
+              streakDay: completionData['streakDay'],
+            );
+          } else {
+            // Fallback to direct write if repository is not provided
+            await _firestore.collection('user_activity').add({
+              'userId': uid,
+              'habitId': habitId,
+              'date': Timestamp.fromDate(date),
+              'type': 'habit_completion',
+              'difficulty': completionData['difficulty'],
+              'attribute': completionData['attribute'],
+              'streakDay': completionData['streakDay'],
+              'createdAt': FieldValue.serverTimestamp(),
+            });
+          }
         } catch (activityError, activityStack) {
           AppLogger.e(
             'Failed to log activity for habit completion',
