@@ -32,7 +32,7 @@ function getDb(): admin.firestore.Firestore {
 // XP & LEVEL CONFIGURATION
 // ============================================================================
 
-const XP_CONFIG: Record<string, number> = {
+const DEFAULT_XP_CONFIG: Record<string, number> = {
   habit_completion: 10,
   joined_challenge: 25,
   joined_tribe: 50,
@@ -40,6 +40,42 @@ const XP_CONFIG: Record<string, number> = {
 };
 
 const MAX_STREAK_BONUS = 0.5; // Match 50% max bonus
+
+// Global cache for XP_CONFIG
+let cachedXpConfig: Record<string, number> | null = null;
+let lastXpConfigFetchTime = 0;
+const XP_CONFIG_CACHE_TTL_MS = 1000 * 60 * 5; // 5 minutes cache
+
+/**
+ * Fetches the XP configuration from Firestore with in-memory caching.
+ * @param {admin.firestore.Firestore} firestore - The Firestore instance.
+ * @return {Promise<Record<string, number>>} The XP configuration.
+ */
+async function getXpConfig(
+  firestore: admin.firestore.Firestore
+): Promise<Record<string, number>> {
+  const now = Date.now();
+  if (cachedXpConfig && now - lastXpConfigFetchTime < XP_CONFIG_CACHE_TTL_MS) {
+    return cachedXpConfig;
+  }
+
+  try {
+    const docRef = await firestore
+      .collection("config")
+      .doc("xp_settings")
+      .get();
+    if (docRef.exists) {
+      cachedXpConfig = docRef.data() as Record<string, number>;
+      lastXpConfigFetchTime = now;
+      return cachedXpConfig;
+    }
+  } catch (err) {
+    console.error("Error fetching XP config:", err);
+  }
+
+  // Fallback to default and don't cache failure heavily to allow recovery
+  return DEFAULT_XP_CONFIG;
+}
 
 interface UserActivity {
   userId: string;
@@ -62,10 +98,14 @@ function calculateLevel(totalXp: number): number {
 /**
  * Calculates XP gain for a given user activity.
  * @param {UserActivity} activity - The activity data.
+ * @param {Record<string, number>} xpConfig - The XP configuration mapping.
  * @return {number} The XP to be awarded.
  */
-function calculateXpGain(activity: UserActivity): number {
-  const baseXp = XP_CONFIG[activity.type] || 0;
+function calculateXpGain(
+  activity: UserActivity,
+  xpConfig: Record<string, number>
+): number {
+  const baseXp = xpConfig[activity.type] || 0;
   if (baseXp === 0) return 0;
 
   let xp = baseXp;
@@ -102,89 +142,97 @@ export const onUserActivityCreated = functionsV1.firestore
       return null;
     }
 
-    const xpGain = calculateXpGain(activity);
+    const xpConfig = await getXpConfig(firestore);
+    const xpGain = calculateXpGain(activity, xpConfig);
     if (xpGain === 0) return null;
 
     const statsRef = firestore.collection("user_stats").doc(activity.userId);
 
-    return firestore.runTransaction(async (transaction: admin.firestore.Transaction) => {
-      const statsDoc = await transaction.get(statsRef);
-      const currentData = statsDoc.exists ? (statsDoc.data() as any) : {};
+    return firestore.runTransaction(
+      async (transaction: admin.firestore.Transaction) => {
+        const statsDoc = await transaction.get(statsRef);
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const currentData = statsDoc.exists ? (statsDoc.data() as any) : {};
 
-      // Get current avatarStats or initialize empty
-      const currentAvatarStats = currentData.avatarStats || {};
+        // Get current avatarStats or initialize empty
+        const currentAvatarStats = currentData.avatarStats || {};
 
-      // Calculate new values
-      const currentTotalXp = currentAvatarStats.totalXp || 0;
-      const newTotalXp = currentTotalXp + xpGain;
-      
-      // Calculate global streak and update lastActiveDate
-      let newStreak = currentAvatarStats.streak || 0;
-      let newLastActiveDate = null;
-      let worldStateUpdates: any = null;
+        // Calculate new values
+        const currentTotalXp = currentAvatarStats.totalXp || 0;
+        const newTotalXp = currentTotalXp + xpGain;
 
-      if (activity.type === "habit_completion") {
-        const currentWorldState = currentData.worldState || {};
-        const lastActiveDate = currentWorldState.lastActiveDate as admin.firestore.Timestamp | undefined;
-        const now = admin.firestore.Timestamp.now();
-        const nowDate = now.toDate();
+        // Calculate global streak and update lastActiveDate
+        let newStreak = currentAvatarStats.streak || 0;
+        let newLastActiveDate = null;
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        let worldStateUpdates: any = null;
 
-        if (lastActiveDate) {
-          const lastDate = lastActiveDate.toDate();
-          
-          // Use YYYY-MM-DD for simple UTC day comparisons
-          const lastDateStr = lastDate.toISOString().split('T')[0];
-          const todayStr = nowDate.toISOString().split('T')[0];
-          
-          const yesterday = new Date(nowDate);
-          yesterday.setUTCDate(yesterday.getUTCDate() - 1);
-          const yesterdayStr = yesterday.toISOString().split('T')[0];
+        if (activity.type === "habit_completion") {
+          const currentWorldState = currentData.worldState || {};
+          const lastActiveDate = currentWorldState.lastActiveDate as
+            | admin.firestore.Timestamp
+            | undefined;
+          const now = admin.firestore.Timestamp.now();
+          const nowDate = now.toDate();
 
-          if (lastDateStr === yesterdayStr) {
-            newStreak += 1; // Continued streak
-          } else if (lastDateStr !== todayStr && lastDateStr < yesterdayStr) {
-            newStreak = 1; // Missed a day, reset and start over
+          if (lastActiveDate) {
+            const lastDate = lastActiveDate.toDate();
+
+            // Use YYYY-MM-DD for simple UTC day comparisons
+            const lastDateStr = lastDate.toISOString().split("T")[0];
+            const todayStr = nowDate.toISOString().split("T")[0];
+
+            const yesterday = new Date(nowDate);
+            yesterday.setUTCDate(yesterday.getUTCDate() - 1);
+            const yesterdayStr = yesterday.toISOString().split("T")[0];
+
+            if (lastDateStr === yesterdayStr) {
+              newStreak += 1; // Continued streak
+            } else if (lastDateStr !== todayStr && lastDateStr < yesterdayStr) {
+              newStreak = 1; // Missed a day, reset and start over
+            }
+            // If lastDateStr === todayStr, streak remains the same (already counted for today)
+          } else {
+            newStreak = 1; // First habit completion ever
           }
-          // If lastDateStr === todayStr, streak remains the same (already counted for today)
-        } else {
-          newStreak = 1; // First habit completion ever
+
+          newLastActiveDate = admin.firestore.FieldValue.serverTimestamp();
+          worldStateUpdates = {
+            ...currentWorldState,
+            lastActiveDate: newLastActiveDate,
+          };
         }
 
-        newLastActiveDate = admin.firestore.FieldValue.serverTimestamp();
-        worldStateUpdates = {
-          ...currentWorldState,
-          lastActiveDate: newLastActiveDate,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const updates: any = {
+          avatarStats: {
+            ...currentAvatarStats,
+            totalXp: newTotalXp,
+            streak: newStreak,
+            lastUpdate: admin.firestore.FieldValue.serverTimestamp(),
+          },
         };
-      }
 
-      const updates: any = {
-        avatarStats: {
-          ...currentAvatarStats,
-          totalXp: newTotalXp,
-          streak: newStreak,
-          lastUpdate: admin.firestore.FieldValue.serverTimestamp(),
+        if (worldStateUpdates) {
+          updates.worldState = worldStateUpdates;
         }
-      };
 
-      if (worldStateUpdates) {
-        updates.worldState = worldStateUpdates;
+        // Update specific attribute XP
+        if (activity.attribute) {
+          const attrXpKey = `${activity.attribute}Xp`;
+          const currentAttrXp = (currentAvatarStats[attrXpKey] as number) || 0;
+          updates.avatarStats[attrXpKey] = currentAttrXp + xpGain;
+        }
+
+        // Update level if needed
+        const newLevel = calculateLevel(newTotalXp);
+        if (newLevel !== (currentAvatarStats.level || 1)) {
+          updates.avatarStats.level = newLevel;
+        }
+
+        transaction.set(statsRef, updates, { merge: true });
       }
-
-      // Update specific attribute XP
-      if (activity.attribute) {
-        const attrXpKey = `${activity.attribute}Xp`;
-        const currentAttrXp = (currentAvatarStats[attrXpKey] as number) || 0;
-        updates.avatarStats[attrXpKey] = currentAttrXp + xpGain;
-      }
-
-      // Update level if needed
-      const newLevel = calculateLevel(newTotalXp);
-      if (newLevel !== (currentAvatarStats.level || 1)) {
-        updates.avatarStats.level = newLevel;
-      }
-
-      transaction.set(statsRef, updates, { merge: true });
-    });
+    );
   });
 
 /**
