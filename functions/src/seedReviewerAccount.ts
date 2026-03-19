@@ -5,6 +5,10 @@
  * and populates Firestore with a fully-fleshed UserProfile so
  * Google reviewers can access all restricted areas of the app.
  *
+ * SECURITY: These credentials MUST be set via Firebase Secrets Manager in production:
+ *   REVIEWER_EMAIL - The email for the reviewer account
+ *   REVIEWER_PASSWORD - The password for the reviewer account
+ *
  * Invoke via:
  *   firebase functions:shell → seedReviewerAccount()
  *   OR deploy and call via the Firebase Console "Run in Cloud Shell"
@@ -18,9 +22,23 @@ if (admin.apps.length === 0) {
   admin.initializeApp();
 }
 
-const REVIEWER_EMAIL = "googleplay.reviewer@emerge-app.com";
-const REVIEWER_PASSWORD = "EmergeReview2026!";
-const REVIEWER_DISPLAY_NAME = "Play Reviewer";
+// Validate required environment variables - fail fast in production
+function getRequiredEnvVar(name: string): string {
+  const value = process.env[name];
+  if (!value) {
+    throw new Error(
+      `Required environment variable ${name} is not set. ` +
+      `Please set it via Firebase Secrets Manager: ` +
+      `firebase secrets:create ${name}`
+    );
+  }
+  return value;
+}
+
+// Use environment variables - no fallbacks for production safety
+const REVIEWER_EMAIL = getRequiredEnvVar("REVIEWER_EMAIL");
+const REVIEWER_PASSWORD = getRequiredEnvVar("REVIEWER_PASSWORD");
+const REVIEWER_DISPLAY_NAME = process.env.REVIEWER_DISPLAY_NAME || "Play Reviewer";
 
 /**
  * Creates or resets the reviewer account in Firebase Auth + Firestore.

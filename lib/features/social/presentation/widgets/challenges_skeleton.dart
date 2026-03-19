@@ -40,10 +40,7 @@ class _ShimmerCard extends StatefulWidget {
   final double height;
   final double width;
 
-  const _ShimmerCard({
-    required this.height,
-    this.width = double.infinity,
-  });
+  const _ShimmerCard({required this.height, this.width = double.infinity});
 
   @override
   State<_ShimmerCard> createState() => _ShimmerCardState();

@@ -50,7 +50,10 @@ void main() {
 
       // Assert - verify level difference is detected
       expect(leveledUpProfile.avatarStats.level, 3);
-      expect(leveledUpProfile.avatarStats.level - initialProfile.avatarStats.level, 2);
+      expect(
+        leveledUpProfile.avatarStats.level - initialProfile.avatarStats.level,
+        2,
+      );
 
       container.dispose();
     });
@@ -165,9 +168,7 @@ void main() {
 
     test('getAttributeXp returns 0 for unknown attribute', () {
       // Arrange
-      const stats = UserAvatarStats(
-        attributeXp: {'strength': 100},
-      );
+      const stats = UserAvatarStats(attributeXp: {'strength': 100});
 
       // Act & Assert
       expect(stats.getAttributeXp('unknown'), 0);

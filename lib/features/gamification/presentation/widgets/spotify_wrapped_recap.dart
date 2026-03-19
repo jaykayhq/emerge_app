@@ -69,7 +69,8 @@ class _SpotifyWrappedRecapState extends ConsumerState<SpotifyWrappedRecap>
       final startDate = dateFormat.format(widget.recap.startDate);
       final endDate = dateFormat.format(widget.recap.endDate);
 
-      final shareText = '''
+      final shareText =
+          '''
 🌟 My Emerge Weekly Recap! 🌟
 
 Week of $startDate - $endDate
@@ -124,20 +125,12 @@ Building my identity, one habit at a time. 💪
             _WrappedIntro(recap: widget.recap),
             _WrappedStats(recap: widget.recap),
             _WrappedTopHabit(recap: widget.recap),
-            _WrappedOutro(
-              recap: widget.recap,
-              onShare: _shareRecap,
-            ),
+            _WrappedOutro(recap: widget.recap, onShare: _shareRecap),
           ],
         ),
 
         // Progress dots
-        Positioned(
-          bottom: 40,
-          left: 0,
-          right: 0,
-          child: _buildProgressDots(),
-        ),
+        Positioned(bottom: 40, left: 0, right: 0, child: _buildProgressDots()),
       ],
     );
   }
@@ -172,7 +165,9 @@ Building my identity, one habit at a time. 💪
           width: isActive ? 12 : 8,
           decoration: BoxDecoration(
             shape: BoxShape.circle,
-            color: isActive ? EmergeColors.teal : Colors.white.withValues(alpha: 0.4),
+            color: isActive
+                ? EmergeColors.teal
+                : Colors.white.withValues(alpha: 0.4),
             boxShadow: isActive
                 ? [
                     BoxShadow(
@@ -222,11 +217,11 @@ class _WrappedIntro extends StatelessWidget {
           Text(
             'WEEKLY',
             style: Theme.of(context).textTheme.displaySmall?.copyWith(
-                  color: Colors.white.withValues(alpha: 0.7),
-                  fontWeight: FontWeight.w300,
-                  letterSpacing: 8,
-                  fontSize: 28,
-                ),
+              color: Colors.white.withValues(alpha: 0.7),
+              fontWeight: FontWeight.w300,
+              letterSpacing: 8,
+              fontSize: 28,
+            ),
           ).animate().fadeIn(duration: 600.ms).slideY(begin: -0.3, end: 0),
 
           const Gap(8),
@@ -234,11 +229,11 @@ class _WrappedIntro extends StatelessWidget {
           Text(
             'RECAP',
             style: Theme.of(context).textTheme.displayLarge?.copyWith(
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
-                  letterSpacing: 4,
-                  fontSize: 64,
-                ),
+              color: Colors.white,
+              fontWeight: FontWeight.bold,
+              letterSpacing: 4,
+              fontSize: 64,
+            ),
           ).animate().fadeIn(delay: 300.ms, duration: 800.ms).scale(),
 
           const Gap(32),
@@ -256,10 +251,10 @@ class _WrappedIntro extends StatelessWidget {
             child: Text(
               '$startDate - $endDate',
               style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    color: EmergeColors.teal,
-                    fontWeight: FontWeight.w600,
-                    letterSpacing: 2,
-                  ),
+                color: EmergeColors.teal,
+                fontWeight: FontWeight.w600,
+                letterSpacing: 2,
+              ),
             ),
           ).animate().fadeIn(delay: 600.ms).scale(),
 
@@ -269,9 +264,9 @@ class _WrappedIntro extends StatelessWidget {
           Text(
             'Your week in numbers',
             style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  color: Colors.white.withValues(alpha: 0.6),
-                  fontSize: 18,
-                ),
+              color: Colors.white.withValues(alpha: 0.6),
+              fontSize: 18,
+            ),
           ).animate().fadeIn(delay: 900.ms),
 
           const Gap(8),
@@ -279,21 +274,23 @@ class _WrappedIntro extends StatelessWidget {
           Text(
             'Swipe to discover',
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: Colors.white.withValues(alpha: 0.4),
-                ),
+              color: Colors.white.withValues(alpha: 0.4),
+            ),
           ).animate().fadeIn(delay: 1000.ms),
 
           const Gap(60),
 
           // Swipe indicator
           Icon(
-            Icons.swipe_left,
-            color: Colors.white.withValues(alpha: 0.3),
-            size: 32,
-          ).animate().fadeIn(delay: 1200.ms).then(
-              ).animate(
-                onPlay: (controller) => controller.repeat(),
-              ).slideX(
+                Icons.swipe_left,
+                color: Colors.white.withValues(alpha: 0.3),
+                size: 32,
+              )
+              .animate()
+              .fadeIn(delay: 1200.ms)
+              .then()
+              .animate(onPlay: (controller) => controller.repeat())
+              .slideX(
                 begin: 0,
                 end: 0.3,
                 duration: 1500.ms,
@@ -325,10 +322,10 @@ class _WrappedStats extends StatelessWidget {
           Text(
             'YOUR NUMBERS',
             style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                  color: Colors.white.withValues(alpha: 0.7),
-                  letterSpacing: 4,
-                  fontWeight: FontWeight.w300,
-                ),
+              color: Colors.white.withValues(alpha: 0.7),
+              letterSpacing: 4,
+              fontWeight: FontWeight.w300,
+            ),
           ).animate().fadeIn(duration: 400.ms),
 
           const Gap(40),
@@ -391,10 +388,7 @@ class _StatCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white.withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: color.withValues(alpha: 0.3),
-          width: 1,
-        ),
+        border: Border.all(color: color.withValues(alpha: 0.3), width: 1),
       ),
       child: Row(
         children: [
@@ -414,10 +408,10 @@ class _StatCard extends StatelessWidget {
           Text(
             value,
             style: Theme.of(context).textTheme.displayMedium?.copyWith(
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 40,
-                ),
+              color: Colors.white,
+              fontWeight: FontWeight.bold,
+              fontSize: 40,
+            ),
           ).animate().fadeIn(delay: (delay + 100).ms).slideX(begin: -0.2),
 
           const Spacer(),
@@ -426,9 +420,9 @@ class _StatCard extends StatelessWidget {
           Text(
             label,
             style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  color: Colors.white.withValues(alpha: 0.6),
-                  fontSize: 16,
-                ),
+              color: Colors.white.withValues(alpha: 0.6),
+              fontSize: 16,
+            ),
           ).animate().fadeIn(delay: (delay + 200).ms),
         ],
       ),
@@ -475,28 +469,28 @@ class _WrappedTopHabit extends StatelessWidget {
 
               // Star icon
               Container(
-                width: 80,
-                height: 80,
-                decoration: BoxDecoration(
-                  color: EmergeColors.yellow,
-                  shape: BoxShape.circle,
-                  boxShadow: [
-                    BoxShadow(
-                      color: EmergeColors.yellow.withValues(alpha: 0.5),
-                      blurRadius: 20,
-                      spreadRadius: 5,
+                    width: 80,
+                    height: 80,
+                    decoration: BoxDecoration(
+                      color: EmergeColors.yellow,
+                      shape: BoxShape.circle,
+                      boxShadow: [
+                        BoxShadow(
+                          color: EmergeColors.yellow.withValues(alpha: 0.5),
+                          blurRadius: 20,
+                          spreadRadius: 5,
+                        ),
+                      ],
                     ),
-                  ],
-                ),
-                child: const Icon(
-                  Icons.emoji_events,
-                  color: Colors.white,
-                  size: 48,
-                ),
-              ).animate().fadeIn(duration: 600.ms).scale(
-                    delay: 300.ms,
-                    curve: Curves.elasticOut,
-                  ),
+                    child: const Icon(
+                      Icons.emoji_events,
+                      color: Colors.white,
+                      size: 48,
+                    ),
+                  )
+                  .animate()
+                  .fadeIn(duration: 600.ms)
+                  .scale(delay: 300.ms, curve: Curves.elasticOut),
             ],
           ),
 
@@ -506,10 +500,10 @@ class _WrappedTopHabit extends StatelessWidget {
           Text(
             'YOUR MVP',
             style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
-                  letterSpacing: 4,
-                ),
+              color: Colors.white,
+              fontWeight: FontWeight.bold,
+              letterSpacing: 4,
+            ),
           ).animate().fadeIn(delay: 600.ms).slideY(begin: -0.2),
 
           const Gap(16),
@@ -533,10 +527,10 @@ class _WrappedTopHabit extends StatelessWidget {
             child: Text(
               recap.topHabitName.toUpperCase(),
               style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
-                    letterSpacing: 2,
-                  ),
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+                letterSpacing: 2,
+              ),
               textAlign: TextAlign.center,
             ),
           ).animate().fadeIn(delay: 900.ms).scale(),
@@ -547,9 +541,9 @@ class _WrappedTopHabit extends StatelessWidget {
           Text(
             'Most consistent habit this week',
             style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                  color: Colors.white.withValues(alpha: 0.6),
-                  fontSize: 16,
-                ),
+              color: Colors.white.withValues(alpha: 0.6),
+              fontSize: 16,
+            ),
             textAlign: TextAlign.center,
           ).animate().fadeIn(delay: 1200.ms),
         ],
@@ -566,10 +560,7 @@ class _WrappedOutro extends StatelessWidget {
   final UserWeeklyRecap recap;
   final VoidCallback onShare;
 
-  const _WrappedOutro({
-    required this.recap,
-    required this.onShare,
-  });
+  const _WrappedOutro({required this.recap, required this.onShare});
 
   @override
   Widget build(BuildContext context) {
@@ -580,88 +571,87 @@ class _WrappedOutro extends StatelessWidget {
         children: [
           // Level badge
           Container(
-            width: 120,
-            height: 120,
-            decoration: BoxDecoration(
-              gradient: const LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [EmergeColors.teal, EmergeColors.violet],
-              ),
-              shape: BoxShape.circle,
-              boxShadow: [
-                BoxShadow(
-                  color: EmergeColors.teal.withValues(alpha: 0.4),
-                  blurRadius: 30,
-                  spreadRadius: 5,
+                width: 120,
+                height: 120,
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [EmergeColors.teal, EmergeColors.violet],
+                  ),
+                  shape: BoxShape.circle,
+                  boxShadow: [
+                    BoxShadow(
+                      color: EmergeColors.teal.withValues(alpha: 0.4),
+                      blurRadius: 30,
+                      spreadRadius: 5,
+                    ),
+                  ],
                 ),
-              ],
-            ),
-            child: Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    'LEVEL',
-                    style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                child: Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        'LEVEL',
+                        style: Theme.of(context).textTheme.labelSmall?.copyWith(
                           color: Colors.white.withValues(alpha: 0.8),
                           letterSpacing: 2,
                           fontSize: 12,
                         ),
+                      ),
+                      const Gap(4),
+                      Text(
+                        '${recap.currentLevel}',
+                        style: Theme.of(context).textTheme.displayLarge
+                            ?.copyWith(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 48,
+                            ),
+                      ),
+                    ],
                   ),
-                  const Gap(4),
-                  Text(
-                    '${recap.currentLevel}',
-                    style: Theme.of(context).textTheme.displayLarge?.copyWith(
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 48,
-                        ),
-                  ),
-                ],
-              ),
-            ),
-          ).animate().fadeIn(duration: 600.ms).scale(
-                delay: 300.ms,
-                curve: Curves.elasticOut,
-              ),
+                ),
+              )
+              .animate()
+              .fadeIn(duration: 600.ms)
+              .scale(delay: 300.ms, curve: Curves.elasticOut),
 
           const Gap(40),
 
           // Congratulatory message
           Text(
-            'KEEP IT UP!',
-            style: Theme.of(context).textTheme.displaySmall?.copyWith(
+                'KEEP IT UP!',
+                style: Theme.of(context).textTheme.displaySmall?.copyWith(
                   color: Colors.white,
                   fontWeight: FontWeight.bold,
                   letterSpacing: 2,
                 ),
-          ).animate().fadeIn(delay: 900.ms).shimmer(
-                duration: 2000.ms,
-                color: EmergeColors.yellow,
-              ),
+              )
+              .animate()
+              .fadeIn(delay: 900.ms)
+              .shimmer(duration: 2000.ms, color: EmergeColors.yellow),
 
           const Gap(16),
 
           Text(
             'Every habit counts toward\nbuilding your identity.',
             style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  color: Colors.white.withValues(alpha: 0.7),
-                  fontSize: 18,
-                  height: 1.4,
-                ),
+              color: Colors.white.withValues(alpha: 0.7),
+              fontSize: 18,
+              height: 1.4,
+            ),
             textAlign: TextAlign.center,
           ).animate().fadeIn(delay: 1200.ms),
 
           const Gap(40),
 
           // Share button
-          _ShareButton(
-            onPressed: onShare,
-          ).animate().fadeIn(delay: 1500.ms).scale(
-                delay: 1700.ms,
-                curve: Curves.elasticOut,
-              ),
+          _ShareButton(onPressed: onShare)
+              .animate()
+              .fadeIn(delay: 1500.ms)
+              .scale(delay: 1700.ms, curve: Curves.elasticOut),
 
           const Gap(16),
 
@@ -669,8 +659,8 @@ class _WrappedOutro extends StatelessWidget {
           Text(
             'Tap X to close',
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: Colors.white.withValues(alpha: 0.4),
-                ),
+              color: Colors.white.withValues(alpha: 0.4),
+            ),
           ).animate().fadeIn(delay: 2000.ms),
         ],
       ),
@@ -705,19 +695,15 @@ class _ShareButton extends StatelessWidget {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(
-              Icons.share,
-              color: Colors.white,
-              size: 24,
-            ),
+            const Icon(Icons.share, color: Colors.white, size: 24),
             const Gap(12),
             Text(
               'Share Your Recap',
               style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 18,
-                  ),
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+                fontSize: 18,
+              ),
             ),
           ],
         ),

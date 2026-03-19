@@ -15,15 +15,15 @@ class PaywallScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final paywallState = ref.watch(paywallControllerProvider);
     final offerings = paywallState.offerings;
-    
+
     // Automatically close the paywall if purchase succeeds
     ref.listen(paywallControllerProvider, (previous, next) {
       if (next.isSuccess && !(previous?.isSuccess ?? false)) {
         if (context.canPop()) {
-           context.pop();
+          context.pop();
         }
       }
-      
+
       if (next.error != null && next.error != previous?.error) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(next.error!), backgroundColor: Colors.red),
@@ -40,24 +40,28 @@ class PaywallScreen extends ConsumerWidget {
             Positioned.fill(
               child: BackdropFilter(
                 filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-                child: Container(
-                  color: Colors.black.withValues(alpha: 0.6),
-                ),
+                child: Container(color: Colors.black.withValues(alpha: 0.6)),
               ),
             ),
             SafeArea(
               child: CustomScrollView(
                 slivers: [
                   SliverToBoxAdapter(
-                     child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16.0),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 24.0,
+                        vertical: 16.0,
+                      ),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Align(
                             alignment: Alignment.topRight,
                             child: IconButton(
-                              icon: const Icon(Icons.close, color: Colors.white70),
+                              icon: const Icon(
+                                Icons.close,
+                                color: Colors.white70,
+                              ),
                               onPressed: () => context.pop(),
                             ),
                           ),
@@ -68,80 +72,115 @@ class PaywallScreen extends ConsumerWidget {
                             ).createShader(bounds),
                             child: Text(
                               'Evolve Your Avatar.',
-                              style: Theme.of(context).textTheme.displaySmall?.copyWith(
-                                fontWeight: FontWeight.w900,
-                                color: Colors.white,
-                                letterSpacing: -1,
-                              ),
+                              style: Theme.of(context).textTheme.displaySmall
+                                  ?.copyWith(
+                                    fontWeight: FontWeight.w900,
+                                    color: Colors.white,
+                                    letterSpacing: -1,
+                                  ),
                             ),
                           ),
                           Text(
                             'Command Your Entropy.',
-                            style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                              color: Colors.white70,
-                            ),
+                            style: Theme.of(context).textTheme.headlineSmall
+                                ?.copyWith(color: Colors.white70),
                           ),
                           const Gap(40),
                           _BenefitRow(
                             icon: Icons.psychology,
                             title: 'Unlimited "Oracle" AI Coach',
-                            description: 'Deep psychological habit analysis & strategies.',
+                            description:
+                                'Deep psychological habit analysis & strategies.',
                           ),
                           const Gap(24),
                           _BenefitRow(
                             icon: Icons.filter_drama,
                             title: 'Avant-Garde World Themes',
-                            description: 'Unlock Cosmic Void, Cyberpunk District, and Monolith.',
+                            description:
+                                'Unlock Cosmic Void, Cyberpunk District, and Monolith.',
                           ),
                           const Gap(24),
                           _BenefitRow(
                             icon: Icons.handshake,
                             title: 'Advanced Identity Mechanics',
-                            description: 'Unlimited Social Contracts & Archetype Tribes.',
+                            description:
+                                'Unlimited Social Contracts & Archetype Tribes.',
                           ),
                           const Gap(24),
                           _BenefitRow(
                             icon: Icons.timeline,
                             title: 'Deep Time Insights',
-                            description: 'Multi-month identity evolution graphs & analytics.',
+                            description:
+                                'Multi-month identity evolution graphs & analytics.',
                           ),
                           const Gap(40),
                           if (paywallState.isLoading && offerings == null)
-                             const Center(child: CircularProgressIndicator(color: Colors.cyanAccent))
-                          else if (offerings != null && offerings.current != null)
-                             ...[
-                               ...offerings.current!.availablePackages.map(
-                                 (package) => Padding(
-                                   padding: const EdgeInsets.only(bottom: 16.0),
-                                   child: _PackageButton(
-                                     package: package,
-                                     isLoading: paywallState.isLoading,
-                                     onTap: () {
-                                        ref.read(paywallControllerProvider.notifier).purchasePackage(package);
-                                     },
-                                   ),
-                                 )
-                               ),
-                             ]
-                          else 
-                             const Center(child: Text("No subscription packages available currently.", style: TextStyle(color: Colors.white))),
-                             
+                            const Center(
+                              child: CircularProgressIndicator(
+                                color: Colors.cyanAccent,
+                              ),
+                            )
+                          else if (offerings != null &&
+                              offerings.current != null) ...[
+                            ...offerings.current!.availablePackages.map(
+                              (package) => Padding(
+                                padding: const EdgeInsets.only(bottom: 16.0),
+                                child: _PackageButton(
+                                  package: package,
+                                  isLoading: paywallState.isLoading,
+                                  onTap: () {
+                                    ref
+                                        .read(
+                                          paywallControllerProvider.notifier,
+                                        )
+                                        .purchasePackage(package);
+                                  },
+                                ),
+                              ),
+                            ),
+                          ] else
+                            const Center(
+                              child: Text(
+                                "No subscription packages available currently.",
+                                style: TextStyle(color: Colors.white),
+                              ),
+                            ),
+
                           const Gap(32),
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                             children: [
                               TextButton(
                                 onPressed: () {
-                                  ref.read(paywallControllerProvider.notifier).restorePurchases();
+                                  ref
+                                      .read(paywallControllerProvider.notifier)
+                                      .restorePurchases();
                                 },
-                                child: Text('Restore Purchases', style: TextStyle(color: Colors.white.withValues(alpha: 0.6))),
+                                child: Text(
+                                  'Restore Purchases',
+                                  style: TextStyle(
+                                    color: Colors.white.withValues(alpha: 0.6),
+                                  ),
+                                ),
                               ),
-                              Text('•', style: TextStyle(color: Colors.white.withValues(alpha: 0.6))),
+                              Text(
+                                '•',
+                                style: TextStyle(
+                                  color: Colors.white.withValues(alpha: 0.6),
+                                ),
+                              ),
                               TextButton(
                                 onPressed: () {
-                                  launchUrl(Uri.parse('https://example.com/terms'));
+                                  launchUrl(
+                                    Uri.parse('https://example.com/terms'),
+                                  );
                                 },
-                                child: Text('Terms & Privacy', style: TextStyle(color: Colors.white.withValues(alpha: 0.6))),
+                                child: Text(
+                                  'Terms & Privacy',
+                                  style: TextStyle(
+                                    color: Colors.white.withValues(alpha: 0.6),
+                                  ),
+                                ),
                               ),
                             ],
                           ),
@@ -149,8 +188,8 @@ class PaywallScreen extends ConsumerWidget {
                         ],
                       ),
                     ),
-                  )
-                ]
+                  ),
+                ],
               ),
             ),
           ],
@@ -173,62 +212,92 @@ class _PackageButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-      final isAnnual = package.packageType == PackageType.annual;
-      
-      return InkWell(
-        onTap: isLoading ? null : onTap,
-        borderRadius: BorderRadius.circular(16),
-        child: Container(
-          width: double.infinity,
-          padding: const EdgeInsets.all(20),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(16),
-            gradient: LinearGradient(
-              colors: isAnnual 
-                 ? [Colors.purpleAccent.withValues(alpha: 0.2), Colors.cyanAccent.withValues(alpha: 0.2)]
-                 : [Colors.white10, Colors.white10],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
-            border: Border.all(
-              color: isAnnual ? Colors.cyanAccent.withValues(alpha: 0.5) : Colors.white24,
-              width: isAnnual ? 2 : 1,
-            ),
-          ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    package.storeProduct.title,
-                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: Colors.white),
-                  ),
-                  if (isAnnual) ...[
-                     const Gap(4),
-                     Container(
-                       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                       decoration: BoxDecoration(
-                         color: Colors.cyanAccent.withValues(alpha: 0.2),
-                         borderRadius: BorderRadius.circular(4),
-                       ),
-                       child: const Text('BEST VALUE', style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.cyanAccent)),
-                     ),
+    final isAnnual = package.packageType == PackageType.annual;
+
+    return InkWell(
+      onTap: isLoading ? null : onTap,
+      borderRadius: BorderRadius.circular(16),
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(16),
+          gradient: LinearGradient(
+            colors: isAnnual
+                ? [
+                    Colors.purpleAccent.withValues(alpha: 0.2),
+                    Colors.cyanAccent.withValues(alpha: 0.2),
                   ]
-                ],
-              ),
-               if (isLoading)
-                  const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-               else 
-                  Text(
-                    package.storeProduct.priceString,
-                    style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 18, color: Colors.white),
-                  ),
-            ],
+                : [Colors.white10, Colors.white10],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          border: Border.all(
+            color: isAnnual
+                ? Colors.cyanAccent.withValues(alpha: 0.5)
+                : Colors.white24,
+            width: isAnnual ? 2 : 1,
           ),
         ),
-      );
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  package.storeProduct.title,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 18,
+                    color: Colors.white,
+                  ),
+                ),
+                if (isAnnual) ...[
+                  const Gap(4),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 2,
+                    ),
+                    decoration: BoxDecoration(
+                      color: Colors.cyanAccent.withValues(alpha: 0.2),
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                    child: const Text(
+                      'BEST VALUE',
+                      style: TextStyle(
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.cyanAccent,
+                      ),
+                    ),
+                  ),
+                ],
+              ],
+            ),
+            if (isLoading)
+              const SizedBox(
+                width: 24,
+                height: 24,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  color: Colors.white,
+                ),
+              )
+            else
+              Text(
+                package.storeProduct.priceString,
+                style: const TextStyle(
+                  fontWeight: FontWeight.w900,
+                  fontSize: 18,
+                  color: Colors.white,
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
   }
 }
 

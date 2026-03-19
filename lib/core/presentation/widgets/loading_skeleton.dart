@@ -57,9 +57,9 @@ class LoadingSkeleton extends StatefulWidget {
     this.baseColor,
     this.highlightColor,
   }) : assert(
-          width != null || height != null || child != null,
-          'Must specify width, height, or child',
-        );
+         width != null || height != null || child != null,
+         'Must specify width, height, or child',
+       );
 
   /// DEPRECATED: Creates a skeleton that matches the size of the given child widget.
   ///
@@ -151,8 +151,7 @@ class _LoadingSkeletonState extends State<LoadingSkeleton>
 
     final baseColor =
         widget.baseColor ?? theme.colorScheme.surfaceContainerHighest;
-    final highlightColor =
-        widget.highlightColor ?? theme.colorScheme.surface;
+    final highlightColor = widget.highlightColor ?? theme.colorScheme.surface;
 
     // child parameter is now only used by the deprecated fromWidget factory
     // which provides fallback dimensions, so we can render directly
@@ -208,11 +207,7 @@ class _ShimmerContainer extends StatelessWidget {
               end: shimmerDirection == Axis.horizontal
                   ? Alignment(offset + 0.3, 0)
                   : Alignment(0, offset + 0.3),
-              colors: [
-                baseColor,
-                highlightColor,
-                baseColor,
-              ],
+              colors: [baseColor, highlightColor, baseColor],
               stops: const [0.0, 0.5, 1.0],
             ),
           ),
@@ -313,7 +308,11 @@ class SkeletonShapes {
     return Row(
       children: [
         if (showAvatar) ...[
-          avatar(size: 48, baseColor: baseColor, highlightColor: highlightColor),
+          avatar(
+            size: 48,
+            baseColor: baseColor,
+            highlightColor: highlightColor,
+          ),
           const SizedBox(width: 12),
         ],
         Expanded(
@@ -371,10 +370,10 @@ class LoadingSkeletonBuilder extends StatelessWidget {
           padding: const EdgeInsets.only(bottom: 12),
           child: useAnimatedOpacity
               ? builder(context, index)
-                  .animate(onPlay: (controller) => controller.repeat())
-                  .fadeIn(duration: 600.ms)
-                  .then()
-                  .fadeOut(duration: 600.ms)
+                    .animate(onPlay: (controller) => controller.repeat())
+                    .fadeIn(duration: 600.ms)
+                    .then()
+                    .fadeOut(duration: 600.ms)
               : builder(context, index),
         ),
       ),

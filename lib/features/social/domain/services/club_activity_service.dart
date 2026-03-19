@@ -115,9 +115,7 @@ class SocialActivityService {
         }, SetOptions(merge: true));
 
         // 3b. Update Tribe Aggregate Counters
-        final tribeRef = _firestore
-            .collection(_kTribesCollection)
-            .doc(clubId);
+        final tribeRef = _firestore.collection(_kTribesCollection).doc(clubId);
         transaction.set(tribeRef, {
           'totalHabitsCompleted': FieldValue.increment(1),
         }, SetOptions(merge: true));
@@ -281,9 +279,7 @@ class SocialActivityService {
         }, SetOptions(merge: true));
 
         // Update Tribe Aggregate Counters
-        final tribeRef = _firestore
-            .collection(_kTribesCollection)
-            .doc(clubId);
+        final tribeRef = _firestore.collection(_kTribesCollection).doc(clubId);
         transaction.set(tribeRef, {
           'totalChallengesCompleted': FieldValue.increment(1),
         }, SetOptions(merge: true));

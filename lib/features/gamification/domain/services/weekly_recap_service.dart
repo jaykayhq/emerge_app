@@ -46,7 +46,8 @@ class WeeklyRecapService {
             totalXpEarned: latestRecap['totalXpEarned'] as int,
             topHabitName: latestRecap['topHabitName'] as String,
             currentLevel: latestRecap['currentLevel'] as int,
-            worldGrowthPercentage: (latestRecap['worldGrowthPercentage'] as num).toDouble(),
+            worldGrowthPercentage: (latestRecap['worldGrowthPercentage'] as num)
+                .toDouble(),
           );
         }
       }

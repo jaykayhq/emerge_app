@@ -32,6 +32,29 @@ async function recalcTribes(): Promise<void> {
   // 1. Scan all users and user_stats
   const usersSnapshot = await db.collection("users").get();
   
+  // Collect all user IDs for batch get
+  const userIds: string[] = [];
+  for (const doc of usersSnapshot.docs) {
+    const userData = doc.data();
+    const archetype = userData.archetype;
+
+    if (archetype && archetype !== "none") {
+      const clubId = clubMap[archetype.toLowerCase()];
+      if (clubId && clubData[clubId]) {
+        clubData[clubId].members.push(doc.id);
+        userIds.push(doc.id);
+      }
+    }
+  }
+  
+  // Get all user_stats in one query to avoid N+1 reads
+  const allStatsSnapshot = await db.collection("user_stats").get();
+  const statsMap = new Map<string, any>();
+  for (const doc of allStatsSnapshot.docs) {
+    statsMap.set(doc.id, doc.data());
+  }
+  
+  // Now process users with their stats from the map
   for (const doc of usersSnapshot.docs) {
     const userData = doc.data();
     const archetype = userData.archetype;
@@ -40,12 +63,9 @@ async function recalcTribes(): Promise<void> {
     if (archetype && archetype !== "none") {
       const clubId = clubMap[archetype.toLowerCase()];
       if (clubId && clubData[clubId]) {
-        clubData[clubId].members.push(userId);
-
-        // Fetch user stats to get XP
-        const statsDoc = await db.collection("user_stats").doc(userId).get();
-        if (statsDoc.exists) {
-          const stats = statsDoc.data() || {};
+        // Get stats from the map instead of individual read
+        const stats = statsMap.get(userId);
+        if (stats) {
           let xp = 0;
           if (stats.avatarStats && typeof stats.avatarStats.totalXp === "number") {
             xp = stats.avatarStats.totalXp;

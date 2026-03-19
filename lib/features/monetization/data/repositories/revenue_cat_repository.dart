@@ -67,7 +67,8 @@ class RevenueCatRepository implements MonetizationRepository {
     _isConfigured = true;
 
     Purchases.addCustomerInfoUpdateListener((customerInfo) {
-      final isPremium = customerInfo.entitlements.all[_entitlementId]?.isActive ?? false;
+      final isPremium =
+          customerInfo.entitlements.all[_entitlementId]?.isActive ?? false;
       _premiumStatusController.add(isPremium);
     });
   }
@@ -88,9 +89,9 @@ class RevenueCatRepository implements MonetizationRepository {
   @override
   Future<Either<String, bool>> get isPremium async {
     if (!_isConfigured) {
-      // TESTING MODE: Treat as premium user when RevenueCat not configured
-      // Change back to `return const Right(false);` to enable paywall
-      return const Right(true);
+      // When RevenueCat is not configured, properly indicate non-premium status
+      // to prevent all users from having free premium access
+      return const Right(false);
     }
     try {
       final customerInfo = await Purchases.getCustomerInfo();

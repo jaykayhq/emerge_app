@@ -41,6 +41,10 @@ class AppConfig {
   );
 
   // Security Configuration
+  static const String recaptchaSiteKey = String.fromEnvironment(
+    'RECAPTCHA_SITE_KEY',
+    defaultValue: '', // Empty in production - must be set via env var
+  );
   static const bool enableFirebaseAppCheck = bool.fromEnvironment(
     'ENABLE_FIREBASE_APP_CHECK',
     defaultValue: true, // ENHANCED: Enabled by default for security

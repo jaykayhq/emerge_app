@@ -50,11 +50,10 @@ final worldHealthStreamProvider = StreamProvider<double>((ref) {
   final profileSub = repository.watchUserStats(user.id).listen(controller.add);
 
   // Periodic refresh stream (every 5 minutes)
-  final periodicSub = Stream.periodic(
-    const Duration(minutes: 5),
-    (_) => user.id,
-  ).asyncMap((userId) => repository.getUserStats(userId))
-   .listen(controller.add);
+  final periodicSub =
+      Stream.periodic(const Duration(minutes: 5), (_) => user.id)
+          .asyncMap((userId) => repository.getUserStats(userId))
+          .listen(controller.add);
 
   // Clean up when provider is disposed
   ref.onDispose(() {

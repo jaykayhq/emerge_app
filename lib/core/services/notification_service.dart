@@ -83,13 +83,21 @@ class NotificationService {
             print('FCM Token: $token');
           }
 
-          // Save token to Firestore User document
+          // Save token to Firestore User document with error handling
           final user = FirebaseAuth.instance.currentUser;
           if (user != null && token != null) {
-            await FirebaseFirestore.instance
-                .collection('users')
-                .doc(user.uid)
-                .set({'fcmToken': token}, SetOptions(merge: true));
+            try {
+              await FirebaseFirestore.instance
+                  .collection('users')
+                  .doc(user.uid)
+                  .set({'fcmToken': token}, SetOptions(merge: true));
+              debugPrint('FCM token updated successfully for user: ${user.uid}');
+            } catch (e) {
+              // Log error but don't crash - notification token update is non-critical
+              debugPrint('Failed to update FCM token: $e');
+              // Token update failure is not critical - app can still function
+              // The token will be updated on next app launch
+            }
           }
         } catch (e) {
           // FCM not available on this device, continue without it
@@ -125,11 +133,23 @@ class NotificationService {
   }
 
   Future<void> subscribeToTopic(String topic) async {
-    await _firebaseMessaging.subscribeToTopic(topic);
+    try {
+      await _firebaseMessaging.subscribeToTopic(topic);
+      debugPrint('Successfully subscribed to topic: $topic');
+    } catch (e) {
+      debugPrint('Failed to subscribe to topic $topic: $e');
+      // Topic subscription is non-critical, continue without failing
+    }
   }
 
   Future<void> unsubscribeFromTopic(String topic) async {
-    await _firebaseMessaging.unsubscribeFromTopic(topic);
+    try {
+      await _firebaseMessaging.unsubscribeFromTopic(topic);
+      debugPrint('Successfully unsubscribed from topic: $topic');
+    } catch (e) {
+      debugPrint('Failed to unsubscribe from topic $topic: $e');
+      // Topic unsubscription is non-critical, continue without failing
+    }
   }
 
   Future<void> scheduleWeeklyRecap() async {

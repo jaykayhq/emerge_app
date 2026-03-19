@@ -7,14 +7,14 @@ class ChallengeBundleData {
   final Challenge? dailyQuest;
   final List<Challenge> userChallenges;
   final List<Challenge> archetypeChallenges;
-  
+
   const ChallengeBundleData({
     required this.weeklySpotlight,
     required this.dailyQuest,
     required this.userChallenges,
     required this.archetypeChallenges,
   });
-  
+
   /// Returns an empty bundle for loading/error states
   factory ChallengeBundleData.empty() {
     return const ChallengeBundleData(
@@ -24,14 +24,14 @@ class ChallengeBundleData {
       archetypeChallenges: [],
     );
   }
-  
+
   /// Get active solo challenges from user challenges
   List<Challenge> get activeSoloChallenges {
     return userChallenges
         .where((c) => c.status == ChallengeStatus.active)
         .toList();
   }
-  
+
   /// Get completed challenges from user challenges
   List<Challenge> get completedChallenges {
     return userChallenges

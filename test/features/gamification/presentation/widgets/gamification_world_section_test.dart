@@ -22,13 +22,15 @@ void main() {
             (ref) => streamController.stream,
           ),
         ],
-        child: const MaterialApp(home: Scaffold(body: GamificationWorldSection())),
+        child: const MaterialApp(
+          home: Scaffold(body: GamificationWorldSection()),
+        ),
       ),
     );
 
     // Should show loading initially
     expect(find.byType(CircularProgressIndicator), findsOneWidget);
-    
+
     // Clean up
     await streamController.close();
   });

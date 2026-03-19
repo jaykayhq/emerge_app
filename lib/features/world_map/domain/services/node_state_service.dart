@@ -3,11 +3,7 @@ import 'package:emerge_app/features/world_map/domain/models/world_node.dart';
 
 /// Node state for progression calculation
 /// Simplified states distinct from the visual NodeState in world_node.dart
-enum ProgressionState {
-  locked,
-  active,
-  completed,
-}
+enum ProgressionState { locked, active, completed }
 
 /// Service to calculate node states based on user progress
 class NodeStateService {
@@ -42,10 +38,7 @@ class NodeStateService {
   }
 
   /// Get lock reason for display
-  static String getLockReason(
-    WorldNode node,
-    UserProfile userProfile,
-  ) {
+  static String getLockReason(WorldNode node, UserProfile userProfile) {
     final userLevel = userProfile.avatarStats.level;
 
     if (userLevel < node.requiredLevel) {

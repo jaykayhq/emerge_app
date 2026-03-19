@@ -12,7 +12,9 @@ abstract class LeaderboardRepository {
 
   /// Watch leaderboard for a specific challenge
   /// Returns empty stream if challengeId is null or empty
-  Stream<List<LeaderboardEntry>> watchChallengeLeaderboard([String? challengeId]);
+  Stream<List<LeaderboardEntry>> watchChallengeLeaderboard([
+    String? challengeId,
+  ]);
 
   /// Update user's score on a leaderboard
   /// Either clubId or challengeId must be provided

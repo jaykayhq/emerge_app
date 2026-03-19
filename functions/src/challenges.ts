@@ -15,6 +15,24 @@ const getDb = () => {
 };
 
 /**
+ * Validates input data has required string fields.
+ * @param data - The data object to validate
+ * @param requiredFields - Array of required field names
+ * @returns true if all fields are valid strings, false otherwise
+ */
+function validateInput(data: any, requiredFields: string[]): boolean {
+  if (!data || typeof data !== 'object') {
+    return false;
+  }
+  for (const field of requiredFields) {
+    if (!data[field] || typeof data[field] !== 'string' || data[field].trim() === '') {
+      return false;
+    }
+  }
+  return true;
+}
+
+/**
  * Trigger: When a new challenge request is created.
  * Action: Send a push notification to the recipient.
  */
@@ -27,6 +45,16 @@ export const onChallengeRequestCreated = functions.firestore
     const {
       senderId, senderName, recipientId, challengeName, message,
     } = request;
+
+    // Validate required fields for challenge request
+    if (!validateInput(request, ['senderId', 'recipientId', 'challengeName'])) {
+      console.error('Invalid challenge request: missing required fields', {
+        hasSenderId: !!senderId,
+        hasRecipientId: !!recipientId,
+        hasChallengeName: !!challengeName,
+      });
+      return null;
+    }
 
     console.log(`New challenge request from ${senderId} to ${recipientId}`);
 
@@ -107,6 +135,15 @@ export const onChallengeRequestUpdated = functions.firestore
     if (newData.status === oldData.status) return null;
 
     const { senderId, recipientName, challengeName, status } = newData;
+
+    // Validate required fields for challenge update
+    if (!validateInput(newData, ['senderId', 'challengeName'])) {
+      console.error('Invalid challenge update: missing required fields', {
+        hasSenderId: !!senderId,
+        hasChallengeName: !!challengeName,
+      });
+      return null;
+    }
 
     console.log(`Challenge request ${context.params.requestId} ` +
       `updated to ${status}`);

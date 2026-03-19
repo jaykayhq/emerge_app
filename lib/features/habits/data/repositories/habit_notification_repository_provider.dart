@@ -4,7 +4,9 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
-final notificationRepositoryProvider = Provider<HabitNotificationRepository>((ref) {
+final notificationRepositoryProvider = Provider<HabitNotificationRepository>((
+  ref,
+) {
   return HabitNotificationRepository(
     notificationService: ref.watch(notificationServiceProvider),
     firestore: FirebaseFirestore.instance,

@@ -87,7 +87,9 @@ class _StructureNodeState extends State<StructureNode>
         // Show soft gate message
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(NodeStateService.getLockReason(widget.node, widget.userProfile!)),
+            content: Text(
+              NodeStateService.getLockReason(widget.node, widget.userProfile!),
+            ),
             behavior: SnackBarBehavior.floating,
             duration: const Duration(seconds: 2),
           ),
@@ -284,8 +286,7 @@ class _StructureNodeState extends State<StructureNode>
                     ),
 
                   // XP Display for unlocked nodes
-                  if (!isLocked)
-                    _buildXPDisplay(),
+                  if (!isLocked) _buildXPDisplay(),
                 ],
               ),
             );

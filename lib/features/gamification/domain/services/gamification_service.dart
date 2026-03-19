@@ -249,6 +249,9 @@ class GamificationService {
       return completedDate == today;
     }).length;
 
+    // Guard against division by zero when no active habits exist
+    if (activeHabits.isEmpty) return currentState;
+
     final completionRate = completedToday / activeHabits.length;
 
     // Adjust entropy based on completion rate

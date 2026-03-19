@@ -80,14 +80,8 @@ class ErrorBoundaryState extends State<ErrorBoundary> {
     if (_error != null) {
       final content = _buildErrorContent(context);
       return widget.useGlassmorphism
-          ? GlassmorphismCard(
-              padding: const EdgeInsets.all(24),
-              child: content,
-            )
-          : Padding(
-              padding: const EdgeInsets.all(24),
-              child: content,
-            );
+          ? GlassmorphismCard(padding: const EdgeInsets.all(24), child: content)
+          : Padding(padding: const EdgeInsets.all(24), child: content);
     }
 
     return ErrorWidgetBuilder(
@@ -105,11 +99,7 @@ class ErrorBoundaryState extends State<ErrorBoundary> {
       mainAxisSize: MainAxisSize.min,
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        Icon(
-          Icons.error_outline_rounded,
-          size: 56,
-          color: EmergeColors.coral,
-        ),
+        Icon(Icons.error_outline_rounded, size: 56, color: EmergeColors.coral),
         const Gap(16),
         Text(
           widget.errorTitle ?? 'Oops! Something went wrong',
@@ -141,10 +131,7 @@ class ErrorBoundaryState extends State<ErrorBoundary> {
             style: FilledButton.styleFrom(
               backgroundColor: AppTheme.neonGreen,
               foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(
-                horizontal: 24,
-                vertical: 12,
-              ),
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
             ),
           ),
         ],

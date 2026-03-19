@@ -105,7 +105,8 @@ class ChallengeDetailScreen extends ConsumerWidget {
                         ],
                       ),
                       const Gap(24),
-                      if (challenge.status == ChallengeStatus.featured || challenge.status == ChallengeStatus.active)
+                      if (challenge.status == ChallengeStatus.featured ||
+                          challenge.status == ChallengeStatus.active)
                         Container(
                           width: double.infinity,
                           height: 50,
@@ -134,8 +135,9 @@ class ChallengeDetailScreen extends ConsumerWidget {
                                   final repo = ref.read(
                                     challengeRepositoryProvider,
                                   );
-                                  
-                                  if (challenge.status == ChallengeStatus.featured) {
+
+                                  if (challenge.status ==
+                                      ChallengeStatus.featured) {
                                     // 1. Join Challenge
                                     final result = await repo.joinChallenge(
                                       user.id,
@@ -145,9 +147,13 @@ class ChallengeDetailScreen extends ConsumerWidget {
                                     await result.fold(
                                       (failure) async {
                                         if (context.mounted) {
-                                          ScaffoldMessenger.of(context).showSnackBar(
+                                          ScaffoldMessenger.of(
+                                            context,
+                                          ).showSnackBar(
                                             SnackBar(
-                                              content: Text('Failed to join: ${failure.message}'),
+                                              content: Text(
+                                                'Failed to join: ${failure.message}',
+                                              ),
                                               backgroundColor: Colors.red,
                                             ),
                                           );
@@ -155,7 +161,9 @@ class ChallengeDetailScreen extends ConsumerWidget {
                                       },
                                       (_) async {
                                         // 2. Log Activity for XP
-                                        final userStatsRepo = ref.read(userStatsRepositoryProvider);
+                                        final userStatsRepo = ref.read(
+                                          userStatsRepositoryProvider,
+                                        );
                                         await userStatsRepo.logActivity(
                                           userId: user.id,
                                           type: 'joined_challenge',
@@ -164,31 +172,42 @@ class ChallengeDetailScreen extends ConsumerWidget {
                                         );
 
                                         if (context.mounted) {
-                                          ScaffoldMessenger.of(context).showSnackBar(
+                                          ScaffoldMessenger.of(
+                                            context,
+                                          ).showSnackBar(
                                             const SnackBar(
-                                              content: Text('Challenge Joined! (+25 XP)'),
-                                              backgroundColor: EmergeColors.teal,
+                                              content: Text(
+                                                'Challenge Joined! (+25 XP)',
+                                              ),
+                                              backgroundColor:
+                                                  EmergeColors.teal,
                                             ),
                                           );
                                           context.pop();
                                         }
                                       },
                                     );
-                                  } else if (challenge.status == ChallengeStatus.active) {
+                                  } else if (challenge.status ==
+                                      ChallengeStatus.active) {
                                     // Update Progress
-                                    final newProgress = challenge.currentDay + 1;
+                                    final newProgress =
+                                        challenge.currentDay + 1;
                                     final result = await repo.updateProgress(
                                       user.id,
                                       challenge.id,
                                       newProgress,
                                     );
-                                    
+
                                     await result.fold(
                                       (failure) async {
                                         if (context.mounted) {
-                                          ScaffoldMessenger.of(context).showSnackBar(
+                                          ScaffoldMessenger.of(
+                                            context,
+                                          ).showSnackBar(
                                             SnackBar(
-                                              content: Text('Failed to update progress: ${failure.message}'),
+                                              content: Text(
+                                                'Failed to update progress: ${failure.message}',
+                                              ),
                                               backgroundColor: Colors.red,
                                             ),
                                           );
@@ -196,15 +215,20 @@ class ChallengeDetailScreen extends ConsumerWidget {
                                       },
                                       (_) async {
                                         if (context.mounted) {
-                                          final isCompleted = newProgress >= challenge.totalDays;
-                                          ScaffoldMessenger.of(context).showSnackBar(
+                                          final isCompleted =
+                                              newProgress >=
+                                              challenge.totalDays;
+                                          ScaffoldMessenger.of(
+                                            context,
+                                          ).showSnackBar(
                                             SnackBar(
                                               content: Text(
-                                                isCompleted 
-                                                  ? 'Quest Completed! You earned ${challenge.xpReward} XP.' 
-                                                  : 'Progress saved! Day $newProgress complete.',
+                                                isCompleted
+                                                    ? 'Quest Completed! You earned ${challenge.xpReward} XP.'
+                                                    : 'Progress saved! Day $newProgress complete.',
                                               ),
-                                              backgroundColor: EmergeColors.teal,
+                                              backgroundColor:
+                                                  EmergeColors.teal,
                                             ),
                                           );
                                           context.pop();
@@ -215,14 +239,18 @@ class ChallengeDetailScreen extends ConsumerWidget {
                                 } else {
                                   if (context.mounted) {
                                     ScaffoldMessenger.of(context).showSnackBar(
-                                      const SnackBar(content: Text('Please sign in first.')),
+                                      const SnackBar(
+                                        content: Text('Please sign in first.'),
+                                      ),
                                     );
                                   }
                                 }
                               } catch (e) {
                                 if (context.mounted) {
                                   ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(content: Text('Action failed: $e')),
+                                    SnackBar(
+                                      content: Text('Action failed: $e'),
+                                    ),
                                   );
                                 }
                               }
@@ -237,8 +265,11 @@ class ChallengeDetailScreen extends ConsumerWidget {
                             ),
                             child: Text(
                               challenge.status == ChallengeStatus.featured
-                                ? 'Join Quest'
-                                : (challenge.currentDay + 1 >= challenge.totalDays ? 'Finish Quest' : 'Complete Day ${challenge.currentDay + 1}'),
+                                  ? 'Join Quest'
+                                  : (challenge.currentDay + 1 >=
+                                            challenge.totalDays
+                                        ? 'Finish Quest'
+                                        : 'Complete Day ${challenge.currentDay + 1}'),
                               style: const TextStyle(
                                 fontWeight: FontWeight.bold,
                                 fontSize: 16,

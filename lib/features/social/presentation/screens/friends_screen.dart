@@ -484,7 +484,8 @@ class _PartnerRequestsSection extends ConsumerWidget {
           ),
         );
       },
-      loading: () => const EmergeLoadingSkeleton(itemCount: 1, showAvatar: true),
+      loading: () =>
+          const EmergeLoadingSkeleton(itemCount: 1, showAvatar: true),
       error: (error, _) => AppErrorWidget(
         message: 'Could not load partner requests',
         onRetry: () => ref.invalidate(pendingPartnerRequestsStreamProvider),
@@ -697,7 +698,8 @@ class _ActiveContractsSection extends ConsumerWidget {
           ),
         );
       },
-      loading: () => const EmergeLoadingSkeleton(itemCount: 1, showAvatar: true),
+      loading: () =>
+          const EmergeLoadingSkeleton(itemCount: 1, showAvatar: true),
       error: (error, _) => AppErrorWidget(
         message: 'Could not load active contracts',
         onRetry: () => ref.invalidate(activeOnlyContractsProvider),
@@ -1130,7 +1132,8 @@ class _FriendsTabContentState extends ConsumerState<FriendsTabContent> {
                 Row(
                   children: [
                     TextButton(
-                      onPressed: () => context.push('/tribes/leaderboard?tab=friends'),
+                      onPressed: () =>
+                          context.push('/tribes/leaderboard?tab=friends'),
                       child: const Text(
                         'View Rankings',
                         style: TextStyle(
@@ -1262,9 +1265,7 @@ class _FriendsTabContentState extends ConsumerState<FriendsTabContent> {
                       decoration: BoxDecoration(
                         color: EmergeColors.glassWhite,
                         borderRadius: BorderRadius.circular(16),
-                        border: Border.all(
-                          color: EmergeColors.glassBorder,
-                        ),
+                        border: Border.all(color: EmergeColors.glassBorder),
                       ),
                       child: Column(
                         children: [
@@ -1287,8 +1288,9 @@ class _FriendsTabContentState extends ConsumerState<FriendsTabContent> {
                           Text(
                             'Invite someone to hold you accountable!',
                             style: TextStyle(
-                              color: AppTheme.textSecondaryDark
-                                  .withValues(alpha: 0.5),
+                              color: AppTheme.textSecondaryDark.withValues(
+                                alpha: 0.5,
+                              ),
                               fontSize: 12,
                             ),
                           ),

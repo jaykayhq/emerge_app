@@ -3,9 +3,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 /// Provider family for calculating attributes
 /// Memoizes calculations to prevent recalculating on every rebuild
-final attributeCalculatorProvider = Provider.family<AttributeValues, UserAvatarStats>((ref, stats) {
-  return _calculateAttributes(stats);
-});
+final attributeCalculatorProvider =
+    Provider.family<AttributeValues, UserAvatarStats>((ref, stats) {
+      return _calculateAttributes(stats);
+    });
 
 /// Wrapper class for attribute calculations
 /// Used for clean API and to avoid Map type issues
@@ -30,17 +31,25 @@ class AttributeValues {
 
   double operator [](String key) {
     switch (key) {
-      case 'Strength': return strength;
-      case 'Intellect': return intellect;
-      case 'Creativity': return creativity;
-      case 'Focus': return focus;
-      case 'Vitality': return vitality;
-      case 'Spirit': return spirit;
-      case 'Resilience': return resilience;
-      default: return 0.0;
+      case 'Strength':
+        return strength;
+      case 'Intellect':
+        return intellect;
+      case 'Creativity':
+        return creativity;
+      case 'Focus':
+        return focus;
+      case 'Vitality':
+        return vitality;
+      case 'Spirit':
+        return spirit;
+      case 'Resilience':
+        return resilience;
+      default:
+        return 0.0;
     }
   }
-  
+
   /// Create from map for backwards compatibility
   factory AttributeValues.fromMap(Map<String, double> map) {
     return AttributeValues(

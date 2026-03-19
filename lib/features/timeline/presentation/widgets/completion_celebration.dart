@@ -131,10 +131,7 @@ class _CompletionCelebrationState extends State<CompletionCelebration>
                       decoration: BoxDecoration(
                         color: Colors.green.withValues(alpha: 0.2),
                         shape: BoxShape.circle,
-                        border: Border.all(
-                          color: Colors.green,
-                          width: 3,
-                        ),
+                        border: Border.all(color: Colors.green, width: 3),
                         boxShadow: [
                           BoxShadow(
                             color: Colors.green.withValues(alpha: 0.5),
@@ -168,7 +165,9 @@ class _CompletionCelebrationState extends State<CompletionCelebration>
                             fontWeight: FontWeight.bold,
                             shadows: [
                               Shadow(
-                                color: widget.accentColor.withValues(alpha: 0.5),
+                                color: widget.accentColor.withValues(
+                                  alpha: 0.5,
+                                ),
                                 blurRadius: 10,
                               ),
                             ],
@@ -179,10 +178,7 @@ class _CompletionCelebrationState extends State<CompletionCelebration>
                           Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              const Text(
-                                '🔥',
-                                style: TextStyle(fontSize: 18),
-                              ),
+                              const Text('🔥', style: TextStyle(fontSize: 18)),
                               const SizedBox(width: 4),
                               Text(
                                 '${widget.newStreak} day streak',
@@ -204,9 +200,7 @@ class _CompletionCelebrationState extends State<CompletionCelebration>
                             decoration: BoxDecoration(
                               color: Colors.amber.withValues(alpha: 0.3),
                               borderRadius: BorderRadius.circular(20),
-                              border: Border.all(
-                                color: Colors.amber,
-                              ),
+                              border: Border.all(color: Colors.amber),
                             ),
                             child: Text(
                               _getMilestoneText(),

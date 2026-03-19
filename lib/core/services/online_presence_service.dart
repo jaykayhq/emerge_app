@@ -36,12 +36,9 @@ class OnlinePresenceService {
     await _updateOnlineStatus(userId);
 
     // Start periodic heartbeat every 2 minutes
-    _heartbeatTimer = Timer.periodic(
-      const Duration(minutes: 2),
-      (_) async {
-        await _updateOnlineStatus(userId);
-      },
-    );
+    _heartbeatTimer = Timer.periodic(const Duration(minutes: 2), (_) async {
+      await _updateOnlineStatus(userId);
+    });
   }
 
   /// Stops the heartbeat timer.
@@ -66,9 +63,9 @@ class OnlinePresenceService {
           .collection('presence')
           .doc('status')
           .set({
-        'online': true,
-        'lastSeen': FieldValue.serverTimestamp(),
-      }, SetOptions(merge: true));
+            'online': true,
+            'lastSeen': FieldValue.serverTimestamp(),
+          }, SetOptions(merge: true));
     } catch (e) {
       // Silently fail to avoid spamming logs if network is unavailable
       // The heartbeat will retry on the next interval
@@ -88,9 +85,9 @@ class OnlinePresenceService {
           .collection('presence')
           .doc('status')
           .set({
-        'online': false,
-        'lastSeen': FieldValue.serverTimestamp(),
-      }, SetOptions(merge: true));
+            'online': false,
+            'lastSeen': FieldValue.serverTimestamp(),
+          }, SetOptions(merge: true));
     } catch (e) {
       // Silently fail
     }

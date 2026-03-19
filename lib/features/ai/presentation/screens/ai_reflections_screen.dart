@@ -12,7 +12,8 @@ class AiReflectionsScreen extends ConsumerStatefulWidget {
   const AiReflectionsScreen({super.key});
 
   @override
-  ConsumerState<AiReflectionsScreen> createState() => _AiReflectionsScreenState();
+  ConsumerState<AiReflectionsScreen> createState() =>
+      _AiReflectionsScreenState();
 }
 
 class _AiReflectionsScreenState extends ConsumerState<AiReflectionsScreen> {
@@ -186,6 +187,7 @@ class _AiReflectionsScreenState extends ConsumerState<AiReflectionsScreen> {
     );
   }
 }
+
 class _InsightCard extends StatelessWidget {
   final AiInsight insight;
 

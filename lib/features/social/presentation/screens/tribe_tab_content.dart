@@ -81,7 +81,9 @@ class _TribeTabContentState extends ConsumerState<TribeTabContent> {
                   const Gap(16),
 
                   // ===== MEMBER COUNT (Real-time from members array) =====
-                  _RealTimeMemberCount(tribeId: userClub.id).animate().fadeIn(delay: 200.ms),
+                  _RealTimeMemberCount(
+                    tribeId: userClub.id,
+                  ).animate().fadeIn(delay: 200.ms),
 
                   const Gap(32),
 
@@ -383,9 +385,24 @@ class _RealTimeTribeProgressMetrics extends ConsumerWidget {
         child: const Row(
           mainAxisAlignment: MainAxisAlignment.spaceAround,
           children: [
-            _StatOrb(label: 'Total XP', value: '...', color: Colors.grey, icon: Icons.electric_bolt),
-            _StatOrb(label: 'Habits Conquered', value: '...', color: Colors.grey, icon: Icons.check_circle_outline),
-            _StatOrb(label: 'Quests Beaten', value: '...', color: Colors.grey, icon: Icons.emoji_events),
+            _StatOrb(
+              label: 'Total XP',
+              value: '...',
+              color: Colors.grey,
+              icon: Icons.electric_bolt,
+            ),
+            _StatOrb(
+              label: 'Habits Conquered',
+              value: '...',
+              color: Colors.grey,
+              icon: Icons.check_circle_outline,
+            ),
+            _StatOrb(
+              label: 'Quests Beaten',
+              value: '...',
+              color: Colors.grey,
+              icon: Icons.emoji_events,
+            ),
           ],
         ),
       ),
@@ -406,9 +423,24 @@ class _RealTimeTribeProgressMetrics extends ConsumerWidget {
         child: const Row(
           mainAxisAlignment: MainAxisAlignment.spaceAround,
           children: [
-            _StatOrb(label: 'Total XP', value: 'Error', color: Colors.red, icon: Icons.electric_bolt),
-            _StatOrb(label: 'Habits Conquered', value: 'Error', color: Colors.red, icon: Icons.check_circle_outline),
-            _StatOrb(label: 'Quests Beaten', value: 'Error', color: Colors.red, icon: Icons.emoji_events),
+            _StatOrb(
+              label: 'Total XP',
+              value: 'Error',
+              color: Colors.red,
+              icon: Icons.electric_bolt,
+            ),
+            _StatOrb(
+              label: 'Habits Conquered',
+              value: 'Error',
+              color: Colors.red,
+              icon: Icons.check_circle_outline,
+            ),
+            _StatOrb(
+              label: 'Quests Beaten',
+              value: 'Error',
+              color: Colors.red,
+              icon: Icons.emoji_events,
+            ),
           ],
         ),
       ),
@@ -837,8 +869,6 @@ class _ActivityTile extends StatelessWidget {
   }
 }
 
-
-
 class _EmptyState extends StatelessWidget {
   final String message;
   final IconData icon;
@@ -866,8 +896,6 @@ class _EmptyState extends StatelessWidget {
     );
   }
 }
-
-
 
 class _ToggleItem extends StatelessWidget {
   final String label;

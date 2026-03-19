@@ -2,7 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
 
 /// Service for calculating real-time tribe statistics from actual user data.
-/// 
+///
 /// This service aggregates data from tribe members to provide accurate:
 /// - Member counts (from members array)
 /// - Total XP (sum of all members' XP)
@@ -29,7 +29,7 @@ class TribeStatsService {
   }
 
   /// Calculates the total XP from all tribe members
-  /// 
+  ///
   /// This queries the user_stats collection for all tribe members
   /// and sums their totalXp values.
   Future<int> getTotalXp(String tribeId) async {
@@ -42,11 +42,11 @@ class TribeStatsService {
 
       // Query user_stats for all tribe members
       final memberIds = members.cast<String>();
-      
+
       // Firestore 'in' query limit is 30, so we batch if needed
       int totalXp = 0;
       const batchSize = 30;
-      
+
       for (var i = 0; i < memberIds.length; i += batchSize) {
         final batch = memberIds.skip(i).take(batchSize).toList();
         final userStatsSnapshot = await _firestore
@@ -68,7 +68,8 @@ class TribeStatsService {
             totalXp += avatarStats['spiritXp'] as int? ?? 0;
 
             // Also sum any custom attribute XP from the attributeXp map
-            final customAttributeXp = avatarStats['attributeXp'] as Map<String, dynamic>?;
+            final customAttributeXp =
+                avatarStats['attributeXp'] as Map<String, dynamic>?;
             if (customAttributeXp != null) {
               for (final value in customAttributeXp.values) {
                 if (value is int) totalXp += value;
@@ -156,7 +157,8 @@ class TribeStatsService {
             totalXp += avatarStats['spiritXp'] as int? ?? 0;
 
             // Also sum any custom attribute XP from the attributeXp map
-            final customAttributeXp = avatarStats['attributeXp'] as Map<String, dynamic>?;
+            final customAttributeXp =
+                avatarStats['attributeXp'] as Map<String, dynamic>?;
             if (customAttributeXp != null) {
               for (final value in customAttributeXp.values) {
                 if (value is int) totalXp += value;
@@ -172,7 +174,8 @@ class TribeStatsService {
         'memberCount': memberCount,
         'totalXp': totalXp,
         'totalHabitsCompleted': data['totalHabitsCompleted'] as int? ?? 0,
-        'totalChallengesCompleted': data['totalChallengesCompleted'] as int? ?? 0,
+        'totalChallengesCompleted':
+            data['totalChallengesCompleted'] as int? ?? 0,
       };
     } catch (e) {
       debugPrint('Error getting tribe stats for $tribeId: $e');
@@ -186,13 +189,13 @@ class TribeStatsService {
   }
 
   /// Updates the tribe document with calculated stats
-  /// 
+  ///
   /// This should be called periodically or triggered by user actions
   /// to keep the tribe document's cached values in sync with reality.
   Future<void> syncTribeStats(String tribeId) async {
     try {
       final stats = await getTribeStats(tribeId);
-      
+
       await _firestore.collection('tribes').doc(tribeId).update({
         'memberCount': stats['memberCount'],
         'totalXp': stats['totalXp'],
@@ -201,7 +204,9 @@ class TribeStatsService {
         'lastStatsSync': FieldValue.serverTimestamp(),
       });
 
-      debugPrint('✅ Synced stats for tribe $tribeId: ${stats['memberCount']} members, ${stats['totalXp']} XP');
+      debugPrint(
+        '✅ Synced stats for tribe $tribeId: ${stats['memberCount']} members, ${stats['totalXp']} XP',
+      );
     } catch (e) {
       debugPrint('❌ Error syncing tribe stats for $tribeId: $e');
     }

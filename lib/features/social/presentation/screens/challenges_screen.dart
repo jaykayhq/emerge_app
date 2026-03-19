@@ -65,8 +65,7 @@ class _ChallengesScreenState extends ConsumerState<ChallengesScreen> {
                 ),
               ),
               // Unified skeleton loader during initial load
-              if (bundleAsync.isLoading)
-                const ChallengesSkeletonLoader(),
+              if (bundleAsync.isLoading) const ChallengesSkeletonLoader(),
             ],
           ),
         ),
@@ -100,10 +99,7 @@ class _ChallengesScreenState extends ConsumerState<ChallengesScreen> {
         // Filter Pills
         SliverToBoxAdapter(
           child: Padding(
-            padding: const EdgeInsets.symmetric(
-              horizontal: 16,
-              vertical: 8,
-            ),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             child: _FilterPillsRow(
               filters: _filters,
               selected: _selectedFilter,
@@ -140,9 +136,7 @@ class _ChallengesScreenState extends ConsumerState<ChallengesScreen> {
             ),
           ),
           const SliverToBoxAdapter(child: Gap(12)),
-          SliverToBoxAdapter(
-            child: _WeeklySpotlightSection(bundle: bundle),
-          ),
+          SliverToBoxAdapter(child: _WeeklySpotlightSection(bundle: bundle)),
           const SliverToBoxAdapter(child: Gap(28)),
         ],
 
@@ -153,11 +147,7 @@ class _ChallengesScreenState extends ConsumerState<ChallengesScreen> {
               padding: const EdgeInsets.symmetric(horizontal: 16),
               child: Row(
                 children: [
-                  const Icon(
-                    Icons.today,
-                    size: 18,
-                    color: EmergeColors.coral,
-                  ),
+                  const Icon(Icons.today, size: 18, color: EmergeColors.coral),
                   const Gap(8),
                   const Text(
                     'Daily Quest',
@@ -172,9 +162,7 @@ class _ChallengesScreenState extends ConsumerState<ChallengesScreen> {
             ),
           ),
           const SliverToBoxAdapter(child: Gap(12)),
-          SliverToBoxAdapter(
-            child: _DailyQuestSection(bundle: bundle),
-          ),
+          SliverToBoxAdapter(child: _DailyQuestSection(bundle: bundle)),
           const SliverToBoxAdapter(child: Gap(28)),
         ],
 
@@ -196,19 +184,14 @@ class _ChallengesScreenState extends ConsumerState<ChallengesScreen> {
                   ),
                   Text(
                     'View All',
-                    style: TextStyle(
-                      color: EmergeColors.teal,
-                      fontSize: 13,
-                    ),
+                    style: TextStyle(color: EmergeColors.teal, fontSize: 13),
                   ),
                 ],
               ),
             ),
           ),
           const SliverToBoxAdapter(child: Gap(16)),
-          SliverToBoxAdapter(
-            child: _QuestCardsSection(bundle: bundle),
-          ),
+          SliverToBoxAdapter(child: _QuestCardsSection(bundle: bundle)),
           const SliverToBoxAdapter(child: Gap(28)),
         ],
 
@@ -349,7 +332,7 @@ class _WeeklySpotlightSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final challenge = bundle?.weeklySpotlight;
-    
+
     if (challenge == null) {
       return _EmptySpotlightCard();
     }
@@ -617,15 +600,15 @@ class _DailyQuestSectionState extends ConsumerState<_DailyQuestSection> {
   @override
   Widget build(BuildContext context) {
     final challenge = widget.bundle?.dailyQuest;
-    
+
     if (challenge == null) {
       return _EmptyDailyQuestCard();
     }
-    
+
     // Get user ID from auth state
     final user = ref.watch(authStateChangesProvider).value;
     final userId = user?.id ?? '';
-    
+
     return _DailyQuestCard(challenge: challenge, userId: userId);
   }
 }
@@ -860,7 +843,7 @@ class _QuestCardsSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final active = bundle?.activeSoloChallenges ?? [];
-    
+
     if (active.isEmpty) {
       return Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -891,9 +874,7 @@ class _QuestCardsSection extends StatelessWidget {
                 Text(
                   'Browse archetype challenges below to get started',
                   style: TextStyle(
-                    color: AppTheme.textSecondaryDark.withValues(
-                      alpha: 0.5,
-                    ),
+                    color: AppTheme.textSecondaryDark.withValues(alpha: 0.5),
                     fontSize: 12,
                   ),
                 ),
@@ -1155,7 +1136,7 @@ class _ArchetypeChallengesSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final challenges = bundle?.archetypeChallenges ?? [];
-    
+
     if (challenges.isEmpty) {
       return Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -1345,7 +1326,10 @@ class _ArchetypeChallengeCard extends ConsumerWidget {
                 }
               },
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 8,
+                ),
                 decoration: BoxDecoration(
                   color: EmergeColors.teal,
                   borderRadius: BorderRadius.circular(8),
@@ -1373,7 +1357,8 @@ class ChallengesTabContent extends ConsumerStatefulWidget {
   const ChallengesTabContent({super.key});
 
   @override
-  ConsumerState<ChallengesTabContent> createState() => _ChallengesTabContentState();
+  ConsumerState<ChallengesTabContent> createState() =>
+      _ChallengesTabContentState();
 }
 
 class _ChallengesTabContentState extends ConsumerState<ChallengesTabContent> {
@@ -1527,7 +1512,11 @@ class _ChallengesTabContentState extends ConsumerState<ChallengesTabContent> {
               padding: const EdgeInsets.symmetric(horizontal: 16),
               child: Row(
                 children: [
-                  const Icon(Icons.verified, size: 18, color: EmergeColors.teal),
+                  const Icon(
+                    Icons.verified,
+                    size: 18,
+                    color: EmergeColors.teal,
+                  ),
                   const Gap(8),
                   const Text(
                     'Completed',
@@ -1552,4 +1541,3 @@ class _ChallengesTabContentState extends ConsumerState<ChallengesTabContent> {
     );
   }
 }
-

@@ -1,5 +1,6 @@
 import 'package:emerge_app/core/error/failure.dart';
 import 'package:emerge_app/core/utils/app_logger.dart';
+import 'package:emerge_app/core/utils/validators.dart';
 import 'package:emerge_app/features/auth/domain/entities/auth_user.dart';
 import 'package:emerge_app/features/auth/domain/repositories/auth_repository.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -35,9 +36,20 @@ class FirebaseAuthRepository implements AuthRepository {
     required String email,
     required String password,
   }) async {
+    // Validate inputs before sending to Firebase
+    final emailError = AppValidators.validateEmail(email);
+    if (emailError != null) {
+      return Left(AuthFailure(emailError));
+    }
+
+    final passwordError = AppValidators.validatePassword(password);
+    if (passwordError != null) {
+      return Left(AuthFailure(passwordError));
+    }
+
     try {
       final credential = await _firebaseAuth.signInWithEmailAndPassword(
-        email: email,
+        email: email.trim(),
         password: password,
       );
       final user = credential.user;
@@ -66,9 +78,29 @@ class FirebaseAuthRepository implements AuthRepository {
     required String password,
     required String username,
   }) async {
+    // Validate inputs before sending to Firebase
+    final emailError = AppValidators.validateEmail(email);
+    if (emailError != null) {
+      return Left(AuthFailure(emailError));
+    }
+
+    final passwordError = AppValidators.validatePassword(password);
+    if (passwordError != null) {
+      return Left(AuthFailure(passwordError));
+    }
+
+    final usernameError = AppValidators.validateUsername(username);
+    if (usernameError != null) {
+      return Left(AuthFailure(usernameError));
+    }
+
+    // Sanitize inputs
+    final sanitizedEmail = email.trim();
+    final sanitizedUsername = AppValidators.sanitizeInput(username);
+
     try {
       final credential = await _firebaseAuth.createUserWithEmailAndPassword(
-        email: email,
+        email: sanitizedEmail,
         password: password,
       );
       final user = credential.user;
@@ -76,8 +108,8 @@ class FirebaseAuthRepository implements AuthRepository {
         return const Left(AuthFailure('User creation failed'));
       }
 
-      // Update display name (username)
-      await user.updateDisplayName(username);
+      // Update display name (username) - use sanitized version
+      await user.updateDisplayName(sanitizedUsername);
       await user.reload(); // Reload to get updated info
       final updatedUser = _firebaseAuth.currentUser;
 
@@ -85,7 +117,7 @@ class FirebaseAuthRepository implements AuthRepository {
       final userProfile = UserProfile(uid: updatedUser?.uid ?? user.uid);
       final profileMap = userProfile.toMap();
       profileMap['email'] = updatedUser?.email ?? user.email ?? '';
-      profileMap['displayName'] = updatedUser?.displayName ?? username;
+      profileMap['displayName'] = updatedUser?.displayName ?? sanitizedUsername;
       profileMap['createdAt'] = FieldValue.serverTimestamp();
 
       await _firestore.collection('users').doc(userProfile.uid).set(profileMap);
@@ -100,7 +132,7 @@ class FirebaseAuthRepository implements AuthRepository {
         AuthUser(
           id: updatedUser?.uid ?? user.uid,
           email: updatedUser?.email ?? user.email ?? '',
-          displayName: updatedUser?.displayName ?? username,
+          displayName: updatedUser?.displayName ?? sanitizedUsername,
         ),
       );
     } on FirebaseAuthException catch (e) {
@@ -180,8 +212,14 @@ class FirebaseAuthRepository implements AuthRepository {
 
   @override
   Future<Either<Failure, void>> sendPasswordResetEmail(String email) async {
+    // Validate email before sending reset
+    final emailError = AppValidators.validateEmail(email);
+    if (emailError != null) {
+      return Left(AuthFailure(emailError));
+    }
+
     try {
-      await _firebaseAuth.sendPasswordResetEmail(email: email);
+      await _firebaseAuth.sendPasswordResetEmail(email: email.trim());
       return const Right(null);
     } on FirebaseAuthException catch (e) {
       AppLogger.e('Password reset failed', e);
@@ -203,12 +241,21 @@ class FirebaseAuthRepository implements AuthRepository {
 
   @override
   Future<Either<Failure, void>> updateDisplayName(String displayName) async {
+    // Validate display name using username rules
+    final usernameError = AppValidators.validateUsername(displayName);
+    if (usernameError != null) {
+      return Left(AuthFailure(usernameError));
+    }
+
+    // Sanitize input
+    final sanitizedDisplayName = AppValidators.sanitizeInput(displayName);
+
     try {
       final user = _firebaseAuth.currentUser;
       if (user == null) {
         return const Left(AuthFailure('User not logged in'));
       }
-      await user.updateDisplayName(displayName);
+      await user.updateDisplayName(sanitizedDisplayName);
       await user.reload();
       return const Right(null);
     } on FirebaseAuthException catch (e) {

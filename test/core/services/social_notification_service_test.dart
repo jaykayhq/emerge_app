@@ -4,20 +4,21 @@ import 'package:mocktail/mocktail.dart';
 import 'package:emerge_app/core/domain/entities/app_notification.dart';
 import 'package:emerge_app/core/services/social_notification_service.dart';
 
-
-
 // Mock classes
 // ignore: subtype_of_sealed_class
 class MockFirestore extends Mock implements FirebaseFirestore {}
 
 // ignore: subtype_of_sealed_class
-class MockCollectionReference extends Mock implements CollectionReference<Map<String, dynamic>> {}
+class MockCollectionReference extends Mock
+    implements CollectionReference<Map<String, dynamic>> {}
 
 // ignore: subtype_of_sealed_class
-class MockDocumentReference extends Mock implements DocumentReference<Map<String, dynamic>> {}
+class MockDocumentReference extends Mock
+    implements DocumentReference<Map<String, dynamic>> {}
 
 // ignore: subtype_of_sealed_class
-class MockQuerySnapshot extends Mock implements QuerySnapshot<Map<String, dynamic>> {}
+class MockQuerySnapshot extends Mock
+    implements QuerySnapshot<Map<String, dynamic>> {}
 
 class MockBatch extends Mock implements WriteBatch {}
 
@@ -25,7 +26,8 @@ class MockBatch extends Mock implements WriteBatch {}
 class MockQuery extends Mock implements Query<Map<String, dynamic>> {}
 
 // ignore: subtype_of_sealed_class
-class MockDocumentSnapshot extends Mock implements DocumentSnapshot<Map<String, dynamic>> {}
+class MockDocumentSnapshot extends Mock
+    implements DocumentSnapshot<Map<String, dynamic>> {}
 
 void main() {
   late MockFirestore mockFirestore;
@@ -44,10 +46,12 @@ void main() {
     service = SocialNotificationService(mockFirestore);
 
     // Setup default collection reference
-    when(() => mockFirestore.collection('users').doc(any()))
-        .thenReturn(mockDocRef);
-    when(() => mockDocRef.collection('notifications'))
-        .thenReturn(mockNotificationsCollection);
+    when(
+      () => mockFirestore.collection('users').doc(any()),
+    ).thenReturn(mockDocRef);
+    when(
+      () => mockDocRef.collection('notifications'),
+    ).thenReturn(mockNotificationsCollection);
   });
 
   group('SocialNotificationService', () {
@@ -62,19 +66,27 @@ void main() {
           createdAt: DateTime.now(),
         );
 
-        when(() => mockNotificationsCollection.add(any()))
-            .thenAnswer((_) async => mockDocRef);
+        when(
+          () => mockNotificationsCollection.add(any()),
+        ).thenAnswer((_) async => mockDocRef);
 
         // Act
-        final result = await service.sendNotification('user123', mockNotification);
+        final result = await service.sendNotification(
+          'user123',
+          mockNotification,
+        );
 
         // Assert
         expect(result, isNotNull);
-        verify(() => mockFirestore.collection('users').doc('user123')).called(1);
-        verify(() => mockDocRef.update({
-          'unreadNotificationCount': FieldValue.increment(1),
-          'lastNotificationAt': any(named: 'lastNotificationAt'),
-        })).called(1);
+        verify(
+          () => mockFirestore.collection('users').doc('user123'),
+        ).called(1);
+        verify(
+          () => mockDocRef.update({
+            'unreadNotificationCount': FieldValue.increment(1),
+            'lastNotificationAt': any(named: 'lastNotificationAt'),
+          }),
+        ).called(1);
       });
     });
 
@@ -89,12 +101,16 @@ void main() {
           createdAt: DateTime.now(),
         );
 
-        when(() => mockFirestore.collection('users').doc(any()))
-            .thenReturn(mockDocRef);
+        when(
+          () => mockFirestore.collection('users').doc(any()),
+        ).thenReturn(mockDocRef);
         when(() => mockFirestore.batch()).thenReturn(MockBatch());
 
         // Act
-        await service.sendNotificationToMultiple(['user1', 'user2'], mockNotification);
+        await service.sendNotificationToMultiple([
+          'user1',
+          'user2',
+        ], mockNotification);
 
         // Assert
         verify(() => mockFirestore.batch()).called(1);
@@ -123,21 +139,24 @@ void main() {
     group('markAsRead', () {
       test('marks notification as read and decrements count', () async {
         // Arrange
-        when(() => mockNotificationsCollection.doc(any()))
-            .thenReturn(mockDocRef);
+        when(
+          () => mockNotificationsCollection.doc(any()),
+        ).thenReturn(mockDocRef);
 
         // Act
         await service.markAsRead('user123', 'notif123');
 
         // Assert
         verify(() => mockNotificationsCollection.doc('notif123')).called(1);
-        verify(() => mockDocRef.update({
-          'read': true,
-          'readAt': any(named: 'readAt'),
-        })).called(1);
-        verify(() => mockFirestore.collection('users').doc('user123').update({
-          'unreadNotificationCount': FieldValue.increment(-1),
-        })).called(1);
+        verify(
+          () =>
+              mockDocRef.update({'read': true, 'readAt': any(named: 'readAt')}),
+        ).called(1);
+        verify(
+          () => mockFirestore.collection('users').doc('user123').update({
+            'unreadNotificationCount': FieldValue.increment(-1),
+          }),
+        ).called(1);
       });
     });
 
@@ -147,55 +166,74 @@ void main() {
         final mockQuery = MockQuery();
         final mockQuerySnapshot = MockQuerySnapshot();
 
-        when(() => mockFirestore.collection('users').doc('user123').collection('notifications'))
-            .thenReturn(mockNotificationsCollection);
-        when(() => mockNotificationsCollection.where('read', isEqualTo: false)).thenReturn(mockQuery);
-        when(() => mockQuery.snapshots()).thenAnswer((_) => Stream.value(mockQuerySnapshot));
+        when(
+          () => mockFirestore
+              .collection('users')
+              .doc('user123')
+              .collection('notifications'),
+        ).thenReturn(mockNotificationsCollection);
+        when(
+          () => mockNotificationsCollection.where('read', isEqualTo: false),
+        ).thenReturn(mockQuery);
+        when(
+          () => mockQuery.snapshots(),
+        ).thenAnswer((_) => Stream.value(mockQuerySnapshot));
         when(() => mockQuerySnapshot.docs).thenReturn([]);
 
         // Act
         await service.markAllAsRead('user123');
 
         // Assert
-        verify(() => mockNotificationsCollection.where('read', isEqualTo: false)).called(1);
-        verify(() => mockFirestore.collection('users').doc('user123').update({
-          'unreadNotificationCount': 0,
-        })).called(1);
+        verify(
+          () => mockNotificationsCollection.where('read', isEqualTo: false),
+        ).called(1);
+        verify(
+          () => mockFirestore.collection('users').doc('user123').update({
+            'unreadNotificationCount': 0,
+          }),
+        ).called(1);
       });
 
       test('returns early when no unread notifications', () async {
         // Arrange
-        when(() => mockFirestore.collection('users').doc('user123').collection('notifications'))
-            .thenReturn(mockNotificationsCollection);
+        when(
+          () => mockFirestore
+              .collection('users')
+              .doc('user123')
+              .collection('notifications'),
+        ).thenReturn(mockNotificationsCollection);
 
         // Act & Assert - should not throw
-        expect(
-          () => service.markAllAsRead('user123'),
-          returnsNormally,
-        );
+        expect(() => service.markAllAsRead('user123'), returnsNormally);
       });
     });
 
     group('deleteNotification', () {
-      test('deletes notification and decrements count only if unread', () async {
-        // Arrange
-        final mockSnapshot = MockDocumentSnapshot();
-        when(() => mockSnapshot.exists).thenReturn(true);
-        when(() => mockSnapshot.data()).thenReturn({'read': false});
+      test(
+        'deletes notification and decrements count only if unread',
+        () async {
+          // Arrange
+          final mockSnapshot = MockDocumentSnapshot();
+          when(() => mockSnapshot.exists).thenReturn(true);
+          when(() => mockSnapshot.data()).thenReturn({'read': false});
 
-        when(() => mockNotificationsCollection.doc(any()))
-            .thenReturn(mockDocRef);
-        when(() => mockDocRef.get()).thenAnswer((_) async => mockSnapshot);
+          when(
+            () => mockNotificationsCollection.doc(any()),
+          ).thenReturn(mockDocRef);
+          when(() => mockDocRef.get()).thenAnswer((_) async => mockSnapshot);
 
-        // Act
-        await service.deleteNotification('user123', 'notif123');
+          // Act
+          await service.deleteNotification('user123', 'notif123');
 
-        // Assert
-        verify(() => mockDocRef.delete()).called(1);
-        verify(() => mockFirestore.collection('users').doc('user123').update({
-          'unreadNotificationCount': FieldValue.increment(-1),
-        })).called(1);
-      });
+          // Assert
+          verify(() => mockDocRef.delete()).called(1);
+          verify(
+            () => mockFirestore.collection('users').doc('user123').update({
+              'unreadNotificationCount': FieldValue.increment(-1),
+            }),
+          ).called(1);
+        },
+      );
 
       test('deletes read notification without decrementing count', () async {
         // Arrange
@@ -203,8 +241,9 @@ void main() {
         when(() => mockSnapshot.exists).thenReturn(true);
         when(() => mockSnapshot.data()).thenReturn({'read': true});
 
-        when(() => mockNotificationsCollection.doc(any()))
-            .thenReturn(mockDocRef);
+        when(
+          () => mockNotificationsCollection.doc(any()),
+        ).thenReturn(mockDocRef);
         when(() => mockDocRef.get()).thenAnswer((_) async => mockSnapshot);
 
         // Act
@@ -212,7 +251,9 @@ void main() {
 
         // Assert
         verify(() => mockDocRef.delete()).called(1);
-        verifyNoMoreInteractions(mockFirestore.collection('users').doc('user123'));
+        verifyNoMoreInteractions(
+          mockFirestore.collection('users').doc('user123'),
+        );
       });
     });
 
@@ -220,9 +261,15 @@ void main() {
       test('deletes all notifications and resets count', () async {
         // Arrange
         final mockQuerySnapshot = MockQuerySnapshot();
-        when(() => mockFirestore.collection('users').doc('user123').collection('notifications'))
-            .thenReturn(mockNotificationsCollection);
-        when(() => mockNotificationsCollection.get()).thenAnswer((_) async => mockQuerySnapshot);
+        when(
+          () => mockFirestore
+              .collection('users')
+              .doc('user123')
+              .collection('notifications'),
+        ).thenReturn(mockNotificationsCollection);
+        when(
+          () => mockNotificationsCollection.get(),
+        ).thenAnswer((_) async => mockQuerySnapshot);
         when(() => mockQuerySnapshot.docs).thenReturn([]);
 
         // Act
@@ -230,17 +277,24 @@ void main() {
 
         // Assert
         verify(() => mockNotificationsCollection.get()).called(1);
-        verify(() => mockFirestore.collection('users').doc('user123').update({
-          'unreadNotificationCount': 0,
-        })).called(1);
+        verify(
+          () => mockFirestore.collection('users').doc('user123').update({
+            'unreadNotificationCount': 0,
+          }),
+        ).called(1);
       });
 
       test('handles errors gracefully without throwing', () async {
         // Arrange
-        when(() => mockFirestore.collection('users').doc('user123').collection('notifications'))
-            .thenReturn(mockNotificationsCollection);
-        when(() => mockNotificationsCollection.get())
-            .thenThrow(Exception('Network error'));
+        when(
+          () => mockFirestore
+              .collection('users')
+              .doc('user123')
+              .collection('notifications'),
+        ).thenReturn(mockNotificationsCollection);
+        when(
+          () => mockNotificationsCollection.get(),
+        ).thenThrow(Exception('Network error'));
 
         // Act & Assert - should not throw despite error
         expect(
@@ -281,7 +335,10 @@ void main() {
         expect(notification.data['senderName'], 'Alice');
         expect(notification.data['route'], '/social/friends');
         expect(notification.expiresAt, isNotNull);
-        expect(notification.expiresAt!.difference(notification.createdAt).inDays, 30);
+        expect(
+          notification.expiresAt!.difference(notification.createdAt).inDays,
+          30,
+        );
       });
 
       test('createChallengeInviteNotification has 7-day expiration', () {
@@ -295,7 +352,10 @@ void main() {
         // Assert
         expect(notification.type, AppNotificationType.challengeInvite);
         expect(notification.expiresAt, isNotNull);
-        expect(notification.expiresAt!.difference(notification.createdAt).inDays, 7);
+        expect(
+          notification.expiresAt!.difference(notification.createdAt).inDays,
+          7,
+        );
       });
 
       test('createLevelUpNotification has correct data', () {

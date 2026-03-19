@@ -73,7 +73,8 @@ class FirestoreTribeRepository implements TribeRepository {
         .orderBy('archetypeId')
         .snapshots()
         .map(
-          (snapshot) => snapshot.docs.map((doc) => Tribe.fromMap(doc.data())).toList(),
+          (snapshot) =>
+              snapshot.docs.map((doc) => Tribe.fromMap(doc.data())).toList(),
         );
   }
 
@@ -131,7 +132,9 @@ class FirestoreTribeRepository implements TribeRepository {
             .doc(userId)
             .collection('tribes')
             .doc(tribeId);
-        transaction.set(userTribeRef, {'joinedAt': FieldValue.serverTimestamp()});
+        transaction.set(userTribeRef, {
+          'joinedAt': FieldValue.serverTimestamp(),
+        });
 
         debugPrint('✅ User $userId joined tribe $tribeId successfully');
       });

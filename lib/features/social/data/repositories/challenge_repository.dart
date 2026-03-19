@@ -122,7 +122,9 @@ class FirestoreChallengeRepository implements ChallengeRepository {
     int progress,
   ) async {
     try {
-      final result = await _firestore.runTransaction<Either<Failure, Unit>>((transaction) async {
+      final result = await _firestore.runTransaction<Either<Failure, Unit>>((
+        transaction,
+      ) async {
         // Get the user's challenge document
         final userChallengeRef = _firestore
             .collection('users')
@@ -208,11 +210,15 @@ class FirestoreChallengeRepository implements ChallengeRepository {
 
         // Award XP ONLY on the final day (when challenge is completed)
         final totalXpReward = data['xpReward'] as int? ?? 50;
-        
+
         if (progress >= totalDays) {
           // Award full XP on completion
           if (totalXpReward > 0) {
-            final userStatsRef = _firestore.collection('users').doc(userId).collection('stats').doc('main');
+            final userStatsRef = _firestore
+                .collection('users')
+                .doc(userId)
+                .collection('stats')
+                .doc('main');
             final userStatsSnapshot = await transaction.get(userStatsRef);
 
             if (userStatsSnapshot.exists) {
@@ -222,18 +228,28 @@ class FirestoreChallengeRepository implements ChallengeRepository {
                   userStatsData['avatarStats'] as Map? ?? {},
                 );
 
-                final primaryAttribute = data['attribute'] as String? ?? 'vitality';
+                final primaryAttribute =
+                    data['attribute'] as String? ?? 'vitality';
                 final attributeKey = '${primaryAttribute}Xp';
 
-                final currentAttributeXp = (avatarStats[attributeKey] as int?) ?? 0;
+                final currentAttributeXp =
+                    (avatarStats[attributeKey] as int?) ?? 0;
                 avatarStats[attributeKey] = currentAttributeXp + totalXpReward;
-                
+
                 // Track challenge XP separately
-                final currentChallengeXp = (avatarStats['challengeXp'] as int?) ?? 0;
+                final currentChallengeXp =
+                    (avatarStats['challengeXp'] as int?) ?? 0;
                 avatarStats['challengeXp'] = currentChallengeXp + totalXpReward;
 
                 int totalXp = 0;
-                final xpKeys = ['strengthXp', 'intellectXp', 'vitalityXp', 'creativityXp', 'focusXp', 'spiritXp'];
+                final xpKeys = [
+                  'strengthXp',
+                  'intellectXp',
+                  'vitalityXp',
+                  'creativityXp',
+                  'focusXp',
+                  'spiritXp',
+                ];
                 for (final key in xpKeys) {
                   totalXp += (avatarStats[key] as int?) ?? 0;
                 }
@@ -270,10 +286,14 @@ class FirestoreChallengeRepository implements ChallengeRepository {
         if (checkData != null &&
             checkData['status'] == ChallengeStatus.completed.name) {
           try {
-            final userDoc = await _firestore.collection('users').doc(userId).get();
+            final userDoc = await _firestore
+                .collection('users')
+                .doc(userId)
+                .get();
             if (userDoc.exists) {
               final userData = userDoc.data() as Map<String, dynamic>;
-              final userName = userData['displayName'] as String? ?? 'Anonymous';
+              final userName =
+                  userData['displayName'] as String? ?? 'Anonymous';
               final archetype = userData['archetype'] as String? ?? 'none';
               final xpReward = checkData['xpReward'] as int? ?? 50;
               final title = checkData['title'] as String? ?? 'a challenge';

@@ -105,57 +105,67 @@ class CueEngine {
 
   void _registerDefaultRules() {
     // Time-based habit reminders
-    registerRule(CueRule(
-      id: 'habit_reminder_time',
-      triggerType: CueTriggerType.time,
-      conditions: {'isScheduledTime': true},
-      cooldown: const Duration(hours: 24),
-      priority: 80,
-    ));
+    registerRule(
+      CueRule(
+        id: 'habit_reminder_time',
+        triggerType: CueTriggerType.time,
+        conditions: {'isScheduledTime': true},
+        cooldown: const Duration(hours: 24),
+        priority: 80,
+      ),
+    );
 
     // Streak at risk warnings
-    registerRule(CueRule(
-      id: 'streak_at_risk',
-      triggerType: CueTriggerType.recovery,
-      conditions: {
-        'operator': 'greater_than',
-        'value': 2,
-        'field': 'hoursSinceReminder',
-      },
-      cooldown: const Duration(hours: 2),
-      priority: 90,
-    ));
+    registerRule(
+      CueRule(
+        id: 'streak_at_risk',
+        triggerType: CueTriggerType.recovery,
+        conditions: {
+          'operator': 'greater_than',
+          'value': 2,
+          'field': 'hoursSinceReminder',
+        },
+        cooldown: const Duration(hours: 2),
+        priority: 90,
+      ),
+    );
 
     // Energy-based cues (low energy = gentle reminders)
-    registerRule(CueRule(
-      id: 'low_energy_reminder',
-      triggerType: CueTriggerType.energy,
-      conditions: {'energyLevel': 'low'},
-      cooldown: const Duration(hours: 6),
-      priority: 40,
-    ));
+    registerRule(
+      CueRule(
+        id: 'low_energy_reminder',
+        triggerType: CueTriggerType.energy,
+        conditions: {'energyLevel': 'low'},
+        cooldown: const Duration(hours: 6),
+        priority: 40,
+      ),
+    );
 
     // Social proof triggers (friend completed habit)
-    registerRule(CueRule(
-      id: 'social_proof_trigger',
-      triggerType: CueTriggerType.social,
-      conditions: {'friendCompleted': true},
-      cooldown: const Duration(minutes: 30),
-      priority: 70,
-    ));
+    registerRule(
+      CueRule(
+        id: 'social_proof_trigger',
+        triggerType: CueTriggerType.social,
+        conditions: {'friendCompleted': true},
+        cooldown: const Duration(minutes: 30),
+        priority: 70,
+      ),
+    );
 
     // Milestone celebrations
-    registerRule(CueRule(
-      id: 'milestone_celebration',
-      triggerType: CueTriggerType.milestone,
-      conditions: {
-        'operator': 'in',
-        'value': [7, 14, 21, 30, 50, 66, 100],
-        'field': 'streakDays',
-      },
-      cooldown: Duration.zero,
-      priority: 100,
-    ));
+    registerRule(
+      CueRule(
+        id: 'milestone_celebration',
+        triggerType: CueTriggerType.milestone,
+        conditions: {
+          'operator': 'in',
+          'value': [7, 14, 21, 30, 50, 66, 100],
+          'field': 'streakDays',
+        },
+        cooldown: Duration.zero,
+        priority: 100,
+      ),
+    );
   }
 
   // ============ CUE CREATION ============
@@ -163,14 +173,20 @@ class CueEngine {
   /// Create a habit initiation cue (archetype-personalized)
   Cue createHabitInitiationCue(Habit habit) {
     final archetype = _userArchetype;
-    final template = NotificationTemplates.reminderMessage(archetype, habit.title);
+    final template = NotificationTemplates.reminderMessage(
+      archetype,
+      habit.title,
+    );
 
     return Cue(
       id: const Uuid().v4(),
       triggerType: CueTriggerType.time,
       category: CueCategory.initiation,
       intensity: _calculateInitiationIntensity(habit),
-      channels: [CueDeliveryChannel.pushNotification, CueDeliveryChannel.inAppBanner],
+      channels: [
+        CueDeliveryChannel.pushNotification,
+        CueDeliveryChannel.inAppBanner,
+      ],
       title: 'Time to focus, ${_getArchetypeTitle(archetype)}',
       body: template,
       userArchetype: archetype.name,
@@ -217,7 +233,11 @@ class CueEngine {
   }
 
   /// Create a social proof cue (friend activity)
-  Cue createSocialProofCue(String friendName, String friendArchetype, String habitTitle) {
+  Cue createSocialProofCue(
+    String friendName,
+    String friendArchetype,
+    String habitTitle,
+  ) {
     return Cue(
       id: const Uuid().v4(),
       triggerType: CueTriggerType.social,
@@ -289,8 +309,11 @@ class CueEngine {
 
   /// Create a reflection cue (daily review)
   Cue createReflectionCue(double completionRate) {
-    final emoji = completionRate >= 0.8 ? '🌟' :
-                  completionRate >= 0.5 ? '💪' : '🌱';
+    final emoji = completionRate >= 0.8
+        ? '🌟'
+        : completionRate >= 0.5
+        ? '💪'
+        : '🌱';
 
     return Cue(
       id: const Uuid().v4(),
@@ -299,8 +322,9 @@ class CueEngine {
       intensity: CueIntensity.gentle,
       channels: [CueDeliveryChannel.inAppBanner],
       title: '$emoji Daily Reflection',
-      body: 'You completed ${(completionRate * 100).toInt()}% of habits today. '
-             'Take a moment to reflect on your journey.',
+      body:
+          'You completed ${(completionRate * 100).toInt()}% of habits today. '
+          'Take a moment to reflect on your journey.',
       userArchetype: _userArchetype.name,
       createdAt: DateTime.now(),
       priority: 55,
@@ -356,7 +380,9 @@ class CueEngine {
 
     // Count cues shown in the last hour
     final recentCues = _metrics.values
-        .where((m) => m.lastShownAt != null && m.lastShownAt!.isAfter(oneHourAgo))
+        .where(
+          (m) => m.lastShownAt != null && m.lastShownAt!.isAfter(oneHourAgo),
+        )
         .length;
 
     if (recentCues >= maxCuesPerHour) {
@@ -387,8 +413,10 @@ class CueEngine {
         conversions: metrics.conversions + 1,
         dismissals: metrics.dismissals,
         avgTimeToAction: timeToAction != null
-            ? ((metrics.avgTimeToAction * metrics.conversions + timeToAction.inMilliseconds) /
-                (metrics.conversions + 1)).toInt()
+            ? ((metrics.avgTimeToAction * metrics.conversions +
+                          timeToAction.inMilliseconds) /
+                      (metrics.conversions + 1))
+                  .toInt()
             : metrics.avgTimeToAction,
         lastShownAt: metrics.lastShownAt,
         lastActionAt: DateTime.now(),
@@ -398,7 +426,10 @@ class CueEngine {
     }
 
     // Update cooldown
-    final cue = _cueQueue.firstWhere((c) => c.id == cueId, orElse: () => cueId as Cue);
+    final cue = _cueQueue.firstWhere(
+      (c) => c.id == cueId,
+      orElse: () => throw StateError('Cue not found: $cueId'),
+    );
     if (cue.habitId != null) {
       _lastTriggerTime[cue.habitId!] = DateTime.now();
     }
@@ -488,7 +519,11 @@ class CueEngine {
     final friendArchetype = context['friendArchetype'] as String?;
 
     if (friendName != null && habitTitle != null) {
-      return createSocialProofCue(friendName, friendArchetype ?? 'Creator', habitTitle);
+      return createSocialProofCue(
+        friendName,
+        friendArchetype ?? 'Creator',
+        habitTitle,
+      );
     }
     return null;
   }
@@ -503,8 +538,8 @@ class CueEngine {
 
     if (lastCompleted == null ||
         (lastCompleted.year != now.year ||
-         lastCompleted.month != now.month ||
-         lastCompleted.day != now.day)) {
+            lastCompleted.month != now.month ||
+            lastCompleted.day != now.day)) {
       // Check if reminder was sent earlier today
       final lastReminder = context['lastReminderTime'] as DateTime?;
       if (lastReminder == null || now.difference(lastReminder).inHours >= 2) {
@@ -529,17 +564,25 @@ class CueEngine {
       };
     }
 
-    final totalConversions = _metrics.values.fold<int>(0, (sum, m) => sum + m.conversions);
-    final totalImpressions = _metrics.values.fold<int>(0, (sum, m) => sum + m.impressions);
-    final avgScore = _metrics.values
-        .map((m) => m.engagementScore)
-        .reduce((a, b) => a + b) / _metrics.length;
+    final totalConversions = _metrics.values.fold<int>(
+      0,
+      (sum, m) => sum + m.conversions,
+    );
+    final totalImpressions = _metrics.values.fold<int>(
+      0,
+      (sum, m) => sum + m.impressions,
+    );
+    final avgScore =
+        _metrics.values.map((m) => m.engagementScore).reduce((a, b) => a + b) /
+        _metrics.length;
 
     return {
       'totalCues': _metrics.length,
       'totalConversions': totalConversions,
       'totalImpressions': totalImpressions,
-      'avgConversionRate': totalImpressions > 0 ? totalConversions / totalImpressions : 0.0,
+      'avgConversionRate': totalImpressions > 0
+          ? totalConversions / totalImpressions
+          : 0.0,
       'avgEngagementScore': avgScore,
     };
   }

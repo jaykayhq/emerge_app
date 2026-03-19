@@ -30,9 +30,10 @@ class _StreakFlameWidgetState extends State<StreakFlameWidget>
       duration: const Duration(milliseconds: 1500),
       vsync: this,
     );
-    _pulseAnimation = Tween<double>(begin: 0.95, end: 1.05).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
-    );
+    _pulseAnimation = Tween<double>(
+      begin: 0.95,
+      end: 1.05,
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
     if (widget.isActive && widget.streakCount > 0) {
       _controller.repeat(reverse: true);
     }
@@ -43,7 +44,8 @@ class _StreakFlameWidgetState extends State<StreakFlameWidget>
     super.didUpdateWidget(oldWidget);
     if (widget.isActive && widget.streakCount > 0 && !_controller.isAnimating) {
       _controller.repeat(reverse: true);
-    } else if ((!widget.isActive || widget.streakCount == 0) && _controller.isAnimating) {
+    } else if ((!widget.isActive || widget.streakCount == 0) &&
+        _controller.isAnimating) {
       _controller.stop();
     }
   }
@@ -207,8 +209,7 @@ class _FlamePainter extends CustomPainter {
     );
     innerFlamePath.close();
 
-    final innerPaint = Paint()
-      ..color = Colors.white.withValues(alpha: 0.6);
+    final innerPaint = Paint()..color = Colors.white.withValues(alpha: 0.6);
     canvas.drawPath(innerFlamePath, innerPaint);
   }
 

@@ -6,9 +6,7 @@ class VariableRewardService {
   static const double randomBonusChance = 0.15;
   static const double randomBonusMax = 0.3;
 
-  static const List<int> streakMilestones = [
-    7, 14, 30, 60, 90, 180, 365
-  ];
+  static const List<int> streakMilestones = [7, 14, 30, 60, 90, 180, 365];
 
   static int calculateFinalXp({
     required Habit habit,
@@ -124,13 +122,17 @@ XpRewardBreakdown calculateXpBreakdown({
   double milestoneBonus = 0;
 
   if (currentStreak > 0) {
-    streakBonus = (currentStreak * 0.1).clamp(0.0, VariableRewardService.streakBonusMax);
+    streakBonus = (currentStreak * 0.1).clamp(
+      0.0,
+      VariableRewardService.streakBonusMax,
+    );
     xp *= (1 + streakBonus);
   }
 
   final random = Random();
   if (random.nextDouble() < VariableRewardService.randomBonusChance) {
-    randomBonus = xp * (random.nextDouble() * VariableRewardService.randomBonusMax);
+    randomBonus =
+        xp * (random.nextDouble() * VariableRewardService.randomBonusMax);
     xp += randomBonus;
   }
 

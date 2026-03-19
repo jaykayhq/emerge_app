@@ -9,18 +9,22 @@ import 'package:mocktail/mocktail.dart';
 class MockFirebaseFirestore extends Mock implements FirebaseFirestore {}
 
 // ignore: subtype_of_sealed_class
-class MockCollectionReference extends Mock implements CollectionReference<Map<String, dynamic>> {}
+class MockCollectionReference extends Mock
+    implements CollectionReference<Map<String, dynamic>> {}
 
 // ignore: subtype_of_sealed_class
-class MockDocumentReference extends Mock implements DocumentReference<Map<String, dynamic>> {}
+class MockDocumentReference extends Mock
+    implements DocumentReference<Map<String, dynamic>> {}
 
 // ignore: subtype_of_sealed_class
 class MockQuery extends Mock implements Query<Map<String, dynamic>> {}
 
-class MockQuerySnapshot extends Mock implements QuerySnapshot<Map<String, dynamic>> {}
+class MockQuerySnapshot extends Mock
+    implements QuerySnapshot<Map<String, dynamic>> {}
 
 // ignore: subtype_of_sealed_class
-class MockQueryDocumentSnapshot extends Mock implements QueryDocumentSnapshot<Map<String, dynamic>> {}
+class MockQueryDocumentSnapshot extends Mock
+    implements QueryDocumentSnapshot<Map<String, dynamic>> {}
 
 void main() {
   late MockFirebaseFirestore mockFirestore;
@@ -59,9 +63,12 @@ void main() {
         'steps': [],
       };
 
-      when(() => mockFirestore.collection('challenges')).thenReturn(mockCollectionRef);
-      when(() => mockCollectionRef.where('isFeatured', isEqualTo: true))
-          .thenReturn(mockQuery);
+      when(
+        () => mockFirestore.collection('challenges'),
+      ).thenReturn(mockCollectionRef);
+      when(
+        () => mockCollectionRef.where('isFeatured', isEqualTo: true),
+      ).thenReturn(mockQuery);
       when(() => mockQuery.get()).thenAnswer((_) async => mockQuerySnapshot);
       when(() => mockQuerySnapshot.docs).thenReturn([mockDocSnapshot]);
       when(() => mockDocSnapshot.data()).thenReturn(challengeData);
@@ -82,8 +89,12 @@ void main() {
       final mockCollectionRef = MockCollectionReference();
       final mockQuerySnapshot = MockQuerySnapshot();
 
-      when(() => mockFirestore.collection('challenges')).thenReturn(mockCollectionRef);
-      when(() => mockCollectionRef.get()).thenAnswer((_) async => mockQuerySnapshot);
+      when(
+        () => mockFirestore.collection('challenges'),
+      ).thenReturn(mockCollectionRef);
+      when(
+        () => mockCollectionRef.get(),
+      ).thenAnswer((_) async => mockQuerySnapshot);
       when(() => mockQuerySnapshot.docs).thenReturn([]);
 
       // Act
@@ -121,10 +132,16 @@ void main() {
         'steps': [],
       };
 
-      when(() => mockFirestore.collection('users')).thenReturn(mockUsersCollectionRef);
+      when(
+        () => mockFirestore.collection('users'),
+      ).thenReturn(mockUsersCollectionRef);
       when(() => mockUsersCollectionRef.doc(userId)).thenReturn(mockUserDocRef);
-      when(() => mockUserDocRef.collection('challenges')).thenReturn(mockChallengesCollectionRef);
-      when(() => mockChallengesCollectionRef.get()).thenAnswer((_) async => mockQuerySnapshot);
+      when(
+        () => mockUserDocRef.collection('challenges'),
+      ).thenReturn(mockChallengesCollectionRef);
+      when(
+        () => mockChallengesCollectionRef.get(),
+      ).thenAnswer((_) async => mockQuerySnapshot);
       when(() => mockQuerySnapshot.docs).thenReturn([mockDocSnapshot]);
       when(() => mockDocSnapshot.data()).thenReturn(challengeData);
       when(() => mockDocSnapshot.id).thenReturn('challenge1');
@@ -192,10 +209,18 @@ void main() {
         'level': 10,
       };
 
-      when(() => mockFirestore.collection('challenges')).thenReturn(mockChallengesCollectionRef);
-      when(() => mockChallengesCollectionRef.doc(challengeId)).thenReturn(mockChallengeDocRef);
-      when(() => mockChallengeDocRef.collection('participants')).thenReturn(mockParticipantsCollectionRef);
-      when(() => mockParticipantsCollectionRef.orderBy('xp', descending: true)).thenReturn(mockQuery);
+      when(
+        () => mockFirestore.collection('challenges'),
+      ).thenReturn(mockChallengesCollectionRef);
+      when(
+        () => mockChallengesCollectionRef.doc(challengeId),
+      ).thenReturn(mockChallengeDocRef);
+      when(
+        () => mockChallengeDocRef.collection('participants'),
+      ).thenReturn(mockParticipantsCollectionRef);
+      when(
+        () => mockParticipantsCollectionRef.orderBy('xp', descending: true),
+      ).thenReturn(mockQuery);
       when(() => mockQuery.limit(3)).thenReturn(mockQuery);
       when(() => mockQuery.get()).thenAnswer((_) async => mockQuerySnapshot);
       when(() => mockQuerySnapshot.docs).thenReturn([mockDocSnapshot]);
@@ -222,16 +247,27 @@ void main() {
       final mockQuery = MockQuery();
       final mockQuerySnapshot = MockQuerySnapshot();
 
-      when(() => mockFirestore.collection('challenges')).thenReturn(mockChallengesCollectionRef);
-      when(() => mockChallengesCollectionRef.doc(challengeId)).thenReturn(mockChallengeDocRef);
-      when(() => mockChallengeDocRef.collection('participants')).thenReturn(mockParticipantsCollectionRef);
-      when(() => mockParticipantsCollectionRef.orderBy('xp', descending: true)).thenReturn(mockQuery);
+      when(
+        () => mockFirestore.collection('challenges'),
+      ).thenReturn(mockChallengesCollectionRef);
+      when(
+        () => mockChallengesCollectionRef.doc(challengeId),
+      ).thenReturn(mockChallengeDocRef);
+      when(
+        () => mockChallengeDocRef.collection('participants'),
+      ).thenReturn(mockParticipantsCollectionRef);
+      when(
+        () => mockParticipantsCollectionRef.orderBy('xp', descending: true),
+      ).thenReturn(mockQuery);
       when(() => mockQuery.limit(customLimit)).thenReturn(mockQuery);
       when(() => mockQuery.get()).thenAnswer((_) async => mockQuerySnapshot);
       when(() => mockQuerySnapshot.docs).thenReturn([]);
 
       // Act
-      final result = await repository.getLeaderboard(challengeId, limit: customLimit);
+      final result = await repository.getLeaderboard(
+        challengeId,
+        limit: customLimit,
+      );
 
       // Assert
       expect(result, isEmpty);
@@ -263,11 +299,19 @@ void main() {
         steps: [],
       );
 
-      when(() => mockFirestore.collection('users')).thenReturn(mockUsersCollectionRef);
+      when(
+        () => mockFirestore.collection('users'),
+      ).thenReturn(mockUsersCollectionRef);
       when(() => mockUsersCollectionRef.doc(userId)).thenReturn(mockUserDocRef);
-      when(() => mockUserDocRef.collection('challenges')).thenReturn(mockChallengesCollectionRef);
-      when(() => mockChallengesCollectionRef.doc(challenge.id)).thenReturn(mockChallengeDocRef);
-      when(() => mockChallengeDocRef.set(any(), any())).thenAnswer((_) async {});
+      when(
+        () => mockUserDocRef.collection('challenges'),
+      ).thenReturn(mockChallengesCollectionRef);
+      when(
+        () => mockChallengesCollectionRef.doc(challenge.id),
+      ).thenReturn(mockChallengeDocRef);
+      when(
+        () => mockChallengeDocRef.set(any(), any()),
+      ).thenAnswer((_) async {});
 
       // Act
       await repository.createSoloChallenge(userId, challenge);
@@ -287,17 +331,27 @@ void main() {
       final mockChallengesCollectionRef = MockCollectionReference();
       final mockChallengeDocRef = MockDocumentReference();
 
-      when(() => mockFirestore.collection('users')).thenReturn(mockUsersCollectionRef);
+      when(
+        () => mockFirestore.collection('users'),
+      ).thenReturn(mockUsersCollectionRef);
       when(() => mockUsersCollectionRef.doc(userId)).thenReturn(mockUserDocRef);
-      when(() => mockUserDocRef.collection('challenges')).thenReturn(mockChallengesCollectionRef);
-      when(() => mockChallengesCollectionRef.doc(challengeId)).thenReturn(mockChallengeDocRef);
+      when(
+        () => mockUserDocRef.collection('challenges'),
+      ).thenReturn(mockChallengesCollectionRef);
+      when(
+        () => mockChallengesCollectionRef.doc(challengeId),
+      ).thenReturn(mockChallengeDocRef);
       when(() => mockChallengeDocRef.update(any())).thenAnswer((_) async {});
 
       // Act
       await repository.completeChallenge(userId, challengeId);
 
       // Assert
-      verify(() => mockChallengeDocRef.update({'status': ChallengeStatus.completed.name})).called(1);
+      verify(
+        () => mockChallengeDocRef.update({
+          'status': ChallengeStatus.completed.name,
+        }),
+      ).called(1);
     });
   });
 

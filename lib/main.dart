@@ -51,8 +51,13 @@ void main() async {
 
   // Initialize AdMob
   if (!kIsWeb) {
+    // SECURITY: Only use test device IDs in debug builds
+    // In production, this will be an empty list, allowing real ads to show
+    final testDeviceIds = kDebugMode
+        ? ['969B3D2A344E9087F453B5A0415B8136']
+        : const <String>[];
     await MobileAds.instance.updateRequestConfiguration(
-      RequestConfiguration(testDeviceIds: ['969B3D2A344E9087F453B5A0415B8136']),
+      RequestConfiguration(testDeviceIds: testDeviceIds),
     );
   }
 

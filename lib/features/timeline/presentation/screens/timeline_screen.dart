@@ -502,7 +502,7 @@ class _TimelineScreenState extends ConsumerState<TimelineScreen> {
   Future<void> _completeHabitWithCelebration(Habit habit) async {
     try {
       final result = await ref.read(completeHabitProvider(habit.id).future);
-      
+
       if (!result.isUndo && result.xpEarned > 0) {
         _showCompletionCelebration(
           xpEarned: result.xpEarned,
@@ -614,8 +614,8 @@ class _TimelineScreenState extends ConsumerState<TimelineScreen> {
       final lastCompleted = h.lastCompletedDate;
       if (lastCompleted == null) return false;
       return lastCompleted.year == now.year &&
-             lastCompleted.month == now.month &&
-             lastCompleted.day == now.day;
+          lastCompleted.month == now.month &&
+          lastCompleted.day == now.day;
     }).length;
 
     return Tooltip(
@@ -783,9 +783,15 @@ class _TimelineScreenState extends ConsumerState<TimelineScreen> {
     }
   }
 
-  void _showDetailBottomSheet(BuildContext context, String metricType, List<Habit> habits) {
+  void _showDetailBottomSheet(
+    BuildContext context,
+    String metricType,
+    List<Habit> habits,
+  ) {
     final isCompleted = metricType == 'completed';
-    final primaryColor = isCompleted ? EmergeEarthyColors.terracotta : EmergeEarthyColors.sienna;
+    final primaryColor = isCompleted
+        ? EmergeEarthyColors.terracotta
+        : EmergeEarthyColors.sienna;
 
     showModalBottomSheet(
       context: context,
@@ -845,7 +851,9 @@ class _TimelineScreenState extends ConsumerState<TimelineScreen> {
                 separatorBuilder: (_, _) => const SizedBox(height: 12),
                 itemBuilder: (context, index) {
                   final habit = habits[index];
-                  final attrColor = EmergeEarthyColors.attributeColors[habit.attribute] ?? primaryColor;
+                  final attrColor =
+                      EmergeEarthyColors.attributeColors[habit.attribute] ??
+                      primaryColor;
                   final gamificationService = GamificationService();
                   final xp = gamificationService.calculateXpGain(habit);
 
@@ -861,7 +869,11 @@ class _TimelineScreenState extends ConsumerState<TimelineScreen> {
                     ),
                     child: Row(
                       children: [
-                        Icon(_getAttributeIcon(habit.attribute), size: 28, color: attrColor),
+                        Icon(
+                          _getAttributeIcon(habit.attribute),
+                          size: 28,
+                          color: attrColor,
+                        ),
                         const SizedBox(width: 12),
                         Expanded(
                           child: Column(
@@ -900,12 +912,16 @@ class _TimelineScreenState extends ConsumerState<TimelineScreen> {
                                     const SizedBox(width: 8),
                                     Row(
                                       children: [
-                                        const Text('🔥', style: TextStyle(fontSize: 12)),
+                                        const Text(
+                                          '🔥',
+                                          style: TextStyle(fontSize: 12),
+                                        ),
                                         const SizedBox(width: 4),
                                         Text(
                                           '${habit.currentStreak} day streak',
                                           style: TextStyle(
-                                            color: EmergeEarthyColors.cream.withValues(alpha: 0.7),
+                                            color: EmergeEarthyColors.cream
+                                                .withValues(alpha: 0.7),
                                             fontSize: 11,
                                           ),
                                         ),

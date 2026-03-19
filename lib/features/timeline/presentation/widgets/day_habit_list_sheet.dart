@@ -38,8 +38,8 @@ class DayHabitListSheet extends StatelessWidget {
       final lastCompleted = h.lastCompletedDate;
       if (lastCompleted == null) return false;
       return lastCompleted.year == date.year &&
-             lastCompleted.month == date.month &&
-             lastCompleted.day == date.day;
+          lastCompleted.month == date.month &&
+          lastCompleted.day == date.day;
     }).toList();
 
     return Container(
@@ -98,8 +98,9 @@ class DayHabitListSheet extends StatelessWidget {
                 separatorBuilder: (_, _) => const SizedBox(height: 12),
                 itemBuilder: (context, index) {
                   final habit = completedOnDay[index];
-                  final attrColor = EmergeEarthyColors.attributeColors[habit.attribute] ??
-                                  EmergeEarthyColors.terracotta;
+                  final attrColor =
+                      EmergeEarthyColors.attributeColors[habit.attribute] ??
+                      EmergeEarthyColors.terracotta;
                   final gamificationService = GamificationService();
                   final xp = gamificationService.calculateXpGain(habit);
 
@@ -157,12 +158,16 @@ class DayHabitListSheet extends StatelessWidget {
                                     const SizedBox(width: 8),
                                     Row(
                                       children: [
-                                        const Text('🔥', style: TextStyle(fontSize: 12)),
+                                        const Text(
+                                          '🔥',
+                                          style: TextStyle(fontSize: 12),
+                                        ),
                                         const SizedBox(width: 4),
                                         Text(
                                           '${habit.currentStreak} day streak',
                                           style: TextStyle(
-                                            color: EmergeEarthyColors.cream.withValues(alpha: 0.7),
+                                            color: EmergeEarthyColors.cream
+                                                .withValues(alpha: 0.7),
                                             fontSize: 11,
                                           ),
                                         ),

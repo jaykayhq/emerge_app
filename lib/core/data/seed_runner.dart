@@ -47,8 +47,10 @@ Future<void> seedChallenges({FirebaseFirestore? firestore}) async {
       {
         'id': 'challenge_30_day_running',
         'title': '30-Day Running Streak',
-        'description': 'Build a consistent running habit. Complete 30 days of running.',
-        'imageUrl': 'https://images.unsplash.com/photo-1571019614242-c5c5dee9f50b?w=800',
+        'description':
+            'Build a consistent running habit. Complete 30 days of running.',
+        'imageUrl':
+            'https://images.unsplash.com/photo-1571019614242-c5c5dee9f50b?w=800',
         'reward': 'Runner Badge + 750 XP',
         'participants': 0,
         'totalDays': 30,
@@ -63,8 +65,10 @@ Future<void> seedChallenges({FirebaseFirestore? firestore}) async {
       {
         'id': 'challenge_21_day_meditation',
         'title': '21-Day Meditation Quest',
-        'description': 'Build a meditation practice. 21 days of daily meditation.',
-        'imageUrl': 'https://images.unsplash.com/photo-1506126613408-eca07ce68773?w=800',
+        'description':
+            'Build a meditation practice. 21 days of daily meditation.',
+        'imageUrl':
+            'https://images.unsplash.com/photo-1506126613408-eca07ce68773?w=800',
         'reward': 'Mindful Master Badge + 500 XP',
         'participants': 0,
         'totalDays': 21,
@@ -79,8 +83,10 @@ Future<void> seedChallenges({FirebaseFirestore? firestore}) async {
       {
         'id': 'challenge_deep_work',
         'title': '14-Day Deep Work Sprint',
-        'description': 'Master focused, distraction-free work. 2-hour deep work blocks daily.',
-        'imageUrl': 'https://images.unsplash.com/photo-1434030216411-0b793f4b4173?w=800',
+        'description':
+            'Master focused, distraction-free work. 2-hour deep work blocks daily.',
+        'imageUrl':
+            'https://images.unsplash.com/photo-1434030216411-0b793f4b4173?w=800',
         'reward': 'Focus Master Badge + 500 XP',
         'participants': 0,
         'totalDays': 14,
@@ -95,8 +101,10 @@ Future<void> seedChallenges({FirebaseFirestore? firestore}) async {
       {
         'id': 'challenge_creative_30',
         'title': '30-Day Creative Challenge',
-        'description': 'Create something every day. Build your creative muscle.',
-        'imageUrl': 'https://images.unsplash.com/photo-1513364776144-60967b0f800f?w=800',
+        'description':
+            'Create something every day. Build your creative muscle.',
+        'imageUrl':
+            'https://images.unsplash.com/photo-1513364776144-60967b0f800f?w=800',
         'reward': 'Creator Badge + 600 XP',
         'participants': 0,
         'totalDays': 30,
@@ -111,10 +119,7 @@ Future<void> seedChallenges({FirebaseFirestore? firestore}) async {
     ];
 
     // Check if challenges already exist
-    final existingSnapshot = await fs
-        .collection('challenges')
-        .limit(1)
-        .get();
+    final existingSnapshot = await fs.collection('challenges').limit(1).get();
 
     if (existingSnapshot.docs.isNotEmpty) {
       debugPrint('🔄 Challenges already exist. Skipping seed.');

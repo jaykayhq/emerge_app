@@ -9,6 +9,24 @@ const getDb = () => {
   return admin.firestore();
 };
 
+/**
+ * Validates input data has required string fields.
+ * @param data - The data object to validate
+ * @param requiredFields - Array of required field names
+ * @returns true if all fields are valid strings, false otherwise
+ */
+function validateInput(data: any, requiredFields: string[]): boolean {
+  if (!data || typeof data !== 'object') {
+    return false;
+  }
+  for (const field of requiredFields) {
+    if (!data[field] || typeof data[field] !== 'string' || data[field].trim() === '') {
+      return false;
+    }
+  }
+  return true;
+}
+
 const TEMPLATES = [
   // ATHLETE ARCHETYPE
   {
@@ -282,9 +300,39 @@ const TEMPLATES = [
 /**
  * HTTP Trigger: Seeds challenge templates into Firestore.
  * REQUIRES ADMIN AUTHENTICATION
+ * 
+ * SECURITY IMPROVEMENTS:
+ * - Rate limiting to prevent brute force attacks
+ * - Token validation against environment variable
+ * - Consider using Firebase Auth for production
  */
+
+// Module-level rate limiting storage
+const rateLimitStorage = new Map<string, {count: number, resetTime: number}>();
+const RATE_LIMIT_WINDOW_MS = 60000; // 1 minute
+const MAX_REQUESTS_PER_WINDOW = 10;
+
 export const seedChallengeTemplates = functions.https.onRequest(
   async (req, res) => {
+    // Apply rate limiting - max 10 requests per minute per IP
+    const clientIp = req.ip || req.socket.remoteAddress || 'unknown';
+    const now = Date.now();
+    
+    const clientData = rateLimitStorage.get(clientIp) || {count: 0, resetTime: now + RATE_LIMIT_WINDOW_MS};
+    
+    if (now > clientData.resetTime) {
+      // Reset window
+      clientData.count = 1;
+      clientData.resetTime = now + RATE_LIMIT_WINDOW_MS;
+    } else {
+      clientData.count++;
+      if (clientData.count > MAX_REQUESTS_PER_WINDOW) {
+        res.status(429).send("Too many requests - rate limit exceeded");
+        return;
+      }
+    }
+    rateLimitStorage.set(clientIp, clientData);
+
     // Verify admin authentication via header
     const authHeader = req.get("authorization");
     if (!authHeader?.startsWith("Bearer ")) {
@@ -298,11 +346,39 @@ export const seedChallengeTemplates = functions.https.onRequest(
       return;
     }
 
+    // Validate request method
+    if (req.method !== 'POST' && req.method !== 'PUT') {
+      res.status(405).send("Method not allowed");
+      return;
+    }
+
+    // Validate request body structure (optional - for bulk seeding)
+    if (req.body && typeof req.body === 'object') {
+      if (Array.isArray(req.body.templates)) {
+        // Validate each template has required fields
+        const requiredTemplateFields = ['title', 'description', 'category', 'xpReward'];
+        for (let i = 0; i < req.body.templates.length; i++) {
+          const template = req.body.templates[i];
+          if (!validateInput(template, requiredTemplateFields)) {
+            res.status(400).send(`Invalid template at index ${i}: missing required fields`);
+            return;
+          }
+          if (typeof template.xpReward !== 'number' || template.xpReward < 0) {
+            res.status(400).send(`Invalid template at index ${i}: xpReward must be a positive number`);
+            return;
+          }
+        }
+      }
+    }
+
     const db = getDb();
     const batch = db.batch();
 
     try {
-      for (const template of TEMPLATES) {
+      // Use provided templates or fall back to default TEMPLATES
+      const templatesToSeed = req.body?.templates || TEMPLATES;
+
+      for (const template of templatesToSeed) {
         const ref = db.collection("challengeTemplates").doc(); // Auto-ID
         batch.set(ref, {
           ...template,
@@ -311,7 +387,7 @@ export const seedChallengeTemplates = functions.https.onRequest(
       }
 
       await batch.commit();
-      res.status(200).send(`Seeded ${TEMPLATES.length} templates.`);
+      res.status(200).send(`Seeded ${templatesToSeed.length} templates.`);
     } catch (error) {
       console.error("Error seeding templates:", error);
       res.status(500).send("Error seeding templates");

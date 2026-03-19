@@ -12,9 +12,11 @@ class AttributeProgress {
   final int totalXp;
   final int currentLevel;
   final int overallLevel;
-  final int contributionToOverall; // How much XP this attribute contributes to current level progress
+  final int
+  contributionToOverall; // How much XP this attribute contributes to current level progress
   final int xpForNextLevel;
-  final double contributionPercent; // Percentage of total XP this attribute provides
+  final double
+  contributionPercent; // Percentage of total XP this attribute provides
 
   const AttributeProgress({
     required this.attribute,
@@ -39,9 +41,7 @@ class AttributeProgress {
 /// This provider reads the real XP values from the user's avatarStats
 /// and calculates how much each attribute contributes to the overall level.
 @riverpod
-Map<String, AttributeProgress> attributeProgressFromHabits(
-  Ref ref,
-) {
+Map<String, AttributeProgress> attributeProgressFromHabits(Ref ref) {
   // Watch user stats stream for real-time updates
   final userAsync = ref.watch(userStatsStreamProvider);
 
@@ -54,8 +54,12 @@ Map<String, AttributeProgress> attributeProgressFromHabits(
   final stats = profile.avatarStats;
 
   // Debug: Log the stats to see what we're getting
-  AppLogger.d('AttributeProgress: totalXp=${stats.totalXp}, level=${stats.level}');
-  AppLogger.d('AttributeProgress: strengthXp=${stats.strengthXp}, intellectXp=${stats.intellectXp}, vitalityXp=${stats.vitalityXp}');
+  AppLogger.d(
+    'AttributeProgress: totalXp=${stats.totalXp}, level=${stats.level}',
+  );
+  AppLogger.d(
+    'AttributeProgress: strengthXp=${stats.strengthXp}, intellectXp=${stats.intellectXp}, vitalityXp=${stats.vitalityXp}',
+  );
 
   // Get total XP for level calculation
   final totalXp = stats.totalXp;
@@ -110,10 +114,7 @@ Map<String, AttributeProgress> attributeProgressFromHabits(
 
 /// Provider for a specific attribute's progress
 @riverpod
-AttributeProgress? attributeProgress(
-  Ref ref,
-  String attribute,
-) {
+AttributeProgress? attributeProgress(Ref ref, String attribute) {
   final allProgress = ref.watch(attributeProgressFromHabitsProvider);
   return allProgress[attribute.toLowerCase()];
 }
