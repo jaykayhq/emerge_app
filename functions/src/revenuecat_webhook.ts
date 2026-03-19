@@ -76,26 +76,26 @@ export const revenueCatWebhook = functions.https.onRequest(
       }
 
       switch (eventType) {
-        case "INITIAL_PURCHASE":
-        case "RENEWAL":
-          await handleSubscriptionActive(eventId, body, firestore);
-          break;
-        case "CANCELLATION":
-        case "EXPIRATION":
-        case "UNCANCELLATION":
-          await handleSubscriptionCancelled(eventId, body, firestore);
-          break;
-        case "PRODUCT_CHANGE":
-          await handleProductChange(eventId, body, firestore);
-          break;
-        case "TRANSFER":
-          await handleSubscriptionTransfer(eventId, body, firestore);
-          break;
-        case "TEST":
-          console.log("Test webhook received, ignoring");
-          break;
-        default:
-          console.warn(`Unknown event type: ${eventType}`);
+      case "INITIAL_PURCHASE":
+      case "RENEWAL":
+        await handleSubscriptionActive(eventId, body, firestore);
+        break;
+      case "CANCELLATION":
+      case "EXPIRATION":
+      case "UNCANCELLATION":
+        await handleSubscriptionCancelled(eventId, body, firestore);
+        break;
+      case "PRODUCT_CHANGE":
+        await handleProductChange(eventId, body, firestore);
+        break;
+      case "TRANSFER":
+        await handleSubscriptionTransfer(eventId, body, firestore);
+        break;
+      case "TEST":
+        console.log("Test webhook received, ignoring");
+        break;
+      default:
+        console.warn(`Unknown event type: ${eventType}`);
       }
 
       // Acknowledge webhook receipt
@@ -269,7 +269,7 @@ async function handleSubscriptionTransfer(
     });
   }
 
-  console.log(`Transferred premium from ${transferredFrom || 'unknown'} to ${appUserId}`);
+  console.log(`Transferred premium from ${transferredFrom || "unknown"} to ${appUserId}`);
 }
 
 /**
