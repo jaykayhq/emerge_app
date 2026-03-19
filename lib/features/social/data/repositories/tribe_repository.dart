@@ -31,6 +31,9 @@ abstract class TribeRepository {
 
   /// Leave a club (when user changes archetype).
   Future<void> leaveClub(String userId, String tribeId);
+
+  /// Get tribes that the user is a member of.
+  Future<List<Tribe>> getUserTribes(String userId);
 }
 
 class FirestoreTribeRepository implements TribeRepository {
@@ -136,6 +139,16 @@ class FirestoreTribeRepository implements TribeRepository {
       debugPrint('❌ Error joining tribe $tribeId: $e');
       rethrow;
     }
+  }
+
+  @override
+  Future<List<Tribe>> getUserTribes(String userId) async {
+    final snapshot = await _firestore
+        .collection('tribes')
+        .where('members', arrayContains: userId)
+        .get();
+
+    return snapshot.docs.map((doc) => Tribe.fromMap(doc.data())).toList();
   }
 
   @override
