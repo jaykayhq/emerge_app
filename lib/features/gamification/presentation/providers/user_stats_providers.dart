@@ -99,10 +99,16 @@ class UserStatsController {
     _subscription = EventBus().on<HabitCompleted>().listen((event) async {
       await _handleHabitCompletion(event);
     });
+    if (_subscription != null) {
+      EventBus().registerSubscription(_subscription!);
+    }
   }
 
   void dispose() {
-    _subscription?.cancel();
+    if (_subscription != null) {
+      EventBus().unregisterSubscription(_subscription!);
+      _subscription?.cancel();
+    }
   }
 
   Future<void> _handleHabitCompletion(HabitCompleted event) async {

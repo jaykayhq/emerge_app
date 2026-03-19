@@ -54,6 +54,17 @@ class EventBus {
     _subscriptions.add(subscription);
   }
 
+  /// ENHANCED: Unregister a subscription to prevent memory leaks when a component is disposed
+  /// but the EventBus itself is not.
+  ///
+  /// Usage:
+  /// ```dart
+  /// EventBus().unregisterSubscription(subscription);
+  /// ```
+  void unregisterSubscription(StreamSubscription subscription) {
+    _subscriptions.remove(subscription);
+  }
+
   /// ENHANCED: Proper disposal with memory leak prevention
   ///
   /// Cancels all tracked subscriptions and closes the controller
