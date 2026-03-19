@@ -16,6 +16,7 @@ class Tribe {
   final bool isVerified;
   final int level; // Add level for ranking and display
   final DateTime? createdAt;
+  final List<String> members; // List of user IDs
 
   // New affiliate/club fields
   final String? affiliatePartnerId; // For brand clubs
@@ -41,6 +42,7 @@ class Tribe {
     this.isVerified = false,
     this.level = 1, // Default level
     this.createdAt,
+    this.members = const [],
     // New fields with defaults
     this.affiliatePartnerId,
     this.brandLogoUrl,
@@ -67,6 +69,7 @@ class Tribe {
       'isVerified': isVerified,
       'level': level,
       'createdAt': createdAt?.toIso8601String(),
+      'members': members,
       // New affiliate/club fields
       'affiliatePartnerId': affiliatePartnerId,
       'brandLogoUrl': brandLogoUrl,
@@ -114,6 +117,7 @@ class Tribe {
       createdAt: map['createdAt'] != null
           ? DateTime.tryParse(map['createdAt'])
           : null,
+      members: List<String>.from(map['members'] ?? []),
       // New affiliate/club fields
       affiliatePartnerId: map['affiliatePartnerId'],
       brandLogoUrl: map['brandLogoUrl'],
