@@ -1,3 +1,6 @@
+import 'dart:async';
+
+import 'package:emerge_app/core/services/event_bus.dart';
 import 'package:emerge_app/features/auth/domain/entities/user_extension.dart';
 import 'package:emerge_app/features/gamification/data/repositories/user_stats_repository.dart';
 import 'package:emerge_app/features/gamification/presentation/providers/user_stats_providers.dart';
@@ -46,7 +49,27 @@ void main() {
     expect(controller, isA<UserStatsController>());
   });
 
-  // Note: Since logic was moved to backend, this controller no longer has public methods to test directly for XP logic.
-  // It only listens to streams.
-  // We should verify it listens, but for now just basic instantiation test is sufficient for "fixing the build".
+  test('UserStatsController should register and unregister EventBus subscription', () async {
+    // We verify the stream subscription by checking the EventBus's active subscription count.
+    EventBus.reset();
+
+    final initialCount = EventBus().activeSubscriptionCount;
+
+    // Creating the controller initializes the EventBus subscription
+    final newController = UserStatsController(
+      repository: mockUserStatsRepository,
+      socialActivityService: mockSocialActivityService,
+      userId: 'user_123',
+      userName: 'Test User',
+    );
+
+    // Verify the subscription was added to the active pool
+    expect(EventBus().activeSubscriptionCount, equals(initialCount + 1));
+
+    // Disposing the controller unregisters the subscription
+    newController.dispose();
+
+    // Verify the subscription was removed from the active pool
+    expect(EventBus().activeSubscriptionCount, equals(initialCount));
+  });
 }
