@@ -28,9 +28,10 @@ service cloud.firestore {
 
     // Helper function to rate limit writes
     function rateLimited() {
-      // Simple rate limiting: Allow 10 writes per minute per user
-      // In production, this should be backed by Firestore counters or Cloud Functions
-      return true;
+      // Rate limiting: Allow 10 writes per minute per user
+      // Backed by Cloud Functions which set the rateLimitUntil custom claim
+      return !('rateLimitUntil' in request.auth.token) ||
+             request.time.toMillis() > request.auth.token.rateLimitUntil;
     }
 
     // Helper function to validate user data with enhanced security
