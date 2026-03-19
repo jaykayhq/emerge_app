@@ -407,10 +407,7 @@ class _AdvancedCreateHabitDialogState
         gradient: LinearGradient(
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
-          colors: [
-            const Color(0xFF1A1A2E),
-            const Color(0xFF0F0F1A),
-          ],
+          colors: [const Color(0xFF1A1A2E), const Color(0xFF0F0F1A)],
         ),
         borderRadius: BorderRadius.circular(24),
         border: Border.all(

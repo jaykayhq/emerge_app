@@ -288,10 +288,7 @@ class _TemplateCard extends StatelessWidget {
                   ),
                 ],
               ),
-              child: Text(
-                template.emoji,
-                style: const TextStyle(fontSize: 16),
-              ),
+              child: Text(template.emoji, style: const TextStyle(fontSize: 16)),
             ),
             const Gap(8),
             Text(
@@ -659,14 +656,20 @@ class _HabitTemplateSheetState extends State<HabitTemplateSheet> {
                       decoration: BoxDecoration(
                         gradient: LinearGradient(
                           colors: [
-                            _getCategoryColor(_selectedCategory).withValues(alpha: 0.2),
-                            _getCategoryColor(_selectedCategory).withValues(alpha: 0.1),
+                            _getCategoryColor(
+                              _selectedCategory,
+                            ).withValues(alpha: 0.2),
+                            _getCategoryColor(
+                              _selectedCategory,
+                            ).withValues(alpha: 0.1),
                           ],
                         ),
                         borderRadius: BorderRadius.circular(12),
                         boxShadow: [
                           BoxShadow(
-                            color: _getCategoryColor(_selectedCategory).withValues(alpha: 0.2),
+                            color: _getCategoryColor(
+                              _selectedCategory,
+                            ).withValues(alpha: 0.2),
                             blurRadius: 12,
                             spreadRadius: -2,
                           ),
@@ -730,7 +733,9 @@ class _HabitTemplateSheetState extends State<HabitTemplateSheet> {
                               ? LinearGradient(
                                   colors: [
                                     _getCategoryColor(category),
-                                    _getCategoryColor(category).withValues(alpha: 0.8),
+                                    _getCategoryColor(
+                                      category,
+                                    ).withValues(alpha: 0.8),
                                   ],
                                 )
                               : null,
@@ -746,9 +751,9 @@ class _HabitTemplateSheetState extends State<HabitTemplateSheet> {
                           boxShadow: isSelected
                               ? [
                                   BoxShadow(
-                                    color: _getCategoryColor(category).withValues(
-                                      alpha: 0.3,
-                                    ),
+                                    color: _getCategoryColor(
+                                      category,
+                                    ).withValues(alpha: 0.3),
                                     blurRadius: 12,
                                     spreadRadius: -2,
                                   ),
@@ -850,10 +855,7 @@ class _TemplateListTile extends StatelessWidget {
                   ),
                 ],
               ),
-              child: Text(
-                template.emoji,
-                style: const TextStyle(fontSize: 22),
-              ),
+              child: Text(template.emoji, style: const TextStyle(fontSize: 22)),
             ),
             const Gap(16),
             Expanded(

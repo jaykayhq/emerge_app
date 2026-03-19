@@ -115,7 +115,9 @@ class _WorldMapScreenState extends ConsumerState<WorldMapScreen> {
         data: (profile) {
           final archetype = profile.archetype;
           // DEBUG: Log archetype being loaded
-          AppLogger.i('WorldMapScreen: Loaded archetype=$archetype, effectiveLevel=${profile.effectiveLevel}');
+          AppLogger.i(
+            'WorldMapScreen: Loaded archetype=$archetype, effectiveLevel=${profile.effectiveLevel}',
+          );
           final mapConfig = ArchetypeMapsCatalog.getMapForArchetype(archetype);
           final currentLevel = profile.effectiveLevel;
           final currentBiome = ArchetypeMapConfig.getBiomeForLevel(
@@ -218,7 +220,8 @@ class _WorldMapScreenState extends ConsumerState<WorldMapScreen> {
     final sectionNodes = <int, List<WorldNode>>{};
     for (var node in sortedNodes) {
       final section = getSection(node.requiredLevel);
-      if ((sectionNodes[section]?.length ?? 0) >= 5) continue; sectionNodes.putIfAbsent(section, () => []).add(node);
+      if ((sectionNodes[section]?.length ?? 0) >= 5) continue;
+      sectionNodes.putIfAbsent(section, () => []).add(node);
     }
 
     // Check completion for each section
@@ -242,7 +245,8 @@ class _WorldMapScreenState extends ConsumerState<WorldMapScreen> {
     }
 
     // 4. Hydrate Nodes based on Rules
-    final filteredNodes = sectionNodes.values.expand((e) => e).toList(); return filteredNodes.map((node) {
+    final filteredNodes = sectionNodes.values.expand((e) => e).toList();
+    return filteredNodes.map((node) {
       if (profile.worldState.claimedNodes.contains(node.id)) {
         return node.copyWith(state: NodeState.completed);
       }
@@ -649,4 +653,3 @@ class _StatItem extends StatelessWidget {
     );
   }
 }
-

@@ -15,7 +15,11 @@ class FirestoreHabitRepository implements HabitRepository {
   final SocialActivityService? _socialActivityService;
   final UserStatsRepository? _userStatsRepository;
 
-  FirestoreHabitRepository(this._firestore, [this._socialActivityService, this._userStatsRepository]);
+  FirestoreHabitRepository(
+    this._firestore, [
+    this._socialActivityService,
+    this._userStatsRepository,
+  ]);
 
   /// Defensive mapping from a Firestore document to a [Habit] entity.
   /// Uses null coalescing on all fields to prevent crashes on malformed data.

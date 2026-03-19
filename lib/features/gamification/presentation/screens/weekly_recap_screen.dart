@@ -59,10 +59,11 @@ class _WeeklyRecapScreenState extends ConsumerState<WeeklyRecapScreen> {
                       const Gap(24),
                       Text(
                         'Weekly Recap Unlocks After 7 Days',
-                        style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                        ),
+                        style: Theme.of(context).textTheme.headlineSmall
+                            ?.copyWith(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                            ),
                         textAlign: TextAlign.center,
                       ),
                       const Gap(12),

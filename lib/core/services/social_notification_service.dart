@@ -21,7 +21,10 @@ class SocialNotificationService {
   CollectionReference<Map<String, dynamic>> _notificationsCollection(
     String userId,
   ) {
-    return _firestore.collection('users').doc(userId).collection('notifications');
+    return _firestore
+        .collection('users')
+        .doc(userId)
+        .collection('notifications');
   }
 
   /// Sends a notification to a specific user.
@@ -30,18 +33,15 @@ class SocialNotificationService {
     String userId,
     AppNotification notification,
   ) async {
-    final docRef = await _notificationsCollection(userId).add(
-      notification.toFirestore(),
-    );
+    final docRef = await _notificationsCollection(
+      userId,
+    ).add(notification.toFirestore());
 
     // Increment unread count in user document
-    await _firestore.collection('users').doc(userId).set(
-      {
-        'unreadNotificationCount': FieldValue.increment(1),
-        'lastNotificationAt': FieldValue.serverTimestamp(),
-      },
-      SetOptions(merge: true),
-    );
+    await _firestore.collection('users').doc(userId).set({
+      'unreadNotificationCount': FieldValue.increment(1),
+      'lastNotificationAt': FieldValue.serverTimestamp(),
+    }, SetOptions(merge: true));
 
     return docRef;
   }
@@ -84,9 +84,9 @@ class SocialNotificationService {
 
   /// Marks all notifications for a user as read.
   Future<void> markAllAsRead(String userId) async {
-    final unreadQuery = await _notificationsCollection(userId)
-        .where('read', isEqualTo: false)
-        .get();
+    final unreadQuery = await _notificationsCollection(
+      userId,
+    ).where('read', isEqualTo: false).get();
 
     if (unreadQuery.docs.isEmpty) return;
 
@@ -145,7 +145,9 @@ class SocialNotificationService {
         'unreadNotificationCount': 0,
       });
 
-      AppLogger.i('Deleted ${snapshot.docs.length} notifications for user $userId');
+      AppLogger.i(
+        'Deleted ${snapshot.docs.length} notifications for user $userId',
+      );
     } catch (e, stack) {
       AppLogger.e('Failed to delete all notifications', e, stack);
       // Don't throw - silently handle the error to prevent UI crashes
@@ -156,9 +158,9 @@ class SocialNotificationService {
   /// Should be called periodically (e.g., on app start).
   Future<void> deleteExpiredNotifications(String userId) async {
     final now = DateTime.now();
-    final expiredQuery = await _notificationsCollection(userId)
-        .where('expiresAt', isLessThan: now.toIso8601String())
-        .get();
+    final expiredQuery = await _notificationsCollection(
+      userId,
+    ).where('expiresAt', isLessThan: now.toIso8601String()).get();
 
     final batch = _firestore.batch();
     for (final doc in expiredQuery.docs) {
@@ -178,10 +180,10 @@ class SocialNotificationService {
         .limit(50)
         .snapshots()
         .map((snapshot) {
-      return snapshot.docs
-          .map((doc) => AppNotification.fromFirestore(doc))
-          .toList();
-    });
+          return snapshot.docs
+              .map((doc) => AppNotification.fromFirestore(doc))
+              .toList();
+        });
   }
 
   /// Stream of all notifications for a user (paginated).
@@ -190,9 +192,9 @@ class SocialNotificationService {
     int limit = 20,
     DocumentSnapshot? startAfter,
   }) {
-    Query<Map<String, dynamic>> query = _notificationsCollection(userId)
-        .orderBy('createdAt', descending: true)
-        .limit(limit);
+    Query<Map<String, dynamic>> query = _notificationsCollection(
+      userId,
+    ).orderBy('createdAt', descending: true).limit(limit);
 
     if (startAfter != null) {
       query = query.startAfterDocument(startAfter);
@@ -207,11 +209,7 @@ class SocialNotificationService {
 
   /// Stream of unread count (from user document).
   Stream<int> unreadCountStream(String userId) {
-    return _firestore
-        .collection('users')
-        .doc(userId)
-        .snapshots()
-        .map((doc) {
+    return _firestore.collection('users').doc(userId).snapshots().map((doc) {
       final data = doc.data();
       return data?['unreadNotificationCount'] as int? ?? 0;
     });
@@ -240,9 +238,7 @@ class SocialNotificationService {
       body: body,
       data: data,
       createdAt: DateTime.now(),
-      expiresAt: expiration != null
-          ? DateTime.now().add(expiration)
-          : null,
+      expiresAt: expiration != null ? DateTime.now().add(expiration) : null,
     );
   }
 
@@ -293,7 +289,8 @@ class SocialNotificationService {
     return createNotification(
       type: AppNotificationType.challengeInvite,
       title: 'Challenge Invite',
-      body: '$inviterName invited you to: $challengeTitle'
+      body:
+          '$inviterName invited you to: $challengeTitle'
           '${xpReward != null ? ' ($xpReward XP)' : ''}',
       data: {
         'challengeId': challengeId,
@@ -323,17 +320,12 @@ class SocialNotificationService {
   }
 
   /// Notification helper for level ups.
-  AppNotification createLevelUpNotification({
-    required int newLevel,
-  }) {
+  AppNotification createLevelUpNotification({required int newLevel}) {
     return createNotification(
       type: AppNotificationType.levelUp,
       title: 'Level Up!',
       body: 'You reached level $newLevel',
-      data: {
-        'newLevel': newLevel,
-        'route': '/profile',
-      },
+      data: {'newLevel': newLevel, 'route': '/profile'},
     );
   }
 

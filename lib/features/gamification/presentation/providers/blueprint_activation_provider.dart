@@ -127,9 +127,7 @@ class BlueprintActivationNotifier extends _$BlueprintActivationNotifier {
 
     try {
       // Use dashboard notifier to create habits with optimistic updates
-      final dashboardNotifier = ref.read(
-        dashboardStateProvider.notifier,
-      );
+      final dashboardNotifier = ref.read(dashboardStateProvider.notifier);
       await dashboardNotifier.activateBlueprint(blueprint, user.id);
 
       // Log activity for gamification

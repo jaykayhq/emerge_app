@@ -361,7 +361,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         children: [
                           GestureDetector(
                             onTap: () => launchUrl(
-                              Uri.parse('https://docs.google.com/document/d/e/2PACX-1vQX-5ydyuD3ZYp_-8b_2rVyyuKW9zF2NaMm1CBxxwE5s1LXASy1P7Plxf8axNGc_TFJw-OnZrULmjgP/pub'),
+                              Uri.parse(
+                                'https://docs.google.com/document/d/e/2PACX-1vQX-5ydyuD3ZYp_-8b_2rVyyuKW9zF2NaMm1CBxxwE5s1LXASy1P7Plxf8axNGc_TFJw-OnZrULmjgP/pub',
+                              ),
                               mode: LaunchMode.externalApplication,
                             ),
                             child: const Text(
@@ -378,12 +380,17 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                             padding: EdgeInsets.symmetric(horizontal: 8),
                             child: Text(
                               '•',
-                              style: TextStyle(color: Colors.white38, fontSize: 12),
+                              style: TextStyle(
+                                color: Colors.white38,
+                                fontSize: 12,
+                              ),
                             ),
                           ),
                           GestureDetector(
                             onTap: () => launchUrl(
-                              Uri.parse('https://docs.google.com/document/d/e/2PACX-1vRt5cCpFS7PLmh_nwhxq3ec9YtRWQZk7mrOqbVN7aThrclpjgYL3q5r-nAqlftQJVkOSWzxnG_FDfjo/pub'),
+                              Uri.parse(
+                                'https://docs.google.com/document/d/e/2PACX-1vRt5cCpFS7PLmh_nwhxq3ec9YtRWQZk7mrOqbVN7aThrclpjgYL3q5r-nAqlftQJVkOSWzxnG_FDfjo/pub',
+                              ),
                               mode: LaunchMode.externalApplication,
                             ),
                             child: const Text(

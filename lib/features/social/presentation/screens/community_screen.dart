@@ -251,5 +251,4 @@ class _CommunityScreenState extends ConsumerState<CommunityScreen>
   // ==========================================================================
   // CLUBS TAB - Shows user's archetype club from seeded data
   // ==========================================================================
-
 }

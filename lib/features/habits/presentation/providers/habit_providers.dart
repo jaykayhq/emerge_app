@@ -125,24 +125,30 @@ Future<HabitCompletionResult> completeHabit(Ref ref, String habitId) async {
             final baseXp = _calculateBaseXp(habit);
             final currentStreak = habit.currentStreak;
             final newStreak = currentStreak + 1;
-            
+
             final xpResult = calculateXpBreakdown(
               habit: habit,
               baseXp: baseXp,
               currentStreak: newStreak,
             );
-            
-            final isMilestone = VariableRewardService.isStreakMilestone(newStreak);
-            
+
+            final isMilestone = VariableRewardService.isStreakMilestone(
+              newStreak,
+            );
+
             if (isMilestone) {
-              AppLogger.i('Streak milestone reached: $newStreak days for habit $habitId');
-              ref.read(cueNotifierProvider.notifier).queueMilestoneCue(habit, newStreak);
+              AppLogger.i(
+                'Streak milestone reached: $newStreak days for habit $habitId',
+              );
+              ref
+                  .read(cueNotifierProvider.notifier)
+                  .queueMilestoneCue(habit, newStreak);
             }
-            
+
             AppLogger.i(
               'Habit completed: $habitId. XP: ${xpResult.totalXp}, Streak: $newStreak, Milestone: $isMilestone',
             );
-            
+
             return HabitCompletionResult(
               xpEarned: xpResult.totalXp,
               newStreak: newStreak,

@@ -246,21 +246,21 @@ class Cue extends Equatable {
 
   @override
   List<Object?> get props => [
-        id,
-        triggerType,
-        category,
-        intensity,
-        channels,
-        title,
-        body,
-        habitId,
-        userArchetype,
-        isShown,
-        actionTaken,
-        createdAt,
-        expiresAt,
-        priority,
-      ];
+    id,
+    triggerType,
+    category,
+    intensity,
+    channels,
+    title,
+    body,
+    habitId,
+    userArchetype,
+    isShown,
+    actionTaken,
+    createdAt,
+    expiresAt,
+    priority,
+  ];
 
   /// Create a copy with modified fields
   Cue copyWith({
@@ -299,7 +299,8 @@ class Cue extends Equatable {
       createdAt: createdAt ?? this.createdAt,
       expiresAt: expiresAt ?? this.expiresAt,
       priority: priority ?? this.priority,
-      personalizationTokens: personalizationTokens ?? this.personalizationTokens,
+      personalizationTokens:
+          personalizationTokens ?? this.personalizationTokens,
       variantId: variantId ?? this.variantId,
       campaignId: campaignId ?? this.campaignId,
     );
@@ -397,15 +398,15 @@ class CueRule extends Equatable {
 
   @override
   List<Object?> get props => [
-        id,
-        habitId,
-        triggerType,
-        conditions,
-        cooldown,
-        activeWindow,
-        priority,
-        isEnabled,
-      ];
+    id,
+    habitId,
+    triggerType,
+    conditions,
+    cooldown,
+    activeWindow,
+    priority,
+    isEnabled,
+  ];
 }
 
 /// Time Window - Restricts when cues can be shown
@@ -523,12 +524,12 @@ class CueEngagementMetrics extends Equatable {
 
   @override
   List<Object?> get props => [
-        cueId,
-        impressions,
-        conversions,
-        dismissals,
-        avgTimeToAction,
-        lastShownAt,
-        lastActionAt,
-      ];
+    cueId,
+    impressions,
+    conversions,
+    dismissals,
+    avgTimeToAction,
+    lastShownAt,
+    lastActionAt,
+  ];
 }

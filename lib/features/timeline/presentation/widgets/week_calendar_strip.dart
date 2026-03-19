@@ -102,7 +102,9 @@ class _WeekCalendarStripState extends State<WeekCalendarStrip> {
               : Colors.transparent,
           borderRadius: BorderRadius.circular(12),
           border: isToday && !isSelected
-              ? Border.all(color: EmergeEarthyColors.terracotta.withValues(alpha: 0.5))
+              ? Border.all(
+                  color: EmergeEarthyColors.terracotta.withValues(alpha: 0.5),
+                )
               : null,
           // Glow effect for today
           boxShadow: isToday

@@ -452,10 +452,14 @@ class SettingsScreen extends ConsumerWidget {
                     ),
                     value: tutorialState.enabled,
                     onChanged: (value) async {
-                      await ref.read(tutorialProvider.notifier).setTutorialsEnabled(value);
+                      await ref
+                          .read(tutorialProvider.notifier)
+                          .setTutorialsEnabled(value);
                       // If enabling tutorials, reset them so they show again
                       if (value) {
-                        await ref.read(tutorialProvider.notifier).resetTutorials();
+                        await ref
+                            .read(tutorialProvider.notifier)
+                            .resetTutorials();
                       }
                     },
                     activeThumbColor: EmergeColors.teal,
@@ -497,12 +501,14 @@ class SettingsScreen extends ConsumerWidget {
                       _showFaqDialog(context);
                     },
                   ),
-                _buildListTile(
+                  _buildListTile(
                     context,
                     Icons.privacy_tip_outlined,
                     'Privacy Policy',
                     onTap: () => launchUrl(
-                      Uri.parse('https://docs.google.com/document/d/e/2PACX-1vRt5cCpFS7PLmh_nwhxq3ec9YtRWQZk7mrOqbVN7aThrclpjgYL3q5r-nAqlftQJVkOSWzxnG_FDfjo/pub'),
+                      Uri.parse(
+                        'https://docs.google.com/document/d/e/2PACX-1vRt5cCpFS7PLmh_nwhxq3ec9YtRWQZk7mrOqbVN7aThrclpjgYL3q5r-nAqlftQJVkOSWzxnG_FDfjo/pub',
+                      ),
                       mode: LaunchMode.externalApplication,
                     ),
                   ),
@@ -511,7 +517,9 @@ class SettingsScreen extends ConsumerWidget {
                     Icons.description_outlined,
                     'Terms of Service',
                     onTap: () => launchUrl(
-                      Uri.parse('https://docs.google.com/document/d/e/2PACX-1vQX-5ydyuD3ZYp_-8b_2rVyyuKW9zF2NaMm1CBxxwE5s1LXASy1P7Plxf8axNGc_TFJw-OnZrULmjgP/pub'),
+                      Uri.parse(
+                        'https://docs.google.com/document/d/e/2PACX-1vQX-5ydyuD3ZYp_-8b_2rVyyuKW9zF2NaMm1CBxxwE5s1LXASy1P7Plxf8axNGc_TFJw-OnZrULmjgP/pub',
+                      ),
                       mode: LaunchMode.externalApplication,
                     ),
                   ),
@@ -840,11 +848,11 @@ class SettingsScreen extends ConsumerWidget {
     UserProfile? profile,
   ) {
     if (profile == null) return;
-    
-    // Check premium status directly if possible from inside dialog, or pass it in. 
+
+    // Check premium status directly if possible from inside dialog, or pass it in.
     // Wait, the dialog is shown using showDialog, which creates a new context, so we read it inside builder or pass it.
     final isPremium = ref.read(isPremiumProvider).value ?? false;
-    
+
     showDialog(
       context: context,
       builder: (context) {
@@ -986,10 +994,16 @@ class SettingsScreen extends ConsumerWidget {
               width: 48,
               height: 48,
               decoration: BoxDecoration(
-                color: isLocked ? Colors.grey.withValues(alpha: 0.2) : color.withValues(alpha: 0.2),
+                color: isLocked
+                    ? Colors.grey.withValues(alpha: 0.2)
+                    : color.withValues(alpha: 0.2),
                 borderRadius: BorderRadius.circular(10),
               ),
-              child: Icon(isLocked ? Icons.lock : icon, color: isLocked ? Colors.grey : color, size: 24),
+              child: Icon(
+                isLocked ? Icons.lock : icon,
+                color: isLocked ? Colors.grey : color,
+                size: 24,
+              ),
             ),
             const SizedBox(width: 16),
             Expanded(
@@ -1001,19 +1015,31 @@ class SettingsScreen extends ConsumerWidget {
                       Text(
                         title,
                         style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                          color: isLocked ? AppTheme.textSecondaryDark : AppTheme.textMainDark,
+                          color: isLocked
+                              ? AppTheme.textSecondaryDark
+                              : AppTheme.textMainDark,
                           fontWeight: FontWeight.w600,
                         ),
                       ),
                       if (requiresPremium) ...[
                         const SizedBox(width: 8),
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 6,
+                            vertical: 2,
+                          ),
                           decoration: BoxDecoration(
                             color: Colors.amber.withValues(alpha: 0.2),
                             borderRadius: BorderRadius.circular(4),
                           ),
-                          child: const Text('PRO', style: TextStyle(color: Colors.amber, fontSize: 10, fontWeight: FontWeight.bold)),
+                          child: const Text(
+                            'PRO',
+                            style: TextStyle(
+                              color: Colors.amber,
+                              fontSize: 10,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
                         ),
                       ],
                     ],
@@ -1258,10 +1284,7 @@ class SettingsScreen extends ConsumerWidget {
           fontSize: 11,
         ),
       ),
-      trailing: const Icon(
-        Icons.chevron_right,
-        color: Colors.red,
-      ),
+      trailing: const Icon(Icons.chevron_right, color: Colors.red),
       tileColor: AppTheme.surfaceDark,
     );
   }
@@ -1280,7 +1303,11 @@ class SettingsScreen extends ConsumerWidget {
             ),
             title: Row(
               children: [
-                const Icon(Icons.warning_amber_rounded, color: Colors.red, size: 28),
+                const Icon(
+                  Icons.warning_amber_rounded,
+                  color: Colors.red,
+                  size: 28,
+                ),
                 const SizedBox(width: 8),
                 Text(
                   'Delete Account',
@@ -1325,7 +1352,9 @@ class SettingsScreen extends ConsumerWidget {
                     fillColor: AppTheme.surfaceDark,
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(8),
-                      borderSide: BorderSide(color: Colors.red.withValues(alpha: 0.3)),
+                      borderSide: BorderSide(
+                        color: Colors.red.withValues(alpha: 0.3),
+                      ),
                     ),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(8),
@@ -1338,7 +1367,10 @@ class SettingsScreen extends ConsumerWidget {
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(dialogContext),
-                child: const Text('Cancel', style: TextStyle(color: Colors.white54)),
+                child: const Text(
+                  'Cancel',
+                  style: TextStyle(color: Colors.white54),
+                ),
               ),
               FilledButton(
                 onPressed: confirmController.text.trim() == 'DELETE'
@@ -1352,8 +1384,9 @@ class SettingsScreen extends ConsumerWidget {
                             child: CircularProgressIndicator(color: Colors.red),
                           ),
                         );
-                        final result =
-                            await ref.read(authRepositoryProvider).deleteAccount();
+                        final result = await ref
+                            .read(authRepositoryProvider)
+                            .deleteAccount();
                         if (context.mounted) {
                           Navigator.of(context).pop(); // Dismiss loading
                           result.fold(
@@ -1385,7 +1418,10 @@ class SettingsScreen extends ConsumerWidget {
                 ),
                 child: const Text(
                   'Delete Forever',
-                  style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
               ),
             ],
@@ -1402,7 +1438,10 @@ class SettingsScreen extends ConsumerWidget {
         children: [
           const Icon(Icons.close, color: Colors.red, size: 14),
           const SizedBox(width: 8),
-          Text(text, style: const TextStyle(color: Colors.white60, fontSize: 13)),
+          Text(
+            text,
+            style: const TextStyle(color: Colors.white60, fontSize: 13),
+          ),
         ],
       ),
     );

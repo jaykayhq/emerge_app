@@ -264,9 +264,9 @@ class FirestoreFriendRepository implements FriendRepository {
 
   @override
   Future<String> generateInviteCode(String userId) async {
-    // Generate a simple 6-character alphanumeric code
+    // Generate a secure 6-character alphanumeric code
     const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-    final random = math.Random();
+    final random = math.Random.secure();
     final code = String.fromCharCodes(
       Iterable.generate(
         6,

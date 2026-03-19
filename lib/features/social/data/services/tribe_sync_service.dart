@@ -3,7 +3,7 @@ import 'package:emerge_app/features/social/data/repositories/tribe_repository.da
 import 'package:flutter/foundation.dart';
 
 /// Service to sync existing users to their archetype tribes.
-/// 
+///
 /// This is needed for users who:
 /// - Created accounts before tribe joining was implemented
 /// - Had issues during onboarding that prevented tribe joining
@@ -15,9 +15,10 @@ class TribeSyncService {
   TribeSyncService({
     FirebaseFirestore? firestore,
     TribeRepository? tribeRepository,
-  })  : _firestore = firestore ?? FirebaseFirestore.instance,
-        _tribeRepository = tribeRepository ??
-            FirestoreTribeRepository(FirebaseFirestore.instance);
+  }) : _firestore = firestore ?? FirebaseFirestore.instance,
+       _tribeRepository =
+           tribeRepository ??
+           FirestoreTribeRepository(FirebaseFirestore.instance);
 
   /// Syncs a single user to their archetype tribe
   Future<bool> syncUserToTribe(String userId) async {
@@ -44,7 +45,10 @@ class TribeSyncService {
       }
 
       // Check if user is already a member
-      final tribeDoc = await _firestore.collection('tribes').doc(tribe.id).get();
+      final tribeDoc = await _firestore
+          .collection('tribes')
+          .doc(tribe.id)
+          .get();
       if (!tribeDoc.exists) {
         debugPrint('❌ Tribe document ${tribe.id} does not exist');
         return false;
@@ -67,7 +71,7 @@ class TribeSyncService {
   }
 
   /// Syncs all users to their archetype tribes
-  /// 
+  ///
   /// Returns a map of results: {successCount, failedCount, skippedCount}
   Future<Map<String, int>> syncAllUsersToTribes() async {
     int successCount = 0;
@@ -145,7 +149,9 @@ class TribeSyncService {
         await _firestore.collection('tribes').doc(tribeId).update({
           'memberCount': actualCount,
         });
-        debugPrint('✅ Updated memberCount for $tribeId: $storedCount → $actualCount');
+        debugPrint(
+          '✅ Updated memberCount for $tribeId: $storedCount → $actualCount',
+        );
       } else {
         debugPrint('ℹ️ memberCount already correct for $tribeId: $actualCount');
       }

@@ -10,7 +10,8 @@ class AiCoachCard extends StatelessWidget {
   final String? suggestedHabit;
   final VoidCallback? onReflect;
   final VoidCallback? onAddHabit;
-  final VoidCallback? onLockedTap; // Callback when locked premium button is tapped
+  final VoidCallback?
+  onLockedTap; // Callback when locked premium button is tapped
   final bool isLoading;
   final Color? accentColor; // Optional archetype theming
   final bool isPremiumLocked; // Whether Reflect is premium locked
@@ -56,10 +57,11 @@ class AiCoachCard extends StatelessWidget {
                       children: [
                         Text(
                           'AI Coach',
-                          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
-                          ),
+                          style: Theme.of(context).textTheme.titleMedium
+                              ?.copyWith(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                              ),
                         ),
                         if (isPremiumLocked) ...[
                           const SizedBox(width: 6),
@@ -69,10 +71,14 @@ class AiCoachCard extends StatelessWidget {
                               vertical: 2,
                             ),
                             decoration: BoxDecoration(
-                              color: EmergeColors.warmGold.withValues(alpha: 0.3),
+                              color: EmergeColors.warmGold.withValues(
+                                alpha: 0.3,
+                              ),
                               borderRadius: BorderRadius.circular(4),
                               border: Border.all(
-                                color: EmergeColors.warmGold.withValues(alpha: 0.6),
+                                color: EmergeColors.warmGold.withValues(
+                                  alpha: 0.6,
+                                ),
                                 width: 1,
                               ),
                             ),
@@ -234,9 +240,7 @@ class _ActionButton extends StatelessWidget {
           color: color.withValues(alpha: 0.1),
           borderRadius: BorderRadius.circular(10),
           border: Border.all(
-            color: color.withValues(
-              alpha: isLockedState ? 0.15 : 0.3,
-            ),
+            color: color.withValues(alpha: isLockedState ? 0.15 : 0.3),
           ),
         ),
         child: FittedBox(
@@ -257,9 +261,7 @@ class _ActionButton extends StatelessWidget {
               Text(
                 label,
                 style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                  color: isLockedState
-                      ? color.withValues(alpha: 0.5)
-                      : color,
+                  color: isLockedState ? color.withValues(alpha: 0.5) : color,
                   fontWeight: FontWeight.w600,
                 ),
               ),

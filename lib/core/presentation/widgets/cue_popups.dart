@@ -101,7 +101,10 @@ class _CuePopupDialogState extends ConsumerState<CuePopupDialog>
               child: FadeTransition(
                 opacity: _fadeAnimation,
                 child: Container(
-                  margin: const EdgeInsets.symmetric(horizontal: 32, vertical: 40),
+                  margin: const EdgeInsets.symmetric(
+                    horizontal: 32,
+                    vertical: 40,
+                  ),
                   padding: const EdgeInsets.all(24),
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
@@ -202,11 +205,7 @@ class _CuePopupDialogState extends ConsumerState<CuePopupDialog>
               color: Colors.white.withValues(alpha: 0.1),
               shape: BoxShape.circle,
             ),
-            child: const Icon(
-              Icons.close,
-              color: Colors.white70,
-              size: 20,
-            ),
+            child: const Icon(Icons.close, color: Colors.white70, size: 20),
           ),
         ),
       ],
@@ -219,17 +218,11 @@ class _CuePopupDialogState extends ConsumerState<CuePopupDialog>
       decoration: BoxDecoration(
         color: primaryColor.withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: primaryColor.withValues(alpha: 0.2),
-        ),
+        border: Border.all(color: primaryColor.withValues(alpha: 0.2)),
       ),
       child: Text(
         widget.cue.personalizedBody,
-        style: const TextStyle(
-          color: Colors.white,
-          fontSize: 16,
-          height: 1.5,
-        ),
+        style: const TextStyle(color: Colors.white, fontSize: 16, height: 1.5),
       ),
     );
   }
@@ -370,10 +363,7 @@ class _CuePopupDialogState extends ConsumerState<CuePopupDialog>
         padding: const EdgeInsets.symmetric(vertical: 16),
         decoration: BoxDecoration(
           gradient: LinearGradient(
-            colors: [
-              EmergeColors.yellow,
-              EmergeEarthyColors.sand,
-            ],
+            colors: [EmergeColors.yellow, EmergeEarthyColors.sand],
           ),
           borderRadius: BorderRadius.circular(12),
         ),
@@ -558,12 +548,7 @@ class CueBanner extends StatelessWidget {
   final VoidCallback? onTap;
   final VoidCallback? onDismiss;
 
-  const CueBanner({
-    super.key,
-    required this.cue,
-    this.onTap,
-    this.onDismiss,
-  });
+  const CueBanner({super.key, required this.cue, this.onTap, this.onDismiss});
 
   @override
   Widget build(BuildContext context) {
@@ -946,7 +931,9 @@ class StreakProtectionDialog extends ConsumerWidget {
                         gradient: LinearGradient(
                           colors: [
                             EmergeEarthyColors.terracotta,
-                            EmergeEarthyColors.terracotta.withValues(alpha: 0.8),
+                            EmergeEarthyColors.terracotta.withValues(
+                              alpha: 0.8,
+                            ),
                           ],
                         ),
                         borderRadius: BorderRadius.circular(12),
@@ -1058,19 +1045,12 @@ class SocialProofToast extends StatelessWidget {
                   const SizedBox(height: 2),
                   const Text(
                     'Keep the momentum going!',
-                    style: TextStyle(
-                      color: Colors.white70,
-                      fontSize: 12,
-                    ),
+                    style: TextStyle(color: Colors.white70, fontSize: 12),
                   ),
                 ],
               ),
             ),
-            const Icon(
-              Icons.chevron_right,
-              color: Colors.white70,
-              size: 18,
-            ),
+            const Icon(Icons.chevron_right, color: Colors.white70, size: 18),
           ],
         ),
       ),
@@ -1132,10 +1112,7 @@ class MilestoneCelebrationDialog extends ConsumerWidget {
               height: 80,
               decoration: BoxDecoration(
                 gradient: LinearGradient(
-                  colors: [
-                    EmergeColors.yellow,
-                    EmergeEarthyColors.sand,
-                  ],
+                  colors: [EmergeColors.yellow, EmergeEarthyColors.sand],
                 ),
                 shape: BoxShape.circle,
                 boxShadow: [

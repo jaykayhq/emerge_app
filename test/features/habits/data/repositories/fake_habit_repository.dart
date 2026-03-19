@@ -34,7 +34,10 @@ class FakeHabitRepository implements HabitRepository {
   }
 
   @override
-  Future<Either<Failure, bool>> completeHabit(String habitId, DateTime date) async {
+  Future<Either<Failure, bool>> completeHabit(
+    String habitId,
+    DateTime date,
+  ) async {
     final habit = _habits[habitId];
     if (habit == null) return Left(ServerFailure('Habit not found'));
 

@@ -12,15 +12,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
 import 'package:go_router/go_router.dart';
 
-export 'package:emerge_app/features/social/presentation/providers/tribes_provider.dart' show TribeStats;
+export 'package:emerge_app/features/social/presentation/providers/tribes_provider.dart'
+    show TribeStats;
 
 class LeaderboardScreen extends ConsumerStatefulWidget {
   final int initialTabIndex;
 
-  const LeaderboardScreen({
-    super.key,
-    this.initialTabIndex = 0,
-  });
+  const LeaderboardScreen({super.key, this.initialTabIndex = 0});
 
   @override
   ConsumerState<LeaderboardScreen> createState() => _LeaderboardScreenState();
@@ -128,7 +126,12 @@ class _FriendsLeaderboardTab extends ConsumerWidget {
     return partnersAsync.when(
       data: (partners) {
         if (partners.isEmpty) {
-          return const Center(child: Text('No partners found', style: TextStyle(color: Colors.white)));
+          return const Center(
+            child: Text(
+              'No partners found',
+              style: TextStyle(color: Colors.white),
+            ),
+          );
         }
 
         final entries = partners.map((p) {
@@ -148,7 +151,8 @@ class _FriendsLeaderboardTab extends ConsumerWidget {
           child: FriendsLeaderboard(friends: entries),
         );
       },
-      loading: () => const EmergeLoadingSkeleton(itemCount: 8, showAvatar: true),
+      loading: () =>
+          const EmergeLoadingSkeleton(itemCount: 8, showAvatar: true),
       error: (err, _) => AppErrorWidget(
         message: 'Could not load partners',
         onRetry: () => ref.invalidate(partnersListProvider),
@@ -164,7 +168,14 @@ class _TribeLeaderboardTab extends ConsumerWidget {
 
     return userStatsAsync.when(
       data: (profile) {
-        if (profile.uid.isEmpty) return const Center(child: Text('No profile found', style: TextStyle(color: Colors.white)));
+        if (profile.uid.isEmpty) {
+          return const Center(
+            child: Text(
+              'No profile found',
+              style: TextStyle(color: Colors.white),
+            ),
+          );
+        }
 
         final clubId = profile.archetype.name;
         final leaderboardAsync = ref.watch(clubLeaderboardProvider(clubId));
@@ -188,7 +199,9 @@ class _TribeLeaderboardTab extends ConsumerWidget {
                 children: [
                   CircleAvatar(
                     radius: 24,
-                    backgroundColor: profile.archetype.color.withValues(alpha: 0.1),
+                    backgroundColor: profile.archetype.color.withValues(
+                      alpha: 0.1,
+                    ),
                     child: Icon(
                       profile.archetype.icon,
                       color: profile.archetype.color,
@@ -225,10 +238,12 @@ class _TribeLeaderboardTab extends ConsumerWidget {
             Expanded(
               child: leaderboardAsync.when(
                 data: (entries) => _LeaderboardList(entries: entries),
-                loading: () => const EmergeLoadingSkeleton(itemCount: 5, showAvatar: true),
+                loading: () =>
+                    const EmergeLoadingSkeleton(itemCount: 5, showAvatar: true),
                 error: (err, _) => AppErrorWidget(
                   message: 'Could not load tribe leaderboard',
-                  onRetry: () => ref.invalidate(clubLeaderboardProvider(clubId)),
+                  onRetry: () =>
+                      ref.invalidate(clubLeaderboardProvider(clubId)),
                 ),
               ),
             ),
@@ -264,7 +279,9 @@ class _WorldLeaderboardTab extends ConsumerWidget {
               child: statsAsync.when(
                 data: (stats) {
                   // Sort by real-time total XP
-                  final sortedIndex = tribes.indexWhere((t) => t.id == tribe.id);
+                  final sortedIndex = tribes.indexWhere(
+                    (t) => t.id == tribe.id,
+                  );
                   return _TribeLeaderboardItem(
                     tribe: tribe,
                     stats: stats,
@@ -298,7 +315,8 @@ class _WorldLeaderboardTab extends ConsumerWidget {
           },
         );
       },
-      loading: () => const EmergeLoadingSkeleton(itemCount: 5, showAvatar: true),
+      loading: () =>
+          const EmergeLoadingSkeleton(itemCount: 5, showAvatar: true),
       error: (err, _) => AppErrorWidget(
         message: 'Could not load world rankings',
         onRetry: () => ref.invalidate(allArchetypeClubsProvider),
@@ -324,17 +342,23 @@ class _TribeLeaderboardItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final displayXp = isLoading ? '...' : isError ? 'Error' : '${stats.totalXp} XP';
-    final displayMembers = isLoading ? '...' : isError ? 'Error' : '${stats.memberCount} members';
+    final displayXp = isLoading
+        ? '...'
+        : isError
+        ? 'Error'
+        : '${stats.totalXp} XP';
+    final displayMembers = isLoading
+        ? '...'
+        : isError
+        ? 'Error'
+        : '${stats.memberCount} members';
 
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: AppTheme.surfaceDark,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: Colors.white.withValues(alpha: 0.1),
-        ),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
       ),
       child: Row(
         children: [
@@ -406,7 +430,9 @@ class _LeaderboardList extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (entries.isEmpty) {
-      return const Center(child: Text('No entries yet', style: TextStyle(color: Colors.white)));
+      return const Center(
+        child: Text('No entries yet', style: TextStyle(color: Colors.white)),
+      );
     }
 
     return ListView.builder(
@@ -429,7 +455,9 @@ class _LeaderboardList extends StatelessWidget {
                   child: Text(
                     '${index + 1}',
                     style: TextStyle(
-                      color: index < 3 ? AppTheme.primary : AppTheme.textSecondaryDark,
+                      color: index < 3
+                          ? AppTheme.primary
+                          : AppTheme.textSecondaryDark,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
@@ -439,7 +467,9 @@ class _LeaderboardList extends StatelessWidget {
                   radius: 18,
                   backgroundColor: AppTheme.primary.withValues(alpha: 0.1),
                   child: Text(
-                    entry.userName.isNotEmpty ? entry.userName[0].toUpperCase() : '?',
+                    entry.userName.isNotEmpty
+                        ? entry.userName[0].toUpperCase()
+                        : '?',
                     style: TextStyle(color: AppTheme.primary, fontSize: 12),
                   ),
                 ),
@@ -450,18 +480,27 @@ class _LeaderboardList extends StatelessWidget {
                     children: [
                       Text(
                         entry.userName,
-                        style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
                       Text(
                         'Level ${entry.level}',
-                        style: TextStyle(color: AppTheme.textSecondaryDark, fontSize: 12),
+                        style: TextStyle(
+                          color: AppTheme.textSecondaryDark,
+                          fontSize: 12,
+                        ),
                       ),
                     ],
                   ),
                 ),
                 Text(
                   '${entry.xp} XP',
-                  style: TextStyle(color: AppTheme.primary, fontWeight: FontWeight.bold),
+                  style: TextStyle(
+                    color: AppTheme.primary,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
               ],
             ),

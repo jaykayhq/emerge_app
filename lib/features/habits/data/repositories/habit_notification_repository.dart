@@ -16,9 +16,9 @@ class HabitNotificationRepository {
     required NotificationService notificationService,
     required FirebaseFirestore firestore,
     required FirebaseAuth auth,
-  })  : _notificationService = notificationService,
-        _firestore = firestore,
-        _auth = FirebaseAuth.instance;
+  }) : _notificationService = notificationService,
+       _firestore = firestore,
+       _auth = FirebaseAuth.instance;
 
   /// Create notification schedule for a new habit
   Future<void> scheduleHabitNotifications(
@@ -32,9 +32,14 @@ class HabitNotificationRepository {
     await _notificationService.notifyHabitCreated(habit, archetype);
 
     // 2. Schedule recurring reminder
-    final reminderTime = habit.reminderTime ??
-        TimeOfDay(hour: NotificationTemplates.getDefaultHour(archetype), minute: 0);
-    final timeString = '${reminderTime.hour.toString().padLeft(2, '0')}:${reminderTime.minute.toString().padLeft(2, '0')}';
+    final reminderTime =
+        habit.reminderTime ??
+        TimeOfDay(
+          hour: NotificationTemplates.getDefaultHour(archetype),
+          minute: 0,
+        );
+    final timeString =
+        '${reminderTime.hour.toString().padLeft(2, '0')}:${reminderTime.minute.toString().padLeft(2, '0')}';
 
     await _notificationService.scheduleHabitReminder(
       habit.id,
@@ -73,9 +78,14 @@ class HabitNotificationRepository {
     final userId = _auth.currentUser?.uid;
     if (userId == null) return;
 
-    final reminderTime = habit.reminderTime ??
-        TimeOfDay(hour: NotificationTemplates.getDefaultHour(archetype), minute: 0);
-    final timeString = '${reminderTime.hour.toString().padLeft(2, '0')}:${reminderTime.minute.toString().padLeft(2, '0')}';
+    final reminderTime =
+        habit.reminderTime ??
+        TimeOfDay(
+          hour: NotificationTemplates.getDefaultHour(archetype),
+          minute: 0,
+        );
+    final timeString =
+        '${reminderTime.hour.toString().padLeft(2, '0')}:${reminderTime.minute.toString().padLeft(2, '0')}';
 
     await _notificationService.updateHabitNotification(
       habit.id,

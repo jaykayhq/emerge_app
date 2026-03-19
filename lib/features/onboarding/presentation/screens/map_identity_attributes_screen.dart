@@ -25,10 +25,14 @@ class _MapIdentityAttributesScreenState
     final state = ref.read(onboardingStateControllerProvider);
     if (state.remainingPoints > 0) {
       final currentPoints = state.attributes[key] ?? 0;
-      ref.read(onboardingStateControllerProvider.notifier).update((s) => s.copyWith(
-        attributes: {...s.attributes, key: currentPoints + 1},
-        remainingPoints: s.remainingPoints - 1,
-      ));
+      ref
+          .read(onboardingStateControllerProvider.notifier)
+          .update(
+            (s) => s.copyWith(
+              attributes: {...s.attributes, key: currentPoints + 1},
+              remainingPoints: s.remainingPoints - 1,
+            ),
+          );
       HapticFeedback.lightImpact();
     }
   }
@@ -37,10 +41,14 @@ class _MapIdentityAttributesScreenState
     final state = ref.read(onboardingStateControllerProvider);
     final currentPoints = state.attributes[key] ?? 0;
     if (currentPoints > 0) {
-      ref.read(onboardingStateControllerProvider.notifier).update((s) => s.copyWith(
-        attributes: {...s.attributes, key: currentPoints - 1},
-        remainingPoints: s.remainingPoints + 1,
-      ));
+      ref
+          .read(onboardingStateControllerProvider.notifier)
+          .update(
+            (s) => s.copyWith(
+              attributes: {...s.attributes, key: currentPoints - 1},
+              remainingPoints: s.remainingPoints + 1,
+            ),
+          );
       HapticFeedback.lightImpact();
     }
   }
@@ -50,11 +58,15 @@ class _MapIdentityAttributesScreenState
     final state = ref.watch(onboardingStateControllerProvider);
 
     // DEBUG: Log archetype at build time
-    AppLogger.i('MapIdentityAttributesScreen build: selectedArchetype=${state.selectedArchetype}');
+    AppLogger.i(
+      'MapIdentityAttributesScreen build: selectedArchetype=${state.selectedArchetype}',
+    );
 
     // Also log from Firestore to compare
     ref.read(userStatsStreamProvider).whenData((profile) {
-      AppLogger.i('MapIdentityAttributesScreen: Firestore archetype=${profile.archetype}');
+      AppLogger.i(
+        'MapIdentityAttributesScreen: Firestore archetype=${profile.archetype}',
+      );
     });
 
     return Scaffold(

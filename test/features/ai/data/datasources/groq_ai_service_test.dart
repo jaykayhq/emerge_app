@@ -27,10 +27,13 @@ void main() {
       // Arrange
       final mockResult = _MockHttpsCallableResult();
       when(() => mockResult.data).thenReturn({'advice': 'You can do it!'});
-      
-      when(() => mockFunctions.httpsCallable('getGroqCoachAdvice'))
-          .thenReturn(mockHttpsCallable);
-      when(() => mockHttpsCallable.call(any())).thenAnswer((_) async => mockResult);
+
+      when(
+        () => mockFunctions.httpsCallable('getGroqCoachAdvice'),
+      ).thenReturn(mockHttpsCallable);
+      when(
+        () => mockHttpsCallable.call(any()),
+      ).thenAnswer((_) async => mockResult);
 
       // Act
       final result = await service.getCoachAdvice("context", "message");
@@ -41,13 +44,11 @@ void main() {
 
     test('should throw Exception on non-200 response', () async {
       // Arrange
-      when(() => mockFunctions.httpsCallable('getGroqCoachAdvice'))
-          .thenReturn(mockHttpsCallable);
+      when(
+        () => mockFunctions.httpsCallable('getGroqCoachAdvice'),
+      ).thenReturn(mockHttpsCallable);
       when(() => mockHttpsCallable.call(any())).thenThrow(
-        FirebaseFunctionsException(
-          code: 'internal',
-          message: 'Server error',
-        ),
+        FirebaseFunctionsException(code: 'internal', message: 'Server error'),
       );
 
       // Act & Assert

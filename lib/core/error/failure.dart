@@ -132,8 +132,6 @@ class ErrorHandler {
     } else if (error is Map<String, dynamic>) {
       // Handle Firestore errors
       return error['message'] ?? 'An error occurred';
-    } else if (error is Exception) {
-      return error.toString();
     } else {
       return error?.toString() ?? 'An unknown error occurred';
     }

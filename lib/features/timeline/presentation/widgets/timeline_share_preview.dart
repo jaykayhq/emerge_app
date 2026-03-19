@@ -145,7 +145,8 @@ class _TimelineSharePreviewDialogState
                                   Text(
                                     'Level $level',
                                     style: TextStyle(
-                                      color: EmergeEarthyColors.cream.withValues(alpha: 0.7),
+                                      color: EmergeEarthyColors.cream
+                                          .withValues(alpha: 0.7),
                                       fontSize: 12,
                                       fontWeight: FontWeight.w600,
                                     ),

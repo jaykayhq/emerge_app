@@ -50,149 +50,147 @@ class _ReflectionCardState extends ConsumerState<ReflectionCard> {
 
   Widget _buildUnloggedState() {
     return Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Icon(Icons.edit_note, color: EmergeColors.yellow, size: 20),
-              const SizedBox(width: 8),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Reflection',
-                    style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  Text(
-                    'Close the loop on your day',
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: EmergeColors.tealMuted.withValues(alpha: 0.7),
-                      fontSize: 11,
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          Text(
-            'How do you feel about your progress?',
-            style: Theme.of(
-              context,
-            ).textTheme.bodyMedium?.copyWith(color: Colors.white),
-          ),
-          const SizedBox(height: 12),
-          // Slider with emoji indicators
-          Row(
-            children: [
-              Text('😔', style: TextStyle(fontSize: 20)),
-              Expanded(
-                child: SliderTheme(
-                  data: SliderTheme.of(context).copyWith(
-                    activeTrackColor: _getSliderColor(),
-                    inactiveTrackColor: _getSliderColor().withValues(
-                      alpha: 0.2,
-                    ),
-                    thumbColor: _getSliderColor(),
-                    overlayColor: _getSliderColor().withValues(alpha: 0.2),
-                    trackHeight: 6,
-                  ),
-                  child: Slider(
-                    value: _progressValue,
-                    onChanged: (value) {
-                      setState(() => _progressValue = value);
-                    },
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Icon(Icons.edit_note, color: EmergeColors.yellow, size: 20),
+            const SizedBox(width: 8),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Reflection',
+                  style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
                   ),
                 ),
-              ),
-              Text('🔥', style: TextStyle(fontSize: 20)),
-            ],
-          ),
-
-          // Optional note field
-          if (_showTextField) ...[
-            const SizedBox(height: 12),
-            TextField(
-              controller: _noteController,
-              maxLines: 2,
-              style: TextStyle(color: AppTheme.textMainDark),
-              decoration: InputDecoration(
-                hintText: 'Add a note (optional)',
-                hintStyle: TextStyle(color: AppTheme.textSecondaryDark),
-                filled: true,
-                fillColor: EmergeColors.background,
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide(color: EmergeColors.hexLine),
+                Text(
+                  'Close the loop on your day',
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: EmergeColors.tealMuted.withValues(alpha: 0.7),
+                    fontSize: 11,
+                  ),
                 ),
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide(color: EmergeColors.hexLine),
+              ],
+            ),
+          ],
+        ),
+        const SizedBox(height: 16),
+        Text(
+          'How do you feel about your progress?',
+          style: Theme.of(
+            context,
+          ).textTheme.bodyMedium?.copyWith(color: Colors.white),
+        ),
+        const SizedBox(height: 12),
+        // Slider with emoji indicators
+        Row(
+          children: [
+            Text('😔', style: TextStyle(fontSize: 20)),
+            Expanded(
+              child: SliderTheme(
+                data: SliderTheme.of(context).copyWith(
+                  activeTrackColor: _getSliderColor(),
+                  inactiveTrackColor: _getSliderColor().withValues(alpha: 0.2),
+                  thumbColor: _getSliderColor(),
+                  overlayColor: _getSliderColor().withValues(alpha: 0.2),
+                  trackHeight: 6,
                 ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide(color: EmergeColors.teal),
+                child: Slider(
+                  value: _progressValue,
+                  onChanged: (value) {
+                    setState(() => _progressValue = value);
+                  },
                 ),
               ),
             ),
+            Text('🔥', style: TextStyle(fontSize: 20)),
           ],
+        ),
 
+        // Optional note field
+        if (_showTextField) ...[
           const SizedBox(height: 12),
-          Row(
-            children: [
-              if (!_showTextField)
-                TextButton.icon(
-                  onPressed: () => setState(() => _showTextField = true),
-                  icon: Icon(
-                    Icons.add,
-                    color: AppTheme.textSecondaryDark,
-                    size: 18,
-                  ),
-                  label: Text(
-                    'Add note',
-                    style: TextStyle(color: AppTheme.textSecondaryDark),
-                  ),
-                ),
-              const Spacer(),
-              ElevatedButton(
-                onPressed: () {
-                  widget.onLogReflection?.call(
-                    _progressValue,
-                    _noteController.text.isEmpty ? null : _noteController.text,
-                  );
-                  setState(() => _isLogged = true);
-                  ref.read(todayReflectionStateProvider.notifier).setLogged(true);
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text('Reflection logged! 🎉'),
-                      backgroundColor: EmergeColors.teal,
-                      behavior: SnackBarBehavior.floating,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                    ),
-                  );
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: EmergeColors.teal,
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 10,
-                  ),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                ),
-                child: const Text('Log'),
+          TextField(
+            controller: _noteController,
+            maxLines: 2,
+            style: TextStyle(color: AppTheme.textMainDark),
+            decoration: InputDecoration(
+              hintText: 'Add a note (optional)',
+              hintStyle: TextStyle(color: AppTheme.textSecondaryDark),
+              filled: true,
+              fillColor: EmergeColors.background,
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(color: EmergeColors.hexLine),
               ),
-            ],
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(color: EmergeColors.hexLine),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(color: EmergeColors.teal),
+              ),
+            ),
           ),
         ],
-      );
+
+        const SizedBox(height: 12),
+        Row(
+          children: [
+            if (!_showTextField)
+              TextButton.icon(
+                onPressed: () => setState(() => _showTextField = true),
+                icon: Icon(
+                  Icons.add,
+                  color: AppTheme.textSecondaryDark,
+                  size: 18,
+                ),
+                label: Text(
+                  'Add note',
+                  style: TextStyle(color: AppTheme.textSecondaryDark),
+                ),
+              ),
+            const Spacer(),
+            ElevatedButton(
+              onPressed: () {
+                widget.onLogReflection?.call(
+                  _progressValue,
+                  _noteController.text.isEmpty ? null : _noteController.text,
+                );
+                setState(() => _isLogged = true);
+                ref.read(todayReflectionStateProvider.notifier).setLogged(true);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text('Reflection logged! 🎉'),
+                    backgroundColor: EmergeColors.teal,
+                    behavior: SnackBarBehavior.floating,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
+                );
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: EmergeColors.teal,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 10,
+                ),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
+              ),
+              child: const Text('Log'),
+            ),
+          ],
+        ),
+      ],
+    );
   }
 
   Color _getSliderColor() {
@@ -212,11 +210,7 @@ class _ReflectionCardState extends ConsumerState<ReflectionCard> {
         crossAxisAlignment: CrossAxisAlignment.center,
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(
-            Icons.check_circle_outline,
-            color: EmergeColors.teal,
-            size: 48,
-          ),
+          Icon(Icons.check_circle_outline, color: EmergeColors.teal, size: 48),
           const SizedBox(height: 12),
           Text(
             'Reflection Logged!',
@@ -228,9 +222,9 @@ class _ReflectionCardState extends ConsumerState<ReflectionCard> {
           const SizedBox(height: 16),
           Text(
             _getMoodEmoji(_progressValue),
-            style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-              color: Colors.white70,
-            ),
+            style: Theme.of(
+              context,
+            ).textTheme.bodyLarge?.copyWith(color: Colors.white70),
           ),
           const SizedBox(height: 20),
           TextButton.icon(
@@ -238,11 +232,7 @@ class _ReflectionCardState extends ConsumerState<ReflectionCard> {
               setState(() => _isLogged = false);
               ref.read(todayReflectionStateProvider.notifier).setLogged(false);
             },
-            icon: Icon(
-              Icons.edit,
-              color: EmergeColors.teal,
-              size: 18,
-            ),
+            icon: Icon(Icons.edit, color: EmergeColors.teal, size: 18),
             label: Text(
               'Edit Reflection',
               style: TextStyle(color: EmergeColors.teal),

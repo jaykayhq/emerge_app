@@ -21,7 +21,7 @@ export const manageRateLimit = functionsV1.firestore
     const trackerRef = db.collection("rate_limits").doc(userId);
 
     try {
-      await db.runTransaction(async (t) => {
+      await db.runTransaction(async (t: admin.firestore.Transaction) => {
         const doc = await t.get(trackerRef);
         const now = Date.now();
         let count = 1;

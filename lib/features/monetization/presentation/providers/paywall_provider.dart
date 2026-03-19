@@ -27,38 +27,57 @@ class PaywallController extends _$PaywallController {
   Future<void> _fetchOfferings() async {
     if (kIsWeb) {
       state = state.copyWith(
-          isLoading: false,
-          error: 'Premium subscriptions are currently available only on mobile.');
+        isLoading: false,
+        error: 'Premium subscriptions are currently available only on mobile.',
+      );
       return;
     }
-    
+
     try {
       final offerings = await Purchases.getOfferings();
-      state = state.copyWith(isLoading: false, offerings: offerings, error: null);
+      state = state.copyWith(
+        isLoading: false,
+        offerings: offerings,
+        error: null,
+      );
     } catch (e) {
-      state = state.copyWith(isLoading: false, error: 'Failed to load premium packages.');
+      state = state.copyWith(
+        isLoading: false,
+        error: 'Failed to load premium packages.',
+      );
     }
   }
 
   Future<void> purchasePackage(Package package) async {
     state = state.copyWith(isLoading: true, error: null);
     try {
-      final purchaseResult = await Purchases.purchase(PurchaseParams.package(package));
-      final isPremium = purchaseResult.customerInfo.entitlements.all['premium']?.isActive ?? false;
+      final purchaseResult = await Purchases.purchase(
+        PurchaseParams.package(package),
+      );
+      final isPremium =
+          purchaseResult.customerInfo.entitlements.all['premium']?.isActive ??
+          false;
       state = state.copyWith(isLoading: false, isSuccess: isPremium);
     } catch (e) {
-      state = state.copyWith(isLoading: false, error: 'Purchase failed or was cancelled.');
+      state = state.copyWith(
+        isLoading: false,
+        error: 'Purchase failed or was cancelled.',
+      );
     }
   }
-  
+
   Future<void> restorePurchases() async {
-     state = state.copyWith(isLoading: true, error: null);
+    state = state.copyWith(isLoading: true, error: null);
     try {
       final customerInfo = await Purchases.restorePurchases();
-      final isPremium = customerInfo.entitlements.all['premium']?.isActive ?? false;
+      final isPremium =
+          customerInfo.entitlements.all['premium']?.isActive ?? false;
       state = state.copyWith(isLoading: false, isSuccess: isPremium);
     } catch (e) {
-      state = state.copyWith(isLoading: false, error: 'Failed to restore purchases.');
+      state = state.copyWith(
+        isLoading: false,
+        error: 'Failed to restore purchases.',
+      );
     }
   }
 }

@@ -29,32 +29,35 @@ class FirestoreLeaderboardRepository implements LeaderboardRepository {
         .limit(100)
         .snapshots()
         .handleError((error, stack) {
-      AppLogger.e('Error watching club leaderboard', error, stack);
-    }).map((snapshot) {
-      // Calculate rank based on position in sorted list
-      return snapshot.docs.map((doc) {
-        final data = doc.data();
-        final index = snapshot.docs.indexOf(doc);
-        return LeaderboardEntry(
-          userId: data['userId'] as String? ?? '',
-          userName: data['userName'] as String? ?? 'Anonymous',
-          xp: data['xp'] as int? ?? 0,
-          level: data['level'] as int? ?? 1,
-          archetype: UserArchetype.values.firstWhere(
-            (e) => e.name == data['archetype'],
-            orElse: () => UserArchetype.none,
-          ),
-          rank: index + 1, // 1-based rank
-          lastUpdated: data['lastUpdated'] != null
-              ? DateTime.tryParse(data['lastUpdated'] as String)
-              : null,
-        );
-      }).toList();
-    });
+          AppLogger.e('Error watching club leaderboard', error, stack);
+        })
+        .map((snapshot) {
+          // Calculate rank based on position in sorted list
+          return snapshot.docs.map((doc) {
+            final data = doc.data();
+            final index = snapshot.docs.indexOf(doc);
+            return LeaderboardEntry(
+              userId: data['userId'] as String? ?? '',
+              userName: data['userName'] as String? ?? 'Anonymous',
+              xp: data['xp'] as int? ?? 0,
+              level: data['level'] as int? ?? 1,
+              archetype: UserArchetype.values.firstWhere(
+                (e) => e.name == data['archetype'],
+                orElse: () => UserArchetype.none,
+              ),
+              rank: index + 1, // 1-based rank
+              lastUpdated: data['lastUpdated'] != null
+                  ? DateTime.tryParse(data['lastUpdated'] as String)
+                  : null,
+            );
+          }).toList();
+        });
   }
 
   @override
-  Stream<List<LeaderboardEntry>> watchChallengeLeaderboard([String? challengeId]) {
+  Stream<List<LeaderboardEntry>> watchChallengeLeaderboard([
+    String? challengeId,
+  ]) {
     // Return empty stream if challengeId is not provided
     if (challengeId == null || challengeId.isEmpty) {
       AppLogger.w('watchChallengeLeaderboard called with empty challengeId');
@@ -69,28 +72,29 @@ class FirestoreLeaderboardRepository implements LeaderboardRepository {
         .limit(100)
         .snapshots()
         .handleError((error, stack) {
-      AppLogger.e('Error watching challenge leaderboard', error, stack);
-    }).map((snapshot) {
-      // Calculate rank based on position in sorted list
-      return snapshot.docs.map((doc) {
-        final data = doc.data();
-        final index = snapshot.docs.indexOf(doc);
-        return LeaderboardEntry(
-          userId: data['userId'] as String? ?? '',
-          userName: data['userName'] as String? ?? 'Anonymous',
-          xp: data['xp'] as int? ?? 0,
-          level: data['level'] as int? ?? 1,
-          archetype: UserArchetype.values.firstWhere(
-            (e) => e.name == data['archetype'],
-            orElse: () => UserArchetype.none,
-          ),
-          rank: index + 1, // 1-based rank
-          lastUpdated: data['lastUpdated'] != null
-              ? DateTime.tryParse(data['lastUpdated'] as String)
-              : null,
-        );
-      }).toList();
-    });
+          AppLogger.e('Error watching challenge leaderboard', error, stack);
+        })
+        .map((snapshot) {
+          // Calculate rank based on position in sorted list
+          return snapshot.docs.map((doc) {
+            final data = doc.data();
+            final index = snapshot.docs.indexOf(doc);
+            return LeaderboardEntry(
+              userId: data['userId'] as String? ?? '',
+              userName: data['userName'] as String? ?? 'Anonymous',
+              xp: data['xp'] as int? ?? 0,
+              level: data['level'] as int? ?? 1,
+              archetype: UserArchetype.values.firstWhere(
+                (e) => e.name == data['archetype'],
+                orElse: () => UserArchetype.none,
+              ),
+              rank: index + 1, // 1-based rank
+              lastUpdated: data['lastUpdated'] != null
+                  ? DateTime.tryParse(data['lastUpdated'] as String)
+                  : null,
+            );
+          }).toList();
+        });
   }
 
   @override
@@ -112,7 +116,9 @@ class FirestoreLeaderboardRepository implements LeaderboardRepository {
     // Validate that at least one leaderboard type is specified
     if (clubId == null && challengeId == null) {
       AppLogger.w('updateUserScore called without clubId or challengeId');
-      return Left(ServerFailure('Either clubId or challengeId must be provided'));
+      return Left(
+        ServerFailure('Either clubId or challengeId must be provided'),
+      );
     }
 
     try {
@@ -134,7 +140,9 @@ class FirestoreLeaderboardRepository implements LeaderboardRepository {
           'lastUpdated': now.toIso8601String(),
         }, SetOptions(merge: true));
 
-        AppLogger.i('Updated club leaderboard for user $userId in club $clubId');
+        AppLogger.i(
+          'Updated club leaderboard for user $userId in club $clubId',
+        );
       }
 
       // Update challenge leaderboard if challengeId provided
@@ -153,7 +161,9 @@ class FirestoreLeaderboardRepository implements LeaderboardRepository {
           'lastUpdated': now.toIso8601String(),
         }, SetOptions(merge: true));
 
-        AppLogger.i('Updated challenge leaderboard for user $userId in challenge $challengeId');
+        AppLogger.i(
+          'Updated challenge leaderboard for user $userId in challenge $challengeId',
+        );
       }
 
       return const Right(unit);

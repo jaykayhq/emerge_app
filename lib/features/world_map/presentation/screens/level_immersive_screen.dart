@@ -151,13 +151,29 @@ class LevelImmersiveScreen extends ConsumerWidget {
     // 1.0 (Health) -> 0.0 (Grayscale factor)
     // 0.0 (Health) -> 1.0 (Full Grayscale/Dim)
     final decayFactor = (1.0 - healthPercent).clamp(0.0, 1.0);
-    
+
     // Matrix for desaturation and slight dimming
     final matrix = <double>[
-        1 - 0.7 * decayFactor, 0.3 * decayFactor, 0.3 * decayFactor, 0, 0,
-        0.3 * decayFactor, 1 - 0.7 * decayFactor, 0.3 * decayFactor, 0, 0,
-        0.3 * decayFactor, 0.3 * decayFactor, 1 - 0.7 * decayFactor, 0, 0,
-        0, 0, 0, 1, 0,
+      1 - 0.7 * decayFactor,
+      0.3 * decayFactor,
+      0.3 * decayFactor,
+      0,
+      0,
+      0.3 * decayFactor,
+      1 - 0.7 * decayFactor,
+      0.3 * decayFactor,
+      0,
+      0,
+      0.3 * decayFactor,
+      0.3 * decayFactor,
+      1 - 0.7 * decayFactor,
+      0,
+      0,
+      0,
+      0,
+      0,
+      1,
+      0,
     ];
 
     return ColorFiltered(

@@ -39,12 +39,12 @@ class EmergeEarthyColors {
 
   /// Map of earthy colors for each habit attribute
   static const Map<HabitAttribute, Color> attributeColors = {
-    HabitAttribute.strength: Color(0xFFCC5500),    // Burnt orange
-    HabitAttribute.intellect: Color(0xFF8B4513),   // Saddle brown
-    HabitAttribute.vitality: Color(0xFF2E8B57),    // Sea green
-    HabitAttribute.creativity: Color(0xFFD2691E),  // Chocolate
-    HabitAttribute.focus: Color(0xFFB8860B),       // Dark goldenrod
-    HabitAttribute.spirit: Color(0xFFCD853F),      // Peru
+    HabitAttribute.strength: Color(0xFFCC5500), // Burnt orange
+    HabitAttribute.intellect: Color(0xFF8B4513), // Saddle brown
+    HabitAttribute.vitality: Color(0xFF2E8B57), // Sea green
+    HabitAttribute.creativity: Color(0xFFD2691E), // Chocolate
+    HabitAttribute.focus: Color(0xFFB8860B), // Dark goldenrod
+    HabitAttribute.spirit: Color(0xFFCD853F), // Peru
   };
 
   // ============ GRADIENTS ============
@@ -124,7 +124,8 @@ class EmergeDialogConfig {
   static EdgeInsets get padding => const EdgeInsets.all(internalPadding);
 
   /// Get standard BorderRadius
-  static BorderRadius get borderRadius => BorderRadius.circular(borderRadiusValue);
+  static BorderRadius get borderRadius =>
+      BorderRadius.circular(borderRadiusValue);
 
   /// Get border for dialog with primary color
   static Border getBorder(Color primaryColor) => Border.all(
@@ -143,7 +144,9 @@ class EmergeDialogConfig {
 
   /// Get standard dialog decoration
   static BoxDecoration getDecoration(Color primaryColor) => BoxDecoration(
-    color: EmergeEarthyColors.baseBackground.withValues(alpha: backgroundOpacity),
+    color: EmergeEarthyColors.baseBackground.withValues(
+      alpha: backgroundOpacity,
+    ),
     borderRadius: borderRadius,
     border: getBorder(primaryColor),
     boxShadow: getBoxShadow(primaryColor),

@@ -60,7 +60,10 @@ class WorldHealthService {
       final streakBonus = _calculateStreakBonus(profile.avatarStats.streak);
 
       // Combine factors
-      var health = (completionRate * 0.7) + (1.0 - decayPenalty) * 0.2 + streakBonus * 0.1;
+      var health =
+          (completionRate * 0.7) +
+          (1.0 - decayPenalty) * 0.2 +
+          streakBonus * 0.1;
 
       // Clamp between 0.0 and 1.0
       health = health.clamp(0.0, 1.0);
@@ -146,17 +149,23 @@ class WorldHealthService {
     } else if (daysInactive <= 3) {
       // 2-3 days inactive: light penalty (0.2)
       final penalty = 0.2;
-      AppLogger.d('Light decay penalty: $penalty (inactive for $daysInactive days)');
+      AppLogger.d(
+        'Light decay penalty: $penalty (inactive for $daysInactive days)',
+      );
       return penalty;
     } else if (daysInactive <= 7) {
       // 4-7 days inactive: medium penalty (0.5)
       final penalty = 0.5;
-      AppLogger.d('Medium decay penalty: $penalty (inactive for $daysInactive days)');
+      AppLogger.d(
+        'Medium decay penalty: $penalty (inactive for $daysInactive days)',
+      );
       return penalty;
     } else {
       // 8+ days inactive: heavy penalty (0.8)
       final penalty = 0.8;
-      AppLogger.d('Heavy decay penalty: $penalty (inactive for $daysInactive days)');
+      AppLogger.d(
+        'Heavy decay penalty: $penalty (inactive for $daysInactive days)',
+      );
       return penalty;
     }
   }
@@ -195,16 +204,21 @@ class WorldHealthService {
   Future<double> getWorldHealth(String userId) async {
     // Check cache
     final cached = _cache[userId];
-    final isCacheFresh = _lastCacheTime != null &&
+    final isCacheFresh =
+        _lastCacheTime != null &&
         DateTime.now().difference(_lastCacheTime!) < _cacheDuration;
 
     if (cached != null && isCacheFresh) {
-      AppLogger.d('Using cached world health for user $userId: ${cached.toStringAsFixed(2)}');
+      AppLogger.d(
+        'Using cached world health for user $userId: ${cached.toStringAsFixed(2)}',
+      );
       return cached;
     }
 
     // Calculate fresh
-    AppLogger.d('Cache miss or stale, calculating fresh world health for user $userId');
+    AppLogger.d(
+      'Cache miss or stale, calculating fresh world health for user $userId',
+    );
     final profile = await _repository.getUserStats(userId);
     final health = await calculateWorldHealth(profile);
 

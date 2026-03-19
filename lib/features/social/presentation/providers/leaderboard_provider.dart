@@ -16,10 +16,7 @@ LeaderboardRepository leaderboardRepository(Ref ref) {
 /// Stream provider for club leaderboard
 /// Returns empty stream if user is not authenticated
 @riverpod
-Stream<List<LeaderboardEntry>> clubLeaderboard(
-  Ref ref,
-  String clubId,
-) {
+Stream<List<LeaderboardEntry>> clubLeaderboard(Ref ref, String clubId) {
   if (clubId.isEmpty) {
     return const Stream.empty();
   }

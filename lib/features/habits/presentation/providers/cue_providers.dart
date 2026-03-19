@@ -62,9 +62,14 @@ class CueNotifier extends Notifier<void> {
   }
 }
 
-final cueNotifierProvider = NotifierProvider<CueNotifier, void>(CueNotifier.new);
+final cueNotifierProvider = NotifierProvider<CueNotifier, void>(
+  CueNotifier.new,
+);
 
-final cueMetricsProvider = Provider.family<CueEngagementMetrics?, String>((ref, cueId) {
+final cueMetricsProvider = Provider.family<CueEngagementMetrics?, String>((
+  ref,
+  cueId,
+) {
   final engine = ref.watch(cueEngineProvider);
   return engine.getMetrics(cueId);
 });

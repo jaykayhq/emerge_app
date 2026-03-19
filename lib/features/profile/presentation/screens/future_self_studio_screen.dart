@@ -418,7 +418,10 @@ class _FutureSelfStudioScreenState
                           const SizedBox(height: 12),
                           // Challenge XP display
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 8,
+                            ),
                             decoration: BoxDecoration(
                               color: Colors.amber.withValues(alpha: 0.1),
                               borderRadius: BorderRadius.circular(8),
@@ -437,10 +440,11 @@ class _FutureSelfStudioScreenState
                                 const SizedBox(width: 8),
                                 Text(
                                   'Challenge XP: ${stats.challengeXp}',
-                                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                    color: Colors.amber,
-                                    fontWeight: FontWeight.bold,
-                                  ),
+                                  style: Theme.of(context).textTheme.bodySmall
+                                      ?.copyWith(
+                                        color: Colors.amber,
+                                        fontWeight: FontWeight.bold,
+                                      ),
                                 ),
                               ],
                             ),

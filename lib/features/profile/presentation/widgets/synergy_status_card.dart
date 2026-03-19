@@ -27,13 +27,20 @@ Color attributeColor(HabitAttribute attribute) {
 /// Utility function to get attribute icon
 IconData _getAttributeIcon(String attribute) {
   switch (attribute.toLowerCase()) {
-    case 'strength': return Icons.fitness_center;
-    case 'intellect': return Icons.psychology;
-    case 'vitality': return Icons.favorite;
-    case 'creativity': return Icons.palette;
-    case 'focus': return Icons.center_focus_strong;
-    case 'spirit': return Icons.auto_awesome;
-    default: return Icons.stars;
+    case 'strength':
+      return Icons.fitness_center;
+    case 'intellect':
+      return Icons.psychology;
+    case 'vitality':
+      return Icons.favorite;
+    case 'creativity':
+      return Icons.palette;
+    case 'focus':
+      return Icons.center_focus_strong;
+    case 'spirit':
+      return Icons.auto_awesome;
+    default:
+      return Icons.stars;
   }
 }
 
@@ -118,13 +125,23 @@ class SynergyStatusCard extends ConsumerWidget {
   Widget _buildCardContent(BuildContext context, WidgetRef ref) {
     // Watch the new attribute progress provider
     final attributeProgress = ref.watch(attributeProgressFromHabitsProvider);
-    final attributes = ['strength', 'intellect', 'vitality', 'creativity', 'focus', 'spirit'];
+    final attributes = [
+      'strength',
+      'intellect',
+      'vitality',
+      'creativity',
+      'focus',
+      'spirit',
+    ];
 
     // Sort by total XP descending, take top 2 (include 0 XP attributes)
-    final sortedAttrs = attributes
-        .where((a) => attributeProgress.containsKey(a))
-        .toList()
-      ..sort((a, b) => (attributeProgress[b]?.totalXp ?? 0).compareTo(attributeProgress[a]?.totalXp ?? 0));
+    final sortedAttrs =
+        attributes.where((a) => attributeProgress.containsKey(a)).toList()
+          ..sort(
+            (a, b) => (attributeProgress[b]?.totalXp ?? 0).compareTo(
+              attributeProgress[a]?.totalXp ?? 0,
+            ),
+          );
 
     // If no attributes at all, show empty state
     if (sortedAttrs.isEmpty) {
@@ -137,12 +154,16 @@ class SynergyStatusCard extends ConsumerWidget {
       children: [
         // Two attributes side by side
         Row(
-          children: topAttrs.map((attr) => Expanded(
-            child: _AttributeDisplay(
-              attribute: attr,
-              progress: attributeProgress[attr]!,
-            ),
-          )).toList(),
+          children: topAttrs
+              .map(
+                (attr) => Expanded(
+                  child: _AttributeDisplay(
+                    attribute: attr,
+                    progress: attributeProgress[attr]!,
+                  ),
+                ),
+              )
+              .toList(),
         ),
 
         SizedBox(height: 12),
@@ -204,11 +225,21 @@ class SynergyStatusCard extends ConsumerWidget {
 
   void _showAttributeBreakdownSheet(BuildContext context, WidgetRef ref) {
     final attributeProgress = ref.watch(attributeProgressFromHabitsProvider);
-    final attributes = ['strength', 'intellect', 'vitality', 'creativity', 'focus', 'spirit'];
-    final sortedAttrs = attributes
-        .where((a) => attributeProgress.containsKey(a))
-        .toList()
-      ..sort((a, b) => (attributeProgress[b]?.totalXp ?? 0).compareTo(attributeProgress[a]?.totalXp ?? 0));
+    final attributes = [
+      'strength',
+      'intellect',
+      'vitality',
+      'creativity',
+      'focus',
+      'spirit',
+    ];
+    final sortedAttrs =
+        attributes.where((a) => attributeProgress.containsKey(a)).toList()
+          ..sort(
+            (a, b) => (attributeProgress[b]?.totalXp ?? 0).compareTo(
+              attributeProgress[a]?.totalXp ?? 0,
+            ),
+          );
 
     showModalBottomSheet(
       context: context,
@@ -268,10 +299,12 @@ class SynergyStatusCard extends ConsumerWidget {
                 itemBuilder: (context, index) {
                   final attr = sortedAttrs[index];
                   final progress = attributeProgress[attr]!;
-                  final color = attributeColor(HabitAttribute.values.firstWhere(
-                    (e) => e.name.toLowerCase() == attr,
-                    orElse: () => HabitAttribute.strength,
-                  ));
+                  final color = attributeColor(
+                    HabitAttribute.values.firstWhere(
+                      (e) => e.name.toLowerCase() == attr,
+                      orElse: () => HabitAttribute.strength,
+                    ),
+                  );
 
                   return ListTile(
                     leading: Container(
@@ -281,10 +314,7 @@ class SynergyStatusCard extends ConsumerWidget {
                         color: color.withValues(alpha: 0.2),
                         shape: BoxShape.circle,
                       ),
-                      child: Icon(
-                        _getAttributeIcon(attr),
-                        color: color,
-                      ),
+                      child: Icon(_getAttributeIcon(attr), color: color),
                     ),
                     title: Text(
                       attr.toUpperCase(),
@@ -318,7 +348,10 @@ class SynergyStatusCard extends ConsumerWidget {
                             ),
                             // Progress fill
                             FractionallySizedBox(
-                              widthFactor: progress.progressPercent.clamp(0.0, 1.0),
+                              widthFactor: progress.progressPercent.clamp(
+                                0.0,
+                                1.0,
+                              ),
                               child: Container(
                                 height: 4,
                                 decoration: BoxDecoration(
@@ -356,10 +389,7 @@ class _AttributeDisplay extends StatelessWidget {
   final String attribute;
   final AttributeProgress progress;
 
-  const _AttributeDisplay({
-    required this.attribute,
-    required this.progress,
-  });
+  const _AttributeDisplay({required this.attribute, required this.progress});
 
   @override
   Widget build(BuildContext context) {

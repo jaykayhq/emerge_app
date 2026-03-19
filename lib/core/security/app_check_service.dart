@@ -1,3 +1,4 @@
+import 'package:emerge_app/core/config/app_config.dart';
 import 'package:firebase_app_check/firebase_app_check.dart';
 import 'package:flutter/foundation.dart';
 
@@ -25,11 +26,17 @@ class AppCheckService {
           );
         } else {
           // Web mode: ReCaptcha V3 is the standard provider
-          // site key must be obtained from Firebase Console
+          // SECURITY: Use environment variable for ReCAPTCHA site key
+          final siteKey = AppConfig.recaptchaSiteKey;
+          if (siteKey.isEmpty) {
+            debugPrint(
+              '⚠️ ReCAPTCHA site key not configured. Set RECAPTCHA_SITE_KEY environment variable.',
+            );
+            debugPrint('   Continuing without App Check for web...');
+            return appCheck;
+          }
           await appCheck.activate(
-            providerWeb: ReCaptchaV3Provider(
-              '6LeaJoQsAAAAAAzo1mB0j_BxaL2BMymsRi-tU3b_',
-            ),
+            providerWeb: ReCaptchaV3Provider(siteKey),
           );
         }
       } else if (kDebugMode) {

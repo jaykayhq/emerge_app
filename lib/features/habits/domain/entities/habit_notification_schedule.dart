@@ -139,7 +139,8 @@ class HabitNotificationSchedule extends Equatable {
       lastReminderSent: lastReminderSent ?? this.lastReminderSent,
       enabled: enabled ?? this.enabled,
       fcmToken: fcmToken ?? this.fcmToken,
-      lastStreakWarningSent: lastStreakWarningSent ?? this.lastStreakWarningSent,
+      lastStreakWarningSent:
+          lastStreakWarningSent ?? this.lastStreakWarningSent,
       streakWarningCount: streakWarningCount ?? this.streakWarningCount,
       createdAt: createdAt ?? this.createdAt,
     );
@@ -147,18 +148,18 @@ class HabitNotificationSchedule extends Equatable {
 
   @override
   List<Object?> get props => [
-        habitId,
-        userId,
-        archetype,
-        reminderTime,
-        frequency,
-        specificDays,
-        welcomeNotified,
-        lastReminderSent,
-        enabled,
-        fcmToken,
-        lastStreakWarningSent,
-        streakWarningCount,
-        createdAt,
-      ];
+    habitId,
+    userId,
+    archetype,
+    reminderTime,
+    frequency,
+    specificDays,
+    welcomeNotified,
+    lastReminderSent,
+    enabled,
+    fcmToken,
+    lastStreakWarningSent,
+    streakWarningCount,
+    createdAt,
+  ];
 }

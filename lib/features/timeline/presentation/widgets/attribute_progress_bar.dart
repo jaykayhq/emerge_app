@@ -71,11 +71,7 @@ class AttributeProgressBar extends StatelessWidget {
             padding: const EdgeInsets.only(bottom: 6),
             child: Row(
               children: [
-                Icon(
-                  _attributeIcon,
-                  color: _attributeColor,
-                  size: 14,
-                ),
+                Icon(_attributeIcon, color: _attributeColor, size: 14),
                 const SizedBox(width: 6),
                 Text(
                   _attributeName,
@@ -180,11 +176,7 @@ class AttributeProgressGrid extends StatelessWidget {
         children: [
           Row(
             children: [
-              Icon(
-                Icons.insights,
-                color: EmergeColors.teal,
-                size: 18,
-              ),
+              Icon(Icons.insights, color: EmergeColors.teal, size: 18),
               const SizedBox(width: 8),
               Text(
                 'Attribute Progress',

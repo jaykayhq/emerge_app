@@ -227,6 +227,7 @@ class _LevelingScreenState extends ConsumerState<LevelingScreen> {
     );
   }
 }
+
 class _RewardItem extends StatelessWidget {
   final IconData icon;
   final String text;

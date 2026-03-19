@@ -1,3 +1,6 @@
+import 'dart:async';
+import 'dart:math' as math;
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:emerge_app/core/error/failure.dart';
 import 'package:emerge_app/core/utils/app_logger.dart';
@@ -123,10 +126,16 @@ class FirestoreGamificationRepository implements GamificationRepository {
     int amount, {
     String? attributeName,
   }) async {
+    // Validate amount to prevent negative XP exploits
+    if (amount < -10000 || amount > 10000) {
+      return Left(ServerFailure('XP amount exceeds reasonable limits'));
+    }
+
     try {
       final docRef = _firestore.collection('user_stats').doc(userId);
 
-      return await _firestore.runTransaction((transaction) async {
+      // Add timeout protection to prevent hanging transactions
+      await _firestore.runTransaction((transaction) async {
         final snapshot = await transaction.get(docRef);
 
         Map<String, dynamic> avatarStats = {};
@@ -156,7 +165,8 @@ class FirestoreGamificationRepository implements GamificationRepository {
         }
 
         final currentVal = (avatarStats[targetField] as int?) ?? 0;
-        final newVal = currentVal + amount;
+        // SECURITY: Prevent negative XP using max
+        final newVal = math.max(0, currentVal + amount);
         avatarStats[targetField] = newVal;
 
         // Recalculate Total XP and Level
@@ -185,9 +195,15 @@ class FirestoreGamificationRepository implements GamificationRepository {
           'currentXp': totalXp,
           'currentLevel': currentLevel,
         }, SetOptions(merge: true));
+      }).timeout(
+        const Duration(seconds: 8),
+        onTimeout: () => throw TimeoutException('Transaction timeout'),
+      );
 
-        return const Right(unit);
-      });
+      return const Right(unit);
+    } on TimeoutException catch (e) {
+      AppLogger.e('Add XP transaction timeout', e);
+      return Left(ServerFailure('Transaction timeout - please try again'));
     } catch (e, s) {
       AppLogger.e('Add XP failed', e, s);
       return Left(ServerFailure(e.toString()));
@@ -217,7 +233,7 @@ class FirestoreGamificationRepository implements GamificationRepository {
 
         final data = snapshot.data()!;
         final avatarStats = Map<String, dynamic>.from(
-          data['avatarStats'] as Map? ?? {}
+          data['avatarStats'] as Map? ?? {},
         );
 
         // Get the node to find its attributes
@@ -234,7 +250,7 @@ class FirestoreGamificationRepository implements GamificationRepository {
           avatarStats['attributeXp'] = <String, int>{};
         }
         final attributeXp = Map<String, dynamic>.from(
-          avatarStats['attributeXp'] as Map? ?? {}
+          avatarStats['attributeXp'] as Map? ?? {},
         );
 
         // Add XP to each target attribute
@@ -245,7 +261,8 @@ class FirestoreGamificationRepository implements GamificationRepository {
 
           // Also update the specific attribute field for backwards compatibility
           final attrField = '${key}Xp';
-          avatarStats[attrField] = (avatarStats[attrField] as int? ?? 0) + amount;
+          avatarStats[attrField] =
+              (avatarStats[attrField] as int? ?? 0) + amount;
         }
         avatarStats['attributeXp'] = attributeXp;
 
@@ -266,35 +283,39 @@ class FirestoreGamificationRepository implements GamificationRepository {
 
         // Track node progress in worldState
         final worldState = Map<String, dynamic>.from(
-          data['worldState'] as Map? ?? {}
+          data['worldState'] as Map? ?? {},
         );
         final nodeProgress = Map<String, dynamic>.from(
-          worldState['nodeProgress'] as Map? ?? {}
+          worldState['nodeProgress'] as Map? ?? {},
         );
-        final previousCompletion = nodeProgress[nodeId]?['completed'] as bool? ?? false;
-        final currentNodeXp = (nodeProgress[nodeId]?['xp'] as int? ?? 0) + amount;
-        final isCompleted = currentNodeXp >= (nodeProgress[nodeId]?['required'] as int? ?? 100);
-        
+        final previousCompletion =
+            nodeProgress[nodeId]?['completed'] as bool? ?? false;
+        final currentNodeXp =
+            (nodeProgress[nodeId]?['xp'] as int? ?? 0) + amount;
+        final isCompleted =
+            currentNodeXp >= (nodeProgress[nodeId]?['required'] as int? ?? 100);
+
         // Check if this is a first-time completion
         final isFirstTimeCompletion = isCompleted && !previousCompletion;
-        
+
         // Award 100 XP bonus + attribute XP on first-time completion
         if (isFirstTimeCompletion) {
           // Award 100 XP to total
           final newTotalXp = totalXp + 100;
           avatarStats['totalXp'] = newTotalXp;
-          
+
           // Award 100 XP to each target attribute
           for (final attr in targetAttributes) {
             final key = attr.toLowerCase();
             attributeXp[key] = (attributeXp[key] as int? ?? 0) + 100;
-            
+
             // Also update the specific attribute field
             final attrField = '${key}Xp';
-            avatarStats[attrField] = (avatarStats[attrField] as int? ?? 0) + 100;
+            avatarStats[attrField] =
+                (avatarStats[attrField] as int? ?? 0) + 100;
           }
         }
-        
+
         nodeProgress[nodeId] = {
           'xp': currentNodeXp,
           'completed': isCompleted,
@@ -304,7 +325,9 @@ class FirestoreGamificationRepository implements GamificationRepository {
 
         // If node is newly completed, add to claimedNodes
         if (isCompleted) {
-          final claimedNodes = List<String>.from(worldState['claimedNodes'] as List? ?? []);
+          final claimedNodes = List<String>.from(
+            worldState['claimedNodes'] as List? ?? [],
+          );
           if (!claimedNodes.contains(nodeId)) {
             claimedNodes.add(nodeId);
             worldState['claimedNodes'] = claimedNodes;
