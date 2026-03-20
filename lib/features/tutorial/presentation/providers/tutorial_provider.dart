@@ -10,6 +10,7 @@ enum TutorialStep {
   worldMap,
   profile,
   community,
+  tribes,
   createHabit,
   insights,
   aiCoach,
@@ -45,10 +46,15 @@ class TutorialState {
   }
 }
 
-final localSettingsRepositoryProvider = Provider<LocalSettingsRepository>((
-  ref,
-) {
-  return LocalSettingsRepository();
+/// Provider for LocalSettingsRepository as a singleton
+/// Shared across the app to prevent multiple Hive box instances
+final localSettingsRepositoryProvider = Provider<LocalSettingsRepository>((ref) {
+  final repo = LocalSettingsRepository();
+  // Initialize the repository to ensure Hive is set up
+  ref.onDispose(() {
+    // Cleanup if needed (Hive boxes are automatically managed)
+  });
+  return repo;
 });
 
 /// Provider for managing tutorial state
@@ -76,11 +82,12 @@ class TutorialNotifier extends _$TutorialNotifier {
     if (state.isCompleted(step)) return;
 
     await _repository.completeTutorial(step.name);
-    // Disable auto-show after completing a tutorial (one-time show per screen visit)
-    await _repository.disableTutorialAutoShow();
+    // NOTE: We intentionally do NOT disable autoShow here.
+    // Each screen re-enables autoShow when it is entered, and checks its own
+    // step completion status. This allows the full tutorial chain to fire
+    // across multiple screens in a single session.
     state = state.copyWith(
       completedSteps: {...state.completedSteps, step: true},
-      autoShow: false,
     );
   }
 
@@ -100,6 +107,11 @@ class TutorialNotifier extends _$TutorialNotifier {
 
   Future<void> setTutorialsEnabled(bool enabled) async {
     await _repository.setTutorialsEnabled(enabled);
+    // When re-enabling tutorials, reset all completed steps so users see
+    // every tutorial again fresh — just like right after onboarding.
+    if (enabled) {
+      await _repository.resetTutorials();
+    }
     // Reload state to ensure sync with repository
     final completed = <TutorialStep, bool>{};
     for (final step in TutorialStep.values) {

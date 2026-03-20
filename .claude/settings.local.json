@@ -72,7 +72,11 @@
       "mcp__dart__analyze_files",
       "Bash(grep:*)",
       "mcp__ide__getDiagnostics",
-      "Bash(npm run:*)"
+      "Bash(npm run:*)",
+      "Bash(cmd.exe /c \"dir C:\\\\Users\\\\HP\\\\Downloads\\\\emerge_app 2>&1\")",
+      "Bash(cmd.exe /c \"flutter build web --release --dart-define=RECAPTCHA_SITE_KEY=\"\"\"\" 2>&1 | findstr /C:\"\"Error\"\" /C:\"\"Failed\"\" /C:\"\"Building\"\"\")",
+      "Bash(cmd.exe /c \"cd /d C:\\\\Users\\\\HP\\\\Downloads\\\\emerge_app && flutter build web --release 2>&1\")",
+      "Bash(cmd.exe /c \"cd /d C:\\\\Users\\\\HP\\\\Downloads\\\\emerge_app && flutter --version\")"
     ],
     "deny": [],
     "ask": []

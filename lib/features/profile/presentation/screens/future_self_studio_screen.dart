@@ -18,6 +18,7 @@ import 'package:emerge_app/features/profile/presentation/widgets/synergy_card.da
 import 'package:emerge_app/features/profile/presentation/widgets/emerge_splash_reveal.dart';
 import 'package:emerge_app/features/tutorial/presentation/providers/tutorial_provider.dart';
 import 'package:emerge_app/features/tutorial/presentation/widgets/tutorial_overlay.dart';
+import 'package:emerge_app/features/monetization/presentation/providers/subscription_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -197,9 +198,20 @@ class _FutureSelfStudioScreenState
               // Animated Cosmic Background - isolated with RepaintBoundary
               Positioned.fill(
                 child: RepaintBoundary(
-                  child: FutureSelfCosmicBackground(
-                    archetype: profile.archetype,
-                    level: effectiveLevel,
+                  child: ref.watch(isPremiumProvider).maybeWhen(
+                    data: (isPremium) => isPremium
+                        ? Image.network(
+                            'https://lh3.googleusercontent.com/aida/ADBb0uifyFqGFp4mMJxHUsUkGtxzNHYY0mbL932czH5LMICRPtO2lcvaErayimo8Bf6SQ_lODbr4TsdxCDCDPONxRxlyl3V5PO3QWFGVHU2pq3H5RONHUokrbeloyus6FMaZLKYE1nJErYmen6aIFK3oWw7K-PY7mY-szQjT2CLEy3x9sTM3j5r_1v84YY33dHc7FSgvT4IpHX8xvVqvTQ1VE6b5WEkgFar01_l_uPfvt5fvOHQrILLEMnYzaDU',
+                            fit: BoxFit.cover,
+                          )
+                        : FutureSelfCosmicBackground(
+                            archetype: profile.archetype,
+                            level: effectiveLevel,
+                          ),
+                    orElse: () => FutureSelfCosmicBackground(
+                      archetype: profile.archetype,
+                      level: effectiveLevel,
+                    ),
                   ),
                 ),
               ),
@@ -222,14 +234,41 @@ class _FutureSelfStudioScreenState
                     ],
                     title: Column(
                       children: [
-                        Text(
-                          'FUTURE SELF',
-                          style: Theme.of(context).textTheme.titleMedium
-                              ?.copyWith(
-                                color: AppTheme.textMainDark,
-                                fontWeight: FontWeight.bold,
-                                letterSpacing: 2,
-                              ),
+                        Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              'FUTURE SELF',
+                              style: Theme.of(context).textTheme.titleMedium
+                                  ?.copyWith(
+                                    color: AppTheme.textMainDark,
+                                    fontWeight: FontWeight.bold,
+                                    letterSpacing: 2,
+                                  ),
+                            ),
+                            const SizedBox(width: 8),
+                            Consumer(
+                              builder: (context, ref, _) {
+                                final isPremium = ref.watch(isPremiumProvider).value ?? false;
+                                if (!isPremium) return const SizedBox.shrink();
+                                return Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                  decoration: BoxDecoration(
+                                    color: Colors.amber,
+                                    borderRadius: BorderRadius.circular(4),
+                                  ),
+                                  child: const Text(
+                                    'PRO',
+                                    style: TextStyle(
+                                      color: Colors.black,
+                                      fontSize: 8,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                );
+                              },
+                            ),
+                          ],
                         ),
                         Container(
                           padding: const EdgeInsets.symmetric(

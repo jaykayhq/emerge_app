@@ -1,7 +1,9 @@
+import 'package:emerge_app/core/presentation/providers/social_preload_provider.dart';
 import 'package:emerge_app/core/utils/app_logger.dart';
 import 'package:emerge_app/features/onboarding/presentation/providers/onboarding_provider.dart';
 import 'package:emerge_app/features/gamification/presentation/providers/user_stats_providers.dart';
 import 'package:emerge_app/core/presentation/widgets/animated_flame_logo.dart';
+import 'package:emerge_app/features/tutorial/presentation/providers/tutorial_provider.dart';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -86,6 +88,9 @@ class _WorldRevealScreenState extends ConsumerState<WorldRevealScreen>
     // Phase 4: Show button
     await Future.delayed(const Duration(milliseconds: 2000));
     setState(() => _showButton = true);
+
+    // Preload ALL social data in background while user watches animations
+    ref.read(socialDataPreloadProvider);
   }
 
   void _enterWorld() async {
@@ -107,6 +112,12 @@ class _WorldRevealScreenState extends ConsumerState<WorldRevealScreen>
       await ref
           .read(onboardingControllerProvider.notifier)
           .completeOnboarding();
+
+      // Enable tutorials for first-time users after onboarding
+      // This ensures users see helpful tutorials when they first explore the app
+      await ref.read(tutorialProvider.notifier).setTutorialsEnabled(true);
+      await ref.read(tutorialProvider.notifier).enableTutorialAutoShow();
+      AppLogger.i('Tutorials enabled after onboarding completion');
 
       // Navigate to world with a fade transition (handled by router or page transition)
       if (mounted) {

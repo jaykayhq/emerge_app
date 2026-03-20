@@ -1372,172 +1372,199 @@ class _ChallengesTabContentState extends ConsumerState<ChallengesTabContent> {
 
   @override
   Widget build(BuildContext context) {
-    return CustomScrollView(
-      slivers: [
-        const SliverToBoxAdapter(child: Gap(16)),
+    // Watch the challenge bundle provider
+    final bundleAsync = ref.watch(challengeBundleProvider);
 
-        // Filter Pills
-        SliverToBoxAdapter(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            child: _FilterPillsRow(
-              filters: _filters,
-              selected: _selectedFilter,
-              onSelected: (i) => setState(() => _selectedFilter = i),
-            ),
-          ),
-        ),
-
-        const SliverToBoxAdapter(child: Gap(20)),
-
-        if (_selectedFilter == 0 || _selectedFilter == 2) ...[
-          // Weekly Spotlight Section
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: Row(
-                children: [
-                  const Icon(
-                    Icons.auto_awesome,
-                    size: 18,
-                    color: EmergeColors.yellow,
-                  ),
-                  const Gap(8),
-                  const Text(
-                    'Weekly Spotlight',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 16,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-          const SliverToBoxAdapter(child: Gap(12)),
-          SliverToBoxAdapter(child: _WeeklySpotlightSection()),
-          const SliverToBoxAdapter(child: Gap(28)),
-        ],
-
-        if (_selectedFilter == 0) ...[
-          // Daily Quest Section
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: Row(
-                children: [
-                  const Icon(Icons.today, size: 18, color: EmergeColors.coral),
-                  const Gap(8),
-                  const Text(
-                    'Daily Quest',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 16,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-          const SliverToBoxAdapter(child: Gap(12)),
-          SliverToBoxAdapter(child: _DailyQuestSection()),
-          const SliverToBoxAdapter(child: Gap(28)),
-        ],
-
-        if (_selectedFilter == 0 || _selectedFilter == 1) ...[
-          // Your Quests Section
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const Text(
-                    'Solo Quests',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 16,
-                    ),
-                  ),
-                  Text(
-                    'View All',
-                    style: TextStyle(color: EmergeColors.teal, fontSize: 13),
-                  ),
-                ],
-              ),
-            ),
-          ),
+    return bundleAsync.when(
+      loading: () => CustomScrollView(
+        slivers: [
           const SliverToBoxAdapter(child: Gap(16)),
-          SliverToBoxAdapter(child: _QuestCardsSection()),
-          const SliverToBoxAdapter(child: Gap(28)),
-        ],
-
-        if (_selectedFilter == 0) ...[
-          // Archetype Challenges Section
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: Row(
-                children: [
-                  const Icon(
-                    Icons.emoji_events,
-                    size: 18,
-                    color: EmergeColors.yellow,
-                  ),
-                  const Gap(8),
-                  const Text(
-                    'For Your Path',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 16,
-                    ),
-                  ),
-                ],
-              ),
+          SliverFillRemaining(
+            child: Center(
+              child: CircularProgressIndicator(color: EmergeColors.teal),
             ),
           ),
-          const SliverToBoxAdapter(child: Gap(16)),
-          SliverToBoxAdapter(child: _ArchetypeChallengesSection()),
-          const SliverToBoxAdapter(child: Gap(28)),
         ],
-
-        if (_selectedFilter == 3) ...[
-          // Completed Challenges Section
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: Row(
-                children: [
-                  const Icon(
-                    Icons.verified,
-                    size: 18,
-                    color: EmergeColors.teal,
-                  ),
-                  const Gap(8),
-                  const Text(
-                    'Completed',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 16,
-                    ),
-                  ),
-                ],
-              ),
+      ),
+      error: (error, stack) => CustomScrollView(
+        slivers: [
+          const SliverToBoxAdapter(child: Gap(16)),
+          SliverFillRemaining(
+            child: Center(
+              child: Text('Error loading challenges', style: TextStyle(color: Colors.white)),
             ),
           ),
-          const SliverToBoxAdapter(child: Gap(16)),
-          SliverToBoxAdapter(child: _CompletedChallengesSection()),
-          const SliverToBoxAdapter(child: Gap(28)),
         ],
+      ),
+      data: (bundle) {
+        return CustomScrollView(
+          slivers: [
+            const SliverToBoxAdapter(child: Gap(16)),
 
-        // Floating Action Button spacer if needed, or we can add a custom button
-        const SliverToBoxAdapter(child: Gap(80)),
-      ],
+            // Filter Pills
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                child: _FilterPillsRow(
+                  filters: _filters,
+                  selected: _selectedFilter,
+                  onSelected: (i) => setState(() => _selectedFilter = i),
+                ),
+              ),
+            ),
+
+            const SliverToBoxAdapter(child: Gap(20)),
+
+            if (_selectedFilter == 0 || _selectedFilter == 2) ...[
+              // Weekly Spotlight Section
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: Row(
+                    children: [
+                      const Icon(
+                        Icons.auto_awesome,
+                        size: 18,
+                        color: EmergeColors.yellow,
+                      ),
+                      const Gap(8),
+                      const Text(
+                        'Weekly Spotlight',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const SliverToBoxAdapter(child: Gap(12)),
+              SliverToBoxAdapter(child: _WeeklySpotlightSection(bundle: bundle)),
+              const SliverToBoxAdapter(child: Gap(28)),
+            ],
+
+            if (_selectedFilter == 0) ...[
+              // Daily Quest Section
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.today, size: 18, color: EmergeColors.coral),
+                      const Gap(8),
+                      const Text(
+                        'Daily Quest',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const SliverToBoxAdapter(child: Gap(12)),
+              SliverToBoxAdapter(child: _DailyQuestSection(bundle: bundle)),
+              const SliverToBoxAdapter(child: Gap(28)),
+            ],
+
+            if (_selectedFilter == 0 || _selectedFilter == 1) ...[
+              // Your Quests Section
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text(
+                        'Solo Quests',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                        ),
+                      ),
+                      Text(
+                        'View All',
+                        style: TextStyle(color: EmergeColors.teal, fontSize: 13),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const SliverToBoxAdapter(child: Gap(16)),
+              SliverToBoxAdapter(child: _QuestCardsSection(bundle: bundle)),
+              const SliverToBoxAdapter(child: Gap(28)),
+            ],
+
+            if (_selectedFilter == 0) ...[
+              // Archetype Challenges Section
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: Row(
+                    children: [
+                      const Icon(
+                        Icons.emoji_events,
+                        size: 18,
+                        color: EmergeColors.yellow,
+                      ),
+                      const Gap(8),
+                      const Text(
+                        'For Your Path',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const SliverToBoxAdapter(child: Gap(16)),
+              SliverToBoxAdapter(child: _ArchetypeChallengesSection(bundle: bundle)),
+              const SliverToBoxAdapter(child: Gap(28)),
+            ],
+
+            if (_selectedFilter == 3) ...[
+              // Completed Challenges Section
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: Row(
+                    children: [
+                      const Icon(
+                        Icons.verified,
+                        size: 18,
+                        color: EmergeColors.teal,
+                      ),
+                      const Gap(8),
+                      const Text(
+                        'Completed',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const SliverToBoxAdapter(child: Gap(16)),
+              SliverToBoxAdapter(child: _CompletedChallengesSection(bundle: bundle)),
+              const SliverToBoxAdapter(child: Gap(28)),
+            ],
+
+            // Floating Action Button spacer if needed, or we can add a custom button
+            const SliverToBoxAdapter(child: Gap(80)),
+          ],
+        );
+      },
     );
   }
 }

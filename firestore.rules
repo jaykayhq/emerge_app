@@ -139,7 +139,10 @@ service cloud.firestore {
     // User Stats / Profile (Gamification & Identity)
     // Written by Cloud Functions (onUserActivityCreated) and client SDK
     match /user_stats/{userId} {
-      allow read: if isOwner(userId);
+      // Allow reading for leaderboards - client filters to only public fields (avatarStats, totalXp, level, streak)
+      // Note: Firestore doesn't support true field-level security, so authenticated users can read the document
+      // but the client code only displays public gamification data
+      allow read: if isOwner(userId) || isAuthenticated();
       allow create: if isOwner(userId) && isValidStats(request.resource.data);
       allow update: if isOwner(userId) && isValidStats(request.resource.data);
     }

@@ -22,8 +22,8 @@ class RevenueCatRepository implements MonetizationRepository {
   Stream<bool> get premiumStatusStream => _premiumStatusController.stream;
 
   @override
-  Future<void> initialize() async {
-    // Initialize API keys from secure config
+  Future<void> initialize({String? uid}) async {
+    // Initialize API keys from Firebase Remote Config (RevenueCat linked directly to Firebase)
     _googleApiKey = AppConfig.getRevenueCatApiKey('android');
     _appleApiKey = AppConfig.getRevenueCatApiKey('ios');
 
@@ -38,7 +38,9 @@ class RevenueCatRepository implements MonetizationRepository {
 
     final currentKey = Platform.isAndroid ? _googleApiKey : _appleApiKey;
     if (currentKey.isEmpty) {
-      debugPrint('⚠️ RevenueCat not configured - skipping initialization');
+      debugPrint(
+        '⚠️ RevenueCat not configured in Firebase Remote Config - skipping initialization',
+      );
       _isConfigured = false;
       return;
     }
@@ -63,6 +65,11 @@ class RevenueCatRepository implements MonetizationRepository {
       return;
     }
 
+    // Link User UID if provided
+    if (uid != null) {
+      configuration.appUserID = uid;
+    }
+
     await Purchases.configure(configuration);
     _isConfigured = true;
 
@@ -73,11 +80,52 @@ class RevenueCatRepository implements MonetizationRepository {
     });
   }
 
+  @override
+  Future<void> identify(String uid) async {
+    if (!_isConfigured) {
+      // If not configured yet, we will configure with user ID during initialize()
+      // This case is handled in init_app.dart if login happens early
+      return;
+    }
+    try {
+      await Purchases.logIn(uid);
+      debugPrint('✅ RevenueCat identified user: $uid');
+    } catch (e) {
+      debugPrint('⚠️ RevenueCat identify failed: $e');
+    }
+  }
+
+  @override
+  Future<void> reset() async {
+    if (!_isConfigured) return;
+    try {
+      await Purchases.logOut();
+      debugPrint('✅ RevenueCat user reset');
+    } catch (e) {
+      debugPrint('⚠️ RevenueCat reset failed: $e');
+    }
+  }
+
   bool _validateProductionConfig() {
     return _googleApiKey.isNotEmpty &&
         !_googleApiKey.startsWith('test_') &&
         _appleApiKey.isNotEmpty &&
         _appleApiKey != 'YOUR_REVENUECAT_APPLE_API_KEY';
+  }
+
+  @override
+  Future<Either<String, Offerings>> getOfferings() async {
+    if (!_isConfigured) {
+      return const Left('RevenueCat not configured');
+    }
+    try {
+      final offerings = await Purchases.getOfferings();
+      return Right(offerings);
+    } on PlatformException catch (e) {
+      return Left(e.message ?? 'Failed to fetch offerings');
+    } catch (e) {
+      return Left(e.toString());
+    }
   }
 
   /// Raw customer info access for verification (internal use)

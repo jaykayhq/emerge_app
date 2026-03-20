@@ -9,6 +9,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/foundation.dart' show kDebugMode, kIsWeb;
 import 'package:google_mobile_ads/google_mobile_ads.dart';
+import 'package:firebase_auth/firebase_auth.dart' as firebase_auth;
 import 'package:emerge_app/firebase_options.dart';
 
 Future<void> initApp() async {
@@ -72,7 +73,8 @@ Future<void> initApp() async {
       if (!kIsWeb) {
         try {
           final revenueCatRepo = RevenueCatRepository();
-          await revenueCatRepo.initialize();
+          final currentUser = firebase_auth.FirebaseAuth.instance.currentUser;
+          await revenueCatRepo.initialize(uid: currentUser?.uid);
           debugPrint('✅ RevenueCat initialized');
           // Verification check is deferred/moved to internal repository logic or handled lazily
         } catch (e) {

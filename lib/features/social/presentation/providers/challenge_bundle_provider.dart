@@ -23,24 +23,33 @@ class ChallengeBundle extends _$ChallengeBundle {
       return ChallengeBundleData.empty();
     }
 
+    // Get archetype name - use 'athlete' as fallback for 'none' to ensure challenges show
+    final archetypeName = profile.archetype.name == 'none'
+        ? 'athlete' // Default to athlete challenges for users without archetype
+        : profile.archetype.name;
+
     // Single batch fetch - all data in one async operation
     // This prevents the cascade of rebuilds from multiple independent providers
     final results = await Future.wait<dynamic>([
       // Weekly spotlight for user's archetype
-      repository.getWeeklySpotlight(archetypeId: profile.archetype.name),
+      repository.getWeeklySpotlight(archetypeId: archetypeName),
       // Daily quest from local catalog (instant, no network)
-      Future.value(ChallengeCatalog.getDailyQuest(profile.archetype.name)),
+      Future.value(ChallengeCatalog.getDailyQuest(archetypeName)),
       // User's active/completed challenges
       repository.getUserChallenges(user.id),
       // Archetype-specific challenges
-      repository.getChallengesByArchetype(profile.archetype.name),
+      repository.getChallengesByArchetype(archetypeName),
     ]);
+
+    // Also fetch general featured challenges available to all users
+    final featuredChallenges = await repository.getChallenges(featuredOnly: true);
 
     return ChallengeBundleData(
       weeklySpotlight: results[0] as Challenge?,
       dailyQuest: results[1] as Challenge?,
       userChallenges: results[2] as List<Challenge>,
       archetypeChallenges: results[3] as List<Challenge>,
+      featuredChallenges: featuredChallenges,
     );
   }
 }

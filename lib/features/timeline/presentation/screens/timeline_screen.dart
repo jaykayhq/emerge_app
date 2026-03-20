@@ -201,14 +201,41 @@ class _TimelineScreenState extends ConsumerState<TimelineScreen> {
                   backgroundColor: Colors.transparent,
                   title: Column(
                     children: [
-                      Text(
-                        'TIMELINE',
-                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                          letterSpacing: 1.5,
+                        Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              'TIMELINE',
+                              style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                                letterSpacing: 1.5,
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            Consumer(
+                              builder: (context, ref, _) {
+                                final isPremium = ref.watch(isPremiumProvider).value ?? false;
+                                if (!isPremium) return const SizedBox.shrink();
+                                return Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                  decoration: BoxDecoration(
+                                    color: Colors.amber,
+                                    borderRadius: BorderRadius.circular(4),
+                                  ),
+                                  child: const Text(
+                                    'PRO',
+                                    style: TextStyle(
+                                      color: Colors.black,
+                                      fontSize: 8,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                );
+                              },
+                            ),
+                          ],
                         ),
-                      ),
                       Text(
                         'IDENTITY PROTOCOL',
                         style: Theme.of(context).textTheme.labelSmall?.copyWith(
