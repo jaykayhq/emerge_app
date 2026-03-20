@@ -14,6 +14,7 @@ import 'package:emerge_app/features/world_map/presentation/screens/level_immersi
 import 'package:emerge_app/features/world_map/presentation/widgets/curved_map_layout.dart';
 import 'package:emerge_app/features/tutorial/presentation/providers/tutorial_provider.dart';
 import 'package:emerge_app/features/tutorial/presentation/widgets/tutorial_overlay.dart';
+import 'package:emerge_app/features/monetization/presentation/providers/subscription_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -139,11 +140,26 @@ class _WorldMapScreenState extends ConsumerState<WorldMapScreen> {
           return Stack(
             children: [
               // Layer 1: Parallax            // Background
-              NebulaBackground(
-                biome: currentBiome,
-                primaryColor: mapConfig.primaryColor,
-                accentColor: mapConfig.accentColor,
-                level: currentLevel,
+              ref.watch(isPremiumProvider).maybeWhen(
+                data: (isPremium) => isPremium 
+                    ? Positioned.fill(
+                        child: Image.network(
+                          'https://lh3.googleusercontent.com/aida/ADBb0uitUEShtb3iVM1Ekb_OSpRsR7K3fNW6ccSwv9pE_jCHpj2DH8HLpXtDzuqoW44ZGcFPZmYZCeB9-DIF9l-28f1r0QCFdy6nQl2LNYs0Oek7FWQLb1UC7Ezwk9Op2KvQV-mFK8QBruLaEPCI9MXC5JRsQ0WvOhzJWU5PbZigl3c1qcHdl9uG7ouK_LHlxvCKbF310Cvuldzy7fXDeqPxuSz-zN7gXg0oEvI0bRsQ9Ii3cZ8n2e7wcdsHqJY',
+                          fit: BoxFit.cover,
+                        ),
+                      )
+                    : NebulaBackground(
+                        biome: currentBiome,
+                        primaryColor: mapConfig.primaryColor,
+                        accentColor: mapConfig.accentColor,
+                        level: currentLevel,
+                      ),
+                orElse: () => NebulaBackground(
+                  biome: currentBiome,
+                  primaryColor: mapConfig.primaryColor,
+                  accentColor: mapConfig.accentColor,
+                  level: currentLevel,
+                ),
               ),
 
               // Layer 2: Map content (Curved Layout)
@@ -423,12 +439,38 @@ class _GlassmorphismTopBar extends StatelessWidget {
                               letterSpacing: 0.5,
                             ),
                       ),
-                      Text(
-                        'Valley of New Beginnings', // Hardcoded for this redesign
-                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: config.primaryColor.withValues(alpha: 0.8),
-                          fontSize: 10,
-                        ),
+                      Row(
+                        children: [
+                          Text(
+                            'Valley of New Beginnings',
+                            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                              color: config.primaryColor.withValues(alpha: 0.8),
+                              fontSize: 10,
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Consumer(
+                            builder: (context, ref, _) {
+                              final isPremium = ref.watch(isPremiumProvider).value ?? false;
+                              if (!isPremium) return const SizedBox.shrink();
+                              return Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                decoration: BoxDecoration(
+                                  color: Colors.amber,
+                                  borderRadius: BorderRadius.circular(4),
+                                ),
+                                child: const Text(
+                                  'PRO',
+                                  style: TextStyle(
+                                    color: Colors.black,
+                                    fontSize: 8,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              );
+                            },
+                          ),
+                        ],
                       ),
                     ],
                   ),

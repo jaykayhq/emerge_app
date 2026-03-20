@@ -7,12 +7,14 @@ class ChallengeBundleData {
   final Challenge? dailyQuest;
   final List<Challenge> userChallenges;
   final List<Challenge> archetypeChallenges;
+  final List<Challenge> featuredChallenges;
 
   const ChallengeBundleData({
     required this.weeklySpotlight,
     required this.dailyQuest,
     required this.userChallenges,
     required this.archetypeChallenges,
+    this.featuredChallenges = const [],
   });
 
   /// Returns an empty bundle for loading/error states
@@ -22,6 +24,7 @@ class ChallengeBundleData {
       dailyQuest: null,
       userChallenges: [],
       archetypeChallenges: [],
+      featuredChallenges: [],
     );
   }
 

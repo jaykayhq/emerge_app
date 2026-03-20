@@ -2,7 +2,7 @@ import 'package:emerge_app/core/presentation/widgets/app_error_widget.dart';
 import 'package:emerge_app/core/presentation/widgets/emerge_loading_skeleton.dart';
 import 'package:emerge_app/core/theme/app_theme.dart';
 import 'package:emerge_app/features/gamification/presentation/providers/user_stats_providers.dart';
-import 'package:emerge_app/features/social/presentation/providers/friend_provider.dart';
+import 'package:emerge_app/features/social/presentation/providers/friends_leaderboard_provider.dart';
 import 'package:emerge_app/features/social/presentation/providers/leaderboard_provider.dart';
 import 'package:emerge_app/features/social/presentation/providers/tribes_provider.dart';
 import 'package:emerge_app/features/social/presentation/widgets/friends_leaderboard.dart';
@@ -121,41 +121,28 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen>
 class _FriendsLeaderboardTab extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final partnersAsync = ref.watch(partnersListProvider);
+    final friendsAsync = ref.watch(friendsLeaderboardProvider);
 
-    return partnersAsync.when(
-      data: (partners) {
-        if (partners.isEmpty) {
+    return friendsAsync.when(
+      data: (entries) {
+        if (entries.isEmpty) {
           return const Center(
             child: Text(
-              'No partners found',
+              'No friends yet',
               style: TextStyle(color: Colors.white),
             ),
           );
         }
-
-        final entries = partners.map((p) {
-          return FriendRankEntry(
-            id: p.id,
-            name: p.name,
-            xp: p.xp,
-            streak: p.streak,
-            isYou: false,
-          );
-        }).toList();
-
-        // Sort by XP
-        entries.sort((a, b) => b.xp.compareTo(a.xp));
 
         return SingleChildScrollView(
           child: FriendsLeaderboard(friends: entries),
         );
       },
       loading: () =>
-          const EmergeLoadingSkeleton(itemCount: 8, showAvatar: true),
+          const EmergeLoadingSkeleton(itemCount: 5, showAvatar: true),
       error: (err, _) => AppErrorWidget(
-        message: 'Could not load partners',
-        onRetry: () => ref.invalidate(partnersListProvider),
+        message: 'Could not load friends leaderboard',
+        onRetry: () => ref.invalidate(friendsLeaderboardProvider),
       ),
     );
   }

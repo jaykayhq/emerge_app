@@ -5,6 +5,7 @@ import 'package:emerge_app/core/theme/emerge_colors.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:emerge_app/features/auth/presentation/providers/auth_providers.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 /// Welcome screen matching the Stitch design with cosmic silhouette background.
 class WelcomeScreen extends ConsumerWidget {
@@ -133,6 +134,66 @@ class WelcomeScreen extends ConsumerWidget {
                           size: 20,
                         ),
                         label: const Text('Continue with Google'),
+                      ),
+                      const SizedBox(height: 24),
+                      // Legal Links
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          GestureDetector(
+                            onTap: () => launchUrl(
+                              Uri.parse(
+                                'https://docs.google.com/document/d/e/2PACX-1vQX-5ydyuD3ZYp_-8b_2rVyyuKW9zF2NaMm1CBxxwE5s1LXASy1P7Plxf8axNGc_TFJw-OnZrULmjgP/pub',
+                              ),
+                              mode: LaunchMode.externalApplication,
+                            ),
+                            child: Text(
+                              'Terms of Service',
+                              style: GoogleFonts.splineSans(
+                                fontSize: 12,
+                                color: Colors.white54,
+                                decoration: TextDecoration.underline,
+                                decorationColor: Colors.white54,
+                              ),
+                            ),
+                          ),
+                          const Padding(
+                            padding: EdgeInsets.symmetric(horizontal: 8),
+                            child: Text(
+                              '•',
+                              style: TextStyle(
+                                color: Colors.white38,
+                                fontSize: 12,
+                              ),
+                            ),
+                          ),
+                          GestureDetector(
+                            onTap: () => launchUrl(
+                              Uri.parse(
+                                'https://docs.google.com/document/d/e/2PACX-1vRt5cCpFS7PLmh_nwhxq3ec9YtRWQZk7mrOqbVN7aThrclpjgYL3q5r-nAqlftQJVkOSWzxnG_FDfjo/pub',
+                              ),
+                              mode: LaunchMode.externalApplication,
+                            ),
+                            child: Text(
+                              'Privacy Policy',
+                              style: GoogleFonts.splineSans(
+                                fontSize: 12,
+                                color: Colors.white54,
+                                decoration: TextDecoration.underline,
+                                decorationColor: Colors.white54,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      // Signup agreement note
+                      const Padding(
+                        padding: EdgeInsets.only(top: 8),
+                        child: Text(
+                          'By signing up, you agree to our Terms of Service and Privacy Policy.',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(color: Colors.white38, fontSize: 11),
+                        ),
                       ),
                     ],
                   ),

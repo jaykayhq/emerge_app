@@ -361,11 +361,12 @@ class _AdvancedCreateHabitDialogState
               ),
             ),
           ),
-          // Close button at top right of the box
+          // Close button at top right — kept inside Stack bounds for reliable hit testing
           Positioned(
-            top: -12,
-            right: -12,
+            top: 8,
+            right: 8,
             child: GestureDetector(
+              behavior: HitTestBehavior.opaque,
               onTap: () => context.pop(),
               child: Container(
                 padding: const EdgeInsets.all(8),

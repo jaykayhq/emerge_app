@@ -6,6 +6,7 @@ import 'package:emerge_app/features/social/presentation/screens/tribe_tab_conten
 import 'package:emerge_app/features/social/presentation/screens/create_solo_challenge_dialog.dart';
 import 'package:emerge_app/features/social/domain/services/online_presence_service.dart';
 import 'package:emerge_app/features/auth/presentation/providers/auth_providers.dart';
+import 'package:emerge_app/features/monetization/presentation/providers/subscription_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
@@ -53,12 +54,12 @@ class _CommunityScreenState extends ConsumerState<CommunityScreen>
     Future.delayed(const Duration(milliseconds: 500), () {
       if (!mounted) return;
       final tutorialNotifier = ref.read(tutorialProvider.notifier);
-      final tutorialState = ref.watch(tutorialProvider);
+      final tutorialState = ref.read(tutorialProvider); // FIX: must use ref.read inside async callbacks
       tutorialNotifier.enableTutorialAutoShow();
 
       // Check if any of the social tutorials need to be shown
       if (tutorialNotifier.shouldShowTutorial()) {
-        if (!tutorialState.isCompleted(TutorialStep.community) ||
+        if (!tutorialState.isCompleted(TutorialStep.tribes) ||
             !tutorialState.isCompleted(TutorialStep.challenges) ||
             !tutorialState.isCompleted(TutorialStep.friends)) {
           _showSocialTutorial();
@@ -73,28 +74,28 @@ class _CommunityScreenState extends ConsumerState<CommunityScreen>
       builder: (context) => TutorialOverlay(
         steps: [
           TutorialStepInfo(
-            title: 'The Collective Forge',
+            title: 'Heroic Feats — Challenges',
             description:
-                'Your Tribe is your core identity support system. Together, you manifest collective growth and compete for archetype dominance.',
-            targetKey: _tribeTabKey,
-          ),
-          TutorialStepInfo(
-            title: 'Heroic Feats',
-            description:
-                'Join community challenges to push your limits and earn massive XP. Shared growth is accelerated growth.',
+                'Create solo or group challenges to push your limits. Complete them to earn XP rewards and rise on the leaderboard. Tap the + button below to forge your first challenge.',
             targetKey: _challengesTabKey,
           ),
           TutorialStepInfo(
-            title: 'Bonding in the Cosmos',
+            title: 'The Collective Forge — Your Tribe',
             description:
-                'Forge direct links with other explorers. Accountability vows ensure you never drift alone into the void.',
+                'Your Tribe is your archetype-matched identity club. See top contributors, collective XP, recent activity, and how your tribe stacks up globally. Consistency here earns you Tribe rank.',
+            targetKey: _tribeTabKey,
+          ),
+          TutorialStepInfo(
+            title: 'Bonding in the Cosmos — Friends',
+            description:
+                'Search for friends by username, send connection requests, and see who is online right now. Friends keep each other accountable — your shared streaks compound discipline.',
             targetKey: _friendsTabKey,
           ),
         ],
         onCompleted: () {
           final notifier = ref.read(tutorialProvider.notifier);
-          notifier.completeStep(TutorialStep.community);
           notifier.completeStep(TutorialStep.challenges);
+          notifier.completeStep(TutorialStep.tribes);
           notifier.completeStep(TutorialStep.friends);
           entry.remove();
         },
@@ -171,14 +172,40 @@ class _CommunityScreenState extends ConsumerState<CommunityScreen>
                       )
                     else
                       Expanded(
-                        child: Text(
-                          'TRIBES',
-                          style: Theme.of(context).textTheme.titleMedium
-                              ?.copyWith(
-                                color: AppTheme.textMainDark,
-                                fontWeight: FontWeight.bold,
-                                letterSpacing: 2,
-                              ),
+                        child: Row(
+                          children: [
+                            Text(
+                              'TRIBES',
+                              style: Theme.of(context).textTheme.titleMedium
+                                  ?.copyWith(
+                                    color: AppTheme.textMainDark,
+                                    fontWeight: FontWeight.bold,
+                                    letterSpacing: 2,
+                                  ),
+                            ),
+                            const SizedBox(width: 8),
+                            Consumer(
+                              builder: (context, ref, _) {
+                                final isPremium = ref.watch(isPremiumProvider).value ?? false;
+                                if (!isPremium) return const SizedBox.shrink();
+                                return Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                  decoration: BoxDecoration(
+                                    color: Colors.amber,
+                                    borderRadius: BorderRadius.circular(4),
+                                  ),
+                                  child: const Text(
+                                    'PRO',
+                                    style: TextStyle(
+                                      color: Colors.black,
+                                      fontSize: 8,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                );
+                              },
+                            ),
+                          ],
                         ),
                       ),
                     IconButton(

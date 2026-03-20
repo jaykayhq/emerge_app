@@ -10,6 +10,7 @@ class LocalSettingsRepository {
   static const _keyTutorialsEnabled = 'tutorialsEnabled';
   static const _keyTutorialAutoShow = 'tutorialAutoShow';
   static const _secureStorageKey = 'hive_encryption_key';
+  static const _keyLastChallengeRefreshDate = 'lastChallengeRefreshDate';
 
   Future<void> init() async {
     await Hive.initFlutter();
@@ -128,5 +129,17 @@ class LocalSettingsRepository {
     }
     // Re-enable auto-show when resetting tutorials
     await box.put(_keyTutorialAutoShow, true);
+  }
+
+  /// Get the last date challenges were refreshed (format: 'YYYY-M-D')
+  String getLastChallengeRefreshDate() {
+    final box = Hive.box(_boxName);
+    return box.get(_keyLastChallengeRefreshDate, defaultValue: '');
+  }
+
+  /// Save the last date challenges were refreshed
+  Future<void> saveLastChallengeRefreshDate(String date) async {
+    final box = Hive.box(_boxName);
+    await box.put(_keyLastChallengeRefreshDate, date);
   }
 }

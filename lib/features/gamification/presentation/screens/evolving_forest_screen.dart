@@ -4,7 +4,7 @@ import 'package:confetti/confetti.dart';
 import 'package:emerge_app/core/theme/app_theme.dart';
 import 'package:emerge_app/features/auth/domain/entities/user_extension.dart';
 import 'package:emerge_app/features/gamification/presentation/providers/user_stats_providers.dart';
-import 'package:emerge_app/features/gamification/presentation/widgets/world_visualizer.dart';
+import 'package:emerge_app/features/monetization/presentation/widgets/pro_world_visualizer.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -73,14 +73,25 @@ class _EvolvingForestScreenState extends ConsumerState<EvolvingForestScreen> {
       body: statsAsync.when(
         data: (profile) {
           final world = profile.worldState;
+          
+          // Determine the active theme based on user settings or fallback to stats
+          final selectedTheme = profile.worldTheme;
+          final String activeTheme;
+          if (selectedTheme != null && selectedTheme.isNotEmpty && selectedTheme != 'Default') {
+            activeTheme = selectedTheme;
+          } else {
+            activeTheme = world.forestLevel > world.cityLevel ? 'forest' : 'city';
+          }
+
           return Stack(
             fit: StackFit.expand,
             children: [
               // 1. Full Screen Background
               Positioned.fill(
-                child: WorldVisualizer(
-                  // Use overall level to drive the world stage (capped at 5 for now)
-                  stage: profile.avatarStats.level,
+                child: ProWorldVisualizer(
+                  theme: activeTheme,
+                  entropy: world.entropy,
+                  level: profile.avatarStats.level,
                 ),
               ),
 

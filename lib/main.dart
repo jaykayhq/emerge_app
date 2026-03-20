@@ -17,6 +17,7 @@ import 'package:emerge_app/core/presentation/providers/online_presence_provider.
 import 'package:emerge_app/features/auth/domain/entities/user_extension.dart';
 import 'package:emerge_app/features/auth/presentation/providers/auth_providers.dart';
 import 'package:emerge_app/features/gamification/presentation/providers/user_stats_providers.dart';
+import 'package:emerge_app/features/monetization/presentation/providers/subscription_provider.dart';
 
 @pragma('vm:entry-point')
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
@@ -98,17 +99,22 @@ class _EmergeAppState extends ConsumerState<EmergeApp> {
 
   @override
   Widget build(BuildContext context) {
-    // Listen to auth state changes to start/stop heartbeat
+    // Listen to auth state changes to start/stop heartbeat and sync monetization identity
     ref.listen(authStateChangesProvider, (previous, next) {
       final presenceService = ref.read(onlinePresenceServiceProvider);
+      final monetizationRepo = ref.read(monetizationRepositoryProvider);
 
       next.when(
         data: (user) {
-          // User signed in - start heartbeat
+          // User signed in - start heartbeat and identify in RevenueCat
           presenceService.startHeartbeat(user.id);
+          monetizationRepo.identify(user.id);
         },
         loading: () => null,
-        error: (_, _) => presenceService.stopHeartbeat(),
+        error: (_, _) {
+          presenceService.stopHeartbeat();
+          monetizationRepo.reset();
+        },
       );
     });
     final router = ref.watch(routerProvider);

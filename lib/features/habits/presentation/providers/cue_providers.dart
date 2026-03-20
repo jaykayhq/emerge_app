@@ -6,7 +6,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 final cueEngineProvider = Provider<CueEngine>((ref) {
   final engine = CueEngine();
+  ref.onDispose(engine.dispose);
   return engine;
+});
+
+/// Exposes CueEngine's real-time cue stream as a Riverpod StreamProvider.
+/// Listen to this in the main shell to display cues to users.
+final cueStreamProvider = StreamProvider<Cue>((ref) {
+  return ref.watch(cueEngineProvider).cueStream;
 });
 
 class CueNotifier extends Notifier<void> {

@@ -60,19 +60,21 @@ class _EmergeLoadingSkeletonState extends State<EmergeLoadingSkeleton>
       builder: (context, child) {
         return Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-          child: Column(
-            children: List.generate(widget.itemCount, (index) {
-              return Padding(
-                padding: const EdgeInsets.only(bottom: 12),
-                child: _SkeletonRow(
-                  height: widget.itemHeight,
-                  showAvatar: widget.showAvatar,
-                  baseColor: baseColor,
-                  highlightColor: highlightColor,
-                  shimmerOffset: _animation.value,
-                ),
-              );
-            }),
+          child: SingleChildScrollView(
+            child: Column(
+              children: List.generate(widget.itemCount, (index) {
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: 12),
+                  child: _SkeletonRow(
+                    height: widget.itemHeight,
+                    showAvatar: widget.showAvatar,
+                    baseColor: baseColor,
+                    highlightColor: highlightColor,
+                    shimmerOffset: _animation.value,
+                  ),
+                );
+              }),
+            ),
           ),
         );
       },

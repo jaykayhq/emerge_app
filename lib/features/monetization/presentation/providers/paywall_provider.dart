@@ -1,3 +1,4 @@
+import 'package:emerge_app/features/monetization/presentation/providers/subscription_provider.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:purchases_flutter/purchases_flutter.dart';
@@ -25,20 +26,25 @@ class PaywallController extends _$PaywallController {
   }
 
   Future<void> _fetchOfferings() async {
-    if (kIsWeb) {
-      state = state.copyWith(
-        isLoading: false,
-        error: 'Premium subscriptions are currently available only on mobile.',
-      );
-      return;
-    }
+    final repository = ref.read(monetizationRepositoryProvider);
 
     try {
-      final offerings = await Purchases.getOfferings();
-      state = state.copyWith(
-        isLoading: false,
-        offerings: offerings,
-        error: null,
+      if (kIsWeb) {
+        state = state.copyWith(
+          isLoading: false,
+          error: 'Premium subscriptions are currently available only on mobile.',
+        );
+        return;
+      }
+
+      final result = await repository.getOfferings();
+      result.fold(
+        (error) => state = state.copyWith(isLoading: false, error: error),
+        (offerings) => state = state.copyWith(
+          isLoading: false,
+          offerings: offerings,
+          error: null,
+        ),
       );
     } catch (e) {
       state = state.copyWith(
@@ -51,13 +57,13 @@ class PaywallController extends _$PaywallController {
   Future<void> purchasePackage(Package package) async {
     state = state.copyWith(isLoading: true, error: null);
     try {
-      final purchaseResult = await Purchases.purchase(
-        PurchaseParams.package(package),
+      final repository = ref.read(monetizationRepositoryProvider);
+      final result = await repository.purchasePremium();
+      
+      result.fold(
+        (error) => state = state.copyWith(isLoading: false, error: error),
+        (isPremium) => state = state.copyWith(isLoading: false, isSuccess: isPremium),
       );
-      final isPremium =
-          purchaseResult.customerInfo.entitlements.all['premium']?.isActive ??
-          false;
-      state = state.copyWith(isLoading: false, isSuccess: isPremium);
     } catch (e) {
       state = state.copyWith(
         isLoading: false,
@@ -69,10 +75,13 @@ class PaywallController extends _$PaywallController {
   Future<void> restorePurchases() async {
     state = state.copyWith(isLoading: true, error: null);
     try {
-      final customerInfo = await Purchases.restorePurchases();
-      final isPremium =
-          customerInfo.entitlements.all['premium']?.isActive ?? false;
-      state = state.copyWith(isLoading: false, isSuccess: isPremium);
+      final repository = ref.read(monetizationRepositoryProvider);
+      final result = await repository.restorePurchases();
+      
+      result.fold(
+        (error) => state = state.copyWith(isLoading: false, error: error),
+        (isPremium) => state = state.copyWith(isLoading: false, isSuccess: isPremium),
+      );
     } catch (e) {
       state = state.copyWith(
         isLoading: false,

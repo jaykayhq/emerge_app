@@ -32,13 +32,12 @@ class AppConfig {
     defaultValue: 'tradeflash-l2966.firebasestorage.app',
   );
 
-  // RevenueCat Configuration
-  static const String revenuecatGoogleApiKey = String.fromEnvironment(
-    'REVENUECAT_GOOGLE_API_KEY',
-  );
-  static const String revenuecatAppleApiKey = String.fromEnvironment(
-    'REVENUECAT_APPLE_API_KEY',
-  );
+  // RevenueCat Configuration - Now linked directly to Firebase Remote Config
+  // Old compile-time env vars are deprecated - all keys come from Firebase
+  @Deprecated('Use Firebase Remote Config instead')
+  static const String revenuecatGoogleApiKey = '';
+  @Deprecated('Use Firebase Remote Config instead')
+  static const String revenuecatAppleApiKey = '';
 
   // Security Configuration
   static const String recaptchaSiteKey = String.fromEnvironment(
@@ -61,79 +60,38 @@ class AppConfig {
   // Validate required configuration
   static bool get isValidConfig {
     if (isProduction) {
-      return firebaseApiKey.isNotEmpty &&
-          revenuecatGoogleApiKey.isNotEmpty &&
-          revenuecatAppleApiKey != 'YOUR_REVENUECAT_APPLE_API_KEY';
+      return firebaseApiKey.isNotEmpty;
     }
     return true; // Allow defaults in development
   }
 
-  // Get API key with validation (SECURITY: No hardcoded fallbacks)
-  // Priority: Remote Config > Compile-time env var
+  // Get API key from Firebase Remote Config (RevenueCat linked directly to Firebase)
   static String getRevenueCatApiKey(String platform) {
-    String? key;
-
-    // Try Remote Config first (Google Cloud Secret Manager integration)
-    if (_remoteConfigService != null) {
-      final remoteKey = _remoteConfigService!.getRevenueCatApiKey(platform);
-      if (remoteKey.isNotEmpty && remoteKey != 'YOUR_REVENUECAT_API_KEY') {
-        key = remoteKey;
-        if (kDebugMode) {
-          debugPrint(
-            '🔑 Using RevenueCat key from Remote Config for $platform',
-          );
-        }
-      }
+    if (_remoteConfigService == null) {
+      debugPrint('⚠️ Remote Config not initialized - call AppConfig.initializeRemoteConfig() first');
+      return '';
     }
 
-    // Fallback to compile-time environment variable
-    if (key == null || key.isEmpty) {
-      if (platform == 'android') {
-        key = revenuecatGoogleApiKey;
-      } else if (platform == 'ios') {
-        key = revenuecatAppleApiKey;
-      } else {
-        throw ArgumentError('Unsupported platform: $platform');
+    final key = _remoteConfigService!.getRevenueCatApiKey(platform);
+
+    if (key.isNotEmpty && key != 'YOUR_REVENUECAT_API_KEY') {
+      if (kDebugMode) {
+        debugPrint('🔑 Using RevenueCat key from Firebase Remote Config for $platform');
       }
-      if (kDebugMode && key.isNotEmpty) {
-        debugPrint(
-          '🔑 Using RevenueCat key from compile-time env var for $platform',
-        );
-      }
+      return key;
     }
 
     // SECURITY: Fail fast if key is missing (production only)
-    if (key.isEmpty) {
-      if (isProduction) {
-        throw Exception(
-          'RevenueCat API key not configured for $platform. '
-          'Set REVENUECAT_${platform.toUpperCase()}_API_KEY environment variable '
-          'or configure in Firebase Remote Config.',
-        );
-      } else {
-        // In development, allow app to continue without RevenueCat
-        debugPrint(
-          '⚠️ RevenueCat API key not configured for $platform - monetization disabled',
-        );
-        return '';
-      }
-    }
-
-    // SECURITY: Prevent test keys in production
-    if (isProduction && key.startsWith('test_')) {
+    if (isProduction) {
       throw Exception(
-        'SECURITY VIOLATION: Test RevenueCat API key detected in production build. '
-        'This configuration is not allowed.',
+        'RevenueCat API key not configured for $platform. '
+        'Configure in Firebase Remote Config with key: revenuecat_${platform}_api_key',
       );
     }
 
-    // Warn if test key in development
-    if (isDevelopment && key.startsWith('test_')) {
-      // Only in debug mode, allow test keys but warn
-      debugPrint('WARNING: Using test RevenueCat API key in development');
-    }
-
-    return key;
+    // In development, allow app to continue without RevenueCat
+    debugPrint('⚠️ RevenueCat API key not configured for $platform - monetization disabled');
+    return '';
   }
 
   // ENHANCED: Log configuration status using AppLogger (with PII redaction)
@@ -144,11 +102,14 @@ class AppConfig {
       AppLogger.i(
         '  Firebase API Key configured: ${firebaseApiKey.isNotEmpty}',
       );
+      // RevenueCat keys now come from Firebase Remote Config
+      final googleKey = _remoteConfigService?.getRevenueCatApiKey('android') ?? '';
+      final appleKey = _remoteConfigService?.getRevenueCatApiKey('ios') ?? '';
       AppLogger.i(
-        '  RevenueCat Google Key configured: ${revenuecatGoogleApiKey.isNotEmpty}',
+        '  RevenueCat Google Key configured in Firebase: ${googleKey.isNotEmpty && googleKey != 'YOUR_REVENUECAT_API_KEY'}',
       );
       AppLogger.i(
-        '  RevenueCat Apple Key configured: ${revenuecatAppleApiKey.isNotEmpty && revenuecatAppleApiKey != 'YOUR_REVENUECAT_APPLE_API_KEY'}',
+        '  RevenueCat Apple Key configured in Firebase: ${appleKey.isNotEmpty && appleKey != 'YOUR_REVENUECAT_API_KEY'}',
       );
       AppLogger.i('  Firebase App Check enabled: $enableFirebaseAppCheck');
       AppLogger.i('  SSL Pinning enabled: $enableSslPinning');

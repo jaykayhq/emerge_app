@@ -1,8 +1,18 @@
 import 'package:fpdart/fpdart.dart';
+import 'package:purchases_flutter/purchases_flutter.dart';
 
 abstract class MonetizationRepository {
   /// Initialize the monetization SDK (e.g. RevenueCat)
-  Future<void> initialize();
+  Future<void> initialize({String? uid});
+
+  /// Identify the user in the monetization SDK
+  Future<void> identify(String uid);
+
+  /// Reset the user identification (on sign-out)
+  Future<void> reset();
+
+  /// Get available offerings
+  Future<Either<String, Offerings>> getOfferings();
 
   /// Get the current entitlement status (e.g. "premium" or null)
   Future<Either<String, bool>> get isPremium;
