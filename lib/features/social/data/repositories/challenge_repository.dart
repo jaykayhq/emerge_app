@@ -1,6 +1,9 @@
+import 'dart:async';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:emerge_app/core/error/failure.dart';
 import 'package:emerge_app/core/utils/app_logger.dart';
+import 'package:emerge_app/features/auth/domain/entities/user_extension.dart';
 import 'package:emerge_app/features/social/domain/models/challenge.dart';
 import 'package:emerge_app/features/social/domain/models/challenge_catalog.dart';
 import 'package:emerge_app/features/social/domain/repositories/challenge_repository.dart';
@@ -122,24 +125,24 @@ class FirestoreChallengeRepository implements ChallengeRepository {
     int progress,
   ) async {
     try {
+      final userChallengeRef = _firestore
+          .collection('users')
+          .doc(userId)
+          .collection('challenges')
+          .doc(challengeId);
+      final userStatsRef = _firestore.collection('user_stats').doc(userId);
+
+      // Success payload if we complete the challenge
+      Map<String, dynamic>? completionLog;
+
       final result = await _firestore.runTransaction<Either<Failure, Unit>>((
         transaction,
       ) async {
-        // Get the user's challenge document
-        final userChallengeRef = _firestore
-            .collection('users')
-            .doc(userId)
-            .collection('challenges')
-            .doc(challengeId);
+        // 1. ALL GETS FIRST
+        final challengeSnapshot = await transaction.get(userChallengeRef);
+        final userStatsSnapshot = await transaction.get(userStatsRef);
 
-        final snapshot = await transaction.get(userChallengeRef);
-
-        if (!snapshot.exists) {
-          AppLogger.e(
-            'Challenge progress update failed: Challenge not found',
-            'Challenge $challengeId not found for user $userId',
-            StackTrace.current,
-          );
+        if (!challengeSnapshot.exists) {
           return Left(
             ServerFailure(
               'Challenge not found. Please join the challenge first.',
@@ -147,28 +150,12 @@ class FirestoreChallengeRepository implements ChallengeRepository {
           );
         }
 
-        final data = snapshot.data();
-        if (data == null) {
-          AppLogger.e(
-            'Challenge data became null during transaction',
-            'Challenge $challengeId not found for user $userId',
-            StackTrace.current,
-          );
-          return Left(
-            ServerFailure('Challenge data became null during transaction'),
-          );
-        }
+        final challengeData = challengeSnapshot.data()!;
+        final currentDay = (challengeData['currentDay'] as num?)?.toInt() ?? 0;
+        final totalDays = (challengeData['totalDays'] as num?)?.toInt() ?? 1;
+        final currentStatus = challengeData['status'] as String?;
 
-        final currentDay = data['currentDay'] as int? ?? 0;
-        final totalDays = data['totalDays'] as int? ?? 1;
-        final currentStatus = data['status'] as String?;
-
-        // Validation 1: Only allow incrementing by 1 (prevent cheating)
         if (progress != currentDay + 1) {
-          AppLogger.w(
-            'Invalid progress increment attempted: User $userId, Challenge $challengeId, '
-            'Current: $currentDay, Attempted: $progress',
-          );
           return Left(
             ServerFailure(
               'Progress can only be incremented by 1 day at a time.',
@@ -176,155 +163,82 @@ class FirestoreChallengeRepository implements ChallengeRepository {
           );
         }
 
-        // Validation 2: Progress cannot exceed totalDays (cannot exceed 100%)
         if (progress > totalDays) {
-          AppLogger.w(
-            'Progress exceeds total days: User $userId, Challenge $challengeId, '
-            'Progress: $progress, Total: $totalDays',
-          );
           return Left(
             ServerFailure('Challenge progress cannot exceed total days.'),
           );
         }
 
-        // Validation 3: Check if challenge is already completed
         if (currentStatus == ChallengeStatus.completed.name) {
-          AppLogger.w(
-            'Attempted to update completed challenge: User $userId, Challenge $challengeId',
-          );
           return Left(ServerFailure('This challenge is already completed.'));
         }
 
-        // Update progress
+        // 2. PREPARE UPDATES
         final updateData = <String, dynamic>{'currentDay': progress};
+        final isCompleted = progress >= totalDays;
 
-        // Auto-mark as completed when progress >= totalDays
-        if (progress >= totalDays) {
+        if (isCompleted) {
           updateData['status'] = ChallengeStatus.completed.name;
-          AppLogger.i(
-            'Challenge automatically marked as completed: User $userId, Challenge $challengeId',
-          );
+          final xpReward = (challengeData['xpReward'] as num?)?.toInt() ?? 50;
+
+          if (userStatsSnapshot.exists) {
+            final userStatsData = userStatsSnapshot.data()!;
+            var avatarStats = UserAvatarStats.fromMap(
+              userStatsData['avatarStats'] as Map<String, dynamic>? ?? {},
+            );
+
+            final primaryAttribute =
+                challengeData['attribute'] as String? ?? 'vitality';
+
+            avatarStats = avatarStats.addAttributeXp(primaryAttribute, xpReward);
+            avatarStats = avatarStats.copyWith(
+              challengeXp: avatarStats.challengeXp + xpReward,
+            );
+
+            transaction.set(
+              userStatsRef,
+              {
+                'avatarStats': avatarStats.toMap(),
+                'totalXp': avatarStats.totalXp,
+                'level': avatarStats.level,
+              },
+              SetOptions(merge: true),
+            );
+
+            // Capture completion data for social logging outside
+            completionLog = {
+              'userId': userId,
+              'userName': userStatsData['displayName'] ?? 'Warrior',
+              'archetype': userStatsData['archetype'] ?? 'none',
+              'challengeId': challengeId,
+              'title': challengeData['title'] ?? 'Challenge',
+              'xpReward': xpReward,
+            };
+          }
         }
 
         transaction.update(userChallengeRef, updateData);
-
-        // Award XP ONLY on the final day (when challenge is completed)
-        final totalXpReward = data['xpReward'] as int? ?? 50;
-
-        if (progress >= totalDays) {
-          // Award full XP on completion
-          if (totalXpReward > 0) {
-            final userStatsRef = _firestore
-                .collection('users')
-                .doc(userId)
-                .collection('stats')
-                .doc('main');
-            final userStatsSnapshot = await transaction.get(userStatsRef);
-
-            if (userStatsSnapshot.exists) {
-              final userStatsData = userStatsSnapshot.data();
-              if (userStatsData != null) {
-                final avatarStats = Map<String, dynamic>.from(
-                  userStatsData['avatarStats'] as Map? ?? {},
-                );
-
-                final primaryAttribute =
-                    data['attribute'] as String? ?? 'vitality';
-                final attributeKey = '${primaryAttribute}Xp';
-
-                final currentAttributeXp =
-                    (avatarStats[attributeKey] as int?) ?? 0;
-                avatarStats[attributeKey] = currentAttributeXp + totalXpReward;
-
-                // Track challenge XP separately
-                final currentChallengeXp =
-                    (avatarStats['challengeXp'] as int?) ?? 0;
-                avatarStats['challengeXp'] = currentChallengeXp + totalXpReward;
-
-                int totalXp = 0;
-                final xpKeys = [
-                  'strengthXp',
-                  'intellectXp',
-                  'vitalityXp',
-                  'creativityXp',
-                  'focusXp',
-                  'spiritXp',
-                ];
-                for (final key in xpKeys) {
-                  totalXp += (avatarStats[key] as int?) ?? 0;
-                }
-
-                transaction.set(userStatsRef, {
-                  'avatarStats': avatarStats,
-                  'currentXp': totalXp,
-                }, SetOptions(merge: true));
-
-                AppLogger.i(
-                  'Challenge completed! Full XP awarded: User $userId, Challenge $challengeId, XP: $totalXpReward',
-                );
-              }
-            }
-          }
-        }
-
-        AppLogger.d(
-          'Challenge progress updated: User $userId, Challenge $challengeId, Day $progress/$totalDays',
-        );
-
-        return Right(unit);
+        return const Right(unit);
       });
 
-      // After successful transaction, log social activity + XP for completion
-      if (result.isRight() && _socialActivityService != null) {
-        final checkDoc = await _firestore
-            .collection('users')
-            .doc(userId)
-            .collection('challenges')
-            .doc(challengeId)
-            .get();
-        final checkData = checkDoc.data();
-        if (checkData != null &&
-            checkData['status'] == ChallengeStatus.completed.name) {
-          try {
-            final userDoc = await _firestore
-                .collection('users')
-                .doc(userId)
-                .get();
-            if (userDoc.exists) {
-              final userData = userDoc.data() as Map<String, dynamic>;
-              final userName =
-                  userData['displayName'] as String? ?? 'Anonymous';
-              final archetype = userData['archetype'] as String? ?? 'none';
-              final xpReward = checkData['xpReward'] as int? ?? 50;
-              final title = checkData['title'] as String? ?? 'a challenge';
-
-              await _socialActivityService.logChallengeComplete(
-                userId: userId,
-                userName: userName,
-                archetype: archetype,
-                challengeId: challengeId,
-                challengeTitle: title,
-                xpReward: xpReward,
-              );
-              AppLogger.i(
-                'Logged challenge completion to social activity + XP: $challengeId',
-              );
-            }
-          } catch (socialError, socialStack) {
-            AppLogger.e(
-              'Failed to log challenge completion to social activity',
-              socialError,
-              socialStack,
-            );
-          }
-        }
+      // 3. SOCIAL LOGGING OUTSIDE TRANSACTION
+      if (result.isRight() && completionLog != null && _socialActivityService != null) {
+        // Note: logChallengeComplete has its own internal transaction for tribes/leaderboards
+        // which would have conflicted if run inside this one.
+        unawaited(_socialActivityService.logChallengeComplete(
+          userId: completionLog!['userId'],
+          userName: completionLog!['userName'],
+          archetype: completionLog!['archetype'],
+          challengeId: completionLog!['challengeId'],
+          challengeTitle: completionLog!['title'],
+          xpReward: completionLog!['xpReward'],
+        ));
       }
+
       return result;
     } catch (e, stackTrace) {
       AppLogger.e('Challenge progress update failed', e, stackTrace);
-      return Left(
-        ServerFailure('Failed to update challenge progress: ${e.toString()}'),
-      );
+      return Left(ServerFailure('Failed to update: ${e.toString()}'));
     }
   }
 
@@ -344,143 +258,95 @@ class FirestoreChallengeRepository implements ChallengeRepository {
     String challengeId,
   ) async {
     try {
-      return await _firestore.runTransaction((transaction) async {
-        // Get the user's challenge document
-        final userChallengeRef = _firestore
-            .collection('users')
-            .doc(userId)
-            .collection('challenges')
-            .doc(challengeId);
+      final userChallengeRef = _firestore
+          .collection('users')
+          .doc(userId)
+          .collection('challenges')
+          .doc(challengeId);
+      final userStatsRef = _firestore.collection('user_stats').doc(userId);
 
+      Map<String, dynamic>? completionLog;
+
+      final result = await _firestore.runTransaction<Either<Failure, Unit>>((
+        transaction,
+      ) async {
+        // 1. ALL GETS FIRST
         final challengeSnapshot = await transaction.get(userChallengeRef);
+        final userStatsSnapshot = await transaction.get(userStatsRef);
 
         if (!challengeSnapshot.exists) {
-          AppLogger.e(
-            'Challenge completion failed: Challenge not found',
-            'Challenge $challengeId not found for user $userId',
-            StackTrace.current,
-          );
-          return Left(
-            ServerFailure(
-              'Challenge not found. Please join the challenge first.',
-            ),
-          );
+          return Left(ServerFailure('Challenge not found.'));
         }
 
-        final challengeData = challengeSnapshot.data();
-        if (challengeData == null) {
-          AppLogger.e(
-            'Challenge data became null during transaction',
-            'Challenge $challengeId not found for user $userId',
-            StackTrace.current,
-          );
-          return Left(
-            ServerFailure('Challenge data became null during transaction'),
-          );
-        }
-
+        final challengeData = challengeSnapshot.data()!;
         final currentStatus = challengeData['status'] as String?;
-        final currentDay = challengeData['currentDay'] as int? ?? 0;
-        final totalDays = challengeData['totalDays'] as int? ?? 1;
-        final xpReward = challengeData['xpReward'] as int? ?? 0;
+        final xpReward = (challengeData['xpReward'] as num?)?.toInt() ?? 0;
 
-        // Validation: Check if challenge is already completed
         if (currentStatus == ChallengeStatus.completed.name) {
-          AppLogger.w(
-            'Attempted to complete already completed challenge: User $userId, Challenge $challengeId',
-          );
-          return Left(ServerFailure('This challenge is already completed.'));
+          return Left(ServerFailure('Challenge already completed.'));
         }
 
-        // Validation: Ensure challenge is fully completed
-        if (currentDay < totalDays) {
-          AppLogger.w(
-            'Attempted to complete incomplete challenge: User $userId, Challenge $challengeId, '
-            'Progress: $currentDay/$totalDays',
-          );
-          return Left(
-            ServerFailure('Complete all days before finishing the challenge.'),
-          );
-        }
-
-        // Update challenge status to completed
+        // 2. Perform UPDATES
         transaction.update(userChallengeRef, {
           'status': ChallengeStatus.completed.name,
+          'completedAt': FieldValue.serverTimestamp(),
+          'lastUpdated': FieldValue.serverTimestamp(),
         });
 
-        // Award XP to user if reward > 0
-        if (xpReward > 0) {
-          final userStatsRef = _firestore.collection('user_stats').doc(userId);
-          final userStatsSnapshot = await transaction.get(userStatsRef);
+        if (xpReward > 0 && userStatsSnapshot.exists) {
+          final userStatsData = userStatsSnapshot.data()!;
+          var avatarStats = UserAvatarStats.fromMap(
+            userStatsData['avatarStats'] as Map<String, dynamic>? ?? {},
+          );
 
-          if (userStatsSnapshot.exists) {
-            final userData = userStatsSnapshot.data();
-            if (userData == null) {
-              AppLogger.e(
-                'User stats data became null during transaction',
-                'User stats not found for user $userId',
-                StackTrace.current,
-              );
-            } else {
-              final avatarStats = Map<String, dynamic>.from(
-                userData['avatarStats'] as Map? ?? {},
-              );
+          final primaryAttribute =
+              challengeData['attribute'] as String? ?? 'vitality';
+          
+          avatarStats = avatarStats.addAttributeXp(primaryAttribute, xpReward);
+          avatarStats = avatarStats.copyWith(
+            challengeXp: avatarStats.challengeXp + xpReward,
+          );
 
-              // Determine the primary attribute for this challenge
-              // Default to 'vitality' if not specified
-              final primaryAttribute =
-                  challengeData['attribute'] as String? ?? 'vitality';
-              final attributeKey = '${primaryAttribute}Xp';
+          transaction.set(
+            userStatsRef,
+            {
+              'avatarStats': avatarStats.toMap(),
+              'totalXp': avatarStats.totalXp,
+              'level': avatarStats.level,
+            },
+            SetOptions(merge: true),
+          );
 
-              // Add XP to the challenge's primary attribute
-              final currentAttributeXp =
-                  (avatarStats[attributeKey] as int?) ?? 0;
-              avatarStats[attributeKey] = currentAttributeXp + xpReward;
-
-              // Recalculate total XP
-              int totalXp = 0;
-              final keys = [
-                'strengthXp',
-                'intellectXp',
-                'vitalityXp',
-                'creativityXp',
-                'focusXp',
-                'spiritXp',
-              ];
-              for (final key in keys) {
-                totalXp += (avatarStats[key] as int?) ?? 0;
-              }
-
-              // Update user stats
-              transaction.set(userStatsRef, {
-                'avatarStats': avatarStats,
-                'currentXp': totalXp,
-                'currentLevel': avatarStats['level'] as int? ?? 1,
-              }, SetOptions(merge: true));
-
-              AppLogger.i(
-                'XP awarded for challenge completion: User $userId, Challenge $challengeId, '
-                'Attribute: $attributeKey, XP: $xpReward',
-              );
-            }
-          } else {
-            AppLogger.w(
-              'User stats document not found for XP award: User $userId',
-            );
-          }
+          // Capture completion data for social logging outside
+          completionLog = {
+            'userId': userId,
+            'userName': userStatsData['displayName'] ?? 'Warrior',
+            'archetype': userStatsData['archetype'] ?? 'none',
+            'challengeId': challengeId,
+            'title': challengeData['title'] ?? 'Challenge',
+            'xpReward': xpReward,
+          };
         }
-
-        AppLogger.i(
-          'Challenge completed with reward: User $userId, Challenge $challengeId',
-        );
 
         return const Right(unit);
       });
+
+      // 3. SOCIAL LOGGING OUTSIDE TRANSACTION
+      if (result.isRight() && completionLog != null && _socialActivityService != null) {
+        unawaited(_socialActivityService.logChallengeComplete(
+          userId: completionLog!['userId'],
+          userName: completionLog!['userName'],
+          archetype: completionLog!['archetype'],
+          challengeId: completionLog!['challengeId'],
+          challengeTitle: completionLog!['title'],
+          xpReward: completionLog!['xpReward'],
+        ));
+      }
+
+      return result;
     } catch (e, stackTrace) {
       AppLogger.e('Challenge completion failed', e, stackTrace);
-      return Left(
-        ServerFailure('Failed to complete challenge: ${e.toString()}'),
-      );
+      return Left(ServerFailure('Failed to complete challenge: ${e.toString()}'));
     }
   }
 

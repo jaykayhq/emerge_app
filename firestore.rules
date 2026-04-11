@@ -93,7 +93,7 @@ service cloud.firestore {
 
     // Helper to validate gamification stats data written by the client or Cloud Functions
     function isValidStats(data) {
-      return data.keys().size() <= 35 &&
+      return data.keys().size() <= 60 &&
              // Legacy numeric fields at root
              (!data.keys().hasAny(['totalXp']) || data.totalXp is number) &&
              (!data.keys().hasAny(['level', 'currentLevel']) || data.get('level', 1) is number) &&
@@ -110,7 +110,9 @@ service cloud.firestore {
                (!data.avatarStats.keys().hasAny(['vitalityXp']) || data.avatarStats.vitalityXp is number) &&
                (!data.avatarStats.keys().hasAny(['creativityXp']) || data.avatarStats.creativityXp is number) &&
                (!data.avatarStats.keys().hasAny(['focusXp']) || data.avatarStats.focusXp is number) &&
-               (!data.avatarStats.keys().hasAny(['spiritXp']) || data.avatarStats.spiritXp is number)
+               (!data.avatarStats.keys().hasAny(['spiritXp']) || data.avatarStats.spiritXp is number) &&
+               (!data.avatarStats.keys().hasAny(['challengeXp']) || data.avatarStats.challengeXp is number) &&
+               (!data.avatarStats.keys().hasAny(['attributeXp']) || data.avatarStats.attributeXp is map)
              )) &&
              
              // New worldState nested structure
