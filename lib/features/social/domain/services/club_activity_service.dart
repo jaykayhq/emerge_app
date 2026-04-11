@@ -272,11 +272,8 @@ class SocialActivityService {
           'lastUpdated': FieldValue.serverTimestamp(),
         }, SetOptions(merge: true));
 
-        // Update Core User Stats XP
-        final userStatsRef = _firestore.collection('user_stats').doc(userId);
-        transaction.set(userStatsRef, {
-          'totalXp': FieldValue.increment(xpReward),
-        }, SetOptions(merge: true));
+        // Note: Core User Stats XP is handled by the initiating Repository transaction
+        // to ensure atomic model consistency.
 
         // Update Tribe Aggregate Counters
         final tribeRef = _firestore.collection(_kTribesCollection).doc(clubId);

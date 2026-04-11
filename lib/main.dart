@@ -108,12 +108,12 @@ class _EmergeAppState extends ConsumerState<EmergeApp> {
         data: (user) {
           // User signed in - start heartbeat and identify in RevenueCat
           presenceService.startHeartbeat(user.id);
-          monetizationRepo.identify(user.id);
+          unawaited(monetizationRepo.identify(user.id));
         },
         loading: () => null,
         error: (_, _) {
           presenceService.stopHeartbeat();
-          monetizationRepo.reset();
+          unawaited(monetizationRepo.reset());
         },
       );
     });

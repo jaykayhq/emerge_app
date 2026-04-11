@@ -75,6 +75,19 @@ class AppConfig {
     final key = _remoteConfigService!.getRevenueCatApiKey(platform);
 
     if (key.isNotEmpty && key != 'YOUR_REVENUECAT_API_KEY') {
+      // SECURITY: Prevent test keys in production
+      if (isProduction && key.startsWith('test_')) {
+        throw Exception(
+          'SECURITY VIOLATION: Test RevenueCat API key detected in production build. '
+          'This configuration is not allowed.',
+        );
+      }
+
+      // Warn if test key in development
+      if (isDevelopment && key.startsWith('test_')) {
+        debugPrint('WARNING: Using test RevenueCat API key in development');
+      }
+
       if (kDebugMode) {
         debugPrint('🔑 Using RevenueCat key from Firebase Remote Config for $platform');
       }
