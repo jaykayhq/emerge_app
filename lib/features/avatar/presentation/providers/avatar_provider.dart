@@ -29,11 +29,11 @@ class AvatarState {
   }
 }
 
-/// Avatar state controller for managing avatar configuration.
+/// Avatar state controller.
 ///
-/// Handles avatar customization (archetype, skin tone, hairstyle) and
-/// evolution state updates. Each config change maps to a different
-/// pre-generated character image.
+/// Manages avatar archetype and evolution phase. Skin tone and hairstyle
+/// selection is no longer part of the rendering pipeline — the avatar is
+/// fully defined by archetype and evolution phase in the silhouette-reveal model.
 @riverpod
 class AvatarController extends _$AvatarController {
   @override
@@ -55,21 +55,6 @@ class AvatarController extends _$AvatarController {
     updateConfig(newConfig);
   }
 
-  /// Update skin tone
-  void updateSkinTone(SkinTone skinTone) {
-    updateConfig(state.config.copyWith(skinTone: skinTone));
-  }
-
-  /// Update hairstyle
-  void updateHairstyle(String hairStyle) {
-    updateConfig(state.config.copyWith(hairStyle: hairStyle));
-  }
-
-  /// Update hair color
-  void updateHairColor(HairColor hairColor) {
-    updateConfig(state.config.copyWith(hairColor: hairColor));
-  }
-
   /// Update evolved state based on level
   void updateEvolvedState(int level) {
     final phase = _getPhaseForLevel(level);
@@ -78,45 +63,26 @@ class AvatarController extends _$AvatarController {
     }
   }
 
-  /// Reset to default config for current archetype
-  void resetToDefault() {
-    final defaultConfig = AvatarConfig.defaultForArchetype(
-      state.config.archetype,
-    );
-    updateConfig(defaultConfig);
-  }
-
-  /// Load avatar configuration from user stats
+  /// Load avatar configuration from user stats (archetype + level only)
   void loadFromUserStats({
     required UserArchetype archetype,
     required int level,
-    SkinTone? skinTone,
-    String? hairStyle,
-    HairColor? hairColor,
   }) {
     final config = AvatarConfig.fromUserStats(
       archetype: archetype,
       level: level,
-      skinTone: skinTone,
-      hairStyle: hairStyle,
-      hairColor: hairColor,
     );
     state = state.copyWith(config: config);
   }
 
-  /// Get available options for archetype
-  AvatarOptions getAvailableOptions() {
-    final service = AvatarAssetService();
-    return AvatarOptions(
-      hairstyles: service.getAvailableHairstyles(state.config.archetype),
-      skinTones: service.getAvailableSkinTones(),
-    );
+  /// Reset to default config for current archetype
+  void resetToDefault() {
+    updateConfig(AvatarConfig.defaultForArchetype(state.config.archetype));
   }
 
   /// Persist configuration to user profile
   void _persistToProfile() {
-    // In a real implementation, this would update the user profile
-    // via the gamification repository
+    // Persistence via gamification repository when wired in production.
   }
 
   /// Get evolution phase for level
@@ -127,12 +93,4 @@ class AvatarController extends _$AvatarController {
     if (level >= 6) return EvolutionPhase.construct;
     return EvolutionPhase.phantom;
   }
-}
-
-/// Available options for avatar customization
-class AvatarOptions {
-  final List<String> hairstyles;
-  final List<SkinTone> skinTones;
-
-  const AvatarOptions({required this.hairstyles, required this.skinTones});
 }
