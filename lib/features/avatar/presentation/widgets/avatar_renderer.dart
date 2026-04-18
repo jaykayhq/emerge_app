@@ -97,7 +97,15 @@ class AvatarRenderer extends StatelessWidget {
   }
 
   Widget _buildCharacterImage() {
-    final characterPath = _assetService.getCharacterPathFromConfig(config);
+    final characterPath = _assetService.getCharacterPath(
+      config.archetype,
+      config.evolvedState,
+    );
+
+    // Non-Ascended phases return empty path — go straight to silhouette fallback.
+    if (characterPath.isEmpty) {
+      return _buildSilhouetteFallback();
+    }
 
     return SizedBox(
       width: size,
@@ -107,22 +115,25 @@ class AvatarRenderer extends StatelessWidget {
         width: size,
         height: size * 1.2,
         fit: BoxFit.contain,
-        errorBuilder: (context, error, stackTrace) {
-          // Fall back to silhouette if character image not found
-          return Image.asset(
-            _assetService.getSilhouettePath(config.archetype),
-            width: size,
-            height: size * 1.2,
-            fit: BoxFit.contain,
-            errorBuilder: (_, _, _) {
-              // Ultimate fallback: painted silhouette
-              return CustomPaint(
-                size: Size(size, size * 1.2),
-                painter: _FallbackSilhouettePainter(color: _primaryColor),
-              );
-            },
-          );
-        },
+        errorBuilder: (context, error, stackTrace) => _buildSilhouetteFallback(),
+      ),
+    );
+  }
+
+  /// Silhouette fallback: tries archetype PNG, then code-painted shape.
+  Widget _buildSilhouetteFallback() {
+    return SizedBox(
+      width: size,
+      height: size * 1.2,
+      child: Image.asset(
+        _assetService.getSilhouettePath(config.archetype),
+        width: size,
+        height: size * 1.2,
+        fit: BoxFit.contain,
+        errorBuilder: (_, _, _) => CustomPaint(
+          size: Size(size, size * 1.2),
+          painter: _FallbackSilhouettePainter(color: _primaryColor),
+        ),
       ),
     );
   }
@@ -135,14 +146,15 @@ class AvatarRenderer extends StatelessWidget {
       height: size * 1.2,
       child: Stack(
         children: [
-          // Image overlay (if exists)
-          Image.asset(
-            _assetService.getEvolvedOverlayPath(phase),
-            width: size,
-            height: size * 1.2,
-            fit: BoxFit.contain,
-            errorBuilder: (_, _, _) => const SizedBox.shrink(),
-          ),
+          // Image overlay — only if this phase has an overlay PNG.
+          if (_assetService.getEvolvedOverlayPath(phase).isNotEmpty)
+            Image.asset(
+              _assetService.getEvolvedOverlayPath(phase),
+              width: size,
+              height: size * 1.2,
+              fit: BoxFit.contain,
+              errorBuilder: (_, _, _) => const SizedBox.shrink(),
+            ),
           // Colored border effect
           Container(
             width: size,

@@ -1,195 +1,66 @@
 import 'package:emerge_app/core/theme/archetype_theme.dart';
-import 'package:emerge_app/features/avatar/domain/models/avatar_config.dart';
 import 'package:emerge_app/features/auth/domain/entities/user_extension.dart';
 import 'package:emerge_app/features/profile/domain/models/silhouette_evolution.dart';
 
 /// Service for resolving avatar asset paths.
 ///
-/// Each avatar is a single pre-generated character image keyed by
-/// (archetype × skinTone × hairStyle). No separate body-part images
-/// are needed — everything is baked into one cohesive PNG.
+/// Uses a silhouette-reveal progression model:
+/// - Levels 1–49 (Phantom → Radiant): returns empty string from [getCharacterPath];
+///   the renderer falls back to the code-painted [_FallbackSilhouettePainter].
+/// - Level 50+ (Ascended): returns the archetype-specific `ascended.png` path
+///   so the full character art reveal is displayed.
+///
+/// Rendering layers (back to front):
+/// 1. Background glow   — phase intensity
+/// 2. Character image   — ascended.png OR code-painted silhouette
+/// 3. Evolution overlay — constructed/incarnate/radiant/ascended texture PNG
+/// 4. Sparkles          — Ascended phase only
+/// 5. Phase label text
 class AvatarAssetService {
-  /// Base asset path for all avatar assets
   static const String _basePath = 'assets/images/avatars';
 
-  /// Get the full character image path for a given config.
+  /// Returns character image path for the given archetype and phase.
   ///
-  /// The image is a complete full-body character on transparent background,
-  /// generated via Pollinations.ai gptimage model.
-  String getCharacterPath(
-    UserArchetype archetype,
-    SkinTone skinTone,
-    String hairStyle,
-  ) {
-    final archetypeName = archetype.name;
-    final skinToneName = skinTone.name;
-    return '$_basePath/base/$archetypeName/${skinToneName}_$hairStyle.png';
+  /// Returns the `ascended.png` path only at [EvolutionPhase.ascended].
+  /// Returns empty string for all other phases — the renderer's fallback
+  /// chain will engage the code-painted silhouette automatically.
+  String getCharacterPath(UserArchetype archetype, EvolutionPhase phase) {
+    if (phase == EvolutionPhase.ascended) {
+      return '$_basePath/base/${archetype.name}/ascended.png';
+    }
+    return '';
   }
 
-  /// Convenience method using an AvatarConfig directly.
-  String getCharacterPathFromConfig(AvatarConfig config) {
-    return getCharacterPath(
-      config.archetype,
-      config.skinTone,
-      config.hairStyle,
-    );
+  /// Returns the evolved state overlay PNG path for a given phase.
+  ///
+  /// Returns empty string for [EvolutionPhase.phantom] — no overlay at that stage.
+  String getEvolvedOverlayPath(EvolutionPhase phase) {
+    if (phase == EvolutionPhase.phantom) return '';
+    return '$_basePath/evolved/${phase.name}/overlay.png';
   }
 
-  /// Get the silhouette asset for archetype (fallback when character image missing)
+  /// Returns the static archetype silhouette PNG path.
+  ///
+  /// Used as a mid-level fallback: if `ascended.png` is not yet generated,
+  /// the renderer attempts this before falling back to the code painter.
   String getSilhouettePath(UserArchetype archetype) {
-    final archetypeName = archetype.name;
-    return '$_basePath/${archetypeName}_silhouette.png';
+    return '$_basePath/${archetype.name}_silhouette.png';
   }
 
-  /// Get the archetype portrait asset (for onboarding / selection UI)
+  /// Returns the archetype portrait asset path (onboarding / selection UI).
   String getArchetypePortraitPath(UserArchetype archetype) {
     return ArchetypeTheme.forArchetype(archetype).assetPath;
   }
 
-  /// Get the glow effect asset path
+  /// Returns the soft or strong glow effect PNG path.
   String getGlowEffectPath({bool strong = false}) {
     return strong
         ? '$_basePath/effects/glow_strong.png'
         : '$_basePath/effects/glow_soft.png';
   }
 
-  /// Get sparkles effect asset path
+  /// Returns the sparkles effect PNG path (Ascended phase only).
   String getSparklesPath() {
     return '$_basePath/effects/sparkles.png';
-  }
-
-  /// Get the evolved state overlay asset path
-  String getEvolvedOverlayPath(EvolutionPhase phase) {
-    final phaseName = phase.name;
-    return '$_basePath/evolved/$phaseName/overlay.png';
-  }
-
-  /// Get available hairstyles for archetype
-  List<String> getAvailableHairstyles(UserArchetype archetype) {
-    switch (archetype) {
-      case UserArchetype.athlete:
-        return const [
-          'buzz_cut',
-          'short_spiky',
-          'swept_back',
-          'pompadour',
-          'undercut',
-        ];
-      case UserArchetype.creator:
-        return const [
-          'messy_shag',
-          'man_bun',
-          'side_swept',
-          'curly_afro',
-          'dreadlocks',
-        ];
-      case UserArchetype.scholar:
-        return const [
-          'neat_part',
-          'slicked_back',
-          'bob_cut',
-          'wispy_bangs',
-          'gray_academic',
-        ];
-      case UserArchetype.stoic:
-        return const [
-          'monk_shave',
-          'simple_crop',
-          'center_part',
-          'low_bun',
-          'bald_with_beard',
-        ];
-      case UserArchetype.zealot:
-        return const [
-          'flowing_long',
-          'space_buns',
-          'ethereal_wisps',
-          'silver_vibrant',
-          'cosmic_halos',
-        ];
-      case UserArchetype.none:
-        return const ['simple_crop'];
-    }
-  }
-
-  /// Get available skin tones
-  List<SkinTone> getAvailableSkinTones() {
-    return SkinTone.values;
-  }
-
-  /// Get prompt for generating a full character via Pollinations.ai
-  ///
-  /// Uses style-locked 2D flat vector prompt template for consistency
-  /// across all generated characters.
-  String getGenerationPrompt({
-    required UserArchetype archetype,
-    required SkinTone skinTone,
-    required String hairStyle,
-  }) {
-    final archetypeDesc = _getArchetypeDescriptor(archetype);
-    final skinToneDesc = _getSkinToneDescriptor(skinTone);
-    final hairDesc = hairStyle.replaceAll('_', ' ');
-
-    return '''
-2D flat vector character, full body front-facing standing pose,
-$archetypeDesc build, $skinToneDesc skin, $hairDesc hairstyle,
-wearing ${_getDefaultOutfitDescriptor(archetype)},
-thick clean black outlines, cell-shaded coloring, no gradients,
-pastel color palette, minimalist design, character sheet style,
-centered in frame, professional game character art,
-no text, no watermark, no other objects
-''';
-  }
-
-  /// Get negative prompt to exclude unwanted elements
-  String getNegativePrompt() {
-    return 'background, scenery, environment, text, watermark, '
-        'border, frame, multiple characters, realistic, 3D, '
-        'photorealistic, blurry, low quality';
-  }
-
-  String _getArchetypeDescriptor(UserArchetype archetype) {
-    switch (archetype) {
-      case UserArchetype.athlete:
-        return 'athletic sporty dynamic';
-      case UserArchetype.creator:
-        return 'artistic creative slender';
-      case UserArchetype.scholar:
-        return 'lean intellectual studious';
-      case UserArchetype.stoic:
-        return 'balanced strong meditative';
-      case UserArchetype.zealot:
-        return 'passionate spiritual fire focused';
-      case UserArchetype.none:
-        return 'balanced average';
-    }
-  }
-
-  String _getSkinToneDescriptor(SkinTone tone) {
-    switch (tone) {
-      case SkinTone.lightOlive:
-        return 'light olive';
-      case SkinTone.mediumBrown:
-        return 'medium brown';
-      case SkinTone.darkEbony:
-        return 'dark ebony';
-    }
-  }
-
-  String _getDefaultOutfitDescriptor(UserArchetype archetype) {
-    switch (archetype) {
-      case UserArchetype.athlete:
-        return 'modern athletic sportswear tracksuit';
-      case UserArchetype.creator:
-        return 'casual bohemian artist apron';
-      case UserArchetype.scholar:
-        return 'smart tweed jacket with glasses';
-      case UserArchetype.stoic:
-        return 'simple minimalist linen tunic';
-      case UserArchetype.zealot:
-        return 'layered monastic robes with crimson accents';
-      case UserArchetype.none:
-        return 'simple casual clothing';
-    }
   }
 }

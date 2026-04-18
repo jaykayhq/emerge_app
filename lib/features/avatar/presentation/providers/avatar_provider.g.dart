@@ -8,27 +8,27 @@ part of 'avatar_provider.dart';
 
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint, type=warning
-/// Avatar state controller for managing avatar configuration.
+/// Avatar state controller.
 ///
-/// Handles avatar customization (archetype, skin tone, hairstyle) and
-/// evolution state updates. Each config change maps to a different
-/// pre-generated character image.
+/// Manages avatar archetype and evolution phase. Skin tone and hairstyle
+/// selection is no longer part of the rendering pipeline — the avatar is
+/// fully defined by archetype and evolution phase in the silhouette-reveal model.
 
 @ProviderFor(AvatarController)
 final avatarControllerProvider = AvatarControllerProvider._();
 
-/// Avatar state controller for managing avatar configuration.
+/// Avatar state controller.
 ///
-/// Handles avatar customization (archetype, skin tone, hairstyle) and
-/// evolution state updates. Each config change maps to a different
-/// pre-generated character image.
+/// Manages avatar archetype and evolution phase. Skin tone and hairstyle
+/// selection is no longer part of the rendering pipeline — the avatar is
+/// fully defined by archetype and evolution phase in the silhouette-reveal model.
 final class AvatarControllerProvider
     extends $NotifierProvider<AvatarController, AvatarState> {
-  /// Avatar state controller for managing avatar configuration.
+  /// Avatar state controller.
   ///
-  /// Handles avatar customization (archetype, skin tone, hairstyle) and
-  /// evolution state updates. Each config change maps to a different
-  /// pre-generated character image.
+  /// Manages avatar archetype and evolution phase. Skin tone and hairstyle
+  /// selection is no longer part of the rendering pipeline — the avatar is
+  /// fully defined by archetype and evolution phase in the silhouette-reveal model.
   AvatarControllerProvider._()
     : super(
         from: null,
@@ -56,13 +56,13 @@ final class AvatarControllerProvider
   }
 }
 
-String _$avatarControllerHash() => r'64c82e0326b44d778bf4935fcd9dc1eb4f002386';
+String _$avatarControllerHash() => r'adf837aef1e12389b22c0479cab8d2dc832d0bed';
 
-/// Avatar state controller for managing avatar configuration.
+/// Avatar state controller.
 ///
-/// Handles avatar customization (archetype, skin tone, hairstyle) and
-/// evolution state updates. Each config change maps to a different
-/// pre-generated character image.
+/// Manages avatar archetype and evolution phase. Skin tone and hairstyle
+/// selection is no longer part of the rendering pipeline — the avatar is
+/// fully defined by archetype and evolution phase in the silhouette-reveal model.
 
 abstract class _$AvatarController extends $Notifier<AvatarState> {
   AvatarState build();
