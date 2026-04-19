@@ -8,9 +8,10 @@ import 'package:emerge_app/features/auth/domain/entities/user_extension.dart';
 import 'package:emerge_app/features/auth/presentation/providers/auth_providers.dart';
 import 'package:emerge_app/features/gamification/data/repositories/user_stats_repository.dart';
 import 'package:emerge_app/features/gamification/presentation/providers/user_stats_providers.dart';
-import 'package:emerge_app/features/monetization/presentation/providers/subscription_provider.dart';
 import 'package:emerge_app/features/settings/presentation/screens/notification_settings_screen.dart';
 import 'package:emerge_app/features/settings/presentation/providers/digital_wellbeing_provider.dart';
+import 'package:emerge_app/core/domain/models/app_world_theme.dart';
+import 'package:emerge_app/core/presentation/providers/world_theme_provider.dart';
 import 'package:emerge_app/features/tutorial/presentation/providers/tutorial_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -30,9 +31,9 @@ class SettingsScreen extends ConsumerWidget {
     final authUser = authUserAsync.value;
     final tutorialState = ref.watch(tutorialProvider);
 
-    final currentTheme = userProfile?.worldTheme ?? 'Default';
     final userSettings = userProfile?.settings ?? const UserSettings();
     final wellbeingAsync = ref.watch(digitalWellbeingProvider);
+    final selectedAppTheme = ref.watch(worldThemeProvider);
 
     return Scaffold(
       backgroundColor: EmergeColors.background,
@@ -64,6 +65,20 @@ class SettingsScreen extends ConsumerWidget {
                 if (authUser != null && userProfile != null)
                   _buildProfileHeader(context, authUser, userProfile),
                 const SizedBox(height: 32),
+
+                // World Theme Section
+                _buildSectionHeader(context, 'World Theme'),
+                _buildSectionContainer(context, [
+                  Padding(
+                    padding: const EdgeInsets.all(12.0),
+                    child: _WorldThemePicker(
+                      selected: selectedAppTheme,
+                      onSelect: (theme) =>
+                          ref.read(worldThemeProvider.notifier).setTheme(theme),
+                    ),
+                  ),
+                ]),
+                const SizedBox(height: 24),
 
                 // Account Section
                 _buildSectionHeader(context, 'Account'),
@@ -466,19 +481,6 @@ class SettingsScreen extends ConsumerWidget {
                     activeTrackColor: EmergeColors.teal.withValues(alpha: 0.5),
                     tileColor: AppTheme.surfaceDark,
                   ),
-                  _buildListTile(
-                    context,
-                    Icons.map_outlined,
-                    'World Theme',
-                    trailingText: currentTheme == 'forest'
-                        ? 'Forest'
-                        : currentTheme == 'city'
-                        ? 'City'
-                        : 'Default',
-                    onTap: () {
-                      _showThemeSelectionDialog(context, ref, userProfile);
-                    },
-                  ),
                 ]),
                 const SizedBox(height: 24),
 
@@ -842,235 +844,6 @@ class SettingsScreen extends ConsumerWidget {
     );
   }
 
-  void _showThemeSelectionDialog(
-    BuildContext context,
-    WidgetRef ref,
-    UserProfile? profile,
-  ) {
-    if (profile == null) return;
-
-    // Check premium status directly if possible from inside dialog, or pass it in.
-    // Wait, the dialog is shown using showDialog, which creates a new context, so we read it inside builder or pass it.
-    final isPremium = ref.read(isPremiumProvider).value ?? false;
-
-    showDialog(
-      context: context,
-      builder: (context) {
-        return Dialog(
-          backgroundColor: AppTheme.surfaceDark,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20),
-          ),
-          child: Padding(
-            padding: const EdgeInsets.all(20),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Select World Theme',
-                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    color: AppTheme.textMainDark,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  'Choose the visual style for your world',
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: AppTheme.textSecondaryDark,
-                  ),
-                ),
-                const SizedBox(height: 20),
-                _buildThemeOption(
-                  context,
-                  ref,
-                  profile,
-                  'city',
-                  'Futuristic City',
-                  'Neon-lit metropolis',
-                  Icons.location_city,
-                  Colors.cyan,
-                  isPremium: isPremium,
-                  requiresPremium: false,
-                ),
-                _buildThemeOption(
-                  context,
-                  ref,
-                  profile,
-                  'forest',
-                  'Enchanted Forest',
-                  'Lush overgrowth',
-                  Icons.forest,
-                  Colors.green,
-                  isPremium: isPremium,
-                  requiresPremium: false,
-                ),
-                _buildThemeOption(
-                  context,
-                  ref,
-                  profile,
-                  'sanctuary',
-                  'Floating Sanctuary',
-                  'Serene sky islands',
-                  Icons.cloud,
-                  Colors.purple,
-                  isPremium: isPremium,
-                  requiresPremium: true,
-                ),
-                _buildThemeOption(
-                  context,
-                  ref,
-                  profile,
-                  'cosmic',
-                  'Cosmic Void',
-                  'Deep space anomaly',
-                  Icons.public,
-                  Colors.deepPurpleAccent,
-                  isPremium: isPremium,
-                  requiresPremium: true,
-                ),
-                _buildThemeOption(
-                  context,
-                  ref,
-                  profile,
-                  null,
-                  'Default (Archetype)',
-                  'Based on character',
-                  Icons.auto_awesome,
-                  EmergeColors.teal,
-                  isPremium: isPremium,
-                  requiresPremium: false,
-                ),
-              ],
-            ),
-          ),
-        );
-      },
-    );
-  }
-
-  Widget _buildThemeOption(
-    BuildContext context,
-    WidgetRef ref,
-    UserProfile profile,
-    String? themeValue,
-    String title,
-    String subtitle,
-    IconData icon,
-    Color color, {
-    required bool isPremium,
-    required bool requiresPremium,
-  }) {
-    final currentTheme = profile.worldTheme;
-    final isSelected = currentTheme == themeValue;
-    final isLocked = requiresPremium && !isPremium;
-
-    return GestureDetector(
-      onTap: () {
-        if (isLocked) {
-          Navigator.pop(context);
-          context.push('/paywall');
-          return;
-        }
-        _updateWorldTheme(context, ref, profile, themeValue);
-      },
-      child: Container(
-        margin: const EdgeInsets.only(bottom: 12),
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: isSelected
-              ? color.withValues(alpha: 0.2)
-              : Colors.white.withValues(alpha: 0.05),
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: isSelected ? color : Colors.transparent,
-            width: 2,
-          ),
-        ),
-        child: Row(
-          children: [
-            Container(
-              width: 48,
-              height: 48,
-              decoration: BoxDecoration(
-                color: isLocked
-                    ? Colors.grey.withValues(alpha: 0.2)
-                    : color.withValues(alpha: 0.2),
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: Icon(
-                isLocked ? Icons.lock : icon,
-                color: isLocked ? Colors.grey : color,
-                size: 24,
-              ),
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Text(
-                        title,
-                        style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                          color: isLocked
-                              ? AppTheme.textSecondaryDark
-                              : AppTheme.textMainDark,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                      if (requiresPremium) ...[
-                        const SizedBox(width: 8),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 6,
-                            vertical: 2,
-                          ),
-                          decoration: BoxDecoration(
-                            color: Colors.amber.withValues(alpha: 0.2),
-                            borderRadius: BorderRadius.circular(4),
-                          ),
-                          child: const Text(
-                            'PRO',
-                            style: TextStyle(
-                              color: Colors.amber,
-                              fontSize: 10,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ],
-                  ),
-                  Text(
-                    isLocked ? 'Unlock with Emerge Pro' : subtitle,
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: AppTheme.textSecondaryDark,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            if (isSelected) Icon(Icons.check_circle, color: color, size: 24),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Future<void> _updateWorldTheme(
-    BuildContext context,
-    WidgetRef ref,
-    UserProfile profile,
-    String? theme,
-  ) async {
-    Navigator.pop(context);
-    if (profile.uid.isEmpty) return; // Prevent saving with empty UID
-    final updatedProfile = profile.copyWith(worldTheme: theme);
-    await ref.read(userStatsRepositoryProvider).saveUserStats(updatedProfile);
-  }
 
   Future<void> _updateSettings(
     BuildContext context,
@@ -1443,6 +1216,85 @@ class SettingsScreen extends ConsumerWidget {
             style: const TextStyle(color: Colors.white60, fontSize: 13),
           ),
         ],
+      ),
+    );
+  }
+}
+
+// ─── World Theme Picker ───────────────────────────────────────────────────────
+
+class _WorldThemePicker extends StatelessWidget {
+  final AppWorldTheme selected;
+  final ValueChanged<AppWorldTheme> onSelect;
+
+  const _WorldThemePicker({
+    required this.selected,
+    required this.onSelect,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      height: 100,
+      child: ListView.separated(
+        scrollDirection: Axis.horizontal,
+        padding: const EdgeInsets.symmetric(vertical: 4),
+        itemCount: AppWorldTheme.values.length,
+        separatorBuilder: (context, index) => const SizedBox(width: 10),
+        itemBuilder: (context, index) {
+          final theme = AppWorldTheme.values[index];
+          final isSelected = theme == selected;
+          return GestureDetector(
+            onTap: () => onSelect(theme),
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 200),
+              width: 80,
+              decoration: BoxDecoration(
+                color: isSelected
+                    ? Colors.white.withValues(alpha: 0.15)
+                    : Colors.white.withValues(alpha: 0.05),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: isSelected
+                      ? Colors.white.withValues(alpha: 0.6)
+                      : Colors.white.withValues(alpha: 0.15),
+                  width: isSelected ? 2 : 1,
+                ),
+              ),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    theme.emoji,
+                    style: const TextStyle(fontSize: 26),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    theme.displayName.split(' ').first,
+                    style: TextStyle(
+                      color: Colors.white
+                          .withValues(alpha: isSelected ? 0.9 : 0.5),
+                      fontSize: 10,
+                      fontWeight: isSelected
+                          ? FontWeight.bold
+                          : FontWeight.normal,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                  if (isSelected)
+                    const Padding(
+                      padding: EdgeInsets.only(top: 4),
+                      child: Icon(
+                        Icons.check_circle,
+                        color: Colors.white,
+                        size: 14,
+                      ),
+                    ),
+                ],
+              ),
+            ),
+          );
+        },
       ),
     );
   }
