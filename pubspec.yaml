@@ -142,6 +142,12 @@ flutter:
     - assets/images/levels/stoic/
     - assets/images/levels/zealot/
     - assets/images/levels/explorer/
+    - assets/images/backgrounds/
+    - assets/images/backgrounds/forest/
+    - assets/images/backgrounds/city/
+    - assets/images/backgrounds/mountain/
+    - assets/images/backgrounds/ocean/
+    - assets/images/backgrounds/volcanic/
     - assets/sounds/
     - assets/rive/
 
