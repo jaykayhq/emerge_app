@@ -1,53 +1,27 @@
-import 'package:emerge_app/core/presentation/widgets/emerge_branding.dart';
-
+// ignore_for_file: deprecated_member_use_from_same_package
+import 'package:emerge_app/core/presentation/widgets/world_background.dart';
 import 'package:flutter/material.dart';
 
+/// Legacy wrapper — delegates to [WorldBackground].
+/// Kept for backward compatibility so existing call-sites need no changes.
 class GrowthBackground extends StatelessWidget {
   final Widget child;
-  final bool showPattern;
   final PreferredSizeWidget? appBar;
-  final List<Color>? overrideGradient;
 
+  /// [showPattern] and [overrideGradient] are ignored in the new system.
+  /// Retained in the constructor so existing call-sites need no changes.
   const GrowthBackground({
     super.key,
     required this.child,
-    this.showPattern = true,
     this.appBar,
-    this.overrideGradient,
+    @Deprecated('No longer used — WorldBackground renders the environment')
+    bool showPattern = true,
+    @Deprecated('No longer used — WorldBackground renders the environment')
+    List<Color>? overrideGradient,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: appBar,
-      extendBodyBehindAppBar: true,
-      backgroundColor: EmergeColors.background, // Ensure base color is correct
-      body: Stack(
-        children: [
-          // 1. Hex Mesh Background (The core Emerge look)
-          if (showPattern) const Positioned.fill(child: HexMeshBackground()),
-
-          // 2. Ambient Glow (Subtle)
-          if (showPattern)
-            Positioned.fill(
-              child: Container(
-                decoration: BoxDecoration(
-                  gradient: RadialGradient(
-                    center: Alignment.topLeft,
-                    radius: 1.5,
-                    colors: [
-                      EmergeColors.teal.withValues(alpha: 0.05),
-                      Colors.transparent,
-                    ],
-                  ),
-                ),
-              ),
-            ),
-
-          // 3. Main Content
-          SafeArea(child: child),
-        ],
-      ),
-    );
+    return WorldBackground(appBar: appBar, child: child);
   }
 }
