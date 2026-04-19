@@ -8,7 +8,7 @@ import 'package:emerge_app/features/gamification/presentation/providers/user_sta
 import 'package:emerge_app/features/world_map/domain/models/archetype_map_config.dart';
 import 'package:emerge_app/features/world_map/domain/models/archetype_maps_catalog.dart';
 import 'package:emerge_app/features/world_map/domain/models/world_node.dart';
-import 'package:emerge_app/features/world_map/presentation/widgets/nebula_background.dart';
+import 'package:emerge_app/core/presentation/widgets/world_background.dart';
 import 'package:emerge_app/features/world_map/presentation/widgets/node_quest_dialog.dart';
 import 'package:emerge_app/features/world_map/presentation/screens/level_immersive_screen.dart';
 import 'package:emerge_app/features/world_map/presentation/widgets/curved_map_layout.dart';
@@ -110,9 +110,8 @@ class _WorldMapScreenState extends ConsumerState<WorldMapScreen> {
   Widget build(BuildContext context) {
     final statsAsync = ref.watch(userStatsStreamProvider);
 
-    return Scaffold(
-      backgroundColor: const Color(0xFF0A0A1A), // Cosmic void dark
-      body: statsAsync.when(
+    return WorldBackground(
+      child: statsAsync.when(
         data: (profile) {
           final archetype = profile.archetype;
           // DEBUG: Log archetype being loaded
@@ -139,28 +138,6 @@ class _WorldMapScreenState extends ConsumerState<WorldMapScreen> {
 
           return Stack(
             children: [
-              // Layer 1: Parallax            // Background
-              ref.watch(isPremiumProvider).maybeWhen(
-                data: (isPremium) => isPremium 
-                    ? Positioned.fill(
-                        child: Image.network(
-                          'https://lh3.googleusercontent.com/aida/ADBb0uitUEShtb3iVM1Ekb_OSpRsR7K3fNW6ccSwv9pE_jCHpj2DH8HLpXtDzuqoW44ZGcFPZmYZCeB9-DIF9l-28f1r0QCFdy6nQl2LNYs0Oek7FWQLb1UC7Ezwk9Op2KvQV-mFK8QBruLaEPCI9MXC5JRsQ0WvOhzJWU5PbZigl3c1qcHdl9uG7ouK_LHlxvCKbF310Cvuldzy7fXDeqPxuSz-zN7gXg0oEvI0bRsQ9Ii3cZ8n2e7wcdsHqJY',
-                          fit: BoxFit.cover,
-                        ),
-                      )
-                    : NebulaBackground(
-                        biome: currentBiome,
-                        primaryColor: mapConfig.primaryColor,
-                        accentColor: mapConfig.accentColor,
-                        level: currentLevel,
-                      ),
-                orElse: () => NebulaBackground(
-                  biome: currentBiome,
-                  primaryColor: mapConfig.primaryColor,
-                  accentColor: mapConfig.accentColor,
-                  level: currentLevel,
-                ),
-              ),
 
               // Layer 2: Map content (Curved Layout)
               SafeArea(
