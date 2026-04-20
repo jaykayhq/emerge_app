@@ -84,8 +84,6 @@ dependencies:
   cloud_functions: ^6.0.6
   firebase_analytics: ^12.1.2
   simple_animations: ^5.2.0
-  health: ^13.3.1
-  app_usage: ^4.0.1
   cached_network_image: ^3.4.1
 
 dev_dependencies:
