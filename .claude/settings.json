@@ -1,10 +1,10 @@
 {
     "env": {
-        "ANTHROPIC_AUTH_TOKEN": "1d365cd1f0b249d7b8c8e80e5c73db2c.PwofESCDDebhtdlq",
-        "ANTHROPIC_BASE_URL": "https://api.z.ai/api/anthropic",
+        "ANTHROPIC_API_KEY": "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",
+        "ANTHROPIC_BASE_URL": "https://integrate.api.nvidia.com/v1",
         "API_TIMEOUT_MS": "3000000",
         "ANTHROPIC_DEFAULT_HAIKU_MODEL": "glm-4.5-air",
         "ANTHROPIC_DEFAULT_SONNET_MODEL": "glm-4.7-flash",
-        "ANTHROPIC_DEFAULT_OPUS_MODEL": "glm-4.7"
+        "ANTHROPIC_DEFAULT_OPUS_MODEL": "z-ai/glm4.7"
     }
 }
