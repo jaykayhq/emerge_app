@@ -90,11 +90,7 @@ class FirestoreHabitRepository implements HabitRepository {
               .toList() ??
           [],
       timerDurationMinutes: data['timerDurationMinutes'] as int? ?? 2,
-      customRules:
-          (data['customRules'] as List<dynamic>?)
-              ?.map((e) => e as String)
-              .toList() ??
-          [],
+
       environmentPriming:
           (data['environmentPriming'] as List<dynamic>?)
               ?.map((e) => e as String)
@@ -161,7 +157,6 @@ class FirestoreHabitRepository implements HabitRepository {
         'anchorHabitId': habit.anchorHabitId,
         'identityTags': habit.identityTags,
         'timerDurationMinutes': habit.timerDurationMinutes,
-        'customRules': habit.customRules,
         'environmentPriming': habit.environmentPriming,
         'twoMinuteVersion': habit.twoMinuteVersion,
         'integrationType': habit.integrationType.name,
@@ -207,7 +202,6 @@ class FirestoreHabitRepository implements HabitRepository {
         'anchorHabitId': habit.anchorHabitId,
         'identityTags': habit.identityTags,
         'timerDurationMinutes': habit.timerDurationMinutes,
-        'customRules': habit.customRules,
         'environmentPriming': habit.environmentPriming,
         'twoMinuteVersion': habit.twoMinuteVersion,
         'integrationType': habit.integrationType.name,

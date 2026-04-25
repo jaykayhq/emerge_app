@@ -270,8 +270,7 @@ class _CategoryHeader extends StatelessWidget {
   }
 }
 
-/// Indented habit item with connector line
-class _IndentedHabitItem extends StatelessWidget {
+class _IndentedHabitItem extends StatefulWidget {
   final Habit habit;
   final DateTime selectedDate;
   final VoidCallback onTap;
@@ -286,19 +285,75 @@ class _IndentedHabitItem extends StatelessWidget {
     required this.showConnector,
   });
 
+  @override
+  State<_IndentedHabitItem> createState() => _IndentedHabitItemState();
+}
+
+class _IndentedHabitItemState extends State<_IndentedHabitItem> {
+  bool _isExpanded = false;
+  int _remainingSeconds = 0;
+  bool _isTimerRunning = false;
+  
+  @override
+  void initState() {
+    super.initState();
+    _remainingSeconds = widget.habit.timerDurationMinutes * 60;
+  }
+  
+  void _startTimer() {
+    if (_isTimerRunning) return;
+    setState(() => _isTimerRunning = true);
+    
+    _tickTimer();
+  }
+  
+  void _tickTimer() {
+    if (!mounted || !_isTimerRunning) return;
+    
+    if (_remainingSeconds > 0) {
+      Future.delayed(const Duration(seconds: 1), () {
+        if (!mounted || !_isTimerRunning) return;
+        setState(() => _remainingSeconds--);
+        _tickTimer();
+      });
+    } else {
+      setState(() => _isTimerRunning = false);
+      // Auto-complete the habit
+      if (!_isCompletedToday) {
+        widget.onToggle();
+      }
+    }
+  }
+
+  void _pauseTimer() {
+    setState(() => _isTimerRunning = false);
+  }
+
+  @override
+  void dispose() {
+    _isTimerRunning = false;
+    super.dispose();
+  }
+
   bool get _isCompletedToday {
-    final last = habit.lastCompletedDate;
+    final last = widget.habit.lastCompletedDate;
     if (last == null) return false;
-    return last.year == selectedDate.year &&
-        last.month == selectedDate.month &&
-        last.day == selectedDate.day;
+    return last.year == widget.selectedDate.year &&
+        last.month == widget.selectedDate.month &&
+        last.day == widget.selectedDate.day;
+  }
+
+  String get _timerString {
+    final m = (_remainingSeconds ~/ 60).toString().padLeft(2, '0');
+    final s = (_remainingSeconds % 60).toString().padLeft(2, '0');
+    return '$m:$s';
   }
 
   @override
   Widget build(BuildContext context) {
     final completed = _isCompletedToday;
-    final color = attributeColor(habit.attribute);
-    final label = attributeLabel(habit.attribute);
+    final color = attributeColor(widget.habit.attribute);
+    final label = attributeLabel(widget.habit.attribute);
 
     return Padding(
       padding: const EdgeInsets.only(left: 24, bottom: 8),
@@ -308,7 +363,7 @@ class _IndentedHabitItem extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // Vertical connector line
-              if (showConnector)
+              if (widget.showConnector)
                 Padding(
                   padding: const EdgeInsets.only(left: 5, top: 0),
                   child: Container(
@@ -333,39 +388,11 @@ class _IndentedHabitItem extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Environmental Priming nodes
-                    if (!completed && habit.environmentPriming.isNotEmpty) ...[
-                      for (final priming in habit.environmentPriming)
-                        Padding(
-                          padding: const EdgeInsets.only(
-                            bottom: 8.0,
-                            left: 16.0,
-                          ),
-                          child: Row(
-                            children: [
-                              Icon(
-                                Icons.check_box_outline_blank,
-                                size: 16,
-                                color: color.withValues(alpha: 0.5),
-                              ),
-                              const SizedBox(width: 8),
-                              Expanded(
-                                child: Text(
-                                  priming,
-                                  style: TextStyle(
-                                    color: Colors.white.withValues(alpha: 0.7),
-                                    fontSize: 12,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                    ],
+
 
                     GestureDetector(
-                      onTap: onTap,
-                      onLongPress: !completed ? onToggle : null,
+                      onTap: widget.onTap,
+                      onLongPress: !completed ? widget.onToggle : null,
                       child: Container(
                         padding: const EdgeInsets.all(12),
                         decoration: BoxDecoration(
@@ -386,8 +413,84 @@ class _IndentedHabitItem extends StatelessWidget {
                       ),
                     ),
 
+                    // Expanding details drawer
+                    AnimatedSize(
+                      duration: const Duration(milliseconds: 300),
+                      curve: Curves.easeOutCubic,
+                      alignment: Alignment.topCenter,
+                      child: (_isExpanded && !completed)
+                          ? Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const SizedBox(height: 8),
+                                // 2-Minute Version
+                                if (widget.habit.twoMinuteVersion != null && widget.habit.twoMinuteVersion!.isNotEmpty)
+                                  Padding(
+                                    padding: const EdgeInsets.only(left: 16.0, bottom: 8.0),
+                                    child: Container(
+                                      padding: const EdgeInsets.all(12),
+                                      decoration: BoxDecoration(
+                                        color: color.withValues(alpha: 0.05),
+                                        borderRadius: BorderRadius.circular(8),
+                                        border: Border.all(color: color.withValues(alpha: 0.2)),
+                                      ),
+                                      child: Column(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            '2-MINUTE VERSION',
+                                            style: TextStyle(
+                                              color: color,
+                                              fontSize: 10,
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                          ),
+                                          const SizedBox(height: 4),
+                                          Text(
+                                            widget.habit.twoMinuteVersion!,
+                                            style: const TextStyle(
+                                              color: Colors.white70,
+                                              fontSize: 12,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+
+                                // Environmental Priming nodes
+                                if (widget.habit.environmentPriming.isNotEmpty) ...[
+                                  for (final priming in widget.habit.environmentPriming)
+                                    Padding(
+                                      padding: const EdgeInsets.only(bottom: 8.0, left: 16.0),
+                                      child: Row(
+                                        children: [
+                                          Icon(
+                                            Icons.check_box_outline_blank,
+                                            size: 16,
+                                            color: color.withValues(alpha: 0.5),
+                                          ),
+                                          const SizedBox(width: 8),
+                                          Expanded(
+                                            child: Text(
+                                              priming,
+                                              style: TextStyle(
+                                                color: Colors.white.withValues(alpha: 0.7),
+                                                fontSize: 12,
+                                              ),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                ],
+                              ],
+                            )
+                          : const SizedBox.shrink(),
+                    ),
+
                     // Temptation Bundling (Reward) node
-                    if (habit.reward.isNotEmpty) ...[
+                    if (widget.habit.reward.isNotEmpty) ...[
                       const SizedBox(height: 8),
                       Padding(
                         padding: const EdgeInsets.only(left: 16.0),
@@ -421,7 +524,7 @@ class _IndentedHabitItem extends StatelessWidget {
                               ),
                               const SizedBox(width: 6),
                               Text(
-                                habit.reward,
+                                widget.habit.reward,
                                 style: TextStyle(
                                   color: completed
                                       ? Colors.white
@@ -465,18 +568,73 @@ class _IndentedHabitItem extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                habit.title,
+                widget.habit.title,
                 style: const TextStyle(
                   color: Colors.white,
                   fontSize: 14,
                   fontWeight: FontWeight.w500,
                 ),
               ),
-
-              // Cue hidden to prevent redundancy with time-of-day headers
             ],
           ),
         ),
+        
+        // Expand details button
+        if (widget.habit.environmentPriming.isNotEmpty || (widget.habit.twoMinuteVersion != null && widget.habit.twoMinuteVersion!.isNotEmpty))
+          IconButton(
+            icon: Icon(
+              _isExpanded ? Icons.expand_less : Icons.expand_more,
+              color: color.withValues(alpha: 0.7),
+              size: 20,
+            ),
+            padding: EdgeInsets.zero,
+            constraints: const BoxConstraints(),
+            onPressed: () {
+              setState(() {
+                _isExpanded = !_isExpanded;
+              });
+            },
+          ),
+          
+        const SizedBox(width: 8),
+        
+        // Timer Button
+        if (widget.habit.timerDurationMinutes > 0 && _remainingSeconds > 0)
+          GestureDetector(
+            behavior: HitTestBehavior.opaque,
+            onTap: _isTimerRunning ? _pauseTimer : _startTimer,
+            child: Container(
+              constraints: const BoxConstraints(minHeight: 48, minWidth: 48),
+              alignment: Alignment.center,
+              padding: const EdgeInsets.symmetric(horizontal: 12),
+              margin: const EdgeInsets.only(right: 8),
+              decoration: BoxDecoration(
+                color: _isTimerRunning ? color.withValues(alpha: 0.2) : Colors.white.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(24),
+                border: Border.all(color: _isTimerRunning ? color : Colors.transparent),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    _isTimerRunning ? Icons.pause : Icons.play_arrow,
+                    color: _isTimerRunning ? color : Colors.white,
+                    size: 14,
+                  ),
+                  const SizedBox(width: 4),
+                  Text(
+                    _timerString,
+                    style: TextStyle(
+                      color: _isTimerRunning ? color : Colors.white,
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold,
+                      fontFeatures: const [FontFeature.tabularFigures()],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
         // Attribute indicator
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
@@ -500,9 +658,9 @@ class _IndentedHabitItem extends StatelessWidget {
   Widget _buildCompleted(Color color) {
     // Calculate XP
     int baseXp = 10;
-    if (habit.difficulty.toString().contains('medium')) baseXp = 20;
-    if (habit.difficulty.toString().contains('hard')) baseXp = 30;
-    final xp = (baseXp * (1 + (habit.currentStreak * 0.1).clamp(0.0, 0.5)))
+    if (widget.habit.difficulty.toString().contains('medium')) baseXp = 20;
+    if (widget.habit.difficulty.toString().contains('hard')) baseXp = 30;
+    final xp = (baseXp * (1 + (widget.habit.currentStreak * 0.1).clamp(0.0, 0.5)))
         .toInt();
 
     return Container(
@@ -513,7 +671,7 @@ class _IndentedHabitItem extends StatelessWidget {
           const SizedBox(width: 12),
           Expanded(
             child: Text(
-              habit.title,
+              widget.habit.title,
               style: const TextStyle(
                 color: Colors.white,
                 fontSize: 14,

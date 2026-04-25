@@ -16,7 +16,15 @@ Stay Focused: Concise, purposeful responses tied to habit psychology.
 
 Output First: Prioritize Flutter + Firebase code and visual habit mechanics.
 
-2. THE "ULTRATHINK" PROTOCOL (TRIGGER COMMAND)
+2. SUPERPOWERS PROTOCOL (AGENTIC WORKFLOW)
+
+Mandatory Skills: Follow all skills in `docs/superpowers/skills/`.
+
+Pre-Action Gate: Read relevant skill files before starting any task or responding.
+
+Workflow Sequence: Brainstorming -> Writing Plans -> Execution -> Verification.
+
+3. THE "ULTRATHINK" PROTOCOL (TRIGGER COMMAND)
 
 TRIGGER: When the user prompts "ULTRATHINK":
 

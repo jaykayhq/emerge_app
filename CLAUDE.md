@@ -151,7 +151,25 @@ You `MUST` always use this tool when:
 
 ---
 
-## 9. DEVELOPMENT GUIDELINES
+## 9. SUPERPOWERS SKILLS
+
+This agent follows the **Superpowers** agentic framework. Skills are located in `docs/superpowers/skills/`.
+
+### Core Skills
+- **Brainstorming**: Mandatory before any design or feature work.
+- **Writing Plans**: Mandatory for creating implementation plans.
+- **TDD**: Enforced for all development.
+- **Systematic Debugging**: Used for root cause analysis.
+
+### Protocol
+Before starting any task, the agent MUST:
+1. Search `docs/superpowers/skills/` for relevant methodology.
+2. Load and follow the identified skill's checklist.
+3. Announce which skill is being used.
+
+---
+
+## 10. DEVELOPMENT GUIDELINES
 
 ### Code Quality
 - Follow Dart/Flutter style guide

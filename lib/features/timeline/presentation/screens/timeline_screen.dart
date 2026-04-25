@@ -3,13 +3,12 @@ import 'package:emerge_app/core/presentation/widgets/glassmorphism_card.dart';
 import 'package:emerge_app/core/theme/emerge_earthy_theme.dart';
 import 'package:emerge_app/features/ai/domain/services/ai_personalization_service.dart';
 import 'package:emerge_app/features/auth/presentation/providers/auth_providers.dart';
-import 'package:emerge_app/features/gamification/domain/services/gamification_service.dart';
 import 'package:emerge_app/features/habits/domain/entities/habit.dart';
 import 'package:emerge_app/features/habits/presentation/providers/habit_providers.dart';
 import 'package:emerge_app/features/insights/data/repositories/insights_repository.dart';
 import 'package:emerge_app/features/insights/domain/entities/insights_entities.dart';
 import 'package:emerge_app/features/monetization/presentation/providers/subscription_provider.dart';
-import 'package:emerge_app/features/timeline/presentation/widgets/week_calendar_strip.dart';
+import 'package:emerge_app/features/timeline/presentation/widgets/month_calendar_strip.dart';
 import 'package:emerge_app/features/timeline/presentation/widgets/ai_coach_card.dart';
 import 'package:emerge_app/features/timeline/presentation/widgets/current_mission_banner.dart';
 import 'package:emerge_app/features/timeline/presentation/widgets/habit_timeline_section.dart';
@@ -201,41 +200,46 @@ class _TimelineScreenState extends ConsumerState<TimelineScreen> {
                   backgroundColor: Colors.transparent,
                   title: Column(
                     children: [
-                        Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Text(
-                              'TIMELINE',
-                              style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                                color: Colors.white,
-                                fontWeight: FontWeight.bold,
-                                letterSpacing: 1.5,
-                              ),
-                            ),
-                            const SizedBox(width: 8),
-                            Consumer(
-                              builder: (context, ref, _) {
-                                final isPremium = ref.watch(isPremiumProvider).value ?? false;
-                                if (!isPremium) return const SizedBox.shrink();
-                                return Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                                  decoration: BoxDecoration(
-                                    color: Colors.amber,
-                                    borderRadius: BorderRadius.circular(4),
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            'TIMELINE',
+                            style: Theme.of(context).textTheme.titleLarge
+                                ?.copyWith(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold,
+                                  letterSpacing: 1.5,
+                                ),
+                          ),
+                          const SizedBox(width: 8),
+                          Consumer(
+                            builder: (context, ref, _) {
+                              final isPremium =
+                                  ref.watch(isPremiumProvider).value ?? false;
+                              if (!isPremium) return const SizedBox.shrink();
+                              return Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 6,
+                                  vertical: 2,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: Colors.amber,
+                                  borderRadius: BorderRadius.circular(4),
+                                ),
+                                child: const Text(
+                                  'PRO',
+                                  style: TextStyle(
+                                    color: Colors.black,
+                                    fontSize: 8,
+                                    fontWeight: FontWeight.bold,
                                   ),
-                                  child: const Text(
-                                    'PRO',
-                                    style: TextStyle(
-                                      color: Colors.black,
-                                      fontSize: 8,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                );
-                              },
-                            ),
-                          ],
-                        ),
+                                ),
+                              );
+                            },
+                          ),
+                        ],
+                      ),
                       Text(
                         'IDENTITY PROTOCOL',
                         style: Theme.of(context).textTheme.labelSmall?.copyWith(
@@ -266,12 +270,14 @@ class _TimelineScreenState extends ConsumerState<TimelineScreen> {
 
                 // Calendar Strip
                 SliverToBoxAdapter(
-                  child: WeekCalendarStrip(
+                  child: MonthCalendarStrip(
                     key: _calendarKey,
                     selectedDate: _selectedDate,
                     onDateSelected: (date) {
                       setState(() => _selectedDate = date);
                     },
+                    // We'll calculate completion status per day
+                    // completionStatus: _buildCompletionMap(habits), // Currently not defined in this scope, let's just omit if it was omitted before
                   ),
                 ),
 
@@ -289,14 +295,7 @@ class _TimelineScreenState extends ConsumerState<TimelineScreen> {
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
                             _buildTotalStreakWidget(habits),
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.end,
-                              children: [
-                                _buildVoteIcon(habits),
-                                const SizedBox(width: 12),
-                                _buildStreakIcon(habits),
-                              ],
-                            ),
+                            _buildVoteIcon(habits),
                           ],
                         ),
                       ],
@@ -647,35 +646,21 @@ class _TimelineScreenState extends ConsumerState<TimelineScreen> {
 
     return Tooltip(
       message: 'Completed Habits: $completedToday',
-      child: Semantics(
-        button: true,
-        label: 'Completed Habits: $completedToday',
-        child: GestureDetector(
-          onTap: () => _showDetailBottomSheet(context, 'completed', habits),
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-            decoration: BoxDecoration(
-              color: EmergeEarthyColors.terracotta.withValues(alpha: 0.15),
-              borderRadius: BorderRadius.circular(20),
-              border: Border.all(
-                color: EmergeEarthyColors.terracotta.withValues(alpha: 0.5),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text('🗳️', style: TextStyle(fontSize: 16)),
+            const SizedBox(width: 8),
+            Text(
+              '$completedToday',
+              style: TextStyle(
+                color: EmergeEarthyColors.terracotta,
+                fontWeight: FontWeight.bold,
               ),
             ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Text('🗳️', style: TextStyle(fontSize: 16)),
-                const SizedBox(width: 8),
-                Text(
-                  '$completedToday',
-                  style: TextStyle(
-                    color: EmergeEarthyColors.terracotta,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ],
-            ),
-          ),
+          ],
         ),
       ),
     );
@@ -722,45 +707,7 @@ class _TimelineScreenState extends ConsumerState<TimelineScreen> {
     );
   }
 
-  Widget _buildStreakIcon(List<Habit> habits) {
-    // Total created habits count (NEW: reversed functionality)
-    final totalCreated = habits.length;
 
-    return Tooltip(
-      message: 'Created Habits: $totalCreated',
-      child: Semantics(
-        button: true,
-        label: 'Created Habits: $totalCreated',
-        child: GestureDetector(
-          onTap: () => _showDetailBottomSheet(context, 'created', habits),
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-            decoration: BoxDecoration(
-              color: EmergeEarthyColors.sienna.withValues(alpha: 0.15),
-              borderRadius: BorderRadius.circular(20),
-              border: Border.all(
-                color: EmergeEarthyColors.sienna.withValues(alpha: 0.5),
-              ),
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Text('🔥', style: TextStyle(fontSize: 16)),
-                const SizedBox(width: 8),
-                Text(
-                  '$totalCreated',
-                  style: TextStyle(
-                    color: EmergeEarthyColors.sienna,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
 
   void _shareTimelineProgress() {
     final habits = ref.read(habitsProvider).value ?? [];
@@ -789,219 +736,6 @@ class _TimelineScreenState extends ConsumerState<TimelineScreen> {
         totalHabits: habits.length,
         totalStreaks: totalStreaks,
         totalVotes: totalVotes,
-      ),
-    );
-  }
-
-  IconData _getAttributeIcon(HabitAttribute attribute) {
-    switch (attribute) {
-      case HabitAttribute.vitality:
-        return Icons.favorite;
-      case HabitAttribute.intellect:
-        return Icons.menu_book;
-      case HabitAttribute.creativity:
-        return Icons.palette;
-      case HabitAttribute.focus:
-        return Icons.center_focus_strong;
-      case HabitAttribute.strength:
-        return Icons.fitness_center;
-      case HabitAttribute.spirit:
-        return Icons.auto_awesome;
-    }
-  }
-
-  void _showDetailBottomSheet(
-    BuildContext context,
-    String metricType,
-    List<Habit> habits,
-  ) {
-    final isCompleted = metricType == 'completed';
-    final primaryColor = isCompleted
-        ? EmergeEarthyColors.terracotta
-        : EmergeEarthyColors.sienna;
-
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: Colors.transparent,
-      isScrollControlled: true,
-      builder: (context) => Container(
-        decoration: BoxDecoration(
-          color: EmergeEarthyColors.baseBackground.withValues(alpha: 0.95),
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-          border: Border(
-            top: BorderSide(
-              color: primaryColor.withValues(alpha: 0.3),
-              width: 2,
-            ),
-          ),
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            // Drag handle
-            Container(
-              margin: const EdgeInsets.only(top: 12),
-              width: 40,
-              height: 4,
-              decoration: BoxDecoration(
-                color: primaryColor.withValues(alpha: 0.3),
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
-            const SizedBox(height: 20),
-
-            // Header
-            Text(
-              isCompleted ? 'Completed Habits' : 'Created Habits',
-              style: TextStyle(
-                color: primaryColor,
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              isCompleted ? 'Habits completed today' : 'Total active habits',
-              style: TextStyle(
-                color: EmergeEarthyColors.cream.withValues(alpha: 0.7),
-                fontSize: 14,
-              ),
-            ),
-
-            const SizedBox(height: 24),
-
-            // Content
-            Flexible(
-              child: ListView.separated(
-                shrinkWrap: true,
-                itemCount: habits.length,
-                separatorBuilder: (_, _) => const SizedBox(height: 12),
-                itemBuilder: (context, index) {
-                  final habit = habits[index];
-                  final attrColor =
-                      EmergeEarthyColors.attributeColors[habit.attribute] ??
-                      primaryColor;
-                  final gamificationService = GamificationService();
-                  final xp = gamificationService.calculateXpGain(habit);
-
-                  return Container(
-                    margin: const EdgeInsets.symmetric(horizontal: 20),
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: attrColor.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(
-                        color: attrColor.withValues(alpha: 0.3),
-                      ),
-                    ),
-                    child: Row(
-                      children: [
-                        Icon(
-                          _getAttributeIcon(habit.attribute),
-                          size: 28,
-                          color: attrColor,
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                habit.title,
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 16,
-                                ),
-                              ),
-                              const SizedBox(height: 4),
-                              Row(
-                                children: [
-                                  Container(
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 8,
-                                      vertical: 2,
-                                    ),
-                                    decoration: BoxDecoration(
-                                      color: attrColor.withValues(alpha: 0.2),
-                                      borderRadius: BorderRadius.circular(8),
-                                    ),
-                                    child: Text(
-                                      habit.attribute.name.toUpperCase(),
-                                      style: TextStyle(
-                                        color: attrColor,
-                                        fontSize: 10,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                  ),
-                                  if (habit.currentStreak > 0) ...[
-                                    const SizedBox(width: 8),
-                                    Row(
-                                      children: [
-                                        const Text(
-                                          '🔥',
-                                          style: TextStyle(fontSize: 12),
-                                        ),
-                                        const SizedBox(width: 4),
-                                        Text(
-                                          '${habit.currentStreak} day streak',
-                                          style: TextStyle(
-                                            color: EmergeEarthyColors.cream
-                                                .withValues(alpha: 0.7),
-                                            fontSize: 11,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ],
-                                ],
-                              ),
-                            ],
-                          ),
-                        ),
-                        Column(
-                          children: [
-                            Text(
-                              '+$xp',
-                              style: TextStyle(
-                                color: attrColor,
-                                fontWeight: FontWeight.bold,
-                                fontSize: 16,
-                              ),
-                            ),
-                            Text(
-                              'XP',
-                              style: TextStyle(
-                                color: attrColor.withValues(alpha: 0.7),
-                                fontSize: 10,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  );
-                },
-              ),
-            ),
-
-            const SizedBox(height: 32),
-
-            // Close button
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: Text(
-                '✕ CLOSE',
-                style: TextStyle(
-                  color: primaryColor,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
-          ],
-        ),
       ),
     );
   }
