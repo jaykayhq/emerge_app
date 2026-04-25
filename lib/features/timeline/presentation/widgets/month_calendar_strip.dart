@@ -9,17 +9,17 @@ import 'package:intl/intl.dart';
 /// Completion status for a day
 enum DayCompletionStatus { none, partial, complete }
 
-/// Horizontal scrollable calendar strip showing the current week
+/// Horizontal scrollable calendar strip showing the current month
 /// Highlights today and allows selecting a day to view its habits/progress
 /// Now includes completion dots below each day per Stitch design
-class WeekCalendarStrip extends StatefulWidget {
+class MonthCalendarStrip extends StatefulWidget {
   final DateTime? selectedDate;
   final ValueChanged<DateTime>? onDateSelected;
 
   /// Map of date (year-month-day string) to completion status
   final Map<String, DayCompletionStatus>? completionStatus;
 
-  const WeekCalendarStrip({
+  const MonthCalendarStrip({
     super.key,
     this.selectedDate,
     this.onDateSelected,
@@ -27,32 +27,58 @@ class WeekCalendarStrip extends StatefulWidget {
   });
 
   @override
-  State<WeekCalendarStrip> createState() => _WeekCalendarStripState();
+  State<MonthCalendarStrip> createState() => _MonthCalendarStripState();
 }
 
-class _WeekCalendarStripState extends State<WeekCalendarStrip> {
+class _MonthCalendarStripState extends State<MonthCalendarStrip> {
   late DateTime _selectedDate;
-  late List<DateTime> _weekDays;
+  late List<DateTime> _monthDays;
+  final ScrollController _scrollController = ScrollController();
 
   @override
   void initState() {
     super.initState();
     _selectedDate = widget.selectedDate ?? DateTime.now();
-    _generateWeekDays();
+    _generateMonthDays();
+    WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToSelectedDate());
   }
 
-  void _generateWeekDays() {
+  void _generateMonthDays() {
     final now = DateTime.now();
-    // Generate the last 7 days ending with today (progressive reveal)
-    _weekDays = List.generate(7, (index) {
-      return now.subtract(Duration(days: 6 - index));
+    final lastDayOfMonth = DateTime(now.year, now.month + 1, 0);
+    _monthDays = List.generate(lastDayOfMonth.day, (index) {
+      return DateTime(now.year, now.month, index + 1);
     });
+  }
+
+  void _scrollToSelectedDate() {
+    if (!_scrollController.hasClients) return;
+    
+    final index = _monthDays.indexWhere((d) => _isSameDay(d, _selectedDate));
+    if (index == -1) return;
+
+    const itemWidth = 64.0;
+    final screenWidth = MediaQuery.of(context).size.width;
+    final scrollOffset = (index * itemWidth) - (screenWidth / 2) + (itemWidth / 2);
+    
+    _scrollController.animateTo(
+      scrollOffset.clamp(0.0, _scrollController.position.maxScrollExtent),
+      duration: const Duration(milliseconds: 300),
+      curve: Curves.easeInOut,
+    );
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 8),
+      height: 110,
+      padding: const EdgeInsets.symmetric(vertical: 16),
       decoration: BoxDecoration(
         color: Colors.transparent,
         border: Border(
@@ -62,11 +88,17 @@ class _WeekCalendarStripState extends State<WeekCalendarStrip> {
           ),
         ),
       ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-        children: _weekDays
-            .map((date) => Expanded(child: _buildDayItem(date)))
-            .toList(),
+      child: ListView.builder(
+        controller: _scrollController,
+        scrollDirection: Axis.horizontal,
+        itemCount: _monthDays.length,
+        padding: const EdgeInsets.symmetric(horizontal: 8),
+        itemBuilder: (context, index) {
+          return SizedBox(
+            width: 64,
+            child: _buildDayItem(_monthDays[index]),
+          );
+        },
       ),
     );
   }
@@ -88,6 +120,7 @@ class _WeekCalendarStripState extends State<WeekCalendarStrip> {
       onTap: () {
         setState(() => _selectedDate = date);
         widget.onDateSelected?.call(date);
+        _scrollToSelectedDate();
       },
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),

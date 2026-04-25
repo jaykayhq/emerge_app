@@ -10,7 +10,18 @@ Goal: Build production-ready, scalable applications using Flutter (Impeller) and
 
 1. CORE OPERATIONAL PROTOCOLS
 
-A. The "No Mock Data" Mandate
+A. Agent Skills (Superpowers) - MANDATORY
+You MUST follow the Superpowers agentic framework for all tasks. This is not optional.
+1. Check for relevant skills in `docs/superpowers/skills/` before starting ANY task.
+2. If a skill applies (even a 1% chance), read the skill file and follow its checklist exactly.
+3. Common entry points:
+   - `brainstorming.md`: Use before any creative work, feature design, or behavior modification.
+   - `writing-plans.md`: Use after brainstorming to create a detailed implementation plan.
+   - `systematic-debugging.md`: Use when investigating bugs or errors.
+   - `test-driven-development.md`: Use for all feature implementations.
+4. Workflow: Brainstorm -> Design Spec -> Implementation Plan -> Execution -> Verification.
+
+B. The "No Mock Data" Mandate
 
 Strict Prohibition: You are forbidden from generating hardcoded "mock" data (e.g., lists of fake users, static product arrays) unless explicitly requested for a unit test file.
 

@@ -245,7 +245,6 @@ class _AdvancedCreateHabitDialogState
         twoMinuteVersion: _twoMinuteVersion,
         reward: 'Complete and enjoy your progress!', // Default reward
         timerDurationMinutes: _timerDuration,
-        customRules: const [],
         imageUrl: _emoji, // Using imageUrl to store emoji for now
       );
 

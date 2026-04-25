@@ -41,7 +41,6 @@ class Habit extends Equatable {
   final int order;
   final String? location;
   final int timerDurationMinutes; // Default: 2 (Two-Minute Rule)
-  final List<String> customRules; // User-defined habit rules
   final List<String> environmentPriming; // Environment priming tasks
   final HabitIntegrationType integrationType;
   final int? integrationTarget;
@@ -74,7 +73,6 @@ class Habit extends Equatable {
     this.order = 0,
     this.location,
     this.timerDurationMinutes = 2,
-    this.customRules = const [],
     this.environmentPriming = const [],
     this.integrationType = HabitIntegrationType.none,
     this.integrationTarget,
@@ -120,7 +118,6 @@ class Habit extends Equatable {
     String? location,
     bool clearLocation = false,
     int? timerDurationMinutes,
-    List<String>? customRules,
     List<String>? environmentPriming,
     HabitIntegrationType? integrationType,
     int? integrationTarget,
@@ -166,7 +163,6 @@ class Habit extends Equatable {
       order: order ?? this.order,
       location: clearLocation ? null : (location ?? this.location),
       timerDurationMinutes: timerDurationMinutes ?? this.timerDurationMinutes,
-      customRules: customRules ?? this.customRules,
       environmentPriming: environmentPriming ?? this.environmentPriming,
       integrationType: integrationType ?? this.integrationType,
       integrationTarget: clearIntegrationTarget
@@ -204,7 +200,6 @@ class Habit extends Equatable {
     order,
     location,
     timerDurationMinutes,
-    customRules,
     environmentPriming,
     integrationType,
     integrationTarget,

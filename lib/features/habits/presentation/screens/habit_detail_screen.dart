@@ -23,12 +23,10 @@ class HabitDetailScreen extends ConsumerStatefulWidget {
 class _HabitDetailScreenState extends ConsumerState<HabitDetailScreen> {
   final _twoMinuteController = TextEditingController();
   final _rewardController = TextEditingController();
-  final _customRulesController = TextEditingController();
   final _primingController = TextEditingController();
 
   // State variables for editing
   late int _timerDurationMinutes;
-  late List<String> _customRules;
   late List<String> _environmentPriming;
   late HabitIntegrationType _integrationType;
   int? _integrationTarget;
@@ -40,7 +38,6 @@ class _HabitDetailScreenState extends ConsumerState<HabitDetailScreen> {
   void dispose() {
     _twoMinuteController.dispose();
     _rewardController.dispose();
-    _customRulesController.dispose();
     _primingController.dispose();
     super.dispose();
   }
@@ -50,7 +47,6 @@ class _HabitDetailScreenState extends ConsumerState<HabitDetailScreen> {
     _twoMinuteController.text = habit.twoMinuteVersion ?? '';
     _rewardController.text = habit.reward;
     _timerDurationMinutes = habit.timerDurationMinutes;
-    _customRules = List.from(habit.customRules);
     _environmentPriming = List.from(habit.environmentPriming);
     _integrationType = habit.integrationType;
     _integrationTarget = habit.integrationTarget;
@@ -79,8 +75,6 @@ class _HabitDetailScreenState extends ConsumerState<HabitDetailScreen> {
       twoMinuteVersion: _twoMinuteController.text.trim(),
       reward: _rewardController.text.trim(),
       timerDurationMinutes: _timerDurationMinutes,
-      customRules: _customRules,
-      environmentPriming: _environmentPriming,
       integrationType: _integrationType,
       integrationTarget: _integrationTarget,
       anchorHabitId: _anchorHabitId,
@@ -103,23 +97,6 @@ class _HabitDetailScreenState extends ConsumerState<HabitDetailScreen> {
     }
   }
 
-  void _addCustomRule() {
-    final rule = _customRulesController.text.trim();
-    if (rule.isNotEmpty) {
-      setState(() {
-        _customRules.add(rule);
-        _customRulesController.clear();
-        _hasChanges = true;
-      });
-    }
-  }
-
-  void _removeCustomRule(int index) {
-    setState(() {
-      _customRules.removeAt(index);
-      _hasChanges = true;
-    });
-  }
 
   void _addPrimingRule() {
     final rule = _primingController.text.trim();
@@ -503,118 +480,7 @@ class _HabitDetailScreenState extends ConsumerState<HabitDetailScreen> {
                     ),
                   ),
 
-                  // Custom Rules Section
-                  GlassmorphismCard(
-                    padding: const EdgeInsets.all(16),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        SectionHeader(title: 'Custom Rules'),
-                        const Gap(16),
-                        TextFormField(
-                          controller: _customRulesController,
-                          style: TextStyle(color: AppTheme.textMainDark),
-                          onFieldSubmitted: (_) => _addCustomRule(),
-                          decoration: InputDecoration(
-                            suffixIcon: IconButton(
-                              icon: const Icon(Icons.add),
-                              color: EmergeColors.teal,
-                              onPressed: _addCustomRule,
-                            ),
-                            hintText: 'Add a new rule...',
-                            hintStyle: TextStyle(
-                              color: AppTheme.textSecondaryDark.withValues(
-                                alpha: 0.5,
-                              ),
-                            ),
-                            border: InputBorder.none,
-                            enabledBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                              borderSide: BorderSide(
-                                color: AppTheme.textSecondaryDark.withValues(
-                                  alpha: 0.3,
-                                ),
-                              ),
-                            ),
-                            focusedBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                              borderSide: BorderSide(color: EmergeColors.teal),
-                            ),
-                            filled: true,
-                            fillColor: Colors.black.withValues(alpha: 0.2),
-                          ),
-                        ),
-                        const Gap(16),
-                        if (_customRules.isEmpty)
-                          Center(
-                            child: Padding(
-                              padding: const EdgeInsets.all(16.0),
-                              child: Text(
-                                'No custom rules yet.\nAdd rules to define success.',
-                                textAlign: TextAlign.center,
-                                style: TextStyle(
-                                  color: AppTheme.textSecondaryDark.withValues(
-                                    alpha: 0.5,
-                                  ),
-                                  fontStyle: FontStyle.italic,
-                                ),
-                              ),
-                            ),
-                          )
-                        else
-                          ListView.builder(
-                            shrinkWrap: true,
-                            physics: const NeverScrollableScrollPhysics(),
-                            itemCount: _customRules.length,
-                            itemBuilder: (context, index) {
-                              return Container(
-                                margin: const EdgeInsets.only(bottom: 8),
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 12,
-                                  vertical: 8,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: Colors.white.withValues(alpha: 0.05),
-                                  borderRadius: BorderRadius.circular(8),
-                                  border: Border.all(
-                                    color: Colors.white.withValues(alpha: 0.1),
-                                  ),
-                                ),
-                                child: Row(
-                                  children: [
-                                    Icon(
-                                      Icons.rule,
-                                      size: 16,
-                                      color: EmergeColors.teal,
-                                    ),
-                                    const Gap(12),
-                                    Expanded(
-                                      child: Text(
-                                        _customRules[index],
-                                        style: TextStyle(
-                                          color: AppTheme.textMainDark,
-                                          fontSize: 14,
-                                        ),
-                                      ),
-                                    ),
-                                    IconButton(
-                                      icon: Icon(
-                                        Icons.close,
-                                        size: 16,
-                                        color: AppTheme.textSecondaryDark,
-                                      ),
-                                      onPressed: () => _removeCustomRule(index),
-                                    ),
-                                  ],
-                                ),
-                              );
-                            },
-                          ),
-                      ],
-                    ),
-                  ),
 
-                  const Gap(24),
 
                   // Environment Priming Section
                   GlassmorphismCard(
