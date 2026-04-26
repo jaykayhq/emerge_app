@@ -71,10 +71,11 @@ class _WorldBackgroundLayer extends StatelessWidget {
 
     if (assetPath == null) {
       // Nebula theme — code-driven animated background
-      return const NebulaBackground(
+      return NebulaBackground(
         biome: BiomeType.valley,
-        primaryColor: Color(0xFF00FFCC),
-        accentColor: Color(0xFF6C63FF),
+        primaryColor: const Color(0xFF00FFCC),
+        accentColor: const Color(0xFF6C63FF),
+        healthState: healthState,
       );
     }
 
