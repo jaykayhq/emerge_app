@@ -75,3 +75,54 @@ String? resolveBackgroundAsset(AppWorldTheme theme, WorldHealthState state) {
   if (folder == null) return null;
   return 'assets/images/backgrounds/$folder/${state.assetName}.png';
 }
+
+/// Configuration for the procedural Nebula background based on health.
+class NebulaStateConfig {
+  final double starDensityFactor;
+  final double driftSpeedFactor;
+  final double nebulaOpacity;
+  final double colorSaturation;
+  final double twinkleSpeedFactor;
+  final double particleCountFactor;
+
+  const NebulaStateConfig({
+    required this.starDensityFactor,
+    required this.driftSpeedFactor,
+    required this.nebulaOpacity,
+    required this.colorSaturation,
+    required this.twinkleSpeedFactor,
+    required this.particleCountFactor,
+  });
+
+  static NebulaStateConfig forState(WorldHealthState state) {
+    switch (state) {
+      case WorldHealthState.thriving:
+        return const NebulaStateConfig(
+          starDensityFactor: 1.5,
+          driftSpeedFactor: 1.2,
+          nebulaOpacity: 0.20,
+          colorSaturation: 1.3,
+          twinkleSpeedFactor: 1.5,
+          particleCountFactor: 2.0,
+        );
+      case WorldHealthState.neutral:
+        return const NebulaStateConfig(
+          starDensityFactor: 1.0,
+          driftSpeedFactor: 1.0,
+          nebulaOpacity: 0.12,
+          colorSaturation: 1.0,
+          twinkleSpeedFactor: 1.0,
+          particleCountFactor: 1.0,
+        );
+      case WorldHealthState.decaying:
+        return const NebulaStateConfig(
+          starDensityFactor: 0.4,
+          driftSpeedFactor: 0.5,
+          nebulaOpacity: 0.05,
+          colorSaturation: 0.3,
+          twinkleSpeedFactor: 0.4,
+          particleCountFactor: 0.3,
+        );
+    }
+  }
+}
