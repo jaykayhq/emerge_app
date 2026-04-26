@@ -1,5 +1,6 @@
 import 'dart:math' as math;
 
+import 'package:emerge_app/core/domain/models/app_world_theme.dart';
 import 'package:emerge_app/features/world_map/domain/models/archetype_map_config.dart';
 import 'package:flutter/material.dart';
 
@@ -10,6 +11,7 @@ class NebulaBackground extends StatefulWidget {
   final Color primaryColor;
   final Color accentColor;
   final int level;
+  final WorldHealthState healthState;
 
   const NebulaBackground({
     super.key,
@@ -17,6 +19,7 @@ class NebulaBackground extends StatefulWidget {
     required this.primaryColor,
     required this.accentColor,
     this.level = 1,
+    this.healthState = WorldHealthState.neutral,
   });
 
   @override
@@ -59,6 +62,7 @@ class _NebulaBackgroundState extends State<NebulaBackground>
   }
 
   void _generateElements() {
+    final config = NebulaStateConfig.forState(widget.healthState);
     final random = math.Random(widget.biome.index * 42 + widget.level);
 
     // Procedural evolution: every 5 levels increases the density/richness
@@ -67,8 +71,9 @@ class _NebulaBackgroundState extends State<NebulaBackground>
       10,
     ); // 0 to 10 max
 
-    // Generate stars - more stars as you evolve
-    final starCount = 60 + (evolutionPhase * 15);
+    // Generate stars - more stars as you evolve, scaled by health
+    final starCount =
+        ((60 + (evolutionPhase * 15)) * config.starDensityFactor).toInt();
     _stars = List.generate(
       starCount,
       (i) => _Star.random(random, evolutionPhase),
@@ -81,8 +86,9 @@ class _NebulaBackgroundState extends State<NebulaBackground>
       (i) => _NebulaCloud.random(random, i, evolutionPhase),
     );
 
-    // Generate floating particles - more particles as you evolve
-    final particleCount = 20 + (evolutionPhase * 8);
+    // Generate floating particles - more particles as you evolve, scaled by health
+    final particleCount =
+        ((20 + (evolutionPhase * 8)) * config.particleCountFactor).toInt();
     _particles = List.generate(
       particleCount,
       (i) => _FloatingParticle.random(random, evolutionPhase),
@@ -92,7 +98,9 @@ class _NebulaBackgroundState extends State<NebulaBackground>
   @override
   void didUpdateWidget(NebulaBackground oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.level != widget.level || oldWidget.biome != widget.biome) {
+    if (oldWidget.level != widget.level ||
+        oldWidget.biome != widget.biome ||
+        oldWidget.healthState != widget.healthState) {
       _generateElements();
     }
   }
@@ -120,12 +128,14 @@ class _NebulaBackgroundState extends State<NebulaBackground>
           AnimatedBuilder(
             animation: _nebulaController,
             builder: (context, child) {
+              final config = NebulaStateConfig.forState(widget.healthState);
               return CustomPaint(
                 painter: _NebulaPainter(
                   clouds: _nebulaClouds,
                   progress: _nebulaController.value,
                   primaryColor: widget.primaryColor,
                   accentColor: widget.accentColor,
+                  config: config,
                 ),
                 size: Size.infinite,
               );
@@ -136,10 +146,12 @@ class _NebulaBackgroundState extends State<NebulaBackground>
           AnimatedBuilder(
             animation: _starController,
             builder: (context, child) {
+              final config = NebulaStateConfig.forState(widget.healthState);
               return CustomPaint(
                 painter: _StarFieldPainter(
                   stars: _stars,
                   twinkleProgress: _starController.value,
+                  config: config,
                 ),
                 size: Size.infinite,
               );
@@ -150,11 +162,13 @@ class _NebulaBackgroundState extends State<NebulaBackground>
           AnimatedBuilder(
             animation: _particleController,
             builder: (context, child) {
+              final config = NebulaStateConfig.forState(widget.healthState);
               return CustomPaint(
                 painter: _ParticleFieldPainter(
                   particles: _particles,
                   progress: _particleController.value,
                   color: widget.primaryColor,
+                  config: config,
                 ),
                 size: Size.infinite,
               );
@@ -332,17 +346,24 @@ class _FloatingParticle {
 class _StarFieldPainter extends CustomPainter {
   final List<_Star> stars;
   final double twinkleProgress;
+  final NebulaStateConfig config;
 
-  _StarFieldPainter({required this.stars, required this.twinkleProgress});
+  _StarFieldPainter({
+    required this.stars,
+    required this.twinkleProgress,
+    required this.config,
+  });
 
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()..style = PaintingStyle.fill;
 
     for (final star in stars) {
-      // Calculate twinkle
+      // Calculate twinkle scaled by health speed
       final twinkle = math.sin(
-        (twinkleProgress + star.twinklePhase) * math.pi * 2,
+        (twinkleProgress * config.twinkleSpeedFactor + star.twinklePhase) *
+            math.pi *
+            2,
       );
       final currentBrightness = star.brightness * (0.5 + 0.5 * twinkle);
 
@@ -364,7 +385,8 @@ class _StarFieldPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant _StarFieldPainter oldDelegate) {
-    return oldDelegate.twinkleProgress != twinkleProgress;
+    return oldDelegate.twinkleProgress != twinkleProgress ||
+        oldDelegate.config != config;
   }
 }
 
@@ -373,34 +395,46 @@ class _NebulaPainter extends CustomPainter {
   final double progress;
   final Color primaryColor;
   final Color accentColor;
+  final NebulaStateConfig config;
 
   _NebulaPainter({
     required this.clouds,
     required this.progress,
     required this.primaryColor,
     required this.accentColor,
+    required this.config,
   });
 
   @override
   void paint(Canvas canvas, Size size) {
+    // Desaturation logic: Lerp colors towards gray based on config.colorSaturation
+    final desaturationColor = const Color(0xFF222222);
+    final saturation = config.colorSaturation.clamp(0.0, 1.0);
+    // If saturation > 1.0, we actually want more vibrancy, but for now we clamp for simplicity
+    // or we could lerp from gray to target.
+    
+    final paintPrimary = Color.lerp(desaturationColor, primaryColor, saturation) ?? primaryColor;
+    final paintAccent = Color.lerp(desaturationColor, accentColor, saturation) ?? accentColor;
+
     for (final cloud in clouds) {
-      // Slow drift movement
-      final driftX = math.sin(progress * math.pi * 2 + cloud.x * 10) * 0.02;
-      final driftY = math.cos(progress * math.pi * 2 + cloud.y * 10) * 0.01;
+      // Slow drift movement scaled by health speed
+      final adjustedProgress = progress * config.driftSpeedFactor;
+      final driftX = math.sin(adjustedProgress * math.pi * 2 + cloud.x * 10) * 0.02;
+      final driftY = math.cos(adjustedProgress * math.pi * 2 + cloud.y * 10) * 0.01;
 
       final center = Offset(
         (cloud.x + driftX) * size.width,
         (cloud.y + driftY) * size.height,
       );
 
-      final color = cloud.colorIndex == 0 ? primaryColor : accentColor;
+      final color = cloud.colorIndex == 0 ? paintPrimary : paintAccent;
       final radius = cloud.radius * size.shortestSide;
 
-      // Draw soft gradient cloud
+      // Draw soft gradient cloud scaled by health opacity
       final gradient = RadialGradient(
         colors: [
-          color.withValues(alpha: cloud.opacity),
-          color.withValues(alpha: cloud.opacity * 0.5),
+          color.withValues(alpha: cloud.opacity * config.nebulaOpacity / 0.12),
+          color.withValues(alpha: cloud.opacity * 0.5 * config.nebulaOpacity / 0.12),
           color.withValues(alpha: 0),
         ],
         stops: const [0.0, 0.5, 1.0],
@@ -417,7 +451,7 @@ class _NebulaPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant _NebulaPainter oldDelegate) {
-    return oldDelegate.progress != progress;
+    return oldDelegate.progress != progress || oldDelegate.config != config;
   }
 }
 
@@ -425,11 +459,13 @@ class _ParticleFieldPainter extends CustomPainter {
   final List<_FloatingParticle> particles;
   final double progress;
   final Color color;
+  final NebulaStateConfig config;
 
   _ParticleFieldPainter({
     required this.particles,
     required this.progress,
     required this.color,
+    required this.config,
   });
 
   @override
@@ -439,8 +475,9 @@ class _ParticleFieldPainter extends CustomPainter {
       ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 1);
 
     for (final particle in particles) {
-      // Float upward with slight horizontal drift
-      final adjustedProgress = (progress + particle.phase) % 1.0;
+      // Float upward with slight horizontal drift scaled by health speed
+      final adjustedProgress =
+          (progress * config.driftSpeedFactor + particle.phase) % 1.0;
       final y = (particle.y - adjustedProgress * particle.speed) % 1.0;
       final x =
           particle.x +
@@ -450,7 +487,7 @@ class _ParticleFieldPainter extends CustomPainter {
 
       // Fade in/out at edges
       final fadeY = y < 0.1 ? y / 0.1 : (y > 0.9 ? (1.0 - y) / 0.1 : 1.0);
-      final opacity = 0.3 * fadeY;
+      final opacity = 0.3 * fadeY * config.colorSaturation; // Desaturate particles too
 
       paint.color = color.withValues(alpha: opacity);
       canvas.drawCircle(position, particle.size, paint);
@@ -459,6 +496,6 @@ class _ParticleFieldPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant _ParticleFieldPainter oldDelegate) {
-    return oldDelegate.progress != progress;
+    return oldDelegate.progress != progress || oldDelegate.config != config;
   }
 }
