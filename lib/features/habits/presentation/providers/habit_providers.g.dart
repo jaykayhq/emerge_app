@@ -9,6 +9,48 @@ part of 'habit_providers.dart';
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint, type=warning
 
+@ProviderFor(momentumService)
+final momentumServiceProvider = MomentumServiceProvider._();
+
+final class MomentumServiceProvider
+    extends
+        $FunctionalProvider<MomentumService, MomentumService, MomentumService>
+    with $Provider<MomentumService> {
+  MomentumServiceProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'momentumServiceProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$momentumServiceHash();
+
+  @$internal
+  @override
+  $ProviderElement<MomentumService> $createElement($ProviderPointer pointer) =>
+      $ProviderElement(pointer);
+
+  @override
+  MomentumService create(Ref ref) {
+    return momentumService(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(MomentumService value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<MomentumService>(value),
+    );
+  }
+}
+
+String _$momentumServiceHash() => r'6fa68938cdbf1787c48f0bd14179a733b1d993a9';
+
 @ProviderFor(habitRepository)
 final habitRepositoryProvider = HabitRepositoryProvider._();
 
@@ -88,7 +130,7 @@ final class HabitsProvider
   }
 }
 
-String _$habitsHash() => r'aacd2426f67145a362ccdcfa5c0dad89eea21a6b';
+String _$habitsHash() => r'093c11893564c37ee39aad0d0d861cd3b2837dbc';
 
 @ProviderFor(createHabit)
 final createHabitProvider = CreateHabitFamily._();
@@ -216,7 +258,7 @@ final class CompleteHabitProvider
   }
 }
 
-String _$completeHabitHash() => r'3e22cb2e5288fc16c8d422adea8ea411d553c589';
+String _$completeHabitHash() => r'140f6ac42c194c998a778aa0f6a964a71e254fa0';
 
 final class CompleteHabitFamily extends $Family
     with $FunctionalFamilyOverride<FutureOr<HabitCompletionResult>, String> {
