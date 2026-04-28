@@ -64,6 +64,7 @@ UserStats _parseUserStats(Map<String, dynamic> params) {
           (key, value) => MapEntry(key, value as int),
         ) ??
         const {},
+    worldHealthScore: data['worldHealthScore'] as int? ?? 100,
   );
 }
 
@@ -108,6 +109,7 @@ class FirestoreGamificationRepository implements GamificationRepository {
         },
         'unlockedBadges': stats.unlockedBadges,
         'identityVotes': stats.identityVotes,
+        'worldHealthScore': stats.worldHealthScore,
         // Legacy fields for insurance
         'currentXp': stats.currentXp,
         'currentLevel': stats.currentLevel,
