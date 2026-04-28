@@ -7,6 +7,7 @@ class UserStats extends Equatable {
   final int currentStreak; // Global streak
   final List<String> unlockedBadges;
   final Map<String, int> identityVotes;
+  final int worldHealthScore; // 0-100, entropy meter
 
   // Referral tracking fields
   final String? referralCode; // Unique code for this user
@@ -30,6 +31,7 @@ class UserStats extends Equatable {
     this.currentStreak = 0,
     this.unlockedBadges = const [],
     this.identityVotes = const {},
+    this.worldHealthScore = 100, // Starts fully healthy
     // Referral fields with defaults
     this.referralCode,
     this.referredByCode,
@@ -54,6 +56,7 @@ class UserStats extends Equatable {
     int? currentStreak,
     List<String>? unlockedBadges,
     Map<String, int>? identityVotes,
+    int? worldHealthScore,
     // Referral fields
     String? referralCode,
     String? referredByCode,
@@ -75,6 +78,7 @@ class UserStats extends Equatable {
       currentStreak: currentStreak ?? this.currentStreak,
       unlockedBadges: unlockedBadges ?? this.unlockedBadges,
       identityVotes: identityVotes ?? this.identityVotes,
+      worldHealthScore: worldHealthScore ?? this.worldHealthScore,
       // Referral fields
       referralCode: referralCode ?? this.referralCode,
       referredByCode: referredByCode ?? this.referredByCode,
@@ -100,6 +104,7 @@ class UserStats extends Equatable {
     currentStreak,
     unlockedBadges,
     identityVotes,
+    worldHealthScore,
     // Referral fields
     referralCode,
     referredByCode,
