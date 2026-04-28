@@ -13,6 +13,15 @@ enum TimeOfDayPreference { morning, afternoon, evening, anytime }
 
 enum HabitIntegrationType { none, healthSteps, screenTimeLimit }
 
+enum HabitStreakState {
+  onFire,    // 90-100
+  strong,    // 70-89
+  building,  // 50-69
+  atRisk,    // 30-49
+  recovery,  // 10-29
+  reset,     // 0-9
+}
+
 class Habit extends Equatable {
   final String id;
   final String userId;
@@ -44,6 +53,18 @@ class Habit extends Equatable {
   final List<String> environmentPriming; // Environment priming tasks
   final HabitIntegrationType integrationType;
   final int? integrationTarget;
+  final int momentumScore;      // 0-100
+  final int consecutiveMisses;  // Days in a row missed
+
+  // Derived — never stored separately
+  HabitStreakState get streakState {
+    if (momentumScore >= 90) return HabitStreakState.onFire;
+    if (momentumScore >= 70) return HabitStreakState.strong;
+    if (momentumScore >= 50) return HabitStreakState.building;
+    if (momentumScore >= 30) return HabitStreakState.atRisk;
+    if (momentumScore >= 10) return HabitStreakState.recovery;
+    return HabitStreakState.reset;
+  }
 
   const Habit({
     required this.id,
@@ -76,10 +97,12 @@ class Habit extends Equatable {
     this.environmentPriming = const [],
     this.integrationType = HabitIntegrationType.none,
     this.integrationTarget,
+    this.momentumScore = 0,
+    this.consecutiveMisses = 0,
   });
 
   static Habit empty() {
-    return Habit(id: '', userId: '', title: '', createdAt: DateTime.now());
+    return Habit(id: '', userId: '', title: '', createdAt: DateTime.now(), momentumScore: 0, consecutiveMisses: 0);
   }
 
   Habit copyWith({
@@ -122,6 +145,8 @@ class Habit extends Equatable {
     HabitIntegrationType? integrationType,
     int? integrationTarget,
     bool clearIntegrationTarget = false,
+    int? momentumScore,
+    int? consecutiveMisses,
   }) {
     return Habit(
       id: id ?? this.id,
@@ -168,6 +193,8 @@ class Habit extends Equatable {
       integrationTarget: clearIntegrationTarget
           ? null
           : (integrationTarget ?? this.integrationTarget),
+      momentumScore: momentumScore ?? this.momentumScore,
+      consecutiveMisses: consecutiveMisses ?? this.consecutiveMisses,
     );
   }
 
@@ -203,6 +230,8 @@ class Habit extends Equatable {
     environmentPriming,
     integrationType,
     integrationTarget,
+    momentumScore,
+    consecutiveMisses,
   ];
 }
 

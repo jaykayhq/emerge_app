@@ -101,6 +101,8 @@ class FirestoreHabitRepository implements HabitRepository {
         orElse: () => HabitIntegrationType.none,
       ),
       integrationTarget: data['integrationTarget'] as int?,
+      momentumScore: data['momentumScore'] as int? ?? 0,
+      consecutiveMisses: data['consecutiveMisses'] as int? ?? 0,
     );
   }
 
@@ -161,6 +163,8 @@ class FirestoreHabitRepository implements HabitRepository {
         'twoMinuteVersion': habit.twoMinuteVersion,
         'integrationType': habit.integrationType.name,
         'integrationTarget': habit.integrationTarget,
+        'momentumScore': habit.momentumScore,
+        'consecutiveMisses': habit.consecutiveMisses,
       });
 
       // Log success for debugging
@@ -206,6 +210,8 @@ class FirestoreHabitRepository implements HabitRepository {
         'twoMinuteVersion': habit.twoMinuteVersion,
         'integrationType': habit.integrationType.name,
         'integrationTarget': habit.integrationTarget,
+        'momentumScore': habit.momentumScore,
+        'consecutiveMisses': habit.consecutiveMisses,
       });
       return const Right(unit);
     } catch (e, s) {
