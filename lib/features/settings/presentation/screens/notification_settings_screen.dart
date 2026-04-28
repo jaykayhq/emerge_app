@@ -1,3 +1,4 @@
+import 'package:emerge_app/core/presentation/widgets/world_background.dart';
 import 'package:emerge_app/core/presentation/widgets/emerge_branding.dart';
 import 'package:emerge_app/core/theme/app_theme.dart';
 import 'package:emerge_app/features/auth/domain/entities/user_extension.dart';
@@ -27,8 +28,7 @@ class NotificationSettingsScreen extends ConsumerWidget {
     final vibration = settings.hapticsEnabled; // Shared with general settings
     final dnd = settings.doNotDisturb;
 
-    return Scaffold(
-      backgroundColor: EmergeColors.background,
+    return WorldBackground(
       appBar: AppBar(
         title: Text(
           'Notifications',
@@ -44,169 +44,164 @@ class NotificationSettingsScreen extends ConsumerWidget {
           onPressed: () => Navigator.of(context).pop(),
         ),
       ),
-      body: Stack(
+      child: ListView(
+        padding: const EdgeInsets.all(16),
         children: [
-          const Positioned.fill(child: HexMeshBackground()),
-          ListView(
+          // Master Toggle
+          Container(
             padding: const EdgeInsets.all(16),
-            children: [
-              // Master Toggle
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: AppTheme.surfaceDark,
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: EmergeColors.hexLine),
+            decoration: BoxDecoration(
+              color: AppTheme.surfaceDark,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: EmergeColors.hexLine),
+            ),
+            child: Row(
+              children: [
+                Icon(Icons.notifications_active, color: EmergeColors.teal),
+                const Gap(16),
+                const Expanded(
+                  child: Text(
+                    'Allow All Notifications',
+                    style: TextStyle(
+                      color: AppTheme.textMainDark,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                    ),
+                  ),
                 ),
-                child: Row(
-                  children: [
-                    Icon(Icons.notifications_active, color: EmergeColors.teal),
-                    const Gap(16),
-                    const Expanded(
-                      child: Text(
-                        'Allow All Notifications',
-                        style: TextStyle(
-                          color: AppTheme.textMainDark,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 16,
-                        ),
-                      ),
-                    ),
-                    Switch(
-                      value: allowAll,
-                      onChanged: (val) => _updateSettings(
-                        context,
-                        ref,
-                        userProfile,
-                        settings.copyWith(notificationsEnabled: val),
-                      ),
-                      activeThumbColor: EmergeColors.teal,
-                      activeTrackColor: EmergeColors.teal.withValues(
-                        alpha: 0.5,
-                      ),
-                    ),
-                  ],
+                Switch(
+                  value: allowAll,
+                  onChanged: (val) => _updateSettings(
+                    context,
+                    ref,
+                    userProfile,
+                    settings.copyWith(notificationsEnabled: val),
+                  ),
+                  activeThumbColor: EmergeColors.teal,
+                  activeTrackColor: EmergeColors.teal.withValues(
+                    alpha: 0.5,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const Gap(24),
+
+          if (allowAll) ...[
+            _buildSectionHeader('Notification Types'),
+            _buildSectionContainer([
+              _buildSwitchTile(
+                'Habit Reminders',
+                'Get nudged to complete your daily tasks',
+                habitReminders,
+                (val) => _updateSettings(
+                  context,
+                  ref,
+                  userProfile,
+                  settings.copyWith(habitReminders: val),
                 ),
               ),
-              const Gap(24),
+              _buildSwitchTile(
+                'Streak Warnings',
+                'Alerts when you\'re about to lose a streak',
+                streakWarnings,
+                (val) => _updateSettings(
+                  context,
+                  ref,
+                  userProfile,
+                  settings.copyWith(streakWarnings: val),
+                ),
+              ),
+              _buildSwitchTile(
+                'AI-Powered Insights',
+                'Daily analysis and coaching tips',
+                aiInsights,
+                (val) => _updateSettings(
+                  context,
+                  ref,
+                  userProfile,
+                  settings.copyWith(aiInsights: val),
+                ),
+              ),
+              _buildSwitchTile(
+                'Tribes Updates',
+                'Friend activity and challenge alerts',
+                communityUpdates,
+                (val) => _updateSettings(
+                  context,
+                  ref,
+                  userProfile,
+                  settings.copyWith(communityUpdates: val),
+                ),
+              ),
+              _buildSwitchTile(
+                'Rewards & Achievements',
+                'Level ups and badge unlocks',
+                rewards,
+                (val) => _updateSettings(
+                  context,
+                  ref,
+                  userProfile,
+                  settings.copyWith(rewardsUpdates: val),
+                ),
+              ),
+            ]),
+            const Gap(24),
 
-              if (allowAll) ...[
-                _buildSectionHeader('Notification Types'),
-                _buildSectionContainer([
-                  _buildSwitchTile(
-                    'Habit Reminders',
-                    'Get nudged to complete your daily tasks',
-                    habitReminders,
-                    (val) => _updateSettings(
-                      context,
-                      ref,
-                      userProfile,
-                      settings.copyWith(habitReminders: val),
-                    ),
+            _buildSectionHeader('General Settings'),
+            _buildSectionContainer([
+              _buildSwitchTile(
+                'Notification Sound',
+                null,
+                sound,
+                (val) => _updateSettings(
+                  context,
+                  ref,
+                  userProfile,
+                  settings.copyWith(soundsEnabled: val),
+                ),
+              ),
+              _buildSwitchTile(
+                'Vibration',
+                null,
+                vibration,
+                (val) => _updateSettings(
+                  context,
+                  ref,
+                  userProfile,
+                  settings.copyWith(hapticsEnabled: val),
+                ),
+              ),
+              _buildSwitchTile(
+                'Do Not Disturb',
+                'Silence notifications during sleep hours',
+                dnd,
+                (val) => _updateSettings(
+                  context,
+                  ref,
+                  userProfile,
+                  settings.copyWith(doNotDisturb: val),
+                ),
+              ),
+              if (dnd) ...[
+                Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 8,
                   ),
-                  _buildSwitchTile(
-                    'Streak Warnings',
-                    'Alerts when you\'re about to lose a streak',
-                    streakWarnings,
-                    (val) => _updateSettings(
-                      context,
-                      ref,
-                      userProfile,
-                      settings.copyWith(streakWarnings: val),
+                  child: Text(
+                    '🌙 Quiet hours: 10:00 PM - 7:00 AM',
+                    style: TextStyle(
+                      color: AppTheme.textSecondaryDark,
+                      fontSize: 12,
+                      fontStyle: FontStyle.italic,
                     ),
+                    textAlign: TextAlign.center,
                   ),
-                  _buildSwitchTile(
-                    'AI-Powered Insights',
-                    'Daily analysis and coaching tips',
-                    aiInsights,
-                    (val) => _updateSettings(
-                      context,
-                      ref,
-                      userProfile,
-                      settings.copyWith(aiInsights: val),
-                    ),
-                  ),
-                  _buildSwitchTile(
-                    'Tribes Updates',
-                    'Friend activity and challenge alerts',
-                    communityUpdates,
-                    (val) => _updateSettings(
-                      context,
-                      ref,
-                      userProfile,
-                      settings.copyWith(communityUpdates: val),
-                    ),
-                  ),
-                  _buildSwitchTile(
-                    'Rewards & Achievements',
-                    'Level ups and badge unlocks',
-                    rewards,
-                    (val) => _updateSettings(
-                      context,
-                      ref,
-                      userProfile,
-                      settings.copyWith(rewardsUpdates: val),
-                    ),
-                  ),
-                ]),
-                const Gap(24),
-
-                _buildSectionHeader('General Settings'),
-                _buildSectionContainer([
-                  _buildSwitchTile(
-                    'Notification Sound',
-                    null,
-                    sound,
-                    (val) => _updateSettings(
-                      context,
-                      ref,
-                      userProfile,
-                      settings.copyWith(soundsEnabled: val),
-                    ),
-                  ),
-                  _buildSwitchTile(
-                    'Vibration',
-                    null,
-                    vibration,
-                    (val) => _updateSettings(
-                      context,
-                      ref,
-                      userProfile,
-                      settings.copyWith(hapticsEnabled: val),
-                    ),
-                  ),
-                  _buildSwitchTile(
-                    'Do Not Disturb',
-                    'Silence notifications during sleep hours',
-                    dnd,
-                    (val) => _updateSettings(
-                      context,
-                      ref,
-                      userProfile,
-                      settings.copyWith(doNotDisturb: val),
-                    ),
-                  ),
-                  if (dnd) ...[
-                    Padding(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 8,
-                      ),
-                      child: Text(
-                        '🌙 Quiet hours: 10:00 PM - 7:00 AM',
-                        style: TextStyle(
-                          color: AppTheme.textSecondaryDark,
-                          fontSize: 12,
-                          fontStyle: FontStyle.italic,
-                        ),
-                        textAlign: TextAlign.center,
-                      ),
-                    ),
-                  ],
-                ]),
+                ),
               ],
-            ],
-          ),
+            ]),
+          ],
         ],
       ),
     );

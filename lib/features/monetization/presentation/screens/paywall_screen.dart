@@ -1,5 +1,5 @@
 import 'dart:ui';
-import 'package:emerge_app/core/presentation/widgets/growth_background.dart';
+import 'package:emerge_app/core/presentation/widgets/world_background.dart';
 import 'package:emerge_app/features/monetization/presentation/providers/paywall_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -31,169 +31,166 @@ class PaywallScreen extends ConsumerWidget {
       }
     });
 
-    return Scaffold(
-      backgroundColor: Colors.transparent, // Let GrowthBackground show through
-      body: GrowthBackground(
-        child: Stack(
-          children: [
-            // Glassmorphism Overlay
-            Positioned.fill(
-              child: BackdropFilter(
-                filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-                child: Container(color: Colors.black.withValues(alpha: 0.6)),
-              ),
+    return WorldBackground(
+      child: Stack(
+        children: [
+          // Glassmorphism Overlay
+          Positioned.fill(
+            child: BackdropFilter(
+              filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+              child: Container(color: Colors.black.withValues(alpha: 0.6)),
             ),
-            SafeArea(
-              child: CustomScrollView(
-                slivers: [
-                  SliverToBoxAdapter(
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 24.0,
-                        vertical: 16.0,
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Align(
-                            alignment: Alignment.topRight,
-                            child: IconButton(
-                              icon: const Icon(
-                                Icons.close,
-                                color: Colors.white70,
-                              ),
-                              onPressed: () => context.pop(),
+          ),
+          SafeArea(
+            child: CustomScrollView(
+              slivers: [
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 24.0,
+                      vertical: 16.0,
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Align(
+                          alignment: Alignment.topRight,
+                          child: IconButton(
+                            icon: const Icon(
+                              Icons.close,
+                              color: Colors.white70,
                             ),
+                            onPressed: () => context.pop(),
                           ),
-                          const Gap(20),
-                          ShaderMask(
-                            shaderCallback: (bounds) => const LinearGradient(
-                              colors: [Colors.purpleAccent, Colors.cyanAccent],
-                            ).createShader(bounds),
-                            child: Text(
-                              'Evolve Your Avatar.',
-                              style: Theme.of(context).textTheme.displaySmall
-                                  ?.copyWith(
-                                    fontWeight: FontWeight.w900,
-                                    color: Colors.white,
-                                    letterSpacing: -1,
-                                  ),
-                            ),
-                          ),
-                          Text(
-                            'Command Your Entropy.',
-                            style: Theme.of(context).textTheme.headlineSmall
-                                ?.copyWith(color: Colors.white70),
-                          ),
-                          const Gap(40),
-                          _BenefitRow(
-                            icon: Icons.psychology,
-                            title: 'Unlimited "Oracle" AI Coach',
-                            description:
-                                'Deep psychological habit analysis & strategies.',
-                          ),
-                          const Gap(24),
-                          _BenefitRow(
-                            icon: Icons.filter_drama,
-                            title: 'Avant-Garde World Themes',
-                            description:
-                                'Unlock Cosmic Void, Cyberpunk District, and Monolith.',
-                          ),
-                          const Gap(24),
-                          _BenefitRow(
-                            icon: Icons.handshake,
-                            title: 'Advanced Identity Mechanics',
-                            description:
-                                'Unlimited Social Contracts & Archetype Tribes.',
-                          ),
-                          const Gap(24),
-                          _BenefitRow(
-                            icon: Icons.timeline,
-                            title: 'Deep Time Insights',
-                            description:
-                                'Multi-month identity evolution graphs & analytics.',
-                          ),
-                          const Gap(40),
-                          if (paywallState.isLoading && offerings == null)
-                            const Center(
-                              child: CircularProgressIndicator(
-                                color: Colors.cyanAccent,
-                              ),
-                            )
-                          else if (offerings != null &&
-                              offerings.current != null) ...[
-                            ...offerings.current!.availablePackages.map(
-                              (package) => Padding(
-                                padding: const EdgeInsets.only(bottom: 16.0),
-                                child: _PackageButton(
-                                  package: package,
-                                  isLoading: paywallState.isLoading,
-                                  onTap: () {
-                                    ref
-                                        .read(
-                                          paywallControllerProvider.notifier,
-                                        )
-                                        .purchasePackage(package);
-                                  },
+                        ),
+                        const Gap(20),
+                        ShaderMask(
+                          shaderCallback: (bounds) => const LinearGradient(
+                            colors: [Colors.purpleAccent, Colors.cyanAccent],
+                          ).createShader(bounds),
+                          child: Text(
+                            'Evolve Your Avatar.',
+                            style: Theme.of(context).textTheme.displaySmall
+                                ?.copyWith(
+                                  fontWeight: FontWeight.w900,
+                                  color: Colors.white,
+                                  letterSpacing: -1,
                                 ),
-                              ),
+                          ),
+                        ),
+                        Text(
+                          'Command Your Entropy.',
+                          style: Theme.of(context).textTheme.headlineSmall
+                              ?.copyWith(color: Colors.white70),
+                        ),
+                        const Gap(40),
+                        _BenefitRow(
+                          icon: Icons.psychology,
+                          title: 'Unlimited "Oracle" AI Coach',
+                          description:
+                              'Deep psychological habit analysis & strategies.',
+                        ),
+                        const Gap(24),
+                        _BenefitRow(
+                          icon: Icons.filter_drama,
+                          title: 'Avant-Garde World Themes',
+                          description:
+                              'Unlock Cosmic Void, Cyberpunk District, and Monolith.',
+                        ),
+                        const Gap(24),
+                        _BenefitRow(
+                          icon: Icons.handshake,
+                          title: 'Advanced Identity Mechanics',
+                          description:
+                              'Unlimited Social Contracts & Archetype Tribes.',
+                        ),
+                        const Gap(24),
+                        _BenefitRow(
+                          icon: Icons.timeline,
+                          title: 'Deep Time Insights',
+                          description:
+                              'Multi-month identity evolution graphs & analytics.',
+                        ),
+                        const Gap(40),
+                        if (paywallState.isLoading && offerings == null)
+                          const Center(
+                            child: CircularProgressIndicator(
+                              color: Colors.cyanAccent,
                             ),
-                          ] else
-                            const Center(
-                              child: Text(
-                                "No subscription packages available currently.",
-                                style: TextStyle(color: Colors.white),
-                              ),
-                            ),
-
-                          const Gap(32),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                            children: [
-                              TextButton(
-                                onPressed: () {
+                          )
+                        else if (offerings != null &&
+                            offerings.current != null) ...[
+                          ...offerings.current!.availablePackages.map(
+                            (package) => Padding(
+                              padding: const EdgeInsets.only(bottom: 16.0),
+                              child: _PackageButton(
+                                package: package,
+                                isLoading: paywallState.isLoading,
+                                onTap: () {
                                   ref
-                                      .read(paywallControllerProvider.notifier)
-                                      .restorePurchases();
+                                      .read(
+                                        paywallControllerProvider.notifier,
+                                      )
+                                      .purchasePackage(package);
                                 },
-                                child: Text(
-                                  'Restore Purchases',
-                                  style: TextStyle(
-                                    color: Colors.white.withValues(alpha: 0.6),
-                                  ),
-                                ),
                               ),
-                              Text(
-                                '•',
+                            ),
+                          ),
+                        ] else
+                          const Center(
+                            child: Text(
+                              "No subscription packages available currently.",
+                              style: TextStyle(color: Colors.white),
+                            ),
+                          ),
+
+                        const Gap(32),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                          children: [
+                            TextButton(
+                              onPressed: () {
+                                ref
+                                    .read(paywallControllerProvider.notifier)
+                                    .restorePurchases();
+                              },
+                              child: Text(
+                                'Restore Purchases',
                                 style: TextStyle(
                                   color: Colors.white.withValues(alpha: 0.6),
                                 ),
                               ),
-                              TextButton(
-                                onPressed: () {
-                                  launchUrl(
-                                    Uri.parse('https://example.com/terms'),
-                                  );
-                                },
-                                child: Text(
-                                  'Terms & Privacy',
-                                  style: TextStyle(
-                                    color: Colors.white.withValues(alpha: 0.6),
-                                  ),
+                            ),
+                            Text(
+                              '•',
+                              style: TextStyle(
+                                color: Colors.white.withValues(alpha: 0.6),
+                              ),
+                            ),
+                            TextButton(
+                              onPressed: () {
+                                launchUrl(
+                                  Uri.parse('https://example.com/terms'),
+                                );
+                              },
+                              child: Text(
+                                'Terms & Privacy',
+                                style: TextStyle(
+                                  color: Colors.white.withValues(alpha: 0.6),
                                 ),
                               ),
-                            ],
-                          ),
-                          const Gap(40),
-                        ],
-                      ),
+                            ),
+                          ],
+                        ),
+                        const Gap(40),
+                      ],
                     ),
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
