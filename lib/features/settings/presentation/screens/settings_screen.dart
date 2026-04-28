@@ -1,3 +1,4 @@
+import 'package:emerge_app/core/presentation/widgets/world_background.dart';
 import 'dart:ui';
 import 'package:emerge_app/core/constants/gamification_constants.dart';
 import 'package:emerge_app/core/presentation/widgets/emerge_branding.dart';
@@ -33,8 +34,7 @@ class SettingsScreen extends ConsumerWidget {
     final userSettings = userProfile?.settings ?? const UserSettings();
     final selectedAppTheme = ref.watch(worldThemeProvider);
 
-    return Scaffold(
-      backgroundColor: EmergeColors.background,
+    return WorldBackground(
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
@@ -51,391 +51,386 @@ class SettingsScreen extends ConsumerWidget {
         ),
         centerTitle: true,
       ),
-      body: Stack(
-        children: [
-          const Positioned.fill(child: HexMeshBackground()),
-          SingleChildScrollView(
-            padding: const EdgeInsets.all(16.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Profile Header
-                if (authUser != null && userProfile != null)
-                  _buildProfileHeader(context, authUser, userProfile),
-                const SizedBox(height: 32),
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Profile Header
+            if (authUser != null && userProfile != null)
+              _buildProfileHeader(context, authUser, userProfile),
+            const SizedBox(height: 32),
 
-                // World Theme Section
-                _buildSectionHeader(context, 'World Theme'),
-                _buildSectionContainer(context, [
-                  Padding(
-                    padding: const EdgeInsets.all(12.0),
-                    child: _WorldThemePicker(
-                      selected: selectedAppTheme,
-                      onSelect: (theme) =>
-                          ref.read(worldThemeProvider.notifier).setTheme(theme),
-                    ),
-                  ),
-                ]),
-                const SizedBox(height: 24),
+            // World Theme Section
+            _buildSectionHeader(context, 'World Theme'),
+            _buildSectionContainer(context, [
+              Padding(
+                padding: const EdgeInsets.all(12.0),
+                child: _WorldThemePicker(
+                  selected: selectedAppTheme,
+                  onSelect: (theme) =>
+                      ref.read(worldThemeProvider.notifier).setTheme(theme),
+                ),
+              ),
+            ]),
+            const SizedBox(height: 24),
 
-                // Account Section
-                _buildSectionHeader(context, 'Account'),
-                _buildSectionContainer(context, [
-                  _buildListTile(
-                    context,
-                    Icons.edit_outlined,
-                    'Edit Name',
-                    onTap: () => _showEditNameDialog(context, ref, authUser),
-                  ),
-                  _buildListTile(
-                    context,
-                    Icons.email_outlined,
-                    'Email',
-                    subtitle: authUser?.email ?? 'No email',
-                    onTap:
-                        () {}, // Email usually not editable directly without re-auth
-                  ),
-                  _buildListTile(
-                    context,
-                    Icons.lock_outline,
-                    'Change Password',
-                    onTap: () async {
-                      if (authUser?.email != null) {
-                        final result = await ref
-                            .read(authRepositoryProvider)
-                            .sendPasswordResetEmail(authUser!.email);
-                        if (context.mounted) {
-                          result.fold(
-                            (
-                              failure,
-                            ) => ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text(
-                                  'Error sending reset email: ${failure.message}',
-                                ),
-                              ),
+            // Account Section
+            _buildSectionHeader(context, 'Account'),
+            _buildSectionContainer(context, [
+              _buildListTile(
+                context,
+                Icons.edit_outlined,
+                'Edit Name',
+                onTap: () => _showEditNameDialog(context, ref, authUser),
+              ),
+              _buildListTile(
+                context,
+                Icons.email_outlined,
+                'Email',
+                subtitle: authUser?.email ?? 'No email',
+                onTap:
+                    () {}, // Email usually not editable directly without re-auth
+              ),
+              _buildListTile(
+                context,
+                Icons.lock_outline,
+                'Change Password',
+                onTap: () async {
+                  if (authUser?.email != null) {
+                    final result = await ref
+                        .read(authRepositoryProvider)
+                        .sendPasswordResetEmail(authUser!.email);
+                    if (context.mounted) {
+                      result.fold(
+                        (
+                          failure,
+                        ) => ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text(
+                              'Error sending reset email: ${failure.message}',
                             ),
-                            (_) => ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text('Password reset email sent'),
-                              ),
+                          ),
+                        ),
+                        (_) => ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('Password reset email sent'),
+                          ),
+                        ),
+                      );
+                    }
+                  } else {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('No email address found'),
+                      ),
+                    );
+                  }
+                },
+              ),
+              _buildListTile(
+                context,
+                Icons.card_membership,
+                'Manage Subscription',
+                trailingText: 'Free',
+                onTap: () {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Premium features coming soon!'),
+                      duration: Duration(seconds: 2),
+                    ),
+                  );
+                },
+              ),
+            ]),
+            const SizedBox(height: 24),
+
+            // Notifications Section
+            _buildSectionHeader(context, 'Notifications'),
+            _buildSectionContainer(context, [
+              SwitchListTile(
+                secondary: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: EmergeColors.teal.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Icon(
+                    Icons.notifications_outlined,
+                    color: EmergeColors.teal,
+                  ),
+                ),
+                title: Text(
+                  'Enable Notifications',
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    fontWeight: FontWeight.w500,
+                    color: AppTheme.textMainDark,
+                  ),
+                ),
+                value: userSettings.notificationsEnabled,
+                onChanged: (value) {
+                  _updateSettings(
+                    context,
+                    ref,
+                    userProfile,
+                    userSettings.copyWith(notificationsEnabled: value),
+                  );
+                },
+                activeThumbColor: EmergeColors.teal,
+                activeTrackColor: EmergeColors.teal.withValues(alpha: 0.5),
+                tileColor: AppTheme.surfaceDark,
+              ),
+              _buildListTile(
+                context,
+                Icons.settings_outlined,
+                'Notification Preferences',
+                onTap: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) => const NotificationSettingsScreen(),
+                    ),
+                  );
+                },
+              ),
+            ]),
+            const SizedBox(height: 24),
+
+            // Integrations & Data
+            _buildSectionHeader(context, 'Integrations & Data'),
+            _buildSectionContainer(context, [
+              _buildListTile(
+                context,
+                Icons.download_outlined,
+                'Export Data',
+                onTap: () {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Exporting data...')),
+                  );
+                },
+              ),
+            ]),
+            const SizedBox(height: 24),
+
+            // General Section
+            _buildSectionHeader(context, 'General'),
+            _buildSectionContainer(context, [
+              SwitchListTile(
+                secondary: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: EmergeColors.teal.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Icon(
+                    Icons.palette_outlined,
+                    color: EmergeColors.teal,
+                  ),
+                ),
+                title: Text(
+                  'Dark Mode',
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    fontWeight: FontWeight.w500,
+                    color: AppTheme.textMainDark,
+                  ),
+                ),
+                value: isDark,
+                onChanged: (value) {
+                  ref.read(themeControllerProvider.notifier).toggleTheme();
+                },
+                activeThumbColor: EmergeColors.teal,
+                activeTrackColor: EmergeColors.teal.withValues(alpha: 0.5),
+                tileColor: AppTheme.surfaceDark,
+              ),
+              SwitchListTile(
+                secondary: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: EmergeColors.teal.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Icon(
+                    Icons.volume_up_outlined,
+                    color: EmergeColors.teal,
+                  ),
+                ),
+                title: Text(
+                  'Sounds & Haptics',
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    fontWeight: FontWeight.w500,
+                    color: AppTheme.textMainDark,
+                  ),
+                ),
+                value: userSettings.soundsEnabled,
+                onChanged: (value) {
+                  _updateSettings(
+                    context,
+                    ref,
+                    userProfile,
+                    userSettings.copyWith(soundsEnabled: value),
+                  );
+                },
+                activeThumbColor: EmergeColors.teal,
+                activeTrackColor: EmergeColors.teal.withValues(alpha: 0.5),
+                tileColor: AppTheme.surfaceDark,
+              ),
+              SwitchListTile(
+                secondary: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: EmergeColors.teal.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Icon(
+                    Icons.school_outlined,
+                    color: EmergeColors.teal,
+                  ),
+                ),
+                title: Text(
+                  'Enable Tutorials',
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    fontWeight: FontWeight.w500,
+                    color: AppTheme.textMainDark,
+                  ),
+                ),
+                subtitle: Text(
+                  tutorialState.enabled
+                      ? 'Tutorials show once per screen visit'
+                      : 'Disabled until you complete onboarding',
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: AppTheme.textSecondaryDark,
+                  ),
+                ),
+                value: tutorialState.enabled,
+                onChanged: (value) async {
+                  await ref
+                      .read(tutorialProvider.notifier)
+                      .setTutorialsEnabled(value);
+                  // If enabling tutorials, reset them so they show again
+                  if (value) {
+                    await ref
+                        .read(tutorialProvider.notifier)
+                        .resetTutorials();
+                  }
+                },
+                activeThumbColor: EmergeColors.teal,
+                activeTrackColor: EmergeColors.teal.withValues(alpha: 0.5),
+                tileColor: AppTheme.surfaceDark,
+              ),
+            ]),
+            const SizedBox(height: 24),
+
+            // Support & Legal
+            _buildSectionHeader(context, 'Support & Legal'),
+            _buildSectionContainer(context, [
+              _buildListTile(
+                context,
+                Icons.replay_outlined,
+                'Redo Tutorials',
+                onTap: () {
+                  _showRedoTutorialsDialog(context, ref);
+                },
+              ),
+              _buildListTile(
+                context,
+                Icons.help_outline,
+                'Help & Support (FAQ)',
+                onTap: () {
+                  _showFaqDialog(context);
+                },
+              ),
+              _buildListTile(
+                context,
+                Icons.privacy_tip_outlined,
+                'Privacy Policy',
+                onTap: () => launchUrl(
+                  Uri.parse(
+                    'https://docs.google.com/document/d/e/2PACX-1vRt5cCpFS7PLmh_nwhxq3ec9YtRWQZk7mrOqbVN7aThrclpjgYL3q5r-nAqlftQJVkOSWzxnG_FDfjo/pub',
+                  ),
+                  mode: LaunchMode.externalApplication,
+                ),
+              ),
+              _buildListTile(
+                context,
+                Icons.description_outlined,
+                'Terms of Service',
+                onTap: () => launchUrl(
+                  Uri.parse(
+                    'https://docs.google.com/document/d/e/2PACX-1vQX-5ydyuD3ZYp_-8b_2rVyyuKW9zF2NaMm1CBxxwE5s1LXASy1P7Plxf8axNGc_TFJw-OnZrULmjgP/pub',
+                  ),
+                  mode: LaunchMode.externalApplication,
+                ),
+              ),
+              _buildDeleteAccountTile(context, ref),
+            ]),
+            const SizedBox(height: 32),
+
+            // Action Buttons
+            SizedBox(
+              width: double.infinity,
+              height: 50,
+              child: Consumer(
+                builder: (context, ref, child) {
+                  return OutlinedButton(
+                    onPressed: () async {
+                      try {
+                        // Show loading indicator
+                        showDialog(
+                          context: context,
+                          barrierDismissible: false,
+                          builder: (context) => const Center(
+                            child: CircularProgressIndicator(),
+                          ),
+                        );
+
+                        await ref.read(authRepositoryProvider).signOut();
+
+                        if (context.mounted) {
+                          Navigator.of(context).pop(); // Dismiss loading
+                          // Router will handle redirect
+                        }
+                      } catch (e) {
+                        if (context.mounted) {
+                          Navigator.of(context).pop(); // Dismiss loading
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text('Error logging out: $e'),
                             ),
                           );
                         }
-                      } else {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text('No email address found'),
-                          ),
-                        );
                       }
                     },
-                  ),
-                  _buildListTile(
-                    context,
-                    Icons.card_membership,
-                    'Manage Subscription',
-                    trailingText: 'Free',
-                    onTap: () {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('Premium features coming soon!'),
-                          duration: Duration(seconds: 2),
-                        ),
-                      );
-                    },
-                  ),
-                ]),
-                const SizedBox(height: 24),
-
-                // Notifications Section
-                _buildSectionHeader(context, 'Notifications'),
-                _buildSectionContainer(context, [
-                  SwitchListTile(
-                    secondary: Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                        color: EmergeColors.teal.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(8),
+                    style: OutlinedButton.styleFrom(
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
                       ),
-                      child: Icon(
-                        Icons.notifications_outlined,
-                        color: EmergeColors.teal,
-                      ),
+                      side: const BorderSide(color: EmergeColors.coral),
+                      foregroundColor: EmergeColors.coral,
                     ),
-                    title: Text(
-                      'Enable Notifications',
-                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        fontWeight: FontWeight.w500,
-                        color: AppTheme.textMainDark,
-                      ),
-                    ),
-                    value: userSettings.notificationsEnabled,
-                    onChanged: (value) {
-                      _updateSettings(
-                        context,
-                        ref,
-                        userProfile,
-                        userSettings.copyWith(notificationsEnabled: value),
-                      );
-                    },
-                    activeThumbColor: EmergeColors.teal,
-                    activeTrackColor: EmergeColors.teal.withValues(alpha: 0.5),
-                    tileColor: AppTheme.surfaceDark,
-                  ),
-                  _buildListTile(
-                    context,
-                    Icons.settings_outlined,
-                    'Notification Preferences',
-                    onTap: () {
-                      Navigator.of(context).push(
-                        MaterialPageRoute(
-                          builder: (_) => const NotificationSettingsScreen(),
-                        ),
-                      );
-                    },
-                  ),
-                ]),
-                const SizedBox(height: 24),
-
-                // Integrations & Data
-                _buildSectionHeader(context, 'Integrations & Data'),
-                _buildSectionContainer(context, [
-                  _buildListTile(
-                    context,
-                    Icons.download_outlined,
-                    'Export Data',
-                    onTap: () {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Exporting data...')),
-                      );
-                    },
-                  ),
-                ]),
-                const SizedBox(height: 24),
-
-                // General Section
-                _buildSectionHeader(context, 'General'),
-                _buildSectionContainer(context, [
-                  SwitchListTile(
-                    secondary: Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                        color: EmergeColors.teal.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Icon(
-                        Icons.palette_outlined,
-                        color: EmergeColors.teal,
-                      ),
-                    ),
-                    title: Text(
-                      'Dark Mode',
-                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        fontWeight: FontWeight.w500,
-                        color: AppTheme.textMainDark,
-                      ),
-                    ),
-                    value: isDark,
-                    onChanged: (value) {
-                      ref.read(themeControllerProvider.notifier).toggleTheme();
-                    },
-                    activeThumbColor: EmergeColors.teal,
-                    activeTrackColor: EmergeColors.teal.withValues(alpha: 0.5),
-                    tileColor: AppTheme.surfaceDark,
-                  ),
-                  SwitchListTile(
-                    secondary: Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                        color: EmergeColors.teal.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Icon(
-                        Icons.volume_up_outlined,
-                        color: EmergeColors.teal,
-                      ),
-                    ),
-                    title: Text(
-                      'Sounds & Haptics',
-                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        fontWeight: FontWeight.w500,
-                        color: AppTheme.textMainDark,
-                      ),
-                    ),
-                    value: userSettings.soundsEnabled,
-                    onChanged: (value) {
-                      _updateSettings(
-                        context,
-                        ref,
-                        userProfile,
-                        userSettings.copyWith(soundsEnabled: value),
-                      );
-                    },
-                    activeThumbColor: EmergeColors.teal,
-                    activeTrackColor: EmergeColors.teal.withValues(alpha: 0.5),
-                    tileColor: AppTheme.surfaceDark,
-                  ),
-                  SwitchListTile(
-                    secondary: Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                        color: EmergeColors.teal.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Icon(
-                        Icons.school_outlined,
-                        color: EmergeColors.teal,
-                      ),
-                    ),
-                    title: Text(
-                      'Enable Tutorials',
-                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        fontWeight: FontWeight.w500,
-                        color: AppTheme.textMainDark,
-                      ),
-                    ),
-                    subtitle: Text(
-                      tutorialState.enabled
-                          ? 'Tutorials show once per screen visit'
-                          : 'Disabled until you complete onboarding',
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: AppTheme.textSecondaryDark,
-                      ),
-                    ),
-                    value: tutorialState.enabled,
-                    onChanged: (value) async {
-                      await ref
-                          .read(tutorialProvider.notifier)
-                          .setTutorialsEnabled(value);
-                      // If enabling tutorials, reset them so they show again
-                      if (value) {
-                        await ref
-                            .read(tutorialProvider.notifier)
-                            .resetTutorials();
-                      }
-                    },
-                    activeThumbColor: EmergeColors.teal,
-                    activeTrackColor: EmergeColors.teal.withValues(alpha: 0.5),
-                    tileColor: AppTheme.surfaceDark,
-                  ),
-                ]),
-                const SizedBox(height: 24),
-
-                // Support & Legal
-                _buildSectionHeader(context, 'Support & Legal'),
-                _buildSectionContainer(context, [
-                  _buildListTile(
-                    context,
-                    Icons.replay_outlined,
-                    'Redo Tutorials',
-                    onTap: () {
-                      _showRedoTutorialsDialog(context, ref);
-                    },
-                  ),
-                  _buildListTile(
-                    context,
-                    Icons.help_outline,
-                    'Help & Support (FAQ)',
-                    onTap: () {
-                      _showFaqDialog(context);
-                    },
-                  ),
-                  _buildListTile(
-                    context,
-                    Icons.privacy_tip_outlined,
-                    'Privacy Policy',
-                    onTap: () => launchUrl(
-                      Uri.parse(
-                        'https://docs.google.com/document/d/e/2PACX-1vRt5cCpFS7PLmh_nwhxq3ec9YtRWQZk7mrOqbVN7aThrclpjgYL3q5r-nAqlftQJVkOSWzxnG_FDfjo/pub',
-                      ),
-                      mode: LaunchMode.externalApplication,
-                    ),
-                  ),
-                  _buildListTile(
-                    context,
-                    Icons.description_outlined,
-                    'Terms of Service',
-                    onTap: () => launchUrl(
-                      Uri.parse(
-                        'https://docs.google.com/document/d/e/2PACX-1vQX-5ydyuD3ZYp_-8b_2rVyyuKW9zF2NaMm1CBxxwE5s1LXASy1P7Plxf8axNGc_TFJw-OnZrULmjgP/pub',
-                      ),
-                      mode: LaunchMode.externalApplication,
-                    ),
-                  ),
-                  _buildDeleteAccountTile(context, ref),
-                ]),
-                const SizedBox(height: 32),
-
-                // Action Buttons
-                SizedBox(
-                  width: double.infinity,
-                  height: 50,
-                  child: Consumer(
-                    builder: (context, ref, child) {
-                      return OutlinedButton(
-                        onPressed: () async {
-                          try {
-                            // Show loading indicator
-                            showDialog(
-                              context: context,
-                              barrierDismissible: false,
-                              builder: (context) => const Center(
-                                child: CircularProgressIndicator(),
-                              ),
-                            );
-
-                            await ref.read(authRepositoryProvider).signOut();
-
-                            if (context.mounted) {
-                              Navigator.of(context).pop(); // Dismiss loading
-                              // Router will handle redirect
-                            }
-                          } catch (e) {
-                            if (context.mounted) {
-                              Navigator.of(context).pop(); // Dismiss loading
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: Text('Error logging out: $e'),
-                                ),
-                              );
-                            }
-                          }
-                        },
-                        style: OutlinedButton.styleFrom(
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
+                    child: Text(
+                      'Log Out',
+                      style: Theme.of(context).textTheme.titleMedium
+                          ?.copyWith(
+                            fontWeight: FontWeight.bold,
+                            color: EmergeColors.coral,
                           ),
-                          side: const BorderSide(color: EmergeColors.coral),
-                          foregroundColor: EmergeColors.coral,
-                        ),
-                        child: Text(
-                          'Log Out',
-                          style: Theme.of(context).textTheme.titleMedium
-                              ?.copyWith(
-                                fontWeight: FontWeight.bold,
-                                color: EmergeColors.coral,
-                              ),
-                        ),
-                      );
-                    },
-                  ),
-                ),
-                const SizedBox(height: 16),
-                Center(
-                  child: Text(
-                    'Version 1.0.0',
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: AppTheme.textSecondaryDark,
-                      fontSize: 12,
                     ),
-                  ),
-                ),
-                const SizedBox(height: 32),
-              ],
+                  );
+                },
+              ),
             ),
-          ),
-        ],
+            const SizedBox(height: 16),
+            Center(
+              child: Text(
+                'Version 1.0.0',
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: AppTheme.textSecondaryDark,
+                  fontSize: 12,
+                ),
+              ),
+            ),
+            const SizedBox(height: 32),
+          ],
+        ),
       ),
     );
   }

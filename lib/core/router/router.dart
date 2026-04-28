@@ -14,24 +14,23 @@ import 'package:emerge_app/features/profile/presentation/screens/future_self_stu
 import 'package:emerge_app/features/gamification/presentation/widgets/level_up_listener.dart';
 import 'package:emerge_app/features/habits/presentation/screens/advanced_create_habit_dialog.dart';
 import 'package:emerge_app/features/habits/presentation/screens/habit_detail_screen.dart';
-import 'package:emerge_app/features/habits/presentation/screens/environment_priming_screen.dart';
+
 import 'package:emerge_app/features/gamification/presentation/screens/weekly_recap_screen.dart';
-import 'package:emerge_app/features/insights/presentation/screens/recap_screen.dart';
+
 import 'package:emerge_app/features/ai/presentation/screens/ai_reflections_screen.dart';
 import 'package:emerge_app/features/onboarding/presentation/providers/onboarding_provider.dart';
 import 'package:emerge_app/features/onboarding/presentation/screens/first_habit_screen.dart';
 import 'package:emerge_app/features/onboarding/presentation/screens/identity_studio_screen.dart';
-import 'package:emerge_app/features/onboarding/presentation/screens/map_identity_attributes_screen.dart';
+
 import 'package:emerge_app/features/onboarding/presentation/screens/welcome_screen.dart';
 import 'package:emerge_app/features/onboarding/presentation/screens/world_reveal_screen.dart';
 import 'package:emerge_app/features/settings/presentation/screens/settings_screen.dart';
 import 'package:emerge_app/features/settings/presentation/screens/notification_settings_screen.dart';
 import 'package:emerge_app/features/monetization/presentation/screens/paywall_screen.dart';
-import 'package:emerge_app/features/social/presentation/screens/community_screen.dart';
+
 import 'package:emerge_app/features/social/presentation/screens/challenges_screen.dart';
-import 'package:emerge_app/features/social/presentation/screens/friends_screen.dart';
-import 'package:emerge_app/features/social/presentation/screens/tribes_screen.dart';
-import 'package:emerge_app/features/social/presentation/screens/leaderboard_screen.dart';
+
+
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
@@ -177,10 +176,7 @@ GoRouter router(Ref ref) {
         path: '/onboarding/identity-studio',
         builder: (context, state) => const IdentityStudioScreen(),
       ),
-      GoRoute(
-        path: '/onboarding/map-attributes',
-        builder: (context, state) => const MapIdentityAttributesScreen(),
-      ),
+
       GoRoute(
         path: '/onboarding/first-habit',
         builder: (context, state) => const FirstHabitScreen(),
@@ -241,36 +237,12 @@ GoRouter router(Ref ref) {
               ),
             ],
           ),
-          // Branch 3: Tribes
+          // Branch 3: Social (Tribe · Challenges · Discover) — SocialScreen added in Task 6.1
           StatefulShellBranch(
             routes: [
               GoRoute(
                 path: '/tribes',
-                builder: (context, state) => const CommunityScreen(),
-                routes: [
-                  GoRoute(
-                    path: 'challenges',
-                    builder: (context, state) => const ChallengesScreen(),
-                  ),
-                  GoRoute(
-                    path: 'tribe',
-                    builder: (context, state) => const TribesScreen(),
-                  ),
-                  GoRoute(
-                    path: 'friends',
-                    builder: (context, state) => const FriendsScreen(),
-                  ),
-                  GoRoute(
-                    path: 'leaderboard',
-                    builder: (context, state) {
-                      final tab = state.uri.queryParameters['tab'];
-                      int index = 0;
-                      if (tab == 'tribe') index = 1;
-                      if (tab == 'world') index = 2;
-                      return LeaderboardScreen(initialTabIndex: index);
-                    },
-                  ),
-                ],
+                builder: (context, state) => const ChallengesScreen(),
               ),
             ],
           ),
@@ -291,16 +263,6 @@ GoRouter router(Ref ref) {
                     parentNavigatorKey: _rootNavigatorKey,
                     builder: (context, state) =>
                         const NotificationSettingsScreen(),
-                  ),
-                  GoRoute(
-                    path: 'priming',
-                    parentNavigatorKey: _rootNavigatorKey,
-                    builder: (context, state) =>
-                        const EnvironmentPrimingScreen(),
-                  ),
-                  GoRoute(
-                    path: 'recap',
-                    builder: (context, state) => const RecapScreen(),
                   ),
                   GoRoute(
                     path: 'reflections',

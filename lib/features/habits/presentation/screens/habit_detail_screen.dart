@@ -1,3 +1,4 @@
+import 'package:emerge_app/core/presentation/widgets/world_background.dart';
 import 'package:emerge_app/core/presentation/widgets/emerge_branding.dart';
 import 'package:emerge_app/core/services/notification_service.dart';
 import 'package:emerge_app/core/theme/app_theme.dart';
@@ -167,8 +168,7 @@ class _HabitDetailScreenState extends ConsumerState<HabitDetailScreen> {
   Widget build(BuildContext context) {
     final habitsAsync = ref.watch(habitsProvider);
 
-    return Scaffold(
-      extendBodyBehindAppBar: true,
+    return WorldBackground(
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
@@ -197,578 +197,569 @@ class _HabitDetailScreenState extends ConsumerState<HabitDetailScreen> {
             ),
         ],
       ),
-      body: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [const Color(0xFF1A1A2E), const Color(0xFF0F0F1A)],
-          ),
-        ),
-        child: habitsAsync.when(
-          data: (habits) {
-            final habit = habits
-                .where((h) => h.id == widget.habitId)
-                .firstOrNull;
-            if (habit == null) {
-              return const Center(
-                child: Text(
-                  'Habit not found',
-                  style: TextStyle(color: Colors.white),
-                ),
-              );
-            }
-
-            _initializeState(habit);
-
-            final now = DateTime.now();
-            final lastCompleted = habit.lastCompletedDate;
-            final isCompleted =
-                lastCompleted != null &&
-                lastCompleted.year == now.year &&
-                lastCompleted.month == now.month &&
-                lastCompleted.day == now.day;
-
-            final neonColor = _getAttributeColor(habit.attribute);
-
-            // Filter habits for anchor dropdown (exclude current habit)
-            final availableAnchors = habits
-                .where((h) => h.id != habit.id)
-                .toList();
-
-            return SingleChildScrollView(
-              padding: const EdgeInsets.fromLTRB(24, 100, 24, 40),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _buildHeader(context, habit, neonColor, isCompleted),
-                  const Gap(32),
-
-                  // Complete Button
-                  _buildCompleteButton(
-                    context,
-                    ref,
-                    habit,
-                    neonColor,
-                    isCompleted,
-                  ),
-                  const Gap(32),
-
-                  // Two-Minute Rule Section
-                  GlassmorphismCard(
-                    padding: const EdgeInsets.all(16),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        SectionHeader(title: 'Two-Minute Rule'),
-                        const Gap(16),
-                        TextFormField(
-                          controller: _twoMinuteController,
-                          style: TextStyle(color: AppTheme.textMainDark),
-                          onChanged: (_) => _checkForChanges(),
-                          decoration: InputDecoration(
-                            helperText: 'Make it easy (e.g., "Read 1 page")',
-                            helperStyle: TextStyle(
-                              color: AppTheme.textSecondaryDark.withValues(
-                                alpha: 0.5,
-                              ),
-                            ),
-                            prefixIcon: Icon(
-                              Icons.timer_outlined,
-                              color: EmergeColors.teal,
-                              size: 20,
-                            ),
-                            hintText: 'Enter 2-minute version',
-                            hintStyle: TextStyle(
-                              color: AppTheme.textSecondaryDark.withValues(
-                                alpha: 0.5,
-                              ),
-                            ),
-                            border: InputBorder.none,
-                            enabledBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                              borderSide: BorderSide(
-                                color: AppTheme.textSecondaryDark.withValues(
-                                  alpha: 0.3,
-                                ),
-                              ),
-                            ),
-                            focusedBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                              borderSide: BorderSide(color: EmergeColors.teal),
-                            ),
-                            filled: true,
-                            fillColor: Colors.black.withValues(alpha: 0.2),
-                          ),
-                        ),
-                        const Gap(16),
-                        Text(
-                          'Timer Duration:',
-                          style: TextStyle(
-                            color: AppTheme.textSecondaryDark,
-                            fontSize: 13,
-                          ),
-                        ),
-                        const Gap(12),
-                        Wrap(
-                          spacing: 8,
-                          runSpacing: 8,
-                          children: [1, 2, 5, 10].map((mins) {
-                            final isSelected = _timerDurationMinutes == mins;
-                            return GestureDetector(
-                              onTap: () {
-                                HapticFeedback.selectionClick();
-                                setState(() {
-                                  _timerDurationMinutes = mins;
-                                  _hasChanges = true;
-                                });
-                              },
-                              child: Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 12,
-                                  vertical: 6,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: isSelected
-                                      ? EmergeColors.teal
-                                      : Colors.transparent,
-                                  borderRadius: BorderRadius.circular(16),
-                                  border: Border.all(
-                                    color: isSelected
-                                        ? EmergeColors.teal
-                                        : AppTheme.textSecondaryDark.withValues(
-                                            alpha: 0.3,
-                                          ),
-                                  ),
-                                ),
-                                child: Text(
-                                  '${mins}m',
-                                  style: TextStyle(
-                                    color: isSelected
-                                        ? Colors.white
-                                        : AppTheme.textSecondaryDark,
-                                    fontWeight: FontWeight.w600,
-                                    fontSize: 12,
-                                  ),
-                                ),
-                              ),
-                            );
-                          }).toList(),
-                        ),
-                        const Gap(24),
-                        // Start Timer Button
-                        SizedBox(
-                          width: double.infinity,
-                          child: OutlinedButton.icon(
-                            onPressed: () {
-                              showDialog(
-                                context: context,
-                                barrierDismissible: false,
-                                builder: (_) => TwoMinuteTimerDialog(
-                                  habitTitle:
-                                      _twoMinuteController.text.isNotEmpty
-                                      ? _twoMinuteController.text
-                                      : habit.title,
-                                  neonColor: neonColor,
-                                  durationMinutes: _timerDurationMinutes,
-                                  onComplete: () {
-                                    ref.read(completeHabitProvider(habit.id));
-                                    // Optionally show a success effect or pop
-                                    Navigator.of(context).pop();
-                                  },
-                                ),
-                              );
-                            },
-                            icon: const Icon(Icons.play_arrow),
-                            label: Text(
-                              'Start $_timerDurationMinutes-Min Timer',
-                            ),
-                            style: OutlinedButton.styleFrom(
-                              foregroundColor: neonColor,
-                              side: BorderSide(
-                                color: neonColor.withValues(alpha: 0.5),
-                              ),
-                              padding: const EdgeInsets.symmetric(vertical: 16),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-
-                  const Gap(24),
-
-                  // Temptation Bundling Section
-                  GlassmorphismCard(
-                    padding: const EdgeInsets.all(16),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        SectionHeader(title: 'Temptation Bundling'),
-                        const Gap(16),
-                        TextFormField(
-                          controller: _rewardController,
-                          style: TextStyle(color: AppTheme.textMainDark),
-                          onChanged: (_) => _checkForChanges(),
-                          decoration: InputDecoration(
-                            helperText: 'Reward yourself after completion',
-                            helperStyle: TextStyle(
-                              color: AppTheme.textSecondaryDark.withValues(
-                                alpha: 0.5,
-                              ),
-                            ),
-                            prefixIcon: Icon(
-                              Icons.card_giftcard,
-                              color: EmergeColors.teal,
-                              size: 20,
-                            ),
-                            hintText: 'e.g., Watch 1 episode',
-                            hintStyle: TextStyle(
-                              color: AppTheme.textSecondaryDark.withValues(
-                                alpha: 0.5,
-                              ),
-                            ),
-                            border: InputBorder.none,
-                            enabledBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                              borderSide: BorderSide(
-                                color: AppTheme.textSecondaryDark.withValues(
-                                  alpha: 0.3,
-                                ),
-                              ),
-                            ),
-                            focusedBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                              borderSide: BorderSide(color: EmergeColors.teal),
-                            ),
-                            filled: true,
-                            fillColor: Colors.black.withValues(alpha: 0.2),
-                          ),
-                        ),
-                        const Gap(12),
-                        Wrap(
-                          spacing: 8,
-                          runSpacing: 8,
-                          children:
-                              [
-                                'Watch 1 episode',
-                                'Check social media',
-                                'Coffee/Tea',
-                                'Podcast',
-                              ].map((suggestion) {
-                                return ActionChip(
-                                  label: Text(suggestion),
-                                  backgroundColor: Colors.white.withValues(
-                                    alpha: 0.05,
-                                  ),
-                                  side: BorderSide.none,
-                                  labelStyle: TextStyle(
-                                    color: AppTheme.textSecondaryDark,
-                                    fontSize: 12,
-                                  ),
-                                  onPressed: () {
-                                    _rewardController.text = suggestion;
-                                    _checkForChanges();
-                                  },
-                                );
-                              }).toList(),
-                        ),
-                      ],
-                    ),
-                  ),
-
-
-
-                  // Environment Priming Section
-                  GlassmorphismCard(
-                    padding: const EdgeInsets.all(16),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        SectionHeader(title: 'Environment Priming'),
-                        const Gap(16),
-                        Text(
-                          'Prepare your environment the night before to reduce friction.',
-                          style: TextStyle(
-                            color: AppTheme.textSecondaryDark,
-                            fontSize: 13,
-                          ),
-                        ),
-                        const Gap(16),
-                        TextFormField(
-                          controller: _primingController,
-                          style: TextStyle(color: AppTheme.textMainDark),
-                          onFieldSubmitted: (_) => _addPrimingRule(),
-                          decoration: InputDecoration(
-                            suffixIcon: IconButton(
-                              icon: const Icon(Icons.add),
-                              color: EmergeColors.teal,
-                              onPressed: _addPrimingRule,
-                            ),
-                            hintText: 'e.g., Lay out workout clothes...',
-                            hintStyle: TextStyle(
-                              color: AppTheme.textSecondaryDark.withValues(
-                                alpha: 0.5,
-                              ),
-                            ),
-                            border: InputBorder.none,
-                            enabledBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                              borderSide: BorderSide(
-                                color: AppTheme.textSecondaryDark.withValues(
-                                  alpha: 0.3,
-                                ),
-                              ),
-                            ),
-                            focusedBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                              borderSide: BorderSide(color: EmergeColors.teal),
-                            ),
-                            filled: true,
-                            fillColor: Colors.black.withValues(alpha: 0.2),
-                          ),
-                        ),
-                        const Gap(16),
-                        if (_environmentPriming.isEmpty)
-                          Center(
-                            child: Padding(
-                              padding: const EdgeInsets.all(16.0),
-                              child: Text(
-                                'No environment priming tasks.\nAdd setup steps to make starting easier.',
-                                textAlign: TextAlign.center,
-                                style: TextStyle(
-                                  color: AppTheme.textSecondaryDark.withValues(
-                                    alpha: 0.5,
-                                  ),
-                                  fontStyle: FontStyle.italic,
-                                ),
-                              ),
-                            ),
-                          )
-                        else
-                          ListView.builder(
-                            shrinkWrap: true,
-                            physics: const NeverScrollableScrollPhysics(),
-                            itemCount: _environmentPriming.length,
-                            itemBuilder: (context, index) {
-                              return Container(
-                                margin: const EdgeInsets.only(bottom: 8),
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 12,
-                                  vertical: 8,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: Colors.white.withValues(alpha: 0.05),
-                                  borderRadius: BorderRadius.circular(8),
-                                  border: Border.all(
-                                    color: Colors.white.withValues(alpha: 0.1),
-                                  ),
-                                ),
-                                child: Row(
-                                  children: [
-                                    Icon(
-                                      Icons.check_box_outline_blank,
-                                      size: 16,
-                                      color: EmergeColors.teal,
-                                    ),
-                                    const Gap(12),
-                                    Expanded(
-                                      child: Text(
-                                        _environmentPriming[index],
-                                        style: TextStyle(
-                                          color: AppTheme.textMainDark,
-                                          fontSize: 14,
-                                        ),
-                                      ),
-                                    ),
-                                    IconButton(
-                                      icon: Icon(
-                                        Icons.close,
-                                        size: 16,
-                                        color: AppTheme.textSecondaryDark,
-                                      ),
-                                      onPressed: () =>
-                                          _removePrimingRule(index),
-                                    ),
-                                  ],
-                                ),
-                              );
-                            },
-                          ),
-                      ],
-                    ),
-                  ),
-
-                  const Gap(24),
-
-                  // Anchor Habit Section (Optional)
-                  if (availableAnchors.isNotEmpty)
-                    GlassmorphismCard(
-                      padding: const EdgeInsets.all(16),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          SectionHeader(title: 'Anchor Habit (Optional)'),
-                          const Gap(16),
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 12),
-                            decoration: BoxDecoration(
-                              color: Colors.black.withValues(alpha: 0.2),
-                              borderRadius: BorderRadius.circular(12),
-                              border: Border.all(
-                                color: AppTheme.textSecondaryDark.withValues(
-                                  alpha: 0.3,
-                                ),
-                              ),
-                            ),
-                            child: DropdownButtonFormField<String>(
-                              initialValue: _anchorHabitId,
-                              dropdownColor: AppTheme.surfaceDark,
-                              style: TextStyle(color: AppTheme.textMainDark),
-                              decoration: const InputDecoration(
-                                border: InputBorder.none,
-                                hintText: 'Select a habit to anchor to',
-                                hintStyle: TextStyle(color: Colors.white54),
-                              ),
-                              items: [
-                                DropdownMenuItem(
-                                  value: null,
-                                  child: Text(
-                                    'None',
-                                    style: TextStyle(
-                                      color: AppTheme.textSecondaryDark,
-                                    ),
-                                  ),
-                                ),
-                                ...availableAnchors.map(
-                                  (h) => DropdownMenuItem(
-                                    value: h.id,
-                                    child: Text(h.title),
-                                  ),
-                                ),
-                              ],
-                              onChanged: (value) {
-                                setState(() {
-                                  _anchorHabitId = value;
-                                  _hasChanges = true;
-                                });
-                              },
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-
-                  const Gap(32),
-
-                  // Delete Habit Section
-                  GlassmorphismCard(
-                    padding: const EdgeInsets.all(20),
-                    child: Column(
-                      children: [
-                        Icon(
-                          Icons.delete_forever,
-                          color: Colors.red.withValues(alpha: 0.7),
-                          size: 36,
-                        ),
-                        const Gap(12),
-                        Text(
-                          'Delete Habit',
-                          style: TextStyle(
-                            color: Colors.red,
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        const Gap(8),
-                        Text(
-                          'Permanently delete this habit and all its history.',
-                          style: TextStyle(
-                            color: AppTheme.textSecondaryDark,
-                            fontSize: 13,
-                          ),
-                          textAlign: TextAlign.center,
-                        ),
-                        const Gap(16),
-                        SizedBox(
-                          width: double.infinity,
-                          child: ElevatedButton(
-                            onPressed: () async {
-                              final confirmed =
-                                  await _showDeleteConfirmationDialog(context);
-                              if (confirmed) {
-                                try {
-                                  // Delete habit from repository
-                                  await ref
-                                      .read(habitRepositoryProvider)
-                                      .deleteHabit(habit.id);
-                                  // Cancel all notifications
-                                  await ref
-                                      .read(notificationServiceProvider)
-                                      .cancelHabitNotifications(habit.id);
-                                  if (context.mounted) {
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      SnackBar(
-                                        content: Text(
-                                          'Habit deleted successfully',
-                                        ),
-                                        backgroundColor: Colors.green,
-                                      ),
-                                    );
-                                    Navigator.of(
-                                      context,
-                                    ).pop(); // Close detail screen
-                                  }
-                                } catch (e) {
-                                  if (context.mounted) {
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      SnackBar(
-                                        content: Text(
-                                          'Error deleting habit: $e',
-                                        ),
-                                        backgroundColor: Colors.red,
-                                      ),
-                                    );
-                                  }
-                                }
-                              }
-                            },
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.red.withValues(
-                                alpha: 0.2,
-                              ),
-                              foregroundColor: Colors.red,
-                              side: BorderSide(
-                                color: Colors.red.withValues(alpha: 0.5),
-                              ),
-                              padding: const EdgeInsets.symmetric(vertical: 16),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                            ),
-                            child: Text(
-                              'Delete Forever',
-                              style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
+      child: habitsAsync.when(
+        data: (habits) {
+          final habit = habits
+              .where((h) => h.id == widget.habitId)
+              .firstOrNull;
+          if (habit == null) {
+            return const Center(
+              child: Text(
+                'Habit not found',
+                style: TextStyle(color: Colors.white),
               ),
             );
-          },
-          loading: () => const Center(child: CircularProgressIndicator()),
-          error: (err, stack) => Center(
-            child: Text('Error: $err', style: TextStyle(color: Colors.white)),
-          ),
+          }
+
+          _initializeState(habit);
+
+          final now = DateTime.now();
+          final lastCompleted = habit.lastCompletedDate;
+          final isCompleted =
+              lastCompleted != null &&
+              lastCompleted.year == now.year &&
+              lastCompleted.month == now.month &&
+              lastCompleted.day == now.day;
+
+          final neonColor = _getAttributeColor(habit.attribute);
+
+          // Filter habits for anchor dropdown (exclude current habit)
+          final availableAnchors = habits
+              .where((h) => h.id != habit.id)
+              .toList();
+
+          return SingleChildScrollView(
+            padding: const EdgeInsets.fromLTRB(24, 100, 24, 40),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _buildHeader(context, habit, neonColor, isCompleted),
+                const Gap(32),
+
+                // Complete Button
+                _buildCompleteButton(
+                  context,
+                  ref,
+                  habit,
+                  neonColor,
+                  isCompleted,
+                ),
+                const Gap(32),
+
+                // Two-Minute Rule Section
+                GlassmorphismCard(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      SectionHeader(title: 'Two-Minute Rule'),
+                      const Gap(16),
+                      TextFormField(
+                        controller: _twoMinuteController,
+                        style: TextStyle(color: AppTheme.textMainDark),
+                        onChanged: (_) => _checkForChanges(),
+                        decoration: InputDecoration(
+                          helperText: 'Make it easy (e.g., "Read 1 page")',
+                          helperStyle: TextStyle(
+                            color: AppTheme.textSecondaryDark.withValues(
+                              alpha: 0.5,
+                            ),
+                          ),
+                          prefixIcon: Icon(
+                            Icons.timer_outlined,
+                            color: EmergeColors.teal,
+                            size: 20,
+                          ),
+                          hintText: 'Enter 2-minute version',
+                          hintStyle: TextStyle(
+                            color: AppTheme.textSecondaryDark.withValues(
+                              alpha: 0.5,
+                            ),
+                          ),
+                          border: InputBorder.none,
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide(
+                              color: AppTheme.textSecondaryDark.withValues(
+                                alpha: 0.3,
+                              ),
+                            ),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide(color: EmergeColors.teal),
+                          ),
+                          filled: true,
+                          fillColor: Colors.black.withValues(alpha: 0.2),
+                        ),
+                      ),
+                      const Gap(16),
+                      Text(
+                        'Timer Duration:',
+                        style: TextStyle(
+                          color: AppTheme.textSecondaryDark,
+                          fontSize: 13,
+                        ),
+                      ),
+                      const Gap(12),
+                      Wrap(
+                        spacing: 8,
+                        runSpacing: 8,
+                        children: [1, 2, 5, 10].map((mins) {
+                          final isSelected = _timerDurationMinutes == mins;
+                          return GestureDetector(
+                            onTap: () {
+                              HapticFeedback.selectionClick();
+                              setState(() {
+                                _timerDurationMinutes = mins;
+                                _hasChanges = true;
+                              });
+                            },
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 12,
+                                vertical: 6,
+                              ),
+                              decoration: BoxDecoration(
+                                color: isSelected
+                                    ? EmergeColors.teal
+                                    : Colors.transparent,
+                                borderRadius: BorderRadius.circular(16),
+                                border: Border.all(
+                                  color: isSelected
+                                      ? EmergeColors.teal
+                                      : AppTheme.textSecondaryDark.withValues(
+                                          alpha: 0.3,
+                                        ),
+                                ),
+                              ),
+                              child: Text(
+                                '${mins}m',
+                                style: TextStyle(
+                                  color: isSelected
+                                      ? Colors.white
+                                      : AppTheme.textSecondaryDark,
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 12,
+                                ),
+                              ),
+                            ),
+                          );
+                        }).toList(),
+                      ),
+                      const Gap(24),
+                      // Start Timer Button
+                      SizedBox(
+                        width: double.infinity,
+                        child: OutlinedButton.icon(
+                          onPressed: () {
+                            showDialog(
+                              context: context,
+                              barrierDismissible: false,
+                              builder: (_) => TwoMinuteTimerDialog(
+                                habitTitle:
+                                    _twoMinuteController.text.isNotEmpty
+                                    ? _twoMinuteController.text
+                                    : habit.title,
+                                neonColor: neonColor,
+                                durationMinutes: _timerDurationMinutes,
+                                onComplete: () {
+                                  ref.read(completeHabitProvider(habit.id));
+                                  // Optionally show a success effect or pop
+                                  Navigator.of(context).pop();
+                                },
+                              ),
+                            );
+                          },
+                          icon: const Icon(Icons.play_arrow),
+                          label: Text(
+                            'Start $_timerDurationMinutes-Min Timer',
+                          ),
+                          style: OutlinedButton.styleFrom(
+                            foregroundColor: neonColor,
+                            side: BorderSide(
+                              color: neonColor.withValues(alpha: 0.5),
+                            ),
+                            padding: const EdgeInsets.symmetric(vertical: 16),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+
+                const Gap(24),
+
+                // Temptation Bundling Section
+                GlassmorphismCard(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      SectionHeader(title: 'Temptation Bundling'),
+                      const Gap(16),
+                      TextFormField(
+                        controller: _rewardController,
+                        style: TextStyle(color: AppTheme.textMainDark),
+                        onChanged: (_) => _checkForChanges(),
+                        decoration: InputDecoration(
+                          helperText: 'Reward yourself after completion',
+                          helperStyle: TextStyle(
+                            color: AppTheme.textSecondaryDark.withValues(
+                              alpha: 0.5,
+                            ),
+                          ),
+                          prefixIcon: Icon(
+                            Icons.card_giftcard,
+                            color: EmergeColors.teal,
+                            size: 20,
+                          ),
+                          hintText: 'e.g., Watch 1 episode',
+                          hintStyle: TextStyle(
+                            color: AppTheme.textSecondaryDark.withValues(
+                              alpha: 0.5,
+                            ),
+                          ),
+                          border: InputBorder.none,
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide(
+                              color: AppTheme.textSecondaryDark.withValues(
+                                alpha: 0.3,
+                              ),
+                            ),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide(color: EmergeColors.teal),
+                          ),
+                          filled: true,
+                          fillColor: Colors.black.withValues(alpha: 0.2),
+                        ),
+                      ),
+                      const Gap(12),
+                      Wrap(
+                        spacing: 8,
+                        runSpacing: 8,
+                        children:
+                            [
+                              'Watch 1 episode',
+                              'Check social media',
+                              'Coffee/Tea',
+                              'Podcast',
+                            ].map((suggestion) {
+                              return ActionChip(
+                                label: Text(suggestion),
+                                backgroundColor: Colors.white.withValues(
+                                  alpha: 0.05,
+                                ),
+                                side: BorderSide.none,
+                                labelStyle: TextStyle(
+                                  color: AppTheme.textSecondaryDark,
+                                  fontSize: 12,
+                                ),
+                                onPressed: () {
+                                  _rewardController.text = suggestion;
+                                  _checkForChanges();
+                                },
+                              );
+                            }).toList(),
+                      ),
+                    ],
+                  ),
+                ),
+
+
+
+                // Environment Priming Section
+                GlassmorphismCard(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      SectionHeader(title: 'Environment Priming'),
+                      const Gap(16),
+                      Text(
+                        'Prepare your environment the night before to reduce friction.',
+                        style: TextStyle(
+                          color: AppTheme.textSecondaryDark,
+                          fontSize: 13,
+                        ),
+                      ),
+                      const Gap(16),
+                      TextFormField(
+                        controller: _primingController,
+                        style: TextStyle(color: AppTheme.textMainDark),
+                        onFieldSubmitted: (_) => _addPrimingRule(),
+                        decoration: InputDecoration(
+                          suffixIcon: IconButton(
+                            icon: const Icon(Icons.add),
+                            color: EmergeColors.teal,
+                            onPressed: _addPrimingRule,
+                          ),
+                          hintText: 'e.g., Lay out workout clothes...',
+                          hintStyle: TextStyle(
+                            color: AppTheme.textSecondaryDark.withValues(
+                              alpha: 0.5,
+                            ),
+                          ),
+                          border: InputBorder.none,
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide(
+                              color: AppTheme.textSecondaryDark.withValues(
+                                alpha: 0.3,
+                              ),
+                            ),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide(color: EmergeColors.teal),
+                          ),
+                          filled: true,
+                          fillColor: Colors.black.withValues(alpha: 0.2),
+                        ),
+                      ),
+                      const Gap(16),
+                      if (_environmentPriming.isEmpty)
+                        Center(
+                          child: Padding(
+                            padding: const EdgeInsets.all(16.0),
+                            child: Text(
+                              'No environment priming tasks.\nAdd setup steps to make starting easier.',
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                color: AppTheme.textSecondaryDark.withValues(
+                                  alpha: 0.5,
+                                ),
+                                fontStyle: FontStyle.italic,
+                              ),
+                            ),
+                          ),
+                        )
+                      else
+                        ListView.builder(
+                          shrinkWrap: true,
+                          physics: const NeverScrollableScrollPhysics(),
+                          itemCount: _environmentPriming.length,
+                          itemBuilder: (context, index) {
+                            return Container(
+                              margin: const EdgeInsets.only(bottom: 8),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 12,
+                                vertical: 8,
+                              ),
+                              decoration: BoxDecoration(
+                                color: Colors.white.withValues(alpha: 0.05),
+                                borderRadius: BorderRadius.circular(8),
+                                border: Border.all(
+                                  color: Colors.white.withValues(alpha: 0.1),
+                                ),
+                              ),
+                              child: Row(
+                                children: [
+                                  Icon(
+                                    Icons.check_box_outline_blank,
+                                    size: 16,
+                                    color: EmergeColors.teal,
+                                  ),
+                                  const Gap(12),
+                                  Expanded(
+                                    child: Text(
+                                      _environmentPriming[index],
+                                      style: TextStyle(
+                                        color: AppTheme.textMainDark,
+                                        fontSize: 14,
+                                      ),
+                                    ),
+                                  ),
+                                  IconButton(
+                                    icon: Icon(
+                                      Icons.close,
+                                      size: 16,
+                                      color: AppTheme.textSecondaryDark,
+                                    ),
+                                    onPressed: () =>
+                                        _removePrimingRule(index),
+                                  ),
+                                ],
+                              ),
+                            );
+                          },
+                        ),
+                    ],
+                  ),
+                ),
+
+                const Gap(24),
+
+                // Anchor Habit Section (Optional)
+                if (availableAnchors.isNotEmpty)
+                  GlassmorphismCard(
+                    padding: const EdgeInsets.all(16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        SectionHeader(title: 'Anchor Habit (Optional)'),
+                        const Gap(16),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 12),
+                          decoration: BoxDecoration(
+                            color: Colors.black.withValues(alpha: 0.2),
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(
+                              color: AppTheme.textSecondaryDark.withValues(
+                                alpha: 0.3,
+                              ),
+                            ),
+                          ),
+                          child: DropdownButtonFormField<String>(
+                            initialValue: _anchorHabitId,
+                            dropdownColor: AppTheme.surfaceDark,
+                            style: TextStyle(color: AppTheme.textMainDark),
+                            decoration: const InputDecoration(
+                              border: InputBorder.none,
+                              hintText: 'Select a habit to anchor to',
+                              hintStyle: TextStyle(color: Colors.white54),
+                            ),
+                            items: [
+                              DropdownMenuItem(
+                                value: null,
+                                child: Text(
+                                  'None',
+                                  style: TextStyle(
+                                    color: AppTheme.textSecondaryDark,
+                                  ),
+                                ),
+                              ),
+                              ...availableAnchors.map(
+                                (h) => DropdownMenuItem(
+                                  value: h.id,
+                                  child: Text(h.title),
+                                ),
+                              ),
+                            ],
+                            onChanged: (value) {
+                              setState(() {
+                                _anchorHabitId = value;
+                                _hasChanges = true;
+                              });
+                            },
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+
+                const Gap(32),
+
+                // Delete Habit Section
+                GlassmorphismCard(
+                  padding: const EdgeInsets.all(20),
+                  child: Column(
+                    children: [
+                      Icon(
+                        Icons.delete_forever,
+                        color: Colors.red.withValues(alpha: 0.7),
+                        size: 36,
+                      ),
+                      const Gap(12),
+                      Text(
+                        'Delete Habit',
+                        style: TextStyle(
+                          color: Colors.red,
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const Gap(8),
+                      Text(
+                        'Permanently delete this habit and all its history.',
+                        style: TextStyle(
+                          color: AppTheme.textSecondaryDark,
+                          fontSize: 13,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                      const Gap(16),
+                      SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton(
+                          onPressed: () async {
+                            final confirmed =
+                                await _showDeleteConfirmationDialog(context);
+                            if (confirmed) {
+                              try {
+                                // Delete habit from repository
+                                await ref
+                                    .read(habitRepositoryProvider)
+                                    .deleteHabit(habit.id);
+                                // Cancel all notifications
+                                await ref
+                                    .read(notificationServiceProvider)
+                                    .cancelHabitNotifications(habit.id);
+                                if (context.mounted) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: Text(
+                                        'Habit deleted successfully',
+                                      ),
+                                      backgroundColor: Colors.green,
+                                    ),
+                                  );
+                                  Navigator.of(
+                                    context,
+                                  ).pop(); // Close detail screen
+                                }
+                              } catch (e) {
+                                if (context.mounted) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: Text(
+                                        'Error deleting habit: $e',
+                                      ),
+                                      backgroundColor: Colors.red,
+                                    ),
+                                  );
+                                }
+                              }
+                            }
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.red.withValues(
+                              alpha: 0.2,
+                            ),
+                            foregroundColor: Colors.red,
+                            side: BorderSide(
+                              color: Colors.red.withValues(alpha: 0.5),
+                            ),
+                            padding: const EdgeInsets.symmetric(vertical: 16),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                          child: Text(
+                            'Delete Forever',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          );
+        },
+        loading: () => const Center(child: CircularProgressIndicator()),
+        error: (err, stack) => Center(
+          child: Text('Error: $err', style: TextStyle(color: Colors.white)),
         ),
       ),
     );
