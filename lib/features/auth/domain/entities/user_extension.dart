@@ -442,6 +442,7 @@ class UserProfile {
 
   final bool reframeMode;
   final String? motive;
+  final String? dominantMotive;
   final String? why;
   final List<String> anchors;
   final List<HabitStack> habitStacks;
@@ -466,6 +467,7 @@ class UserProfile {
     this.worldState = const UserWorldState(),
     this.reframeMode = false,
     this.motive,
+    this.dominantMotive,
     this.why,
     this.anchors = const [],
     this.habitStacks = const [],
@@ -491,6 +493,7 @@ class UserProfile {
       'worldState': worldState.toMap(),
       'reframeMode': reframeMode,
       'motive': motive,
+      'dominantMotive': dominantMotive,
       'why': why,
       'anchors': anchors,
       'habitStacks': habitStacks.map((e) => e.toMap()).toList(),
@@ -520,6 +523,7 @@ class UserProfile {
       worldState: UserWorldState.fromMap(map['worldState'] ?? {}),
       reframeMode: map['reframeMode'] as bool? ?? false,
       motive: map['motive'] as String?,
+      dominantMotive: map['dominantMotive'] as String?,
       why: map['why'] as String?,
       anchors: List<String>.from(map['anchors'] ?? []),
       habitStacks:
@@ -555,6 +559,7 @@ class UserProfile {
     UserWorldState? worldState,
     bool? reframeMode,
     String? motive,
+    String? dominantMotive,
     String? why,
     List<String>? anchors,
     List<HabitStack>? habitStacks,
@@ -578,6 +583,7 @@ class UserProfile {
       worldState: worldState ?? this.worldState,
       reframeMode: reframeMode ?? this.reframeMode,
       motive: motive ?? this.motive,
+      dominantMotive: dominantMotive ?? this.dominantMotive,
       why: why ?? this.why,
       anchors: anchors ?? this.anchors,
       habitStacks: habitStacks ?? this.habitStacks,
