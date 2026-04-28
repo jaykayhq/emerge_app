@@ -320,6 +320,22 @@ class FirestoreHabitRepository implements HabitRepository {
               'createdAt': FieldValue.serverTimestamp(),
             });
           }
+
+          // Write to the new habit_completions subcollection
+          await _firestore
+              .collection('users')
+              .doc(uid)
+              .collection('habit_completions')
+              .add({
+            'habitId': habitId,
+            'userId': uid,
+            'timestamp': Timestamp.fromDate(date),
+            // Assuming motive isn't passed here yet, setting to null
+            'motiveUsed': null, 
+            'streakAtCompletion': completionData['streakDay'],
+            'entropyImpact': 5, // Default base impact
+          });
+
         } catch (activityError, activityStack) {
           AppLogger.e(
             'Failed to log activity for habit completion',
