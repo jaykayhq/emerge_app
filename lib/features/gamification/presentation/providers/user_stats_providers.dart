@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 import 'package:emerge_app/core/services/event_bus.dart';
 import 'package:emerge_app/core/utils/app_logger.dart';
@@ -7,6 +8,7 @@ import 'package:emerge_app/features/auth/presentation/providers/auth_providers.d
 import 'package:emerge_app/features/gamification/data/repositories/user_stats_repository.dart';
 import 'package:emerge_app/features/gamification/domain/services/gamification_service.dart';
 import 'package:emerge_app/features/habits/domain/entities/habit.dart';
+import 'package:emerge_app/features/habits/domain/services/momentum_service.dart';
 import 'package:emerge_app/features/social/domain/services/club_activity_service.dart';
 import 'package:emerge_app/features/social/presentation/providers/tribes_provider.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -126,6 +128,21 @@ class UserStatsController {
     AppLogger.i(
       'Habit completed event received: ${event.habitId} for user: ${event.userId}',
     );
+  }
+
+  /// Recalculate world health based on momentum
+  Future<void> recalculateWorldHealth(List<Habit> habits) async {
+    if (userId.isEmpty) return;
+    try {
+      final score = MomentumService().computeWorldHealth(habits);
+      await FirebaseFirestore.instance.collection('user_stats').doc(userId).set(
+        {'worldHealthScore': score},
+        SetOptions(merge: true),
+      );
+      AppLogger.d('World health recalculated: $score');
+    } catch (e) {
+      AppLogger.e('Error recalculating world health', e);
+    }
   }
 
   /// Update the world state (for building placements, etc.)
