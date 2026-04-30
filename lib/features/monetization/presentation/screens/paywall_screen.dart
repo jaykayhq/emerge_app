@@ -8,11 +8,25 @@ import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:purchases_flutter/purchases_flutter.dart';
 
-class PaywallScreen extends ConsumerWidget {
+class PaywallScreen extends ConsumerStatefulWidget {
   const PaywallScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<PaywallScreen> createState() => _PaywallScreenState();
+}
+
+class _PaywallScreenState extends ConsumerState<PaywallScreen> {
+  @override
+  void initState() {
+    super.initState();
+    // Fetch offerings when widget is first mounted
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.read(paywallControllerProvider.notifier).fetchOfferings();
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final paywallState = ref.watch(paywallControllerProvider);
     final offerings = paywallState.offerings;
 

@@ -1,5 +1,5 @@
-import 'package:emerge_app/core/presentation/widgets/emerge_branding.dart';
 import 'package:flutter/material.dart';
+import 'package:emerge_app/core/theme/emerge_colors.dart';
 
 /// Renders a nameplate background behind a user's name/card.
 /// The `nameplateKey` corresponds to the `displayValue` from RewardCatalog.

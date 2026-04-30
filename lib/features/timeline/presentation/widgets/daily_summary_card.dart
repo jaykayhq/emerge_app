@@ -1,6 +1,6 @@
-import 'package:emerge_app/core/presentation/widgets/emerge_branding.dart';
 import 'package:emerge_app/core/presentation/widgets/glassmorphism_card.dart';
 import 'package:flutter/material.dart';
+import 'package:emerge_app/core/theme/emerge_colors.dart';
 
 /// Card showing today's habit completion summary with XP and streak info.
 /// Uses glassmorphism background matching the Stitch green design system.
@@ -50,7 +50,7 @@ class DailySummaryCard extends StatelessWidget {
                 Text(
                   'Track your daily identity votes',
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: EmergeColors.tealMuted.withValues(alpha: 0.7),
+                    color: EmergeColors.tealMuted.withValues(alpha:0.7),
                     fontSize: 11,
                   ),
                 ),
@@ -115,7 +115,7 @@ class DailySummaryCard extends StatelessWidget {
             child: CircularProgressIndicator(
               value: progress,
               strokeWidth: 5,
-              backgroundColor: EmergeColors.teal.withValues(alpha: 0.2),
+              backgroundColor: EmergeColors.teal.withValues(alpha:0.2),
               valueColor: AlwaysStoppedAnimation(EmergeColors.teal),
             ),
           ),

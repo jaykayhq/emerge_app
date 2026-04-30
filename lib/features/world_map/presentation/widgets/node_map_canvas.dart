@@ -196,12 +196,12 @@ class _StitchNodeWidget extends StatelessWidget {
                   color: primaryColor,
                   boxShadow: [
                     BoxShadow(
-                      color: primaryColor.withValues(alpha: glowAlpha),
+                      color: primaryColor.withValues(alpha:glowAlpha),
                       blurRadius: 24,
                       spreadRadius: 8,
                     ),
                     BoxShadow(
-                      color: primaryColor.withValues(alpha: glowAlpha * 0.5),
+                      color: primaryColor.withValues(alpha:glowAlpha * 0.5),
                       blurRadius: 40,
                       spreadRadius: 16,
                     ),
@@ -248,14 +248,14 @@ class _StitchNodeWidget extends StatelessWidget {
       height: 48,
       decoration: BoxDecoration(
         shape: BoxShape.circle,
-        color: primaryColor.withValues(alpha: 0.25),
+        color: primaryColor.withValues(alpha:0.25),
         border: Border.all(
-          color: primaryColor.withValues(alpha: 0.6),
+          color: primaryColor.withValues(alpha:0.6),
           width: 2,
         ),
         boxShadow: [
           BoxShadow(
-            color: primaryColor.withValues(alpha: 0.2),
+            color: primaryColor.withValues(alpha:0.2),
             blurRadius: 8,
             spreadRadius: 2,
           ),
@@ -309,15 +309,15 @@ class _StitchNodeWidget extends StatelessWidget {
       height: 44,
       decoration: BoxDecoration(
         shape: BoxShape.circle,
-        color: const Color(0xFF193324).withValues(alpha: 0.8),
+        color: const Color(0xFF193324).withValues(alpha:0.8),
         border: Border.all(
-          color: primaryColor.withValues(alpha: 0.3),
+          color: primaryColor.withValues(alpha:0.3),
           width: 2,
         ),
       ),
       child: Icon(
         _getNodeIcon(),
-        color: primaryColor.withValues(alpha: 0.6),
+        color: primaryColor.withValues(alpha:0.6),
         size: 20,
       ),
     );
@@ -372,8 +372,8 @@ class _StitchConnectionsPainter extends CustomPainter {
         // Thin line style matching Stitch
         final paint = Paint()
           ..color = isActive
-              ? primaryColor.withValues(alpha: 0.4)
-              : const Color(0xFF326747).withValues(alpha: 0.5)
+              ? primaryColor.withValues(alpha:0.4)
+              : const Color(0xFF326747).withValues(alpha:0.5)
           ..strokeWidth = isActive ? 2 : 1.5
           ..style = PaintingStyle.stroke;
 
@@ -390,12 +390,12 @@ class _StitchConnectionsPainter extends CustomPainter {
         // Green glow dot at midpoint for active paths
         if (isActive) {
           final glowPaint = Paint()
-            ..color = primaryColor.withValues(alpha: 0.15)
+            ..color = primaryColor.withValues(alpha:0.15)
             ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 4);
           canvas.drawCircle(Offset(controlX, midY), 4, glowPaint);
 
           final dotPaint = Paint()
-            ..color = primaryColor.withValues(alpha: 0.5)
+            ..color = primaryColor.withValues(alpha:0.5)
             ..style = PaintingStyle.fill;
           canvas.drawCircle(Offset(controlX, midY), 2, dotPaint);
         }

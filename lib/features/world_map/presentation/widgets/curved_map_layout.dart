@@ -143,13 +143,13 @@ class CurvedMapLayout extends StatelessWidget {
                             vertical: 4,
                           ),
                           decoration: BoxDecoration(
-                            color: Colors.black.withValues(alpha: 0.5),
+                            color: Colors.black.withValues(alpha:0.5),
                             borderRadius: BorderRadius.circular(12),
                           ),
                           child: Text(
                             'LVL ${node.requiredLevel}',
                             style: TextStyle(
-                              color: Colors.white.withValues(alpha: 0.8),
+                              color: Colors.white.withValues(alpha:0.8),
                               fontSize: 10,
                               fontWeight: FontWeight.bold,
                               letterSpacing: 1.0,
@@ -177,7 +177,7 @@ class CurvedMapLayout extends StatelessWidget {
           nodeCount: nodes.length,
           spacingY: spacingY,
           amplitude: amplitude,
-          pathColor: primaryColor.withValues(alpha: 0.3),
+          pathColor: primaryColor.withValues(alpha:0.3),
         ),
       ),
     );
@@ -229,7 +229,7 @@ class _PathPainter extends CustomPainter {
     }
 
     // Add glow effect to the path
-    canvas.drawShadow(path, pathColor.withValues(alpha: 0.5), 10, true);
+    canvas.drawShadow(path, pathColor.withValues(alpha:0.5), 10, true);
     canvas.drawPath(path, paint);
   }
 

@@ -2,7 +2,6 @@ import 'dart:ui';
 
 import 'package:emerge_app/core/theme/app_theme.dart';
 import 'package:emerge_app/core/utils/app_logger.dart';
-import 'package:emerge_app/core/presentation/widgets/emerge_branding.dart';
 import 'package:emerge_app/features/auth/domain/entities/user_extension.dart';
 import 'package:emerge_app/features/gamification/presentation/providers/user_stats_providers.dart';
 import 'package:emerge_app/features/world_map/domain/models/archetype_map_config.dart';
@@ -17,6 +16,8 @@ import 'package:emerge_app/features/tutorial/presentation/widgets/tutorial_overl
 import 'package:emerge_app/features/monetization/presentation/providers/subscription_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+import 'package:emerge_app/core/theme/emerge_colors.dart';
 
 /// Main World Map screen showing the archetype-specific progression map
 /// Features vertical scrolling with biome transitions and node interactions
@@ -324,7 +325,7 @@ class _WorldMapScreenState extends ConsumerState<WorldMapScreen> {
   ) {
     showDialog(
       context: context,
-      barrierColor: Colors.black.withValues(alpha: 0.7),
+      barrierColor: Colors.black.withValues(alpha:0.7),
       builder: (dialogContext) => NodeQuestDialog(
         node: node,
         primaryColor: config.primaryColor,
@@ -373,107 +374,151 @@ class _GlassmorphismTopBar extends StatelessWidget {
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.08),
+              color: Colors.white.withValues(alpha:0.08),
               borderRadius: BorderRadius.circular(16),
               border: Border.all(
-                color: config.primaryColor.withValues(alpha: 0.2),
+                color: config.primaryColor.withValues(alpha:0.2),
               ),
             ),
-            child: Row(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
               children: [
-                // Journey icon with glow
-                Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: config.primaryColor.withValues(alpha: 0.2),
-                    shape: BoxShape.circle,
-                    boxShadow: [
-                      BoxShadow(
-                        color: config.primaryColor.withValues(alpha: 0.3),
-                        blurRadius: 12,
-                        spreadRadius: 1,
-                      ),
-                    ],
-                  ),
-                  child: Icon(
-                    config.journeyIcon,
-                    color: config.primaryColor,
-                    size: 24,
-                  ),
-                ),
-                const SizedBox(width: 12),
-                // Map name
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        config.mapName,
-                        style: Theme.of(context).textTheme.titleMedium
-                            ?.copyWith(
-                              color: Colors.white,
-                              fontWeight: FontWeight.bold,
-                              letterSpacing: 0.5,
-                            ),
-                      ),
-                      Row(
-                        children: [
-                          Text(
-                            'Valley of New Beginnings',
-                            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                              color: config.primaryColor.withValues(alpha: 0.8),
-                              fontSize: 10,
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          Consumer(
-                            builder: (context, ref, _) {
-                              final isPremium = ref.watch(isPremiumProvider).value ?? false;
-                              if (!isPremium) return const SizedBox.shrink();
-                              return Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                                decoration: BoxDecoration(
-                                  color: Colors.amber,
-                                  borderRadius: BorderRadius.circular(4),
-                                ),
-                                child: const Text(
-                                  'PRO',
-                                  style: TextStyle(
-                                    color: Colors.black,
-                                    fontSize: 8,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                              );
-                            },
+                Row(
+                  children: [
+                    // Journey icon with glow
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: config.primaryColor.withValues(alpha:0.2),
+                        shape: BoxShape.circle,
+                        boxShadow: [
+                          BoxShadow(
+                            color: config.primaryColor.withValues(alpha:0.3),
+                            blurRadius: 12,
+                            spreadRadius: 1,
                           ),
                         ],
                       ),
-                    ],
-                  ),
+                      child: Icon(
+                        config.journeyIcon,
+                        color: config.primaryColor,
+                        size: 24,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    // Map name
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            config.mapName,
+                            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold,
+                                  letterSpacing: 0.5,
+                                ),
+                          ),
+                          Row(
+                            children: [
+                              Text(
+                                'Valley of New Beginnings',
+                                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                      color: config.primaryColor.withValues(alpha:0.8),
+                                      fontSize: 10,
+                                    ),
+                              ),
+                              const SizedBox(width: 8),
+                              Consumer(
+                                builder: (context, ref, _) {
+                                  final isPremium = ref.watch(isPremiumProvider).value ?? false;
+                                  if (!isPremium) return const SizedBox.shrink();
+                                  return Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                    decoration: BoxDecoration(
+                                      color: Colors.amber,
+                                      borderRadius: BorderRadius.circular(4),
+                                    ),
+                                    child: const Text(
+                                      'PRO',
+                                      style: TextStyle(
+                                        color: Colors.black,
+                                        fontSize: 8,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  );
+                                },
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                    // Level badge
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 14,
+                        vertical: 8,
+                      ),
+                      decoration: BoxDecoration(
+                        color: config.primaryColor.withValues(alpha:0.15),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: config.primaryColor.withValues(alpha:0.6),
+                          width: 1.5,
+                        ),
+                      ),
+                      child: Text(
+                        'LVL $level',
+                        style: TextStyle(
+                          color: config.primaryColor,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 13,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    GestureDetector(
+                      onTap: () => context.push('/profile'),
+                      child: Container(
+                        padding: const EdgeInsets.all(2),
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          border: Border.all(
+                            color: config.primaryColor.withValues(alpha:0.4),
+                            width: 1.5,
+                          ),
+                        ),
+                        child: CircleAvatar(
+                          radius: 16,
+                          backgroundColor:
+                              config.primaryColor.withValues(alpha:0.1),
+                          child: Icon(
+                            Icons.person_outline,
+                            color: config.primaryColor,
+                            size: 20,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
-                // Level badge
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 14,
-                    vertical: 8,
-                  ),
-                  decoration: BoxDecoration(
-                    color: config.primaryColor.withValues(alpha: 0.15),
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(
-                      color: config.primaryColor.withValues(alpha: 0.6),
-                      width: 1.5,
-                    ),
-                  ),
-                  child: Text(
-                    'LVL $level',
-                    style: TextStyle(
-                      color: config.primaryColor,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 13,
-                    ),
-                  ),
+                const SizedBox(height: 8),
+                Consumer(
+                  builder: (context, ref, _) {
+                    final statsAsync = ref.watch(userStatsStreamProvider);
+                    final stats = statsAsync.value?.avatarStats;
+                    if (stats == null) return const SizedBox.shrink();
+                    final progress = (stats.totalXp % 500) / 500.0;
+                    return LinearProgressIndicator(
+                      value: progress,
+                      backgroundColor: config.primaryColor.withValues(alpha:0.15),
+                      valueColor: AlwaysStoppedAnimation<Color>(config.primaryColor),
+                      minHeight: 2,
+                      borderRadius: BorderRadius.circular(99),
+                    );
+                  },
                 ),
               ],
             ),
@@ -508,11 +553,6 @@ class _GlassmorphismStatsBar extends StatelessWidget {
         .length;
     final totalNodes = config.nodes.length;
 
-    // Calculate progress to next level (500 XP per level)
-    final xpInLevel = stats.totalXp % 500;
-    final xpForNextLevel = 500;
-    final xpProgress = (xpInLevel / xpForNextLevel).clamp(0.0, 1.0);
-
     return ClipRRect(
       child: BackdropFilter(
         filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
@@ -525,10 +565,10 @@ class _GlassmorphismStatsBar extends StatelessWidget {
             32, // Extra bottom padding for safe area
           ),
           decoration: BoxDecoration(
-            color: Colors.black.withValues(alpha: 0.6),
+            color: Colors.black.withValues(alpha:0.6),
             border: Border(
               top: BorderSide(
-                color: config.primaryColor.withValues(alpha: 0.3),
+                color: config.primaryColor.withValues(alpha:0.3),
                 width: 1,
               ),
             ),
@@ -536,63 +576,6 @@ class _GlassmorphismStatsBar extends StatelessWidget {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              // Progress to Next Level
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const Text(
-                    'Progress to Next Level',
-                    style: TextStyle(
-                      color: Colors.white70,
-                      fontSize: 14,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                  Text(
-                    '$xpInLevel / $xpForNextLevel XP',
-                    style: const TextStyle(color: Colors.white70, fontSize: 12),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 8),
-
-              // XP Progress bar - using LayoutBuilder for proper width constraint
-              LayoutBuilder(
-                builder: (context, constraints) {
-                  return Stack(
-                    children: [
-                      // Background track
-                      Container(
-                        width: constraints.maxWidth,
-                        height: 8,
-                        decoration: BoxDecoration(
-                          color: config.primaryColor.withValues(alpha: 0.2),
-                          borderRadius: BorderRadius.circular(99),
-                        ),
-                      ),
-                      // Progress fill
-                      AnimatedContainer(
-                        duration: const Duration(milliseconds: 500),
-                        width: constraints.maxWidth * xpProgress,
-                        height: 8,
-                        decoration: BoxDecoration(
-                          color: config.primaryColor,
-                          borderRadius: BorderRadius.circular(99),
-                          boxShadow: [
-                            BoxShadow(
-                              color: config.primaryColor.withValues(alpha: 0.5),
-                              blurRadius: 8,
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  );
-                },
-              ),
-
-              const SizedBox(height: 16),
-
               // Stats Row - Stitch style
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceAround,
@@ -615,14 +598,7 @@ class _GlassmorphismStatsBar extends StatelessWidget {
                     icon: Icons.emoji_events,
                     color: const Color(0xFFFFD700), // Gold
                   ),
-                  _StatItem(
-                    label: 'World',
-                    value: profile.worldState.isThriving
-                        ? 'Thriving'
-                        : 'Stable',
-                    icon: Icons.public,
-                    color: const Color(0xFF00FFCC), // Teal
-                  ),
+                  _WorldOrb(profile: profile),
                 ],
               ),
             ],
@@ -669,6 +645,177 @@ class _StatItem extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+}
+
+class _WorldOrb extends ConsumerWidget {
+  final UserProfile profile;
+  const _WorldOrb({required this.profile});
+
+  Color get _orbColor {
+    final score = profile.worldHealthScore;
+    if (score >= 0.75) return const Color(0xFF00FF9C);
+    if (score >= 0.4) return const Color(0xFF4FC3F7);
+    return const Color(0xFFFF7043);
+  }
+
+  String get _stateLabel {
+    final score = profile.worldHealthScore;
+    if (score >= 0.75) return 'Thriving';
+    if (score >= 0.4) return 'Neutral';
+    return 'Decaying';
+  }
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    return GestureDetector(
+      onTap: () => _showWorldStateSheet(context, ref),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 32,
+            height: 32,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: _orbColor.withValues(alpha:0.15),
+              border: Border.all(color: _orbColor.withValues(alpha:0.6), width: 1.5),
+              boxShadow: [
+                BoxShadow(
+                  color: _orbColor.withValues(alpha:0.4),
+                  blurRadius: 10,
+                  spreadRadius: 1,
+                ),
+              ],
+            ),
+            child: Icon(Icons.public, color: _orbColor, size: 16),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            _stateLabel.toUpperCase(),
+            style: const TextStyle(
+              color: Colors.white54,
+              fontSize: 10,
+              letterSpacing: 1,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showWorldStateSheet(BuildContext context, WidgetRef ref) {
+    final score = (profile.worldHealthScore * 100).round();
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (_) => _WorldStateSheet(
+        score: score,
+        stateLabel: _stateLabel,
+        orbColor: _orbColor,
+      ),
+    );
+  }
+}
+
+class _WorldStateSheet extends StatelessWidget {
+  final int score;
+  final String stateLabel;
+  final Color orbColor;
+  const _WorldStateSheet({
+    required this.score,
+    required this.stateLabel,
+    required this.orbColor,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    String advice;
+    if (score >= 75) {
+      advice = 'Your world is flourishing. Keep your habits alive to maintain this.';
+    } else if (score >= 40) {
+      advice = 'Your world is stable. Complete more habits today to make it thrive.';
+    } else {
+      advice = 'Your world is decaying. Complete any habit now to start recovery.';
+    }
+
+    return Container(
+      padding: const EdgeInsets.fromLTRB(24, 32, 24, 40),
+      decoration: const BoxDecoration(
+        color: Color(0xFF12122A),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 40,
+            height: 4,
+            decoration: BoxDecoration(color: Colors.white24, borderRadius: BorderRadius.circular(99)),
+          ),
+          const SizedBox(height: 24),
+          Text(
+            'World State',
+            style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                ),
+          ),
+          const SizedBox(height: 16),
+          Stack(
+            alignment: Alignment.center,
+            children: [
+              SizedBox(
+                height: 80,
+                width: 80,
+                child: CircularProgressIndicator(
+                  value: score / 100,
+                  strokeWidth: 6,
+                  backgroundColor: orbColor.withValues(alpha:0.15),
+                  valueColor: AlwaysStoppedAnimation<Color>(orbColor),
+                ),
+              ),
+              Text(
+                '$score',
+                style: TextStyle(color: orbColor, fontSize: 22, fontWeight: FontWeight.bold),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            decoration: BoxDecoration(
+              color: orbColor.withValues(alpha:0.1),
+              borderRadius: BorderRadius.circular(99),
+              border: Border.all(color: orbColor.withValues(alpha:0.4)),
+            ),
+            child: Text(
+              stateLabel,
+              style: TextStyle(color: orbColor, fontWeight: FontWeight.bold),
+            ),
+          ),
+          const SizedBox(height: 16),
+          Text(
+            advice,
+            style: const TextStyle(color: Colors.white60, height: 1.5),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 24),
+          SizedBox(
+            width: double.infinity,
+            child: OutlinedButton(
+              onPressed: () => Navigator.pop(context),
+              style: OutlinedButton.styleFrom(
+                side: const BorderSide(color: Colors.white24),
+                foregroundColor: Colors.white60,
+              ),
+              child: const Text('Close'),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

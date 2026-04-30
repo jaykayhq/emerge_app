@@ -24,8 +24,7 @@ class HeatmapCalendar extends StatelessWidget {
         Color color = Colors.grey[300]!;
         if (count > 0) {
           // Green intensity based on count
-          color = Colors.green.withValues(
-            alpha: (0.2 + (count * 0.2)).clamp(0.2, 1.0),
+          color = Colors.green.withValues(alpha: (0.2 + (count * 0.2)).clamp(0.2, 1.0),
           );
         } else if (!isToday && date.isBefore(now)) {
           // Missed day? Check if previous day was also missed for "Never Miss Twice" logic

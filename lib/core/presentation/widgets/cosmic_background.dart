@@ -128,7 +128,7 @@ class _CosmicBackgroundState extends State<CosmicBackground>
                     colors: [
                       const Color(
                         0xFF2A1A3A,
-                      ).withValues(alpha: 0.3), // Mid-tone purple
+                      ).withValues(alpha:0.3), // Mid-tone purple
                       Colors.transparent,
                     ],
                   ),
@@ -169,8 +169,8 @@ class _NebulaLayer extends StatelessWidget {
               shape: BoxShape.circle,
               gradient: RadialGradient(
                 colors: [
-                  const Color(0xFF2A1A3A).withValues(alpha: 0.25),
-                  const Color(0xFF1A0A3A).withValues(alpha: 0.1),
+                  const Color(0xFF2A1A3A).withValues(alpha:0.25),
+                  const Color(0xFF1A0A3A).withValues(alpha:0.1),
                   Colors.transparent,
                 ],
               ),
@@ -189,8 +189,8 @@ class _NebulaLayer extends StatelessWidget {
               shape: BoxShape.circle,
               gradient: RadialGradient(
                 colors: [
-                  const Color(0xFF0A1A3A).withValues(alpha: 0.2),
-                  const Color(0xFF1A0A2A).withValues(alpha: 0.08),
+                  const Color(0xFF0A1A3A).withValues(alpha:0.2),
+                  const Color(0xFF1A0A2A).withValues(alpha:0.08),
                   Colors.transparent,
                 ],
               ),
@@ -209,7 +209,7 @@ class _NebulaLayer extends StatelessWidget {
               shape: BoxShape.circle,
               gradient: RadialGradient(
                 colors: [
-                  const Color(0xFF1A0A2A).withValues(alpha: 0.2),
+                  const Color(0xFF1A0A2A).withValues(alpha:0.2),
                   Colors.transparent,
                 ],
               ),
@@ -228,7 +228,7 @@ class _NebulaLayer extends StatelessWidget {
               shape: BoxShape.circle,
               gradient: RadialGradient(
                 colors: [
-                  const Color(0xFF2A1A3A).withValues(alpha: 0.15),
+                  const Color(0xFF2A1A3A).withValues(alpha:0.15),
                   Colors.transparent,
                 ],
               ),
@@ -247,7 +247,7 @@ class _NebulaLayer extends StatelessWidget {
               shape: BoxShape.circle,
               gradient: RadialGradient(
                 colors: [
-                  const Color(0xFF0A1A3A).withValues(alpha: 0.12),
+                  const Color(0xFF0A1A3A).withValues(alpha:0.12),
                   Colors.transparent,
                 ],
               ),
@@ -310,15 +310,14 @@ class _StarFieldPainter extends CustomPainter {
       // Draw star glow for larger stars
       if (baseSize > 1.2) {
         final glowPaint = Paint()
-          ..color = baseColor.withValues(alpha: 0.15 * twinkle)
+          ..color = baseColor.withValues(alpha:0.15 * twinkle)
           ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 3);
         canvas.drawCircle(Offset(x, y), baseSize * 3, glowPaint);
       }
 
       // Draw star
       final starPaint = Paint()
-        ..color = baseColor.withValues(
-          alpha: (0.5 + twinkle * 0.5).clamp(0.0, 1.0),
+        ..color = baseColor.withValues(alpha:(0.5 + twinkle * 0.5).clamp(0.0, 1.0),
         );
       canvas.drawCircle(Offset(x, y), baseSize, starPaint);
     }
@@ -332,7 +331,7 @@ class _StarFieldPainter extends CustomPainter {
         final y = baseY + math.sin(time * 0.1 + i) * 10;
 
         final driftPaint = Paint()
-          ..color = const Color(0xFFFFFFFF).withValues(alpha: 0.3);
+          ..color = const Color(0xFFFFFFFF).withValues(alpha:0.3);
         canvas.drawCircle(
           Offset((baseX + driftX) % size.width, y),
           0.8,
@@ -415,7 +414,7 @@ class _CosmicDustPainter extends CustomPainter {
       final opacity = animate ? (math.sin(phase) * 0.5 + 0.5) * 0.15 : 0.1;
 
       final paint = Paint()
-        ..color = color.withValues(alpha: opacity)
+        ..color = color.withValues(alpha:opacity)
         ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 8)
         ..style = PaintingStyle.stroke
         ..strokeWidth = 40

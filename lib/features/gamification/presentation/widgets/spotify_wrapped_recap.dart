@@ -1,11 +1,13 @@
 import 'package:emerge_app/core/presentation/widgets/emerge_branding.dart';
 import 'package:emerge_app/features/gamification/domain/entities/weekly_recap.dart';
+import 'package:emerge_app/features/gamification/presentation/providers/user_stats_providers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:intl/intl.dart';
+import 'package:emerge_app/core/theme/emerge_colors.dart';
 
 /// Spotify Wrapped-style weekly recap widget
 /// Features: Animated gradients, swipeable cards, progress dots, sharing
@@ -32,6 +34,7 @@ class _SpotifyWrappedRecapState extends ConsumerState<SpotifyWrappedRecap>
 
   // Gradient colors for each slide
   static const List<List<Color>> _slideGradients = [
+    [Color(0xFF0A0A0A), Color(0xFF1A1A1A)], // Identity - Black/Dark Grey
     [Color(0xFF1A0A2A), Color(0xFF2A1B4E)], // Intro - Purple
     [Color(0xFF112218), Color(0xFF1DB954)], // Stats - Green
     [Color(0xFF2A1A3A), Color(0xFFFFD700)], // Top Habit - Gold
@@ -47,6 +50,8 @@ class _SpotifyWrappedRecapState extends ConsumerState<SpotifyWrappedRecap>
       duration: const Duration(milliseconds: 600),
     );
   }
+
+  int get _totalSlides => widget.recap.dominantIdentityThisWeek != null ? 5 : 4;
 
   @override
   void dispose() {
@@ -122,6 +127,12 @@ Building my identity, one habit at a time. 💪
           controller: _pageController,
           onPageChanged: _onPageChanged,
           children: [
+            if (widget.recap.dominantIdentityThisWeek != null)
+              _IdentitySlide(
+                identity: widget.recap.dominantIdentityThisWeek!,
+                headline: widget.recap.identityHeadline ?? '',
+                motive: ref.watch(userStatsStreamProvider).value?.dominantMotive,
+              ),
             _WrappedIntro(recap: widget.recap),
             _WrappedStats(recap: widget.recap),
             _WrappedTopHabit(recap: widget.recap),
@@ -156,7 +167,7 @@ Building my identity, one habit at a time. 💪
   Widget _buildProgressDots() {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
-      children: List.generate(4, (index) {
+      children: List.generate(_totalSlides, (index) {
         final isActive = _currentPage == index;
         return AnimatedContainer(
           duration: const Duration(milliseconds: 300),
@@ -708,6 +719,87 @@ class _ShareButton extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+}
+
+class _IdentitySlide extends StatelessWidget {
+  final String identity;
+  final String headline;
+  final String? motive;
+  const _IdentitySlide({
+    required this.identity,
+    required this.headline,
+    this.motive,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Text(
+          'THIS WEEK YOU WERE A',
+          style: const TextStyle(
+            color: Colors.white54,
+            fontSize: 12,
+            letterSpacing: 2,
+          ),
+        ).animate().fadeIn(duration: 600.ms).slideY(begin: 0.2, end: 0),
+        const Gap(12),
+        Text(
+          identity.toUpperCase(),
+          style: Theme.of(context).textTheme.displaySmall?.copyWith(
+            color: Colors.white,
+            fontWeight: FontWeight.bold,
+            letterSpacing: 4,
+          ),
+        ).animate().fadeIn(delay: 300.ms, duration: 800.ms).scale(),
+        const Gap(24),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 32),
+          child: Text(
+            headline,
+            style: const TextStyle(
+              color: Colors.white70,
+              fontSize: 16,
+              height: 1.5,
+            ),
+            textAlign: TextAlign.center,
+          ).animate().fadeIn(delay: 600.ms).slideY(begin: 0.2, end: 0),
+        ),
+        if (motive != null) ...[
+          const Gap(40),
+          Container(
+            margin: const EdgeInsets.symmetric(horizontal: 48),
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.05),
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(
+                color: Colors.white.withValues(alpha: 0.1),
+                width: 1,
+              ),
+            ),
+            child: Column(
+              children: [
+                const Icon(Icons.format_quote, color: Colors.white24, size: 32),
+                const Gap(8),
+                Text(
+                  motive!,
+                  style: const TextStyle(
+                    color: Colors.white60,
+                    fontStyle: FontStyle.italic,
+                    fontSize: 15,
+                    height: 1.4,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              ],
+            ),
+          ).animate().fadeIn(delay: 900.ms).scale(),
+        ],
+      ],
     );
   }
 }

@@ -129,12 +129,12 @@ class _CompletionCelebrationState extends State<CompletionCelebration>
                       width: 80,
                       height: 80,
                       decoration: BoxDecoration(
-                        color: Colors.green.withValues(alpha: 0.2),
+                        color: Colors.green.withValues(alpha:0.2),
                         shape: BoxShape.circle,
                         border: Border.all(color: Colors.green, width: 3),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.green.withValues(alpha: 0.5),
+                            color: Colors.green.withValues(alpha:0.5),
                             blurRadius: 20,
                             spreadRadius: 5,
                           ),
@@ -183,7 +183,7 @@ class _CompletionCelebrationState extends State<CompletionCelebration>
                               Text(
                                 '${widget.newStreak} day streak',
                                 style: TextStyle(
-                                  color: Colors.white.withValues(alpha: 0.8),
+                                  color: Colors.white.withValues(alpha:0.8),
                                   fontSize: 16,
                                 ),
                               ),
@@ -198,7 +198,7 @@ class _CompletionCelebrationState extends State<CompletionCelebration>
                               vertical: 6,
                             ),
                             decoration: BoxDecoration(
-                              color: Colors.amber.withValues(alpha: 0.3),
+                              color: Colors.amber.withValues(alpha:0.3),
                               borderRadius: BorderRadius.circular(20),
                               border: Border.all(color: Colors.amber),
                             ),
@@ -266,8 +266,7 @@ class _ConfettiPainter extends CustomPainter {
       final y = center.dy + math.sin(angle) * distance;
 
       final paint = Paint()
-        ..color = colors[i % colors.length].withValues(
-          alpha: (1.0 - progress).clamp(0.0, 1.0),
+        ..color = colors[i % colors.length].withValues(alpha:(1.0 - progress).clamp(0.0, 1.0),
         );
 
       final confettiSize = 4 + random.nextDouble() * 4;

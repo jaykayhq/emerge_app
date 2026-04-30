@@ -1,7 +1,7 @@
-import 'package:emerge_app/core/presentation/widgets/emerge_branding.dart';
 import 'package:emerge_app/core/theme/archetype_theme.dart';
 import 'package:emerge_app/features/auth/domain/entities/user_extension.dart';
 import 'package:flutter/material.dart';
+import 'package:emerge_app/core/theme/emerge_colors.dart';
 
 /// Archetype Avatar with glowing attribute auras
 /// Displays a silhouette image with animated glowing zones that indicate attribute strength
@@ -99,9 +99,7 @@ class _ArchetypeAvatarState extends State<ArchetypeAvatar>
                     borderRadius: BorderRadius.circular(widget.size * 0.4),
                     boxShadow: [
                       BoxShadow(
-                        color: primaryColor.withValues(
-                          alpha:
-                              0.2 * auraPulse * (widget.level / 50).clamp(0, 1),
+                        color: primaryColor.withValues(alpha: 0.2 * auraPulse * (widget.level / 50).clamp(0, 1),
                         ),
                         blurRadius: widget.level * 3.0,
                         spreadRadius: widget.level * 0.5,

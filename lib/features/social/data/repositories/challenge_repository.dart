@@ -28,6 +28,24 @@ class FirestoreChallengeRepository implements ChallengeRepository {
     }).toList();
   }
 
+  Future<void> seedChallengesIfEmpty() async {
+    final snap = await _firestore.collection('challenges').limit(1).get();
+    if (snap.docs.isNotEmpty) return;
+
+    final featuredTemplates = ChallengeCatalog.getFeatured();
+    final batch = _firestore.batch();
+
+    for (final challenge in featuredTemplates) {
+      final docRef = _firestore.collection('challenges').doc(challenge.id);
+      batch.set(docRef, {
+        ...challenge.toMap(),
+        'isFeatured': true, // Explicitly mark as featured for the repository query
+      });
+    }
+
+    await batch.commit();
+  }
+
   @override
   Future<List<Challenge>> getUserChallenges(String userId) async {
     final snapshot = await _firestore
@@ -87,9 +105,9 @@ class FirestoreChallengeRepository implements ChallengeRepository {
             'currentDay': 0,
           });
 
-      await _firestore.collection('challenges').doc(challengeId).update({
-        'participants': FieldValue.increment(1),
-      });
+      // Note: Participant count is updated by Cloud Functions
+      // See: functions/src/challenges.ts - onChallengeJoined and onChallengeLeft
+      // These functions automatically increment/decrement the count when users join/leave
 
       return const Right(unit);
     } catch (e) {
@@ -382,5 +400,20 @@ class FirestoreChallengeRepository implements ChallengeRepository {
       data['id'] = doc.id;
       return data;
     }).toList();
+  }
+
+  @override
+  Future<Challenge?> getChallengeById(String id) async {
+    try {
+      final doc = await _firestore.collection('challenges').doc(id).get();
+      if (doc.exists) {
+        return Challenge.fromMap(doc.data() as Map<String, dynamic>, id: doc.id);
+      }
+      // Fallback to catalog
+      return ChallengeCatalog.getChallengeById(id);
+    } catch (e) {
+      AppLogger.e('Error getting challenge by id', e.toString(), StackTrace.current);
+      return ChallengeCatalog.getChallengeById(id);
+    }
   }
 }

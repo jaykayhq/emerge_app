@@ -130,7 +130,7 @@ final class HabitsProvider
   }
 }
 
-String _$habitsHash() => r'093c11893564c37ee39aad0d0d861cd3b2837dbc';
+String _$habitsHash() => r'8806632e3af19c32e7c31a05719058facd941d11';
 
 @ProviderFor(createHabit)
 final createHabitProvider = CreateHabitFamily._();
@@ -181,7 +181,7 @@ final class CreateHabitProvider
   }
 }
 
-String _$createHabitHash() => r'a980185897c45e6a7013d5228da62618c03ffd0e';
+String _$createHabitHash() => r'443835d4d9a9d31b06b5a3c8cb8a3aeaa3166697';
 
 final class CreateHabitFamily extends $Family
     with $FunctionalFamilyOverride<FutureOr<void>, Habit> {
@@ -258,7 +258,7 @@ final class CompleteHabitProvider
   }
 }
 
-String _$completeHabitHash() => r'140f6ac42c194c998a778aa0f6a964a71e254fa0';
+String _$completeHabitHash() => r'cb8009b05b74315a9666d24d21497797fdd9de90';
 
 final class CompleteHabitFamily extends $Family
     with $FunctionalFamilyOverride<FutureOr<HabitCompletionResult>, String> {

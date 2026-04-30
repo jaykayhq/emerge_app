@@ -101,4 +101,27 @@ class EmergeColors {
 
   /// Border color
   static const Color border = Color(0xFF3A3A5A);
+  static const Color hexLine = border;
+
+  static const Color backgroundLight = cosmicVoidCenter;
+  static const Color tealMuted = mintMuted;
+  static const Color violet = Color(0xFF1DB954);
+  static const Color violetSoft = neonGreenBright;
+  static const Color lime = neonTeal;
+  static const Color glassWhiteMed = glassWhiteLight;
+  static const Color glassGreen = Color(0x142BEE79);
+
+  static const LinearGradient darkGradient = LinearGradient(
+    begin: Alignment.topCenter,
+    end: Alignment.bottomCenter,
+    colors: [backgroundLight, background],
+  );
+
+  static const LinearGradient neonGradient = LinearGradient(
+    colors: [teal, violet],
+  );
+
+  static const LinearGradient warmGradient = LinearGradient(
+    colors: [coral, yellow],
+  );
 }

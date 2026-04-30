@@ -15,7 +15,6 @@ import 'package:emerge_app/features/gamification/data/repositories/user_stats_re
 import 'package:emerge_app/features/social/presentation/providers/tribes_provider.dart';
 import 'package:emerge_app/features/gamification/presentation/providers/user_stats_providers.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
-import 'package:flutter/material.dart';
 
 part 'habit_providers.g.dart';
 
@@ -50,39 +49,54 @@ Stream<List<Habit>> habits(Ref ref) {
     data: (user) {
       if (user.isEmpty) return Stream.value([]);
       final stream = repository.watchHabits(user.id);
-      
+
       // Run daily decay logic on first load
       stream.first.then((habitsList) async {
         try {
           final today = DateTime.now();
           bool hasChanges = false;
           final momentumService = ref.read(momentumServiceProvider);
-          
+
           for (final habit in habitsList) {
             if (habit.isArchived) continue;
+
             final lastCompleted = habit.lastCompletedDate;
-            final missedYesterday = lastCompleted == null ||
-                !DateUtils.isSameDay(lastCompleted, today.subtract(const Duration(days: 1)));
-            if (missedYesterday && (lastCompleted == null || !DateUtils.isSameDay(lastCompleted, today))) {
-              final decayed = momentumService.applyDailyDecay(habit);
-              if (decayed.momentumScore != habit.momentumScore || decayed.consecutiveMisses != habit.consecutiveMisses) {
+            final baseDate = lastCompleted ?? habit.createdAt;
+
+            // Normalize to midnight for accurate calendar day counting
+            final todayMidnight = DateTime(today.year, today.month, today.day);
+            final baseMidnight = DateTime(baseDate.year, baseDate.month, baseDate.day);
+            final calendarDaysDifference = todayMidnight.difference(baseMidnight).inDays;
+
+            // If difference is 1, they completed/created it yesterday (no miss yet)
+            // If difference is 2+, they missed at least yesterday
+            if (calendarDaysDifference >= 2) {
+              final missedDays = calendarDaysDifference - 1;
+              final decayed = momentumService.applyMultiDayDecay(habit, missedDays);
+
+              if (decayed.momentumScore != habit.momentumScore ||
+                  decayed.consecutiveMisses != habit.consecutiveMisses) {
                 await repository.updateHabit(decayed);
                 hasChanges = true;
               }
             }
           }
-          
+
           if (hasChanges) {
-             final updated = await repository.watchHabits(user.id).first;
-             await ref.read(userStatsControllerProvider).recalculateWorldHealth(updated);
+            final updated = await repository.watchHabits(user.id).first;
+            if (ref.mounted) {
+              await ref.read(userStatsControllerProvider).recalculateWorldHealth(updated);
+            }
           } else {
-             await ref.read(userStatsControllerProvider).recalculateWorldHealth(habitsList);
+            if (ref.mounted) {
+              await ref.read(userStatsControllerProvider).recalculateWorldHealth(habitsList);
+            }
           }
         } catch (e, s) {
           AppLogger.e('Error running daily decay', e, s);
         }
       });
-      
+
       return stream;
     },
     loading: () => Stream.value([]),
@@ -118,6 +132,10 @@ Future<void> createHabit(Ref ref, Habit habit) async {
             .read(remoteConfigServiceProvider)
             .freeHabitLimit;
         if (currentHabits.length >= freeHabitLimit) {
+          // Check if provider is still mounted before throwing
+          if (!ref.mounted) {
+            return; // Provider was disposed, silently return
+          }
           throw SubscriptionLimitReachedException(
             'You have reached the limit of $freeHabitLimit active habits on the free tier. Upgrade to add more.',
           );
@@ -131,7 +149,9 @@ Future<void> createHabit(Ref ref, Habit habit) async {
     result.fold(
       (failure) {
         AppLogger.e('Failed to create habit', failure, StackTrace.current);
-        throw Exception(failure.message);
+        if (ref.mounted) {
+          throw Exception(failure.message);
+        }
       },
       (_) {
         AppLogger.i('Successfully created habit: ${habit.id}');
@@ -154,7 +174,10 @@ Future<HabitCompletionResult> completeHabit(Ref ref, String habitId) async {
   return result.fold(
     (failure) {
       AppLogger.e('Failed to complete habit', failure, StackTrace.current);
-      throw Exception(failure.message);
+      if (ref.mounted) {
+        throw Exception(failure.message);
+      }
+      return HabitCompletionResult(xpEarned: 0, newStreak: 0);
     },
     (isCompleted) async {
       if (isCompleted) {
@@ -192,7 +215,9 @@ Future<HabitCompletionResult> completeHabit(Ref ref, String habitId) async {
             // Recalculate world health after completion
             try {
               final currentHabits = await repository.watchHabits(userId).first;
-              await ref.read(userStatsControllerProvider).recalculateWorldHealth(currentHabits);
+              if (ref.mounted) {
+                await ref.read(userStatsControllerProvider).recalculateWorldHealth(currentHabits);
+              }
             } catch (e) {
               AppLogger.e('Failed to recalculate world health', e);
             }
@@ -212,7 +237,9 @@ Future<HabitCompletionResult> completeHabit(Ref ref, String habitId) async {
         if (userId != null) {
           try {
             final currentHabits = await repository.watchHabits(userId).first;
-            await ref.read(userStatsControllerProvider).recalculateWorldHealth(currentHabits);
+            if (ref.mounted) {
+              await ref.read(userStatsControllerProvider).recalculateWorldHealth(currentHabits);
+            }
           } catch (e) {
             AppLogger.e('Failed to recalculate world health on undo', e);
           }

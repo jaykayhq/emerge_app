@@ -253,3 +253,52 @@ final class ArchetypeChallengesFromBundleProvider
 
 String _$archetypeChallengesFromBundleHash() =>
     r'8cb817a76b9c1af7ade4403250f9bf9678a86da4';
+
+/// Selector helper for featured challenges
+
+@ProviderFor(featuredChallengesFromBundle)
+final featuredChallengesFromBundleProvider =
+    FeaturedChallengesFromBundleProvider._();
+
+/// Selector helper for featured challenges
+
+final class FeaturedChallengesFromBundleProvider
+    extends
+        $FunctionalProvider<List<Challenge>, List<Challenge>, List<Challenge>>
+    with $Provider<List<Challenge>> {
+  /// Selector helper for featured challenges
+  FeaturedChallengesFromBundleProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'featuredChallengesFromBundleProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$featuredChallengesFromBundleHash();
+
+  @$internal
+  @override
+  $ProviderElement<List<Challenge>> $createElement($ProviderPointer pointer) =>
+      $ProviderElement(pointer);
+
+  @override
+  List<Challenge> create(Ref ref) {
+    return featuredChallengesFromBundle(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(List<Challenge> value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<List<Challenge>>(value),
+    );
+  }
+}
+
+String _$featuredChallengesFromBundleHash() =>
+    r'd18156f4baa8ece10c011c5fef6334ed9d140ad3';

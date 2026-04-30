@@ -115,7 +115,7 @@ class _HabitStackingSheetState extends ConsumerState<HabitStackingSheet> {
                       // Create the new habit linked to the anchor
                       final newHabit = Habit.empty().copyWith(
                         title: _newHabitController.text,
-                        stackParentId: _selectedAnchorId,
+                        anchorHabitId: _selectedAnchorId,
                         createdAt: DateTime.now(),
                         // Default to daily for now
                         frequency: HabitFrequency.daily,

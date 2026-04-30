@@ -205,22 +205,20 @@ enum WorldTheme { sanctuary, island, settlement, floatingRealm }
 class UserWorldState {
   final int cityLevel;
   final int forestLevel;
-  final double entropy; // 0.0 to 1.0 (0 = pristine, 1 = decayed)
-
-  // Growing World fields
-  final int worldAge; // Days since world creation
-  final Map<String, Map<String, dynamic>> zones; // Zone states by ID
-  final List<String> unlockedBuildings; // Building IDs
-  final List<Map<String, dynamic>> buildingPlacements; // Placement data
-  final List<String> unlockedLandPlots; // Land expansion IDs
+  final double entropy;
+  final int worldAge;
+  final Map<String, Map<String, dynamic>> zones;
+  final List<String> unlockedBuildings;
+  final List<Map<String, dynamic>> buildingPlacements;
+  final List<String> unlockedLandPlots;
   final int totalBuildingsConstructed;
-  final DateTime? lastActiveDate; // For decay calculation
+  final DateTime? lastActiveDate;
   final WorldTheme worldTheme;
   final WorldSeason seasonalState;
-  final List<String> claimedNodes; // ID of nodes claimed on the world map
-  final List<String> activeNodes; // Nodes with missions in progress
-  final int
-  highestCompletedNodeLevel; // Highest requiredLevel among completed nodes
+  final List<String> claimedNodes;
+  final List<String> activeNodes;
+  final int highestCompletedNodeLevel;
+  final List<String> activeEntropyEffects; // e.g., ["fog", "weeds", "dimming"]
 
   const UserWorldState({
     this.cityLevel = 1,
@@ -238,6 +236,7 @@ class UserWorldState {
     this.claimedNodes = const [],
     this.activeNodes = const [],
     this.highestCompletedNodeLevel = 0,
+    this.activeEntropyEffects = const [],
   });
 
   /// Calculate overall world health (inverse of entropy)
@@ -266,6 +265,7 @@ class UserWorldState {
       'claimedNodes': claimedNodes,
       'activeNodes': activeNodes,
       'highestCompletedNodeLevel': highestCompletedNodeLevel,
+      'activeEntropyEffects': activeEntropyEffects,
     };
   }
 
@@ -301,6 +301,7 @@ class UserWorldState {
       claimedNodes: List<String>.from(map['claimedNodes'] ?? []),
       activeNodes: List<String>.from(map['activeNodes'] ?? []),
       highestCompletedNodeLevel: map['highestCompletedNodeLevel'] as int? ?? 0,
+      activeEntropyEffects: List<String>.from(map['activeEntropyEffects'] ?? []),
     );
   }
 
@@ -320,6 +321,7 @@ class UserWorldState {
     List<String>? claimedNodes,
     List<String>? activeNodes,
     int? highestCompletedNodeLevel,
+    List<String>? activeEntropyEffects,
   }) {
     return UserWorldState(
       cityLevel: cityLevel ?? this.cityLevel,
@@ -339,8 +341,10 @@ class UserWorldState {
       activeNodes: activeNodes ?? this.activeNodes,
       highestCompletedNodeLevel:
           highestCompletedNodeLevel ?? this.highestCompletedNodeLevel,
+      activeEntropyEffects: activeEntropyEffects ?? this.activeEntropyEffects,
     );
   }
+
 
   /// Create initial world state with default zones
   factory UserWorldState.initial() {
@@ -458,6 +462,7 @@ class UserProfile {
   final UserSettings settings;
   final DateTime? accountCreatedAt; // When the user account was created
   final bool hasEmerged; // Whether user has pressed Emerge at level 5
+  final double worldHealthScore; // Behavioral momentum score (0.0 to 1.0)
 
   const UserProfile({
     required this.uid,
@@ -482,6 +487,7 @@ class UserProfile {
     this.settings = const UserSettings(),
     this.accountCreatedAt,
     this.hasEmerged = false,
+    this.worldHealthScore = 0.5,
   });
 
   Map<String, dynamic> toMap() {
@@ -508,6 +514,7 @@ class UserProfile {
       'settings': settings.toMap(),
       'accountCreatedAt': accountCreatedAt?.toIso8601String(),
       'hasEmerged': hasEmerged,
+      'worldHealthScore': worldHealthScore,
     };
   }
 
@@ -548,6 +555,7 @@ class UserProfile {
           : const UserSettings(),
       accountCreatedAt: _parseDateTime(map['accountCreatedAt']),
       hasEmerged: map['hasEmerged'] as bool? ?? false,
+      worldHealthScore: (map['worldHealthScore'] as num? ?? 0.5).toDouble(),
     );
   }
 
@@ -574,6 +582,7 @@ class UserProfile {
     UserSettings? settings,
     DateTime? accountCreatedAt,
     bool? hasEmerged,
+    double? worldHealthScore,
   }) {
     return UserProfile(
       uid: uid ?? this.uid,
@@ -600,6 +609,7 @@ class UserProfile {
       settings: settings ?? this.settings,
       accountCreatedAt: accountCreatedAt ?? this.accountCreatedAt,
       hasEmerged: hasEmerged ?? this.hasEmerged,
+      worldHealthScore: worldHealthScore ?? this.worldHealthScore,
     );
   }
 }

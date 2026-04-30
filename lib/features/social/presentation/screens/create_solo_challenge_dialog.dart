@@ -1,5 +1,4 @@
 import 'dart:ui';
-import 'package:emerge_app/core/presentation/widgets/emerge_branding.dart';
 import 'package:emerge_app/features/social/domain/models/challenge.dart';
 import 'package:emerge_app/features/social/presentation/providers/challenge_provider.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -8,6 +7,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:uuid/uuid.dart';
+import 'package:emerge_app/core/theme/emerge_colors.dart';
 
 class CreateSoloChallengeDialog extends ConsumerStatefulWidget {
   const CreateSoloChallengeDialog({super.key});
@@ -121,7 +121,7 @@ class _CreateSoloChallengeDialogState
         decoration: BoxDecoration(
           color: const Color(0xFF1A1A2E),
           borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
-          border: Border.all(color: EmergeColors.teal.withValues(alpha: 0.3)),
+          border: Border.all(color: EmergeColors.teal.withValues(alpha:0.3)),
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -155,12 +155,12 @@ class _CreateSoloChallengeDialogState
                         decoration: BoxDecoration(
                           color: _category == category
                               ? EmergeColors.teal
-                              : Colors.white.withValues(alpha: 0.05),
+                              : Colors.white.withValues(alpha:0.05),
                           borderRadius: BorderRadius.circular(12),
                           border: Border.all(
                             color: _category == category
                                 ? Colors.transparent
-                                : Colors.white.withValues(alpha: 0.1),
+                                : Colors.white.withValues(alpha:0.1),
                           ),
                         ),
                         child: Text(
@@ -196,7 +196,7 @@ class _CreateSoloChallengeDialogState
         decoration: BoxDecoration(
           color: const Color(0xFF1A1A2E),
           borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
-          border: Border.all(color: EmergeColors.yellow.withValues(alpha: 0.3)),
+          border: Border.all(color: EmergeColors.yellow.withValues(alpha:0.3)),
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -224,12 +224,12 @@ class _CreateSoloChallengeDialogState
                     decoration: BoxDecoration(
                       color: _durationDays == days
                           ? EmergeColors.yellow
-                          : Colors.white.withValues(alpha: 0.05),
+                          : Colors.white.withValues(alpha:0.05),
                       shape: BoxShape.circle,
                       border: Border.all(
                         color: _durationDays == days
                             ? Colors.transparent
-                            : Colors.white.withValues(alpha: 0.1),
+                            : Colors.white.withValues(alpha:0.1),
                       ),
                     ),
                     alignment: Alignment.center,
@@ -286,11 +286,11 @@ class _CreateSoloChallengeDialogState
                   color: const Color(0xFF1A1A2E),
                   shape: BoxShape.circle,
                   border: Border.all(
-                    color: EmergeColors.teal.withValues(alpha: 0.5),
+                    color: EmergeColors.teal.withValues(alpha:0.5),
                   ),
                   boxShadow: [
                     BoxShadow(
-                      color: EmergeColors.teal.withValues(alpha: 0.3),
+                      color: EmergeColors.teal.withValues(alpha:0.3),
                       blurRadius: 8,
                     ),
                   ],
@@ -312,15 +312,15 @@ class _CreateSoloChallengeDialogState
         child: Container(
           padding: const EdgeInsets.all(24),
           decoration: BoxDecoration(
-            color: const Color(0xFF1A1A2E).withValues(alpha: 0.92),
+            color: const Color(0xFF1A1A2E).withValues(alpha:0.92),
             borderRadius: BorderRadius.circular(24),
             border: Border.all(
-              color: EmergeColors.teal.withValues(alpha: 0.4),
+              color: EmergeColors.teal.withValues(alpha:0.4),
               width: 1.5,
             ),
             boxShadow: [
               BoxShadow(
-                color: EmergeColors.teal.withValues(alpha: 0.15),
+                color: EmergeColors.teal.withValues(alpha:0.15),
                 blurRadius: 32,
                 spreadRadius: 2,
               ),
@@ -370,7 +370,7 @@ class _CreateSoloChallengeDialogState
                   hintText: 'Describe your personal challenge...',
                   hintStyle: const TextStyle(color: Colors.white38),
                   filled: true,
-                  fillColor: Colors.white.withValues(alpha: 0.05),
+                  fillColor: Colors.white.withValues(alpha:0.05),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
                     borderSide: BorderSide.none,
@@ -420,9 +420,9 @@ class _CreateSoloChallengeDialogState
         height: 48,
         padding: const EdgeInsets.symmetric(horizontal: 12),
         decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha: 0.05),
+          color: Colors.white.withValues(alpha:0.05),
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: color.withValues(alpha: 0.3)),
+          border: Border.all(color: color.withValues(alpha:0.3)),
         ),
         child: Row(
           children: [
@@ -456,7 +456,7 @@ class _CreateSoloChallengeDialogState
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
-              color: EmergeColors.teal.withValues(alpha: 0.4),
+              color: EmergeColors.teal.withValues(alpha:0.4),
               blurRadius: 16,
               offset: const Offset(0, 4),
             ),

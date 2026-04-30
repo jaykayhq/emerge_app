@@ -79,7 +79,7 @@ class _CircularSkillNodeState extends State<CircularSkillNode>
                     shape: BoxShape.circle,
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.3),
+                        color: Colors.black.withValues(alpha:0.3),
                         blurRadius: 10,
                         offset: const Offset(0, 8),
                       ),
@@ -99,13 +99,13 @@ class _CircularSkillNodeState extends State<CircularSkillNode>
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
                       colors: [
-                        style.faceColor.withValues(alpha: 0.9), // Highlight
+                        style.faceColor.withValues(alpha:0.9), // Highlight
                         style.faceColor, // Base
                       ],
                     ),
                     shape: BoxShape.circle,
                     border: Border.all(
-                      color: Colors.white.withValues(alpha: 0.2),
+                      color: Colors.white.withValues(alpha:0.2),
                       width: 2,
                     ),
                   ),
@@ -120,7 +120,7 @@ class _CircularSkillNodeState extends State<CircularSkillNode>
                               shape: BoxShape.circle,
                               boxShadow: [
                                 BoxShadow(
-                                  color: Colors.white.withValues(alpha: 0.4),
+                                  color: Colors.white.withValues(alpha:0.4),
                                   blurRadius: 15,
                                   spreadRadius: -2,
                                 ),
@@ -261,7 +261,7 @@ class _MasteryCrown extends StatelessWidget {
         shape: BoxShape.circle,
         border: Border.all(color: Colors.white, width: 2),
         boxShadow: [
-          BoxShadow(color: Colors.amber.withValues(alpha: 0.5), blurRadius: 8),
+          BoxShadow(color: Colors.amber.withValues(alpha:0.5), blurRadius: 8),
         ],
       ),
       child: const Icon(Icons.star, color: Colors.white, size: 14),

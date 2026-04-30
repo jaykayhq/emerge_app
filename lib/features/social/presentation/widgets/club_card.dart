@@ -44,7 +44,7 @@ class ClubCard extends StatelessWidget {
         decoration: BoxDecoration(
           color: AppTheme.surfaceDark,
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
+          border: Border.all(color: Colors.white.withValues(alpha:0.1)),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -66,8 +66,8 @@ class ClubCard extends StatelessWidget {
                       decoration: BoxDecoration(
                         gradient: LinearGradient(
                           colors: [
-                            AppTheme.primary.withValues(alpha: 0.2),
-                            AppTheme.secondary.withValues(alpha: 0.2),
+                            AppTheme.primary.withValues(alpha:0.2),
+                            AppTheme.secondary.withValues(alpha:0.2),
                           ],
                         ),
                       ),
@@ -216,7 +216,7 @@ class ClubCard extends StatelessWidget {
       child: Icon(
         Icons.groups,
         size: 24,
-        color: AppTheme.primary.withValues(alpha: 0.5),
+        color: AppTheme.primary.withValues(alpha:0.5),
       ),
     );
   }

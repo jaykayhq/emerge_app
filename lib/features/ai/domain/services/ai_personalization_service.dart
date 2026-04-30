@@ -21,18 +21,16 @@ class AiPersonalizationService {
     String userWhy, {
     String? archetype,
     Map<String, int>? attributes,
+    String? dominantMotive,
   }) async {
-    final identityContext = archetype != null
-        ? 'User Archetype: $archetype. '
-        : '';
-    final attributeContext = attributes != null
-        ? 'Core Attributes: $attributes. '
-        : '';
+    final identityContext = archetype != null ? 'User Archetype: $archetype. ' : '';
+    final attributeContext = attributes != null ? 'Core Attributes: $attributes. ' : '';
+    final motiveContext = dominantMotive != null ? 'Dominant Motive: $dominantMotive. ' : '';
 
     final systemPrompt =
         'You are a wise and encouraging mentor. The user has just shared their deep "Why" for building habits. '
-        'Context: $identityContext$attributeContext'
-        'Acknowledge it, validate it, and rephrase it into a powerful, short affirmation (max 1 sentence) that connects their motivation to their identity. '
+        'Context: $identityContext$attributeContext$motiveContext'
+        'Acknowledge it, validate it, and rephrase it into a powerful, short affirmation (max 1 sentence) that connects their motivation to their identity and core drivers. '
         'Do not give advice. Just affirm them.';
 
     try {
@@ -44,8 +42,9 @@ class AiPersonalizationService {
   }
 
   Future<List<GoldilocksAdjustment>> analyzeHabitPerformance(
-    List<Habit> habits,
-  ) async {
+    List<Habit> habits, {
+    String? dominantMotive,
+  }) async {
     // Filter for active habits
     final activeHabits = habits.where((h) => !h.isArchived).toList();
 
@@ -63,12 +62,14 @@ class AiPersonalizationService {
         )
         .toList();
 
-    const systemPrompt =
-        'You are the Goldilocks Engine. Your job is to analyze habit performance and suggest difficulty adjustments. '
+    final motiveContext = dominantMotive != null ? ' The user is driven by: $dominantMotive.' : '';
+    final systemPrompt =
+        'You are the Goldilocks Engine. Your job is to analyze habit performance and suggest difficulty adjustments.$motiveContext '
         'Rules:'
         '1. If streak > 5, suggest increasing difficulty (Level Up).'
         '2. If missed > 2 times recently or streak is 0 for a while, suggest decreasing difficulty (Recalibrate).'
         '3. If consistent but not too easy, suggest maintaining (Stay the Course).'
+        'Ensure your suggestions align with their core motive. '
         'Output ONLY valid JSON array of objects: {"habitTitle": "...", "type": "increase"|"decrease"|"maintain", "suggestion": "...", "reason": "..."}';
 
     try {
@@ -98,7 +99,10 @@ class AiPersonalizationService {
     }
   }
 
-  Future<List<AiInsight>> generateIdentityInsights(List<Habit> habits) async {
+  Future<List<AiInsight>> generateIdentityInsights(
+    List<Habit> habits, {
+    String? dominantMotive,
+  }) async {
     final activeHabits = habits.where((h) => !h.isArchived).toList();
     if (activeHabits.isEmpty) return [];
 
@@ -112,10 +116,11 @@ class AiPersonalizationService {
         )
         .toList();
 
-    const systemPrompt =
+    final motiveContext = dominantMotive != null ? ' Consider their dominant motive ($dominantMotive) in your analysis.' : '';
+    final systemPrompt =
         'You are an Insight Engine. Analyze the user'
         "'"
-        's habits and streaks to identify their growing identity. '
+        's habits and streaks to identify their growing identity.$motiveContext '
         'Output ONLY valid JSON array of objects: {"type": "identity"|"pattern", "title": "...", "description": "...", "action": "..."}';
 
     try {

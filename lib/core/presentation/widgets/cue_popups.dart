@@ -3,9 +3,9 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:emerge_app/core/domain/entities/cue.dart';
-import 'package:emerge_app/core/presentation/widgets/emerge_branding.dart';
 import 'package:emerge_app/core/theme/emerge_earthy_theme.dart';
 import 'package:emerge_app/features/auth/domain/entities/user_extension.dart';
+import 'package:emerge_app/core/theme/emerge_colors.dart';
 
 /// CUE POPUP WIDGETS - Visual Implementation of "Make It Obvious"
 ///

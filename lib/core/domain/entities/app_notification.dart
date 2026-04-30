@@ -123,20 +123,20 @@ extension AppNotificationExt on AppNotification {
     switch (type) {
       case AppNotificationType.friendRequest:
       case AppNotificationType.friendRequestAccepted:
-        return '/social/friends';
+        return '/tribes';
       case AppNotificationType.challengeInvite:
       case AppNotificationType.challengeCompleted:
         return data['challengeId'] != null
-            ? '/challenges/${data['challengeId']}'
-            : '/challenges';
+            ? '/tribes/challenges/${data['challengeId']}'
+            : '/tribes/challenges';
       case AppNotificationType.achievement:
       case AppNotificationType.levelUp:
         return '/profile';
       case AppNotificationType.tribeJoined:
       case AppNotificationType.tribeActivity:
         return data['tribeId'] != null
-            ? '/social/tribes/${data['tribeId']}'
-            : '/social/tribes';
+            ? '/tribes/${data['tribeId']}'
+            : '/tribes';
       default:
         return null;
     }

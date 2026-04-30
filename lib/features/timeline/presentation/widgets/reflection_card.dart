@@ -1,9 +1,9 @@
 import 'package:emerge_app/core/theme/app_theme.dart';
-import 'package:emerge_app/core/presentation/widgets/emerge_branding.dart';
 import 'package:emerge_app/core/presentation/widgets/glassmorphism_card.dart';
 import 'package:emerge_app/features/timeline/presentation/providers/reflection_state_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:emerge_app/core/theme/emerge_colors.dart';
 
 /// Card for logging daily reflections with a slider for mood/progress
 class ReflectionCard extends ConsumerStatefulWidget {
@@ -69,7 +69,7 @@ class _ReflectionCardState extends ConsumerState<ReflectionCard> {
                 Text(
                   'Close the loop on your day',
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: EmergeColors.tealMuted.withValues(alpha: 0.7),
+                    color: EmergeColors.tealMuted.withValues(alpha:0.7),
                     fontSize: 11,
                   ),
                 ),
@@ -93,9 +93,9 @@ class _ReflectionCardState extends ConsumerState<ReflectionCard> {
               child: SliderTheme(
                 data: SliderTheme.of(context).copyWith(
                   activeTrackColor: _getSliderColor(),
-                  inactiveTrackColor: _getSliderColor().withValues(alpha: 0.2),
+                  inactiveTrackColor: _getSliderColor().withValues(alpha:0.2),
                   thumbColor: _getSliderColor(),
-                  overlayColor: _getSliderColor().withValues(alpha: 0.2),
+                  overlayColor: _getSliderColor().withValues(alpha:0.2),
                   trackHeight: 6,
                 ),
                 child: Slider(

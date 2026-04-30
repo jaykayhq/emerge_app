@@ -1,8 +1,8 @@
 import 'dart:math' as math;
-import 'package:emerge_app/core/presentation/widgets/emerge_branding.dart';
 import 'package:emerge_app/features/profile/domain/models/silhouette_evolution.dart';
 import 'package:emerge_app/features/profile/domain/services/evolution_haptic_service.dart';
 import 'package:flutter/material.dart';
+import 'package:emerge_app/core/theme/emerge_colors.dart';
 
 /// Full-screen celebration overlay displayed when user evolves to a new phase
 /// Features: confetti particles, phase announcement, silhouette preview

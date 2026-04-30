@@ -78,7 +78,10 @@ service cloud.firestore {
              (!habit.keys().hasAny(['order']) || habit.order is number) &&
              (!habit.keys().hasAny(['currentStreak']) || habit.currentStreak is number) &&
              (!habit.keys().hasAny(['longestStreak']) || habit.longestStreak is number) &&
-             (!habit.keys().hasAny(['createdAt']) || habit.createdAt is timestamp);
+             (!habit.keys().hasAny(['createdAt']) || habit.createdAt is timestamp) &&
+             // Behavioral system fields
+             (!habit.keys().hasAny(['momentumScore']) || (habit.momentumScore is number && habit.momentumScore >= 0 && habit.momentumScore <= 100)) &&
+             (!habit.keys().hasAny(['consecutiveMisses']) || (habit.consecutiveMisses is number && habit.consecutiveMisses >= 0));
     }
 
     // Helper function to validate post content
@@ -190,6 +193,13 @@ service cloud.firestore {
         allow read: if isAuthenticated();
         allow write: if isOwner(userId);
       }
+
+      // Habit Completions Subcollection (immutable behavioral log)
+      match /habit_completions/{completionId} {
+        allow create: if isOwner(userId) && request.resource.data.userId == request.auth.uid;
+        allow read: if isOwner(userId);
+        allow update, delete: if false; // Completions are immutable logs
+      }
     }
 
     // Habits (Top-level collection) - Enhanced security
@@ -223,7 +233,8 @@ service cloud.firestore {
       // Prevent deletion of official clubs
       allow delete: if false;
       // Members can join/leave (updates members array)
-      allow update: if isAuthenticated();
+      allow update: if isAuthenticated() &&
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['memberCount', 'members']);
 
       match /members/{memberId} {
         allow read: if isAuthenticated();
@@ -256,11 +267,13 @@ service cloud.firestore {
       allow delete: if isAuthenticated() && resource.data.senderId == request.auth.uid;
     }
 
-    // Challenges
+    // Challenges — catalog entries managed by Cloud Functions only
     match /challenges/{challengeId} {
       allow read: if isAuthenticated();
-      allow create, update: if isAuthenticated();
-      allow delete: if false;
+      // Only allow updating participant count — full CRUD managed by Cloud Functions
+      allow update: if isAuthenticated() &&
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['participants']);
+      allow create, delete: if false;
 
       match /participants/{participantId} {
         allow read: if isAuthenticated();
@@ -331,6 +344,15 @@ service cloud.firestore {
     match /affiliatePartners/{partnerId} {
       allow read: if isAuthenticated();
       allow write: if request.auth != null && request.auth.token.admin == true;
+    }
+
+    // Creator Blueprints (habit stacks shared by creators)
+    match /creator_blueprints/{blueprintId} {
+      allow read: if isAuthenticated();
+      // Any authenticated user can increment adoptionCount when adopting
+      allow update: if isAuthenticated() &&
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['adoptionCount']);
+      allow create, delete: if false; // Admin/Cloud Function seeded only
     }
 
     // Challenge Templates (Read-only, Write by Admin)

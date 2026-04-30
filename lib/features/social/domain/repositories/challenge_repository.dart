@@ -51,4 +51,7 @@ abstract class ChallengeRepository {
     String challengeId, {
     int limit = 3,
   });
+
+  /// Get a specific challenge by ID
+  Future<Challenge?> getChallengeById(String id);
 }

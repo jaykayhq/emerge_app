@@ -1,6 +1,6 @@
-import 'package:emerge_app/core/presentation/widgets/emerge_branding.dart';
 import 'package:emerge_app/features/profile/domain/models/silhouette_evolution.dart';
 import 'package:flutter/material.dart';
+import 'package:emerge_app/core/theme/emerge_colors.dart';
 
 /// Tooltip that appears when tapping on the silhouette
 /// Shows evolution progress, phase info, and unlocked artifacts
@@ -114,12 +114,12 @@ class _ProfilePreviewTooltipState extends State<ProfilePreviewTooltip>
         ),
         borderRadius: BorderRadius.circular(24),
         border: Border.all(
-          color: widget.primaryColor.withValues(alpha: 0.3),
+          color: widget.primaryColor.withValues(alpha:0.3),
           width: 1,
         ),
         boxShadow: [
           BoxShadow(
-            color: widget.primaryColor.withValues(alpha: 0.2),
+            color: widget.primaryColor.withValues(alpha:0.2),
             blurRadius: 20,
             offset: const Offset(0, -4),
           ),
@@ -134,7 +134,7 @@ class _ProfilePreviewTooltipState extends State<ProfilePreviewTooltip>
             width: 40,
             height: 4,
             decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.3),
+              color: Colors.white.withValues(alpha:0.3),
               borderRadius: BorderRadius.circular(2),
             ),
           ),
@@ -178,7 +178,7 @@ class _ProfilePreviewTooltipState extends State<ProfilePreviewTooltip>
             shape: BoxShape.circle,
             gradient: RadialGradient(
               colors: [
-                widget.primaryColor.withValues(alpha: 0.3),
+                widget.primaryColor.withValues(alpha:0.3),
                 Colors.transparent,
               ],
             ),
@@ -197,7 +197,7 @@ class _ProfilePreviewTooltipState extends State<ProfilePreviewTooltip>
               Text(
                 'Evolution Phase',
                 style: TextStyle(
-                  color: Colors.white.withValues(alpha: 0.6),
+                  color: Colors.white.withValues(alpha:0.6),
                   fontSize: 12,
                   letterSpacing: 1,
                 ),
@@ -219,7 +219,7 @@ class _ProfilePreviewTooltipState extends State<ProfilePreviewTooltip>
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
           decoration: BoxDecoration(
-            color: widget.primaryColor.withValues(alpha: 0.2),
+            color: widget.primaryColor.withValues(alpha:0.2),
             borderRadius: BorderRadius.circular(12),
           ),
           child: Text(
@@ -246,7 +246,7 @@ class _ProfilePreviewTooltipState extends State<ProfilePreviewTooltip>
             Text(
               'Progress to ${nextPhase.name.toUpperCase()}',
               style: TextStyle(
-                color: Colors.white.withValues(alpha: 0.7),
+                color: Colors.white.withValues(alpha:0.7),
                 fontSize: 12,
               ),
             ),
@@ -269,7 +269,7 @@ class _ProfilePreviewTooltipState extends State<ProfilePreviewTooltip>
           builder: (context, _) => Container(
             height: 8,
             decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.1),
+              color: Colors.white.withValues(alpha:0.1),
               borderRadius: BorderRadius.circular(4),
             ),
             child: FractionallySizedBox(
@@ -283,7 +283,7 @@ class _ProfilePreviewTooltipState extends State<ProfilePreviewTooltip>
                   borderRadius: BorderRadius.circular(4),
                   boxShadow: [
                     BoxShadow(
-                      color: widget.primaryColor.withValues(alpha: 0.5),
+                      color: widget.primaryColor.withValues(alpha:0.5),
                       blurRadius: 6,
                     ),
                   ],
@@ -309,7 +309,7 @@ class _ProfilePreviewTooltipState extends State<ProfilePreviewTooltip>
         Container(
           width: 1,
           height: 40,
-          color: Colors.white.withValues(alpha: 0.1),
+          color: Colors.white.withValues(alpha:0.1),
         ),
         Expanded(
           child: _buildStatItem(
@@ -321,7 +321,7 @@ class _ProfilePreviewTooltipState extends State<ProfilePreviewTooltip>
         Container(
           width: 1,
           height: 40,
-          color: Colors.white.withValues(alpha: 0.1),
+          color: Colors.white.withValues(alpha:0.1),
         ),
         Expanded(
           child: _buildStatItem(
@@ -354,7 +354,7 @@ class _ProfilePreviewTooltipState extends State<ProfilePreviewTooltip>
         Text(
           label,
           style: TextStyle(
-            color: Colors.white.withValues(alpha: 0.5),
+            color: Colors.white.withValues(alpha:0.5),
             fontSize: 10,
           ),
         ),
@@ -369,7 +369,7 @@ class _ProfilePreviewTooltipState extends State<ProfilePreviewTooltip>
         Text(
           'UNLOCKED ARTIFACTS',
           style: TextStyle(
-            color: Colors.white.withValues(alpha: 0.6),
+            color: Colors.white.withValues(alpha:0.6),
             fontSize: 11,
             letterSpacing: 1,
           ),
@@ -382,10 +382,10 @@ class _ProfilePreviewTooltipState extends State<ProfilePreviewTooltip>
             return Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
               decoration: BoxDecoration(
-                color: widget.primaryColor.withValues(alpha: 0.15),
+                color: widget.primaryColor.withValues(alpha:0.15),
                 borderRadius: BorderRadius.circular(16),
                 border: Border.all(
-                  color: widget.primaryColor.withValues(alpha: 0.3),
+                  color: widget.primaryColor.withValues(alpha:0.3),
                 ),
               ),
               child: Text(

@@ -1,5 +1,7 @@
-import 'package:emerge_app/core/presentation/widgets/emerge_branding.dart';
 import 'package:emerge_app/core/theme/app_theme.dart';
+import 'package:emerge_app/core/theme/emerge_colors.dart';
+import 'package:emerge_app/core/presentation/widgets/world_background.dart';
+import 'package:emerge_app/core/domain/models/app_world_theme.dart';
 import 'package:emerge_app/features/auth/presentation/providers/auth_providers.dart';
 import 'package:emerge_app/features/gamification/data/repositories/user_stats_repository.dart';
 
@@ -11,18 +13,53 @@ import 'package:gap/gap.dart';
 import 'package:go_router/go_router.dart';
 
 class ChallengeDetailScreen extends ConsumerWidget {
-  final Challenge challenge;
+  final Challenge? challenge;
+  final String? challengeId;
 
-  const ChallengeDetailScreen({super.key, required this.challenge});
+  const ChallengeDetailScreen({
+    super.key,
+    this.challenge,
+    this.challengeId,
+  });
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    return Scaffold(
-      backgroundColor: EmergeColors.background,
-      body: Stack(
-        children: [
-          const Positioned.fill(child: HexMeshBackground()),
-          CustomScrollView(
+    final challengeAsync = challenge != null
+        ? AsyncValue.data(challenge!)
+        : ref.watch(challengeByIdProvider(challengeId ?? ''));
+
+    return challengeAsync.when(
+      loading: () => const Scaffold(
+        backgroundColor: EmergeColors.background,
+        body: Center(child: CircularProgressIndicator(color: EmergeColors.teal)),
+      ),
+      error: (err, stack) => Scaffold(
+        backgroundColor: EmergeColors.background,
+        body: Center(
+          child: Text(
+            'Error loading challenge: $err',
+            style: const TextStyle(color: Colors.white),
+          ),
+        ),
+      ),
+      data: (challenge) {
+        if (challenge == null) {
+          return const Scaffold(
+            backgroundColor: EmergeColors.background,
+            body: Center(
+              child: Text(
+                'Challenge not found',
+                style: TextStyle(color: Colors.white),
+              ),
+            ),
+          );
+        }
+
+        return WorldBackground(
+          themeOverride: AppWorldTheme.nebula,
+          child: Scaffold(
+            backgroundColor: Colors.transparent,
+            body: CustomScrollView(
             slivers: [
               SliverAppBar(
                 expandedHeight: 250,
@@ -32,20 +69,25 @@ class ChallengeDetailScreen extends ConsumerWidget {
                   background: Stack(
                     fit: StackFit.expand,
                     children: [
-                      Image.network(
-                        challenge.imageUrl,
-                        fit: BoxFit.cover,
-                        errorBuilder: (context, error, stackTrace) => Container(
-                          color: EmergeColors.teal.withValues(alpha: 0.2),
-                          child: Center(
-                            child: Icon(
-                              Icons.emoji_events,
-                              size: 64,
-                              color: EmergeColors.teal,
+                      challenge.imageUrl.startsWith('assets/')
+                          ? Image.asset(
+                              challenge.imageUrl,
+                              fit: BoxFit.cover,
+                            )
+                          : Image.network(
+                              challenge.imageUrl,
+                              fit: BoxFit.cover,
+                              errorBuilder: (context, error, stackTrace) => Container(
+                                color: EmergeColors.teal.withValues(alpha:0.2),
+                                child: const Center(
+                                  child: Icon(
+                                    Icons.emoji_events,
+                                    size: 64,
+                                    color: EmergeColors.teal,
+                                  ),
+                                ),
+                              ),
                             ),
-                          ),
-                        ),
-                      ),
                       Container(
                         decoration: BoxDecoration(
                           gradient: LinearGradient(
@@ -117,7 +159,7 @@ class ChallengeDetailScreen extends ConsumerWidget {
                             ),
                             boxShadow: [
                               BoxShadow(
-                                color: EmergeColors.teal.withValues(alpha: 0.3),
+                                color: EmergeColors.teal.withValues(alpha:0.3),
                                 blurRadius: 10,
                                 offset: const Offset(0, 4),
                               ),
@@ -327,8 +369,9 @@ class ChallengeDetailScreen extends ConsumerWidget {
               const SliverPadding(padding: EdgeInsets.only(bottom: 32)),
             ],
           ),
-        ],
-      ),
-    );
-  }
+        ),
+      );
+    },
+  );
+}
 }

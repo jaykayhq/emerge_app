@@ -4,9 +4,11 @@ import 'package:emerge_app/features/ai/domain/services/ai_personalization_servic
 import 'package:emerge_app/features/habits/presentation/providers/habit_providers.dart';
 import 'package:emerge_app/features/tutorial/presentation/providers/tutorial_provider.dart';
 import 'package:emerge_app/features/tutorial/presentation/widgets/tutorial_overlay.dart';
+import 'package:emerge_app/features/gamification/presentation/providers/user_stats_providers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:emerge_app/core/theme/emerge_colors.dart';
 
 class AiReflectionsScreen extends ConsumerStatefulWidget {
   const AiReflectionsScreen({super.key});
@@ -88,7 +90,10 @@ class _AiReflectionsScreenState extends ConsumerState<AiReflectionsScreen> {
                       return FutureBuilder<List<AiInsight>>(
                         future: ref
                             .read(aiPersonalizationServiceProvider)
-                            .generateIdentityInsights(habits),
+                            .generateIdentityInsights(
+                              habits,
+                              dominantMotive: ref.read(userStatsStreamProvider).value?.dominantMotive,
+                            ),
                         builder: (context, snapshot) {
                           if (snapshot.connectionState ==
                               ConnectionState.waiting) {

@@ -75,7 +75,7 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen>
                     begin: Alignment.topCenter,
                     end: Alignment.bottomCenter,
                     colors: [
-                      AppTheme.primary.withValues(alpha: 0.2),
+                      AppTheme.primary.withValues(alpha:0.2),
                       AppTheme.backgroundDark,
                     ],
                   ),
@@ -175,7 +175,7 @@ class _TribeLeaderboardTab extends ConsumerWidget {
               decoration: BoxDecoration(
                 gradient: LinearGradient(
                   colors: [
-                    profile.archetype.color.withValues(alpha: 0.2),
+                    profile.archetype.color.withValues(alpha:0.2),
                     Colors.transparent,
                   ],
                   begin: Alignment.topCenter,
@@ -345,7 +345,7 @@ class _TribeLeaderboardItem extends StatelessWidget {
       decoration: BoxDecoration(
         color: AppTheme.surfaceDark,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
+        border: Border.all(color: Colors.white.withValues(alpha:0.1)),
       ),
       child: Row(
         children: [
@@ -359,7 +359,7 @@ class _TribeLeaderboardItem extends StatelessWidget {
           ),
           const Gap(16),
           CircleAvatar(
-            backgroundColor: AppTheme.primary.withValues(alpha: 0.2),
+            backgroundColor: AppTheme.primary.withValues(alpha:0.2),
             child: Icon(Icons.shield, color: AppTheme.primary, size: 20),
           ),
           const Gap(16),
@@ -452,7 +452,7 @@ class _LeaderboardList extends StatelessWidget {
                 const Gap(8),
                 CircleAvatar(
                   radius: 18,
-                  backgroundColor: AppTheme.primary.withValues(alpha: 0.1),
+                  backgroundColor: AppTheme.primary.withValues(alpha:0.1),
                   child: Text(
                     entry.userName.isNotEmpty
                         ? entry.userName[0].toUpperCase()

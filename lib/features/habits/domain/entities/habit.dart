@@ -39,7 +39,6 @@ class Habit extends Equatable {
   final int longestStreak;
   final DateTime? lastCompletedDate;
   final HabitImpact impact;
-  final String? stackParentId;
   final String? twoMinuteVersion;
   final List<String> identityTags;
   final bool contractActive;
@@ -83,7 +82,6 @@ class Habit extends Equatable {
     this.longestStreak = 0,
     this.lastCompletedDate,
     this.impact = HabitImpact.neutral,
-    this.stackParentId,
     this.twoMinuteVersion,
     this.identityTags = const [],
     this.contractActive = false,
@@ -124,8 +122,6 @@ class Habit extends Equatable {
     DateTime? lastCompletedDate,
     bool clearLastCompletedDate = false,
     HabitImpact? impact,
-    String? stackParentId,
-    bool clearStackParentId = false,
     String? twoMinuteVersion,
     bool clearTwoMinuteVersion = false,
     List<String>? identityTags,
@@ -169,9 +165,6 @@ class Habit extends Equatable {
           ? null
           : (lastCompletedDate ?? this.lastCompletedDate),
       impact: impact ?? this.impact,
-      stackParentId: clearStackParentId
-          ? null
-          : (stackParentId ?? this.stackParentId),
       twoMinuteVersion: clearTwoMinuteVersion
           ? null
           : (twoMinuteVersion ?? this.twoMinuteVersion),
@@ -216,7 +209,6 @@ class Habit extends Equatable {
     longestStreak,
     lastCompletedDate,
     impact,
-    stackParentId,
     twoMinuteVersion,
     identityTags,
     contractActive,

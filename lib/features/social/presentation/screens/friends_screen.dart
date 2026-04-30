@@ -1,5 +1,4 @@
 import 'package:emerge_app/core/presentation/widgets/app_error_widget.dart';
-import 'package:emerge_app/core/presentation/widgets/emerge_branding.dart';
 import 'package:emerge_app/core/presentation/widgets/emerge_loading_skeleton.dart';
 import 'package:emerge_app/core/theme/app_theme.dart';
 import 'package:emerge_app/features/auth/presentation/providers/auth_providers.dart';
@@ -13,6 +12,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
 import 'package:go_router/go_router.dart';
+import 'package:emerge_app/core/theme/emerge_colors.dart';
 
 /// Friends Screen - Accountability Partners
 class FriendsScreen extends ConsumerStatefulWidget {
@@ -211,7 +211,7 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen> {
                                   'Invite someone to hold you accountable!',
                                   style: TextStyle(
                                     color: AppTheme.textSecondaryDark
-                                        .withValues(alpha: 0.5),
+                                        .withValues(alpha:0.5),
                                     fontSize: 12,
                                   ),
                                 ),
@@ -260,7 +260,7 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen> {
     showDialog(
       context: context,
       barrierDismissible: true,
-      barrierColor: Colors.black.withValues(alpha: 0.6),
+      barrierColor: Colors.black.withValues(alpha:0.6),
       builder: (context) => const InviteCodeDialog(),
     );
   }
@@ -292,7 +292,7 @@ class _ActivePartnersSection extends ConsumerWidget {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
-                  color: EmergeColors.teal.withValues(alpha: 0.2),
+                  color: EmergeColors.teal.withValues(alpha:0.2),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: onlineAsync.when(
@@ -678,7 +678,7 @@ class _ActiveContractsSection extends ConsumerWidget {
                       vertical: 2,
                     ),
                     decoration: BoxDecoration(
-                      color: EmergeColors.yellow.withValues(alpha: 0.2),
+                      color: EmergeColors.yellow.withValues(alpha:0.2),
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Text(
@@ -735,7 +735,7 @@ class _ContractCard extends StatelessWidget {
                 width: 36,
                 height: 36,
                 decoration: BoxDecoration(
-                  color: EmergeColors.yellow.withValues(alpha: 0.2),
+                  color: EmergeColors.yellow.withValues(alpha:0.2),
                   shape: BoxShape.circle,
                 ),
                 child: const Icon(
@@ -882,8 +882,8 @@ class _PartnerCard extends StatelessWidget {
                       shape: BoxShape.circle,
                       gradient: LinearGradient(
                         colors: [
-                          EmergeColors.violet.withValues(alpha: 0.6),
-                          EmergeColors.teal.withValues(alpha: 0.4),
+                          EmergeColors.violet.withValues(alpha:0.6),
+                          EmergeColors.teal.withValues(alpha:0.4),
                         ],
                       ),
                     ),
@@ -1335,7 +1335,7 @@ class _FriendsTabContentState extends ConsumerState<FriendsTabContent> {
     showDialog(
       context: context,
       barrierDismissible: true,
-      barrierColor: Colors.black.withValues(alpha: 0.6),
+      barrierColor: Colors.black.withValues(alpha:0.6),
       builder: (context) => const InviteCodeDialog(),
     );
   }

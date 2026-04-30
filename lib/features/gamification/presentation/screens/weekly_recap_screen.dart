@@ -7,6 +7,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:emerge_app/features/auth/presentation/providers/auth_providers.dart';
 import 'package:gap/gap.dart';
 import 'package:go_router/go_router.dart';
+import 'package:emerge_app/core/theme/emerge_colors.dart';
 
 class WeeklyRecapScreen extends ConsumerStatefulWidget {
   const WeeklyRecapScreen({super.key});
@@ -58,7 +59,7 @@ class _WeeklyRecapScreenState extends ConsumerState<WeeklyRecapScreen> {
                       ),
                       const Gap(24),
                       Text(
-                        'Weekly Recap Unlocks After 7 Days',
+                        'Weekly Recap is Growing',
                         style: Theme.of(context).textTheme.headlineSmall
                             ?.copyWith(
                               color: Colors.white,
@@ -68,7 +69,7 @@ class _WeeklyRecapScreenState extends ConsumerState<WeeklyRecapScreen> {
                       ),
                       const Gap(12),
                       Text(
-                        'Complete habits for a full week to see your stats',
+                        'Keep completing habits to see your identity emerge.',
                         style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                           color: Colors.white.withValues(alpha: 0.6),
                         ),

@@ -1,7 +1,6 @@
 import 'package:emerge_app/core/constants/gamification_constants.dart';
 import 'package:emerge_app/core/theme/app_theme.dart';
 import 'package:emerge_app/core/theme/archetype_theme.dart';
-import 'package:emerge_app/core/presentation/widgets/emerge_branding.dart';
 import 'package:emerge_app/features/auth/domain/entities/user_extension.dart';
 import 'package:emerge_app/features/avatar/domain/models/avatar_config.dart';
 import 'package:emerge_app/features/avatar/presentation/widgets/avatar_renderer.dart';
@@ -11,7 +10,7 @@ import 'package:emerge_app/features/habits/presentation/providers/habit_provider
 import 'package:emerge_app/features/profile/domain/models/silhouette_evolution.dart';
 import 'package:emerge_app/features/profile/presentation/widgets/decay_recovery_overlay.dart';
 import 'package:emerge_app/features/profile/presentation/widgets/evolving_silhouette_widget.dart';
-import 'package:emerge_app/features/profile/presentation/widgets/future_self_cosmic_background.dart';
+import 'package:emerge_app/core/presentation/widgets/world_background.dart';
 import 'package:emerge_app/features/profile/presentation/widgets/trajectory_timeline.dart';
 import 'package:emerge_app/features/profile/presentation/widgets/synergy_status_card.dart';
 import 'package:emerge_app/features/profile/presentation/widgets/synergy_card.dart';
@@ -24,6 +23,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
+import 'package:emerge_app/core/theme/emerge_colors.dart';
 
 part 'future_self_studio_screen.g.dart';
 
@@ -151,10 +151,8 @@ class _FutureSelfStudioScreenState
     final statsAsync = ref.watch(userStatsStreamProvider);
     final isRecovering = ref.watch(recoveryAnimatingProvider);
 
-    return Scaffold(
-      backgroundColor: const Color(0xFF0A0A1A), // Cosmic void dark
-      body: statsAsync.when(
-        data: (profile) {
+    return statsAsync.when(
+      data: (profile) {
           final stats = profile.avatarStats;
 
           // Detect recovery: streak was 0 but now > 0
@@ -193,31 +191,8 @@ class _FutureSelfStudioScreenState
           final archetypeTheme = ArchetypeTheme.forArchetype(profile.archetype);
           final accentColor = archetypeTheme.primaryColor;
 
-          return Stack(
-            children: [
-              // Animated Cosmic Background - isolated with RepaintBoundary
-              Positioned.fill(
-                child: RepaintBoundary(
-                  child: ref.watch(isPremiumProvider).maybeWhen(
-                    data: (isPremium) => isPremium
-                        ? Image.network(
-                            'https://lh3.googleusercontent.com/aida/ADBb0uifyFqGFp4mMJxHUsUkGtxzNHYY0mbL932czH5LMICRPtO2lcvaErayimo8Bf6SQ_lODbr4TsdxCDCDPONxRxlyl3V5PO3QWFGVHU2pq3H5RONHUokrbeloyus6FMaZLKYE1nJErYmen6aIFK3oWw7K-PY7mY-szQjT2CLEy3x9sTM3j5r_1v84YY33dHc7FSgvT4IpHX8xvVqvTQ1VE6b5WEkgFar01_l_uPfvt5fvOHQrILLEMnYzaDU',
-                            fit: BoxFit.cover,
-                          )
-                        : FutureSelfCosmicBackground(
-                            archetype: profile.archetype,
-                            level: effectiveLevel,
-                          ),
-                    orElse: () => FutureSelfCosmicBackground(
-                      archetype: profile.archetype,
-                      level: effectiveLevel,
-                    ),
-                  ),
-                ),
-              ),
-
-              // Main content
-              CustomScrollView(
+          return WorldBackground(
+            child: CustomScrollView(
                 slivers: [
                   // App Bar
                   SliverAppBar(
@@ -569,20 +544,24 @@ class _FutureSelfStudioScreenState
                   const SliverToBoxAdapter(child: SizedBox(height: 40)),
                 ],
               ),
-            ],
-          );
-        },
-        loading: () => const Center(
-          child: CircularProgressIndicator(color: EmergeColors.teal),
-        ),
-        error: (e, s) => Center(
-          child: Text(
-            'Error: $e',
-            style: TextStyle(color: AppTheme.textMainDark),
+            );
+          },
+          loading: () => const Scaffold(
+            backgroundColor: Color(0xFF0A0A1A),
+            body: Center(
+              child: CircularProgressIndicator(color: EmergeColors.teal),
+            ),
           ),
-        ),
-      ),
-    );
+          error: (e, s) => Scaffold(
+            backgroundColor: const Color(0xFF0A0A1A),
+            body: Center(
+              child: Text(
+                'Error: $e',
+                style: const TextStyle(color: AppTheme.textMainDark),
+              ),
+            ),
+          ),
+        );
   }
 
   Map<String, double> _calculateAttributes(UserAvatarStats stats) {

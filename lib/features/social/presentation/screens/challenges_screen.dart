@@ -1,5 +1,5 @@
-import 'package:emerge_app/core/presentation/widgets/emerge_branding.dart';
 import 'package:emerge_app/core/theme/app_theme.dart';
+import 'package:emerge_app/core/theme/emerge_colors.dart';
 import 'package:emerge_app/features/auth/presentation/providers/auth_providers.dart';
 import 'package:emerge_app/features/social/domain/models/challenge.dart';
 import 'package:emerge_app/features/social/domain/models/challenge_bundle.dart';
@@ -16,7 +16,8 @@ import 'package:gap/gap.dart';
 /// Challenges Screen - Optimized with bundle provider to prevent double refresh
 /// Uses single consolidated data fetch instead of multiple independent providers
 class ChallengesScreen extends ConsumerStatefulWidget {
-  const ChallengesScreen({super.key});
+  final bool showAppBar;
+  const ChallengesScreen({super.key, this.showAppBar = true});
 
   @override
   ConsumerState<ChallengesScreen> createState() => _ChallengesScreenState();
@@ -36,6 +37,29 @@ class _ChallengesScreenState extends ConsumerState<ChallengesScreen> {
     // Watch the consolidated bundle - single async operation
     final bundleAsync = ref.watch(challengeBundleProvider);
 
+    final content = Container(
+      decoration: widget.showAppBar ? BoxDecoration(gradient: AppTheme.cosmicGradient) : null,
+      child: SafeArea(
+        top: widget.showAppBar,
+        child: Stack(
+          children: [
+            // Main content - hidden during initial load
+            Opacity(
+              opacity: bundleAsync.isLoading ? 0.0 : 1.0,
+              child: IgnorePointer(
+                ignoring: bundleAsync.isLoading,
+                child: _buildContent(bundleAsync.value),
+              ),
+            ),
+            // Unified skeleton loader during initial load
+            if (bundleAsync.isLoading) const ChallengesSkeletonLoader(),
+          ],
+        ),
+      ),
+    );
+
+    if (!widget.showAppBar) return content;
+
     return Scaffold(
       backgroundColor: EmergeColors.background,
       floatingActionButton: FloatingActionButton(
@@ -51,25 +75,7 @@ class _ChallengesScreenState extends ConsumerState<ChallengesScreen> {
         foregroundColor: Colors.black,
         child: const Icon(Icons.add_rounded, size: 32),
       ),
-      body: Container(
-        decoration: const BoxDecoration(gradient: AppTheme.cosmicGradient),
-        child: SafeArea(
-          child: Stack(
-            children: [
-              // Main content - hidden during initial load
-              Opacity(
-                opacity: bundleAsync.isLoading ? 0.0 : 1.0,
-                child: IgnorePointer(
-                  ignoring: bundleAsync.isLoading,
-                  child: _buildContent(bundleAsync.value),
-                ),
-              ),
-              // Unified skeleton loader during initial load
-              if (bundleAsync.isLoading) const ChallengesSkeletonLoader(),
-            ],
-          ),
-        ),
-      ),
+      body: content,
     );
   }
 
@@ -77,24 +83,25 @@ class _ChallengesScreenState extends ConsumerState<ChallengesScreen> {
     return CustomScrollView(
       slivers: [
         // App Bar
-        SliverAppBar(
-          backgroundColor: Colors.transparent,
-          floating: true,
-          leading: IconButton(
-            icon: const Icon(Icons.arrow_back, color: Colors.white),
-            onPressed: () => Navigator.of(context).pop(),
-          ),
-          title: const Text(
-            'ACTIVE CHALLENGES',
-            style: TextStyle(
-              color: Colors.white,
-              fontWeight: FontWeight.bold,
-              fontSize: 16,
-              letterSpacing: 1,
+        if (widget.showAppBar)
+          SliverAppBar(
+            backgroundColor: Colors.transparent,
+            floating: true,
+            leading: IconButton(
+              icon: const Icon(Icons.arrow_back, color: Colors.white),
+              onPressed: () => Navigator.of(context).pop(),
             ),
+            title: const Text(
+              'ACTIVE CHALLENGES',
+              style: TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+                fontSize: 16,
+                letterSpacing: 1,
+              ),
+            ),
+            centerTitle: true,
           ),
-          centerTitle: true,
-        ),
 
         // Filter Pills
         SliverToBoxAdapter(
@@ -732,8 +739,8 @@ class _DailyQuestCard extends ConsumerWidget {
                         (_) {
                           if (context.mounted) {
                             ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text('Daily quest started!'),
+                              SnackBar(
+                                content: const Text('Daily quest started!'),
                                 backgroundColor: EmergeColors.teal,
                               ),
                             );

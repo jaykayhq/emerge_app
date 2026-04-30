@@ -1,7 +1,7 @@
 import 'package:emerge_app/core/theme/app_theme.dart';
-import 'package:emerge_app/core/presentation/widgets/emerge_branding.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:emerge_app/core/theme/emerge_colors.dart';
 
 /// Glassmorphism card widget for cosmic aesthetic
 class GlassmorphismCard extends StatelessWidget {

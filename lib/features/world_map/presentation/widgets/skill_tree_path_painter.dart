@@ -18,7 +18,7 @@ class SkillTreePathPainter extends CustomPainter {
     if (nodePositions.length < 2) return;
 
     final paint = Paint()
-      ..color = color.withValues(alpha: 0.3)
+      ..color = color.withValues(alpha:0.3)
       ..style = PaintingStyle.stroke
       ..strokeWidth = 12.0
       ..strokeCap = StrokeCap.round;
@@ -53,7 +53,7 @@ class SkillTreePathPainter extends CustomPainter {
         ..strokeCap = StrokeCap.round
         // Gradient shader for "flow" effect
         ..shader = LinearGradient(
-          colors: [color.withValues(alpha: 0.5), color],
+          colors: [color.withValues(alpha:0.5), color],
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
         ).createShader(Rect.fromLTWH(0, 0, size.width, size.height));
@@ -74,7 +74,7 @@ class SkillTreePathPainter extends CustomPainter {
 
   void _drawPathDots(Canvas canvas, Path path, Color color) {
     final dotPaint = Paint()
-      ..color = Colors.white.withValues(alpha: 0.2)
+      ..color = Colors.white.withValues(alpha:0.2)
       ..style = PaintingStyle.fill;
 
     // Use path metrics to place dots

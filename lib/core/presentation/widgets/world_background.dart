@@ -15,16 +15,22 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 class WorldBackground extends ConsumerWidget {
   final Widget child;
   final PreferredSizeWidget? appBar;
+  final bool useSafeArea;
+  final Widget? floatingActionButton;
+  final AppWorldTheme? themeOverride;
 
   const WorldBackground({
     super.key,
     required this.child,
     this.appBar,
+    this.useSafeArea = true,
+    this.floatingActionButton,
+    this.themeOverride,
   });
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final theme = ref.watch(worldThemeProvider);
+    final theme = themeOverride ?? ref.watch(worldThemeProvider);
     final healthAsync = ref.watch(worldHealthStreamProvider);
     final health = healthAsync.when(
       data: (h) => h,
@@ -33,21 +39,33 @@ class WorldBackground extends ConsumerWidget {
     );
     final healthState = WorldHealthState.fromHealth(health);
 
+    final entropyAsync = ref.watch(worldEntropyStreamProvider);
+    final entropy = entropyAsync.when(
+      data: (e) => e,
+      loading: () => 0.0,
+      error: (e, st) => 0.0,
+    );
+
     return Scaffold(
       backgroundColor: const Color(0xFF0A0A1A),
       appBar: appBar,
+      floatingActionButton: floatingActionButton,
       extendBodyBehindAppBar: true,
       body: Stack(
         fit: StackFit.expand,
         children: [
           // Layer 1: World background (image or animated nebula)
-          _WorldBackgroundLayer(theme: theme, healthState: healthState),
+          _WorldBackgroundLayer(
+            theme: theme ?? AppWorldTheme.nebula, 
+            healthState: healthState,
+            entropy: entropy,
+          ),
 
           // Layer 2: Gradient overlay for text legibility
           const _GradientOverlay(),
 
           // Layer 3: Screen content
-          SafeArea(child: child),
+          useSafeArea ? SafeArea(child: child) : child,
         ],
       ),
     );
@@ -59,10 +77,12 @@ class WorldBackground extends ConsumerWidget {
 class _WorldBackgroundLayer extends StatelessWidget {
   final AppWorldTheme theme;
   final WorldHealthState healthState;
+  final double entropy;
 
   const _WorldBackgroundLayer({
     required this.theme,
     required this.healthState,
+    required this.entropy,
   });
 
   @override
@@ -76,21 +96,54 @@ class _WorldBackgroundLayer extends StatelessWidget {
         primaryColor: const Color(0xFF00FFCC),
         accentColor: const Color(0xFF6C63FF),
         healthState: healthState,
+        entropy: entropy,
       );
     }
 
-    return AnimatedSwitcher(
-      duration: const Duration(milliseconds: 600),
-      child: Image.asset(
-        assetPath,
-        key: ValueKey(assetPath),
-        fit: BoxFit.cover,
-        alignment: Alignment.topCenter,
-        width: double.infinity,
-        height: double.infinity,
-        errorBuilder: (ctx, err, st) => _FallbackBackground(theme: theme),
+    return ColorFiltered(
+      colorFilter: _getFilterForState(healthState),
+      child: AnimatedSwitcher(
+        duration: const Duration(milliseconds: 600),
+        child: Image.asset(
+          assetPath,
+          key: ValueKey(assetPath),
+          fit: BoxFit.cover,
+          alignment: Alignment.topCenter,
+          width: double.infinity,
+          height: double.infinity,
+          errorBuilder: (ctx, err, st) => _FallbackBackground(theme: theme),
+        ),
       ),
     );
+  }
+
+  ColorFilter _getFilterForState(WorldHealthState state) {
+    switch (state) {
+      case WorldHealthState.thriving:
+        // Subtle saturation and brightness boost
+        return const ColorFilter.matrix([
+          1.1, 0, 0, 0, 5,
+          0, 1.1, 0, 0, 5,
+          0, 0, 1.1, 0, 5,
+          0, 0, 0, 1, 0,
+        ]);
+      case WorldHealthState.decaying:
+        // Heavy desaturation and reduced contrast (grim/ashy look)
+        return const ColorFilter.matrix([
+          0.21, 0.72, 0.07, 0, 0,
+          0.21, 0.72, 0.07, 0, 0,
+          0.21, 0.72, 0.07, 0, 0,
+          0, 0, 0, 1, 0,
+        ]);
+      case WorldHealthState.neutral:
+        // Identity filter
+        return const ColorFilter.matrix([
+          1, 0, 0, 0, 0,
+          0, 1, 0, 0, 0,
+          0, 0, 1, 0, 0,
+          0, 0, 0, 1, 0,
+        ]);
+    }
   }
 }
 

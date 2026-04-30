@@ -1,5 +1,4 @@
 import 'package:emerge_app/core/presentation/widgets/world_background.dart';
-import 'package:emerge_app/core/presentation/widgets/emerge_branding.dart';
 import 'package:emerge_app/core/theme/app_theme.dart';
 import 'package:emerge_app/features/auth/domain/entities/user_extension.dart';
 import 'package:emerge_app/features/gamification/data/repositories/user_stats_repository.dart';
@@ -7,6 +6,7 @@ import 'package:emerge_app/features/gamification/presentation/providers/user_sta
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
+import 'package:emerge_app/core/theme/emerge_colors.dart';
 
 class NotificationSettingsScreen extends ConsumerWidget {
   const NotificationSettingsScreen({super.key});
@@ -257,9 +257,9 @@ class NotificationSettingsScreen extends ConsumerWidget {
         value: value,
         onChanged: onChanged,
         activeThumbColor: EmergeColors.teal,
-        activeTrackColor: EmergeColors.teal.withValues(alpha: 0.5),
+        activeTrackColor: EmergeColors.teal.withValues(alpha:0.5),
         inactiveThumbColor: Colors.grey,
-        inactiveTrackColor: Colors.grey.withValues(alpha: 0.3),
+        inactiveTrackColor: Colors.grey.withValues(alpha:0.3),
       ),
     );
   }
