@@ -1,7 +1,7 @@
 import 'dart:math' as math;
 import 'package:emerge_app/core/theme/app_theme.dart';
-import 'package:emerge_app/core/presentation/widgets/emerge_branding.dart';
 import 'package:flutter/material.dart';
+import 'package:emerge_app/core/theme/emerge_colors.dart';
 
 /// Hexagonal radar chart displaying 6 attributes:
 /// Creativity, Focus, Output, Resilience, Vitality, Discipline

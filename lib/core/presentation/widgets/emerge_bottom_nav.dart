@@ -1,9 +1,9 @@
 import 'package:emerge_app/core/theme/app_theme.dart';
-import 'package:emerge_app/core/presentation/widgets/emerge_branding.dart';
 import 'package:emerge_app/core/presentation/widgets/emerge_semantics.dart';
 import 'package:emerge_app/core/theme/emerge_dimensions.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:emerge_app/core/theme/emerge_colors.dart';
 
 /// Custom bottom navigation bar with elevated center FAB (diamond shape)
 ///
@@ -28,7 +28,7 @@ class EmergeBottomNav extends StatelessWidget {
         color: EmergeColors.background,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.2),
+            color: Colors.black.withValues(alpha:0.2),
             blurRadius: 10,
             offset: const Offset(0, -2),
           ),
@@ -58,7 +58,7 @@ class EmergeBottomNav extends StatelessWidget {
                         ),
                         _NavItem(
                           icon: Icons.calendar_today,
-                          label: 'Timeline',
+                          label: 'Habits',
                           isSelected: currentIndex == 1,
                           onTap: () => _onItemTapped(1),
                         ),
@@ -67,20 +67,20 @@ class EmergeBottomNav extends StatelessWidget {
                   ),
                   // Center spacer for FAB
                   const SizedBox(width: 80),
-                  // Right side: Tribes, Profile
+                  // Right side: Tribe + Profile
                   Expanded(
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                       children: [
                         _NavItem(
                           icon: Icons.groups,
-                          label: 'Tribes',
+                          label: 'Tribe',
                           isSelected: currentIndex == 2,
                           onTap: () => _onItemTapped(2),
                         ),
                         _NavItem(
                           icon: Icons.person,
-                          label: 'Profile',
+                          label: 'Identity',
                           isSelected: currentIndex == 3,
                           onTap: () => _onItemTapped(3),
                         ),
@@ -139,7 +139,7 @@ class _NavItem extends StatelessWidget {
               padding: const EdgeInsets.all(6),
               decoration: BoxDecoration(
                 color: isSelected
-                    ? EmergeColors.teal.withValues(alpha: 0.1)
+                    ? EmergeColors.teal.withValues(alpha:0.1)
                     : Colors.transparent,
                 borderRadius: BorderRadius.circular(12),
               ),
@@ -181,7 +181,7 @@ class _DiamondFab extends StatelessWidget {
           decoration: BoxDecoration(
             boxShadow: [
               BoxShadow(
-                color: EmergeColors.teal.withValues(alpha: 0.4),
+                color: EmergeColors.teal.withValues(alpha:0.4),
                 blurRadius: 12,
                 offset: const Offset(0, 4),
               ),

@@ -1,10 +1,10 @@
-import 'package:emerge_app/core/presentation/widgets/emerge_branding.dart';
 import 'package:emerge_app/core/theme/archetype_theme.dart';
 import 'package:emerge_app/features/auth/domain/entities/user_extension.dart';
 import 'package:emerge_app/features/world_map/domain/models/world_node.dart';
 import 'package:emerge_app/features/world_map/domain/services/node_state_service.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:emerge_app/core/theme/emerge_colors.dart';
 
 /// A widget representing a map node as a Stitch-style circle.
 /// Features states: Locked, Available (active), Completed, Mastered.
@@ -130,7 +130,7 @@ class _StructureNodeState extends State<StructureNode>
                 // Background
                 Container(
                   decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.2),
+                    color: Colors.white.withValues(alpha:0.2),
                     borderRadius: BorderRadius.circular(2),
                   ),
                 ),
@@ -152,7 +152,7 @@ class _StructureNodeState extends State<StructureNode>
           Text(
             xpText,
             style: TextStyle(
-              color: Colors.white.withValues(alpha: 0.7),
+              color: Colors.white.withValues(alpha:0.7),
               fontSize: widget.size * 0.12,
               fontWeight: FontWeight.bold,
             ),
@@ -246,7 +246,7 @@ class _StructureNodeState extends State<StructureNode>
                           ),
                         if (isCompleted)
                           BoxShadow(
-                            color: widget.primaryColor.withValues(alpha: 0.2),
+                            color: widget.primaryColor.withValues(alpha:0.2),
                             blurRadius: 8,
                             spreadRadius: 2,
                           ),
@@ -301,11 +301,11 @@ class _StructureNodeState extends State<StructureNode>
       case NodeState.available:
         return widget.primaryColor; // Solid green
       case NodeState.completed:
-        return widget.primaryColor.withValues(alpha: 0.25);
+        return widget.primaryColor.withValues(alpha:0.25);
       case NodeState.mastered:
-        return widget.primaryColor.withValues(alpha: 0.35);
+        return widget.primaryColor.withValues(alpha:0.35);
       case NodeState.inProgress:
-        return widget.primaryColor.withValues(alpha: 0.5);
+        return widget.primaryColor.withValues(alpha:0.5);
       case NodeState.locked:
         return const Color(0xFF193324);
     }
@@ -317,9 +317,9 @@ class _StructureNodeState extends State<StructureNode>
         return Colors.transparent;
       case NodeState.completed:
       case NodeState.mastered:
-        return widget.primaryColor.withValues(alpha: 0.6);
+        return widget.primaryColor.withValues(alpha:0.6);
       case NodeState.inProgress:
-        return widget.primaryColor.withValues(alpha: 0.4);
+        return widget.primaryColor.withValues(alpha:0.4);
       case NodeState.locked:
         return const Color(0xFF326747);
     }
@@ -333,7 +333,7 @@ class _StructureNodeState extends State<StructureNode>
       case NodeState.mastered:
         return widget.primaryColor;
       case NodeState.inProgress:
-        return widget.primaryColor.withValues(alpha: 0.8);
+        return widget.primaryColor.withValues(alpha:0.8);
       case NodeState.locked:
         return const Color(0xFF92c9a8);
     }

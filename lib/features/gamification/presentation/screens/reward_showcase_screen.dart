@@ -1,4 +1,3 @@
-import 'package:emerge_app/core/presentation/widgets/emerge_branding.dart';
 import 'package:emerge_app/core/theme/app_theme.dart';
 import 'package:emerge_app/features/gamification/domain/entities/reward_item.dart';
 import 'package:emerge_app/features/gamification/presentation/providers/reward_providers.dart';
@@ -7,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
+import 'package:emerge_app/core/theme/emerge_colors.dart';
 
 /// Reward Showcase Screen — "The Trophy Room"
 /// Displays all titles, nameplates, and emblems grouped by rarity.

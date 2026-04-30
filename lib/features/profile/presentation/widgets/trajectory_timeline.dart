@@ -1,9 +1,9 @@
 import 'dart:ui';
 import 'package:emerge_app/core/theme/archetype_theme.dart';
 import 'package:emerge_app/core/theme/app_theme.dart';
-import 'package:emerge_app/core/presentation/widgets/emerge_branding.dart';
 import 'package:emerge_app/features/auth/domain/entities/user_extension.dart';
 import 'package:flutter/material.dart';
+import 'package:emerge_app/core/theme/emerge_colors.dart';
 
 /// Trajectory Timeline widget matching Stitch AI design
 /// Shows progression through milestones with glassmorphism cards
@@ -271,21 +271,21 @@ class _TrajectoryCard extends StatelessWidget {
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
                 colors: [
-                  Colors.white.withValues(alpha: isCurrent ? 0.12 : 0.06),
-                  Colors.white.withValues(alpha: isCurrent ? 0.05 : 0.02),
+                  Colors.white.withValues(alpha:isCurrent ? 0.12 : 0.06),
+                  Colors.white.withValues(alpha:isCurrent ? 0.05 : 0.02),
                 ],
               ),
               borderRadius: BorderRadius.circular(16),
               border: Border.all(
                 color: isCurrent
-                    ? primaryColor.withValues(alpha: 0.5)
-                    : Colors.white.withValues(alpha: 0.1),
+                    ? primaryColor.withValues(alpha:0.5)
+                    : Colors.white.withValues(alpha:0.1),
                 width: isCurrent ? 1.5 : 1,
               ),
               boxShadow: isCurrent
                   ? [
                       BoxShadow(
-                        color: primaryColor.withValues(alpha: 0.2),
+                        color: primaryColor.withValues(alpha:0.2),
                         blurRadius: 12,
                         spreadRadius: -2,
                       ),
@@ -304,7 +304,7 @@ class _TrajectoryCard extends StatelessWidget {
                         vertical: 4,
                       ),
                       decoration: BoxDecoration(
-                        color: accentColor.withValues(alpha: 0.2),
+                        color: accentColor.withValues(alpha:0.2),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Row(
@@ -356,7 +356,7 @@ class _TrajectoryCard extends StatelessWidget {
                     description,
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
                       color: isLocked
-                          ? AppTheme.textSecondaryDark.withValues(alpha: 0.6)
+                          ? AppTheme.textSecondaryDark.withValues(alpha:0.6)
                           : AppTheme.textSecondaryDark,
                       height: 1.3,
                     ),

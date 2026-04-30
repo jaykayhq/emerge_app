@@ -1,7 +1,6 @@
 import 'package:emerge_app/core/presentation/widgets/world_background.dart';
 import 'dart:ui';
 import 'package:emerge_app/core/constants/gamification_constants.dart';
-import 'package:emerge_app/core/presentation/widgets/emerge_branding.dart';
 import 'package:emerge_app/core/theme/app_theme.dart';
 import 'package:emerge_app/core/theme/theme_provider.dart';
 import 'package:emerge_app/features/auth/domain/entities/auth_user.dart';
@@ -17,6 +16,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:emerge_app/core/theme/emerge_colors.dart';
 
 class SettingsScreen extends ConsumerWidget {
   const SettingsScreen({super.key});
@@ -152,7 +152,7 @@ class SettingsScreen extends ConsumerWidget {
                 secondary: Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: EmergeColors.teal.withValues(alpha: 0.1),
+                    color: EmergeColors.teal.withValues(alpha:0.1),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Icon(
@@ -177,7 +177,7 @@ class SettingsScreen extends ConsumerWidget {
                   );
                 },
                 activeThumbColor: EmergeColors.teal,
-                activeTrackColor: EmergeColors.teal.withValues(alpha: 0.5),
+                activeTrackColor: EmergeColors.teal.withValues(alpha:0.5),
                 tileColor: AppTheme.surfaceDark,
               ),
               _buildListTile(
@@ -218,7 +218,7 @@ class SettingsScreen extends ConsumerWidget {
                 secondary: Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: EmergeColors.teal.withValues(alpha: 0.1),
+                    color: EmergeColors.teal.withValues(alpha:0.1),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Icon(
@@ -238,14 +238,14 @@ class SettingsScreen extends ConsumerWidget {
                   ref.read(themeControllerProvider.notifier).toggleTheme();
                 },
                 activeThumbColor: EmergeColors.teal,
-                activeTrackColor: EmergeColors.teal.withValues(alpha: 0.5),
+                activeTrackColor: EmergeColors.teal.withValues(alpha:0.5),
                 tileColor: AppTheme.surfaceDark,
               ),
               SwitchListTile(
                 secondary: Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: EmergeColors.teal.withValues(alpha: 0.1),
+                    color: EmergeColors.teal.withValues(alpha:0.1),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Icon(
@@ -270,14 +270,14 @@ class SettingsScreen extends ConsumerWidget {
                   );
                 },
                 activeThumbColor: EmergeColors.teal,
-                activeTrackColor: EmergeColors.teal.withValues(alpha: 0.5),
+                activeTrackColor: EmergeColors.teal.withValues(alpha:0.5),
                 tileColor: AppTheme.surfaceDark,
               ),
               SwitchListTile(
                 secondary: Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: EmergeColors.teal.withValues(alpha: 0.1),
+                    color: EmergeColors.teal.withValues(alpha:0.1),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Icon(
@@ -313,7 +313,7 @@ class SettingsScreen extends ConsumerWidget {
                   }
                 },
                 activeThumbColor: EmergeColors.teal,
-                activeTrackColor: EmergeColors.teal.withValues(alpha: 0.5),
+                activeTrackColor: EmergeColors.teal.withValues(alpha:0.5),
                 tileColor: AppTheme.surfaceDark,
               ),
             ]),
@@ -458,7 +458,7 @@ class SettingsScreen extends ConsumerWidget {
           child: Container(
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              color: EmergeColors.teal.withValues(alpha: 0.2),
+              color: EmergeColors.teal.withValues(alpha:0.2),
             ),
             child: const Icon(Icons.person, size: 40, color: EmergeColors.teal),
           ),
@@ -492,7 +492,7 @@ class SettingsScreen extends ConsumerWidget {
                       vertical: 2,
                     ),
                     decoration: BoxDecoration(
-                      color: EmergeColors.teal.withValues(alpha: 0.1),
+                      color: EmergeColors.teal.withValues(alpha:0.1),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Text(
@@ -617,9 +617,9 @@ class SettingsScreen extends ConsumerWidget {
         child: Container(
           clipBehavior: Clip.antiAlias,
           decoration: BoxDecoration(
-            color: Colors.white.withValues(alpha: 0.08),
+            color: Colors.white.withValues(alpha:0.08),
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: Colors.white.withValues(alpha: 0.15)),
+            border: Border.all(color: Colors.white.withValues(alpha:0.15)),
           ),
           child: Column(children: children),
         ),
@@ -640,7 +640,7 @@ class SettingsScreen extends ConsumerWidget {
       leading: Container(
         padding: const EdgeInsets.all(8),
         decoration: BoxDecoration(
-          color: EmergeColors.teal.withValues(alpha: 0.1),
+          color: EmergeColors.teal.withValues(alpha:0.1),
           borderRadius: BorderRadius.circular(8),
         ),
         child: Icon(icon, color: EmergeColors.teal),
@@ -871,7 +871,7 @@ class SettingsScreen extends ConsumerWidget {
       leading: Container(
         padding: const EdgeInsets.all(8),
         decoration: BoxDecoration(
-          color: Colors.red.withValues(alpha: 0.1),
+          color: Colors.red.withValues(alpha:0.1),
           borderRadius: BorderRadius.circular(8),
         ),
         child: const Icon(Icons.delete_forever, color: Colors.red),
@@ -886,7 +886,7 @@ class SettingsScreen extends ConsumerWidget {
       subtitle: Text(
         'Permanently delete your account and all data',
         style: Theme.of(context).textTheme.bodySmall?.copyWith(
-          color: Colors.red.withValues(alpha: 0.6),
+          color: Colors.red.withValues(alpha:0.6),
           fontSize: 11,
         ),
       ),
@@ -905,7 +905,7 @@ class SettingsScreen extends ConsumerWidget {
             backgroundColor: EmergeColors.background,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(16),
-              side: BorderSide(color: Colors.red.withValues(alpha: 0.3)),
+              side: BorderSide(color: Colors.red.withValues(alpha:0.3)),
             ),
             title: Row(
               children: [
@@ -959,7 +959,7 @@ class SettingsScreen extends ConsumerWidget {
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(8),
                       borderSide: BorderSide(
-                        color: Colors.red.withValues(alpha: 0.3),
+                        color: Colors.red.withValues(alpha:0.3),
                       ),
                     ),
                     focusedBorder: OutlineInputBorder(
@@ -1020,7 +1020,7 @@ class SettingsScreen extends ConsumerWidget {
                     : null,
                 style: FilledButton.styleFrom(
                   backgroundColor: Colors.red,
-                  disabledBackgroundColor: Colors.red.withValues(alpha: 0.2),
+                  disabledBackgroundColor: Colors.red.withValues(alpha:0.2),
                 ),
                 child: const Text(
                   'Delete Forever',
@@ -1084,13 +1084,13 @@ class _WorldThemePicker extends StatelessWidget {
               width: 80,
               decoration: BoxDecoration(
                 color: isSelected
-                    ? Colors.white.withValues(alpha: 0.15)
-                    : Colors.white.withValues(alpha: 0.05),
+                    ? Colors.white.withValues(alpha:0.15)
+                    : Colors.white.withValues(alpha:0.05),
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(
                   color: isSelected
-                      ? Colors.white.withValues(alpha: 0.6)
-                      : Colors.white.withValues(alpha: 0.15),
+                      ? Colors.white.withValues(alpha:0.6)
+                      : Colors.white.withValues(alpha:0.15),
                   width: isSelected ? 2 : 1,
                 ),
               ),
@@ -1106,7 +1106,7 @@ class _WorldThemePicker extends StatelessWidget {
                     theme.displayName.split(' ').first,
                     style: TextStyle(
                       color: Colors.white
-                          .withValues(alpha: isSelected ? 0.9 : 0.5),
+                          .withValues(alpha:isSelected ? 0.9 : 0.5),
                       fontSize: 10,
                       fontWeight: isSelected
                           ? FontWeight.bold

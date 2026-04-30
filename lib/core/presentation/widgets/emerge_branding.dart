@@ -1,45 +1,6 @@
 import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
-
-/// The Core Color Palette - Plain Dark Background
-class EmergeColors {
-  // ============ PLAIN DARK BACKGROUND ============
-  static const Color background = Color(0xFF0A0A1A); // Dark void
-  static const Color backgroundLight = Color(0xFF1A0A2A); // Slightly lighter
-  static const Color surface = Color(0xFF222222); // Surface for cards
-  static const Color hexLine = Color(0xFF3A3A5A); // Border lines
-
-  // ============ STITCH ACCENTS ============
-  static const Color teal = Color(0xFF2BEE79); // Primary green (buttons/cards)
-  static const Color tealMuted = Color(0xFF92C9A8); // Muted green text
-  static const Color violet = Color(0xFF1DB954); // Secondary green
-  static const Color violetSoft = Color(0xFF4ADE80); // Soft green
-  static const Color coral = Color(0xFFf7768e); // Error / warning red
-  static const Color yellow = Color(0xFFe0af68); // Accent yellow
-  static const Color lime = Color(0xFF2BEE79); // Lime = primary green
-  static const Color warmGold = Color(0xFFFFD700); // Gold for premium features
-
-  // ============ GLASSMORPHISM ============
-  static const Color glassWhite = Color(0x14FFFFFF); // 8% white
-  static const Color glassWhiteMed = Color(0x1FFFFFFF); // 12% white
-  static const Color glassBorder = Color(0x26FFFFFF); // 15% white
-  static const Color glassGreen = Color(0x142BEE79); // 8% green tint
-
-  // ============ GRADIENTS ============
-  static const LinearGradient darkGradient = LinearGradient(
-    begin: Alignment.topCenter,
-    end: Alignment.bottomCenter,
-    colors: [backgroundLight, background],
-  );
-
-  static const LinearGradient neonGradient = LinearGradient(
-    colors: [teal, Color(0xFF1DB954)],
-  );
-
-  static const LinearGradient warmGradient = LinearGradient(
-    colors: [coral, yellow],
-  );
-}
+import 'package:emerge_app/core/theme/emerge_colors.dart';
 
 // ---------------------------------------------------------------------------
 // WIDGET: The Custom "Unfolding E" Logo Painter

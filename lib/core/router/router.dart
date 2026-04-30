@@ -29,6 +29,8 @@ import 'package:emerge_app/features/settings/presentation/screens/notification_s
 import 'package:emerge_app/features/monetization/presentation/screens/paywall_screen.dart';
 
 import 'package:emerge_app/features/social/presentation/screens/challenges_screen.dart';
+import 'package:emerge_app/features/social/presentation/screens/social_screen.dart';
+import 'package:emerge_app/features/social/presentation/screens/challenge_detail_screen.dart';
 
 
 import 'package:flutter/material.dart';
@@ -237,16 +239,34 @@ GoRouter router(Ref ref) {
               ),
             ],
           ),
-          // Branch 3: Social (Tribe · Challenges · Discover) — SocialScreen added in Task 6.1
+          // Branch 3: Social (Tribe · Challenges · Discover)
           StatefulShellBranch(
             routes: [
               GoRoute(
                 path: '/tribes',
-                builder: (context, state) => const ChallengesScreen(),
+                builder: (context, state) => const SocialScreen(),
+                routes: [
+                  GoRoute(
+                    path: 'challenges',
+                    builder: (context, state) => const ChallengesScreen(),
+                    routes: [
+                      GoRoute(
+                        path: ':challengeId',
+                        builder: (context, state) {
+                          final challengeId =
+                              state.pathParameters['challengeId']!;
+                          return ChallengeDetailScreen(
+                            challengeId: challengeId,
+                          );
+                        },
+                      ),
+                    ],
+                  ),
+                ],
               ),
             ],
           ),
-          // Branch 4: Profile & Insights (Future Self Studio)
+          // Branch 4: Profile (Identity)
           StatefulShellBranch(
             routes: [
               GoRoute(
@@ -255,12 +275,10 @@ GoRouter router(Ref ref) {
                 routes: [
                   GoRoute(
                     path: 'settings',
-                    parentNavigatorKey: _rootNavigatorKey,
                     builder: (context, state) => const SettingsScreen(),
                   ),
                   GoRoute(
                     path: 'notifications',
-                    parentNavigatorKey: _rootNavigatorKey,
                     builder: (context, state) =>
                         const NotificationSettingsScreen(),
                   ),

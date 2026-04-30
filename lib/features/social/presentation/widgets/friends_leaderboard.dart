@@ -70,7 +70,7 @@ class _FriendsLeaderboardState extends State<FriendsLeaderboard> {
                     side: BorderSide(
                       color: isSelected
                           ? AppTheme.primary
-                          : Colors.white.withValues(alpha: 0.1),
+                          : Colors.white.withValues(alpha:0.1),
                     ),
                   ),
                 ),
@@ -194,11 +194,11 @@ class _FriendRankTile extends StatelessWidget {
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: entry.isYou
-            ? AppTheme.primary.withValues(alpha: 0.1)
+            ? AppTheme.primary.withValues(alpha:0.1)
             : AppTheme.surfaceDark,
         borderRadius: BorderRadius.circular(12),
         border: entry.isYou
-            ? Border.all(color: AppTheme.primary.withValues(alpha: 0.3))
+            ? Border.all(color: AppTheme.primary.withValues(alpha:0.3))
             : null,
       ),
       child: Row(
@@ -226,7 +226,7 @@ class _FriendRankTile extends StatelessWidget {
           // Avatar
           CircleAvatar(
             radius: 20,
-            backgroundColor: AppTheme.primary.withValues(alpha: 0.2),
+            backgroundColor: AppTheme.primary.withValues(alpha:0.2),
             backgroundImage: entry.avatarUrl != null
                 ? NetworkImage(entry.avatarUrl!)
                 : null,
@@ -268,7 +268,7 @@ class _FriendRankTile extends StatelessWidget {
                           vertical: 2,
                         ),
                         decoration: BoxDecoration(
-                          color: Colors.orange.withValues(alpha: 0.2),
+                          color: Colors.orange.withValues(alpha:0.2),
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: Text(
@@ -321,9 +321,9 @@ class _ActionButton extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
         decoration: BoxDecoration(
-          color: color.withValues(alpha: 0.1),
+          color: color.withValues(alpha:0.1),
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: color.withValues(alpha: 0.5)),
+          border: Border.all(color: color.withValues(alpha:0.5)),
         ),
         child: Row(
           children: [
@@ -358,7 +358,7 @@ class _EmptyFriendsState extends StatelessWidget {
           Icon(
             Icons.people_outline,
             size: 64,
-            color: AppTheme.textSecondaryDark.withValues(alpha: 0.5),
+            color: AppTheme.textSecondaryDark.withValues(alpha:0.5),
           ),
           const Gap(16),
           Text(
@@ -405,7 +405,7 @@ class _AddFriendSlot extends StatelessWidget {
           color: AppTheme.surfaceDark,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
-            color: AppTheme.primary.withValues(alpha: 0.3),
+            color: AppTheme.primary.withValues(alpha:0.3),
             style: BorderStyle.solid,
           ),
         ),
@@ -418,7 +418,7 @@ class _AddFriendSlot extends StatelessWidget {
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 border: Border.all(
-                  color: AppTheme.primary.withValues(alpha: 0.5),
+                  color: AppTheme.primary.withValues(alpha:0.5),
                   width: 2,
                 ),
               ),
@@ -452,19 +452,19 @@ class _InviteLinkCard extends StatelessWidget {
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [
-            AppTheme.primary.withValues(alpha: 0.15),
-            AppTheme.secondary.withValues(alpha: 0.15),
+            AppTheme.primary.withValues(alpha:0.15),
+            AppTheme.secondary.withValues(alpha:0.15),
           ],
         ),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppTheme.primary.withValues(alpha: 0.3)),
+        border: Border.all(color: AppTheme.primary.withValues(alpha:0.3)),
       ),
       child: Row(
         children: [
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: AppTheme.primary.withValues(alpha: 0.2),
+              color: AppTheme.primary.withValues(alpha:0.2),
               borderRadius: BorderRadius.circular(12),
             ),
             child: Icon(Icons.link, color: AppTheme.primary),

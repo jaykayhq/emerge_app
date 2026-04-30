@@ -1,8 +1,8 @@
 import 'dart:ui';
 
-import 'package:emerge_app/core/presentation/widgets/emerge_branding.dart';
 import 'package:emerge_app/features/habits/domain/entities/habit.dart';
 import 'package:flutter/material.dart';
+import 'package:emerge_app/core/theme/emerge_colors.dart';
 
 /// Maps a [HabitAttribute] to its identity color.
 /// Each attribute gets a distinct, vibrant accent color for visual identity.
@@ -98,14 +98,14 @@ class HierarchicalHabitTimeline extends StatelessWidget {
           children: [
             Icon(
               Icons.self_improvement,
-              color: Colors.white.withValues(alpha: 0.3),
+              color: Colors.white.withValues(alpha:0.3),
               size: 48,
             ),
             const SizedBox(height: 12),
             Text(
               'No habits scheduled today',
               style: TextStyle(
-                color: Colors.white.withValues(alpha: 0.6),
+                color: Colors.white.withValues(alpha:0.6),
                 fontSize: 14,
               ),
             ),
@@ -231,7 +231,7 @@ class _CategoryHeader extends StatelessWidget {
             color: color,
             boxShadow: [
               BoxShadow(
-                color: color.withValues(alpha: 0.5),
+                color: color.withValues(alpha:0.5),
                 blurRadius: 4,
                 spreadRadius: 1,
               ),
@@ -253,7 +253,7 @@ class _CategoryHeader extends StatelessWidget {
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
           decoration: BoxDecoration(
-            color: color.withValues(alpha: 0.2),
+            color: color.withValues(alpha:0.2),
             borderRadius: BorderRadius.circular(10),
           ),
           child: Text(
@@ -374,8 +374,8 @@ class _IndentedHabitItemState extends State<_IndentedHabitItem> {
                         begin: Alignment.topCenter,
                         end: Alignment.bottomCenter,
                         colors: [
-                          color.withValues(alpha: 0.3),
-                          color.withValues(alpha: 0.1),
+                          color.withValues(alpha:0.3),
+                          color.withValues(alpha:0.1),
                         ],
                       ),
                     ),
@@ -397,13 +397,13 @@ class _IndentedHabitItemState extends State<_IndentedHabitItem> {
                         padding: const EdgeInsets.all(12),
                         decoration: BoxDecoration(
                           color: completed
-                              ? Colors.white.withValues(alpha: 0.04)
-                              : Colors.white.withValues(alpha: 0.06),
+                              ? Colors.white.withValues(alpha:0.04)
+                              : Colors.white.withValues(alpha:0.06),
                           borderRadius: BorderRadius.circular(10),
                           border: Border.all(
                             color: completed
-                                ? color.withValues(alpha: 0.3)
-                                : Colors.white.withValues(alpha: 0.1),
+                                ? color.withValues(alpha:0.3)
+                                : Colors.white.withValues(alpha:0.1),
                             width: 1,
                           ),
                         ),
@@ -430,9 +430,9 @@ class _IndentedHabitItemState extends State<_IndentedHabitItem> {
                                     child: Container(
                                       padding: const EdgeInsets.all(12),
                                       decoration: BoxDecoration(
-                                        color: color.withValues(alpha: 0.05),
+                                        color: color.withValues(alpha:0.05),
                                         borderRadius: BorderRadius.circular(8),
-                                        border: Border.all(color: color.withValues(alpha: 0.2)),
+                                        border: Border.all(color: color.withValues(alpha:0.2)),
                                       ),
                                       child: Column(
                                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -468,14 +468,14 @@ class _IndentedHabitItemState extends State<_IndentedHabitItem> {
                                           Icon(
                                             Icons.check_box_outline_blank,
                                             size: 16,
-                                            color: color.withValues(alpha: 0.5),
+                                            color: color.withValues(alpha:0.5),
                                           ),
                                           const SizedBox(width: 8),
                                           Expanded(
                                             child: Text(
                                               priming,
                                               style: TextStyle(
-                                                color: Colors.white.withValues(alpha: 0.7),
+                                                color: Colors.white.withValues(alpha:0.7),
                                                 fontSize: 12,
                                               ),
                                             ),
@@ -501,13 +501,13 @@ class _IndentedHabitItemState extends State<_IndentedHabitItem> {
                           ),
                           decoration: BoxDecoration(
                             color: completed
-                                ? color.withValues(alpha: 0.2)
-                                : Colors.white.withValues(alpha: 0.05),
+                                ? color.withValues(alpha:0.2)
+                                : Colors.white.withValues(alpha:0.05),
                             borderRadius: BorderRadius.circular(8),
                             border: Border.all(
                               color: completed
-                                  ? color.withValues(alpha: 0.5)
-                                  : Colors.white.withValues(alpha: 0.1),
+                                  ? color.withValues(alpha:0.5)
+                                  : Colors.white.withValues(alpha:0.1),
                             ),
                           ),
                           child: Row(
@@ -520,7 +520,7 @@ class _IndentedHabitItemState extends State<_IndentedHabitItem> {
                                 size: 14,
                                 color: completed
                                     ? color
-                                    : Colors.white.withValues(alpha: 0.5),
+                                    : Colors.white.withValues(alpha:0.5),
                               ),
                               const SizedBox(width: 6),
                               Text(
@@ -528,7 +528,7 @@ class _IndentedHabitItemState extends State<_IndentedHabitItem> {
                                 style: TextStyle(
                                   color: completed
                                       ? Colors.white
-                                      : Colors.white.withValues(alpha: 0.5),
+                                      : Colors.white.withValues(alpha:0.5),
                                   fontSize: 12,
                                   fontWeight: completed
                                       ? FontWeight.bold
@@ -558,7 +558,7 @@ class _IndentedHabitItemState extends State<_IndentedHabitItem> {
           padding: const EdgeInsets.only(right: 12),
           child: Icon(
             Icons.radio_button_unchecked,
-            color: color.withValues(alpha: 0.5),
+            color: color.withValues(alpha:0.5),
             size: 20,
           ),
         ),
@@ -584,7 +584,7 @@ class _IndentedHabitItemState extends State<_IndentedHabitItem> {
           IconButton(
             icon: Icon(
               _isExpanded ? Icons.expand_less : Icons.expand_more,
-              color: color.withValues(alpha: 0.7),
+              color: color.withValues(alpha:0.7),
               size: 20,
             ),
             padding: EdgeInsets.zero,
@@ -609,7 +609,7 @@ class _IndentedHabitItemState extends State<_IndentedHabitItem> {
               padding: const EdgeInsets.symmetric(horizontal: 12),
               margin: const EdgeInsets.only(right: 8),
               decoration: BoxDecoration(
-                color: _isTimerRunning ? color.withValues(alpha: 0.2) : Colors.white.withValues(alpha: 0.1),
+                color: _isTimerRunning ? color.withValues(alpha:0.2) : Colors.white.withValues(alpha:0.1),
                 borderRadius: BorderRadius.circular(24),
                 border: Border.all(color: _isTimerRunning ? color : Colors.transparent),
               ),
@@ -639,7 +639,7 @@ class _IndentedHabitItemState extends State<_IndentedHabitItem> {
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
           decoration: BoxDecoration(
-            color: color.withValues(alpha: 0.15),
+            color: color.withValues(alpha:0.15),
             borderRadius: BorderRadius.circular(4),
           ),
           child: Text(
@@ -753,7 +753,7 @@ class HabitTimelineSection extends StatelessWidget {
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
                       color: allDone
-                          ? accentColor.withValues(alpha: 0.2)
+                          ? accentColor.withValues(alpha:0.2)
                           : const Color(0xFF193324),
                       border: allDone
                           ? null
@@ -871,13 +871,13 @@ class _HabitTimelineItem extends StatelessWidget {
           child: Container(
             decoration: BoxDecoration(
               color: completed
-                  ? Colors.white.withValues(alpha: 0.04)
-                  : Colors.white.withValues(alpha: 0.08),
+                  ? Colors.white.withValues(alpha:0.04)
+                  : Colors.white.withValues(alpha:0.08),
               borderRadius: BorderRadius.circular(12),
               border: Border.all(
                 color: completed
-                    ? color.withValues(alpha: 0.15)
-                    : color.withValues(alpha: 0.25),
+                    ? color.withValues(alpha:0.15)
+                    : color.withValues(alpha:0.25),
                 width: 1,
               ),
             ),
@@ -903,14 +903,14 @@ class _HabitTimelineItem extends StatelessWidget {
                               Icon(
                                 Icons.check_box_outline_blank,
                                 size: 16,
-                                color: color.withValues(alpha: 0.5),
+                                color: color.withValues(alpha:0.5),
                               ),
                               const SizedBox(width: 8),
                               Expanded(
                                 child: Text(
                                   priming,
                                   style: TextStyle(
-                                    color: Colors.white.withValues(alpha: 0.7),
+                                    color: Colors.white.withValues(alpha:0.7),
                                     fontSize: 12,
                                   ),
                                 ),
@@ -931,7 +931,7 @@ class _HabitTimelineItem extends StatelessWidget {
                                   padding: const EdgeInsets.only(right: 12),
                                   child: Icon(
                                     Icons.radio_button_unchecked,
-                                    color: color.withValues(alpha: 0.5),
+                                    color: color.withValues(alpha:0.5),
                                     size: 24,
                                   ),
                                 ),
@@ -1029,13 +1029,13 @@ class _HabitTimelineItem extends StatelessWidget {
                         ),
                         decoration: BoxDecoration(
                           color: completed
-                              ? color.withValues(alpha: 0.2)
-                              : Colors.white.withValues(alpha: 0.05),
+                              ? color.withValues(alpha:0.2)
+                              : Colors.white.withValues(alpha:0.05),
                           borderRadius: BorderRadius.circular(8),
                           border: Border.all(
                             color: completed
-                                ? color.withValues(alpha: 0.5)
-                                : Colors.white.withValues(alpha: 0.1),
+                                ? color.withValues(alpha:0.5)
+                                : Colors.white.withValues(alpha:0.1),
                           ),
                         ),
                         child: Row(
@@ -1048,7 +1048,7 @@ class _HabitTimelineItem extends StatelessWidget {
                               size: 14,
                               color: completed
                                   ? color
-                                  : Colors.white.withValues(alpha: 0.5),
+                                  : Colors.white.withValues(alpha:0.5),
                             ),
                             const SizedBox(width: 6),
                             Text(
@@ -1056,7 +1056,7 @@ class _HabitTimelineItem extends StatelessWidget {
                               style: TextStyle(
                                 color: completed
                                     ? Colors.white
-                                    : Colors.white.withValues(alpha: 0.5),
+                                    : Colors.white.withValues(alpha:0.5),
                                 fontSize: 12,
                                 fontWeight: completed
                                     ? FontWeight.bold

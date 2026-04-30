@@ -62,7 +62,7 @@ class _StreakFlameWidgetState extends State<StreakFlameWidget>
         ? const Color(0xFFFF7F50)
         : Colors.grey.shade600;
     final glowColor = widget.isActive
-        ? const Color(0xFFFF4500).withValues(alpha: 0.5)
+        ? const Color(0xFFFF4500).withValues(alpha:0.5)
         : Colors.transparent;
 
     return GestureDetector(
@@ -94,7 +94,7 @@ class _StreakFlameWidgetState extends State<StreakFlameWidget>
                         fontWeight: FontWeight.bold,
                         shadows: [
                           Shadow(
-                            color: baseColor.withValues(alpha: 0.8),
+                            color: baseColor.withValues(alpha:0.8),
                             blurRadius: 4,
                           ),
                         ],
@@ -166,10 +166,10 @@ class _FlamePainter extends CustomPainter {
       center: Alignment.center,
       radius: 0.8,
       colors: [
-        Colors.white.withValues(alpha: 0.9),
+        Colors.white.withValues(alpha:0.9),
         color,
-        color.withValues(alpha: 0.7),
-        Colors.orange.withValues(alpha: 0.5),
+        color.withValues(alpha:0.7),
+        Colors.orange.withValues(alpha:0.5),
       ],
       stops: const [0.0, 0.3, 0.6, 1.0],
     );
@@ -209,7 +209,7 @@ class _FlamePainter extends CustomPainter {
     );
     innerFlamePath.close();
 
-    final innerPaint = Paint()..color = Colors.white.withValues(alpha: 0.6);
+    final innerPaint = Paint()..color = Colors.white.withValues(alpha:0.6);
     canvas.drawPath(innerFlamePath, innerPaint);
   }
 

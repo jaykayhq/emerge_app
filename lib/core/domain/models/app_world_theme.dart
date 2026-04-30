@@ -60,8 +60,8 @@ enum WorldHealthState {
   decaying; // 0.0–0.29
 
   static WorldHealthState fromHealth(double health) {
-    if (health >= 0.70) return WorldHealthState.thriving;
-    if (health >= 0.30) return WorldHealthState.neutral;
+    if (health >= 0.75) return WorldHealthState.thriving;
+    if (health >= 0.40) return WorldHealthState.neutral;
     return WorldHealthState.decaying;
   }
 
@@ -94,7 +94,23 @@ class NebulaStateConfig {
     required this.particleCountFactor,
   });
 
-  static NebulaStateConfig forState(WorldHealthState state) {
+  static NebulaStateConfig forState(WorldHealthState state, {double entropy = 0.0}) {
+    final baseConfig = _getBaseConfig(state);
+    
+    // Entropy reduces saturation and speed significantly
+    final entropyFactor = (1.0 - entropy).clamp(0.0, 1.0);
+    
+    return NebulaStateConfig(
+      starDensityFactor: baseConfig.starDensityFactor * (1.0 - (entropy * 0.5)),
+      driftSpeedFactor: baseConfig.driftSpeedFactor * entropyFactor,
+      nebulaOpacity: baseConfig.nebulaOpacity * (1.0 + (entropy * 0.5)), // Entropy makes it cloudier/foggier
+      colorSaturation: baseConfig.colorSaturation * entropyFactor,
+      twinkleSpeedFactor: baseConfig.twinkleSpeedFactor * entropyFactor,
+      particleCountFactor: baseConfig.particleCountFactor * (1.0 - (entropy * 0.7)),
+    );
+  }
+
+  static NebulaStateConfig _getBaseConfig(WorldHealthState state) {
     switch (state) {
       case WorldHealthState.thriving:
         return const NebulaStateConfig(

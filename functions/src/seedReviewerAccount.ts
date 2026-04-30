@@ -35,17 +35,17 @@ function getRequiredEnvVar(name: string): string {
   return value;
 }
 
-// Use environment variables - no fallbacks for production safety
-const REVIEWER_EMAIL = getRequiredEnvVar("REVIEWER_EMAIL");
-const REVIEWER_PASSWORD = getRequiredEnvVar("REVIEWER_PASSWORD");
-const REVIEWER_DISPLAY_NAME = process.env.REVIEWER_DISPLAY_NAME || "Play Reviewer";
-
 /**
  * Creates or resets the reviewer account in Firebase Auth + Firestore.
  */
 export const seedReviewerAccount = functionsV1.https.onRequest(
   async (_req, res) => {
     try {
+      // Use environment variables - no fallbacks for production safety
+      const REVIEWER_EMAIL = getRequiredEnvVar("REVIEWER_EMAIL");
+      const REVIEWER_PASSWORD = getRequiredEnvVar("REVIEWER_PASSWORD");
+      const REVIEWER_DISPLAY_NAME = process.env.REVIEWER_DISPLAY_NAME || "Play Reviewer";
+
       const auth = admin.auth();
       const db = admin.firestore();
 

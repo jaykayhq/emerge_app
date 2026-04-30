@@ -1,3 +1,4 @@
+import 'package:emerge_app/features/habits/domain/entities/habit.dart';
 import 'package:equatable/equatable.dart';
 
 class UserWeeklyRecap extends Equatable {
@@ -13,6 +14,12 @@ class UserWeeklyRecap extends Equatable {
   final double
   worldGrowthPercentage; // 0.0 to 1.0 representation of entropy reduction or level gain
 
+  final String? dominantIdentityThisWeek;
+  final String? identityHeadline;
+  final String? aiInsight;
+  final HabitDifficulty? recommendedDifficultyAdjustment;
+  final List<String> velocityInsights;
+
   const UserWeeklyRecap({
     required this.id,
     required this.userId,
@@ -24,6 +31,11 @@ class UserWeeklyRecap extends Equatable {
     required this.topHabitName,
     required this.currentLevel,
     required this.worldGrowthPercentage,
+    this.dominantIdentityThisWeek,
+    this.identityHeadline,
+    this.aiInsight,
+    this.recommendedDifficultyAdjustment,
+    this.velocityInsights = const [],
   });
 
   Map<String, dynamic> toMap() {
@@ -38,6 +50,11 @@ class UserWeeklyRecap extends Equatable {
       'topHabitName': topHabitName,
       'currentLevel': currentLevel,
       'worldGrowthPercentage': worldGrowthPercentage,
+      'dominantIdentityThisWeek': dominantIdentityThisWeek,
+      'identityHeadline': identityHeadline,
+      'aiInsight': aiInsight,
+      'recommendedDifficultyAdjustment': recommendedDifficultyAdjustment?.name,
+      'velocityInsights': velocityInsights,
     };
   }
 
@@ -53,8 +70,19 @@ class UserWeeklyRecap extends Equatable {
       topHabitName: map['topHabitName'] as String,
       currentLevel: map['currentLevel'] as int,
       worldGrowthPercentage: (map['worldGrowthPercentage'] as num).toDouble(),
+      dominantIdentityThisWeek: map['dominantIdentityThisWeek'] as String?,
+      identityHeadline: map['identityHeadline'] as String?,
+      aiInsight: map['aiInsight'] as String?,
+      recommendedDifficultyAdjustment: map['recommendedDifficultyAdjustment'] != null
+          ? HabitDifficulty.values.firstWhere(
+              (e) => e.name == map['recommendedDifficultyAdjustment'],
+              orElse: () => HabitDifficulty.medium,
+            )
+          : null,
+      velocityInsights: List<String>.from(map['velocityInsights'] ?? []),
     );
   }
+
 
   @override
   List<Object> get props => [

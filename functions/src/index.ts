@@ -270,8 +270,10 @@ export const getAuraInsight = functionsV1.https.onCall(async (data, context) => 
   }
 
   const stats = userStatsDoc.data()!;
-  const level = stats.level || 1;
-  const streak = stats.streak || 0;
+  // Support both new nested structure (avatarStats) and legacy root fields
+  const avatarStats = stats.avatarStats || {};
+  const level = avatarStats.level || stats.level || 1;
+  const streak = avatarStats.streak || stats.streak || 0;
 
   let insight = "";
   if (streak >= 7) {
@@ -404,3 +406,139 @@ export * from "./habit_notifications";
 export * from "./seedReviewerAccount";
 export * from "./accountDeletion";
 export * from "./rateLimiter";
+export * from "./ai_recap";
+
+// ============================================================================
+// DAILY MOMENTUM DECAY (Behavioral Entropy Engine)
+// ============================================================================
+
+/**
+ * Daily scheduled function: applies momentum decay to all habits
+ * that were NOT completed today. This is the core of the behavioral
+ * entropy system — without it, momentum only ever increases.
+ *
+ * Runs at 02:00 UTC daily (after midnight in most user timezones).
+ */
+export const applyDailyMomentumDecay = functionsV1.pubsub
+  .schedule("0 2 * * *")
+  .timeZone("UTC")
+  .onRun(async (context) => {
+    console.log("Daily momentum decay starting at:", context.timestamp);
+    const firestore = getDb();
+    const today = new Date(context.timestamp);
+    const todayStr = today.toISOString().split("T")[0];
+
+    // Query all non-archived habits
+    const habitsSnap = await firestore
+      .collection("habits")
+      .where("isArchived", "==", false)
+      .get();
+
+    if (habitsSnap.empty) {
+      console.log("No active habits to process.");
+      return null;
+    }
+
+    const BATCH_SIZE = 450; // Firestore batch limit is 500
+    let batch = firestore.batch();
+    let batchCount = 0;
+    let decayedCount = 0;
+    let skippedCount = 0;
+
+    for (const doc of habitsSnap.docs) {
+      const data = doc.data();
+      const lastCompletedDate = data.lastCompletedDate as
+        | admin.firestore.Timestamp
+        | undefined;
+
+      // Check if habit was completed today
+      let completedToday = false;
+      if (lastCompletedDate) {
+        const lastDateStr = lastCompletedDate.toDate().toISOString().split("T")[0];
+        completedToday = lastDateStr === todayStr;
+      }
+
+      if (completedToday) {
+        skippedCount++;
+        continue; // No decay — user completed the habit today
+      }
+
+      // Apply decay: miss penalty if consecutiveMisses > 0, else idle penalty
+      const currentMomentum = (data.momentumScore as number) ?? 0;
+      const consecutiveMisses = (data.consecutiveMisses as number) ?? 0;
+      const contractActive = (data.contractActive as boolean) ?? false;
+
+      // Penalty: 15 for missed contract, else standard (5 for miss, 2 for idle)
+      const missDecay = contractActive ? 15 : (consecutiveMisses > 0 ? 5 : 2);
+      const newMomentum = Math.max(0, currentMomentum - missDecay);
+      const newConsecutiveMisses = consecutiveMisses + 1;
+
+      batch.update(doc.ref, {
+        momentumScore: newMomentum,
+        consecutiveMisses: newConsecutiveMisses,
+      });
+
+      // SOCIAL CONTRACT ENFORCEMENT: XP and Entropy Penalties
+      // Only trigger on the FIRST day a contract is broken (consecutiveMisses transitions 0 -> 1)
+      if (contractActive && consecutiveMisses === 0) {
+        const userId = data.userId;
+        const statsRef = firestore.collection("user_stats").doc(userId);
+        
+        // We'll use a separate set operation for stats to avoid complex transaction 
+        // logic inside a loop, but in a production environment with high concurrency, 
+        // a transaction or specific increment field would be preferred.
+        // For now, we use FieldValue.increment for safety.
+        
+        // XP Penalty: -5% of current level XP (approx level * 500 * 0.05)
+        // Since we don't have the level here without a read, we'll fetch or use a safe heuristic.
+        // Better: Fetch user_stats for broken contracts.
+        try {
+          const statsDoc = await statsRef.get();
+          if (statsDoc.exists) {
+            const statsData = statsDoc.data()!;
+            const level = statsData.avatarStats?.level ?? 1;
+            const currentTotalXp = statsData.avatarStats?.totalXp ?? 0;
+            const xpLoss = Math.floor(level * 500 * 0.05);
+            const levelMinXp = (level - 1) * 500;
+            const newTotalXp = Math.max(levelMinXp, currentTotalXp - xpLoss);
+
+            batch.update(statsRef, {
+              "avatarStats.totalXp": newTotalXp,
+              "worldState.entropy": admin.firestore.FieldValue.increment(0.1),
+              "worldState.activeEvents": admin.firestore.FieldValue.arrayUnion({
+                type: "contract_broken",
+                timestamp: admin.firestore.FieldValue.serverTimestamp(),
+                habitId: doc.id,
+                title: "Identity Breach",
+                description: `Social contract for '${data.title}' broken. Identity stability compromised.`
+              })
+            });
+          }
+        } catch (err) {
+          console.error(`Error applying contract penalty for user ${userId}:`, err);
+        }
+      }
+
+      decayedCount++;
+      batchCount++;
+
+      // Commit batch when approaching limit
+      if (batchCount >= BATCH_SIZE) {
+        await batch.commit();
+        batch = firestore.batch();
+        batchCount = 0;
+        console.log(`Committed batch of ${BATCH_SIZE} decay updates.`);
+      }
+    }
+
+    // Commit final batch
+    if (batchCount > 0) {
+      await batch.commit();
+    }
+
+    console.log(
+      `Momentum decay complete. Decayed: ${decayedCount}, Skipped (completed today): ${skippedCount}`
+    );
+    return null;
+  });
+

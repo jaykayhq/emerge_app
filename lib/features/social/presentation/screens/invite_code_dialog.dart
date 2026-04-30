@@ -5,7 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
 
-import 'package:emerge_app/core/presentation/widgets/emerge_branding.dart';
+import 'package:emerge_app/core/theme/emerge_colors.dart';
 
 class InviteCodeDialog extends ConsumerStatefulWidget {
   const InviteCodeDialog({super.key});
@@ -96,7 +96,7 @@ class _InviteCodeDialogState extends ConsumerState<InviteCodeDialog> {
           border: Border.all(color: EmergeColors.glassBorder),
           boxShadow: [
             BoxShadow(
-              color: EmergeColors.teal.withValues(alpha: 0.2),
+              color: EmergeColors.teal.withValues(alpha:0.2),
               blurRadius: 30,
               spreadRadius: 5,
             ),
@@ -109,10 +109,10 @@ class _InviteCodeDialogState extends ConsumerState<InviteCodeDialog> {
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: EmergeColors.teal.withValues(alpha: 0.1),
+                color: EmergeColors.teal.withValues(alpha:0.1),
                 shape: BoxShape.circle,
                 border: Border.all(
-                  color: EmergeColors.teal.withValues(alpha: 0.3),
+                  color: EmergeColors.teal.withValues(alpha:0.3),
                 ),
               ),
               child: const Icon(
@@ -138,7 +138,7 @@ class _InviteCodeDialogState extends ConsumerState<InviteCodeDialog> {
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontSize: 14,
-                color: Colors.white.withValues(alpha: 0.7),
+                color: Colors.white.withValues(alpha:0.7),
               ),
             ),
             const Gap(24),
@@ -148,9 +148,9 @@ class _InviteCodeDialogState extends ConsumerState<InviteCodeDialog> {
                 margin: const EdgeInsets.only(bottom: 16),
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: Colors.red.withValues(alpha: 0.1),
+                  color: Colors.red.withValues(alpha:0.1),
                   borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: Colors.red.withValues(alpha: 0.3)),
+                  border: Border.all(color: Colors.red.withValues(alpha:0.3)),
                 ),
                 child: Row(
                   children: [
@@ -200,10 +200,10 @@ class _InviteCodeDialogState extends ConsumerState<InviteCodeDialog> {
                         decoration: InputDecoration(
                           hintText: 'XXXXXX',
                           hintStyle: TextStyle(
-                            color: Colors.white.withValues(alpha: 0.2),
+                            color: Colors.white.withValues(alpha:0.2),
                           ),
                           filled: true,
-                          fillColor: Colors.black.withValues(alpha: 0.3),
+                          fillColor: Colors.black.withValues(alpha:0.3),
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),
                             borderSide: BorderSide(
@@ -319,10 +319,10 @@ class _InviteCodeDialogState extends ConsumerState<InviteCodeDialog> {
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: EmergeColors.coral.withValues(alpha: 0.1),
+                  color: EmergeColors.coral.withValues(alpha:0.1),
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(
-                    color: EmergeColors.coral.withValues(alpha: 0.3),
+                    color: EmergeColors.coral.withValues(alpha:0.3),
                   ),
                 ),
                 child: Column(
@@ -371,7 +371,7 @@ class _InviteCodeDialogState extends ConsumerState<InviteCodeDialog> {
                       'Share this code. It works for one use only.',
                       style: TextStyle(
                         fontSize: 12,
-                        color: Colors.white.withValues(alpha: 0.6),
+                        color: Colors.white.withValues(alpha:0.6),
                       ),
                     ),
                   ],

@@ -1,6 +1,5 @@
 import 'package:emerge_app/core/services/notification_templates.dart';
 import 'package:emerge_app/core/theme/app_theme.dart';
-import 'package:emerge_app/core/presentation/widgets/emerge_branding.dart';
 import 'package:emerge_app/core/utils/app_logger.dart';
 import 'package:emerge_app/features/auth/domain/entities/user_extension.dart';
 import 'package:emerge_app/features/gamification/presentation/providers/user_stats_providers.dart';
@@ -17,6 +16,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:uuid/uuid.dart';
+import 'package:emerge_app/core/theme/emerge_colors.dart';
 
 /// Redesigned Create Habit Dialog with Stitch-inspired cosmic glassmorphism
 class AdvancedCreateHabitDialog extends ConsumerStatefulWidget {
@@ -814,12 +814,15 @@ class _AdvancedCreateHabitDialogState
           children: [
             Icon(icon, color: _getAttributeColor(_attribute), size: 20),
             const SizedBox(width: 12),
-            Text(
-              label,
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 14,
-                fontWeight: FontWeight.w500,
+            Expanded(
+              child: Text(
+                label,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
+                ),
+                overflow: TextOverflow.ellipsis,
               ),
             ),
           ],

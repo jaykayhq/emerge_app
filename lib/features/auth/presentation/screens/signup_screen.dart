@@ -14,6 +14,7 @@ import 'package:emerge_app/features/onboarding/presentation/providers/onboarding
 import 'package:emerge_app/features/gamification/domain/services/gamification_service.dart';
 import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:emerge_app/core/theme/emerge_colors.dart';
 
 class SignUpScreen extends ConsumerStatefulWidget {
   const SignUpScreen({super.key});

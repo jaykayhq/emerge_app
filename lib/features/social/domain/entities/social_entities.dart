@@ -14,25 +14,7 @@ class Tribe {
   });
 }
 
-class Challenge {
-  final String id;
-  final String title;
-  final String description;
-  final int participants;
-  final int daysLeft;
-  final String imageUrl;
-  final int xpReward;
 
-  const Challenge({
-    required this.id,
-    required this.title,
-    required this.description,
-    required this.participants,
-    required this.daysLeft,
-    required this.imageUrl,
-    this.xpReward = 100,
-  });
-}
 
 enum FriendArchetype { athlete, creator, scholar, stoic, zealot }
 
@@ -159,5 +141,76 @@ class PartnerRequest {
       'status': status,
       'createdAt': createdAt.toIso8601String(),
     };
+  }
+}
+
+class CreatorBlueprint {
+  final String id;
+  final String creatorUserId;
+  final String creatorName;
+  final String creatorArchetype; // e.g. 'Scholar'
+  final String blueprintName; // e.g. 'Morning Deep Work Stack'
+  final String description;
+  final List<String> habitTitles; // Ordered habit stack to adopt
+  final int adoptionCount;
+  final DateTime createdAt;
+  final String? imageUrl;
+  final String? category; // e.g. 'Productivity'
+
+  const CreatorBlueprint({
+    required this.id,
+    required this.creatorUserId,
+    required this.creatorName,
+    required this.creatorArchetype,
+    required this.blueprintName,
+    required this.description,
+    required this.habitTitles,
+    this.adoptionCount = 0,
+    required this.createdAt,
+    this.imageUrl,
+    this.category,
+  });
+
+  Map<String, dynamic> toMap() => {
+    'id': id,
+    'creatorUserId': creatorUserId,
+    'creatorName': creatorName,
+    'creatorArchetype': creatorArchetype,
+    'blueprintName': blueprintName,
+    'description': description,
+    'habitTitles': habitTitles,
+    'adoptionCount': adoptionCount,
+    'createdAt': createdAt.toIso8601String(),
+    'imageUrl': imageUrl,
+    'category': category,
+  };
+
+  factory CreatorBlueprint.fromMap(Map<String, dynamic> map) {
+    // createdAt can be a Firestore Timestamp (from Firestore reads) or an ISO string (from toMap())
+    DateTime parseCreatedAt(dynamic value) {
+      if (value == null) return DateTime.now();
+      if (value is DateTime) return value;
+      // Firestore Timestamp — has a toDate() method
+      try {
+        return (value as dynamic).toDate() as DateTime;
+      } catch (_) {}
+      // ISO string fallback
+      if (value is String) return DateTime.parse(value);
+      return DateTime.now();
+    }
+
+    return CreatorBlueprint(
+    id: map['id'] as String,
+    creatorUserId: map['creatorUserId'] as String,
+    creatorName: map['creatorName'] as String,
+    creatorArchetype: map['creatorArchetype'] as String? ?? 'Unknown',
+    blueprintName: map['blueprintName'] as String,
+    description: map['description'] as String,
+    habitTitles: List<String>.from(map['habitTitles'] as List? ?? []),
+    adoptionCount: (map['adoptionCount'] as int?) ?? 0,
+    createdAt: parseCreatedAt(map['createdAt']),
+    imageUrl: map['imageUrl'] as String?,
+    category: map['category'] as String?,
+  );
   }
 }

@@ -1,6 +1,7 @@
 import 'package:emerge_app/core/error/failure.dart';
 import 'package:emerge_app/features/habits/domain/entities/habit.dart';
 import 'package:emerge_app/features/habits/domain/models/habit_activity.dart';
+import 'package:emerge_app/features/social/domain/entities/social_entities.dart';
 import 'package:fpdart/fpdart.dart';
 
 abstract class HabitRepository {
@@ -25,4 +26,9 @@ abstract class HabitRepository {
     DateTime start,
     DateTime end,
   );
+
+  Future<Either<Failure, Unit>> createHabitsFromBlueprint({
+    required String userId,
+    required CreatorBlueprint blueprint,
+  });
 }

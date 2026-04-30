@@ -162,7 +162,7 @@ class EmergeDimensions {
   /// Light elevation shadow
   static List<BoxShadow> shadowLight() => [
     BoxShadow(
-      color: Colors.black.withValues(alpha: 0.05),
+      color: Colors.black.withValues(alpha:0.05),
       blurRadius: 4,
       offset: const Offset(0, 2),
     ),
@@ -171,7 +171,7 @@ class EmergeDimensions {
   /// Medium elevation shadow
   static List<BoxShadow> shadowMedium() => [
     BoxShadow(
-      color: Colors.black.withValues(alpha: 0.1),
+      color: Colors.black.withValues(alpha:0.1),
       blurRadius: 8,
       offset: const Offset(0, 4),
     ),
@@ -180,7 +180,7 @@ class EmergeDimensions {
   /// Heavy elevation shadow
   static List<BoxShadow> shadowHeavy() => [
     BoxShadow(
-      color: Colors.black.withValues(alpha: 0.15),
+      color: Colors.black.withValues(alpha:0.15),
       blurRadius: 16,
       offset: const Offset(0, 8),
     ),

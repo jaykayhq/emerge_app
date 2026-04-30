@@ -229,8 +229,7 @@ class _CosmicBackgroundPainter extends CustomPainter {
         canvas.drawCircle(Offset(x, y), starSize * 3, glowPaint);
       }
 
-      starPaint.color = starColors[colorIndex].withValues(
-        alpha: (0.4 + 0.6 * twinkle).clamp(0.0, 1.0),
+      starPaint.color = starColors[colorIndex].withValues(alpha: (0.4 + 0.6 * twinkle).clamp(0.0, 1.0),
       );
       canvas.drawCircle(Offset(x, y), starSize, starPaint);
     }

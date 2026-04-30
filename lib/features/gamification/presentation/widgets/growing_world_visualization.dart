@@ -114,8 +114,7 @@ class _WorldVisualizationState extends State<WorldVisualization>
                   radius: 1.2,
                   colors: [
                     Colors.transparent,
-                    Colors.grey.shade900.withValues(
-                      alpha: fogOpacity * (0.5 + _pulseController.value * 0.5),
+                    Colors.grey.shade900.withValues(alpha: fogOpacity * (0.5 + _pulseController.value * 0.5),
                     ),
                   ],
                 ),

@@ -33,6 +33,58 @@ function validateInput(data: any, requiredFields: string[]): boolean {
 }
 
 /**
+ * Trigger: When a user joins a challenge (document created in users/{userId}/challenges).
+ * Action: Increment the participant count in the global challenges document.
+ */
+export const onChallengeJoined = functions.firestore
+  .document("users/{userId}/challenges/{challengeId}")
+  .onCreate(async (snapshot, context) => {
+    const challengeId = context.params.challengeId as string;
+    const userId = context.params.userId as string;
+
+    console.log(`User ${userId} joined challenge ${challengeId}`);
+
+    try {
+      // Increment participant count in the global challenges document
+      await getDb().collection("challenges").doc(challengeId).update({
+        participants: admin.firestore.FieldValue.increment(1),
+      });
+      console.log(`Incremented participant count for challenge ${challengeId}`);
+    } catch (error) {
+      console.error("Error incrementing participant count:", error);
+      // Don't throw - this is a non-critical operation
+    }
+
+    return null;
+  });
+
+/**
+ * Trigger: When a user leaves a challenge (document deleted from users/{userId}/challenges).
+ * Action: Decrement the participant count in the global challenges document.
+ */
+export const onChallengeLeft = functions.firestore
+  .document("users/{userId}/challenges/{challengeId}")
+  .onDelete(async (snapshot, context) => {
+    const challengeId = context.params.challengeId as string;
+    const userId = context.params.userId as string;
+
+    console.log(`User ${userId} left challenge ${challengeId}`);
+
+    try {
+      // Decrement participant count in the global challenges document
+      await getDb().collection("challenges").doc(challengeId).update({
+        participants: admin.firestore.FieldValue.increment(-1),
+      });
+      console.log(`Decremented participant count for challenge ${challengeId}`);
+    } catch (error) {
+      console.error("Error decrementing participant count:", error);
+      // Don't throw - this is a non-critical operation
+    }
+
+    return null;
+  });
+
+/**
  * Trigger: When a new challenge request is created.
  * Action: Send a push notification to the recipient.
  */

@@ -1,5 +1,4 @@
 import 'package:emerge_app/core/presentation/widgets/world_background.dart';
-import 'package:emerge_app/core/presentation/widgets/emerge_branding.dart';
 import 'package:emerge_app/core/services/notification_service.dart';
 import 'package:emerge_app/core/theme/app_theme.dart';
 import 'package:emerge_app/features/habits/domain/entities/habit.dart';
@@ -10,6 +9,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
+import 'package:emerge_app/core/theme/emerge_colors.dart';
 
 /// Full screen habit detail view with editing capabilities
 class HabitDetailScreen extends ConsumerStatefulWidget {

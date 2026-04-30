@@ -107,7 +107,7 @@ class _NodeRow extends StatelessWidget {
                 Text(
                   'LVL ${node.requiredLevel}',
                   style: TextStyle(
-                    color: Colors.white.withValues(alpha: 0.6),
+                    color: Colors.white.withValues(alpha:0.6),
                     fontSize: 10,
                     fontWeight: FontWeight.bold,
                     letterSpacing: 1.0,

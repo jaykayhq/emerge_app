@@ -1,7 +1,6 @@
 import 'dart:io';
 import 'dart:ui';
 
-import 'package:emerge_app/core/presentation/widgets/emerge_branding.dart';
 import 'package:emerge_app/core/utils/app_logger.dart';
 import 'package:emerge_app/features/auth/domain/entities/user_extension.dart';
 import 'package:emerge_app/features/auth/presentation/providers/auth_providers.dart';
@@ -16,6 +15,7 @@ import 'package:emerge_app/features/gamification/presentation/providers/user_sta
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:emerge_app/core/theme/emerge_colors.dart';
 
 /// Full-screen immersive level view with AI-generated background
 /// Shows habits, stats, health bar, and mission controls
@@ -205,7 +205,7 @@ class LevelImmersiveScreen extends ConsumerWidget {
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
           colors: [
-            config.primaryColor.withValues(alpha: 0.3),
+            config.primaryColor.withValues(alpha:0.3),
             const Color(0xFF0A0A1A),
             const Color(0xFF0A0A1A),
           ],
@@ -222,10 +222,10 @@ class LevelImmersiveScreen extends ConsumerWidget {
           end: Alignment.bottomCenter,
           stops: const [0.0, 0.3, 0.6, 1.0],
           colors: [
-            Colors.black.withValues(alpha: 0.3),
-            Colors.black.withValues(alpha: 0.1),
-            Colors.black.withValues(alpha: 0.5),
-            Colors.black.withValues(alpha: 0.85),
+            Colors.black.withValues(alpha:0.3),
+            Colors.black.withValues(alpha:0.1),
+            Colors.black.withValues(alpha:0.5),
+            Colors.black.withValues(alpha:0.85),
           ],
         ),
       ),
@@ -245,10 +245,10 @@ class LevelImmersiveScreen extends ConsumerWidget {
               child: Container(
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.08),
+                  color: Colors.white.withValues(alpha:0.08),
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(
-                    color: Colors.white.withValues(alpha: 0.1),
+                    color: Colors.white.withValues(alpha:0.1),
                   ),
                 ),
                 child: const Icon(
@@ -264,7 +264,7 @@ class LevelImmersiveScreen extends ConsumerWidget {
         // Stage label
         _glassBadge(
           'STAGE ${node.stage}/5',
-          Colors.white.withValues(alpha: 0.7),
+          Colors.white.withValues(alpha:0.7),
         ),
         const SizedBox(width: 8),
         // Level badge
@@ -286,15 +286,15 @@ class LevelImmersiveScreen extends ConsumerWidget {
           width: 64,
           height: 64,
           decoration: BoxDecoration(
-            color: config.primaryColor.withValues(alpha: 0.15),
+            color: config.primaryColor.withValues(alpha:0.15),
             shape: BoxShape.circle,
             border: Border.all(
-              color: config.primaryColor.withValues(alpha: 0.5),
+              color: config.primaryColor.withValues(alpha:0.5),
               width: 2,
             ),
             boxShadow: [
               BoxShadow(
-                color: config.primaryColor.withValues(alpha: 0.2),
+                color: config.primaryColor.withValues(alpha:0.2),
                 blurRadius: 16,
               ),
             ],
@@ -345,7 +345,7 @@ class LevelImmersiveScreen extends ConsumerWidget {
           width: double.infinity,
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: Colors.white.withValues(alpha: 0.06),
+            color: Colors.white.withValues(alpha:0.06),
             borderRadius: BorderRadius.circular(16),
             border: Border(
               left: BorderSide(color: config.primaryColor, width: 3),
@@ -372,7 +372,7 @@ class LevelImmersiveScreen extends ConsumerWidget {
               Text(
                 node.directive,
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: Colors.white.withValues(alpha: 0.85),
+                  color: Colors.white.withValues(alpha:0.85),
                   fontStyle: FontStyle.italic,
                   height: 1.5,
                 ),
@@ -397,10 +397,10 @@ class LevelImmersiveScreen extends ConsumerWidget {
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
               decoration: BoxDecoration(
-                color: _getAttributeColor(attr).withValues(alpha: 0.1),
+                color: _getAttributeColor(attr).withValues(alpha:0.1),
                 borderRadius: BorderRadius.circular(20),
                 border: Border.all(
-                  color: _getAttributeColor(attr).withValues(alpha: 0.5),
+                  color: _getAttributeColor(attr).withValues(alpha:0.5),
                 ),
               ),
               child: Row(
@@ -437,9 +437,9 @@ class LevelImmersiveScreen extends ConsumerWidget {
         child: Container(
           padding: const EdgeInsets.all(14),
           decoration: BoxDecoration(
-            color: Colors.white.withValues(alpha: 0.05),
+            color: Colors.white.withValues(alpha:0.05),
             borderRadius: BorderRadius.circular(14),
-            border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+            border: Border.all(color: Colors.white.withValues(alpha:0.08)),
           ),
           child: WorldHealthBar(
             healthPercent: healthPercent,
@@ -465,7 +465,7 @@ class LevelImmersiveScreen extends ConsumerWidget {
         Text(
           'QUEST CHALLENGES',
           style: TextStyle(
-            color: Colors.white.withValues(alpha: 0.5),
+            color: Colors.white.withValues(alpha:0.5),
             fontSize: 10,
             fontWeight: FontWeight.bold,
             letterSpacing: 1.2,
@@ -525,7 +525,7 @@ class LevelImmersiveScreen extends ConsumerWidget {
             child: Text(
               'Failed to load quests: $e',
               style: TextStyle(
-                color: Colors.red.withValues(alpha: 0.7),
+                color: Colors.red.withValues(alpha:0.7),
                 fontSize: 12,
               ),
             ),
@@ -544,7 +544,7 @@ class LevelImmersiveScreen extends ConsumerWidget {
             Text(
               'NODE PROGRESS',
               style: TextStyle(
-                color: Colors.white.withValues(alpha: 0.5),
+                color: Colors.white.withValues(alpha:0.5),
                 fontSize: 10,
                 fontWeight: FontWeight.bold,
                 letterSpacing: 1,
@@ -565,7 +565,7 @@ class LevelImmersiveScreen extends ConsumerWidget {
           borderRadius: BorderRadius.circular(6),
           child: LinearProgressIndicator(
             value: node.progress / 100,
-            backgroundColor: config.primaryColor.withValues(alpha: 0.15),
+            backgroundColor: config.primaryColor.withValues(alpha:0.15),
             valueColor: AlwaysStoppedAnimation(config.primaryColor),
             minHeight: 8,
           ),
@@ -616,13 +616,13 @@ class LevelImmersiveScreen extends ConsumerWidget {
         ),
         style: ElevatedButton.styleFrom(
           backgroundColor: isCompleted
-              ? config.primaryColor.withValues(alpha: 0.5)
+              ? config.primaryColor.withValues(alpha:0.5)
               : config.primaryColor,
           foregroundColor: Colors.white,
           disabledBackgroundColor: isCompleted
-              ? config.primaryColor.withValues(alpha: 0.4)
+              ? config.primaryColor.withValues(alpha:0.4)
               : Colors.grey.shade800,
-          disabledForegroundColor: Colors.white.withValues(alpha: 0.5),
+          disabledForegroundColor: Colors.white.withValues(alpha:0.5),
           padding: const EdgeInsets.symmetric(vertical: 16),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(14),
@@ -685,13 +685,13 @@ class LevelImmersiveScreen extends ConsumerWidget {
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
           decoration: BoxDecoration(
-            color: color.withValues(alpha: 0.12),
+            color: color.withValues(alpha:0.12),
             borderRadius: BorderRadius.circular(10),
-            border: Border.all(color: color.withValues(alpha: 0.5)),
+            border: Border.all(color: color.withValues(alpha:0.5)),
             boxShadow: glow
                 ? [
                     BoxShadow(
-                      color: color.withValues(alpha: 0.3),
+                      color: color.withValues(alpha:0.3),
                       blurRadius: 8,
                     ),
                   ]
@@ -714,9 +714,9 @@ class LevelImmersiveScreen extends ConsumerWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
       decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.2),
+        color: color.withValues(alpha:0.2),
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: color.withValues(alpha: 0.5)),
+        border: Border.all(color: color.withValues(alpha:0.5)),
       ),
       child: Text(
         text,
@@ -957,22 +957,22 @@ class _EmptyMissionsState extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.03),
+        color: Colors.white.withValues(alpha:0.03),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+        border: Border.all(color: Colors.white.withValues(alpha:0.08)),
       ),
       child: Column(
         children: [
           Icon(
             Icons.emoji_events_outlined,
-            color: Colors.white.withValues(alpha: 0.3),
+            color: Colors.white.withValues(alpha:0.3),
             size: 40,
           ),
           const SizedBox(height: 12),
           Text(
             'No active solo quests for this archetype',
             style: TextStyle(
-              color: Colors.white.withValues(alpha: 0.6),
+              color: Colors.white.withValues(alpha:0.6),
               fontSize: 13,
             ),
             textAlign: TextAlign.center,
@@ -983,7 +983,7 @@ class _EmptyMissionsState extends StatelessWidget {
             icon: const Icon(Icons.add, size: 16),
             label: const Text('Create Solo Quest'),
             style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF00FFCC).withValues(alpha: 0.15),
+              backgroundColor: const Color(0xFF00FFCC).withValues(alpha:0.15),
               foregroundColor: const Color(0xFF00FFCC),
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
               shape: RoundedRectangleBorder(
@@ -1023,13 +1023,13 @@ class _ChallengeQuestCard extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
           decoration: BoxDecoration(
             color: isCompleted
-                ? Colors.green.withValues(alpha: 0.1)
-                : Colors.white.withValues(alpha: 0.05),
+                ? Colors.green.withValues(alpha:0.1)
+                : Colors.white.withValues(alpha:0.05),
             borderRadius: BorderRadius.circular(12),
             border: Border.all(
               color: isCompleted
-                  ? Colors.green.withValues(alpha: 0.3)
-                  : Colors.white.withValues(alpha: 0.08),
+                  ? Colors.green.withValues(alpha:0.3)
+                  : Colors.white.withValues(alpha:0.08),
             ),
           ),
           child: Column(
@@ -1042,7 +1042,7 @@ class _ChallengeQuestCard extends StatelessWidget {
                     width: 36,
                     height: 36,
                     decoration: BoxDecoration(
-                      color: accentColor.withValues(alpha: 0.15),
+                      color: accentColor.withValues(alpha:0.15),
                       borderRadius: BorderRadius.circular(8),
                     ),
                     alignment: Alignment.center,
@@ -1072,7 +1072,7 @@ class _ChallengeQuestCard extends StatelessWidget {
                         Text(
                           '${challenge.currentDay}/${challenge.totalDays} days',
                           style: TextStyle(
-                            color: Colors.white.withValues(alpha: 0.5),
+                            color: Colors.white.withValues(alpha:0.5),
                             fontSize: 11,
                           ),
                         ),
@@ -1082,7 +1082,7 @@ class _ChallengeQuestCard extends StatelessWidget {
                   if (isCompleted)
                     Icon(
                       Icons.check_circle,
-                      color: Colors.green.withValues(alpha: 0.8),
+                      color: Colors.green.withValues(alpha:0.8),
                       size: 20,
                     )
                   else
@@ -1092,7 +1092,7 @@ class _ChallengeQuestCard extends StatelessWidget {
                         vertical: 3,
                       ),
                       decoration: BoxDecoration(
-                        color: accentColor.withValues(alpha: 0.15),
+                        color: accentColor.withValues(alpha:0.15),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Text(
@@ -1113,7 +1113,7 @@ class _ChallengeQuestCard extends StatelessWidget {
                   borderRadius: BorderRadius.circular(4),
                   child: LinearProgressIndicator(
                     value: progress,
-                    backgroundColor: Colors.white.withValues(alpha: 0.1),
+                    backgroundColor: Colors.white.withValues(alpha:0.1),
                     valueColor: AlwaysStoppedAnimation(accentColor),
                     minHeight: 4,
                   ),
@@ -1125,7 +1125,7 @@ class _ChallengeQuestCard extends StatelessWidget {
                   child: ElevatedButton(
                     onPressed: onCheckIn,
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: accentColor.withValues(alpha: 0.15),
+                      backgroundColor: accentColor.withValues(alpha:0.15),
                       foregroundColor: accentColor,
                       padding: const EdgeInsets.symmetric(vertical: 8),
                       shape: RoundedRectangleBorder(

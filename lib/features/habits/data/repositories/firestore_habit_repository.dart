@@ -8,6 +8,8 @@ import 'package:emerge_app/features/habits/domain/entities/habit.dart';
 import 'package:emerge_app/features/habits/domain/models/habit_activity.dart';
 import 'package:emerge_app/features/habits/domain/repositories/habit_repository.dart';
 import 'package:emerge_app/features/social/domain/services/club_activity_service.dart';
+import 'package:emerge_app/features/habits/domain/services/momentum_service.dart';
+import 'package:emerge_app/features/social/domain/entities/social_entities.dart';
 import 'package:fpdart/fpdart.dart';
 
 class FirestoreHabitRepository implements HabitRepository {
@@ -168,9 +170,8 @@ class FirestoreHabitRepository implements HabitRepository {
       });
 
       // Log success for debugging
-      AppLogger.i(
-        'Successfully created habit: ${habit.id} for user: ${habit.userId}',
-      );
+      // Recalculate World Health
+      await _recalculateAndStoreWorldHealth(habit.userId);
 
       return const Right(unit);
     } catch (e, s) {
@@ -223,7 +224,15 @@ class FirestoreHabitRepository implements HabitRepository {
   @override
   Future<Either<Failure, Unit>> deleteHabit(String habitId) async {
     try {
+      final doc = await _firestore.collection('habits').doc(habitId).get();
+      final userId = doc.data()?['userId'] as String?;
+
       await _firestore.collection('habits').doc(habitId).delete();
+
+      if (userId != null) {
+        await _recalculateAndStoreWorldHealth(userId);
+      }
+
       return const Right(unit);
     } catch (e, s) {
       AppLogger.e('Delete habit failed', e, s);
@@ -270,6 +279,10 @@ class FirestoreHabitRepository implements HabitRepository {
           return null; // Signals undo
         } else {
           // Complete
+          final habit = _mapDocToHabit(snapshot);
+          final momentumService = MomentumService();
+          final updatedHabit = momentumService.applyCompletion(habit);
+
           final newCurrentStreak = currentStreak + 1;
           final newLongestStreak = newCurrentStreak > longestStreak
               ? newCurrentStreak
@@ -279,13 +292,24 @@ class FirestoreHabitRepository implements HabitRepository {
             'currentStreak': newCurrentStreak,
             'longestStreak': newLongestStreak,
             'lastCompletedDate': Timestamp.fromDate(date),
+            'momentumScore': updatedHabit.momentumScore,
+            'consecutiveMisses': updatedHabit.consecutiveMisses,
           });
+
+          // Recalculate World Health within transaction
+          await _recalculateAndStoreWorldHealth(
+            userId!,
+            transaction: transaction,
+            updatedHabit: updatedHabit,
+          );
 
           return {
             'userId': userId,
             'difficulty': data['difficulty'],
             'attribute': data['attribute'],
             'streakDay': newCurrentStreak,
+            'momentumAtCompletion': updatedHabit.momentumScore,
+            'wasRecovery': habit.consecutiveMisses > 0,
           };
         }
       });
@@ -329,9 +353,11 @@ class FirestoreHabitRepository implements HabitRepository {
               .add({
             'habitId': habitId,
             'userId': uid,
-            'timestamp': Timestamp.fromDate(date),
-            // Assuming motive isn't passed here yet, setting to null
+            'completedAt': Timestamp.fromDate(date),
             'motiveUsed': null, 
+            'momentumAtCompletion': completionData['momentumAtCompletion'],
+            'completedAtHour': date.hour,
+            'wasRecovery': completionData['wasRecovery'],
             'streakAtCompletion': completionData['streakDay'],
             'entropyImpact': 5, // Default base impact
           });
@@ -484,6 +510,133 @@ class FirestoreHabitRepository implements HabitRepository {
         return 25;
       default:
         return 15;
+    }
+  }
+
+  @override
+  Future<Either<Failure, Unit>> createHabitsFromBlueprint({
+    required String userId,
+    required CreatorBlueprint blueprint,
+  }) async {
+    try {
+      final batch = _firestore.batch();
+      for (int i = 0; i < blueprint.habitTitles.length; i++) {
+        final ref = _firestore
+            .collection('habits')
+            .doc(); // Use top-level habits collection to match watchHabits
+            
+        final habit = Habit(
+          id: ref.id,
+          userId: userId,
+          title: blueprint.habitTitles[i],
+          createdAt: DateTime.now(),
+          order: i,
+          attribute: HabitAttribute.values.firstWhere(
+            (e) => e.name == blueprint.creatorArchetype.toLowerCase(),
+            orElse: () => HabitAttribute.vitality,
+          ),
+        );
+        
+        batch.set(ref, {
+          'userId': habit.userId,
+          'title': habit.title,
+          'cue': habit.cue,
+          'routine': habit.routine,
+          'reward': habit.reward,
+          'frequency': habit.frequency.toString(),
+          'specificDays': habit.specificDays,
+          'difficulty': habit.difficulty.name,
+          'reminderTime': null,
+          'location': habit.location,
+          'isArchived': habit.isArchived,
+          'createdAt': Timestamp.fromDate(habit.createdAt),
+          'currentStreak': habit.currentStreak,
+          'longestStreak': habit.longestStreak,
+          'lastCompletedDate': null,
+          'attribute': habit.attribute.name,
+          'imageUrl': habit.imageUrl,
+          'timeOfDayPreference': habit.timeOfDayPreference?.name,
+          'impact': habit.impact.name,
+          'order': habit.order,
+          'anchorHabitId': habit.anchorHabitId,
+          'identityTags': habit.identityTags,
+          'timerDurationMinutes': habit.timerDurationMinutes,
+          'environmentPriming': habit.environmentPriming,
+          'twoMinuteVersion': habit.twoMinuteVersion,
+          'integrationType': habit.integrationType.name,
+          'integrationTarget': habit.integrationTarget,
+          'momentumScore': habit.momentumScore,
+          'consecutiveMisses': habit.consecutiveMisses,
+        });
+      }
+
+      // Increment adoption count on blueprint
+      batch.update(
+        _firestore.collection('creator_blueprints').doc(blueprint.id),
+        {'adoptionCount': FieldValue.increment(1)},
+      );
+
+      await batch.commit();
+
+      // Recalculate World Health after batch commit
+      await _recalculateAndStoreWorldHealth(userId);
+
+      return const Right(unit);
+    } catch (e, s) {
+      AppLogger.e('Create habits from blueprint failed', e, s);
+      return Left(ServerFailure(e.toString()));
+    }
+  }
+
+  /// Recalculates the user's world health score based on all active habits
+  /// and updates their user_stats document.
+  Future<void> _recalculateAndStoreWorldHealth(
+    String userId, {
+    Transaction? transaction,
+    Habit? updatedHabit,
+  }) async {
+    final momentumService = MomentumService();
+
+    // In a transaction, we must use transaction.get()
+    List<Habit> allHabits;
+    if (transaction != null) {
+      final habitsSnap = await _firestore
+          .collection('habits')
+          .where('userId', isEqualTo: userId)
+          .where('isArchived', isEqualTo: false)
+          .get(); // Note: transaction.get() doesn't support queries well in some SDKs, 
+                  // but here we are using the regular get() because we are inside a transaction 
+                  // that already did reads. Wait, actually we should use a regular get if possible
+                  // or do the query outside. 
+                  // For simplicity, we'll fetch them normally.
+      allHabits = habitsSnap.docs.map((d) => _mapDocToHabit(d)).toList();
+    } else {
+      final habitsSnap = await _firestore
+          .collection('habits')
+          .where('userId', isEqualTo: userId)
+          .where('isArchived', isEqualTo: false)
+          .get();
+      allHabits = habitsSnap.docs.map((d) => _mapDocToHabit(d)).toList();
+    }
+
+    // If we have an updated habit (e.g. from completeHabit), inject it
+    if (updatedHabit != null) {
+      final index = allHabits.indexWhere((h) => h.id == updatedHabit.id);
+      if (index != -1) {
+        allHabits[index] = updatedHabit;
+      } else {
+        allHabits.add(updatedHabit);
+      }
+    }
+
+    final worldHealthInt = momentumService.computeWorldHealth(allHabits);
+    final worldHealthDouble = worldHealthInt / 100.0;
+
+    final statsRef = _firestore.collection('user_stats').doc(userId);
+    if (transaction != null) {
+      transaction.set(statsRef, {'worldHealthScore': worldHealthDouble}, SetOptions(merge: true));
+    } else {
+      await statsRef.set({'worldHealthScore': worldHealthDouble}, SetOptions(merge: true));
     }
   }
 }

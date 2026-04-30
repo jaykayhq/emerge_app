@@ -113,7 +113,7 @@ class ErrorBoundaryState extends State<ErrorBoundary> {
         Text(
           widget.errorMessage ?? _getSanitizedErrorMessage(),
           style: theme.textTheme.bodyMedium?.copyWith(
-            color: AppTheme.textSecondaryDark.withValues(alpha: 0.7),
+            color: AppTheme.textSecondaryDark.withValues(alpha:0.7),
           ),
           textAlign: TextAlign.center,
         ),

@@ -33,7 +33,7 @@ class AppErrorWidget extends StatelessWidget {
             Text(
               message,
               style: theme.textTheme.bodyMedium?.copyWith(
-                color: AppTheme.textSecondaryDark.withValues(alpha: 0.7),
+                color: AppTheme.textSecondaryDark.withValues(alpha:0.7),
               ),
               textAlign: TextAlign.center,
             ),

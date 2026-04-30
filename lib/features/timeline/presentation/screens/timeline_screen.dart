@@ -1,10 +1,10 @@
-import 'package:emerge_app/core/presentation/widgets/emerge_branding.dart';
 import 'package:emerge_app/core/presentation/widgets/glassmorphism_card.dart';
 import 'package:emerge_app/core/theme/emerge_earthy_theme.dart';
 import 'package:emerge_app/features/ai/domain/services/ai_personalization_service.dart';
 import 'package:emerge_app/features/auth/presentation/providers/auth_providers.dart';
 import 'package:emerge_app/features/habits/domain/entities/habit.dart';
 import 'package:emerge_app/features/habits/presentation/providers/habit_providers.dart';
+import 'package:emerge_app/features/habits/presentation/widgets/miss_recovery_sheet.dart';
 import 'package:emerge_app/features/insights/data/repositories/insights_repository.dart';
 import 'package:emerge_app/features/insights/domain/entities/insights_entities.dart';
 import 'package:emerge_app/features/monetization/presentation/providers/subscription_provider.dart';
@@ -19,10 +19,14 @@ import 'package:emerge_app/features/gamification/presentation/providers/user_sta
 import 'package:emerge_app/features/timeline/presentation/widgets/reflection_card.dart';
 import 'package:emerge_app/features/tutorial/presentation/providers/tutorial_provider.dart';
 import 'package:emerge_app/features/tutorial/presentation/widgets/tutorial_overlay.dart';
+import 'package:emerge_app/core/presentation/widgets/world_background.dart';
+import 'package:emerge_app/core/domain/models/app_world_theme.dart';
+import 'package:emerge_app/core/presentation/widgets/archetype_sliver_app_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:uuid/uuid.dart';
+import 'package:emerge_app/core/theme/emerge_colors.dart';
 
 /// Main Timeline screen - the daily command center
 /// Shows calendar, daily summary, habit timeline grouped by time-of-day,
@@ -42,6 +46,7 @@ class _TimelineScreenState extends ConsumerState<TimelineScreen> {
   final GlobalKey _calendarKey = GlobalKey();
   final GlobalKey _missionKey = GlobalKey();
   final GlobalKey _aiCoachKey = GlobalKey();
+  bool _hasCheckedMisses = false;
 
   @override
   void initState() {
@@ -117,7 +122,10 @@ class _TimelineScreenState extends ConsumerState<TimelineScreen> {
       final habits = ref.read(habitsProvider).value ?? [];
 
       if (habits.isNotEmpty) {
-        final insights = await aiService.generateIdentityInsights(habits);
+        final insights = await aiService.generateIdentityInsights(
+          habits,
+          dominantMotive: ref.read(userStatsStreamProvider).value?.dominantMotive,
+        );
         if (insights.isNotEmpty && mounted) {
           setState(() {
             _aiInsight = insights.first.description;
@@ -172,9 +180,23 @@ class _TimelineScreenState extends ConsumerState<TimelineScreen> {
   Widget build(BuildContext context) {
     final habitsAsync = ref.watch(habitsProvider);
 
-    return Scaffold(
-      backgroundColor: Colors.transparent,
-      body: SafeArea(
+    // Listen for habit misses on first load
+    ref.listen<AsyncValue<List<Habit>>>(habitsProvider, (previous, next) {
+      if (next is AsyncData<List<Habit>> && !_hasCheckedMisses) {
+        final missed = next.value.where((h) => h.consecutiveMisses > 0).toList();
+        if (missed.isNotEmpty) {
+          _hasCheckedMisses = true;
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            _showMissRecoverySheet(missed);
+          });
+        }
+      }
+    });
+
+    return WorldBackground(
+      useSafeArea: false,
+      themeOverride: AppWorldTheme.nebula,
+      child: SafeArea(
         child: habitsAsync.when(
           data: (habits) {
             // Calculate completed today
@@ -195,62 +217,33 @@ class _TimelineScreenState extends ConsumerState<TimelineScreen> {
             return CustomScrollView(
               slivers: [
                 // App Bar
-                SliverAppBar(
-                  floating: true,
-                  backgroundColor: Colors.transparent,
-                  title: Column(
-                    children: [
-                      Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(
-                            'TIMELINE',
-                            style: Theme.of(context).textTheme.titleLarge
-                                ?.copyWith(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.bold,
-                                  letterSpacing: 1.5,
-                                ),
-                          ),
-                          const SizedBox(width: 8),
-                          Consumer(
-                            builder: (context, ref, _) {
-                              final isPremium =
-                                  ref.watch(isPremiumProvider).value ?? false;
-                              if (!isPremium) return const SizedBox.shrink();
-                              return Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 6,
-                                  vertical: 2,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: Colors.amber,
-                                  borderRadius: BorderRadius.circular(4),
-                                ),
-                                child: const Text(
-                                  'PRO',
-                                  style: TextStyle(
-                                    color: Colors.black,
-                                    fontSize: 8,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                              );
-                            },
-                          ),
-                        ],
-                      ),
-                      Text(
-                        'IDENTITY PROTOCOL',
-                        style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                          color: EmergeColors.teal,
-                          fontWeight: FontWeight.w600,
-                          letterSpacing: 2,
+                ArchetypeSliverAppBar(
+                  title: 'TIMELINE',
+                  badge: Consumer(
+                    builder: (context, ref, _) {
+                      final isPremium =
+                          ref.watch(isPremiumProvider).value ?? false;
+                      if (!isPremium) return const SizedBox.shrink();
+                      return Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 6,
+                          vertical: 2,
                         ),
-                      ),
-                    ],
+                        decoration: BoxDecoration(
+                          color: Colors.amber,
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                        child: const Text(
+                          'PRO',
+                          style: TextStyle(
+                            color: Colors.black,
+                            fontSize: 8,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      );
+                    },
                   ),
-                  centerTitle: true,
                   actions: [
                     IconButton(
                       icon: const Icon(Icons.ios_share, color: Colors.white),
@@ -264,6 +257,11 @@ class _TimelineScreenState extends ConsumerState<TimelineScreen> {
                       ),
                       onPressed: () => context.push('/recap'),
                       tooltip: 'Weekly Recap',
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.person_outline, color: Colors.white),
+                      onPressed: () => context.push('/profile'),
+                      tooltip: 'Future Self Studio',
                     ),
                   ],
                 ),
@@ -580,6 +578,16 @@ class _TimelineScreenState extends ConsumerState<TimelineScreen> {
       ),
     );
   }
+
+  void _showMissRecoverySheet(List<Habit> missedHabits) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => MissRecoverySheet(missedHabits: missedHabits),
+    );
+  }
+
 
   Future<void> _saveReflection(double moodValue, String? note) async {
     final user = ref.read(authStateChangesProvider).value;

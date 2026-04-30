@@ -98,8 +98,8 @@ class ParallaxValleyBackground extends StatelessWidget {
                     end: Alignment.bottomCenter,
                     colors: [
                       Colors.transparent,
-                      const Color(0xFF1A0A2A).withValues(alpha: 0.3),
-                      const Color(0xFF0A0A1A).withValues(alpha: 0.7),
+                      const Color(0xFF1A0A2A).withValues(alpha:0.3),
+                      const Color(0xFF0A0A1A).withValues(alpha:0.7),
                     ],
                     stops: const [0.0, 0.6, 1.0],
                   ),
@@ -133,9 +133,9 @@ class _CosmicSkyPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     // Draw subtle stars/dots with cosmic colors
     final colors = [
-      const Color(0xFF2BEE79).withValues(alpha: 0.08), // Green accent
-      const Color(0xFFAACFFF).withValues(alpha: 0.08), // Blue stars
-      const Color(0xFFFFD700).withValues(alpha: 0.06), // Gold stars
+      const Color(0xFF2BEE79).withValues(alpha:0.08), // Green accent
+      const Color(0xFFAACFFF).withValues(alpha:0.08), // Blue stars
+      const Color(0xFFFFD700).withValues(alpha:0.06), // Gold stars
     ];
 
     for (int i = 0; i < 40; i++) {
@@ -162,7 +162,7 @@ class _CosmicHillsPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    final paint = Paint()..color = color.withValues(alpha: 0.5);
+    final paint = Paint()..color = color.withValues(alpha:0.5);
 
     final path = Path();
     path.moveTo(0, size.height * 0.4);
@@ -196,19 +196,19 @@ class _StarPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final glowPaint = Paint()
-      ..color = const Color(0xFF2BEE79).withValues(alpha: 0.12)
+      ..color = const Color(0xFF2BEE79).withValues(alpha:0.12)
       ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 6);
 
     final dotPaint = Paint()
-      ..color = const Color(0xFF2BEE79).withValues(alpha: 0.35);
+      ..color = const Color(0xFF2BEE79).withValues(alpha:0.35);
 
     // Also add blue stars
     final blueGlowPaint = Paint()
-      ..color = const Color(0xFFAACFFF).withValues(alpha: 0.10)
+      ..color = const Color(0xFFAACFFF).withValues(alpha:0.10)
       ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 5);
 
     final blueDotPaint = Paint()
-      ..color = const Color(0xFFAACFFF).withValues(alpha: 0.30);
+      ..color = const Color(0xFFAACFFF).withValues(alpha:0.30);
 
     for (int i = 0; i < 12; i++) {
       final phase = scrollOffset * 0.002 + i * 1.7;

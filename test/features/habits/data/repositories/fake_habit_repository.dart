@@ -2,6 +2,7 @@ import 'package:emerge_app/core/error/failure.dart';
 import 'package:emerge_app/features/habits/domain/entities/habit.dart';
 import 'package:emerge_app/features/habits/domain/models/habit_activity.dart';
 import 'package:emerge_app/features/habits/domain/repositories/habit_repository.dart';
+import 'package:emerge_app/features/social/domain/entities/social_entities.dart';
 import 'package:fpdart/fpdart.dart';
 
 class FakeHabitRepository implements HabitRepository {
@@ -76,5 +77,29 @@ class FakeHabitRepository implements HabitRepository {
     DateTime end,
   ) async {
     return [];
+  }
+
+  @override
+  Future<Either<Failure, Unit>> createHabitsFromBlueprint({
+    required String userId,
+    required CreatorBlueprint blueprint,
+  }) async {
+    // Create mock habits from blueprint titles
+    for (int i = 0; i < blueprint.habitTitles.length; i++) {
+      final habitId = 'mock_habit_${DateTime.now().millisecondsSinceEpoch}_$i';
+      final habit = Habit(
+        id: habitId,
+        userId: userId,
+        title: blueprint.habitTitles[i],
+        createdAt: DateTime.now(),
+        order: i,
+        attribute: HabitAttribute.values.firstWhere(
+          (e) => e.name == blueprint.creatorArchetype.toLowerCase(),
+          orElse: () => HabitAttribute.vitality,
+        ),
+      );
+      _habits[habit.id] = habit;
+    }
+    return const Right(unit);
   }
 }

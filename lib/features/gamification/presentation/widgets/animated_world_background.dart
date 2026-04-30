@@ -311,8 +311,7 @@ class CloudsPainter extends CustomPainter {
     // For city theme, add hologram-like elements
     if (theme == 'city' && isNight) {
       final holoPaint = Paint()
-        ..color = Colors.cyan.withValues(
-          alpha: 0.1 + (math.sin(progress * math.pi * 2) * 0.05),
+        ..color = Colors.cyan.withValues(alpha: 0.1 + (math.sin(progress * math.pi * 2) * 0.05),
         );
 
       for (int i = 0; i < 3; i++) {

@@ -81,3 +81,10 @@ List<Challenge> archetypeChallengesFromBundle(Ref ref) {
   final bundle = ref.watch(challengeBundleProvider).value;
   return bundle?.archetypeChallenges ?? [];
 }
+
+/// Selector helper for featured challenges
+@riverpod
+List<Challenge> featuredChallengesFromBundle(Ref ref) {
+  final bundle = ref.watch(challengeBundleProvider).value;
+  return bundle?.featuredChallenges ?? [];
+}

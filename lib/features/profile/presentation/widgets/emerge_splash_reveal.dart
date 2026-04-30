@@ -1,7 +1,7 @@
 import 'dart:math' as math;
-import 'package:emerge_app/core/presentation/widgets/emerge_branding.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:emerge_app/core/theme/emerge_colors.dart';
 
 /// Full-screen splash reveal when user first presses EMERGE at level 5
 /// Features: dramatic reveal animation, silhouette transformation preview

@@ -1,9 +1,9 @@
 import 'package:emerge_app/core/theme/app_theme.dart';
-import 'package:emerge_app/core/presentation/widgets/emerge_branding.dart';
 import 'package:emerge_app/features/auth/domain/entities/user_extension.dart';
 import 'package:emerge_app/features/habits/domain/entities/habit.dart';
 import 'package:emerge_app/features/world_map/domain/models/world_node.dart';
 import 'package:flutter/material.dart';
+import 'package:emerge_app/core/theme/emerge_colors.dart';
 
 /// Bottom sheet showing detailed information about a world map node
 class NodeDetailSheet extends StatelessWidget {
@@ -28,7 +28,7 @@ class NodeDetailSheet extends StatelessWidget {
         color: AppTheme.surfaceDark,
         borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
         border: Border(
-          top: BorderSide(color: primaryColor.withValues(alpha: 0.3), width: 2),
+          top: BorderSide(color: primaryColor.withValues(alpha:0.3), width: 2),
         ),
       ),
       child: Column(
@@ -43,7 +43,7 @@ class NodeDetailSheet extends StatelessWidget {
                 width: 56,
                 height: 56,
                 decoration: BoxDecoration(
-                  color: primaryColor.withValues(alpha: 0.2),
+                  color: primaryColor.withValues(alpha:0.2),
                   borderRadius: BorderRadius.circular(16),
                   border: Border.all(color: primaryColor),
                 ),
@@ -70,7 +70,7 @@ class NodeDetailSheet extends StatelessWidget {
                             vertical: 2,
                           ),
                           decoration: BoxDecoration(
-                            color: _getTypeColor().withValues(alpha: 0.2),
+                            color: _getTypeColor().withValues(alpha:0.2),
                             borderRadius: BorderRadius.circular(8),
                           ),
                           child: Text(
@@ -113,9 +113,9 @@ class NodeDetailSheet extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: primaryColor.withValues(alpha: 0.1),
+                color: primaryColor.withValues(alpha:0.1),
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: primaryColor.withValues(alpha: 0.3)),
+                border: Border.all(color: primaryColor.withValues(alpha:0.3)),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -203,7 +203,7 @@ class NodeDetailSheet extends StatelessWidget {
               borderRadius: BorderRadius.circular(4),
               child: LinearProgressIndicator(
                 value: node.progress / 100,
-                backgroundColor: primaryColor.withValues(alpha: 0.2),
+                backgroundColor: primaryColor.withValues(alpha:0.2),
                 valueColor: AlwaysStoppedAnimation(primaryColor),
                 minHeight: 8,
               ),
@@ -238,9 +238,9 @@ class NodeDetailSheet extends StatelessWidget {
                 disabledBackgroundColor:
                     node.state == NodeState.completed ||
                         node.state == NodeState.mastered
-                    ? primaryColor.withValues(alpha: 0.5)
+                    ? primaryColor.withValues(alpha:0.5)
                     : Colors.grey.shade700,
-                disabledForegroundColor: Colors.white.withValues(alpha: 0.7),
+                disabledForegroundColor: Colors.white.withValues(alpha:0.7),
                 padding: const EdgeInsets.symmetric(vertical: 14),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
@@ -279,7 +279,7 @@ class NodeDetailSheet extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
-        color: tierColors[node.tier]!.withValues(alpha: 0.2),
+        color: tierColors[node.tier]!.withValues(alpha:0.2),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: tierColors[node.tier]!),
       ),
@@ -344,9 +344,9 @@ class _AttributeChip extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       decoration: BoxDecoration(
-        color: _getAttributeColor().withValues(alpha: 0.15),
+        color: _getAttributeColor().withValues(alpha:0.15),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: _getAttributeColor().withValues(alpha: 0.4)),
+        border: Border.all(color: _getAttributeColor().withValues(alpha:0.4)),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -373,7 +373,7 @@ class _AttributeChip extends StatelessWidget {
           Text(
             'Current: $currentXp XP',
             style: TextStyle(
-              color: Colors.white.withValues(alpha: 0.7),
+              color: Colors.white.withValues(alpha:0.7),
               fontSize: 11,
             ),
           ),

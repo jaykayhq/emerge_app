@@ -73,6 +73,12 @@ final challengeLeaderboardProvider =
       return repository.getLeaderboard(challengeId);
     });
 
+final challengeByIdProvider =
+    FutureProvider.family<Challenge?, String>((ref, id) async {
+  final repository = ref.read(challengeRepositoryProvider);
+  return repository.getChallengeById(id);
+});
+
 final filteredChallengesProvider =
     FutureProvider.family<List<Challenge>, ChallengeStatus>((
       ref,

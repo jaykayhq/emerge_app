@@ -55,7 +55,7 @@ class EarthyProgressBar extends StatelessWidget {
               borderRadius: BorderRadius.circular(4),
               child: LinearProgressIndicator(
                 value: value,
-                backgroundColor: color.withValues(alpha: 0.15),
+                backgroundColor: color.withValues(alpha:0.15),
                 valueColor: AlwaysStoppedAnimation(color),
                 minHeight: height ?? 8,
               ),
@@ -122,7 +122,7 @@ class EarthyProgressBarCompact extends StatelessWidget {
           borderRadius: BorderRadius.circular(4),
           child: LinearProgressIndicator(
             value: value,
-            backgroundColor: color.withValues(alpha: 0.15),
+            backgroundColor: color.withValues(alpha:0.15),
             valueColor: AlwaysStoppedAnimation(color),
             minHeight: height ?? 6,
           ),
@@ -168,9 +168,9 @@ class EarthyProgressCircle extends StatelessWidget {
               CircularProgressIndicator(
                 value: 1,
                 strokeWidth: 6,
-                backgroundColor: color.withValues(alpha: 0.15),
+                backgroundColor: color.withValues(alpha:0.15),
                 valueColor: AlwaysStoppedAnimation(
-                  color.withValues(alpha: 0.15),
+                  color.withValues(alpha:0.15),
                 ),
               ),
               // Progress circle

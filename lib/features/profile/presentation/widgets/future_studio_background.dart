@@ -84,7 +84,7 @@ class _FutureStudioBackgroundState extends State<FutureStudioBackground>
                 center: const Alignment(0.0, -0.5),
                 radius: 1.8,
                 colors: [
-                  primaryColor.withValues(alpha: 0.15),
+                  primaryColor.withValues(alpha:0.15),
                   const Color(0xFF0D0D1A),
                   const Color(0xFF050510),
                 ],
@@ -132,8 +132,8 @@ class _FutureStudioBackgroundState extends State<FutureStudioBackground>
                 radius: 1.2,
                 colors: [
                   Colors.transparent,
-                  Colors.black.withValues(alpha: 0.4),
-                  Colors.black.withValues(alpha: 0.8),
+                  Colors.black.withValues(alpha:0.4),
+                  Colors.black.withValues(alpha:0.8),
                 ],
                 stops: const [0.3, 0.7, 1.0],
               ),
@@ -232,9 +232,9 @@ class _NebulaPainter extends CustomPainter {
       // Draw soft gradient cloud
       final gradient = RadialGradient(
         colors: [
-          color.withValues(alpha: cloud.opacity),
-          color.withValues(alpha: cloud.opacity * 0.4),
-          color.withValues(alpha: 0),
+          color.withValues(alpha:cloud.opacity),
+          color.withValues(alpha:cloud.opacity * 0.4),
+          color.withValues(alpha:0),
         ],
         stops: const [0.0, 0.5, 1.0],
       );
@@ -285,7 +285,7 @@ class _ParticlePainter extends CustomPainter {
       final fadeY = y < 0.15 ? y / 0.15 : (y > 0.85 ? (1.0 - y) / 0.15 : 1.0);
       final opacity = 0.4 * fadeY;
 
-      paint.color = color.withValues(alpha: opacity);
+      paint.color = color.withValues(alpha:opacity);
       canvas.drawCircle(position, particle.size, paint);
     }
   }

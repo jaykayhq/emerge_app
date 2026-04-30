@@ -1,7 +1,7 @@
 import 'dart:math' as math;
-import 'package:emerge_app/core/presentation/widgets/emerge_branding.dart';
 import 'package:emerge_app/features/auth/domain/entities/user_extension.dart';
 import 'package:flutter/material.dart';
+import 'package:emerge_app/core/theme/emerge_colors.dart';
 
 /// Full-body evolving silhouette that changes based on archetype, level, and consistency.
 /// Simpler than the old ProceduralAvatar - just shapes with glow effects.

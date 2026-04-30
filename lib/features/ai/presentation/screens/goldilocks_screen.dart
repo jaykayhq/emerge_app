@@ -2,6 +2,7 @@ import 'package:emerge_app/features/habits/domain/entities/habit.dart';
 import 'package:emerge_app/core/theme/app_theme.dart';
 import 'package:emerge_app/features/ai/domain/services/ai_personalization_service.dart';
 import 'package:emerge_app/features/habits/presentation/providers/habit_providers.dart';
+import 'package:emerge_app/features/gamification/presentation/providers/user_stats_providers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -41,7 +42,10 @@ class _GoldilocksScreenState extends ConsumerState<GoldilocksScreen> {
                     return FutureBuilder<List<GoldilocksAdjustment>>(
                       future: ref
                           .read(aiPersonalizationServiceProvider)
-                          .analyzeHabitPerformance(habits),
+                          .analyzeHabitPerformance(
+                            habits,
+                            dominantMotive: ref.read(userStatsStreamProvider).value?.dominantMotive,
+                          ),
                       builder: (context, snapshot) {
                         if (snapshot.connectionState ==
                             ConnectionState.waiting) {

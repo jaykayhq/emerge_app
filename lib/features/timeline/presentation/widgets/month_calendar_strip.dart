@@ -1,10 +1,10 @@
 import 'package:emerge_app/core/theme/app_theme.dart';
 import 'package:emerge_app/core/theme/emerge_earthy_theme.dart';
-import 'package:emerge_app/core/presentation/widgets/emerge_branding.dart';
 import 'package:emerge_app/core/presentation/widgets/emerge_semantics.dart';
 import 'package:emerge_app/core/theme/emerge_dimensions.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:emerge_app/core/theme/emerge_colors.dart';
 
 /// Completion status for a day
 enum DayCompletionStatus { none, partial, complete }
@@ -83,7 +83,7 @@ class _MonthCalendarStripState extends State<MonthCalendarStrip> {
         color: Colors.transparent,
         border: Border(
           bottom: BorderSide(
-            color: EmergeColors.hexLine.withValues(alpha: 0.3),
+            color: EmergeColors.hexLine.withValues(alpha:0.3),
             width: 1,
           ),
         ),
@@ -131,19 +131,19 @@ class _MonthCalendarStripState extends State<MonthCalendarStrip> {
           color: isSelected
               ? EmergeEarthyColors.terracotta
               : isToday
-              ? EmergeEarthyColors.terracotta.withValues(alpha: 0.15)
+              ? EmergeEarthyColors.terracotta.withValues(alpha:0.15)
               : Colors.transparent,
           borderRadius: BorderRadius.circular(12),
           border: isToday && !isSelected
               ? Border.all(
-                  color: EmergeEarthyColors.terracotta.withValues(alpha: 0.5),
+                  color: EmergeEarthyColors.terracotta.withValues(alpha:0.5),
                 )
               : null,
           // Glow effect for today
           boxShadow: isToday
               ? [
                   BoxShadow(
-                    color: EmergeEarthyColors.terracotta.withValues(alpha: 0.3),
+                    color: EmergeEarthyColors.terracotta.withValues(alpha:0.3),
                     blurRadius: 8,
                     spreadRadius: -2,
                   ),
@@ -206,7 +206,7 @@ class _MonthCalendarStripState extends State<MonthCalendarStrip> {
         color: color,
         boxShadow: [
           BoxShadow(
-            color: color.withValues(alpha: 0.5),
+            color: color.withValues(alpha:0.5),
             blurRadius: 4,
             spreadRadius: 0,
           ),

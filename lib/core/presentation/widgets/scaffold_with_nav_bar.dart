@@ -1,6 +1,6 @@
 import 'package:emerge_app/core/domain/entities/cue.dart';
 import 'package:emerge_app/core/presentation/widgets/cue_popups.dart';
-import 'package:emerge_app/core/presentation/widgets/growth_background.dart';
+import 'package:emerge_app/core/presentation/widgets/world_background.dart';
 import 'package:emerge_app/core/presentation/widgets/emerge_bottom_nav.dart';
 import 'package:emerge_app/features/habits/presentation/providers/cue_providers.dart';
 import 'package:flutter/material.dart';
@@ -30,7 +30,10 @@ class ScaffoldWithNavBar extends ConsumerWidget {
     });
 
     return Scaffold(
-      body: GrowthBackground(child: navigationShell),
+      body: WorldBackground(
+        useSafeArea: false,
+        child: navigationShell,
+      ),
       bottomNavigationBar: EmergeBottomNav(
         navigationShell: navigationShell,
         onFabPressed: () => context.push('/timeline/create-habit'),

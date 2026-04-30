@@ -76,7 +76,7 @@ class AttributeProgressBar extends StatelessWidget {
                 Text(
                   _attributeName,
                   style: TextStyle(
-                    color: Colors.white.withValues(alpha: 0.8),
+                    color: Colors.white.withValues(alpha:0.8),
                     fontSize: 12,
                     fontWeight: FontWeight.w500,
                   ),
@@ -85,7 +85,7 @@ class AttributeProgressBar extends StatelessWidget {
                 Text(
                   '$currentXp / $maxXp XP',
                   style: TextStyle(
-                    color: Colors.white.withValues(alpha: 0.5),
+                    color: Colors.white.withValues(alpha:0.5),
                     fontSize: 10,
                   ),
                 ),
@@ -95,7 +95,7 @@ class AttributeProgressBar extends StatelessWidget {
         Container(
           height: height,
           decoration: BoxDecoration(
-            color: Colors.white.withValues(alpha: 0.1),
+            color: Colors.white.withValues(alpha:0.1),
             borderRadius: BorderRadius.circular(height / 2),
           ),
           child: LayoutBuilder(
@@ -110,7 +110,7 @@ class AttributeProgressBar extends StatelessWidget {
                     decoration: BoxDecoration(
                       gradient: LinearGradient(
                         colors: [
-                          _attributeColor.withValues(alpha: 0.8),
+                          _attributeColor.withValues(alpha:0.8),
                           _attributeColor,
                         ],
                       ),
@@ -118,7 +118,7 @@ class AttributeProgressBar extends StatelessWidget {
                       boxShadow: clampedProgress > 0
                           ? [
                               BoxShadow(
-                                color: _attributeColor.withValues(alpha: 0.4),
+                                color: _attributeColor.withValues(alpha:0.4),
                                 blurRadius: 6,
                                 offset: const Offset(0, 2),
                               ),

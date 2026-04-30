@@ -1,8 +1,9 @@
 import 'dart:ui';
 import 'package:emerge_app/core/theme/app_theme.dart';
-import 'package:emerge_app/core/presentation/widgets/emerge_branding.dart';
 import 'package:emerge_app/features/habits/domain/entities/habit.dart';
+import 'package:emerge_app/features/habits/presentation/widgets/momentum_bar.dart';
 import 'package:flutter/material.dart';
+import 'package:emerge_app/core/theme/emerge_colors.dart';
 
 /// Glassmorphism habit card with neon progress ring
 /// Matches Stitch-generated design: frosted glass effect, colored progress rings
@@ -41,7 +42,7 @@ class HabitCardStitch extends StatelessWidget {
               bottom: 30, // Curve into current item
               child: CustomPaint(
                 painter: _ConnectorPainter(
-                  color: neonColor.withValues(alpha: 0.3),
+                  color: neonColor.withValues(alpha:0.3),
                 ),
                 size: const Size(20, 60),
               ),
@@ -61,18 +62,18 @@ class HabitCardStitch extends StatelessWidget {
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
                       colors: [
-                        Colors.white.withValues(alpha: 0.1),
-                        Colors.white.withValues(alpha: 0.05),
+                        Colors.white.withValues(alpha:0.1),
+                        Colors.white.withValues(alpha:0.05),
                       ],
                     ),
                     borderRadius: BorderRadius.circular(16),
                     border: Border.all(
-                      color: neonColor.withValues(alpha: 0.3),
+                      color: neonColor.withValues(alpha:0.3),
                       width: 1,
                     ),
                     boxShadow: [
                       BoxShadow(
-                        color: neonColor.withValues(alpha: 0.1),
+                        color: neonColor.withValues(alpha:0.1),
                         blurRadius: 20,
                         spreadRadius: -5,
                       ),
@@ -104,7 +105,7 @@ class HabitCardStitch extends StatelessWidget {
                                     Icon(
                                       _getAttributeIcon(habit.attribute),
                                       size: 14,
-                                      color: neonColor.withValues(alpha: 0.8),
+                                      color: neonColor.withValues(alpha:0.8),
                                     ),
                                     const SizedBox(width: 6),
                                     Text(
@@ -135,11 +136,16 @@ class HabitCardStitch extends StatelessWidget {
                                             ),
                                       ),
                                     ],
-                                  ],
-                                ),
-                              ],
+                                    ],
+                                  ),
+                                  const SizedBox(height: 12),
+                                  MomentumBar(
+                                    momentumScore: habit.momentumScore,
+                                    streakState: habit.streakState,
+                                  ),
+                                ],
+                              ),
                             ),
-                          ),
                           // Completion checkbox
                           _buildCheckbox(neonColor),
                         ],
@@ -152,7 +158,7 @@ class HabitCardStitch extends StatelessWidget {
                           child: Container(
                             padding: const EdgeInsets.all(4),
                             decoration: BoxDecoration(
-                              color: neonColor.withValues(alpha: 0.2),
+                              color: neonColor.withValues(alpha:0.2),
                               borderRadius: BorderRadius.circular(8),
                             ),
                             child: Icon(Icons.link, size: 14, color: neonColor),
@@ -184,7 +190,7 @@ class HabitCardStitch extends StatelessWidget {
               shape: BoxShape.circle,
               boxShadow: [
                 BoxShadow(
-                  color: neonColor.withValues(alpha: 0.4),
+                  color: neonColor.withValues(alpha:0.4),
                   blurRadius: 12,
                   spreadRadius: -2,
                 ),
@@ -198,7 +204,7 @@ class HabitCardStitch extends StatelessWidget {
             child: CircularProgressIndicator(
               value: progress,
               strokeWidth: 4,
-              backgroundColor: neonColor.withValues(alpha: 0.2),
+              backgroundColor: neonColor.withValues(alpha:0.2),
               valueColor: AlwaysStoppedAnimation(neonColor),
             ),
           ),
@@ -227,13 +233,13 @@ class HabitCardStitch extends StatelessWidget {
           color: isCompleted ? neonColor : Colors.transparent,
           borderRadius: BorderRadius.circular(8),
           border: Border.all(
-            color: isCompleted ? neonColor : neonColor.withValues(alpha: 0.5),
+            color: isCompleted ? neonColor : neonColor.withValues(alpha:0.5),
             width: 2,
           ),
           boxShadow: isCompleted
               ? [
                   BoxShadow(
-                    color: neonColor.withValues(alpha: 0.5),
+                    color: neonColor.withValues(alpha:0.5),
                     blurRadius: 8,
                     spreadRadius: -2,
                   ),

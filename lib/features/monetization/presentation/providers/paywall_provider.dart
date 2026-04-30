@@ -21,11 +21,12 @@ abstract class PaywallState with _$PaywallState {
 class PaywallController extends _$PaywallController {
   @override
   PaywallState build() {
-    _fetchOfferings();
+    // Initialize state synchronously
+    // Don't call async methods in build to avoid initialization issues
     return const PaywallState(isLoading: true);
   }
 
-  Future<void> _fetchOfferings() async {
+  Future<void> fetchOfferings() async {
     final repository = ref.read(monetizationRepositoryProvider);
 
     try {

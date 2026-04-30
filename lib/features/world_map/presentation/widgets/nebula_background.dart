@@ -12,6 +12,7 @@ class NebulaBackground extends StatefulWidget {
   final Color accentColor;
   final int level;
   final WorldHealthState healthState;
+  final double entropy;
 
   const NebulaBackground({
     super.key,
@@ -20,6 +21,7 @@ class NebulaBackground extends StatefulWidget {
     required this.accentColor,
     this.level = 1,
     this.healthState = WorldHealthState.neutral,
+    this.entropy = 0.0,
   });
 
   @override
@@ -62,7 +64,7 @@ class _NebulaBackgroundState extends State<NebulaBackground>
   }
 
   void _generateElements() {
-    final config = NebulaStateConfig.forState(widget.healthState);
+    final config = NebulaStateConfig.forState(widget.healthState, entropy: widget.entropy);
     final random = math.Random(widget.biome.index * 42 + widget.level);
 
     // Procedural evolution: every 5 levels increases the density/richness
@@ -100,7 +102,8 @@ class _NebulaBackgroundState extends State<NebulaBackground>
     super.didUpdateWidget(oldWidget);
     if (oldWidget.level != widget.level ||
         oldWidget.biome != widget.biome ||
-        oldWidget.healthState != widget.healthState) {
+        oldWidget.healthState != widget.healthState ||
+        oldWidget.entropy != widget.entropy) {
       _generateElements();
     }
   }
@@ -128,7 +131,7 @@ class _NebulaBackgroundState extends State<NebulaBackground>
           AnimatedBuilder(
             animation: _nebulaController,
             builder: (context, child) {
-              final config = NebulaStateConfig.forState(widget.healthState);
+              final config = NebulaStateConfig.forState(widget.healthState, entropy: widget.entropy);
               return CustomPaint(
                 painter: _NebulaPainter(
                   clouds: _nebulaClouds,
@@ -146,7 +149,7 @@ class _NebulaBackgroundState extends State<NebulaBackground>
           AnimatedBuilder(
             animation: _starController,
             builder: (context, child) {
-              final config = NebulaStateConfig.forState(widget.healthState);
+              final config = NebulaStateConfig.forState(widget.healthState, entropy: widget.entropy);
               return CustomPaint(
                 painter: _StarFieldPainter(
                   stars: _stars,
@@ -162,7 +165,7 @@ class _NebulaBackgroundState extends State<NebulaBackground>
           AnimatedBuilder(
             animation: _particleController,
             builder: (context, child) {
-              final config = NebulaStateConfig.forState(widget.healthState);
+              final config = NebulaStateConfig.forState(widget.healthState, entropy: widget.entropy);
               return CustomPaint(
                 painter: _ParticleFieldPainter(
                   particles: _particles,
@@ -208,8 +211,8 @@ class _NebulaBackgroundState extends State<NebulaBackground>
           radius: 1.0,
           colors: [
             Colors.transparent,
-            Colors.black.withValues(alpha: 0.3),
-            Colors.black.withValues(alpha: 0.7),
+            Colors.black.withValues(alpha:0.3),
+            Colors.black.withValues(alpha:0.7),
           ],
           stops: const [0.4, 0.8, 1.0],
         ),
@@ -367,7 +370,7 @@ class _StarFieldPainter extends CustomPainter {
       );
       final currentBrightness = star.brightness * (0.5 + 0.5 * twinkle);
 
-      paint.color = Colors.white.withValues(alpha: currentBrightness);
+      paint.color = Colors.white.withValues(alpha:currentBrightness);
 
       final position = Offset(star.x * size.width, star.y * size.height);
 
@@ -433,9 +436,9 @@ class _NebulaPainter extends CustomPainter {
       // Draw soft gradient cloud scaled by health opacity
       final gradient = RadialGradient(
         colors: [
-          color.withValues(alpha: cloud.opacity * config.nebulaOpacity / 0.12),
-          color.withValues(alpha: cloud.opacity * 0.5 * config.nebulaOpacity / 0.12),
-          color.withValues(alpha: 0),
+          color.withValues(alpha:cloud.opacity * config.nebulaOpacity / 0.12),
+          color.withValues(alpha:cloud.opacity * 0.5 * config.nebulaOpacity / 0.12),
+          color.withValues(alpha:0),
         ],
         stops: const [0.0, 0.5, 1.0],
       );
@@ -489,7 +492,7 @@ class _ParticleFieldPainter extends CustomPainter {
       final fadeY = y < 0.1 ? y / 0.1 : (y > 0.9 ? (1.0 - y) / 0.1 : 1.0);
       final opacity = 0.3 * fadeY * config.colorSaturation; // Desaturate particles too
 
-      paint.color = color.withValues(alpha: opacity);
+      paint.color = color.withValues(alpha:opacity);
       canvas.drawCircle(position, particle.size, paint);
     }
   }
