@@ -28,7 +28,6 @@ import 'package:emerge_app/features/settings/presentation/screens/settings_scree
 import 'package:emerge_app/features/settings/presentation/screens/notification_settings_screen.dart';
 import 'package:emerge_app/features/monetization/presentation/screens/paywall_screen.dart';
 
-import 'package:emerge_app/features/social/presentation/screens/challenges_screen.dart';
 import 'package:emerge_app/features/social/presentation/screens/social_screen.dart';
 import 'package:emerge_app/features/social/presentation/screens/challenge_detail_screen.dart';
 
@@ -247,20 +246,12 @@ GoRouter router(Ref ref) {
                 builder: (context, state) => const SocialScreen(),
                 routes: [
                   GoRoute(
-                    path: 'challenges',
-                    builder: (context, state) => const ChallengesScreen(),
-                    routes: [
-                      GoRoute(
-                        path: ':challengeId',
-                        builder: (context, state) {
-                          final challengeId =
-                              state.pathParameters['challengeId']!;
-                          return ChallengeDetailScreen(
-                            challengeId: challengeId,
-                          );
-                        },
-                      ),
-                    ],
+                    path: 'challenge/:challengeId',
+                    parentNavigatorKey: _rootNavigatorKey,
+                    builder: (context, state) {
+                      final id = state.pathParameters['challengeId']!;
+                      return ChallengeDetailScreen(challengeId: id);
+                    },
                   ),
                 ],
               ),

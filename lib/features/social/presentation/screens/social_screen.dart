@@ -1,9 +1,10 @@
+import 'dart:ui';
 import 'package:emerge_app/core/theme/emerge_colors.dart';
 import 'package:emerge_app/core/domain/models/app_world_theme.dart';
 import 'package:emerge_app/core/presentation/widgets/world_background.dart';
 import 'package:emerge_app/core/presentation/widgets/archetype_sliver_app_bar.dart';
 import 'package:emerge_app/features/social/presentation/screens/tribe_tab_content.dart';
-import 'package:emerge_app/features/social/presentation/screens/tribe_feed_tab.dart';
+import 'package:emerge_app/features/social/presentation/screens/challenges_screen.dart';
 import 'package:emerge_app/features/social/presentation/screens/create_solo_challenge_dialog.dart';
 import 'package:emerge_app/features/social/presentation/screens/social_discover_tab.dart';
 import 'package:flutter/material.dart';
@@ -46,9 +47,9 @@ class _SocialScreenState extends ConsumerState<SocialScreen>
   Widget _buildCurrentTabContent() {
     switch (_currentIndex) {
       case 0:
-        return const TribeFeedTab(); // FEED
+        return const TribeTabContent(); // TRIBE
       case 1:
-        return const TribeTabContent(); // MY TRIBE
+        return const ChallengesScreen(); // CHALLENGES
       case 2:
         return const SocialDiscoverTab(); // DISCOVER
       default:
@@ -61,7 +62,7 @@ class _SocialScreenState extends ConsumerState<SocialScreen>
     return WorldBackground(
       useSafeArea: false,
       themeOverride: AppWorldTheme.nebula,
-      floatingActionButton: _currentIndex == 1 // MY TRIBE tab gets the create challenge FAB
+      floatingActionButton: _currentIndex == 1 // CHALLENGES tab gets the create challenge FAB
           ? FloatingActionButton(
               onPressed: () {
                 showDialog(
@@ -99,8 +100,8 @@ class _SocialScreenState extends ConsumerState<SocialScreen>
                   unselectedLabelColor: Colors.white60,
                   indicatorWeight: 3,
                   tabs: const [
-                    Tab(text: 'FEED'),
-                    Tab(text: 'MY TRIBE'),
+                    Tab(text: 'TRIBE'),
+                    Tab(text: 'CHALLENGES'),
                     Tab(text: 'DISCOVER'),
                   ],
                 ),
@@ -129,17 +130,22 @@ class _SliverAppBarDelegate extends SliverPersistentHeaderDelegate {
   @override
   Widget build(
       BuildContext context, double shrinkOffset, bool overlapsContent) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.black.withValues(alpha:0.4), // Reduced opacity for glassy look
-        border: Border(
-          bottom: BorderSide(
-            color: Colors.white.withValues(alpha:0.05),
-            width: 1,
+    return ClipRRect(
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
+        child: Container(
+          decoration: BoxDecoration(
+            color: Colors.black.withValues(alpha:0.4),
+            border: Border(
+              bottom: BorderSide(
+                color: Colors.white.withValues(alpha:0.08),
+                width: 1,
+              ),
+            ),
           ),
+          child: _tabBar,
         ),
       ),
-      child: _tabBar,
     );
   }
 
