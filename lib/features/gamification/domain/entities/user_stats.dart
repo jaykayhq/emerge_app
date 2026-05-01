@@ -1,4 +1,5 @@
 import 'package:equatable/equatable.dart';
+import 'package:emerge_app/core/domain/models/app_world_theme.dart';
 
 class UserStats extends Equatable {
   final String userId;
@@ -48,6 +49,13 @@ class UserStats extends Equatable {
   });
 
   static const empty = UserStats(userId: '');
+
+  // Derived — never stored separately
+  WorldHealthState get worldHealthState {
+    if (worldHealthScore >= 75) return WorldHealthState.thriving;
+    if (worldHealthScore >= 40) return WorldHealthState.neutral;
+    return WorldHealthState.decaying;
+  }
 
   UserStats copyWith({
     String? userId,

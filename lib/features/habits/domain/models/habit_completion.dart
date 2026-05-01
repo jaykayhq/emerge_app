@@ -5,43 +5,42 @@ class HabitCompletion extends Equatable {
   final String id;
   final String habitId;
   final String userId;
-  final DateTime timestamp;
-  final String? motiveUsed;
-  final int streakAtCompletion;
-  final int entropyImpact;
+  final DateTime completedAt;
+  final int momentumAtCompletion;
+  final int? completedAtHour;    // 0-23, for AI time-pattern detection
+  final bool wasRecovery;        // true if completed after a miss
 
   const HabitCompletion({
     required this.id,
     required this.habitId,
     required this.userId,
-    required this.timestamp,
-    this.motiveUsed,
-    this.streakAtCompletion = 0,
-    this.entropyImpact = 0,
+    required this.completedAt,
+    required this.momentumAtCompletion,
+    this.completedAtHour,
+    this.wasRecovery = false,
   });
 
   Map<String, dynamic> toMap() {
     return {
+      'id': id,
       'habitId': habitId,
       'userId': userId,
-      'timestamp': Timestamp.fromDate(timestamp),
-      'motiveUsed': motiveUsed,
-      'streakAtCompletion': streakAtCompletion,
-      'entropyImpact': entropyImpact,
+      'completedAt': Timestamp.fromDate(completedAt),
+      'momentumAtCompletion': momentumAtCompletion,
+      'completedAtHour': completedAtHour,
+      'wasRecovery': wasRecovery,
     };
   }
 
-  factory HabitCompletion.fromMap(Map<String, dynamic> map, String id) {
+  factory HabitCompletion.fromMap(Map<String, dynamic> map) {
     return HabitCompletion(
-      id: id,
+      id: map['id'] as String? ?? '',
       habitId: map['habitId'] as String? ?? '',
       userId: map['userId'] as String? ?? '',
-      timestamp: map['timestamp'] != null 
-          ? (map['timestamp'] as Timestamp).toDate() 
-          : DateTime.now(),
-      motiveUsed: map['motiveUsed'] as String?,
-      streakAtCompletion: map['streakAtCompletion'] as int? ?? 0,
-      entropyImpact: map['entropyImpact'] as int? ?? 0,
+      completedAt: (map['completedAt'] as Timestamp).toDate(),
+      momentumAtCompletion: (map['momentumAtCompletion'] as int?) ?? 0,
+      completedAtHour: map['completedAtHour'] as int?,
+      wasRecovery: (map['wasRecovery'] as bool?) ?? false,
     );
   }
 
@@ -50,9 +49,9 @@ class HabitCompletion extends Equatable {
         id,
         habitId,
         userId,
-        timestamp,
-        motiveUsed,
-        streakAtCompletion,
-        entropyImpact,
+        completedAt,
+        momentumAtCompletion,
+        completedAtHour,
+        wasRecovery,
       ];
 }
