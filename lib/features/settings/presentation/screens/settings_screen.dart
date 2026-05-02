@@ -1,3 +1,4 @@
+import 'package:emerge_app/features/monetization/presentation/providers/subscription_provider.dart';
 import 'package:emerge_app/core/presentation/widgets/world_background.dart';
 import 'dart:ui';
 import 'package:emerge_app/core/constants/gamification_constants.dart';
@@ -128,17 +129,26 @@ class SettingsScreen extends ConsumerWidget {
                   }
                 },
               ),
-              _buildListTile(
-                context,
-                Icons.card_membership,
-                'Manage Subscription',
-                trailingText: 'Free',
-                onTap: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Premium features coming soon!'),
-                      duration: Duration(seconds: 2),
-                    ),
+              Consumer(
+                builder: (context, ref, child) {
+                  final isPremium = ref.watch(isPremiumProvider).value ?? false;
+                  return _buildListTile(
+                    context,
+                    Icons.card_membership,
+                    'Manage Subscription',
+                    trailingText: isPremium ? 'Premium' : 'Free',
+                    onTap: () {
+                      if (isPremium) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('You are an active Premium member!'),
+                            backgroundColor: EmergeColors.teal,
+                          ),
+                        );
+                      } else {
+                        context.push('/premium');
+                      }
+                    },
                   );
                 },
               ),
@@ -421,7 +431,7 @@ class SettingsScreen extends ConsumerWidget {
             const SizedBox(height: 16),
             Center(
               child: Text(
-                'Version 1.0.0',
+                'Version 1.0.4+7',
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
                   color: AppTheme.textSecondaryDark,
                   fontSize: 12,
@@ -823,6 +833,26 @@ class SettingsScreen extends ConsumerWidget {
               _buildFaqItem(
                 'How do I unlock nodes?',
                 'Nodes in the World Map are unlocked by reaching the required level and maintaining consistency.',
+              ),
+              _buildFaqItem(
+                'What are Tribes?',
+                'Tribes are social groups where you can find accountability partners, join challenges, and witness each other\'s growth.',
+              ),
+              _buildFaqItem(
+                'How do I use Future Self Studio?',
+                'The Studio allows you to visualize your ideal self. Completing habits "votes" for this identity, making it more vibrant.',
+              ),
+              _buildFaqItem(
+                'Can I share my progress?',
+                'Yes! You can share your World Map or specific habit milestones to your Tribe or external social media.',
+              ),
+              _buildFaqItem(
+                'What are High-Stakes Contracts?',
+                'These are social commitments where you stake your reputation. If you fail, your tribe witnesses the "breach", but success earns major Tribe Momentum.',
+              ),
+              _buildFaqItem(
+                'How does Peak Potential work?',
+                'Your Future Self is a projection of your 100% consistent state. The "Resonance" score shows how close your current actions are to that ideal.',
               ),
             ],
           ),

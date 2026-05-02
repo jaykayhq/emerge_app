@@ -12,6 +12,8 @@ import 'package:emerge_app/features/world_map/domain/models/world_node.dart';
 import 'package:emerge_app/features/world_map/presentation/providers/world_health_provider.dart';
 import 'package:emerge_app/features/world_map/presentation/widgets/world_health_bar.dart';
 import 'package:emerge_app/features/gamification/presentation/providers/user_stats_providers.dart';
+import 'package:emerge_app/features/tutorial/presentation/providers/tutorial_provider.dart';
+import 'package:emerge_app/features/tutorial/presentation/widgets/tutorial_overlay.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -19,7 +21,7 @@ import 'package:emerge_app/core/theme/emerge_colors.dart';
 
 /// Full-screen immersive level view with AI-generated background
 /// Shows habits, stats, health bar, and mission controls
-class LevelImmersiveScreen extends ConsumerWidget {
+class LevelImmersiveScreen extends ConsumerStatefulWidget {
   final WorldNode node;
   final ArchetypeMapConfig config;
 
@@ -30,7 +32,80 @@ class LevelImmersiveScreen extends ConsumerWidget {
   });
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<LevelImmersiveScreen> createState() => _LevelImmersiveScreenState();
+}
+
+class _LevelImmersiveScreenState extends ConsumerState<LevelImmersiveScreen> {
+  final GlobalKey _directiveKey = GlobalKey();
+  final GlobalKey _healthBarKey = GlobalKey();
+  final GlobalKey _actionButtonKey = GlobalKey();
+
+  @override
+  void initState() {
+    super.initState();
+    _checkTutorial();
+  }
+
+  void _checkTutorial() {
+    Future.delayed(const Duration(milliseconds: 500), () {
+      if (!mounted) return;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        final tutorialNotifier = ref.read(tutorialProvider.notifier);
+        final tutorialState = ref.read(tutorialProvider);
+        tutorialNotifier.enableTutorialAutoShow();
+
+        if (!tutorialState.isCompleted(TutorialStep.worldMapImmersive) &&
+            tutorialNotifier.shouldShowTutorial()) {
+          _showTutorial();
+        }
+      });
+    });
+  }
+
+  void _showTutorial() {
+    late OverlayEntry entry;
+    entry = OverlayEntry(
+      builder: (context) => TutorialOverlay(
+        steps: [
+          const TutorialStepInfo(
+            title: 'Immersive Exploration',
+            description:
+                'You are now inside a psychic landmark. The atmosphere reflects the health of your archetype.',
+          ),
+          TutorialStepInfo(
+            title: 'Your Directive',
+            description:
+                'Every node has a specific purpose. This directive guides your growth for this mission.',
+            targetKey: _directiveKey,
+          ),
+          TutorialStepInfo(
+            title: 'Environmental Health',
+            description:
+                'This bar shows how much vitality you\'ve brought to this specific land. Complete quests to clear the fog.',
+            targetKey: _healthBarKey,
+          ),
+          TutorialStepInfo(
+            title: 'Accept the Mission',
+            description:
+                'Ready to commit? Begin the mission to bind your habits to this node and earn unique XP boosts.',
+            targetKey: _actionButtonKey,
+            alignment: Alignment.topCenter,
+          ),
+        ],
+        onCompleted: () {
+          ref
+              .read(tutorialProvider.notifier)
+              .completeStep(TutorialStep.worldMapImmersive);
+          entry.remove();
+        },
+      ),
+    );
+    Overlay.of(context).insert(entry);
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final statsAsync = ref.watch(userStatsStreamProvider);
     final worldHealthAsync = ref.watch(worldHealthStreamProvider);
 
@@ -91,7 +166,8 @@ class LevelImmersiveScreen extends ConsumerWidget {
                 const SizedBox(height: 20),
 
                 // Directive Card (floating glassmorphism)
-                if (node.directive.isNotEmpty) _buildDirectiveCard(context),
+                if (widget.node.directive.isNotEmpty)
+                  _buildDirectiveCard(context, key: _directiveKey),
 
                 const SizedBox(height: 20),
 
@@ -101,7 +177,7 @@ class LevelImmersiveScreen extends ConsumerWidget {
                 const SizedBox(height: 20),
 
                 // World Health Bar
-                _buildHealthSection(context, healthPercent),
+                _buildHealthSection(context, healthPercent, key: _healthBarKey),
 
                 const SizedBox(height: 24),
 
@@ -116,7 +192,7 @@ class LevelImmersiveScreen extends ConsumerWidget {
                 const SizedBox(height: 16),
 
                 // Action Button
-                _buildActionButton(context, ref, profile),
+                _buildActionButton(context, ref, profile, key: _actionButtonKey),
 
                 const SizedBox(height: 32),
               ],
@@ -130,9 +206,9 @@ class LevelImmersiveScreen extends ConsumerWidget {
   Widget _buildBackground(Size screenSize, double healthPercent) {
     Widget imageWidget;
     // Try to load AI-generated background
-    if (node.backgroundImagePath != null &&
-        node.backgroundImagePath!.isNotEmpty) {
-      final file = File(node.backgroundImagePath!);
+    if (widget.node.backgroundImagePath != null &&
+        widget.node.backgroundImagePath!.isNotEmpty) {
+      final file = File(widget.node.backgroundImagePath!);
       if (file.existsSync()) {
         imageWidget = Image.file(
           file,
@@ -184,7 +260,7 @@ class LevelImmersiveScreen extends ConsumerWidget {
 
   Widget _loadAssetBackground(Size screenSize) {
     final assetPath =
-        'assets/images/levels/${node.archetype ?? 'default'}/${node.id}.png';
+        'assets/images/levels/${widget.node.archetype ?? 'default'}/${widget.node.id}.png';
 
     return Image.asset(
       assetPath,
@@ -205,7 +281,7 @@ class LevelImmersiveScreen extends ConsumerWidget {
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
           colors: [
-            config.primaryColor.withValues(alpha:0.3),
+            widget.config.primaryColor.withValues(alpha:0.3),
             const Color(0xFF0A0A1A),
             const Color(0xFF0A0A1A),
           ],
@@ -263,14 +339,14 @@ class LevelImmersiveScreen extends ConsumerWidget {
         const Spacer(),
         // Stage label
         _glassBadge(
-          'STAGE ${node.stage}/5',
+          'STAGE ${widget.node.stage}/5',
           Colors.white.withValues(alpha:0.7),
         ),
         const SizedBox(width: 8),
         // Level badge
         _glassBadge(
-          'LVL ${node.requiredLevel}',
-          config.primaryColor,
+          'LVL ${widget.node.requiredLevel}',
+          widget.config.primaryColor,
           glow: true,
         ),
       ],
@@ -286,21 +362,21 @@ class LevelImmersiveScreen extends ConsumerWidget {
           width: 64,
           height: 64,
           decoration: BoxDecoration(
-            color: config.primaryColor.withValues(alpha:0.15),
+            color: widget.config.primaryColor.withValues(alpha:0.15),
             shape: BoxShape.circle,
             border: Border.all(
-              color: config.primaryColor.withValues(alpha:0.5),
+              color: widget.config.primaryColor.withValues(alpha:0.5),
               width: 2,
             ),
             boxShadow: [
               BoxShadow(
-                color: config.primaryColor.withValues(alpha:0.2),
+                color: widget.config.primaryColor.withValues(alpha:0.2),
                 blurRadius: 16,
               ),
             ],
           ),
           alignment: Alignment.center,
-          child: Text(node.emoji, style: const TextStyle(fontSize: 32)),
+          child: Text(widget.node.emoji, style: const TextStyle(fontSize: 32)),
         ),
         const SizedBox(width: 16),
         // Name and badges
@@ -309,7 +385,7 @@ class LevelImmersiveScreen extends ConsumerWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                node.name,
+                widget.node.name,
                 style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                   color: Colors.white,
                   fontWeight: FontWeight.bold,
@@ -319,12 +395,12 @@ class LevelImmersiveScreen extends ConsumerWidget {
               Row(
                 children: [
                   _buildInlineBadge(
-                    node.type.name.toUpperCase(),
+                    widget.node.type.name.toUpperCase(),
                     _getTypeColor(),
                   ),
                   const SizedBox(width: 6),
                   _buildInlineBadge(
-                    node.tier.name.toUpperCase(),
+                    widget.node.tier.name.toUpperCase(),
                     _getTierColor(),
                   ),
                 ],
@@ -336,8 +412,9 @@ class LevelImmersiveScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildDirectiveCard(BuildContext context) {
+  Widget _buildDirectiveCard(BuildContext context, {Key? key}) {
     return ClipRRect(
+      key: key,
       borderRadius: BorderRadius.circular(16),
       child: BackdropFilter(
         filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
@@ -348,7 +425,7 @@ class LevelImmersiveScreen extends ConsumerWidget {
             color: Colors.white.withValues(alpha:0.06),
             borderRadius: BorderRadius.circular(16),
             border: Border(
-              left: BorderSide(color: config.primaryColor, width: 3),
+              left: BorderSide(color: widget.config.primaryColor, width: 3),
             ),
           ),
           child: Column(
@@ -360,7 +437,7 @@ class LevelImmersiveScreen extends ConsumerWidget {
                   Text(
                     'DIRECTIVE',
                     style: TextStyle(
-                      color: config.primaryColor,
+                      color: widget.config.primaryColor,
                       fontSize: 10,
                       fontWeight: FontWeight.bold,
                       letterSpacing: 1.2,
@@ -370,7 +447,7 @@ class LevelImmersiveScreen extends ConsumerWidget {
               ),
               const SizedBox(height: 8),
               Text(
-                node.directive,
+                widget.node.directive,
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                   color: Colors.white.withValues(alpha:0.85),
                   fontStyle: FontStyle.italic,
@@ -388,8 +465,8 @@ class LevelImmersiveScreen extends ConsumerWidget {
     return Wrap(
       spacing: 10,
       runSpacing: 10,
-      children: node.targetedAttributes.map((attr) {
-        final xp = node.xpBoosts[attr] ?? 10;
+      children: widget.node.targetedAttributes.map((attr) {
+        final xp = widget.node.xpBoosts[attr] ?? 10;
         return ClipRRect(
           borderRadius: BorderRadius.circular(20),
           child: BackdropFilter(
@@ -429,8 +506,9 @@ class LevelImmersiveScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildHealthSection(BuildContext context, double healthPercent) {
+  Widget _buildHealthSection(BuildContext context, double healthPercent, {Key? key}) {
     return ClipRRect(
+      key: key,
       borderRadius: BorderRadius.circular(14),
       child: BackdropFilter(
         filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
@@ -443,7 +521,7 @@ class LevelImmersiveScreen extends ConsumerWidget {
           ),
           child: WorldHealthBar(
             healthPercent: healthPercent,
-            accentColor: config.primaryColor,
+            accentColor: widget.config.primaryColor,
           ),
         ),
       ),
@@ -503,7 +581,7 @@ class LevelImmersiveScreen extends ConsumerWidget {
                   child: _ChallengeQuestCard(
                     challenge: challenge,
                     progress: progress,
-                    accentColor: config.primaryColor,
+                    accentColor: widget.config.primaryColor,
                     onCheckIn: () => _checkInChallenge(context, ref, challenge),
                   ),
                 );
@@ -515,7 +593,7 @@ class LevelImmersiveScreen extends ConsumerWidget {
               height: 100,
               child: Center(
                 child: CircularProgressIndicator(
-                  color: config.primaryColor,
+                  color: widget.config.primaryColor,
                   strokeWidth: 2,
                 ),
               ),
@@ -551,9 +629,9 @@ class LevelImmersiveScreen extends ConsumerWidget {
               ),
             ),
             Text(
-              '${node.progress}%',
+              '${widget.node.progress}%',
               style: TextStyle(
-                color: config.primaryColor,
+                color: widget.config.primaryColor,
                 fontSize: 13,
                 fontWeight: FontWeight.bold,
               ),
@@ -564,9 +642,9 @@ class LevelImmersiveScreen extends ConsumerWidget {
         ClipRRect(
           borderRadius: BorderRadius.circular(6),
           child: LinearProgressIndicator(
-            value: node.progress / 100,
-            backgroundColor: config.primaryColor.withValues(alpha:0.15),
-            valueColor: AlwaysStoppedAnimation(config.primaryColor),
+            value: widget.node.progress / 100,
+            backgroundColor: widget.config.primaryColor.withValues(alpha:0.15),
+            valueColor: AlwaysStoppedAnimation(widget.config.primaryColor),
             minHeight: 8,
           ),
         ),
@@ -577,14 +655,16 @@ class LevelImmersiveScreen extends ConsumerWidget {
   Widget _buildActionButton(
     BuildContext context,
     WidgetRef ref,
-    UserProfile profile,
-  ) {
-    final isLocked = node.state == NodeState.locked;
-    final isCompleted =
-        node.state == NodeState.completed || node.state == NodeState.mastered;
-    final isInProgress = node.state == NodeState.inProgress;
+    UserProfile profile, {
+    Key? key,
+  }) {
+    final isLocked = widget.node.state == NodeState.locked;
+    final isCompleted = widget.node.state == NodeState.completed ||
+        widget.node.state == NodeState.mastered;
+    final isInProgress = widget.node.state == NodeState.inProgress;
 
     return SizedBox(
+      key: key,
       width: double.infinity,
       child: ElevatedButton.icon(
         onPressed: isLocked || isCompleted
@@ -602,7 +682,7 @@ class LevelImmersiveScreen extends ConsumerWidget {
         ),
         label: Text(
           isLocked
-              ? 'LOCKED (REACH LEVEL ${node.requiredLevel})'
+              ? 'LOCKED (REACH LEVEL ${widget.node.requiredLevel})'
               : isCompleted
               ? '🏆 COMPLETED'
               : isInProgress
@@ -616,11 +696,11 @@ class LevelImmersiveScreen extends ConsumerWidget {
         ),
         style: ElevatedButton.styleFrom(
           backgroundColor: isCompleted
-              ? config.primaryColor.withValues(alpha:0.5)
-              : config.primaryColor,
+              ? widget.config.primaryColor.withValues(alpha:0.5)
+              : widget.config.primaryColor,
           foregroundColor: Colors.white,
           disabledBackgroundColor: isCompleted
-              ? config.primaryColor.withValues(alpha:0.4)
+              ? widget.config.primaryColor.withValues(alpha:0.4)
               : Colors.grey.shade800,
           disabledForegroundColor: Colors.white.withValues(alpha:0.5),
           padding: const EdgeInsets.symmetric(vertical: 16),
@@ -635,27 +715,27 @@ class LevelImmersiveScreen extends ConsumerWidget {
 
   Future<void> _handleAction(BuildContext context, WidgetRef ref) async {
     try {
-      if (node.state == NodeState.available) {
-        await ref.read(userStatsControllerProvider).startMission(node.id);
+      if (widget.node.state == NodeState.available) {
+        await ref.read(userStatsControllerProvider).startMission(widget.node.id);
         if (context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('Mission started: ${node.name}'),
-              backgroundColor: config.primaryColor,
+              content: Text('Mission started: ${widget.node.name}'),
+              backgroundColor: widget.config.primaryColor,
               behavior: SnackBarBehavior.floating,
             ),
           );
         }
-      } else if (node.state == NodeState.inProgress) {
-        final xpBoosts = node.xpBoosts.map((k, v) => MapEntry(k.name, v));
+      } else if (widget.node.state == NodeState.inProgress) {
+        final xpBoosts = widget.node.xpBoosts.map((k, v) => MapEntry(k.name, v));
         await ref
             .read(userStatsControllerProvider)
-            .completeMission(node.id, xpBoosts, node.requiredLevel);
+            .completeMission(widget.node.id, xpBoosts, widget.node.requiredLevel);
         if (context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('Mission complete: ${node.name}! 🎉'),
-              backgroundColor: config.primaryColor,
+              content: Text('Mission complete: ${widget.node.name}! 🎉'),
+              backgroundColor: widget.config.primaryColor,
               behavior: SnackBarBehavior.floating,
             ),
           );
@@ -731,7 +811,7 @@ class LevelImmersiveScreen extends ConsumerWidget {
   }
 
   Color _getTypeColor() {
-    switch (node.type) {
+    switch (widget.node.type) {
       case NodeType.waypoint:
         return EmergeColors.teal;
       case NodeType.milestone:
@@ -746,7 +826,7 @@ class LevelImmersiveScreen extends ConsumerWidget {
   }
 
   Color _getTierColor() {
-    switch (node.tier) {
+    switch (widget.node.tier) {
       case NodeTier.dormant:
         return Colors.grey;
       case NodeTier.awakened:
@@ -802,7 +882,7 @@ class LevelImmersiveScreen extends ConsumerWidget {
     Challenge? dailyQuest,
     UserProfile profile,
   ) {
-    final nodeArchetype = node.archetype?.toLowerCase();
+    final nodeArchetype = widget.node.archetype?.toLowerCase();
     final profileArchetype = profile.archetype.name.toLowerCase();
 
     // 1. Get active user challenges for this archetype/node
@@ -911,15 +991,15 @@ class LevelImmersiveScreen extends ConsumerWidget {
           if (context.mounted) {
             final isComplete = newProgress >= challenge.totalDays;
             ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(
-                  isComplete
-                      ? 'Quest completed! +${challenge.xpReward} XP earned!'
-                      : 'Day $newProgress/${challenge.totalDays} complete! +$xpPerDay XP',
-                ),
-                backgroundColor: config.primaryColor,
-                behavior: SnackBarBehavior.floating,
-              ),
+                  SnackBar(
+                    content: Text(
+                      isComplete
+                          ? 'Quest completed! +${challenge.xpReward} XP earned!'
+                          : 'Day $newProgress/${challenge.totalDays} complete! +$xpPerDay XP',
+                    ),
+                    backgroundColor: widget.config.primaryColor,
+                    behavior: SnackBarBehavior.floating,
+                  ),
             );
           }
         },

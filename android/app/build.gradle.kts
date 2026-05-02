@@ -127,4 +127,5 @@ dependencies {
 
     // Play Integrity API for Firebase App Check (Android)
     implementation("com.google.android.play:integrity:1.3.0")
+    implementation("androidx.activity:activity-ktx:1.9.0")
 }
