@@ -83,9 +83,23 @@ class _WorldMapScreenState extends ConsumerState<WorldMapScreen> {
             targetKey: _firstNodeKey,
           ),
           TutorialStepInfo(
+            title: 'Map Navigation',
+            description:
+                'Scroll vertically to explore different biomes. Each section represents a new phase of your evolution.',
+            targetKey: _scrollController.hasClients ? null : null, // General tip
+            alignment: Alignment.center,
+          ),
+          TutorialStepInfo(
             title: 'Identity Progress',
             description:
                 'Monitor your XP, streak, and world status here. Level up to expand your domain.',
+            targetKey: _statsBarKey,
+            alignment: Alignment.topCenter,
+          ),
+          TutorialStepInfo(
+            title: 'World Health',
+            description:
+                'Your World Orb shows the state of your inner ecosystem. Thriving means your habits are strong; Decaying means it\'s time for a vote.',
             targetKey: _statsBarKey,
             alignment: Alignment.topCenter,
           ),

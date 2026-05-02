@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
+import 'package:emerge_app/features/tutorial/presentation/providers/tutorial_provider.dart';
+import 'package:emerge_app/features/tutorial/presentation/widgets/tutorial_overlay.dart';
 
 import 'package:emerge_app/core/presentation/widgets/app_error_widget.dart';
 import 'package:emerge_app/core/presentation/widgets/emerge_loading_skeleton.dart';
@@ -25,6 +27,66 @@ class TribeTabContent extends ConsumerStatefulWidget {
 
 class _TribeTabContentState extends ConsumerState<TribeTabContent> {
   bool _showGlobalActivity = false;
+  final GlobalKey _emblemKey = GlobalKey();
+  final GlobalKey _bondsKey = GlobalKey();
+  final GlobalKey _feedKey = GlobalKey();
+
+  @override
+  void initState() {
+    super.initState();
+    _checkTutorial();
+  }
+
+  void _checkTutorial() {
+    Future.delayed(const Duration(milliseconds: 800), () {
+      if (!mounted) return;
+      final tutorialNotifier = ref.read(tutorialProvider.notifier);
+      final tutorialState = ref.watch(tutorialProvider);
+      
+      tutorialNotifier.enableTutorialAutoShow();
+
+      if (!tutorialState.isCompleted(TutorialStep.tribes) &&
+          tutorialNotifier.shouldShowTutorial()) {
+        _showTutorial();
+      }
+    });
+  }
+
+  void _showTutorial() {
+    late OverlayEntry entry;
+    entry = OverlayEntry(
+      builder: (context) => TutorialOverlay(
+        steps: [
+          TutorialStepInfo(
+            title: 'Your Archetype Tribe',
+            description: 'You\'ve been grouped with others who share your primary archetype. Together, you build collective momentum.',
+            targetKey: _emblemKey,
+          ),
+          TutorialStepInfo(
+            title: 'Collective Momentum',
+            description: 'Toggle between your Tribe\'s focused activity and Global progress. Seeing the world grow together fuels your identity.',
+            targetKey: _feedKey,
+          ),
+          TutorialStepInfo(
+            title: 'Social Witnessing',
+            description: 'See how your tribe members are progressing. Witnessing others\' wins strengthens your own commitment.',
+            targetKey: _feedKey,
+            alignment: Alignment.topCenter,
+          ),
+          TutorialStepInfo(
+            title: 'Accountability Bonds',
+            description: 'Form deep contracts with partners. High-stakes accountability is the ultimate "skin in the game".',
+            targetKey: _bondsKey,
+          ),
+        ],
+        onCompleted: () {
+          ref.read(tutorialProvider.notifier).completeStep(TutorialStep.tribes);
+          entry.remove();
+        },
+      ),
+    );
+    Overlay.of(context).insert(entry);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -59,6 +121,7 @@ class _TribeTabContentState extends ConsumerState<TribeTabContent> {
 
                   // ===== CLUB EMBLEM (Archetype-colored) =====
                   ArchetypeClubEmblem(
+                    key: _emblemKey,
                     theme: theme,
                   ).animate().fadeIn().scale(begin: const Offset(0.9, 0.9)),
 
@@ -105,7 +168,7 @@ class _TribeTabContentState extends ConsumerState<TribeTabContent> {
 
                   const Gap(32),
 
-                  const TribeAccountabilitySection().animate().fadeIn(delay: 400.ms),
+                  TribeAccountabilitySection(key: _bondsKey).animate().fadeIn(delay: 400.ms),
 
                   const Gap(32),
 
@@ -116,6 +179,7 @@ class _TribeTabContentState extends ConsumerState<TribeTabContent> {
 
                   // ===== ACTIVITY FEED HEADER CON toggle =====
                   Row(
+                    key: _feedKey,
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(

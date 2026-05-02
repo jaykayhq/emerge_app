@@ -135,6 +135,16 @@ class _FutureSelfStudioScreenState
             targetKey: _synergyKey,
             alignment: Alignment.topCenter,
           ),
+          TutorialStepInfo(
+            title: 'Archetype Evolution',
+            description: 'Your physical form reflects your internal state. Missed habits cause decay, while consistency brings radiance.',
+            targetKey: _avatarKey,
+          ),
+          const TutorialStepInfo(
+            title: 'Archetype Resonance',
+            description:
+                'Your current growth is compared against your archetype\'s peak potential. Every action brings you closer to that resonance.',
+          ),
         ],
         onCompleted: () {
           ref
