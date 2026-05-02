@@ -34,6 +34,7 @@ class _SpotifyWrappedRecapState extends ConsumerState<SpotifyWrappedRecap>
 
   // Gradient colors for each slide
   static const List<List<Color>> _slideGradients = [
+    [Color(0xFF0D1B2A), Color(0xFF1B263B)], // Progress - Deep Navy
     [Color(0xFF0A0A0A), Color(0xFF1A1A1A)], // Identity - Black/Dark Grey
     [Color(0xFF1A0A2A), Color(0xFF2A1B4E)], // Intro - Purple
     [Color(0xFF112218), Color(0xFF1DB954)], // Stats - Green
@@ -51,7 +52,12 @@ class _SpotifyWrappedRecapState extends ConsumerState<SpotifyWrappedRecap>
     );
   }
 
-  int get _totalSlides => widget.recap.dominantIdentityThisWeek != null ? 5 : 4;
+  int get _totalSlides {
+    int count = 4; // Intro, Stats, Top Habit, Outro
+    if (widget.recap.dominantIdentityThisWeek != null) count++;
+    if (!widget.recap.isComplete) count++;
+    return count;
+  }
 
   @override
   void dispose() {
@@ -127,6 +133,9 @@ Building my identity, one habit at a time. 💪
           controller: _pageController,
           onPageChanged: _onPageChanged,
           children: [
+            // Progress slide is now just the first part of the experience, not a gate
+            _ProgressSlide(recap: widget.recap),
+            
             if (widget.recap.dominantIdentityThisWeek != null)
               _IdentitySlide(
                 identity: widget.recap.dominantIdentityThisWeek!,
@@ -799,6 +808,92 @@ class _IdentitySlide extends StatelessWidget {
             ),
           ).animate().fadeIn(delay: 900.ms).scale(),
         ],
+      ],
+    );
+  }
+}
+
+class _ProgressSlide extends StatelessWidget {
+  final UserWeeklyRecap recap;
+
+  const _ProgressSlide({required this.recap});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 32),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.05),
+              shape: BoxShape.circle,
+              border: Border.all(
+                color: EmergeColors.teal.withValues(alpha: 0.3),
+                width: 2,
+              ),
+            ),
+            child: const Icon(
+              Icons.hourglass_empty_rounded,
+              color: EmergeColors.teal,
+              size: 64,
+            ),
+          ).animate().rotate(duration: 2000.ms).fadeIn(),
+          const Gap(40),
+          Text(
+            'IDENTITY\nEMERGING',
+            textAlign: TextAlign.center,
+            style: Theme.of(context).textTheme.displaySmall?.copyWith(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w900,
+                  letterSpacing: 6,
+                ),
+          ).animate().fadeIn(delay: 400.ms).slideY(begin: 0.2, end: 0),
+          const Gap(24),
+          Text(
+            "You're in the process of becoming. This recap is evolving as you complete your habits.",
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              color: Colors.white.withValues(alpha: 0.7),
+              fontSize: 18,
+              height: 1.5,
+            ),
+          ).animate().fadeIn(delay: 800.ms),
+          const Gap(40),
+          _buildProgressBar(context),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildProgressBar(BuildContext context) {
+    // Calculate progress through the week
+    final now = DateTime.now();
+    final totalDuration = recap.endDate.difference(recap.startDate).inSeconds;
+    final elapsedDuration = now.difference(recap.startDate).inSeconds;
+    final progress = (elapsedDuration / totalDuration).clamp(0.0, 1.0);
+
+    return Column(
+      children: [
+        ClipRRect(
+          borderRadius: BorderRadius.circular(10),
+          child: LinearProgressIndicator(
+            value: progress,
+            backgroundColor: Colors.white.withValues(alpha: 0.1),
+            valueColor: const AlwaysStoppedAnimation<Color>(EmergeColors.teal),
+            minHeight: 12,
+          ),
+        ).animate().scaleX(delay: 1200.ms),
+        const Gap(12),
+        Text(
+          '${(progress * 100).toInt()}% through your weekly cycle',
+          style: TextStyle(
+            color: EmergeColors.teal.withValues(alpha: 0.8),
+            fontWeight: FontWeight.bold,
+          ),
+        ).animate().fadeIn(delay: 1500.ms),
       ],
     );
   }

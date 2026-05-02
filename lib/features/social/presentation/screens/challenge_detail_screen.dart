@@ -69,7 +69,7 @@ class ChallengeDetailScreen extends ConsumerWidget {
                   background: Stack(
                     fit: StackFit.expand,
                     children: [
-                      challenge.imageUrl.startsWith('assets/')
+                      challenge.imageUrl.startsWith('images/')
                           ? Image.asset(
                               challenge.imageUrl,
                               fit: BoxFit.cover,

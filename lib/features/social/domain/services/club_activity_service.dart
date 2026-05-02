@@ -21,6 +21,8 @@ class SocialActivityService {
   static const String _kActivityTypeStreakMilestone = 'streak_milestone';
   static const String _kActivityTypeNodeClaim = 'node_claim';
   static const String _kActivityTypeBadgeEarned = 'badge_earned';
+  static const String _kActivityTypePartnerJoined = 'partner_joined';
+  static const String _kActivityTypeContractCommitted = 'contract_committed';
 
   SocialActivityService({FirebaseFirestore? firestore})
     : _firestore = firestore ?? FirebaseFirestore.instance;
@@ -100,27 +102,26 @@ class SocialActivityService {
           'timestamp': FieldValue.serverTimestamp(),
         });
 
-        // 3. Update Club Contributor Stats
-        final contributorRef = _firestore
-            .collection(_kTribesCollection)
-            .doc(clubId)
-            .collection(_kContributorsCollection)
-            .doc(userId);
+        // 3. Update Tribe Aggregate Counters
+        final tribeRef = _firestore.collection(_kTribesCollection).doc(clubId);
+        transaction.set(tribeRef, {
+          'totalHabitsCompleted': FieldValue.increment(1),
+          if (xpGained != null) 'totalXp': FieldValue.increment(xpGained),
+        }, SetOptions(merge: true));
+
+        // 4. Update Club Contributor Stats
+        final contributorRef = tribeRef.collection(_kContributorsCollection).doc(userId);
         transaction.set(contributorRef, {
           'userId': userId,
           'userName': userName,
           'lastActivity': FieldValue.serverTimestamp(),
           'contributionCount': FieldValue.increment(1),
+          'totalHabitsCompleted': FieldValue.increment(1),
+          if (xpGained != null) 'totalXpContributed': FieldValue.increment(xpGained),
           'archetype': archetype,
         }, SetOptions(merge: true));
 
-        // 3b. Update Tribe Aggregate Counters
-        final tribeRef = _firestore.collection(_kTribesCollection).doc(clubId);
-        transaction.set(tribeRef, {
-          'totalHabitsCompleted': FieldValue.increment(1),
-        }, SetOptions(merge: true));
-
-        // 4. Update Club Leaderboard Entry
+        // 5. Update Club Leaderboard Entry
         if (xpGained != null) {
           final leaderboardRef = _firestore
               .collection('club_leaderboards')
@@ -134,15 +135,17 @@ class SocialActivityService {
             'archetype': archetype,
             'lastUpdated': FieldValue.serverTimestamp(),
           }, SetOptions(merge: true));
-
-          // 5. Update Core User Stats XP (if available)
-          final userStatsRef = _firestore.collection('user_stats').doc(userId);
-          transaction.set(userStatsRef, {
-            'totalXp': FieldValue.increment(xpGained),
-            // We increment specific attribute XP just as a fallback
-            '${attribute}Xp': FieldValue.increment(xpGained),
-          }, SetOptions(merge: true));
         }
+
+        // 6. Update Core User Stats XP and Counters
+        final userStatsRef = _firestore.collection('user_stats').doc(userId);
+        transaction.set(userStatsRef, {
+          if (xpGained != null) 'avatarStats.totalXp': FieldValue.increment(xpGained),
+          if (xpGained != null) 'avatarStats.${attribute}Xp': FieldValue.increment(xpGained),
+          if (xpGained != null) 'totalXp': FieldValue.increment(xpGained),
+          if (xpGained != null) '${attribute}Xp': FieldValue.increment(xpGained),
+          'totalHabitsCompleted': FieldValue.increment(1),
+        }, SetOptions(merge: true));
       });
     } catch (e) {
       debugPrint('Error logging habit completion to social activity: $e');
@@ -259,7 +262,7 @@ class SocialActivityService {
           'timestamp': FieldValue.serverTimestamp(),
         });
 
-        // Update Leaderboard XP
+        // 3. Update Leaderboard XP
         final leaderboardRef = _firestore
             .collection('club_leaderboards')
             .doc('${userId}_$clubId');
@@ -272,13 +275,31 @@ class SocialActivityService {
           'lastUpdated': FieldValue.serverTimestamp(),
         }, SetOptions(merge: true));
 
-        // Note: Core User Stats XP is handled by the initiating Repository transaction
-        // to ensure atomic model consistency.
-
-        // Update Tribe Aggregate Counters
+        // 4. Update Tribe Total Stats
         final tribeRef = _firestore.collection(_kTribesCollection).doc(clubId);
         transaction.set(tribeRef, {
           'totalChallengesCompleted': FieldValue.increment(1),
+          'totalXp': FieldValue.increment(xpReward),
+        }, SetOptions(merge: true));
+
+        // 5. Update contributor record
+        final contributorRef = tribeRef
+            .collection(_kContributorsCollection)
+            .doc(userId);
+        
+        transaction.set(contributorRef, {
+          'totalChallengesCompleted': FieldValue.increment(1),
+          'totalXpContributed': FieldValue.increment(xpReward),
+          'lastContributionAt': FieldValue.serverTimestamp(),
+        }, SetOptions(merge: true));
+
+        // 6. Update Core User Stats Challenges
+        final userStatsRef = _firestore.collection('user_stats').doc(userId);
+        transaction.set(userStatsRef, {
+          'totalChallengesCompleted': FieldValue.increment(1),
+          'totalQuestsCompleted': FieldValue.increment(1), // Sync for UI/Rules consistency
+          'avatarStats.challengeXp': FieldValue.increment(xpReward),
+          if (xpReward > 0) 'totalXp': FieldValue.increment(xpReward),
         }, SetOptions(merge: true));
       });
     } catch (e) {
@@ -423,6 +444,89 @@ class SocialActivityService {
       });
     } catch (e) {
       debugPrint('Error logging badge earned to social activity: $e');
+    }
+  }
+
+  /// Logs when a new accountability partner relationship is formed.
+  Future<void> logPartnerJoined({
+    required String userId,
+    required String userName,
+    required String archetype,
+    required String partnerName,
+  }) async {
+    try {
+      final clubId = _getClubIdForArchetype(archetype);
+      final id = '${userId}_partner_${DateTime.now().millisecondsSinceEpoch}';
+
+      await _firestore.runTransaction((transaction) async {
+        final globalRef = _firestore.collection(_kGlobalActivitiesCollection).doc(id);
+        transaction.set(globalRef, {
+          'type': _kActivityTypePartnerJoined,
+          'userId': userId,
+          'userName': userName,
+          'archetypeId': archetype,
+          'clubId': clubId,
+          'data': {'partnerName': partnerName},
+          'timestamp': FieldValue.serverTimestamp(),
+        });
+
+        final clubActivityRef = _firestore
+            .collection(_kTribesCollection)
+            .doc(clubId)
+            .collection(_kActivityCollection)
+            .doc(id);
+        transaction.set(clubActivityRef, {
+          'type': _kActivityTypePartnerJoined,
+          'userId': userId,
+          'userName': userName,
+          'data': {'partnerName': partnerName},
+          'timestamp': FieldValue.serverTimestamp(),
+        });
+      });
+    } catch (e) {
+      debugPrint('Error logging partner joined: $e');
+    }
+  }
+
+  /// Logs when a user commits to a high-stakes habit contract.
+  Future<void> logContractCommitted({
+    required String userId,
+    required String userName,
+    required String archetype,
+    required String habitTitle,
+    required String penalty,
+  }) async {
+    try {
+      final clubId = _getClubIdForArchetype(archetype);
+      final id = '${userId}_contract_${DateTime.now().millisecondsSinceEpoch}';
+
+      await _firestore.runTransaction((transaction) async {
+        final globalRef = _firestore.collection(_kGlobalActivitiesCollection).doc(id);
+        transaction.set(globalRef, {
+          'type': _kActivityTypeContractCommitted,
+          'userId': userId,
+          'userName': userName,
+          'archetypeId': archetype,
+          'clubId': clubId,
+          'data': {'habitTitle': habitTitle, 'penalty': penalty},
+          'timestamp': FieldValue.serverTimestamp(),
+        });
+
+        final clubActivityRef = _firestore
+            .collection(_kTribesCollection)
+            .doc(clubId)
+            .collection(_kActivityCollection)
+            .doc(id);
+        transaction.set(clubActivityRef, {
+          'type': _kActivityTypeContractCommitted,
+          'userId': userId,
+          'userName': userName,
+          'data': {'habitTitle': habitTitle, 'penalty': penalty},
+          'timestamp': FieldValue.serverTimestamp(),
+        });
+      });
+    } catch (e) {
+      debugPrint('Error logging contract committed: $e');
     }
   }
 }

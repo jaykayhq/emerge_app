@@ -5,9 +5,6 @@ import 'package:emerge_app/features/social/presentation/providers/blueprint_prov
 import 'package:emerge_app/features/social/presentation/providers/challenge_bundle_provider.dart';
 import 'package:emerge_app/features/social/presentation/screens/blueprint_detail_screen.dart';
 import 'package:emerge_app/features/social/presentation/screens/challenge_detail_screen.dart';
-import 'package:emerge_app/features/social/data/repositories/challenge_repository.dart';
-import 'package:emerge_app/features/social/presentation/providers/challenge_provider.dart';
-import 'package:emerge_app/features/social/data/repositories/blueprint_repository.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
@@ -20,19 +17,6 @@ class SocialDiscoverTab extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final blueprintsAsync = ref.watch(blueprintsStreamProvider);
     final featuredChallenges = ref.watch(featuredChallengesFromBundleProvider);
-
-    // Trigger seeding if empty
-    Future.microtask(() {
-      if (blueprintsAsync.hasValue && blueprintsAsync.value!.isEmpty) {
-        ref.read(blueprintRepositoryProvider).seedBlueprintsIfEmpty();
-      }
-      if (featuredChallenges.isEmpty) {
-        final repo = ref.read(challengeRepositoryProvider);
-        if (repo is FirestoreChallengeRepository) {
-          repo.seedChallengesIfEmpty();
-        }
-      }
-    });
 
     return blueprintsAsync.when(
       data: (blueprints) {
@@ -149,7 +133,7 @@ class _ChallengeStripCard extends StatelessWidget {
             children: [
               // Background Image
               challenge.imageUrl.isNotEmpty
-                  ? (challenge.imageUrl.startsWith('assets/')
+                  ? (challenge.imageUrl.startsWith('images/')
                       ? Image.asset(challenge.imageUrl, fit: BoxFit.cover)
                       : Image.network(challenge.imageUrl, fit: BoxFit.cover))
                   : Container(color: Colors.white10),
@@ -305,7 +289,7 @@ class _BlueprintStripCard extends StatelessWidget {
                   children: [
                     // Background Image
                     blueprint.imageUrl != null
-                        ? (blueprint.imageUrl!.startsWith('assets/')
+                        ? (blueprint.imageUrl!.startsWith('images/')
                             ? Image.asset(blueprint.imageUrl!, fit: BoxFit.cover)
                             : Image.network(blueprint.imageUrl!, fit: BoxFit.cover))
                         : Container(

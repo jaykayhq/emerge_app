@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:emerge_app/features/gamification/data/repositories/user_stats_repository.dart';
+import 'package:emerge_app/core/utils/app_logger.dart';
 import 'package:emerge_app/features/gamification/domain/entities/weekly_recap.dart';
 
 import 'package:emerge_app/features/habits/presentation/providers/habit_providers.dart'; // For habit repo provider
@@ -27,29 +28,44 @@ class WeeklyRecapService {
           recapDate.month == now.month &&
           recapDate.day == now.day;
 
-      if (isSameDay) {
+      // Only reuse if it's the SAME day and it's already "complete"
+      // If it's not complete, we might want to refresh it to show today's progress
+      if (isSameDay && latestRecap.isComplete) {
         return latestRecap;
       }
     }
 
-    // 2. Determine Date Range (Last 7 Days)
-    final endDate = now;
-    final startDate = now.subtract(const Duration(days: 7));
+    // 2. Determine Date Range
+    // For a dynamic recap, we look back up to 7 days, or since user joined
+    final userProfile = await userStatsRepository.getUserStats(userId);
+    DateTime startDate = now.subtract(const Duration(days: 7));
+    
+    // If user joined recently, start from their join date
+    final userJoinDate = userProfile.accountCreatedAt ?? DateTime.now().subtract(const Duration(days: 7));
+    if (userJoinDate.isAfter(startDate)) {
+      startDate = userJoinDate;
+    }
+
+    // Always allow recap to show if there's at least some data
+    // We'll mark it as "complete" only if it's been a full cycle, 
+    // but the UI won't block based on this anymore.
+    final diff = now.difference(startDate).inDays;
+    final isComplete = diff >= 6; 
 
     // 3. Fetch Activity History
     final activities = await userStatsRepository.getWeeklyActivity(
       userId,
       startDate,
-      endDate,
+      now,
     );
 
-    // 4. Get User Profile for stats
-    final userProfile = await userStatsRepository.getUserStats(userId);
-
-    // 5. Generate and Save (Attempt AI first)
+    // 4. Generate and Save (Attempt AI first)
     UserWeeklyRecap? recap;
     try {
       final functions = FirebaseFunctions.instance;
+      // Note: We pass the range to the AI if it supported it, but our function
+      // currently just looks back 14 days internally. We'll stick to that but
+      // fix the UI side.
       final result = await functions.httpsCallable('generateAiRecap').call({
         'userId': userId,
       });
@@ -71,12 +87,28 @@ class WeeklyRecapService {
           identityHeadline: localRecap.identityHeadline,
           aiInsight: result.data['insight'],
           velocityInsights: List<String>.from(result.data['adjustments'] ?? []),
+          isComplete: isComplete,
         );
       }
     } catch (e) {
       AppLogger.d('AI Recap Error: $e');
       // Fallback to local calculation
       recap = await _calculateRecap(userId, activities, startDate, now, userProfile);
+      recap = UserWeeklyRecap(
+        id: recap.id,
+        userId: recap.userId,
+        startDate: recap.startDate,
+        endDate: recap.endDate,
+        totalHabitsCompleted: recap.totalHabitsCompleted,
+        perfectDays: recap.perfectDays,
+        totalXpEarned: recap.totalXpEarned,
+        topHabitName: recap.topHabitName,
+        currentLevel: recap.currentLevel,
+        worldGrowthPercentage: recap.worldGrowthPercentage,
+        dominantIdentityThisWeek: recap.dominantIdentityThisWeek,
+        identityHeadline: recap.identityHeadline,
+        isComplete: isComplete,
+      );
     }
 
     if (recap != null) {

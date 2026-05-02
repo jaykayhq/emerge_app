@@ -11,6 +11,7 @@ import 'package:emerge_app/features/profile/domain/models/silhouette_evolution.d
 import 'package:emerge_app/features/profile/presentation/widgets/decay_recovery_overlay.dart';
 import 'package:emerge_app/features/profile/presentation/widgets/evolving_silhouette_widget.dart';
 import 'package:emerge_app/core/presentation/widgets/world_background.dart';
+import 'package:emerge_app/core/presentation/widgets/skeleton_shimmer.dart';
 import 'package:emerge_app/features/profile/presentation/widgets/trajectory_timeline.dart';
 import 'package:emerge_app/features/profile/presentation/widgets/synergy_status_card.dart';
 import 'package:emerge_app/features/profile/presentation/widgets/synergy_card.dart';
@@ -549,7 +550,16 @@ class _FutureSelfStudioScreenState
           loading: () => const Scaffold(
             backgroundColor: Color(0xFF0A0A1A),
             body: Center(
-              child: CircularProgressIndicator(color: EmergeColors.teal),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  SkeletonShimmer.circular(size: 120),
+                  SizedBox(height: 24),
+                  SkeletonShimmer(width: 150, height: 20),
+                  SizedBox(height: 8),
+                  SkeletonShimmer(width: 100, height: 16),
+                ],
+              ),
             ),
           ),
           error: (e, s) => Scaffold(

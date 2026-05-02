@@ -54,4 +54,7 @@ abstract class ChallengeRepository {
 
   /// Get a specific challenge by ID
   Future<Challenge?> getChallengeById(String id);
+
+  /// Seeds challenges if collection is empty.
+  Future<void> seedChallengesIfEmpty();
 }

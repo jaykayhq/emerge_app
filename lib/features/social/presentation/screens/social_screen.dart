@@ -14,7 +14,8 @@ import 'package:go_router/go_router.dart';
 /// Consolidated Social Screen for the 3-tab layout
 /// Hosts Archetype Tribe info, Challenges, and Discovery
 class SocialScreen extends ConsumerStatefulWidget {
-  const SocialScreen({super.key});
+  final int initialIndex;
+  const SocialScreen({super.key, this.initialIndex = 0});
 
   @override
   ConsumerState<SocialScreen> createState() => _SocialScreenState();
@@ -23,12 +24,17 @@ class SocialScreen extends ConsumerStatefulWidget {
 class _SocialScreenState extends ConsumerState<SocialScreen>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
-  int _currentIndex = 0;
+  late int _currentIndex;
 
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 3, vsync: this);
+    _currentIndex = widget.initialIndex;
+    _tabController = TabController(
+      length: 3,
+      vsync: this,
+      initialIndex: _currentIndex,
+    );
     _tabController.addListener(() {
       if (_tabController.index != _currentIndex) {
         setState(() {
@@ -36,6 +42,15 @@ class _SocialScreenState extends ConsumerState<SocialScreen>
         });
       }
     });
+  }
+
+  @override
+  void didUpdateWidget(SocialScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.initialIndex != widget.initialIndex &&
+        widget.initialIndex != _currentIndex) {
+      _tabController.animateTo(widget.initialIndex);
+    }
   }
 
   @override
@@ -49,7 +64,7 @@ class _SocialScreenState extends ConsumerState<SocialScreen>
       case 0:
         return const TribeTabContent(); // TRIBE
       case 1:
-        return const ChallengesScreen(); // CHALLENGES
+        return const ChallengesScreen(showAppBar: false); // CHALLENGES
       case 2:
         return const SocialDiscoverTab(); // DISCOVER
       default:
@@ -64,6 +79,7 @@ class _SocialScreenState extends ConsumerState<SocialScreen>
       themeOverride: AppWorldTheme.nebula,
       floatingActionButton: _currentIndex == 1 // CHALLENGES tab gets the create challenge FAB
           ? FloatingActionButton(
+              heroTag: 'create_challenge_fab',
               onPressed: () {
                 showDialog(
                   context: context,
@@ -83,6 +99,16 @@ class _SocialScreenState extends ConsumerState<SocialScreen>
             ArchetypeSliverAppBar(
               title: 'TRIBES',
               actions: [
+                IconButton(
+                  icon: const Icon(Icons.handshake_outlined, color: Colors.white),
+                  onPressed: () => context.push('/tribes/contracts'),
+                  tooltip: 'Habit Contracts',
+                ),
+                IconButton(
+                  icon: const Icon(Icons.person_add_outlined, color: Colors.white),
+                  onPressed: () => context.push('/tribes/accountability'),
+                  tooltip: 'Accountability Partners',
+                ),
                 IconButton(
                   icon: const Icon(Icons.person_outline, color: Colors.white),
                   onPressed: () => context.push('/profile'),

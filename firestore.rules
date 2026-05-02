@@ -81,7 +81,10 @@ service cloud.firestore {
              (!habit.keys().hasAny(['createdAt']) || habit.createdAt is timestamp) &&
              // Behavioral system fields
              (!habit.keys().hasAny(['momentumScore']) || (habit.momentumScore is number && habit.momentumScore >= 0 && habit.momentumScore <= 100)) &&
-             (!habit.keys().hasAny(['consecutiveMisses']) || (habit.consecutiveMisses is number && habit.consecutiveMisses >= 0));
+             (!habit.keys().hasAny(['consecutiveMisses']) || (habit.consecutiveMisses is number && habit.consecutiveMisses >= 0)) &&
+             // New fields for scheduling
+             (!habit.keys().hasAny(['reminderTime']) || (habit.reminderTime is string && habit.reminderTime.matches('^([01]\\d|2[0-3]):([0-5]\\d)$'))) &&
+             (!habit.keys().hasAny(['timeOfDayPreference']) || (habit.timeOfDayPreference is string && habit.timeOfDayPreference in ['morning', 'afternoon', 'evening', 'anytime']));
     }
 
     // Helper function to validate post content
@@ -96,7 +99,15 @@ service cloud.firestore {
 
     // Helper to validate gamification stats data written by the client or Cloud Functions
     function isValidStats(data) {
-      return data.keys().size() <= 60 &&
+      return data.keys().size() <= 100 &&
+             // Core Profile Fields (often merged during transactions)
+             (!data.keys().hasAny(['userId']) || data.userId is string) &&
+             (!data.keys().hasAny(['displayName']) || (sanitizeString(data.displayName) && data.displayName.size() <= 100)) &&
+             (!data.keys().hasAny(['email']) || data.email is string) &&
+             (!data.keys().hasAny(['photoUrl']) || data.photoUrl is string) &&
+             (!data.keys().hasAny(['archetype']) || data.archetype is string) &&
+             (!data.keys().hasAny(['lastUpdated']) || data.lastUpdated is timestamp) &&
+
              // Legacy numeric fields at root
              (!data.keys().hasAny(['totalXp']) || data.totalXp is number) &&
              (!data.keys().hasAny(['level', 'currentLevel']) || data.get('level', 1) is number) &&
@@ -138,7 +149,18 @@ service cloud.firestore {
              (!data.keys().hasAny(['unlockedRewardIds']) || data.unlockedRewardIds is list) &&
              (!data.keys().hasAny(['equippedTitleId']) || data.equippedTitleId == null || data.equippedTitleId is string) &&
              (!data.keys().hasAny(['equippedNameplateId']) || data.equippedNameplateId == null || data.equippedNameplateId is string) &&
-             (!data.keys().hasAny(['equippedEmblemIds']) || data.equippedEmblemIds is list);
+             (!data.keys().hasAny(['equippedEmblemIds']) || data.equippedEmblemIds is list) &&
+             
+             // Social and habit counts (allow increment/updates)
+             (!data.keys().hasAny(['totalHabitsCompleted']) || data.totalHabitsCompleted is number) &&
+             (!data.keys().hasAny(['totalQuestsCompleted']) || data.totalQuestsCompleted is number) &&
+             (!data.keys().hasAny(['totalChallengesCompleted']) || data.totalChallengesCompleted is number) &&
+             (!data.keys().hasAny(['strengthXp']) || data.strengthXp is number) &&
+             (!data.keys().hasAny(['intellectXp']) || data.intellectXp is number) &&
+             (!data.keys().hasAny(['vitalityXp']) || data.vitalityXp is number) &&
+             (!data.keys().hasAny(['creativityXp']) || data.creativityXp is number) &&
+             (!data.keys().hasAny(['focusXp']) || data.focusXp is number) &&
+             (!data.keys().hasAny(['spiritXp']) || data.spiritXp is number);
     }
 
     // User Stats / Profile (Gamification & Identity)
@@ -226,25 +248,18 @@ service cloud.firestore {
     match /tribes/{tribeId} {
       allow read: if isAuthenticated();
       // Allow creation for initial seeding of official clubs
-      // Clubs have type: 'official' and are seeded once
-      allow create: if isAuthenticated() &&
-                       request.resource.data.keys().hasAll(['name', 'type', 'archetypeId']) &&
-                       request.resource.data.type == 'official';
+      allow create, update: if isAuthenticated();
       // Prevent deletion of official clubs
       allow delete: if false;
-      // Members can join/leave (updates members array)
-      allow update: if isAuthenticated() &&
-        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['memberCount', 'members']);
 
-      match /members/{memberId} {
-        allow read: if isAuthenticated();
-        allow write: if isOwner(memberId);
-      }
 
-      // Club contributor stats
-      match /contributors/{contributorId} {
+      // Tribe contributor-specific metrics and details
+      match /contributors/{memberId} {
         allow read: if isAuthenticated();
-        allow write: if isOwner(contributorId);
+        allow create: if isAuthenticated() && request.auth.uid == memberId;
+        allow update: if isAuthenticated() && request.auth.uid == memberId &&
+          request.resource.data.diff(resource.data).affectedKeys()
+            .hasOnly(['lastActivity', 'contributionCount', 'lastContributionAt', 'totalHabitsCompleted', 'totalChallengesCompleted', 'totalXpContributed', 'archetype', 'userName', 'userId']);
       }
 
       // Club activity feed
@@ -267,13 +282,13 @@ service cloud.firestore {
       allow delete: if isAuthenticated() && resource.data.senderId == request.auth.uid;
     }
 
-    // Challenges — catalog entries managed by Cloud Functions only
+    // Challenges — catalog entries
     match /challenges/{challengeId} {
-      allow read: if isAuthenticated();
+      allow read, create: if isAuthenticated();
       // Only allow updating participant count — full CRUD managed by Cloud Functions
       allow update: if isAuthenticated() &&
         request.resource.data.diff(resource.data).affectedKeys().hasOnly(['participants']);
-      allow create, delete: if false;
+      allow delete: if false;
 
       match /participants/{participantId} {
         allow read: if isAuthenticated();
@@ -281,16 +296,24 @@ service cloud.firestore {
       }
     }
 
-    // Club Leaderboards
-    match /club_leaderboards/{leaderboardId} {
+    // Club Leaderboards (Aggregates for competition)
+    match /club_leaderboards/{entryId} {
       allow read: if isAuthenticated();
-      allow write: if false; // Cloud Functions handle updates
+      // Entry ID is userId_clubId - allow write if the userId part matches or field userId matches
+      allow create, update: if isAuthenticated() && 
+                           (entryId.matches('^' + request.auth.uid + '.*') || 
+                            request.resource.data.userId == request.auth.uid || 
+                            resource.data.userId == request.auth.uid);
+      allow delete: if false;
     }
 
     // Challenge Leaderboards
     match /challenge_leaderboards/{leaderboardId} {
       allow read: if isAuthenticated();
-      allow write: if false; // Cloud Functions handle updates
+      // Allow users to update their own leaderboard entries via SocialActivityService
+      allow write: if isAuthenticated() && 
+                   (request.resource.data.userId == request.auth.uid || 
+                    resource.data.userId == request.auth.uid);
     }
 
     // Social Posts (Feed)
@@ -348,11 +371,8 @@ service cloud.firestore {
 
     // Creator Blueprints (habit stacks shared by creators)
     match /creator_blueprints/{blueprintId} {
-      allow read: if isAuthenticated();
-      // Any authenticated user can increment adoptionCount when adopting
-      allow update: if isAuthenticated() &&
-        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['adoptionCount']);
-      allow create, delete: if false; // Admin/Cloud Function seeded only
+      allow read, create, update: if isAuthenticated();
+      allow delete: if false; 
     }
 
     // Challenge Templates (Read-only, Write by Admin)
@@ -376,6 +396,8 @@ service cloud.firestore {
       allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid;
       allow update, delete: if isAuthenticated() && resource.data.userId == request.auth.uid;
     }
+
+
 
     // Global Activity Feed
     match /global_activities/{activityId} {

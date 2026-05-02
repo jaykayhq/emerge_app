@@ -97,8 +97,9 @@ void main() {
       await controller.startMission('athlete_1_1');
 
       // Assert
+      verify(() => mockRepository.saveUserStats(any())).called(1);
       final captured = verify(() => mockRepository.saveUserStats(any()))
-          .captured.last as UserProfile;
+          .captured.single as UserProfile;
       expect(captured.worldState.activeNodes, contains('athlete_1_1'));
       expect(captured.worldState.activeNodes, hasLength(1));
     });
@@ -189,8 +190,9 @@ void main() {
       await controller.completeMission('athlete_1_1', xpBoosts, 1);
 
       // Assert
+      verify(() => mockRepository.saveUserStats(any())).called(1);
       final captured = verify(() => mockRepository.saveUserStats(any()))
-          .captured.last as UserProfile;
+          .captured.single as UserProfile;
 
       // Node should be moved from active to claimed
       expect(captured.worldState.activeNodes, isNot(contains('athlete_1_1')));
@@ -273,8 +275,9 @@ void main() {
       await controller.completeMission('athlete_1_1', {'strength': 100}, 1);
 
       // Assert - level should be capped at highestCompletedNodeLevel + 1 = 2
+      verify(() => mockRepository.saveUserStats(any())).called(1);
       final captured = verify(() => mockRepository.saveUserStats(any()))
-          .captured.last as UserProfile;
+          .captured.single as UserProfile;
       expect(captured.avatarStats.level, lessThanOrEqualTo(2));
     });
   });
@@ -290,8 +293,9 @@ void main() {
       await controller.emerge();
 
       // Assert
+      verify(() => mockRepository.saveUserStats(any())).called(1);
       final captured = verify(() => mockRepository.saveUserStats(any()))
-          .captured.last as UserProfile;
+          .captured.single as UserProfile;
       expect(captured.hasEmerged, isTrue);
     });
 
@@ -341,8 +345,9 @@ void main() {
       await controller.updateWorldState(newWorldState);
 
       // Assert
+      verify(() => mockRepository.saveUserStats(any())).called(1);
       final captured = verify(() => mockRepository.saveUserStats(any()))
-          .captured.last as UserProfile;
+          .captured.single as UserProfile;
       expect(captured.worldState.activeNodes, equals(['test-node']));
       expect(captured.worldState.highestCompletedNodeLevel, equals(1));
       expect(captured.worldState.unlockedBuildings, equals(['gym']));
@@ -391,8 +396,9 @@ void main() {
       await controller.unlockBuilding('gym');
 
       // Assert
+      verify(() => mockRepository.saveUserStats(any())).called(1);
       final captured = verify(() => mockRepository.saveUserStats(any()))
-          .captured.last as UserProfile;
+          .captured.single as UserProfile;
       expect(captured.worldState.unlockedBuildings, contains('gym'));
     });
 

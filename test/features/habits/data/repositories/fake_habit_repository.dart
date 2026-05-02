@@ -83,6 +83,7 @@ class FakeHabitRepository implements HabitRepository {
   Future<Either<Failure, Unit>> createHabitsFromBlueprint({
     required String userId,
     required CreatorBlueprint blueprint,
+    String? reminderTime,
   }) async {
     // Create mock habits from blueprint titles
     for (int i = 0; i < blueprint.habitTitles.length; i++) {

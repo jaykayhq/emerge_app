@@ -13,6 +13,7 @@ import 'package:emerge_app/features/gamification/presentation/providers/user_sta
 import '../widgets/tribe_header_widgets.dart';
 import '../widgets/tribe_quests_section.dart';
 import '../widgets/tribe_activity_feed.dart';
+import '../widgets/tribe_accountability_section.dart';
 
 /// Tribe Tab Content - Shared between CommunityScreen (tab) and TribesScreen (standalone)
 class TribeTabContent extends ConsumerStatefulWidget {
@@ -101,6 +102,10 @@ class _TribeTabContentState extends ConsumerState<TribeTabContent> {
                     tribeId: userClub.id,
                     theme: theme,
                   ).animate().fadeIn(delay: 350.ms),
+
+                  const Gap(32),
+
+                  const TribeAccountabilitySection().animate().fadeIn(delay: 400.ms),
 
                   const Gap(32),
 

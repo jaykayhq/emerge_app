@@ -3,13 +3,17 @@ import 'package:emerge_app/features/auth/presentation/providers/auth_providers.d
 import 'package:emerge_app/features/social/data/repositories/friend_repository.dart';
 import 'package:emerge_app/features/social/domain/entities/social_entities.dart';
 import 'package:emerge_app/features/social/domain/repositories/friend_repository.dart';
+import 'package:emerge_app/features/social/presentation/providers/tribes_provider.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 // Legacy stream provider
 export 'friend_stream_provider.dart';
 
 final friendRepositoryProvider = Provider<FriendRepository>((ref) {
-  return FirestoreFriendRepository(FirebaseFirestore.instance);
+  return FirestoreFriendRepository(
+    FirebaseFirestore.instance,
+    ref.watch(socialActivityServiceProvider),
+  );
 });
 
 /// All accountability partners for the current user

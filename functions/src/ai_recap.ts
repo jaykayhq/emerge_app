@@ -9,7 +9,8 @@ import * as admin from "firebase-admin";
  */
 export const generateAiRecap = onCall({
   secrets: ["GROQ_API_KEY"],
-  memory: "256MiB",
+  memory: "512MiB",
+  timeoutSeconds: 60,
 }, async (request) => {
   if (!request.auth) {
     throw new HttpsError("unauthenticated", "User must be authenticated.");
@@ -18,121 +19,177 @@ export const generateAiRecap = onCall({
   const userId = request.auth.uid;
   const db = admin.firestore();
   
-  // 1. Fetch Habits
-  const habitsSnap = await db.collection("habits")
-    .where("userId", "==", userId)
-    .where("isArchived", "==", false)
-    .get();
+  console.log(`[generateAiRecap] Starting for user: ${userId}`);
 
-  if (habitsSnap.empty) {
-    return { success: false, message: "No active habits found." };
-  }
-
-  // 2. Fetch Activity for last 14 days
-  const fourteenDaysAgo = new Date();
-  fourteenDaysAgo.setDate(fourteenDaysAgo.getDate() - 14);
-  
-  const activitySnap = await db.collection("user_activity")
-    .where("userId", "==", userId)
-    .where("type", "==", "habit_completion")
-    .where("timestamp", ">=", fourteenDaysAgo)
-    .get();
-
-  const activityCounts: Record<string, number> = {};
-  activitySnap.docs.forEach((doc: admin.firestore.QueryDocumentSnapshot) => {
-    const data = doc.data();
-    const habitId = data.habitId;
-    if (habitId) {
-      activityCounts[habitId] = (activityCounts[habitId] || 0) + 1;
-    }
-  });
-
-  // 3. Process Habits & Calibration
-  const habitUpdates: Promise<any>[] = [];
-  const recalibrations: string[] = [];
-
-  for (const doc of habitsSnap.docs) {
-    const habitData = doc.data();
-    const habitId = doc.id;
-    const completions = activityCounts[habitId] || 0;
-    const velocity = completions / 14.0; // Daily average over 14 days
-
-    let newDifficulty = habitData.difficulty;
-    let calibrated = false;
-
-    if (velocity >= 0.9 && habitData.difficulty !== "hard") {
-      newDifficulty = "hard";
-      calibrated = true;
-    } else if (velocity <= 0.3 && habitData.difficulty !== "easy") {
-      newDifficulty = "easy";
-      calibrated = true;
+  try {
+    // 1. Fetch User Data & Habits
+    const userDoc = await db.collection("user_stats").doc(userId).get();
+    const habitsSnap = await db.collection("habits").where("userId", "==", userId).get();
+    
+    if (habitsSnap.empty) {
+      console.log(`[generateAiRecap] No habits found for user: ${userId}`);
+      return { success: false, reason: "no_habits" };
     }
 
-    if (calibrated) {
-      habitUpdates.push(db.collection("habits").doc(habitId).update({
-        difficulty: newDifficulty,
-        lastCalibrated: admin.firestore.FieldValue.serverTimestamp(),
-      }));
-      recalibrations.push(`${habitData.title}: ${habitData.difficulty} -> ${newDifficulty}`);
-    }
-  }
+    const habitMap: Record<string, any> = {};
+    habitsSnap.docs.forEach((doc: any) => {
+      habitMap[doc.id] = doc.data();
+    });
 
-  // Execute habit updates
-  if (habitUpdates.length > 0) {
-    await Promise.all(habitUpdates);
-  }
+    // 2. Fetch Last 14 Days of Activity
+    const fourteenDaysAgo = new Date();
+    fourteenDaysAgo.setDate(fourteenDaysAgo.getDate() - 14);
 
-  // 4. Generate AI Insight via Groq
-  const groqApiKey = process.env.GROQ_API_KEY;
-  let insight = "Your journey continues. Stay focused on your small wins.";
+    const activitySnap = await db.collection("user_activity")
+      .where("userId", "==", userId)
+      .where("type", "==", "habit_completion")
+      .where("date", ">=", admin.firestore.Timestamp.fromDate(fourteenDaysAgo))
+      .get();
 
-  if (groqApiKey) {
-    try {
-      const prompt = `
-        User is building habits in Emerge (Identity-First habit tracker).
-        Last 14 days velocity: ${JSON.stringify(activityCounts)}
-        Adjustments made: ${recalibrations.join(", ")}
-        Provide a 2-sentence motivational insight focusing on their 'Identity' (e.g. Creator, Athlete).
-      `;
+    console.log(`[generateAiRecap] Found ${activitySnap.size} activities for the last 14 days`);
 
-      const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${groqApiKey}`,
-        },
-        body: JSON.stringify({
-          model: "llama3-8b-8192",
-          messages: [{ role: "user", content: prompt }],
-          max_tokens: 150,
-        }),
-      });
+    // 3. Analyze Activity
+    const completionsPerHabit: Record<string, number> = {};
+    let totalCompletions = 0;
 
-      if (response.ok) {
-        const result = await response.json();
-        insight = result.choices?.[0]?.message?.content?.trim() || insight;
+    activitySnap.docs.forEach((doc: any) => {
+      const data = doc.data();
+      const habitId = data.habitId;
+      if (habitId) {
+        completionsPerHabit[habitId] = (completionsPerHabit[habitId] || 0) + 1;
+        totalCompletions++;
       }
-    } catch (e) {
-      console.error("Groq AI Error:", e);
+    });
+
+    // Find top habit
+    let topHabitId = null;
+    let maxCompletions = 0;
+    for (const [id, count] of Object.entries(completionsPerHabit)) {
+      if (count > maxCompletions) {
+        maxCompletions = count;
+        topHabitId = id;
+      }
     }
+
+    const topHabitTitle = topHabitId ? (habitMap[topHabitId]?.title || "Unknown Habit") : "None";
+
+    // 4. Recommendation Logic (Recalibrations)
+    const recalibrations: string[] = [];
+    const habitUpdates: Promise<any>[] = [];
+
+    for (const [habitId, count] of Object.entries(completionsPerHabit)) {
+      const habitData = habitMap[habitId];
+      if (!habitData) continue;
+
+      const velocity = count / 14.0;
+      
+      // If performing exceptionally well on a non-hard habit, suggest hardening
+      if (velocity > 0.8 && habitData.difficulty !== "hard") {
+        const difficultyOrder: ("easy" | "medium" | "hard")[] = ["easy", "medium", "hard"];
+        const currentIndex = difficultyOrder.indexOf(habitData.difficulty as any);
+        const nextDifficulty = currentIndex !== -1 && currentIndex < 2 ? difficultyOrder[currentIndex + 1] : habitData.difficulty;
+        
+        if (nextDifficulty !== habitData.difficulty) {
+          recalibrations.push(`Upgraded ${habitData.title} to ${nextDifficulty} to match your momentum.`);
+          habitUpdates.push(db.collection("habits").doc(habitId).update({
+            difficulty: nextDifficulty,
+            lastCalibrated: admin.firestore.FieldValue.serverTimestamp(),
+          }));
+        }
+      }
+    }
+
+    if (habitUpdates.length > 0) {
+      await Promise.all(habitUpdates);
+      console.log(`[generateAiRecap] Applied ${habitUpdates.length} habit difficulty updates`);
+    }
+
+    // 5. AI Insight Generation
+    let insightHeadline = "Identity Emerging";
+    let insightBody = "You're building momentum. Every completion is a vote for the person you wish to become.";
+    
+    const groqApiKey = process.env.GROQ_API_KEY;
+    if (groqApiKey && totalCompletions > 0) {
+      try {
+        console.log("[generateAiRecap] Requesting Groq AI Insight...");
+        const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+          method: "POST",
+          headers: {
+            "Authorization": `Bearer ${groqApiKey}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            model: "llama-3.1-8b-instant",
+            messages: [
+              {
+                role: "system",
+                content: "You are the Emerge Identity Coach. You analyze a user's habit performance and provide a short (4-6 words) punchy headline and a 1-2 sentence deep identity-first insight. Focus on WHO they are becoming, not just what they did.",
+              },
+              {
+                role: "user",
+                content: `Last 14 days activity: ${JSON.stringify(completionsPerHabit)}. Top habit: ${topHabitTitle}. Total completions: ${totalCompletions}. Provide JSON: {"headline": "...", "insight": "..."}`,
+              },
+            ],
+            response_format: { type: "json_object" },
+          }),
+        });
+
+        if (response.ok) {
+          const aiData = await response.json() as any;
+          const content = JSON.parse(aiData.choices[0]?.message?.content || "{}");
+          insightHeadline = content.headline || insightHeadline;
+          insightBody = content.insight || insightBody;
+          console.log("[generateAiRecap] Groq AI Insight generated successfully");
+        } else {
+          console.error("[generateAiRecap] Groq API Error:", await response.text());
+        }
+      } catch (aiError) {
+        console.error("[generateAiRecap] Failed to call AI service:", aiError);
+      }
+    }
+
+    // 6. Assemble & Save Recap
+    const now = new Date();
+    const sevenDaysAgo = new Date();
+    sevenDaysAgo.setDate(now.getDate() - 7);
+
+    const recapId = `recap_${now.getTime()}`;
+    const recapData = {
+      id: recapId,
+      userId: userId,
+      startDate: sevenDaysAgo.toISOString(),
+      endDate: now.toISOString(),
+      totalHabitsCompleted: totalCompletions,
+      perfectDays: Math.floor(totalCompletions / 2), // Simplified for now
+      totalXpEarned: totalCompletions * 20,
+      topHabitName: topHabitTitle,
+      currentLevel: userDoc.data()?.level || 1,
+      worldGrowthPercentage: 0.05, // Placeholder
+      dominantIdentityThisWeek: userDoc.data()?.archetype || "Explorer",
+      identityHeadline: insightHeadline,
+      aiInsight: insightBody,
+      velocityInsights: recalibrations,
+      recommendedDifficultyAdjustment: recalibrations.length > 0 ? "medium" : null,
+      isComplete: true,
+      createdAt: admin.firestore.FieldValue.serverTimestamp(),
+    };
+
+    // Save to user's stats subcollection (where the app expects it)
+    await db.collection("user_stats").doc(userId).collection("recaps").doc(recapId).set(recapData);
+    
+    // Also keep the global collection for auditing
+    await db.collection("weekly_recaps").doc(recapId).set(recapData);
+
+    console.log(`[generateAiRecap] Success! Recap saved with ID: ${recapId}`);
+    return { 
+      success: true, 
+      recapId: recapId,
+      insight: insightBody,
+      adjustments: recalibrations,
+    };
+
+  } catch (error: any) {
+    console.error("[generateAiRecap] CRITICAL ERROR:", error);
+    throw new HttpsError("internal", error.message || "An unexpected error occurred during recap generation.");
   }
-
-  // 5. Create Weekly Recap Document
-  const recapData = {
-    userId,
-    timestamp: admin.firestore.FieldValue.serverTimestamp(),
-    insight,
-    recalibrations,
-    velocity: activityCounts,
-    identityFocus: "Evolving Identity", // Simplified for now
-  };
-
-  const recapRef = await db.collection("weekly_recaps").add(recapData);
-
-  return {
-    success: true,
-    recapId: recapRef.id,
-    insight,
-    adjustments: recalibrations,
-  };
 });

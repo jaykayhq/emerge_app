@@ -1,6 +1,7 @@
 import 'package:emerge_app/core/theme/archetype_theme.dart';
 import 'package:emerge_app/core/utils/app_logger.dart';
 import 'package:emerge_app/features/auth/domain/entities/user_extension.dart';
+import 'package:emerge_app/features/habits/domain/entities/habit.dart';
 import 'package:emerge_app/features/onboarding/presentation/providers/onboarding_provider.dart';
 import 'package:emerge_app/features/gamification/presentation/providers/user_stats_providers.dart';
 
@@ -38,12 +39,17 @@ class _FirstHabitScreenState extends ConsumerState<FirstHabitScreen> {
     }
 
     // Store habit info in onboarding state
-    ref
-        .read(onboardingStateControllerProvider.notifier)
-        .update(
+    ref.read(onboardingStateControllerProvider.notifier).update(
           (s) => s.copyWith(
             habitStacks: [
-              HabitStack(anchorId: 'onboarding_anchor', habitId: habitTitle),
+              HabitStack(
+                anchorId: 'onboarding_anchor',
+                habitId: habitTitle,
+                defaultTime: _selectedHabit?.defaultTime != null
+                    ? '${_selectedHabit!.defaultTime!.hour}:${_selectedHabit!.defaultTime!.minute}'
+                    : null,
+                timeOfDayPreference: _selectedHabit?.timeOfDayPreference?.name,
+              ),
             ],
             anchors: [_selectedAnchor!],
           ),
@@ -54,6 +60,19 @@ class _FirstHabitScreenState extends ConsumerState<FirstHabitScreen> {
 
     // Navigate to world reveal (which then goes to dashboard)
     context.push('/onboarding/world-reveal');
+  }
+
+  String _getAnchorForPreference(TimeOfDayPreference pref) {
+    switch (pref) {
+      case TimeOfDayPreference.morning:
+        return 'After waking up';
+      case TimeOfDayPreference.afternoon:
+        return 'After lunch';
+      case TimeOfDayPreference.evening:
+        return 'Before bed';
+      case TimeOfDayPreference.anytime:
+        return 'After work';
+    }
   }
 
   void _skipForNow() {
@@ -252,8 +271,12 @@ class _FirstHabitScreenState extends ConsumerState<FirstHabitScreen> {
                               onTap: () {
                                 setState(() {
                                   _selectedHabit = habit;
-                                  // Auto-select anchor if not set, or keep existing?
-                                  // Let's keep anchor separate to force a conscious choice
+                                  // Auto-select anchor if template provides preference
+                                  if (habit.timeOfDayPreference != null) {
+                                    _selectedAnchor = _getAnchorForPreference(
+                                      habit.timeOfDayPreference!,
+                                    );
+                                  }
                                   _isCustomHabit = false;
                                   _customHabitTitleController.clear();
                                 });

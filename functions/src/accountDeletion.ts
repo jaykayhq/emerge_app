@@ -1,15 +1,14 @@
+import { onRequest } from "firebase-functions/v2/https";
+
 /**
- * Cloud Function: Account Deletion Page
+ * Cloud Function: Account Deletion Page (Gen 2)
  *
  * Serves a static HTML page with instructions for deleting
  * your Emerge account and all associated data.
  *
  * URL: https://us-central1-tradeflash-l2966.cloudfunctions.net/accountDeletion
  */
-
-import * as functionsV1 from "firebase-functions/v1";
-
-export const accountDeletion = functionsV1.https.onRequest((_req, res) => {
+export const accountDeletion = onRequest((_req, res) => {
   res.status(200).send(`<!DOCTYPE html>
 <html lang="en">
 <head>

@@ -20,6 +20,8 @@ class HabitTemplate {
   final String frequency;
   final String timeOfDay;
   final HabitAttribute attribute;
+  final TimeOfDay? defaultTime;
+  final TimeOfDayPreference? timeOfDayPreference;
 
   const HabitTemplate({
     required this.title,
@@ -30,6 +32,8 @@ class HabitTemplate {
     this.frequency = 'Daily',
     this.timeOfDay = 'Morning',
     this.attribute = HabitAttribute.vitality,
+    this.defaultTime,
+    this.timeOfDayPreference,
   });
 
   /// Get the identity color for this template's attribute
@@ -46,6 +50,8 @@ class HabitTemplate {
       anchor: suggestion.anchor,
       category: category,
       emoji: _getEmojiForIcon(suggestion.icon), // Convert icon to emoji
+      defaultTime: suggestion.defaultTime,
+      timeOfDayPreference: suggestion.timeOfDayPreference,
     );
   }
 

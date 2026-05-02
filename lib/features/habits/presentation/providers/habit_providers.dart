@@ -111,10 +111,7 @@ Stream<List<Habit>> habits(Ref ref) {
 Future<void> createHabit(Ref ref, Habit habit) async {
   try {
     // Check limit logic
-    final isPremiumAsync = ref.read(isPremiumProvider);
-    // Default to false if still loading or error, but ideally we should wait.
-    // Since this is a simple provider, we'll try to get the value if available.
-    final isPremium = isPremiumAsync.value ?? false;
+    final isPremium = await ref.read(isPremiumProvider.future);
 
     if (!isPremium) {
       // Check current habit count
@@ -137,7 +134,7 @@ Future<void> createHabit(Ref ref, Habit habit) async {
             return; // Provider was disposed, silently return
           }
           throw SubscriptionLimitReachedException(
-            'You have reached the limit of $freeHabitLimit active habits on the free tier. Upgrade to add more.',
+            'You have reached the limit of $freeHabitLimit active habits on the free tier. Upgrade to Premium for unlimited habits!',
           );
         }
       }

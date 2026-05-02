@@ -2,6 +2,7 @@ import 'package:emerge_app/core/theme/app_theme.dart';
 import 'package:emerge_app/core/presentation/widgets/glassmorphism_card.dart';
 import 'package:flutter/material.dart';
 import 'package:emerge_app/core/theme/emerge_colors.dart';
+import 'package:emerge_app/core/presentation/widgets/skeleton_shimmer.dart';
 
 /// AI Coach card that provides reflections and habit suggestions
 /// Combines the AI Reflections and Goldilocks features into one unified card
@@ -120,20 +121,14 @@ class AiCoachCard extends StatelessWidget {
           ),
           const SizedBox(height: 16),
 
-          // Insight text
           if (isLoading)
-            Center(
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: SizedBox(
-                  width: 24,
-                  height: 24,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2,
-                    color: _accent,
-                  ),
-                ),
-              ),
+            const Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                SkeletonShimmer(width: double.infinity, height: 14),
+                SizedBox(height: 8),
+                SkeletonShimmer(width: 200, height: 14),
+              ],
             )
           else
             Text(
@@ -237,10 +232,10 @@ class _ActionButton extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
         decoration: BoxDecoration(
-          color: color.withValues(alpha:0.1),
+          color: color.withValues(alpha: 0.2), // Increased default visibility
           borderRadius: BorderRadius.circular(10),
           border: Border.all(
-            color: color.withValues(alpha:isLockedState ? 0.15 : 0.3),
+            color: color.withValues(alpha: 0.4),
           ),
         ),
         child: FittedBox(
@@ -261,8 +256,8 @@ class _ActionButton extends StatelessWidget {
               Text(
                 label,
                 style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                  color: isLockedState ? color.withValues(alpha:0.5) : color,
-                  fontWeight: FontWeight.w600,
+                  color: color,
+                  fontWeight: FontWeight.bold,
                 ),
               ),
             ],

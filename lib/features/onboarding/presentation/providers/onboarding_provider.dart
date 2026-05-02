@@ -283,27 +283,50 @@ class OnboardingController extends _$OnboardingController {
             ? state.anchors[i]
             : 'After waking up';
 
-        // Map anchor text to TimeOfDayPreference and specify default times
+        // Use defaults from stack if available, otherwise fallback to anchor mapping
         TimeOfDayPreference tdp = TimeOfDayPreference.morning;
         TimeOfDay? reminderTime;
 
-        final lowerAnchor = anchorText.toLowerCase();
-        if (lowerAnchor.contains('wake') || lowerAnchor.contains('morning')) {
-          tdp = TimeOfDayPreference.morning;
-          reminderTime = const TimeOfDay(hour: 8, minute: 0);
-        } else if (lowerAnchor.contains('lunch') ||
-            lowerAnchor.contains('afternoon')) {
-          tdp = TimeOfDayPreference.afternoon;
-          reminderTime = const TimeOfDay(hour: 12, minute: 0);
-        } else if (lowerAnchor.contains('bed') ||
-            lowerAnchor.contains('evening') ||
-            lowerAnchor.contains('night')) {
-          tdp = TimeOfDayPreference.evening;
-          reminderTime = const TimeOfDay(hour: 21, minute: 0);
-        } else if (lowerAnchor.contains('work')) {
-          // Explicitly map After work to Evening as requested
-          tdp = TimeOfDayPreference.evening;
-          reminderTime = const TimeOfDay(hour: 18, minute: 0);
+        bool hasDefaults = false;
+
+        if (stack.timeOfDayPreference != null) {
+          tdp = TimeOfDayPreference.values.firstWhere(
+            (e) => e.name == stack.timeOfDayPreference,
+            orElse: () => TimeOfDayPreference.morning,
+          );
+          hasDefaults = true;
+        }
+
+        if (stack.defaultTime != null) {
+          final parts = stack.defaultTime!.split(':');
+          if (parts.length == 2) {
+            reminderTime = TimeOfDay(
+              hour: int.parse(parts[0]),
+              minute: int.parse(parts[1]),
+            );
+            hasDefaults = true;
+          }
+        }
+
+        if (!hasDefaults) {
+          // Map anchor text to TimeOfDayPreference and specify default times
+          final lowerAnchor = anchorText.toLowerCase();
+          if (lowerAnchor.contains('wake') || lowerAnchor.contains('morning')) {
+            tdp = TimeOfDayPreference.morning;
+            reminderTime = const TimeOfDay(hour: 8, minute: 0);
+          } else if (lowerAnchor.contains('lunch') ||
+              lowerAnchor.contains('afternoon')) {
+            tdp = TimeOfDayPreference.afternoon;
+            reminderTime = const TimeOfDay(hour: 12, minute: 0);
+          } else if (lowerAnchor.contains('bed') ||
+              lowerAnchor.contains('evening') ||
+              lowerAnchor.contains('night')) {
+            tdp = TimeOfDayPreference.evening;
+            reminderTime = const TimeOfDay(hour: 21, minute: 0);
+          } else if (lowerAnchor.contains('work')) {
+            tdp = TimeOfDayPreference.evening;
+            reminderTime = const TimeOfDay(hour: 18, minute: 0);
+          }
         }
 
         // Map attribute based on archetype for consistent coloring

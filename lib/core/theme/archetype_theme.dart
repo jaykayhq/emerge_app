@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:emerge_app/features/habits/domain/entities/habit.dart';
 import 'package:emerge_app/features/auth/domain/entities/user_extension.dart';
 
 /// Extension to access identity colors in the theme
@@ -153,18 +154,24 @@ class ArchetypeTheme {
         description: '3 high-intensity runs',
         anchor: 'After coffee',
         icon: Icons.run_circle,
+        defaultTime: const TimeOfDay(hour: 7, minute: 0),
+        timeOfDayPreference: TimeOfDayPreference.morning,
       ),
       ArchetypeHabitSuggestion(
         title: 'Hydration Goal',
         description: '3L of water daily',
         anchor: 'Throughout the day',
         icon: Icons.water_drop,
+        defaultTime: const TimeOfDay(hour: 9, minute: 0),
+        timeOfDayPreference: TimeOfDayPreference.morning,
       ),
       ArchetypeHabitSuggestion(
         title: 'Sleep Routine',
         description: '7-8 hours of rest',
         anchor: 'Before 11pm',
         icon: Icons.bedtime,
+        defaultTime: const TimeOfDay(hour: 22, minute: 30),
+        timeOfDayPreference: TimeOfDayPreference.evening,
       ),
     ],
     strengths: [
@@ -220,18 +227,24 @@ class ArchetypeTheme {
         description: '20 pages of a non-fiction book',
         anchor: 'Evening cool-down',
         icon: Icons.menu_book,
+        defaultTime: const TimeOfDay(hour: 20, minute: 0),
+        timeOfDayPreference: TimeOfDayPreference.evening,
       ),
       ArchetypeHabitSuggestion(
         title: 'Daily Digest',
         description: 'Summarize one new concept',
         anchor: 'After lunch',
         icon: Icons.summarize,
+        defaultTime: const TimeOfDay(hour: 13, minute: 0),
+        timeOfDayPreference: TimeOfDayPreference.afternoon,
       ),
       ArchetypeHabitSuggestion(
         title: 'Curiosity Log',
         description: 'Write down one question to research',
         anchor: 'During morning coffee',
         icon: Icons.psychology,
+        defaultTime: const TimeOfDay(hour: 8, minute: 30),
+        timeOfDayPreference: TimeOfDayPreference.morning,
       ),
     ],
     strengths: [
@@ -287,18 +300,24 @@ class ArchetypeTheme {
         description: '15 mins of pure creation',
         anchor: 'First thing in morning',
         icon: Icons.edit,
+        defaultTime: const TimeOfDay(hour: 9, minute: 0),
+        timeOfDayPreference: TimeOfDayPreference.morning,
       ),
       ArchetypeHabitSuggestion(
         title: 'Inspiration Walk',
         description: 'Observe patterns in nature',
         anchor: 'After work',
         icon: Icons.brush,
+        defaultTime: const TimeOfDay(hour: 17, minute: 0),
+        timeOfDayPreference: TimeOfDayPreference.afternoon,
       ),
       ArchetypeHabitSuggestion(
         title: 'Portfolio Update',
         description: 'Document one small win',
         anchor: 'Friday afternoon',
         icon: Icons.auto_fix_high,
+        defaultTime: const TimeOfDay(hour: 16, minute: 0),
+        timeOfDayPreference: TimeOfDayPreference.afternoon,
       ),
     ],
     strengths: [
@@ -354,18 +373,24 @@ class ArchetypeTheme {
         description: 'Meditate on potential obstacles',
         anchor: 'During commute',
         icon: Icons.self_improvement,
+        defaultTime: const TimeOfDay(hour: 8, minute: 0),
+        timeOfDayPreference: TimeOfDayPreference.morning,
       ),
       ArchetypeHabitSuggestion(
         title: 'Discomfort Training',
         description: 'Take a cold shower',
         anchor: 'After gym',
         icon: Icons.ac_unit,
+        defaultTime: const TimeOfDay(hour: 7, minute: 30),
+        timeOfDayPreference: TimeOfDayPreference.morning,
       ),
       ArchetypeHabitSuggestion(
         title: 'Evening Review',
         description: 'What did I do well? What could be better?',
         anchor: 'Before sleep',
         icon: Icons.event_note,
+        defaultTime: const TimeOfDay(hour: 21, minute: 30),
+        timeOfDayPreference: TimeOfDayPreference.evening,
       ),
     ],
     strengths: [
@@ -422,18 +447,24 @@ class ArchetypeTheme {
         description: 'Communion before the world wakes',
         anchor: 'Sunrise',
         icon: Icons.wb_sunny,
+        defaultTime: const TimeOfDay(hour: 5, minute: 30),
+        timeOfDayPreference: TimeOfDayPreference.morning,
       ),
       ArchetypeHabitSuggestion(
         title: 'Sacred Reading',
         description: 'Internalize the timeless wisdom',
         anchor: 'After morning coffee',
         icon: Icons.auto_stories,
+        defaultTime: const TimeOfDay(hour: 8, minute: 30),
+        timeOfDayPreference: TimeOfDayPreference.morning,
       ),
       ArchetypeHabitSuggestion(
         title: 'Dhikr / Contemplation',
         description: 'Constant awareness of the Divine',
         anchor: 'Between tasks',
         icon: Icons.spa,
+        defaultTime: const TimeOfDay(hour: 12, minute: 0),
+        timeOfDayPreference: TimeOfDayPreference.afternoon,
       ),
     ],
     strengths: [
@@ -507,12 +538,16 @@ class ArchetypeHabitSuggestion {
   final String description;
   final String anchor;
   final IconData icon;
+  final TimeOfDay? defaultTime;
+  final TimeOfDayPreference? timeOfDayPreference;
 
   const ArchetypeHabitSuggestion({
     required this.title,
     required this.description,
     required this.anchor,
     required this.icon,
+    this.defaultTime,
+    this.timeOfDayPreference,
   });
 }
 

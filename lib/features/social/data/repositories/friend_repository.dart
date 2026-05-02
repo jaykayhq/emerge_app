@@ -3,10 +3,13 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:emerge_app/features/social/domain/entities/social_entities.dart';
 import 'package:emerge_app/features/social/domain/repositories/friend_repository.dart';
 
+import 'package:emerge_app/features/social/domain/services/club_activity_service.dart';
+
 class FirestoreFriendRepository implements FriendRepository {
   final FirebaseFirestore _firestore;
+  final SocialActivityService? _socialActivityService;
 
-  FirestoreFriendRepository(this._firestore);
+  FirestoreFriendRepository(this._firestore, [this._socialActivityService]);
 
   @override
   Future<List<Friend>> getFriends(String userId) async {
@@ -161,6 +164,16 @@ class FirestoreFriendRepository implements FriendRepository {
 
     // Update request status
     await requestDoc.reference.update({'status': 'accepted'});
+
+    // Log social activity
+    if (_socialActivityService != null) {
+      _socialActivityService.logPartnerJoined(
+        userId: recipientId,
+        userName: data['recipientName'] ?? 'A member', // Assuming we add this to request
+        archetype: data['recipientArchetype'] ?? 'Stoic',
+        partnerName: data['senderName'] ?? 'a partner',
+      );
+    }
   }
 
   @override

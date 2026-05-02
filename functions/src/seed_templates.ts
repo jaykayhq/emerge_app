@@ -1,4 +1,4 @@
-import * as functions from "firebase-functions/v1";
+import { onRequest } from "firebase-functions/v2/https";
 import * as admin from "firebase-admin";
 
 // Helper to access Firestore
@@ -16,11 +16,12 @@ const getDb = () => {
  * @returns true if all fields are valid strings, false otherwise
  */
 function validateInput(data: any, requiredFields: string[]): boolean {
-  if (!data || typeof data !== 'object') {
+  if (!data || typeof data !== "object") {
     return false;
   }
   for (const field of requiredFields) {
-    if (!data[field] || typeof data[field] !== 'string' || data[field].trim() === '') {
+    if (!data[field] || typeof data[field] !== "string" ||
+        data[field].trim() === "") {
       return false;
     }
   }
@@ -37,7 +38,7 @@ const TEMPLATES = [
     affiliateLink: "https://nike.com?ref=emerge",
     sponsorName: "Nike Running",
     requirements: {
-      type: "habit_completion", habitType: "exercise", days: 30
+      type: "habit_completion", habitType: "exercise", days: 30,
     },
     priority: 1,
     used: false,
@@ -50,7 +51,7 @@ const TEMPLATES = [
     affiliateLink: "https://fitbit.com?ref=emerge",
     sponsorName: "Fitbit",
     requirements: {
-      type: "steps", count: 10000, days: 7
+      type: "steps", count: 10000, days: 7,
     },
     priority: 2,
     used: false,
@@ -63,7 +64,7 @@ const TEMPLATES = [
     affiliateLink: "https://wimhofmethod.com?ref=emerge",
     sponsorName: "Wim Hof",
     requirements: {
-      type: "habit_completion", habitType: "cold_exposure", days: 21
+      type: "habit_completion", habitType: "cold_exposure", days: 21,
     },
     priority: 3,
     used: false,
@@ -76,7 +77,7 @@ const TEMPLATES = [
     affiliateLink: "https://aaptiv.com?ref=emerge",
     sponsorName: "Aaptiv",
     requirements: {
-      type: "habit_completion", habitType: "exercise", days: 21
+      type: "habit_completion", habitType: "exercise", days: 21,
     },
     priority: 4,
     used: false,
@@ -89,7 +90,7 @@ const TEMPLATES = [
     affiliateLink: "https://pliability.com?ref=emerge",
     sponsorName: "Pliability",
     requirements: {
-      type: "habit_completion", habitType: "mobility", days: 7
+      type: "habit_completion", habitType: "mobility", days: 7,
     },
     priority: 5,
     used: false,
@@ -104,7 +105,7 @@ const TEMPLATES = [
     affiliateLink: "https://headspace.com?ref=emerge",
     sponsorName: "Headspace",
     requirements: {
-      type: "habit_completion", habitType: "meditation", days: 30
+      type: "habit_completion", habitType: "meditation", days: 30,
     },
     priority: 6,
     used: false,
@@ -117,7 +118,7 @@ const TEMPLATES = [
     affiliateLink: "https://dayoneapp.com?ref=emerge",
     sponsorName: "Day One",
     requirements: {
-      type: "habit_completion", habitType: "journaling", days: 21
+      type: "habit_completion", habitType: "journaling", days: 21,
     },
     priority: 7,
     used: false,
@@ -130,7 +131,7 @@ const TEMPLATES = [
     affiliateLink: "https://opal.so?ref=emerge",
     sponsorName: "Opal",
     requirements: {
-      type: "screen_time", limit: 120, days: 2
+      type: "screen_time", limit: 120, days: 2,
     },
     priority: 8,
     used: false,
@@ -143,7 +144,7 @@ const TEMPLATES = [
     affiliateLink: "https://stoicapp.com?ref=emerge",
     sponsorName: "Stoic",
     requirements: {
-      type: "habit_completion", habitType: "gratitude", days: 14
+      type: "habit_completion", habitType: "gratitude", days: 14,
     },
     priority: 9,
     used: false,
@@ -156,7 +157,7 @@ const TEMPLATES = [
     affiliateLink: "https://wimhofmethod.com?ref=emerge",
     sponsorName: "Wim Hof",
     requirements: {
-      type: "habit_completion", habitType: "cold", days: 7
+      type: "habit_completion", habitType: "cold", days: 7,
     },
     priority: 10,
     used: false,
@@ -171,7 +172,7 @@ const TEMPLATES = [
     affiliateLink: "https://kindle.amazon.com?ref=emerge",
     sponsorName: "Kindle",
     requirements: {
-      type: "habit_completion", habitType: "reading", count: 7
+      type: "habit_completion", habitType: "reading", count: 7,
     },
     priority: 11,
     used: false,
@@ -184,7 +185,7 @@ const TEMPLATES = [
     affiliateLink: "https://blinkist.com?ref=emerge",
     sponsorName: "Blinkist",
     requirements: {
-      type: "habit_completion", habitType: "reading", pages: 100
+      type: "habit_completion", habitType: "reading", pages: 100,
     },
     priority: 12,
     used: false,
@@ -197,7 +198,7 @@ const TEMPLATES = [
     affiliateLink: "https://duolingo.com?ref=emerge",
     sponsorName: "Duolingo",
     requirements: {
-      type: "habit_completion", habitType: "learning", days: 14
+      type: "habit_completion", habitType: "learning", days: 14,
     },
     priority: 13,
     used: false,
@@ -210,7 +211,7 @@ const TEMPLATES = [
     affiliateLink: "https://ulysses.app?ref=emerge",
     sponsorName: "Ulysses",
     requirements: {
-      type: "habit_completion", habitType: "writing", words: 30000
+      type: "habit_completion", habitType: "writing", words: 30000,
     },
     priority: 14,
     used: false,
@@ -223,7 +224,7 @@ const TEMPLATES = [
     affiliateLink: "https://centered.app?ref=emerge",
     sponsorName: "Centered",
     requirements: {
-      type: "habit_completion", habitType: "focus", sessions: 3
+      type: "habit_completion", habitType: "focus", sessions: 3,
     },
     priority: 15,
     used: false,
@@ -238,7 +239,7 @@ const TEMPLATES = [
     affiliateLink: "https://skillshare.com?ref=emerge",
     sponsorName: "Skillshare",
     requirements: {
-      type: "habit_completion", habitType: "creation", days: 30
+      type: "habit_completion", habitType: "creation", days: 30,
     },
     priority: 16,
     used: false,
@@ -251,7 +252,7 @@ const TEMPLATES = [
     affiliateLink: "https://yousician.com?ref=emerge",
     sponsorName: "Yousician",
     requirements: {
-      type: "habit_completion", habitType: "practice", days: 21
+      type: "habit_completion", habitType: "practice", days: 21,
     },
     priority: 17,
     used: false,
@@ -264,7 +265,7 @@ const TEMPLATES = [
     affiliateLink: "https://codecademy.com?ref=emerge",
     sponsorName: "Codecademy",
     requirements: {
-      type: "habit_completion", habitType: "coding", days: 100
+      type: "habit_completion", habitType: "coding", days: 100,
     },
     priority: 18,
     used: false,
@@ -277,7 +278,7 @@ const TEMPLATES = [
     affiliateLink: "https://adobe.com?ref=emerge",
     sponsorName: "Adobe",
     requirements: {
-      type: "habit_completion", habitType: "photography", days: 30
+      type: "habit_completion", habitType: "photography", days: 30,
     },
     priority: 19,
     used: false,
@@ -290,7 +291,7 @@ const TEMPLATES = [
     affiliateLink: "https://producthunt.com?ref=emerge",
     sponsorName: "Product Hunt",
     requirements: {
-      type: "habit_completion", habitType: "ship", count: 1
+      type: "habit_completion", habitType: "ship", count: 1,
     },
     priority: 20,
     used: false,
@@ -300,11 +301,6 @@ const TEMPLATES = [
 /**
  * HTTP Trigger: Seeds challenge templates into Firestore.
  * REQUIRES ADMIN AUTHENTICATION
- * 
- * SECURITY IMPROVEMENTS:
- * - Rate limiting to prevent brute force attacks
- * - Token validation against environment variable
- * - Consider using Firebase Auth for production
  */
 
 // Module-level rate limiting storage
@@ -312,84 +308,88 @@ const rateLimitStorage = new Map<string, {count: number, resetTime: number}>();
 const RATE_LIMIT_WINDOW_MS = 60000; // 1 minute
 const MAX_REQUESTS_PER_WINDOW = 10;
 
-export const seedChallengeTemplates = functions.https.onRequest(
-  async (req, res) => {
-    // Apply rate limiting - max 10 requests per minute per IP
-    const clientIp = req.ip || req.socket.remoteAddress || 'unknown';
-    const now = Date.now();
-    
-    const clientData = rateLimitStorage.get(clientIp) || {count: 0, resetTime: now + RATE_LIMIT_WINDOW_MS};
-    
-    if (now > clientData.resetTime) {
-      // Reset window
-      clientData.count = 1;
-      clientData.resetTime = now + RATE_LIMIT_WINDOW_MS;
-    } else {
-      clientData.count++;
-      if (clientData.count > MAX_REQUESTS_PER_WINDOW) {
-        res.status(429).send("Too many requests - rate limit exceeded");
-        return;
-      }
-    }
-    rateLimitStorage.set(clientIp, clientData);
+export const seedChallengeTemplates = onRequest({
+  memory: "256MiB",
+  invoker: "public",
+}, async (req, res) => {
+  // Apply rate limiting - max 10 requests per minute per IP
+  const clientIp = req.ip || req.socket.remoteAddress || "unknown";
+  const now = Date.now();
 
-    // Verify admin authentication via header
-    const authHeader = req.get("authorization");
-    if (!authHeader?.startsWith("Bearer ")) {
-      res.status(401).send("Unauthorized: Missing or invalid Bearer token");
+  const clientData = rateLimitStorage.get(clientIp) ||
+    {count: 0, resetTime: now + RATE_LIMIT_WINDOW_MS};
+
+  if (now > clientData.resetTime) {
+    // Reset window
+    clientData.count = 1;
+    clientData.resetTime = now + RATE_LIMIT_WINDOW_MS;
+  } else {
+    clientData.count++;
+    if (clientData.count > MAX_REQUESTS_PER_WINDOW) {
+      res.status(429).send("Too many requests - rate limit exceeded");
       return;
     }
+  }
+  rateLimitStorage.set(clientIp, clientData);
 
-    const authToken = authHeader.split(" ")[1];
-    if (!authToken || authToken !== process.env.ADMIN_SECRET) {
-      res.status(403).send("Forbidden: Invalid admin token");
-      return;
-    }
+  // Verify admin authentication via header
+  const authHeader = req.get("authorization");
+  if (!authHeader?.startsWith("Bearer ")) {
+    res.status(401).send("Unauthorized: Missing or invalid Bearer token");
+    return;
+  }
 
-    // Validate request method
-    if (req.method !== 'POST' && req.method !== 'PUT') {
-      res.status(405).send("Method not allowed");
-      return;
-    }
+  const authToken = authHeader.split(" ")[1];
+  if (!authToken || authToken !== process.env.ADMIN_SECRET) {
+    res.status(403).send("Forbidden: Invalid admin token");
+    return;
+  }
 
-    // Validate request body structure (optional - for bulk seeding)
-    if (req.body && typeof req.body === 'object') {
-      if (Array.isArray(req.body.templates)) {
-        // Validate each template has required fields
-        const requiredTemplateFields = ['title', 'description', 'category', 'xpReward'];
-        for (let i = 0; i < req.body.templates.length; i++) {
-          const template = req.body.templates[i];
-          if (!validateInput(template, requiredTemplateFields)) {
-            res.status(400).send(`Invalid template at index ${i}: missing required fields`);
-            return;
-          }
-          if (typeof template.xpReward !== 'number' || template.xpReward < 0) {
-            res.status(400).send(`Invalid template at index ${i}: xpReward must be a positive number`);
-            return;
-          }
+  // Validate request method
+  if (req.method !== "POST" && req.method !== "PUT") {
+    res.status(405).send("Method not allowed");
+    return;
+  }
+
+  // Validate request body structure (optional - for bulk seeding)
+  if (req.body && typeof req.body === "object") {
+    if (Array.isArray(req.body.templates)) {
+      // Validate each template has required fields
+      const requiredFields = ["title", "description", "category", "xpReward"];
+      for (let i = 0; i < req.body.templates.length; i++) {
+        const template = req.body.templates[i];
+        if (!validateInput(template, requiredFields)) {
+          res.status(400).send(`Invalid template at index ${i}`);
+          return;
+        }
+        if (typeof template.xpReward !== "number" || template.xpReward < 0) {
+          res.status(400).send(`Invalid xpReward at index ${i}`);
+          return;
         }
       }
     }
+  }
 
-    const db = getDb();
-    const batch = db.batch();
+  const db = getDb();
+  const batch = db.batch();
 
-    try {
-      // Use provided templates or fall back to default TEMPLATES
-      const templatesToSeed = req.body?.templates || TEMPLATES;
+  try {
+    // Use provided templates or fall back to default TEMPLATES
+    const templatesToSeed = req.body?.templates || TEMPLATES;
 
-      for (const template of templatesToSeed) {
-        const ref = db.collection("challengeTemplates").doc(); // Auto-ID
-        batch.set(ref, {
-          ...template,
-          createdAt: admin.firestore.FieldValue.serverTimestamp(),
-        });
-      }
-
-      await batch.commit();
-      res.status(200).send(`Seeded ${templatesToSeed.length} templates.`);
-    } catch (error) {
-      console.error("Error seeding templates:", error);
-      res.status(500).send("Error seeding templates");
+    for (const template of templatesToSeed) {
+      const ref = db.collection("challengeTemplates").doc(); // Auto-ID
+      batch.set(ref, {
+        ...template,
+        createdAt: admin.firestore.FieldValue.serverTimestamp(),
+      });
     }
-  });
+
+    await batch.commit();
+    res.status(200).send(`Seeded ${templatesToSeed.length} templates.`);
+  } catch (error) {
+    console.error("Error seeding templates:", error);
+    res.status(500).send("Error seeding templates");
+  }
+});
+

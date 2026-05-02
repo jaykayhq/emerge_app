@@ -3,10 +3,12 @@ import 'package:emerge_app/core/theme/app_theme.dart';
 import 'package:emerge_app/features/ai/domain/services/ai_personalization_service.dart';
 import 'package:emerge_app/features/habits/presentation/providers/habit_providers.dart';
 import 'package:emerge_app/features/gamification/presentation/providers/user_stats_providers.dart';
+import 'package:emerge_app/core/presentation/widgets/skeleton_shimmer.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:emerge_app/core/presentation/widgets/oracle_card.dart';
 
 class GoldilocksScreen extends ConsumerStatefulWidget {
   const GoldilocksScreen({super.key});
@@ -49,9 +51,41 @@ class _GoldilocksScreenState extends ConsumerState<GoldilocksScreen> {
                       builder: (context, snapshot) {
                         if (snapshot.connectionState ==
                             ConnectionState.waiting) {
-                          return const Center(
-                            child: CircularProgressIndicator(
-                              color: AppTheme.primary,
+                          return ListView.separated(
+                            padding: const EdgeInsets.all(16),
+                            itemCount: 2,
+                            separatorBuilder: (_, _) =>
+                                const SizedBox(height: 16),
+                            itemBuilder: (context, index) => Container(
+                              padding: const EdgeInsets.all(16),
+                              decoration: BoxDecoration(
+                                color: AppTheme.surfaceDark.withValues(alpha: 0.5),
+                                borderRadius: BorderRadius.circular(16),
+                                border: Border.all(color: Colors.white10),
+                              ),
+                              child: const Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Row(
+                                    children: [
+                                      SkeletonShimmer.circular(size: 48),
+                                      SizedBox(width: 16),
+                                      Expanded(
+                                        child: Column(
+                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          children: [
+                                            SkeletonShimmer(width: 200, height: 16),
+                                            SizedBox(height: 8),
+                                            SkeletonShimmer(width: 150, height: 14),
+                                          ],
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  SizedBox(height: 16),
+                                  SkeletonShimmer(width: double.infinity, height: 48, borderRadius: 12),
+                                ],
+                              ),
                             ),
                           );
                         }
@@ -90,8 +124,42 @@ class _GoldilocksScreenState extends ConsumerState<GoldilocksScreen> {
                       },
                     );
                   },
-                  loading: () =>
-                      const Center(child: CircularProgressIndicator()),
+                  loading: () => ListView.separated(
+                    padding: const EdgeInsets.all(16),
+                    itemCount: 2,
+                    separatorBuilder: (_, _) => const SizedBox(height: 16),
+                    itemBuilder: (context, index) => Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: AppTheme.surfaceDark.withValues(alpha: 0.5),
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(color: Colors.white10),
+                      ),
+                      child: const Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              SkeletonShimmer.circular(size: 48),
+                              SizedBox(width: 16),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    SkeletonShimmer(width: 200, height: 16),
+                                    SizedBox(height: 8),
+                                    SkeletonShimmer(width: 150, height: 14),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                          SizedBox(height: 16),
+                          SkeletonShimmer(width: double.infinity, height: 48, borderRadius: 12),
+                        ],
+                      ),
+                    ),
+                  ),
                   error: (e, s) => Center(child: Text('Error: $e')),
                 ),
               ),
@@ -257,122 +325,62 @@ class _GoldilocksCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: AppTheme.surfaceDark.withValues(alpha: 0.5),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.white10),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
+    return OracleCard(
+      title: '${adjustment.habitTitle}: ${_getTypeTitle(adjustment.type)}',
+      description: adjustment.reason,
+      quote: adjustment.suggestion,
+      icon: _getIcon(adjustment.type),
+      iconColor: _getColor(adjustment.type),
+      footer: Row(
         children: [
-          Row(
-            children: [
-              _buildIcon(adjustment.type),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      '${adjustment.habitTitle}: ${_getTypeTitle(adjustment.type)}',
-                      style: GoogleFonts.lexend(
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                        fontSize: 16,
-                      ),
-                    ),
-                    Text(
-                      adjustment.reason,
-                      style: GoogleFonts.lexend(
-                        color: Colors.grey[400],
-                        fontSize: 14,
-                      ),
-                    ),
-                  ],
-                ),
+          Expanded(
+            child: TextButton(
+              onPressed: () {},
+              style: TextButton.styleFrom(
+                backgroundColor: Colors.grey[800],
+                shape: const StadiumBorder(),
+                foregroundColor: Colors.white,
               ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.05),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Text(
-              '"${adjustment.suggestion}"',
-              textAlign: TextAlign.center,
-              style: GoogleFonts.lexend(
-                color: Colors.white,
-                fontSize: 15,
-                fontStyle: FontStyle.italic,
-              ),
+              child: const Text('Maybe Later'),
             ),
           ),
-          const SizedBox(height: 16),
-          Row(
-            children: [
-              Expanded(
-                child: TextButton(
-                  onPressed: () {},
-                  style: TextButton.styleFrom(
-                    backgroundColor: Colors.grey[800],
-                    shape: const StadiumBorder(),
-                    foregroundColor: Colors.white,
-                  ),
-                  child: const Text('Maybe Later'),
-                ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: TextButton(
+              onPressed: onAccept,
+              style: TextButton.styleFrom(
+                backgroundColor: AppTheme.primary,
+                shape: const StadiumBorder(),
+                foregroundColor: Colors.white,
               ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: TextButton(
-                  onPressed: onAccept,
-                  style: TextButton.styleFrom(
-                    backgroundColor: AppTheme.primary,
-                    shape: const StadiumBorder(),
-                    foregroundColor: Colors.white,
-                  ),
-                  child: const Text('Accept'),
-                ),
-              ),
-            ],
+              child: const Text('Accept'),
+            ),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildIcon(AdjustmentType type) {
-    IconData icon;
-    Color color;
-
+  IconData _getIcon(AdjustmentType type) {
     switch (type) {
       case AdjustmentType.increase:
-        icon = Icons.trending_up;
-        color = AppTheme.vitalityGreen;
-        break;
+        return Icons.trending_up;
       case AdjustmentType.decrease:
-        icon = Icons.trending_down;
-        color = Colors.amber;
-        break;
+        return Icons.trending_down;
       case AdjustmentType.maintain:
-        icon = Icons.horizontal_rule;
-        color = AppTheme.primary;
-        break;
+        return Icons.horizontal_rule;
     }
+  }
 
-    return Container(
-      width: 48,
-      height: 48,
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.2),
-        shape: BoxShape.circle,
-      ),
-      child: Icon(icon, color: color, size: 28),
-    );
+  Color _getColor(AdjustmentType type) {
+    switch (type) {
+      case AdjustmentType.increase:
+        return AppTheme.vitalityGreen;
+      case AdjustmentType.decrease:
+        return Colors.amber;
+      case AdjustmentType.maintain:
+        return AppTheme.primary;
+    }
   }
 
   String _getTypeTitle(AdjustmentType type) {

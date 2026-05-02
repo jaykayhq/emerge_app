@@ -17,6 +17,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:uuid/uuid.dart';
 import 'package:emerge_app/core/theme/emerge_colors.dart';
+import 'package:emerge_app/features/monetization/presentation/widgets/premium_limit_dialog.dart';
+import 'package:emerge_app/features/monetization/presentation/providers/subscription_provider.dart';
+import 'package:emerge_app/core/services/remote_config_service.dart';
 
 /// Redesigned Create Habit Dialog with Stitch-inspired cosmic glassmorphism
 class AdvancedCreateHabitDialog extends ConsumerStatefulWidget {
@@ -249,6 +252,26 @@ class _AdvancedCreateHabitDialogState
       );
 
       try {
+        // PROACTIVE CHECK: Check limit before calling provider to avoid "Bad state" on disposal
+        final isPremium = await ref.read(isPremiumProvider.future);
+        if (!isPremium) {
+          final habits = ref.read(habitsProvider).value ?? [];
+          final freeLimit = ref.read(remoteConfigServiceProvider).freeHabitLimit;
+          
+          if (habits.length >= freeLimit) {
+            if (mounted) {
+              showDialog(
+                context: context,
+                builder: (context) => const PremiumLimitDialog(
+                  title: 'Habit Capacity Reached',
+                  message: 'You have reached the free limit of habits. Upgrade to Premium for unlimited growth.',
+                ),
+              );
+            }
+            return;
+          }
+        }
+
         await ref.read(createHabitProvider(newHabit).future);
 
         AppLogger.i(
@@ -284,6 +307,16 @@ class _AdvancedCreateHabitDialogState
           }
           contextRef.pop();
         }
+      } on SubscriptionLimitReachedException catch (e) {
+        if (mounted) {
+          showDialog(
+            context: context,
+            builder: (context) => PremiumLimitDialog(
+              title: 'Habit Capacity Reached',
+              message: e.toString().replaceAll('SubscriptionLimitReachedException: ', ''),
+            ),
+          );
+        }
       } catch (e, s) {
         AppLogger.e('Error creating habit from Advanced Create', e, s);
         if (context.mounted) {
@@ -299,24 +332,34 @@ class _AdvancedCreateHabitDialogState
   void _applyTemplate(HabitTemplate template) {
     HapticFeedback.mediumImpact();
     setState(() {
-      _titleController.text = template.description; // Use action as the title
-      _emoji = template.emoji; // Set emoji from template
-      switch (template.timeOfDay.toLowerCase()) {
-        case 'morning':
-          _timeOfDay = TimeOfDayPreference.morning;
-          break;
-        case 'afternoon':
-          _timeOfDay = TimeOfDayPreference.afternoon;
-          break;
-        case 'evening':
-          _timeOfDay = TimeOfDayPreference.evening;
-          break;
-        case 'night':
-          _timeOfDay = TimeOfDayPreference.evening;
-          break;
-        default:
-          _timeOfDay = TimeOfDayPreference.anytime;
+      _titleController.text = template.title;
+      _emoji = template.emoji;
+      
+      // Use structured preference if available, otherwise fallback to legacy parsing
+      if (template.timeOfDayPreference != null) {
+        _timeOfDay = template.timeOfDayPreference!;
+      } else {
+        switch (template.timeOfDay.toLowerCase()) {
+          case 'morning':
+            _timeOfDay = TimeOfDayPreference.morning;
+            break;
+          case 'afternoon':
+            _timeOfDay = TimeOfDayPreference.afternoon;
+            break;
+          case 'evening':
+          case 'night':
+            _timeOfDay = TimeOfDayPreference.evening;
+            break;
+          default:
+            _timeOfDay = TimeOfDayPreference.anytime;
+        }
       }
+
+      // Auto-set the specific time from the template
+      if (template.defaultTime != null) {
+        _specificTime = template.defaultTime;
+      }
+
       if (template.frequency.toLowerCase() == 'weekly') {
         _frequency = HabitFrequency.weekly;
       } else {
@@ -724,9 +767,7 @@ class _AdvancedCreateHabitDialogState
               const SizedBox(height: 8),
               _buildCompactInput(
                 icon: Icons.access_time_filled,
-                label:
-                    _specificTime?.format(context) ??
-                    '07:00 AM', // Default to 7:00 AM if null for UI preview
+                label: _specificTime?.format(context) ?? 'SET TIME',
                 onTap: () => _selectTime(context),
               ),
             ],
