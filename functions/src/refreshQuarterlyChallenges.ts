@@ -11,7 +11,7 @@
  * - Q4 (Oct 1): Year-End Reflection
  */
 
-import * as functionsV1 from "firebase-functions/v1";
+import { onSchedule } from "firebase-functions/v2/scheduler";
 import * as admin from "firebase-admin";
 
 if (admin.apps.length === 0) {
@@ -65,52 +65,53 @@ interface AffiliatePartner {
  * Quarterly Challenge Refresh
  * Runs on the first day of each quarter at midnight UTC
  */
-export const refreshQuarterlyChallenges = functionsV1.pubsub
-  .schedule("0 0 1 */3 *")
-  .timeZone("UTC")
-  .onRun(async () => {
-    const now = new Date();
-    const month = now.getMonth() + 1; // 1-12
-    const quarter = Math.ceil(month / 3);
+export const refreshQuarterlyChallenges = onSchedule({
+  schedule: "0 0 1 */3 *",
+  timeZone: "UTC",
+  memory: "256MiB",
+}, async (event) => {
+  const now = new Date(event.scheduleTime || new Date().toISOString());
+  const month = now.getMonth() + 1; // 1-12
+  const quarter = Math.ceil(month / 3);
 
-    console.log(`Starting quarterly challenge refresh for Q${quarter}...`);
+  console.log(`Starting quarterly challenge refresh for Q${quarter}...`);
 
-    try {
-      const theme = QUARTERLY_THEMES[quarter];
-      if (!theme) {
-        console.log(`No theme found for quarter ${quarter}`);
-        return null;
-      }
-
-      console.log(`Theme: ${theme.name}`);
-      console.log(`Partners: ${theme.partners.join(", ")}`);
-
-      // Calculate end of quarter
-      const endOfQuarter = getEndOfQuarter(now);
-
-      for (const partnerId of theme.partners) {
-        await createPartnerChallenge(
-          partnerId, quarter, theme.name, endOfQuarter
-        );
-      }
-
-      // Log analytics
-      await db.collection("analytics").add({
-        event: "quarterly_refresh_completed",
-        quarter: quarter,
-        theme: theme.name,
-        partners: theme.partners,
-        challengesCreated: theme.partners.length,
-        timestamp: admin.firestore.FieldValue.serverTimestamp(),
-      });
-
-      console.log(`Q${quarter} challenge refresh completed successfully`);
-      return null;
-    } catch (error) {
-      console.error(`Error in quarterly refresh for Q${quarter}:`, error);
-      throw error;
+  try {
+    const theme = QUARTERLY_THEMES[quarter];
+    if (!theme) {
+      console.log(`No theme found for quarter ${quarter}`);
+      return;
     }
-  });
+
+    console.log(`Theme: ${theme.name}`);
+    console.log(`Partners: ${theme.partners.join(", ")}`);
+
+    // Calculate end of quarter
+    const endOfQuarter = getEndOfQuarter(now);
+
+    for (const partnerId of theme.partners) {
+      await createPartnerChallenge(
+        partnerId, quarter, theme.name, endOfQuarter
+      );
+    }
+
+    // Log analytics
+    await db.collection("analytics").add({
+      event: "quarterly_refresh_completed",
+      quarter: quarter,
+      theme: theme.name,
+      partners: theme.partners,
+      challengesCreated: theme.partners.length,
+      timestamp: admin.firestore.FieldValue.serverTimestamp(),
+    });
+
+    console.log(`Q${quarter} challenge refresh completed successfully`);
+  } catch (error) {
+    console.error(`Error in quarterly refresh for Q${quarter}:`, error);
+    throw error;
+  }
+});
+
 
 /**
  * Creates a sponsored challenge for a specific partner

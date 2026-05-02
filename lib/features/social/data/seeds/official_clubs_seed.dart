@@ -22,6 +22,9 @@ class OfficialClubsSeed {
       'rank': 1,
       'totalXp': 50000,
       'memberCount': 1250,
+      'totalHabitsCompleted': 1500,
+      'totalChallengesCompleted': 450,
+
       'ownerId': 'emerge_official',
     },
     {
@@ -39,6 +42,9 @@ class OfficialClubsSeed {
       'rank': 5,
       'totalXp': 28000,
       'memberCount': 890,
+      'totalHabitsCompleted': 840,
+      'totalChallengesCompleted': 120,
+
       'ownerId': 'emerge_official',
     },
     {
@@ -56,6 +62,9 @@ class OfficialClubsSeed {
       'rank': 3,
       'totalXp': 42000,
       'memberCount': 1560,
+      'totalHabitsCompleted': 1200,
+      'totalChallengesCompleted': 310,
+
       'ownerId': 'emerge_official',
     },
 
@@ -74,6 +83,9 @@ class OfficialClubsSeed {
       'rank': 2,
       'totalXp': 68000,
       'memberCount': 2100,
+      'totalHabitsCompleted': 3200,
+      'totalChallengesCompleted': 890,
+
       'ownerId': 'emerge_official',
     },
     {
@@ -91,6 +103,9 @@ class OfficialClubsSeed {
       'rank': 7,
       'totalXp': 35000,
       'memberCount': 980,
+      'totalHabitsCompleted': 1100,
+      'totalChallengesCompleted': 240,
+
       'ownerId': 'emerge_official',
     },
     {
@@ -108,6 +123,9 @@ class OfficialClubsSeed {
       'rank': 4,
       'totalXp': 39000,
       'memberCount': 1450,
+      'totalHabitsCompleted': 1560,
+      'totalChallengesCompleted': 410,
+
       'ownerId': 'emerge_official',
     },
 
@@ -126,6 +144,9 @@ class OfficialClubsSeed {
       'rank': 1,
       'totalXp': 75000,
       'memberCount': 3200,
+      'totalHabitsCompleted': 5400,
+      'totalChallengesCompleted': 1200,
+
       'ownerId': 'emerge_official',
     },
     {
@@ -142,6 +163,9 @@ class OfficialClubsSeed {
       'rank': 6,
       'totalXp': 31000,
       'memberCount': 1120,
+      'totalHabitsCompleted': 980,
+      'totalChallengesCompleted': 150,
+
       'ownerId': 'emerge_official',
     },
     {
@@ -158,6 +182,9 @@ class OfficialClubsSeed {
       'rank': 8,
       'totalXp': 24000,
       'memberCount': 870,
+      'totalHabitsCompleted': 760,
+      'totalChallengesCompleted': 95,
+
       'ownerId': 'emerge_official',
     },
 
@@ -176,6 +203,9 @@ class OfficialClubsSeed {
       'rank': 3,
       'totalXp': 46000,
       'memberCount': 1650,
+      'totalHabitsCompleted': 2100,
+      'totalChallengesCompleted': 540,
+
       'ownerId': 'emerge_official',
     },
     {
@@ -192,6 +222,9 @@ class OfficialClubsSeed {
       'rank': 9,
       'totalXp': 22000,
       'memberCount': 640,
+      'totalHabitsCompleted': 580,
+      'totalChallengesCompleted': 80,
+
       'ownerId': 'emerge_official',
     },
 
@@ -210,6 +243,9 @@ class OfficialClubsSeed {
       'rank': 2,
       'totalXp': 58000,
       'memberCount': 1890,
+      'totalHabitsCompleted': 2400,
+      'totalChallengesCompleted': 620,
+
       'ownerId': 'emerge_official',
     },
     {
@@ -226,6 +262,9 @@ class OfficialClubsSeed {
       'rank': 10,
       'totalXp': 19000,
       'memberCount': 520,
+      'totalHabitsCompleted': 420,
+      'totalChallengesCompleted': 65,
+
       'ownerId': 'emerge_official',
     },
 
@@ -244,6 +283,9 @@ class OfficialClubsSeed {
       'rank': 5,
       'totalXp': 33000,
       'memberCount': 2340,
+      'totalHabitsCompleted': 1800,
+      'totalChallengesCompleted': 320,
+
       'ownerId': 'emerge_official',
     },
   ];

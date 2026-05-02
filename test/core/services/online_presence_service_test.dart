@@ -44,7 +44,7 @@ void main() {
       test('starts heartbeat and sets online status', () async {
         // Arrange
         when(
-          () => mockDocRef.set(any(named: 'data'), any(named: 'options')),
+          () => mockDocRef.set(any(), any()),
         ).thenAnswer((_) async => {});
 
         // Act
@@ -57,8 +57,8 @@ void main() {
         verify(
           () => mockDocRef.set({
             'online': true,
-            'lastSeen': any(named: 'data'),
-          }, any(named: 'options')),
+            'lastSeen': any(),
+          }, any()),
         ).called(1);
       });
 
@@ -68,7 +68,7 @@ void main() {
           () => mockFirestore.collection('users').doc(any()),
         ).thenReturn(mockDocRef);
         when(
-          () => mockDocRef.set(any(named: 'data'), any(named: 'options')),
+          () => mockDocRef.set(any(), any()),
         ).thenAnswer((_) async => {});
 
         // Act
@@ -83,7 +83,7 @@ void main() {
       test('does not restart heartbeat if same user calls again', () async {
         // Arrange
         when(
-          () => mockDocRef.set(any(named: 'data'), any(named: 'options')),
+          () => mockDocRef.set(any(), any()),
         ).thenAnswer((_) async => {});
 
         // Act
@@ -96,7 +96,7 @@ void main() {
       test('stops heartbeat and sets offline status', () async {
         // Arrange
         when(
-          () => mockDocRef.set(any(named: 'data'), any(named: 'options')),
+          () => mockDocRef.set(any(), any()),
         ).thenAnswer((_) async => {});
 
         // Act
@@ -110,15 +110,15 @@ void main() {
         verify(
           () => mockDocRef.set({
             'online': false,
-            'lastSeen': any(named: 'data'),
-          }, any(named: 'options')),
+            'lastSeen': any(),
+          }, any()),
         ).called(1);
       });
 
       test('handles multiple stopHeartbeat calls gracefully', () async {
         // Arrange
         when(
-          () => mockDocRef.set(any(named: 'data'), any(named: 'options')),
+          () => mockDocRef.set(any(), any()),
         ).thenAnswer((_) async => {});
 
         // Act
@@ -134,7 +134,7 @@ void main() {
       test('sets offline status in Firestore', () async {
         // Arrange
         when(
-          () => mockDocRef.set(any(named: 'data'), any(named: 'options')),
+          () => mockDocRef.set(any(), any()),
         ).thenAnswer((_) async => {});
 
         // Act
@@ -147,15 +147,15 @@ void main() {
         verify(
           () => mockDocRef.set({
             'online': false,
-            'lastSeen': any(named: 'data'),
-          }, any(named: 'options')),
+            'lastSeen': any(),
+          }, any()),
         ).called(1);
       });
 
       test('handles errors gracefully without throwing', () async {
         // Arrange
         when(
-          () => mockDocRef.set(any(named: 'data'), any(named: 'options')),
+          () => mockDocRef.set(any(), any()),
         ).thenThrow(Exception('Network error'));
 
         // Act & Assert - should not throw despite error
@@ -170,7 +170,7 @@ void main() {
           () => mockFirestore.collection('users').doc(any()),
         ).thenReturn(mockDocRef);
         when(
-          () => mockDocRef.set(any(named: 'data'), any(named: 'options')),
+          () => mockDocRef.set(any(), any()),
         ).thenAnswer((_) async => {});
 
         // Act

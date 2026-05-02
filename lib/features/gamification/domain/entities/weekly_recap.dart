@@ -19,6 +19,7 @@ class UserWeeklyRecap extends Equatable {
   final String? aiInsight;
   final HabitDifficulty? recommendedDifficultyAdjustment;
   final List<String> velocityInsights;
+  final bool isComplete;
 
   const UserWeeklyRecap({
     required this.id,
@@ -36,6 +37,7 @@ class UserWeeklyRecap extends Equatable {
     this.aiInsight,
     this.recommendedDifficultyAdjustment,
     this.velocityInsights = const [],
+    this.isComplete = true,
   });
 
   Map<String, dynamic> toMap() {
@@ -55,6 +57,7 @@ class UserWeeklyRecap extends Equatable {
       'aiInsight': aiInsight,
       'recommendedDifficultyAdjustment': recommendedDifficultyAdjustment?.name,
       'velocityInsights': velocityInsights,
+      'isComplete': isComplete,
     };
   }
 
@@ -80,6 +83,7 @@ class UserWeeklyRecap extends Equatable {
             )
           : null,
       velocityInsights: List<String>.from(map['velocityInsights'] ?? []),
+      isComplete: map['isComplete'] as bool? ?? true,
     );
   }
 

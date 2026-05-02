@@ -46,42 +46,17 @@ class _WeeklyRecapScreenState extends ConsumerState<WeeklyRecapScreen> {
                   child: CircularProgressIndicator(color: EmergeColors.teal),
                 );
               }
-              if (snapshot.hasError || !snapshot.hasData) {
-                // Show locked state for new users (< 7 days)
+              if (snapshot.hasError) {
                 return Center(
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(
-                        Icons.lock_outline,
-                        size: 64,
-                        color: EmergeColors.teal.withValues(alpha: 0.5),
-                      ),
-                      const Gap(24),
-                      Text(
-                        'Weekly Recap is Growing',
-                        style: Theme.of(context).textTheme.headlineSmall
-                            ?.copyWith(
-                              color: Colors.white,
-                              fontWeight: FontWeight.bold,
-                            ),
-                        textAlign: TextAlign.center,
-                      ),
-                      const Gap(12),
-                      Text(
-                        'Keep completing habits to see your identity emerge.',
-                        style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                          color: Colors.white.withValues(alpha: 0.6),
-                        ),
-                        textAlign: TextAlign.center,
-                      ),
-                      const Gap(32),
+                      const Icon(Icons.error_outline, color: AppTheme.error, size: 48),
+                      const Gap(16),
+                      Text('Unable to generate recap', style: TextStyle(color: Colors.white)),
+                      const Gap(16),
                       ElevatedButton(
                         onPressed: () => context.pop(),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: AppTheme.surfaceDark,
-                          foregroundColor: AppTheme.textMainDark,
-                        ),
                         child: const Text('Back'),
                       ),
                     ],
@@ -89,7 +64,12 @@ class _WeeklyRecapScreenState extends ConsumerState<WeeklyRecapScreen> {
                 );
               }
 
-              final recap = snapshot.data!;
+              final recap = snapshot.data;
+              if (recap == null) {
+                return const Center(
+                  child: CircularProgressIndicator(color: EmergeColors.teal),
+                );
+              }
 
               // Use the new Spotify Wrapped-style widget
               return SpotifyWrappedRecap(

@@ -515,10 +515,50 @@ class FirestoreHabitRepository implements HabitRepository {
   Future<Either<Failure, Unit>> createHabitsFromBlueprint({
     required String userId,
     required CreatorBlueprint blueprint,
+    String? reminderTime,
   }) async {
     try {
       final batch = _firestore.batch();
-      for (int i = 0; i < blueprint.habitTitles.length; i++) {
+      final specs = blueprint.habitSpecs;
+      final titles = blueprint.habitTitles;
+      final count = specs.isNotEmpty ? specs.length : titles.length;
+
+      TimeOfDay? overrideTime;
+      if (reminderTime != null) {
+        final parts = reminderTime.split(':');
+        if (parts.length == 2) {
+          overrideTime = TimeOfDay(
+            hour: int.parse(parts[0]),
+            minute: int.parse(parts[1]),
+          );
+        }
+      }
+
+      for (int i = 0; i < count; i++) {
+        final title = specs.isNotEmpty ? specs[i].title : titles[i];
+        final spec = (specs.isNotEmpty && i < specs.length) ? specs[i] : null;
+        
+        TimeOfDayPreference? tdp;
+        TimeOfDay? habitTime = overrideTime ?? spec?.defaultTime;
+
+        if (spec?.timeOfDay != null) {
+          tdp = TimeOfDayPreference.values.firstWhere(
+            (e) => e.name.toLowerCase() == spec!.timeOfDay!.toLowerCase(),
+            orElse: () => TimeOfDayPreference.anytime,
+          );
+        }
+
+        // AUTO-SCHEDULING: If no time is set (and no override), apply 15-minute sequence starting at 07:00 AM
+        if (habitTime == null) {
+          final int totalMinutes = 7 * 60 + (i * 15);
+          habitTime = TimeOfDay(
+            hour: (totalMinutes ~/ 60) % 24, 
+            minute: totalMinutes % 60,
+          );
+        }
+        
+        tdp ??= _getPreferenceForTime(habitTime);
+
         final ref = _firestore
             .collection('habits')
             .doc(); // Use top-level habits collection to match watchHabits
@@ -526,13 +566,15 @@ class FirestoreHabitRepository implements HabitRepository {
         final habit = Habit(
           id: ref.id,
           userId: userId,
-          title: blueprint.habitTitles[i],
+          title: title,
           createdAt: DateTime.now(),
           order: i,
           attribute: HabitAttribute.values.firstWhere(
             (e) => e.name == blueprint.creatorArchetype.toLowerCase(),
             orElse: () => HabitAttribute.vitality,
           ),
+          reminderTime: habitTime,
+          timeOfDayPreference: tdp,
         );
         
         batch.set(ref, {
@@ -544,7 +586,12 @@ class FirestoreHabitRepository implements HabitRepository {
           'frequency': habit.frequency.toString(),
           'specificDays': habit.specificDays,
           'difficulty': habit.difficulty.name,
-          'reminderTime': null,
+          'reminderTime': habit.reminderTime != null
+              ? {
+                  'hour': habit.reminderTime!.hour,
+                  'minute': habit.reminderTime!.minute,
+                }
+              : null,
           'location': habit.location,
           'isArchived': habit.isArchived,
           'createdAt': Timestamp.fromDate(habit.createdAt),
@@ -636,5 +683,12 @@ class FirestoreHabitRepository implements HabitRepository {
     } else {
       await statsRef.set({'worldHealthScore': worldHealthDouble}, SetOptions(merge: true));
     }
+  }
+
+  TimeOfDayPreference _getPreferenceForTime(TimeOfDay time) {
+    if (time.hour >= 5 && time.hour < 12) return TimeOfDayPreference.morning;
+    if (time.hour >= 12 && time.hour < 17) return TimeOfDayPreference.afternoon;
+    if (time.hour >= 17 && time.hour < 22) return TimeOfDayPreference.evening;
+    return TimeOfDayPreference.anytime;
   }
 }

@@ -271,271 +271,163 @@ class FirestoreSeedData {
     debugPrint('Seeded ${challenges.length} challenges');
   }
 
-  /// Seeds the 'blueprints' collection matching the design mockups
+  /// Seeds the 'creator_blueprints' collection matching the design mockups
   /// Based on the creator_blueprints_4 design reference
   Future<void> seedBlueprints() async {
+    final now = DateTime.now();
     final blueprints = [
       {
         'id': 'blueprint_atomic_habits',
-        'title': 'The Atomic Habits Starter Kit',
+        'creatorUserId': 'system',
+        'creatorName': 'James Clear',
+        'creatorArchetype': 'Scholar',
+        'blueprintName': 'The Atomic Habits Starter Kit',
         'description':
             'Build the systems that fuel creative output and make good habits inevitable.',
         'category': 'Productivity',
-        'difficulty': 'Epic',
-        'tier': 'Epic',
-        'adoptedCount': 12405,
+        'adoptionCount': 12405,
+        'createdAt': now.toIso8601String(),
         'imageUrl':
             'https://lh3.googleusercontent.com/aida-public/AB6AXuD_357wWxUMnRri8nImd1s-eIliBpp3eF_CaZECldc5HtSN5UM48aZ2YkyT6TW65D-c82YI066ifv7q9xHkZXLj4kImgFqZ1FtG3sLiJSLzYZsJ_-HouaUF5sqwuyYaC91L4LCd5wAu0N5zN9cXK55ra_l4jARjWNVwzljZ260VNZc9nxLDyfu2y5-w3nmVEDQpjkWjRMZKkC2TIcrtndLsYH2yu7J6107haz1nZTdZhuC6xvepDx5YaVzvg5d7AYIojci-TJqup-M',
-        'creatorName': 'James Clear',
-        'creatorTitle': 'Author',
-        'creatorAvatarUrl':
-            'https://lh3.googleusercontent.com/aida-public/AB6AXuBXRYtZjkkPb9bF9Csl9a-cmuKHoMRruFkungWlnmFAbTtNmpEKnbP6HXvCr3GRQ_B-yXxbNpFnQYjJ85OOZXjPuA4Cxl_3rIqQnTNq7Gau3bJGpZWCOa_jtbsJAgc600WGDQCBGlFN5ZktVhkotTHgX_C-fLIffExwXHqAycFG_UU4mByAFE9dGPtWZbnpENx2xdhWda5aq83RXgoPPRiGTQh029amLQ7Ek9oHlAvVx4R7XMdyhHZZzDwhRSQWAfNTOaeytffaz2k',
-        'habits': [
-          {
-            'title': 'Habit Stacking',
-            'frequency': 'Daily',
-            'timeOfDay': 'Morning',
-            'duration': '30 min',
-          },
-          {
-            'title': 'Environment Design',
-            'frequency': 'Weekly',
-            'timeOfDay': 'Anytime',
-            'duration': '15 min',
-          },
-          {
-            'title': '2-Minute Rule',
-            'frequency': 'Daily',
-            'timeOfDay': 'Anytime',
-            'duration': '2 min',
-          },
+        'habitTitles': [
+          'Habit Stacking',
+          'Environment Design',
+          '2-Minute Rule',
         ],
       },
       {
         'id': 'blueprint_optimal_morning',
-        'title': 'The Optimal Morning Routine',
+        'creatorUserId': 'system',
+        'creatorName': 'Dr. Andrew Huberman',
+        'creatorArchetype': 'Athlete',
+        'blueprintName': 'The Optimal Morning Routine',
         'description':
             'Leverage neuroscience to maximize your focus and energy every single day.',
         'category': 'Morning',
-        'difficulty': 'Rare',
-        'tier': 'Rare',
-        'adoptedCount': 9872,
+        'adoptionCount': 9872,
+        'createdAt': now.toIso8601String(),
         'imageUrl':
             'https://lh3.googleusercontent.com/aida-public/AB6AXuAfCNp1icRBAU8hg03pn5bQWXoBFEuaIz-ZFfUPXOh56xerlnlYitA0if4Yc5mPo2938KAYn8mxC25rkiXWhXcYFz9SfaZXyRbkgQzUjyo5Lbu0wgeu2-f88hbgcI2LmQwu7y8HtduqEUdr1X4wZjJLQ4nTwXeshkcfus-M2KwANVbUrrVVdmH0O96ujwECYbjBx9-QgoR4v3d59g8vui_2fJyHpXZs4iPsgZaO0Ql6gjPS-wyfvwQ_v_T_7Cmulv-_P9IlhJ9Tqp4',
-        'creatorName': 'Dr. Andrew Huberman',
-        'creatorTitle': 'Neuroscientist',
-        'creatorAvatarUrl':
-            'https://lh3.googleusercontent.com/aida-public/AB6AXuC94qmsOI1YKYB2g74vJVwr0Vh9VlkCBAUs23iuXf_ZMyP-oPHFK1hWtdc0RgqN1NFKABBayKG08sropAPD53qYavwdP_wnkjtB0Ct2vCXWR31s1wUuVjAWvhtYLIVova6ENGSfP-PS72sJpHdZRlFF7K-zKCvsI8BEZwt0Rk57dHd4kfshachLHvCdyquthAiRmELPLzUYafrZFDW2BOdFBoAGdCUOLQADPktapw9LdoUxBADgHu4O4-rNOnttz7ahhxruOhpenqo',
-        'habits': [
-          {
-            'title': 'Morning Sunlight',
-            'frequency': 'Daily',
-            'timeOfDay': 'Morning',
-            'duration': '10 min',
-          },
-          {
-            'title': 'Cold Exposure',
-            'frequency': 'Daily',
-            'timeOfDay': 'Morning',
-            'duration': '3 min',
-          },
-          {
-            'title': 'Delay Caffeine',
-            'frequency': 'Daily',
-            'timeOfDay': 'Morning',
-            'duration': '90 min',
-          },
+        'habitTitles': [
+          'Morning Sunlight',
+          'Cold Exposure',
+          'Delay Caffeine',
         ],
+        'isPremium': true,
       },
       {
         'id': 'blueprint_100m_productivity',
-        'title': '\$100M Offer Productivity Stack',
+        'creatorUserId': 'system',
+        'creatorName': 'Alex Hormozi',
+        'creatorArchetype': 'Creator',
+        'blueprintName': '\$100M Offer Productivity Stack',
         'description':
             'The daily non-negotiables required to build a high-leverage business.',
         'category': 'Business',
-        'difficulty': 'Legendary',
-        'tier': 'Legendary',
-        'adoptedCount': 15102,
+        'adoptionCount': 15102,
+        'createdAt': now.toIso8601String(),
         'imageUrl':
             'https://lh3.googleusercontent.com/aida-public/AB6AXuCpEenasQ2PiqC-P3Gs1VE6p_G5LmQroYE6D9kN-T-Qylz96aFWrFzZ_bIZ2PrFy13J56PkwnkoSo8oz8eS_NVcesKqRSKMCFnLK1kgxSCaKfW3-25G5nbgYlXTeDDsHNhDsZ18pyYAwsk1r4K_BKKy_CO3fOseW0zgKn5XsawJlgcahei0SNdIAVYW8jLmmPZGLQpXP1whzb-H_a3hr31ax_rDUa5S6R3VNTzwHCqCDtFrJ0wtCyUxZPMA3UUxTbkvE8E8NpsnoQo',
-        'creatorName': 'Alex Hormozi',
-        'creatorTitle': 'Entrepreneur',
-        'creatorAvatarUrl':
-            'https://lh3.googleusercontent.com/aida-public/AB6AXuDocGa4Ya0LttpQGZI5hn_lrbKVzmKI5IOzqSZjYXp_EwoI6uJf5rDg-mFj8L9tu2PilvgcvdxNSGgBiXznNDNCQrv40xZj00WWAwc_BnZMkeWKH7CFmpiRpBXWTf4FKv-eGKlLDocgcDq-5RvvCEh55XsRnfqVymPOaSD6U9vAgY-OwHDFKQql8Exa0RL4dqKxFKp4XXFG_hCIdbxSnIncUAuAcK5vcCOo8pH3FMjoJuhYd2dk4ZjoocWv87Av-S_umaLn1mCUlqI',
-        'habits': [
-          {
-            'title': 'Revenue-Generating Activity',
-            'frequency': 'Daily',
-            'timeOfDay': 'Morning',
-            'duration': '4 hours',
-          },
-          {
-            'title': 'Lead Generation',
-            'frequency': 'Daily',
-            'timeOfDay': 'Afternoon',
-            'duration': '2 hours',
-          },
-          {
-            'title': 'Daily Reflection',
-            'frequency': 'Daily',
-            'timeOfDay': 'Evening',
-            'duration': '15 min',
-          },
+        'habitTitles': [
+          'Revenue-Generating Activity',
+          'Lead Generation',
+          'Daily Reflection',
         ],
+        'isPremium': true,
       },
       {
         'id': 'blueprint_athlete',
-        'title': 'Fitness Foundation',
+        'creatorUserId': 'system',
+        'creatorName': 'Emerge Team',
+        'creatorArchetype': 'Athlete',
+        'blueprintName': 'Fitness Foundation',
         'description':
             'Build a solid base of physical health and become the Athlete.',
         'category': 'Fitness',
-        'difficulty': 'beginner',
+        'adoptionCount': 5420,
+        'createdAt': now.toIso8601String(),
         'imageUrl':
             'https://images.unsplash.com/photo-1517836357463-d25dfeac3438?w=400',
-        'creatorName': 'Emerge Team',
-        'habits': [
-          {
-            'title': '30 Min Walk',
-            'frequency': 'Daily',
-            'timeOfDay': 'Anytime',
-            'duration': '30 min',
-          },
-          {
-            'title': 'Drink 2L Water',
-            'frequency': 'Daily',
-            'timeOfDay': 'Anytime',
-            'duration': '',
-          },
-          {
-            'title': 'Stretch',
-            'frequency': 'Daily',
-            'timeOfDay': 'Morning',
-            'duration': '10 min',
-          },
+        'habitTitles': [
+          '30 Min Walk',
+          'Drink 2L Water',
+          'Stretch',
         ],
       },
       {
         'id': 'blueprint_scholar',
-        'title': 'The Scholar Path',
+        'creatorUserId': 'system',
+        'creatorName': 'Emerge Team',
+        'creatorArchetype': 'Scholar',
+        'blueprintName': 'The Scholar Path',
         'description':
             'Focus on learning, reading, and cognitive expansion. Become a lifelong learner.',
         'category': 'Learning',
-        'difficulty': 'beginner',
+        'adoptionCount': 3210,
+        'createdAt': now.toIso8601String(),
         'imageUrl':
             'https://images.unsplash.com/photo-1456513080510-7bf3a84b82f8?w=400',
-        'creatorName': 'Emerge Team',
-        'habits': [
-          {
-            'title': 'Read 20 Pages',
-            'frequency': 'Daily',
-            'timeOfDay': 'Evening',
-            'duration': '30 min',
-          },
-          {
-            'title': 'Study Session',
-            'frequency': 'Weekdays',
-            'timeOfDay': 'Morning',
-            'duration': '45 min',
-          },
-          {
-            'title': 'Review Notes',
-            'frequency': 'Daily',
-            'timeOfDay': 'Evening',
-            'duration': '15 min',
-          },
+        'habitTitles': [
+          'Read 20 Pages',
+          'Study Session',
+          'Review Notes',
         ],
       },
       {
         'id': 'blueprint_creator',
-        'title': 'The Creator Blueprint',
+        'creatorUserId': 'system',
+        'creatorName': 'Emerge Team',
+        'creatorArchetype': 'Creator',
+        'blueprintName': 'The Creator Blueprint',
         'description':
             'Focus on output, deep work, and creative expression. Create something every day.',
         'category': 'Creativity',
-        'difficulty': 'intermediate',
+        'adoptionCount': 4150,
+        'createdAt': now.toIso8601String(),
         'imageUrl':
             'https://images.unsplash.com/photo-1452802447250-470a88ac82bc?w=400',
-        'creatorName': 'Emerge Team',
-        'habits': [
-          {
-            'title': 'Create First (1h)',
-            'frequency': 'Daily',
-            'timeOfDay': 'Morning',
-            'duration': '60 min',
-          },
-          {
-            'title': 'Document Progress',
-            'frequency': 'Daily',
-            'timeOfDay': 'Evening',
-            'duration': '10 min',
-          },
-          {
-            'title': 'Share Work Weekly',
-            'frequency': 'Weekly',
-            'timeOfDay': 'Anytime',
-            'duration': '15 min',
-          },
+        'habitTitles': [
+          'Create First (1h)',
+          'Document Progress',
+          'Share Work Weekly',
         ],
       },
       {
         'id': 'blueprint_dopamine_detox',
-        'title': 'Dopamine Detox',
+        'creatorUserId': 'system',
+        'creatorName': 'Emerge Team',
+        'creatorArchetype': 'Stoic',
+        'blueprintName': 'Dopamine Detox',
         'description':
             "Reset your brain's reward system and reclaim your focus.",
         'category': 'Mindset',
-        'difficulty': 'intermediate',
+        'adoptionCount': 8900,
+        'createdAt': now.toIso8601String(),
         'imageUrl':
             'https://images.unsplash.com/photo-1447752875215-b2761acb3c5d?w=400',
-        'creatorName': 'Emerge Team',
-        'habits': [
-          {
-            'title': 'No Screens (1h)',
-            'frequency': 'Daily',
-            'timeOfDay': 'Morning',
-            'duration': '60 min',
-          },
-          {
-            'title': 'Nature Walk (30m)',
-            'frequency': 'Daily',
-            'timeOfDay': 'Afternoon',
-            'duration': '30 min',
-          },
-          {
-            'title': 'Reading (30m)',
-            'frequency': 'Daily',
-            'timeOfDay': 'Evening',
-            'duration': '30 min',
-          },
+        'habitTitles': [
+          'No Screens (1h)',
+          'Nature Walk (30m)',
+          'Reading (30m)',
         ],
       },
       {
         'id': 'blueprint_sleep_hygiene',
-        'title': 'Sleep Hygiene 101',
+        'creatorUserId': 'system',
+        'creatorName': 'Emerge Team',
+        'creatorArchetype': 'Athlete',
+        'blueprintName': 'Sleep Hygiene 101',
         'description':
             'Optimize your sleep for better recovery and energy. The evening wind-down ritual.',
         'category': 'Health',
-        'difficulty': 'beginner',
+        'adoptionCount': 6300,
+        'createdAt': now.toIso8601String(),
         'imageUrl':
             'https://images.unsplash.com/photo-1511296933631-18b5f0008d7b?w=400',
-        'creatorName': 'Emerge Team',
-        'habits': [
-          {
-            'title': 'No Screens 1hr Before Bed',
-            'frequency': 'Daily',
-            'timeOfDay': 'Evening',
-            'duration': '',
-          },
-          {
-            'title': 'Read Fiction',
-            'frequency': 'Daily',
-            'timeOfDay': 'Evening',
-            'duration': '20 min',
-          },
-          {
-            'title': 'Dark Room Setup',
-            'frequency': 'Daily',
-            'timeOfDay': 'Evening',
-            'duration': '',
-          },
+        'habitTitles': [
+          'No Screens 1hr Before Bed',
+          'Read Fiction',
+          'Dark Room Setup',
         ],
       },
     ];
@@ -543,12 +435,12 @@ class FirestoreSeedData {
     final batch = _firestore.batch();
     for (final blueprint in blueprints) {
       final docRef = _firestore
-          .collection('blueprints')
+          .collection('creator_blueprints')
           .doc(blueprint['id'] as String);
       batch.set(docRef, blueprint);
     }
     await batch.commit();
-    debugPrint('Seeded ${blueprints.length} blueprints');
+    debugPrint('Seeded ${blueprints.length} creator blueprints');
   }
 
   /// Runs all seed operations

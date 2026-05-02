@@ -30,5 +30,6 @@ abstract class HabitRepository {
   Future<Either<Failure, Unit>> createHabitsFromBlueprint({
     required String userId,
     required CreatorBlueprint blueprint,
+    String? reminderTime,
   });
 }

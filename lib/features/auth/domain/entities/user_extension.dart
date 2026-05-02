@@ -115,9 +115,12 @@ class UserAvatarStats {
       challengeXp: map['challengeXp'] as int? ?? 0,
       level: map['level'] as int? ?? 1,
       streak: map['streak'] as int? ?? 0,
-      attributeXp: Map<String, dynamic>.from(
-        map['attributeXp'] as Map? ?? {},
-      ).map((key, value) => MapEntry(key, value as int? ?? 0)),
+      attributeXp: Map<String, int>.from(
+        (map['attributeXp'] as Map?)?.map(
+              (key, value) => MapEntry(key.toString(), value as int? ?? 0),
+            ) ??
+            {},
+      ),
     );
   }
   int get totalXp =>
@@ -411,17 +414,31 @@ extension UserExtension on AuthUser {
 class HabitStack {
   final String anchorId;
   final String habitId;
+  final String? defaultTime;
+  final String? timeOfDayPreference;
 
-  const HabitStack({required this.anchorId, required this.habitId});
+  const HabitStack({
+    required this.anchorId,
+    required this.habitId,
+    this.defaultTime,
+    this.timeOfDayPreference,
+  });
 
   Map<String, dynamic> toMap() {
-    return {'anchorId': anchorId, 'habitId': habitId};
+    return {
+      'anchorId': anchorId,
+      'habitId': habitId,
+      'defaultTime': defaultTime,
+      'timeOfDayPreference': timeOfDayPreference,
+    };
   }
 
   factory HabitStack.fromMap(Map<String, dynamic> map) {
     return HabitStack(
       anchorId: map['anchorId'] as String,
       habitId: map['habitId'] as String,
+      defaultTime: map['defaultTime'] as String?,
+      timeOfDayPreference: map['timeOfDayPreference'] as String?,
     );
   }
 }
@@ -463,6 +480,9 @@ class UserProfile {
   final DateTime? accountCreatedAt; // When the user account was created
   final bool hasEmerged; // Whether user has pressed Emerge at level 5
   final double worldHealthScore; // Behavioral momentum score (0.0 to 1.0)
+  final int totalHabitsCompleted;
+  final int totalChallengesCompleted;
+  final int totalQuestsCompleted;
 
   const UserProfile({
     required this.uid,
@@ -488,6 +508,9 @@ class UserProfile {
     this.accountCreatedAt,
     this.hasEmerged = false,
     this.worldHealthScore = 0.5,
+    this.totalHabitsCompleted = 0,
+    this.totalChallengesCompleted = 0,
+    this.totalQuestsCompleted = 0,
   });
 
   Map<String, dynamic> toMap() {
@@ -515,6 +538,9 @@ class UserProfile {
       'accountCreatedAt': accountCreatedAt?.toIso8601String(),
       'hasEmerged': hasEmerged,
       'worldHealthScore': worldHealthScore,
+      'totalHabitsCompleted': totalHabitsCompleted,
+      'totalChallengesCompleted': totalChallengesCompleted,
+      'totalQuestsCompleted': totalQuestsCompleted,
     };
   }
 
@@ -556,6 +582,9 @@ class UserProfile {
       accountCreatedAt: _parseDateTime(map['accountCreatedAt']),
       hasEmerged: map['hasEmerged'] as bool? ?? false,
       worldHealthScore: (map['worldHealthScore'] as num? ?? 0.5).toDouble(),
+      totalHabitsCompleted: map['totalHabitsCompleted'] as int? ?? 0,
+      totalChallengesCompleted: map['totalChallengesCompleted'] as int? ?? 0,
+      totalQuestsCompleted: map['totalQuestsCompleted'] as int? ?? 0,
     );
   }
 
@@ -583,6 +612,9 @@ class UserProfile {
     DateTime? accountCreatedAt,
     bool? hasEmerged,
     double? worldHealthScore,
+    int? totalHabitsCompleted,
+    int? totalChallengesCompleted,
+    int? totalQuestsCompleted,
   }) {
     return UserProfile(
       uid: uid ?? this.uid,
@@ -610,6 +642,10 @@ class UserProfile {
       accountCreatedAt: accountCreatedAt ?? this.accountCreatedAt,
       hasEmerged: hasEmerged ?? this.hasEmerged,
       worldHealthScore: worldHealthScore ?? this.worldHealthScore,
+      totalHabitsCompleted: totalHabitsCompleted ?? this.totalHabitsCompleted,
+      totalChallengesCompleted:
+          totalChallengesCompleted ?? this.totalChallengesCompleted,
+      totalQuestsCompleted: totalQuestsCompleted ?? this.totalQuestsCompleted,
     );
   }
 }

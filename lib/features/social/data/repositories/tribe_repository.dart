@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:emerge_app/features/social/domain/models/tribe.dart';
+import 'package:emerge_app/features/social/data/seeds/official_clubs_seed.dart';
 import 'package:flutter/foundation.dart';
 
 /// Repository for archetype-based clubs (tribes).
@@ -34,12 +35,30 @@ abstract class TribeRepository {
 
   /// Get tribes that the user is a member of.
   Future<List<Tribe>> getUserTribes(String userId);
+
+  /// Seeds official clubs if collection is empty.
+  Future<void> seedTribesIfEmpty();
 }
 
 class FirestoreTribeRepository implements TribeRepository {
   final FirebaseFirestore _firestore;
 
   FirestoreTribeRepository(this._firestore);
+
+  @override
+  Future<void> seedTribesIfEmpty() async {
+    final snapshot = await _firestore.collection('tribes').limit(1).get();
+    if (snapshot.docs.isNotEmpty) return;
+
+    final seedData = OfficialClubsSeed.getOfficialClubsMap();
+    final batch = _firestore.batch();
+    for (final entry in seedData.entries) {
+      final docRef = _firestore.collection('tribes').doc(entry.key);
+      batch.set(docRef, entry.value);
+    }
+    await batch.commit();
+    debugPrint('Seeded official tribes');
+  }
 
   @override
   Future<Tribe?> getArchetypeClub(String archetypeId) async {

@@ -49,14 +49,23 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen> {
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Text(
-                        'PARTNERS',
-                        style: TextStyle(
-                          fontSize: 24,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                          letterSpacing: 1,
-                        ),
+                      Row(
+                        children: [
+                          if (Navigator.canPop(context))
+                            IconButton(
+                              icon: const Icon(Icons.arrow_back, color: Colors.white),
+                              onPressed: () => Navigator.pop(context),
+                            ),
+                          const Text(
+                            'PARTNERS',
+                            style: TextStyle(
+                              fontSize: 24,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                              letterSpacing: 1,
+                            ),
+                          ),
+                        ],
                       ),
                       GestureDetector(
                         onTap: () => _showInviteSheet(context),

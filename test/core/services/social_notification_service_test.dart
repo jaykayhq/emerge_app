@@ -31,6 +31,7 @@ class MockDocumentSnapshot extends Mock
 
 void main() {
   late MockFirestore mockFirestore;
+  late MockCollectionReference mockUsersCollection;
   late MockCollectionReference mockNotificationsCollection;
   late MockDocumentReference mockDocRef;
   late SocialNotificationService service;
@@ -41,13 +42,17 @@ void main() {
 
   setUp(() {
     mockFirestore = MockFirestore();
+    mockUsersCollection = MockCollectionReference();
     mockNotificationsCollection = MockCollectionReference();
     mockDocRef = MockDocumentReference();
     service = SocialNotificationService(mockFirestore);
 
-    // Setup default collection reference
+    // Setup default collection reference chain
     when(
-      () => mockFirestore.collection('users').doc(any()),
+      () => mockFirestore.collection('users'),
+    ).thenReturn(mockUsersCollection);
+    when(
+      () => mockUsersCollection.doc(any()),
     ).thenReturn(mockDocRef);
     when(
       () => mockDocRef.collection('notifications'),
@@ -79,12 +84,15 @@ void main() {
         // Assert
         expect(result, isNotNull);
         verify(
-          () => mockFirestore.collection('users').doc('user123'),
+          () => mockFirestore.collection('users'),
+        ).called(1);
+        verify(
+          () => mockUsersCollection.doc('user123'),
         ).called(1);
         verify(
           () => mockDocRef.update({
             'unreadNotificationCount': FieldValue.increment(1),
-            'lastNotificationAt': any(named: 'lastNotificationAt'),
+            'lastNotificationAt': any(),
           }),
         ).called(1);
       });
@@ -114,8 +122,9 @@ void main() {
 
         // Assert
         verify(() => mockFirestore.batch()).called(1);
-        verify(() => mockFirestore.collection('users').doc('user1')).called(1);
-        verify(() => mockFirestore.collection('users').doc('user2')).called(1);
+        verify(() => mockFirestore.collection('users')).called(2);
+        verify(() => mockUsersCollection.doc('user1')).called(1);
+        verify(() => mockUsersCollection.doc('user2')).called(1);
       });
 
       test('handles empty user list gracefully', () async {
@@ -150,10 +159,13 @@ void main() {
         verify(() => mockNotificationsCollection.doc('notif123')).called(1);
         verify(
           () =>
-              mockDocRef.update({'read': true, 'readAt': any(named: 'readAt')}),
+              mockDocRef.update({'read': true, 'readAt': any()}),
         ).called(1);
         verify(
-          () => mockFirestore.collection('users').doc('user123').update({
+          () => mockFirestore.collection('users'),
+        ).called(1);
+        verify(
+          () => mockUsersCollection.doc('user123').update({
             'unreadNotificationCount': FieldValue.increment(-1),
           }),
         ).called(1);
@@ -188,7 +200,10 @@ void main() {
           () => mockNotificationsCollection.where('read', isEqualTo: false),
         ).called(1);
         verify(
-          () => mockFirestore.collection('users').doc('user123').update({
+          () => mockFirestore.collection('users'),
+        ).called(1);
+        verify(
+          () => mockUsersCollection.doc('user123').update({
             'unreadNotificationCount': 0,
           }),
         ).called(1);
@@ -225,13 +240,16 @@ void main() {
           // Act
           await service.deleteNotification('user123', 'notif123');
 
-          // Assert
-          verify(() => mockDocRef.delete()).called(1);
-          verify(
-            () => mockFirestore.collection('users').doc('user123').update({
-              'unreadNotificationCount': FieldValue.increment(-1),
-            }),
-          ).called(1);
+        // Assert
+        verify(() => mockDocRef.delete()).called(1);
+        verify(
+          () => mockFirestore.collection('users'),
+        ).called(1);
+        verify(
+          () => mockUsersCollection.doc('user123').update({
+            'unreadNotificationCount': FieldValue.increment(-1),
+          }),
+        ).called(1);
         },
       );
 
@@ -252,7 +270,7 @@ void main() {
         // Assert
         verify(() => mockDocRef.delete()).called(1);
         verifyNoMoreInteractions(
-          mockFirestore.collection('users').doc('user123'),
+          mockUsersCollection.doc('user123'),
         );
       });
     });
@@ -278,7 +296,10 @@ void main() {
         // Assert
         verify(() => mockNotificationsCollection.get()).called(1);
         verify(
-          () => mockFirestore.collection('users').doc('user123').update({
+          () => mockFirestore.collection('users'),
+        ).called(1);
+        verify(
+          () => mockUsersCollection.doc('user123').update({
             'unreadNotificationCount': 0,
           }),
         ).called(1);

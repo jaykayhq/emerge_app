@@ -1,8 +1,11 @@
+import 'package:emerge_app/features/auth/domain/entities/auth_user.dart';
+import 'package:emerge_app/features/auth/domain/entities/user_extension.dart';
 import 'package:emerge_app/features/habits/presentation/providers/habit_providers.dart';
 import 'package:emerge_app/features/auth/presentation/providers/auth_providers.dart';
 import 'package:emerge_app/features/monetization/data/repositories/habit_contract_repository.dart';
 import 'package:emerge_app/features/monetization/domain/entities/habit_contract.dart';
 import 'package:emerge_app/features/monetization/presentation/providers/subscription_provider.dart';
+import 'package:emerge_app/features/gamification/presentation/providers/gamification_providers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
@@ -157,9 +160,16 @@ class _HabitContractScreenState extends ConsumerState<HabitContractScreen> {
                               0.0,
                         );
 
+                        final AuthUser? authUser = ref.read(authStateChangesProvider).value;
+                        final UserProfile? userProfile = ref.read(userProfileProvider).value;
+
                         ref
                             .read(habitContractRepositoryProvider)
-                            .createContract(contract);
+                            .createContract(
+                              contract,
+                              userName: authUser?.displayName ?? 'User',
+                              archetype: userProfile?.archetype.name ?? 'stoic',
+                            );
 
                         ScaffoldMessenger.of(context).showSnackBar(
                           const SnackBar(content: Text('Contract Sent!')),

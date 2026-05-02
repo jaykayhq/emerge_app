@@ -85,6 +85,7 @@ dependencies:
   firebase_analytics: ^12.1.2
   simple_animations: ^5.2.0
   cached_network_image: ^3.4.1
+  shimmer: ^3.0.0
 
 dev_dependencies:
   integration_test:

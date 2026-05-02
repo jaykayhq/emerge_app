@@ -28,6 +28,7 @@ class FirestoreChallengeRepository implements ChallengeRepository {
     }).toList();
   }
 
+  @override
   Future<void> seedChallengesIfEmpty() async {
     final snap = await _firestore.collection('challenges').limit(1).get();
     if (snap.docs.isNotEmpty) return;
@@ -80,11 +81,9 @@ class FirestoreChallengeRepository implements ChallengeRepository {
           );
         }
         challengeData = localChallenge.toMap();
-        // Write the global doc instantly so other users can see participants
-        await _firestore
-            .collection('challenges')
-            .doc(challengeId)
-            .set(challengeData);
+        // Note: Global challenges are managed by Cloud Functions only
+        // Users can only read from the global challenges catalog
+        // We only write to the user's personal challenges subcollection
       } else {
         challengeData = challengeDoc.data();
       }

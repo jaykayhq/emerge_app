@@ -2,23 +2,41 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:emerge_app/features/monetization/domain/entities/habit_contract.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'package:emerge_app/features/social/domain/services/club_activity_service.dart';
+import 'package:emerge_app/features/social/presentation/providers/tribes_provider.dart';
+
 final habitContractRepositoryProvider = Provider<HabitContractRepository>((
   ref,
 ) {
-  return HabitContractRepository(FirebaseFirestore.instance);
+  return HabitContractRepository(
+    FirebaseFirestore.instance,
+    ref.watch(socialActivityServiceProvider),
+  );
 });
 
 class HabitContractRepository {
   final FirebaseFirestore _firestore;
+  final SocialActivityService? _socialActivityService;
 
-  HabitContractRepository(this._firestore);
+  HabitContractRepository(this._firestore, [this._socialActivityService]);
 
   /// Create a new social contract between user and partner.
-  Future<void> createContract(HabitContract contract) async {
+  Future<void> createContract(HabitContract contract, {String? userName, String? archetype}) async {
     await _firestore
         .collection('contracts')
         .doc(contract.id)
         .set(contract.toMap());
+
+    // Log social activity
+    if (_socialActivityService != null && userName != null && archetype != null) {
+      _socialActivityService.logContractCommitted(
+        userId: contract.userId,
+        userName: userName,
+        archetype: archetype,
+        habitTitle: 'a new habit', // Ideally we'd have the habit title here
+        penalty: contract.penaltyAmount.toString(),
+      );
+    }
   }
 
   /// Watch all contracts where the user is the owner.

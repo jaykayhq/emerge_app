@@ -1,63 +1,63 @@
-import * as functionsV1 from "firebase-functions/v1";
+import { onDocumentCreated } from "firebase-functions/v2/firestore";
 import * as admin from "firebase-admin";
 
+// Ensure admin is initialized
+if (admin.apps.length === 0) {
+  admin.initializeApp();
+}
+
 /**
- * Tracks user writes and sets a rateLimitUntil custom claim if they exceed
- * the allowed 10 writes per minute.
+ * Monitors habit completions and enforces rate limiting via custom claims (Gen 2).
+ * This prevents users from spamming completions to artificially inflate stats.
  */
-export const manageRateLimit = functionsV1.firestore
-  .document("posts/{postId}")
-  .onWrite(async (change, context) => {
-    const data = change.after.exists ?
-      change.after.data() : change.before.data();
-    const userId = data?.userId;
-
-    if (!userId) {
-      console.warn(`No userId found for post ${context.params.postId}`);
-      return null;
-    }
-
+export const enforceRateLimit = onDocumentCreated(
+  "users/{userId}/habits/{habitId}/completions/{completionId}",
+  async (event) => {
+    const userId = event.params.userId;
     const db = admin.firestore();
-    const trackerRef = db.collection("rate_limits").doc(userId);
 
     try {
-      await db.runTransaction(async (t: admin.firestore.Transaction) => {
-        const doc = await t.get(trackerRef);
-        const now = Date.now();
-        let count = 1;
-        let windowStart = now;
+      // 1. Get recent completions count (last 24 hours)
+      const oneDayAgo = new Date();
+      oneDayAgo.setDate(oneDayAgo.getDate() - 1);
 
-        if (doc.exists) {
-          const tracker = doc.data()!;
-          if (now - tracker.windowStart < 60000) {
-            count = (tracker.count || 0) + 1;
-            windowStart = tracker.windowStart;
-          }
-        }
+      const completionsSnapshot = await db
+        .collection("users")
+        .doc(userId)
+        .collection("habits")
+        .doc(event.params.habitId)
+        .collection("completions")
+        .where("timestamp", ">", oneDayAgo)
+        .get();
 
-        t.set(trackerRef, { count, windowStart });
+      const completionCount = completionsSnapshot.size;
 
-        if (count > 10) {
-          const user = await admin.auth().getUser(userId);
-          const currentClaims = user.customClaims || {};
-          const currentLimit = currentClaims.rateLimitUntil || 0;
+      // 2. If count exceeds limit (e.g., 50 completions per day per habit)
+      if (completionCount > 50) {
+        console.warn(`Rate limit exceeded for user ${userId} on habit ${event.params.habitId}`);
 
-          // Only update the claim if we haven't already set a future limit
-          if (currentLimit < now) {
-            const rateLimitUntil = now + 60000; // Block for 1 minute
-            await admin.auth().setCustomUserClaims(userId, {
-              ...currentClaims,
-              rateLimitUntil,
-            });
-            console.log(
-              `Rate limit exceeded for user ${userId}. Claim updated.`
-            );
-          }
-        }
-      });
+        // Set a custom claim to flag the user for review
+        const auth = admin.auth();
+        const user = await auth.getUser(userId);
+        const currentClaims = user.customClaims || {};
+
+        await auth.setCustomUserClaims(userId, {
+          ...currentClaims,
+          rateLimited: true,
+          flaggedAt: new Date().toISOString(),
+        });
+
+        // Log to security collection
+        await db.collection("security_logs").add({
+          userId: userId,
+          type: "rate_limit_exceeded",
+          habitId: event.params.habitId,
+          count: completionCount,
+          timestamp: admin.firestore.FieldValue.serverTimestamp(),
+        });
+      }
     } catch (error) {
-      console.error(`Error managing rate limit for user ${userId}:`, error);
+      console.error(`Error enforcing rate limit for user ${userId}:`, error);
     }
-
-    return null;
-  });
+  }
+);

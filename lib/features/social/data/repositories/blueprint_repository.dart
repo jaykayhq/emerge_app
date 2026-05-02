@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:emerge_app/features/social/domain/entities/social_entities.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:emerge_app/core/utils/app_logger.dart';
 
 class BlueprintRepository {
   final FirebaseFirestore _firestore;
@@ -18,214 +19,96 @@ class BlueprintRepository {
             .toList());
   }
 
+  Future<void> adoptBlueprint(String blueprintId) async {
+    final docRef = _firestore.collection('creator_blueprints').doc(blueprintId);
+    await docRef.update({
+      'adoptionCount': FieldValue.increment(1),
+    });
+  }
+
   Future<void> seedBlueprintsIfEmpty() async {
-    final snap = await _firestore.collection('creator_blueprints').limit(1).get();
-    if (snap.docs.isNotEmpty) return;
+    try {
+      final now = DateTime.now();
+      final blueprints = [
+        CreatorBlueprint(
+          id: 'blueprint_atomic_habits',
+          creatorUserId: 'system',
+          creatorName: 'James Clear',
+          creatorArchetype: 'Scholar',
+          blueprintName: 'The Atomic Habits Starter Kit',
+          description: 'Build the systems that fuel creative output and make good habits inevitable.',
+          habitTitles: ['Habit Stacking', 'Environment Design', '2-Minute Rule'],
+          adoptionCount: 0,
+          category: 'Productivity',
+          imageUrl: 'https://lh3.googleusercontent.com/aida-public/AB6AXuD_357wWxUMnRri8nImd1s-eIliBpp3eF_CaZECldc5HtSN5UM48aZ2YkyT6TW65D-c82YI066ifv7q9xHkZXLj4kImgFqZ1FtG3sLiJSLzYZsJ_-HouaUF5sqwuyYaC91L4LCd5wAu0N5zN9cXK55ra_l4jARjWNVwzljZ260VNZc9nxLDyfu2y5-w3nmVEDQpjkWjRMZKkC2TIcrtndLsYH2yu7J6107haz1nZTdZhuC6xvepDx5YaVzvg5d7AYIojci-TJqup-M',
+          createdAt: now,
+        ),
+        CreatorBlueprint(
+          id: 'blueprint_optimal_morning',
+          creatorUserId: 'system',
+          creatorName: 'Dr. Andrew Huberman',
+          creatorArchetype: 'Athlete',
+          blueprintName: 'The Optimal Morning Routine',
+          description: 'Leverage neuroscience to maximize your focus and energy every single day.',
+          habitTitles: ['Morning Sunlight', 'Cold Exposure', 'Delay Caffeine'],
+          adoptionCount: 0,
+          category: 'Morning',
+          imageUrl: 'https://lh3.googleusercontent.com/aida-public/AB6AXuAfCNp1icRBAU8hg03pn5bQWXoBFEuaIz-ZFfUPXOh56xerlnlYitA0if4Yc5mPo2938KAYn8mxC25rkiXWhXcYFz9SfaZXyRbkgQzUjyo5Lbu0wgeu2-f88hbgcI2LmQwu7y8HtduqEUdr1X4wZjJLQ4nTwXeshkcfus-M2KwANVbUrrVVdmH0O96ujwECYbjBx9-QgoR4v3d59g8vui_2fJyHpXZs4iPsgZaO0Ql6gjPS-wyfvwQ_v_T_7Cmulv-_P9IlhJ9Tqp4',
+          createdAt: now,
+          isPremium: true,
+        ),
+        CreatorBlueprint(
+          id: 'blueprint_100m_productivity',
+          creatorUserId: 'system',
+          creatorName: 'Alex Hormozi',
+          creatorArchetype: 'Creator',
+          blueprintName: '\$100M Offer Productivity Stack',
+          description: 'The daily non-negotiables required to build a high-leverage business.',
+          habitTitles: ['Revenue-Generating Activity', 'Lead Generation', 'Daily Reflection'],
+          adoptionCount: 0,
+          category: 'Business',
+          imageUrl: 'https://lh3.googleusercontent.com/aida-public/AB6AXuCpEenasQ2PiqC-P3Gs1VE6p_G5LmQroYE6D9kN-T-Qylz96aFWrFzZ_bIZ2PrFy13J56PkwnkoSo8oz8eS_NVcesKqRSKMCFnLK1kgxSCaKfW3-25G5nbgYlXTeDDsHNhDsZ18pyYAwsk1r4K_BKKy_CO3fOseW0zgKn5XsawJlgcahei0SNdIAVYW8jLmmPZGLQpXP1whzb-H_a3hr31ax_rDUa5S6R3VNTzwHCqCDtFrJ0wtCyUxZPMA3UUxTbkvE8E8NpsnoQo',
+          createdAt: now,
+          isPremium: true,
+        ),
+        CreatorBlueprint(
+          id: 'bp_psych_1',
+          creatorUserId: 'system',
+          creatorName: 'Behavioral Scientist',
+          creatorArchetype: 'Scholar',
+          blueprintName: 'The Behavior Design',
+          description: 'Apply the B=MAT model to decode your habits. Optimize your triggers and ability to make desired behaviors inevitable.',
+          habitTitles: ['Trigger Mapping', 'Friction Reduction', 'Small Success Celebration', 'Zeigarnik Task Start'],
+          adoptionCount: 0,
+          category: 'Psychology',
+          imageUrl: 'https://images.unsplash.com/photo-1452802447250-470a88ac82bc?w=400',
+          createdAt: now,
+        ),
+        CreatorBlueprint(
+          id: 'bp_proc_1',
+          creatorUserId: 'system',
+          creatorName: 'Resistance Breaker',
+          creatorArchetype: 'Stoic',
+          blueprintName: 'Anti-Procrastination Loop',
+          description: 'Shatter procrastination loops using the 5-Minute Rule and emotional labeling.',
+          habitTitles: ['5-Minute Task Start', 'Emotional Labeling', 'Launch Countdown', 'Focus Burst'],
+          adoptionCount: 0,
+          category: 'Mindset',
+          imageUrl: 'https://images.unsplash.com/photo-1447752875215-b2761acb3c5d?w=400',
+          createdAt: now,
+        ),
+      ];
 
-    final blueprints = [
-      // PRODUCTIVITY
-      CreatorBlueprint(
-        id: 'bp_productivity_1',
-        creatorUserId: 'system',
-        creatorName: 'The Architect',
-        creatorArchetype: 'Athlete',
-        blueprintName: 'The Focus Engine',
-        description: 'A hybrid system combining the Pomodoro Technique with Eisenhower Matrix prioritization to eliminate busywork and maximize high-impact output.',
-        habitTitles: ['Eisenhower Prioritization', '90-Minute Focus Block', 'Pomodoro Rest Cycle', 'Daily Output Review'],
-        adoptionCount: 1250,
-        category: 'Productivity',
-        imageUrl: 'assets/images/blueprints/blueprint_productivity_1777545113334.png',
-        createdAt: DateTime.now(),
-      ),
-      CreatorBlueprint(
-        id: 'bp_productivity_2',
-        creatorUserId: 'system',
-        creatorName: 'Deep Work Master',
-        creatorArchetype: 'Scholar',
-        blueprintName: 'Digital Minimalism',
-        description: 'Advice: Your attention is your most valuable asset. Protect it by ruthlessly eliminating digital clutter and context switching.',
-        habitTitles: ['Phone-Free Morning', 'Tab Audit', 'Asynchronous Communication', 'Single-Task Focus'],
-        adoptionCount: 950,
-        category: 'Productivity',
-        imageUrl: 'assets/images/blueprints/blueprint_productivity_1777545113334.png',
-        createdAt: DateTime.now(),
-      ),
-      
-      // SELF IMPROVEMENT
-      CreatorBlueprint(
-        id: 'bp_self_1',
-        creatorUserId: 'system',
-        creatorName: 'Identity Strategist',
-        creatorArchetype: 'Stoic',
-        blueprintName: 'The 1% Identity',
-        description: 'Focus on becoming the type of person who achieves your goals. Shift from outcome-based habits to identity-based evolution with 1% daily improvements.',
-        habitTitles: ['Identity Vote Action', '1% Improvement Task', 'Habit Stacking Anchor', 'Evening Reflection'],
-        adoptionCount: 2800,
-        category: 'Self Improvement',
-        imageUrl: 'assets/images/blueprints/blueprint_self_improvement_1777545132966.png',
-        createdAt: DateTime.now(),
-      ),
-      CreatorBlueprint(
-        id: 'bp_self_2',
-        creatorUserId: 'system',
-        creatorName: 'Growth Coach',
-        creatorArchetype: 'Creator',
-        blueprintName: 'Growth Mindset Loop',
-        description: 'Advice: Reframe failure as data. Every setback is a signal for where to optimize your system next.',
-        habitTitles: ['Failure Deconstruction', 'Challenge Pursuit', 'Effort-Based Praise', 'Skill Deep-Dive'],
-        adoptionCount: 1400,
-        category: 'Self Improvement',
-        imageUrl: 'assets/images/blueprints/blueprint_self_improvement_1777545132966.png',
-        createdAt: DateTime.now(),
-      ),
-
-      // GOAL SETTING
-      CreatorBlueprint(
-        id: 'bp_goal_1',
-        creatorUserId: 'system',
-        creatorName: 'Strategic Planner',
-        creatorArchetype: 'Scholar',
-        blueprintName: 'Strategic Intent',
-        description: 'Master the science of achievement using SMART goals combined with Mental Contrasting and Implementation Intentions (If-Then planning).',
-        habitTitles: ['SMART Goal Audit', 'Mental Contrasting Session', 'If-Then Obstacle Plan', 'Weekly Milestone Check'],
-        adoptionCount: 1950,
-        category: 'Goal Setting',
-        imageUrl: 'assets/images/blueprints/blueprint_goal_setting_1777545151153.png',
-        createdAt: DateTime.now(),
-      ),
-      CreatorBlueprint(
-        id: 'bp_goal_2',
-        creatorUserId: 'system',
-        creatorName: 'Visionary',
-        creatorArchetype: 'Creator',
-        blueprintName: 'Reverse Engineering Success',
-        description: 'Advice: Start at the finish line. Break your 10-year goal down into 1-year, 1-month, and 1-day actionable steps.',
-        habitTitles: ['Backwards Planning', 'Daily Tiny Step', 'Vision Board Review', 'Milestone Celebration'],
-        adoptionCount: 1100,
-        category: 'Goal Setting',
-        imageUrl: 'assets/images/blueprints/blueprint_goal_setting_1777545151153.png',
-        createdAt: DateTime.now(),
-      ),
-
-      // BEHAVIORAL PSYCHOLOGY
-      CreatorBlueprint(
-        id: 'bp_psych_1',
-        creatorUserId: 'system',
-        creatorName: 'Behavioral Scientist',
-        creatorArchetype: 'Scholar',
-        blueprintName: 'The Behavior Design',
-        description: 'Apply the B=MAT model to decode your habits. Optimize your triggers and ability to make desired behaviors inevitable and undesired ones impossible.',
-        habitTitles: ['Trigger Mapping', 'Friction Reduction', 'Small Success Celebration', 'Zeigarnik Task Start'],
-        adoptionCount: 3100,
-        category: 'Behavioral Psychology',
-        imageUrl: 'assets/images/blueprints/blueprint_behavioral_psychology_1777545169964.png',
-        createdAt: DateTime.now(),
-      ),
-      CreatorBlueprint(
-        id: 'bp_psych_2',
-        creatorUserId: 'system',
-        creatorName: 'Habit Lab',
-        creatorArchetype: 'Stoic',
-        blueprintName: 'Neural Path Sculpting',
-        description: 'Advice: Habits aren\'t just behaviors; they are physical pathways in your brain. Repetition is the only way to thicken those wires.',
-        habitTitles: ['Habit Stacking', 'Environmental Cueing', 'Immediate Reward', 'Behavior Tracking'],
-        adoptionCount: 2200,
-        category: 'Behavioral Psychology',
-        imageUrl: 'assets/images/blueprints/blueprint_behavioral_psychology_1777545169964.png',
-        createdAt: DateTime.now(),
-      ),
-
-      // PROCRASTINATION
-      CreatorBlueprint(
-        id: 'bp_proc_1',
-        creatorUserId: 'system',
-        creatorName: 'Resistance Breaker',
-        creatorArchetype: 'Athlete',
-        blueprintName: 'Resistance Breaker',
-        description: 'Shatter procrastination loops using the 5-Minute Rule and emotional labeling. Transform anxiety into action through temptation bundling.',
-        habitTitles: ['5-Minute Task Start', 'Emotional State Labeling', 'Temptation Bundle Setup', 'Instant Launch Countdown'],
-        adoptionCount: 4500,
-        category: 'Procrastination',
-        imageUrl: 'assets/images/blueprints/blueprint_procrastination_1777545184036.png',
-        createdAt: DateTime.now(),
-      ),
-      CreatorBlueprint(
-        id: 'bp_proc_2',
-        creatorUserId: 'system',
-        creatorName: 'Action Instigator',
-        creatorArchetype: 'Athlete',
-        blueprintName: 'The 2-Minute Sprint',
-        description: 'Advice: Procrastination is a wall you can jump over with a 2-minute run. Once you start, the momentum takes over.',
-        habitTitles: ['2-Minute Task Kickoff', 'Decision Deletion', 'External Accountability', 'Public Shipping'],
-        adoptionCount: 3800,
-        category: 'Procrastination',
-        imageUrl: 'assets/images/blueprints/blueprint_procrastination_1777545184036.png',
-        createdAt: DateTime.now(),
-      ),
-
-      // WILLPOWER
-      CreatorBlueprint(
-        id: 'bp_will_1',
-        creatorUserId: 'system',
-        creatorName: 'Environment Architect',
-        creatorArchetype: 'Stoic',
-        blueprintName: 'Environment Architecture',
-        description: 'Stop relying on finite willpower. Design your surroundings to automate discipline and minimize decision fatigue through spatial anchoring.',
-        habitTitles: ['Environmental Audit', 'Decision Automation', 'Visual Cue Placement', 'Night Before Prep'],
-        adoptionCount: 1800,
-        category: 'Willpower',
-        imageUrl: 'assets/images/blueprints/blueprint_willpower_1777545209964.png',
-        createdAt: DateTime.now(),
-      ),
-      CreatorBlueprint(
-        id: 'bp_will_2',
-        creatorUserId: 'system',
-        creatorName: 'Stoic Guide',
-        creatorArchetype: 'Stoic',
-        blueprintName: 'Voluntary Discomfort',
-        description: 'Advice: Willpower is built through struggle. By choosing small discomforts, you harden your mind against larger challenges.',
-        habitTitles: ['Cold Shower Burst', 'Delayed Gratification', 'Focus Stamina', 'Mental Resilience Exercise'],
-        adoptionCount: 1600,
-        category: 'Willpower',
-        imageUrl: 'assets/images/blueprints/blueprint_willpower_1777545209964.png',
-        createdAt: DateTime.now(),
-      ),
-
-      // MOTIVATION
-      CreatorBlueprint(
-        id: 'bp_mot_1',
-        creatorUserId: 'system',
-        creatorName: 'Purpose Sync',
-        creatorArchetype: 'Creator',
-        blueprintName: 'Purpose Synchronization',
-        description: 'Align your daily actions with intrinsic values. Build sustainable motivation through social accountability loops and progress visualization.',
-        habitTitles: ['Value-Action Audit', 'Public Commitment', 'Progress Visual Update', 'Purpose Re-centering'],
-        adoptionCount: 950,
-        category: 'Motivation',
-        imageUrl: 'assets/images/blueprints/blueprint_motivation_1777545226464.png',
-        createdAt: DateTime.now(),
-      ),
-      CreatorBlueprint(
-        id: 'bp_mot_2',
-        creatorUserId: 'system',
-        creatorName: 'Dopamine Designer',
-        creatorArchetype: 'Creator',
-        blueprintName: 'The Small Win Spiral',
-        description: 'Advice: Motivation is the result of progress, not the cause. Engineer a series of tiny wins to trigger a dopamine-driven spiral of action.',
-        habitTitles: ['Task Chunking', 'Micro-Win Celebration', 'Streak Tracking', 'Visual Rewards'],
-        adoptionCount: 1200,
-        category: 'Motivation',
-        imageUrl: 'assets/images/blueprints/blueprint_motivation_1777545226464.png',
-        createdAt: DateTime.now(),
-      ),
-    ];
-
-    final batch = _firestore.batch();
-    for (final bp in blueprints) {
-      final docRef = _firestore.collection('creator_blueprints').doc(bp.id);
-      batch.set(docRef, bp.toMap());
+      final batch = _firestore.batch();
+      for (final bp in blueprints) {
+        final docRef = _firestore.collection('creator_blueprints').doc(bp.id);
+        batch.set(docRef, bp.toMap(), SetOptions(merge: true));
+      }
+      await batch.commit();
+      AppLogger.i('BlueprintRepository: Seeding/Sync complete.');
+    } catch (e) {
+      AppLogger.e('BlueprintRepository: Failed to seed blueprints', e);
     }
-    await batch.commit();
   }
 }
 

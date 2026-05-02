@@ -406,6 +406,7 @@ class _TimelineScreenState extends ConsumerState<TimelineScreen> {
                           isLoading: _isLoadingInsight,
                           accentColor: EmergeColors.teal,
                           isPremiumLocked: !isPremium, // Unlocked when premium
+                          onReflect: () => context.push('/ai-reflections'),
                           onAddHabit: () =>
                               context.push('/timeline/create-habit'),
                           onLockedTap: () {
@@ -425,7 +426,7 @@ class _TimelineScreenState extends ConsumerState<TimelineScreen> {
                                   label: 'UPGRADE',
                                   textColor: Colors.black,
                                   onPressed: () =>
-                                      context.push('/profile/paywall'),
+                                      context.push('/paywall'),
                                 ),
                               ),
                             );
@@ -439,6 +440,7 @@ class _TimelineScreenState extends ConsumerState<TimelineScreen> {
                           accentColor: EmergeColors.teal,
                           isPremiumLocked:
                               true, // Default to locked while loading
+                          onReflect: () => context.push('/ai-reflections'),
                           onAddHabit: () =>
                               context.push('/timeline/create-habit'),
                           onLockedTap: () {
@@ -457,6 +459,7 @@ class _TimelineScreenState extends ConsumerState<TimelineScreen> {
                           isLoading: _isLoadingInsight,
                           accentColor: EmergeColors.teal,
                           isPremiumLocked: false, // Unlock on error
+                          onReflect: () => context.push('/ai-reflections'),
                           onAddHabit: () =>
                               context.push('/timeline/create-habit'),
                         ),

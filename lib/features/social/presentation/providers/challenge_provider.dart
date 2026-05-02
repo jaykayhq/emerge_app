@@ -20,6 +20,9 @@ final challengeRepositoryProvider = Provider<ChallengeRepository>((ref) {
 @Riverpod(keepAlive: true)
 Future<List<Challenge>> featuredChallenges(Ref ref) async {
   final repository = ref.read(challengeRepositoryProvider);
+  if (repository is FirestoreChallengeRepository) {
+    await repository.seedChallengesIfEmpty();
+  }
   return repository.getChallenges(featuredOnly: true);
 }
 

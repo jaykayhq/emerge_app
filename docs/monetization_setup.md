@@ -2,21 +2,20 @@
 
 This document outlines the steps to fully connect your app to RevenueCat and AdMob for monetization.
 
-## 1. Environment Variables
-
-Set up your environment variables for RevenueCat and AdMob:
-
+## 1. API Key Configuration
+ 
+RevenueCat API keys are managed dynamically via **Firebase Remote Config**. This allows you to update keys without releasing a new app version.
+ 
+### Configuration Steps:
+1. Open the [Firebase Console](https://console.firebase.google.com/).
+2. Navigate to **Remote Config**.
+3. Add the following parameters:
+   - `revenuecat_google_api_key`: Your RevenueCat Android Public API key.
+   - `revenuecat_apple_api_key`: Your RevenueCat iOS Public API key.
+4. Click **Publish changes**.
+ 
 ### For local development:
-Create a `.env` file or pass variables when building:
-```bash
-flutter run --dart-define=REVENUECAT_GOOGLE_API_KEY=your_revenuecat_key_here
-flutter run --dart-define=ADMOB_BANNER_AD_UNIT_ID=your_admob_banner_id_here
-```
-
-### For release builds:
-```bash
-flutter build apk --dart-define=REVENUECAT_GOOGLE_API_KEY=your_revenuecat_key_here --dart-define=ADMOB_BANNER_AD_UNIT_ID=your_admob_banner_id_here
-```
+The app will fetch these keys automatically on startup. Ensure you have initialized your Firebase project locally.
 
 ## 2. RevenueCat Configuration
 

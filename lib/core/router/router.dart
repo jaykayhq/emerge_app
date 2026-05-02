@@ -29,7 +29,10 @@ import 'package:emerge_app/features/settings/presentation/screens/notification_s
 import 'package:emerge_app/features/monetization/presentation/screens/paywall_screen.dart';
 
 import 'package:emerge_app/features/social/presentation/screens/social_screen.dart';
+import 'package:emerge_app/features/social/presentation/screens/challenges_screen.dart';
 import 'package:emerge_app/features/social/presentation/screens/challenge_detail_screen.dart';
+import 'package:emerge_app/features/social/presentation/screens/friends_screen.dart';
+import 'package:emerge_app/features/monetization/presentation/screens/habit_contract_screen.dart';
 
 
 import 'package:flutter/material.dart';
@@ -165,6 +168,10 @@ GoRouter router(Ref ref) {
         builder: (context, state) => const SplashScreen(),
       ),
       GoRoute(
+        path: '/paywall',
+        builder: (context, state) => const PaywallScreen(),
+      ),
+      GoRoute(
         path: '/world-splash',
         builder: (context, state) => const WorldSplashScreen(),
       ),
@@ -190,6 +197,10 @@ GoRouter router(Ref ref) {
       GoRoute(
         path: '/signup',
         builder: (context, state) => const SignUpScreen(),
+      ),
+      GoRoute(
+        path: '/challenges',
+        builder: (context, state) => const ChallengesScreen(showAppBar: true),
       ),
       // ShellRoute for Bottom Navigation
       StatefulShellRoute.indexedStack(
@@ -243,8 +254,13 @@ GoRouter router(Ref ref) {
             routes: [
               GoRoute(
                 path: '/tribes',
-                builder: (context, state) => const SocialScreen(),
+                builder: (context, state) => const SocialScreen(initialIndex: 0),
                 routes: [
+                  GoRoute(
+                    path: 'challenges',
+                    builder: (context, state) =>
+                        const SocialScreen(initialIndex: 1),
+                  ),
                   GoRoute(
                     path: 'challenge/:challengeId',
                     parentNavigatorKey: _rootNavigatorKey,
@@ -252,6 +268,16 @@ GoRouter router(Ref ref) {
                       final id = state.pathParameters['challengeId']!;
                       return ChallengeDetailScreen(challengeId: id);
                     },
+                  ),
+                  GoRoute(
+                    path: 'accountability',
+                    parentNavigatorKey: _rootNavigatorKey,
+                    builder: (context, state) => const FriendsScreen(),
+                  ),
+                  GoRoute(
+                    path: 'contracts',
+                    parentNavigatorKey: _rootNavigatorKey,
+                    builder: (context, state) => const HabitContractScreen(),
                   ),
                 ],
               ),
@@ -284,10 +310,6 @@ GoRouter router(Ref ref) {
                   GoRoute(
                     path: 'goldilocks',
                     builder: (context, state) => const GoldilocksScreen(),
-                  ),
-                  GoRoute(
-                    path: 'paywall',
-                    builder: (context, state) => const PaywallScreen(),
                   ),
                 ],
               ),
