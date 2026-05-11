@@ -5,8 +5,17 @@ import 'package:emerge_app/features/social/domain/models/tribe.dart';
 import 'package:emerge_app/features/social/domain/services/club_activity_service.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'package:emerge_app/core/services/local_cache_service.dart';
+import 'package:emerge_app/features/social/data/repositories/cache_aware_tribe_repository.dart';
+
 final tribeRepositoryProvider = Provider<TribeRepository>((ref) {
-  return FirestoreTribeRepository(FirebaseFirestore.instance);
+  final remoteRepository = FirestoreTribeRepository(FirebaseFirestore.instance);
+  try {
+    final cacheService = ref.watch(localCacheServiceProvider);
+    return CacheAwareTribeRepository(remoteRepository, cacheService);
+  } catch (_) {
+    return remoteRepository;
+  }
 });
 
 /// Provider for TribeStatsService - calculates real-time tribe statistics
@@ -31,8 +40,12 @@ final userClubProvider = FutureProvider.family<Tribe?, String>((
 /// All official archetype clubs (Real-time).
 final allArchetypeClubsProvider = StreamProvider<List<Tribe>>((ref) {
   final repository = ref.watch(tribeRepositoryProvider);
-  repository.seedTribesIfEmpty();
-  return repository.watchArchetypeClubs();
+  return repository.watchArchetypeClubs().map((list) {
+    // Sort locally to avoid index requirements
+    final sorted = List<Tribe>.from(list);
+    sorted.sort((a, b) => (a.archetypeId ?? '').compareTo(b.archetypeId ?? ''));
+    return sorted;
+  });
 });
 
 /// Real-time stream of top contributors for a given club.
@@ -146,4 +159,22 @@ class TribeStats {
     required this.totalHabitsCompleted,
     required this.totalChallengesCompleted,
   });
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    return other is TribeStats &&
+        other.memberCount == memberCount &&
+        other.totalXp == totalXp &&
+        other.totalHabitsCompleted == totalHabitsCompleted &&
+        other.totalChallengesCompleted == totalChallengesCompleted;
+  }
+
+  @override
+  int get hashCode => Object.hash(
+        memberCount,
+        totalXp,
+        totalHabitsCompleted,
+        totalChallengesCompleted,
+      );
 }
