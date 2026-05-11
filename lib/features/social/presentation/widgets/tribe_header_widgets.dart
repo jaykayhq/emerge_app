@@ -6,7 +6,10 @@ import 'package:emerge_app/core/theme/emerge_colors.dart';
 import 'package:emerge_app/core/theme/app_theme.dart';
 import 'package:emerge_app/core/theme/archetype_theme.dart';
 import 'package:emerge_app/features/social/presentation/providers/tribes_provider.dart';
+import 'package:emerge_app/features/social/presentation/providers/cached_tribe_stats_provider.dart';
 import 'package:emerge_app/features/social/presentation/providers/friend_provider.dart';
+import 'package:emerge_app/core/presentation/widgets/skeleton_shimmer.dart';
+import 'package:emerge_app/core/presentation/widgets/app_error_widget.dart';
 
 // ============ CLUB EMBLEM (Centered, glowing ring) ============
 
@@ -27,18 +30,6 @@ class ArchetypeClubEmblem extends StatelessWidget {
           end: Alignment.bottomRight,
           colors: [theme.primaryColor, theme.accentColor],
         ),
-        boxShadow: [
-          BoxShadow(
-            color: theme.primaryColor.withValues(alpha:0.6),
-            blurRadius: 30,
-            spreadRadius: 5,
-          ),
-          BoxShadow(
-            color: theme.accentColor.withValues(alpha:0.4),
-            blurRadius: 40,
-            spreadRadius: 10,
-          ),
-        ],
       ),
       child: Container(
         margin: const EdgeInsets.all(4),
@@ -46,7 +37,12 @@ class ArchetypeClubEmblem extends StatelessWidget {
           shape: BoxShape.circle,
           color: EmergeColors.background,
         ),
-        child: Icon(theme.journeyIcon, size: 42, color: theme.primaryColor),
+        child: Center(
+          child: Text(
+            theme.emoji,
+            style: const TextStyle(fontSize: 42),
+          ),
+        ),
       ),
     );
   }
@@ -61,7 +57,7 @@ class RealTimeMemberCount extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final statsAsync = ref.watch(realTimeTribeStatsProvider(tribeId));
+    final statsAsync = ref.watch(cachedTribeStatsProvider(tribeId));
 
     return statsAsync.when(
       data: (stats) {
@@ -81,21 +77,7 @@ class RealTimeMemberCount extends ConsumerWidget {
           ],
         );
       },
-      loading: () => Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(Icons.people, color: Theme.of(context).primaryColor, size: 16),
-          const Gap(4),
-          const Text(
-            'Loading...',
-            style: TextStyle(
-              fontSize: 12,
-              color: Colors.white70,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-        ],
-      ),
+      loading: () => const SkeletonShimmer(width: 80, height: 16, borderRadius: 4),
       error: (error, _) => Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
@@ -131,7 +113,7 @@ class RealTimeTribeProgressMetrics extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final statsAsync = ref.watch(realTimeTribeStatsProvider(tribeId));
+    final statsAsync = ref.watch(cachedTribeStatsProvider(tribeId));
 
     return statsAsync.when(
       data: (stats) {
@@ -240,16 +222,10 @@ class StatOrb extends StatelessWidget {
             shape: BoxShape.circle,
             color: color.withValues(alpha:0.1),
             border: Border.all(color: color.withValues(alpha:0.5)),
-            boxShadow: [
-              BoxShadow(
-                color: color.withValues(alpha:0.2),
-                blurRadius: 10,
-                spreadRadius: 2,
-              ),
-            ],
           ),
           child: Icon(icon, color: color, size: 24),
         ),
+
         const Gap(8),
         Text(
           value,
@@ -340,7 +316,7 @@ class ContributorsSection extends ConsumerWidget {
           ],
         );
       },
-      loading: () => const SizedBox(height: 100, child: Center(child: CircularProgressIndicator())),
+      loading: () => const _ContributorsShimmer(),
       error: (error, _) => const SizedBox.shrink(),
     );
   }
@@ -483,8 +459,58 @@ class _MetricsLoadingState extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white.withValues(alpha:0.05),
         borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.white10),
       ),
-      child: const Center(child: CircularProgressIndicator()),
+      child: Column(
+        children: [
+          const SkeletonShimmer(width: 120, height: 20),
+          const Gap(16),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: List.generate(3, (index) => Column(
+              children: [
+                const SkeletonShimmer.circular(size: 48),
+                const Gap(8),
+                const SkeletonShimmer(width: 40, height: 16),
+                const Gap(4),
+                const SkeletonShimmer(width: 60, height: 10),
+              ],
+            )),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ContributorsShimmer extends StatelessWidget {
+  const _ContributorsShimmer();
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const SkeletonShimmer(width: 100, height: 20),
+        const Gap(16),
+        SizedBox(
+          height: 80,
+          child: ListView.builder(
+            scrollDirection: Axis.horizontal,
+            itemCount: 5,
+            itemBuilder: (context, index) => Padding(
+              padding: const EdgeInsets.only(right: 12),
+              child: Column(
+                children: [
+                  const SkeletonShimmer.circular(size: 50),
+                  const Gap(4),
+                  const SkeletonShimmer(width: 40, height: 10),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ],
     );
   }
 }
@@ -497,8 +523,13 @@ class _MetricsErrorState extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.red.withValues(alpha:0.05),
         borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.redAccent.withValues(alpha:0.2)),
       ),
-      child: const Center(child: Text('Error loading metrics', style: TextStyle(color: Colors.white70))),
+      child: const Center(
+        child: AppErrorWidget(
+          message: 'Error loading metrics',
+        ),
+      ),
     );
   }
 }
