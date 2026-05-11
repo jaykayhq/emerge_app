@@ -3,12 +3,13 @@ import 'package:emerge_app/features/social/presentation/providers/tribes_provide
 class CachedStats {
   final TribeStats stats;
   final DateTime timestamp;
+  final Duration ttl;
   
-  static const Duration _cacheTtl = Duration(minutes: 5);
+  static const Duration _defaultCacheTtl = Duration(minutes: 5);
   
-  CachedStats(this.stats, this.timestamp);
+  CachedStats(this.stats, this.timestamp, {this.ttl = _defaultCacheTtl});
   
   bool isExpired() {
-    return DateTime.now().difference(timestamp) > _cacheTtl;
+    return DateTime.now().difference(timestamp) > ttl;
   }
 }
