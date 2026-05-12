@@ -449,9 +449,9 @@ class ChallengeDetailScreen extends ConsumerWidget {
     );
   }
 
-  void _showConfirmation(BuildContext context, WidgetRef ref, Challenge challenge) {
+  void _showConfirmation(BuildContext screenContext, WidgetRef ref, Challenge challenge) {
     showModalBottomSheet(
-      context: context,
+      context: screenContext,
       backgroundColor: Colors.transparent,
       isScrollControlled: true,
       builder: (context) => QuestConfirmationSheet(
@@ -464,7 +464,7 @@ class ChallengeDetailScreen extends ConsumerWidget {
           if (challenge.status == ChallengeStatus.featured) {
             final result = await repo.joinChallenge(user.id, challenge.id);
             result.fold(
-              (failure) => _showError(context, failure.message),
+              (failure) => _showError(screenContext, failure.message),
               (_) async {
                 final userStatsRepo = ref.read(userStatsRepositoryProvider);
                 await userStatsRepo.logActivity(
@@ -473,9 +473,9 @@ class ChallengeDetailScreen extends ConsumerWidget {
                   sourceId: challenge.id,
                   date: DateTime.now(),
                 );
-                if (context.mounted) {
-                  _showSuccess(context, 'QUEST STARTED! (+25 XP)');
-                  context.go('/tribes/challenges');
+                if (screenContext.mounted) {
+                  _showSuccess(screenContext, 'QUEST STARTED! (+25 XP)');
+                  screenContext.go('/tribes/challenges');
                 }
               },
             );

@@ -503,15 +503,13 @@ class _WeeklySpotlightSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final challenge = bundle?.weeklySpotlight;
+    // Show active version if joined, otherwise show featured
+    final challenge = (bundle?.isWeeklySpotlightJoined == true)
+        ? bundle?.activeWeeklyChallenge
+        : bundle?.weeklySpotlight;
 
     if (challenge == null) {
       return _EmptySpotlightCard();
-    }
-
-    // Hide featured if user already joined it
-    if (bundle?.isWeeklySpotlightJoined == true) {
-      return const SizedBox.shrink();
     }
 
     return QuestCardStitch(
@@ -585,15 +583,13 @@ class _DailyQuestSection extends ConsumerStatefulWidget {
 class _DailyQuestSectionState extends ConsumerState<_DailyQuestSection> {
   @override
   Widget build(BuildContext context) {
-    final challenge = widget.bundle?.dailyQuest;
+    // Show active version if joined, otherwise show featured
+    final challenge = (widget.bundle?.isDailyQuestJoined == true)
+        ? widget.bundle?.activeDailyChallenge
+        : widget.bundle?.dailyQuest;
 
     if (challenge == null) {
       return _EmptyDailyQuestCard();
-    }
-
-    // Hide featured if user already joined it
-    if (widget.bundle?.isDailyQuestJoined == true) {
-      return const SizedBox.shrink();
     }
 
     return QuestCardStitch(
