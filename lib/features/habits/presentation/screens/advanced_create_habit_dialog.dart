@@ -252,26 +252,6 @@ class _AdvancedCreateHabitDialogState
       );
 
       try {
-        // PROACTIVE CHECK: Check limit before calling provider to avoid "Bad state" on disposal
-        final isPremium = await ref.read(isPremiumProvider.future);
-        if (!isPremium) {
-          final habits = ref.read(habitsProvider).value ?? [];
-          final freeLimit = ref.read(remoteConfigServiceProvider).freeHabitLimit;
-          
-          if (habits.length >= freeLimit) {
-            if (mounted) {
-              showDialog(
-                context: context,
-                builder: (context) => const PremiumLimitDialog(
-                  title: 'Habit Capacity Reached',
-                  message: 'You have reached the free limit of habits. Upgrade to Premium for unlimited growth.',
-                ),
-              );
-            }
-            return;
-          }
-        }
-
         await ref.read(createHabitProvider(newHabit).future);
 
         AppLogger.i(
