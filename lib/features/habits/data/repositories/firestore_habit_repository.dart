@@ -227,9 +227,14 @@ class FirestoreHabitRepository implements HabitRepository {
   Future<Either<Failure, Unit>> deleteHabit(String habitId) async {
     try {
       final doc = await _firestore.collection('habits').doc(habitId).get();
-      final userId = doc.data()?['userId'] as String?;
+      final data = doc.data();
+      final userId = data?['userId'] as String?;
 
-      await _firestore.collection('habits').doc(habitId).delete();
+      if (data != null) {
+        // Soft delete: write back full document with isArchived: true
+        data['isArchived'] = true;
+        await _firestore.collection('habits').doc(habitId).set(data);
+      }
 
       if (userId != null) {
         await _recalculateAndStoreWorldHealth(userId);
