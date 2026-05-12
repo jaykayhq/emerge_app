@@ -691,40 +691,52 @@ class _HabitDetailScreenState extends ConsumerState<HabitDetailScreen> {
                           onPressed: () async {
                             final confirmed =
                                 await _showDeleteConfirmationDialog(context);
-                            if (confirmed) {
-                              try {
-                                // Delete habit from repository
-                                await ref
-                                    .read(habitRepositoryProvider)
-                                    .deleteHabit(habit.id);
-                                // Cancel all notifications
-                                await ref
-                                    .read(notificationServiceProvider)
-                                    .cancelHabitNotifications(habit.id);
-                                if (context.mounted) {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(
-                                      content: Text(
-                                        'Habit deleted successfully',
+                            if (!confirmed) return;
+                            try {
+                              final result = await ref
+                                  .read(habitRepositoryProvider)
+                                  .deleteHabit(habit.id);
+                              await ref
+                                  .read(notificationServiceProvider)
+                                  .cancelHabitNotifications(habit.id);
+                              result.fold(
+                                (failure) {
+                                  if (context.mounted) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(
+                                        content: Text(
+                                          'Error deleting habit: ${failure.message}',
+                                        ),
+                                        backgroundColor: Colors.red,
                                       ),
-                                      backgroundColor: Colors.green,
-                                    ),
-                                  );
-                                  Navigator.of(
-                                    context,
-                                  ).pop(); // Close detail screen
-                                }
-                              } catch (e) {
-                                if (context.mounted) {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(
-                                      content: Text(
-                                        'Error deleting habit: $e',
+                                    );
+                                  }
+                                },
+                                (_) {
+                                  if (context.mounted) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(
+                                        content: Text(
+                                          'Habit deleted successfully',
+                                        ),
+                                        backgroundColor: Colors.green,
                                       ),
-                                      backgroundColor: Colors.red,
-                                    ),
-                                  );
-                                }
+                                    );
+                                  }
+                                },
+                              );
+                              if (context.mounted) {
+                                Navigator.of(context).pop();
+                              }
+                            } catch (e) {
+                              if (context.mounted) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text('$e'),
+                                    backgroundColor: Colors.red,
+                                  ),
+                                );
+                                Navigator.of(context).pop();
                               }
                             }
                           },
