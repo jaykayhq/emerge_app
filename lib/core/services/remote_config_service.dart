@@ -19,7 +19,7 @@ class RemoteConfigService {
     await _remoteConfig.setDefaults({
       'goldilocks_threshold_easy': 0.9,
       'goldilocks_threshold_hard': 0.4,
-      'free_habit_limit': 3,
+      'free_habit_limit': 5,
       'affirmations_json': jsonEncode({
         'athlete': [
           'Pain is weakness leaving the body.',
