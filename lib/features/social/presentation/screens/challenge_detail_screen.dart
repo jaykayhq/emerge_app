@@ -483,14 +483,14 @@ class ChallengeDetailScreen extends ConsumerWidget {
             final newProgress = challenge.currentDay + 1;
             final result = await repo.updateProgress(user.id, challenge.id, newProgress);
             result.fold(
-              (failure) => _showError(context, failure.message),
+              (failure) => _showError(screenContext, failure.message),
               (_) {
                 final isCompleted = newProgress >= challenge.totalDays;
                 _showSuccess(
-                  context,
+                  screenContext,
                   isCompleted ? 'QUEST COMPLETE! (+${challenge.xpReward} XP)' : 'PROGRESS SAVED!',
                 );
-                context.pop();
+                screenContext.pop();
               },
             );
           }
