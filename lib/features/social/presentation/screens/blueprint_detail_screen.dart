@@ -247,10 +247,26 @@ class BlueprintDetailScreen extends ConsumerWidget {
             return;
           }
 
-          // Show adoption dialog to set schedule
+          // Check for duplicate adoption
+          final existingHabits = ref.read(habitsProvider).value ?? [];
+          final blueprintTitles = blueprint.habits.map((h) => h.title).toSet();
+          if (existingHabits.any((h) => blueprintTitles.contains(h.title))) {
+            if (context.mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('Blueprint already adopted'),
+                  backgroundColor: Colors.orange,
+                ),
+              );
+            }
+            return;
+          }
+
+          final screenContext = context;
+
           showDialog(
-            context: context,
-            builder: (context) => BlueprintAdoptDialog(
+            context: screenContext,
+            builder: (_) => BlueprintAdoptDialog(
               blueprint: blueprint,
               onAdopt: (reminderTime) async {
                 try {
@@ -263,8 +279,8 @@ class BlueprintDetailScreen extends ConsumerWidget {
 
                   result.fold(
                     (failure) {
-                      if (context.mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(
+                      if (screenContext.mounted) {
+                        ScaffoldMessenger.of(screenContext).showSnackBar(
                           SnackBar(
                             content: Text('Error: ${failure.message}'),
                             backgroundColor: Colors.red,
@@ -273,22 +289,21 @@ class BlueprintDetailScreen extends ConsumerWidget {
                       }
                     },
                     (_) async {
-                      if (context.mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(
+                      if (screenContext.mounted) {
+                        ScaffoldMessenger.of(screenContext).showSnackBar(
                           const SnackBar(
                             content: Text(
                                 'Adopted successfully'),
                             backgroundColor: EmergeColors.teal,
                           ),
                         );
-                        // Navigate to timeline or home
-                        context.go('/timeline');
+                        screenContext.go('/timeline');
                       }
                     },
                   );
                 } catch (e) {
-                  if (context.mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
+                  if (screenContext.mounted) {
+                    ScaffoldMessenger.of(screenContext).showSnackBar(
                       SnackBar(
                         content: Text('Error: $e'),
                         backgroundColor: Colors.red,
