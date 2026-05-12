@@ -18,6 +18,17 @@ class SocialDiscoverTab extends ConsumerStatefulWidget {
   ConsumerState<SocialDiscoverTab> createState() => _SocialDiscoverTabState();
 }
 
+/// Blueprint categories that should be displayed. Old archetype categories
+/// (Athlete, Creator, Scholar, Stoic, Zealot) are excluded even if they
+/// still exist in Firestore from previous seed data.
+const _displayedBlueprintCategories = {
+  'Morning',
+  'Productivity',
+  'Fitness',
+  'Mindfulness',
+  'Learning',
+};
+
 class _SocialDiscoverTabState extends ConsumerState<SocialDiscoverTab> {
   final GlobalKey _blueprintsKey = GlobalKey();
 
@@ -75,10 +86,11 @@ class _SocialDiscoverTabState extends ConsumerState<SocialDiscoverTab> {
 
     return blueprintsAsync.when(
       data: (blueprints) {
-        // Group blueprints by category
+        // Group blueprints by category (filter out old archetype categories)
         final grouped = <String, List<Blueprint>>{};
         for (final bp in blueprints) {
           final cat = bp.category;
+          if (!_displayedBlueprintCategories.contains(cat)) continue;
           grouped.putIfAbsent(cat, () => []).add(bp);
         }
 
