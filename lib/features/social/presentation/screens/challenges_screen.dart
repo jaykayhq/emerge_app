@@ -508,6 +508,12 @@ class _WeeklySpotlightSection extends StatelessWidget {
     if (challenge == null) {
       return _EmptySpotlightCard();
     }
+
+    // Hide featured if user already joined it
+    if (bundle?.isWeeklySpotlightJoined == true) {
+      return const SizedBox.shrink();
+    }
+
     return QuestCardStitch(
       challenge: challenge,
       onTap: () {
@@ -585,8 +591,10 @@ class _DailyQuestSectionState extends ConsumerState<_DailyQuestSection> {
       return _EmptyDailyQuestCard();
     }
 
-    // Get user ID from auth state (if needed in future)
-    // final user = ref.watch(authStateChangesProvider).value;
+    // Hide featured if user already joined it
+    if (widget.bundle?.isDailyQuestJoined == true) {
+      return const SizedBox.shrink();
+    }
 
     return QuestCardStitch(
       challenge: challenge,
