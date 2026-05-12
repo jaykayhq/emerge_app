@@ -57,28 +57,21 @@ class HabitCardStitch extends StatelessWidget {
                 filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
                 child: Container(
                   padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                      colors: [
-                        Colors.white.withValues(alpha:0.1),
-                        Colors.white.withValues(alpha:0.05),
-                      ],
-                    ),
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(
-                      color: neonColor.withValues(alpha:0.3),
-                      width: 1,
-                    ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: neonColor.withValues(alpha:0.1),
-                        blurRadius: 20,
-                        spreadRadius: -5,
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: [
+                          Colors.white.withValues(alpha:0.1),
+                          Colors.white.withValues(alpha:0.05),
+                        ],
                       ),
-                    ],
-                  ),
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(
+                        color: neonColor.withValues(alpha:0.3),
+                        width: 1,
+                      ),
+                    ),
                   child: Stack(
                     children: [
                       Row(
@@ -188,13 +181,6 @@ class HabitCardStitch extends StatelessWidget {
             height: 48,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              boxShadow: [
-                BoxShadow(
-                  color: neonColor.withValues(alpha:0.4),
-                  blurRadius: 12,
-                  spreadRadius: -2,
-                ),
-              ],
             ),
           ),
           // Progress ring
@@ -236,15 +222,6 @@ class HabitCardStitch extends StatelessWidget {
             color: isCompleted ? neonColor : neonColor.withValues(alpha:0.5),
             width: 2,
           ),
-          boxShadow: isCompleted
-              ? [
-                  BoxShadow(
-                    color: neonColor.withValues(alpha:0.5),
-                    blurRadius: 8,
-                    spreadRadius: -2,
-                  ),
-                ]
-              : null,
         ),
         child: isCompleted
             ? const Icon(Icons.check, color: Colors.white, size: 20)

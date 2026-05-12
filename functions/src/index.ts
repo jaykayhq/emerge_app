@@ -13,6 +13,7 @@ import { onCall, HttpsError } from "firebase-functions/v2/https";
 import { setGlobalOptions } from "firebase-functions/v2";
 import * as admin from "firebase-admin";
 import { sendNotification, getTemplateMessage } from "./habit_notifications";
+import { recalcTribesInternal } from "./recalcTribes";
 
 // Global configuration for all v2 functions
 setGlobalOptions({
@@ -34,7 +35,7 @@ const db = admin.firestore();
 // ============================================================================
 
 const DEFAULT_XP_CONFIG: Record<string, number> = {
-  habit_completion: 10,
+  habit_complete: 10,
   joined_challenge: 25,
   joined_tribe: 50,
   reflection_saved: 15,
@@ -90,7 +91,7 @@ function calculateXpGain(
   if (baseXp === 0) return 0;
 
   let xp = baseXp;
-  if (activity.type === "habit_completion" && activity.difficulty) {
+  if (activity.type === "habit_complete" && activity.difficulty) {
     const isHard = activity.difficulty === "hard";
     const isMedium = activity.difficulty === "medium";
     const mult = isHard ? 3.0 : (isMedium ? 2.0 : 1.0);
@@ -132,6 +133,14 @@ export const onUserActivityCreated = onDocumentCreated("user_activity/{activityI
     let newStreak = currentAvatarStats.streak || 0;
     let worldStateUpdates: any = null;
 
+    const updates: any = {
+      avatarStats: {
+        ...currentAvatarStats,
+        streak: newStreak, // Initial value, will be updated below if needed
+        lastUpdate: admin.firestore.FieldValue.serverTimestamp(),
+      },
+    };
+
     if (activity.type === "habit_completion") {
       const currentWorldState = currentData.worldState || {};
       const lastActiveDate = currentWorldState.lastActiveDate as admin.firestore.Timestamp | undefined;
@@ -155,20 +164,40 @@ export const onUserActivityCreated = onDocumentCreated("user_activity/{activityI
         newStreak = 1;
       }
 
+      const currentMomentum = currentAvatarStats.momentumScore || 0;
+      const boost = 10; // Base boost for completion
+      const newMomentum = Math.min(100, currentMomentum + boost);
+
+      // Slightly reduce entropy on habit completion (0.01 per habit)
+      const currentEntropy = currentWorldState.entropy || 0;
+      const newEntropy = Math.max(0, currentEntropy - 0.01);
+
       worldStateUpdates = {
         ...currentWorldState,
+        entropy: newEntropy,
         lastActiveDate: admin.firestore.FieldValue.serverTimestamp(),
+      };
+
+      if (!updates.avatarStats) updates.avatarStats = { ...currentAvatarStats };
+      updates.avatarStats.momentumScore = newMomentum;
+    }
+
+    if (activity.type === "node_claim") {
+      const currentWorldState = currentData.worldState || {};
+      const currentEntropy = currentWorldState.entropy || 0;
+      
+      // Significantly reduce entropy on mission completion (0.1 per mission)
+      const newEntropy = Math.max(0, currentEntropy - 0.1);
+
+      worldStateUpdates = {
+        ...currentWorldState,
+        entropy: newEntropy,
+        lastMissionAt: admin.firestore.FieldValue.serverTimestamp(),
       };
     }
 
-    const updates: any = {
-      avatarStats: {
-        ...currentAvatarStats,
-        totalXp: newTotalXp,
-        streak: newStreak,
-        lastUpdate: admin.firestore.FieldValue.serverTimestamp(),
-      },
-    };
+    updates.avatarStats.totalXp = newTotalXp;
+    updates.avatarStats.streak = newStreak;
 
     if (worldStateUpdates) updates.worldState = worldStateUpdates;
 
@@ -184,6 +213,27 @@ export const onUserActivityCreated = onDocumentCreated("user_activity/{activityI
     }
 
     transaction.set(statsRef, updates, { merge: true });
+
+    // Handle Tribe XP Sync if user belongs to a tribe
+    const archetype = currentData.archetype;
+    if (archetype && archetype !== "none") {
+      const clubMap: Record<string, string> = {
+        athlete: "morning_warriors",
+        scholar: "deep_work_society",
+        stoic: "mindful_masters",
+        creator: "creative_collective",
+        zealot: "lunar_seekers",
+        mystic: "lunar_seekers",
+      };
+      const clubId = clubMap[archetype.toLowerCase()];
+      if (clubId) {
+        const tribeRef = db.collection("tribes").doc(clubId);
+        transaction.update(tribeRef, {
+          totalXp: admin.firestore.FieldValue.increment(xpGain),
+          lastStatsSync: admin.firestore.FieldValue.serverTimestamp()
+        });
+      }
+    }
 
     // Handle Level Up Notification (Consolidated from onLevelUp)
     const notifiedLevel = updates.avatarStats.level;
@@ -258,11 +308,35 @@ export const getAuraInsight = onCall(async (request) => {
   return result;
 });
 
-/*
-export const resetDailyChallengesOptimized = onSchedule("0 0 * * *", async () => {
-  console.log("Resetting daily challenges status at midnight UTC");
+/**
+ * Daily behavioral decay: Increases entropy and resets daily flags.
+ * Runs at midnight UTC.
+ */
+export const applyDailyDecayScheduled = onSchedule("0 0 * * *", async (event) => {
+  console.log("Applying daily behavioral decay at midnight UTC");
+  
+  const usersSnapshot = await db.collection("user_stats").get();
+  const batch = db.batch();
+  
+  usersSnapshot.forEach((doc: admin.firestore.QueryDocumentSnapshot) => {
+    const data = doc.data();
+    const currentWorldState = data.worldState || {};
+    const currentEntropy = currentWorldState.entropy || 0;
+    
+    // Increase entropy by 0.05 daily (approx 20 days to full decay if inactive)
+    const newEntropy = Math.min(1.0, currentEntropy + 0.05);
+    
+    batch.set(doc.ref, {
+      worldState: {
+        ...currentWorldState,
+        entropy: newEntropy,
+      }
+    }, { merge: true });
+  });
+  
+  await batch.commit();
+  console.log(`Successfully applied decay to ${usersSnapshot.size} users.`);
 });
-*/
 
 /**
  * AI Coach - Groq Proxy (Gen 2)
@@ -397,12 +471,18 @@ export const applyDailyMomentumDecay = onSchedule("0 2 * * *", async (event) => 
 // ============================================================================
 // SUB-MODULE EXPORTS
 // ============================================================================
+export const applyDailyTribeRecalculation = onSchedule("0 3 * * *", async (event) => {
+  console.log("Starting scheduled tribe recalculation...");
+  await recalcTribesInternal(db);
+});
+
 export * from "./challenges";
 // export * from "./seed_templates";
 export * from "./refreshQuarterlyChallenges";
 export * from "./habit_notifications";
 // export * from "./seedReviewerAccount";
 export * from "./accountDeletion";
+export * from "./cleanupUserData";
 export * from "./rateLimiter";
 export * from "./ai_recap";
 export * from "./revenuecat_events";

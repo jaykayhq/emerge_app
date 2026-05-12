@@ -10,7 +10,16 @@ import 'package:go_router/go_router.dart';
 import 'package:emerge_app/core/theme/emerge_colors.dart';
 
 class WeeklyRecapScreen extends ConsumerStatefulWidget {
-  const WeeklyRecapScreen({super.key});
+  final String? recapId;
+  final DateTime? startDate;
+  final DateTime? endDate;
+
+  const WeeklyRecapScreen({
+    super.key,
+    this.recapId,
+    this.startDate,
+    this.endDate,
+  });
 
   @override
   ConsumerState<WeeklyRecapScreen> createState() => _WeeklyRecapScreenState();
@@ -39,7 +48,12 @@ class _WeeklyRecapScreenState extends ConsumerState<WeeklyRecapScreen> {
         children: [
           const Positioned.fill(child: HexMeshBackground()),
           FutureBuilder(
-            future: recapService.generateRecapIfNeeded(user.id),
+            future: recapService.generateRecap(
+              userId: user.id,
+              recapId: widget.recapId,
+              startDate: widget.startDate,
+              endDate: widget.endDate,
+            ),
             builder: (context, snapshot) {
               if (snapshot.connectionState == ConnectionState.waiting) {
                 return const Center(

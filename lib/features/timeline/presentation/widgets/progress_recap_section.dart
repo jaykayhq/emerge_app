@@ -279,7 +279,7 @@ class _ProgressRecapSectionState extends State<ProgressRecapSection> {
           icon: Icons.today,
           title: 'Daily Recap',
           subtitle: 'Today: $dailyCompleted/$dailyTotal habits • +$dailyXp XP',
-          onTap: () => context.push('/profile/recap'),
+          onTap: () => context.push('/recap'),
         ),
         const SizedBox(height: 12),
         // Weekly Recap card

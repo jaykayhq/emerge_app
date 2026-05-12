@@ -1,3 +1,4 @@
+import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:flutter/foundation.dart';
 import 'package:logger/logger.dart';
@@ -120,17 +121,21 @@ class AppLogger {
       _logger.e(redacted, error: error, stackTrace: stackTrace);
     }
 
-    if (!kIsWeb) {
-      // In production, send to Crashlytics as non-fatal error
-      FirebaseCrashlytics.instance.log('[ERROR] $redacted');
-      if (error != null || stackTrace != null) {
-        FirebaseCrashlytics.instance.recordError(
-          error ?? Exception(message),
-          stackTrace,
-          fatal: false,
-          information: ['Message: $redacted'],
-        );
+    try {
+      if (!kIsWeb && Firebase.apps.isNotEmpty) {
+        // In production, send to Crashlytics as non-fatal error
+        FirebaseCrashlytics.instance.log('[ERROR] $redacted');
+        if (error != null || stackTrace != null) {
+          FirebaseCrashlytics.instance.recordError(
+            error ?? Exception(message),
+            stackTrace,
+            fatal: false,
+            information: ['Message: $redacted'],
+          );
+        }
       }
+    } catch (_) {
+      // Silently ignore Crashlytics errors in tests/early init
     }
   }
 

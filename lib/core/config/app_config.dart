@@ -1,6 +1,7 @@
 import 'package:emerge_app/features/onboarding/data/services/remote_config_service.dart';
 import 'package:flutter/foundation.dart';
 import '../../core/utils/app_logger.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class AppConfig {
   static RemoteConfigService? _remoteConfigService;
@@ -35,9 +36,9 @@ class AppConfig {
   // RevenueCat Configuration - Now linked directly to Firebase Remote Config
   // Old compile-time env vars are deprecated - all keys come from Firebase
   @Deprecated('Use Firebase Remote Config instead')
-  static const String revenuecatGoogleApiKey = '';
+  static const String revenuecatGoogleApiKey = String.fromEnvironment('REVENUECAT_GOOGLE_API_KEY');
   @Deprecated('Use Firebase Remote Config instead')
-  static const String revenuecatAppleApiKey = '';
+  static const String revenuecatAppleApiKey = String.fromEnvironment('REVENUECAT_APPLE_API_KEY');
 
   // Security Configuration
   static const String recaptchaSiteKey = String.fromEnvironment(
@@ -65,31 +66,69 @@ class AppConfig {
     return true; // Allow defaults in development
   }
 
-  // Get API key from Firebase Remote Config (RevenueCat linked directly to Firebase)
+  // Get API key from multiple sources with fallback logic
   static String getRevenueCatApiKey(String platform) {
-    if (_remoteConfigService == null) {
-      debugPrint('⚠️ Remote Config not initialized - call AppConfig.initializeRemoteConfig() first');
-      return '';
+    String? key;
+
+    // Layer 1: Check Firebase Remote Config (Production Standard)
+    if (_remoteConfigService != null) {
+      final remoteKey = _remoteConfigService!.getRevenueCatApiKey(platform);
+      if (remoteKey.isNotEmpty && 
+          remoteKey != 'YOUR_REVENUECAT_API_KEY' &&
+          !remoteKey.contains('your_production')) {
+        key = remoteKey;
+        if (kDebugMode) {
+          debugPrint('🔑 Using RevenueCat key from Firebase Remote Config for $platform');
+        }
+      }
     }
 
-    final key = _remoteConfigService!.getRevenueCatApiKey(platform);
+    // Layer 2: Fallback to .env file (Development Support)
+    if (key == null || key.isEmpty) {
+      String envVarName = 'REVENUECAT_GOOGLE_API_KEY';
+      if (platform == 'ios') {
+        envVarName = 'REVENUECAT_APPLE_API_KEY';
+      } else if (platform == 'web') {
+        envVarName = 'REVENUECAT_WEB_API_KEY';
+      }
 
-    if (key.isNotEmpty && key != 'YOUR_REVENUECAT_API_KEY') {
+      final envKey = dotenv.isInitialized ? dotenv.maybeGet(envVarName) : null;
+      if (envKey != null && 
+          envKey.isNotEmpty && 
+          envKey != 'YOUR_REVENUECAT_API_KEY' &&
+          !envKey.contains('your_production')) {
+        key = envKey;
+        if (kDebugMode) {
+          debugPrint('🔑 Using RevenueCat key from .env file for $platform');
+        }
+      }
+    }
+
+    // Layer 3: Fallback to compile-time variables (--dart-define)
+    if (key == null || key.isEmpty) {
+      String? defineKey;
+      if (platform == 'android') {
+        defineKey = revenuecatGoogleApiKey;
+      } else if (platform == 'ios') {
+        defineKey = revenuecatAppleApiKey;
+      } else if (platform == 'web') {
+        defineKey = const String.fromEnvironment('REVENUECAT_WEB_API_KEY');
+      }
+      
+      if (defineKey != null && defineKey.isNotEmpty) {
+        key = defineKey;
+        if (kDebugMode) {
+          debugPrint('🔑 Using RevenueCat key from --dart-define for $platform');
+        }
+      }
+    }
+
+    if (key != null && key.isNotEmpty) {
       // SECURITY: Prevent test keys in production
       if (isProduction && key.startsWith('test_')) {
         throw Exception(
-          'SECURITY VIOLATION: Test RevenueCat API key detected in production build. '
-          'This configuration is not allowed.',
+          'SECURITY VIOLATION: Test RevenueCat API key detected in production build.',
         );
-      }
-
-      // Warn if test key in development
-      if (isDevelopment && key.startsWith('test_')) {
-        debugPrint('WARNING: Using test RevenueCat API key in development');
-      }
-
-      if (kDebugMode) {
-        debugPrint('🔑 Using RevenueCat key from Firebase Remote Config for $platform');
       }
       return key;
     }
@@ -97,13 +136,50 @@ class AppConfig {
     // SECURITY: Fail fast if key is missing (production only)
     if (isProduction) {
       throw Exception(
-        'RevenueCat API key not configured for $platform. '
-        'Configure in Firebase Remote Config with key: revenuecat_${platform}_api_key',
+        'RevenueCat API key not configured for $platform.',
       );
     }
 
     // In development, allow app to continue without RevenueCat
     debugPrint('⚠️ RevenueCat API key not configured for $platform - monetization disabled');
+    return '';
+  }
+
+  static String getAdUnitId(String type, String platform) {
+    if (isDevelopment) {
+      return _getTestAdUnitId(type, platform);
+    }
+
+    if (_remoteConfigService != null) {
+      final key = _remoteConfigService!.getString('ad_unit_${type}_$platform');
+      if (key.isNotEmpty) return key;
+    }
+    
+    // Fallback production IDs if Remote Config fails
+    if (platform == 'android') {
+      return {
+        'banner': 'ca-app-pub-5049162599848475/3295552257',
+        'interstitial': 'ca-app-pub-5049162599848475/7186785099',
+        'rewarded': 'ca-app-pub-5049162599848475/1076583020',
+      }[type] ?? '';
+    }
+    return ''; // Add iOS production IDs here when available
+  }
+
+  static String _getTestAdUnitId(String type, String platform) {
+    if (platform == 'android') {
+      return {
+        'banner': 'ca-app-pub-3940256099942544/6300978111',
+        'interstitial': 'ca-app-pub-3940256099942544/1033173712',
+        'rewarded': 'ca-app-pub-3940256099942544/5224354917',
+      }[type] ?? '';
+    } else if (platform == 'ios') {
+      return {
+        'banner': 'ca-app-pub-3940256099942544/2934735716',
+        'interstitial': 'ca-app-pub-3940256099942544/4411468910',
+        'rewarded': 'ca-app-pub-3940256099942544/1712485313',
+      }[type] ?? '';
+    }
     return '';
   }
 
@@ -115,14 +191,18 @@ class AppConfig {
       AppLogger.i(
         '  Firebase API Key configured: ${firebaseApiKey.isNotEmpty}',
       );
-      // RevenueCat keys now come from Firebase Remote Config
-      final googleKey = _remoteConfigService?.getRevenueCatApiKey('android') ?? '';
-      final appleKey = _remoteConfigService?.getRevenueCatApiKey('ios') ?? '';
+      // RevenueCat keys resolved via multi-layer fallback
+      final googleKey = getRevenueCatApiKey('android');
+      final appleKey = getRevenueCatApiKey('ios');
+      final webKey = getRevenueCatApiKey('web');
       AppLogger.i(
-        '  RevenueCat Google Key configured in Firebase: ${googleKey.isNotEmpty && googleKey != 'YOUR_REVENUECAT_API_KEY'}',
+        '  RevenueCat Google Key resolved: ${googleKey.isNotEmpty}',
       );
       AppLogger.i(
-        '  RevenueCat Apple Key configured in Firebase: ${appleKey.isNotEmpty && appleKey != 'YOUR_REVENUECAT_API_KEY'}',
+        '  RevenueCat Apple Key resolved: ${appleKey.isNotEmpty}',
+      );
+      AppLogger.i(
+        '  RevenueCat Web Key resolved: ${webKey.isNotEmpty}',
       );
       AppLogger.i('  Firebase App Check enabled: $enableFirebaseAppCheck');
       AppLogger.i('  SSL Pinning enabled: $enableSslPinning');

@@ -6,10 +6,16 @@ import 'package:emerge_app/features/gamification/data/repositories/firestore_use
 import 'package:emerge_app/features/gamification/domain/entities/user_stats.dart';
 import 'package:emerge_app/features/gamification/domain/repositories/gamification_repository.dart';
 import 'package:emerge_app/features/gamification/domain/repositories/user_profile_repository.dart';
+import 'package:emerge_app/features/gamification/domain/services/gamification_service.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'gamification_providers.g.dart';
+
+@Riverpod(keepAlive: true)
+GamificationService gamificationService(Ref ref) {
+  return GamificationService();
+}
 
 @Riverpod(keepAlive: true)
 GamificationRepository gamificationRepository(Ref ref) {

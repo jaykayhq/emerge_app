@@ -1,5 +1,4 @@
 import 'package:emerge_app/core/theme/archetype_theme.dart';
-import 'package:emerge_app/core/utils/app_logger.dart';
 import 'package:emerge_app/features/auth/domain/entities/user_extension.dart';
 import 'package:emerge_app/features/habits/domain/entities/habit.dart';
 import 'package:emerge_app/features/onboarding/presentation/providers/onboarding_provider.dart';
@@ -28,8 +27,11 @@ class _FirstHabitScreenState extends ConsumerState<FirstHabitScreen> {
   final TextEditingController _customHabitTitleController =
       TextEditingController();
   bool _isCustomHabit = false;
+  bool _isSaving = false;
 
-  void _completeFirstHabit() {
+  Future<void> _completeFirstHabit() async {
+    if (_isSaving) return;
+
     final habitTitle = _isCustomHabit
         ? _customHabitTitleController.text.trim()
         : _selectedHabit?.description; // Use action as the title
@@ -38,28 +40,48 @@ class _FirstHabitScreenState extends ConsumerState<FirstHabitScreen> {
       return;
     }
 
-    // Store habit info in onboarding state
-    ref.read(onboardingStateControllerProvider.notifier).update(
-          (s) => s.copyWith(
-            habitStacks: [
-              HabitStack(
-                anchorId: 'onboarding_anchor',
-                habitId: habitTitle,
-                defaultTime: _selectedHabit?.defaultTime != null
-                    ? '${_selectedHabit!.defaultTime!.hour}:${_selectedHabit!.defaultTime!.minute}'
-                    : null,
-                timeOfDayPreference: _selectedHabit?.timeOfDayPreference?.name,
-              ),
-            ],
-            anchors: [_selectedAnchor!],
-          ),
+    setState(() => _isSaving = true);
+
+    try {
+      // Map selected anchor back to preference for the domain model
+      final resolvedPreference = _selectedHabit?.timeOfDayPreference ?? 
+          _getPreferenceForAnchor(_selectedAnchor!);
+
+      // Store habit info in onboarding state
+      ref.read(onboardingStateControllerProvider.notifier).update(
+            (s) => s.copyWith(
+              habitStacks: [
+                HabitStack(
+                  anchorId: 'onboarding_anchor',
+                  habitId: habitTitle,
+                  defaultTime: _selectedHabit?.defaultTime != null
+                      ? '${_selectedHabit!.defaultTime!.hour}:${_selectedHabit!.defaultTime!.minute}'
+                      : null,
+                  timeOfDayPreference: resolvedPreference.name,
+                ),
+              ],
+              anchors: [_selectedAnchor!],
+            ),
+          );
+
+      // PERSIST IMMEDIATELY: Create the habit in Firestore as requested
+      await ref.read(onboardingControllerProvider.notifier).createOnboardingHabits();
+
+      // PERSIST PROGRESS: Complete the third milestone (First Habit) - Index 2
+      await ref.read(onboardingControllerProvider.notifier).completeMilestone(2);
+
+      // Navigate to world reveal (which then goes to dashboard)
+      if (mounted) {
+        context.push('/onboarding/world-reveal');
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _isSaving = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to save habit: $e')),
         );
-
-    // PERSIST PROGRESS: Complete the third milestone (First Habit) - Index 2
-    ref.read(onboardingControllerProvider.notifier).completeMilestone(2);
-
-    // Navigate to world reveal (which then goes to dashboard)
-    context.push('/onboarding/world-reveal');
+      }
+    }
   }
 
   String _getAnchorForPreference(TimeOfDayPreference pref) {
@@ -73,6 +95,24 @@ class _FirstHabitScreenState extends ConsumerState<FirstHabitScreen> {
       case TimeOfDayPreference.anytime:
         return 'After work';
     }
+  }
+
+  TimeOfDayPreference _getPreferenceForAnchor(String anchor) {
+    final lower = anchor.toLowerCase();
+    if (lower.contains('waking') || lower.contains('breakfast') || lower.contains('morning')) {
+      return TimeOfDayPreference.morning;
+    }
+    if (lower.contains('lunch') || lower.contains('afternoon')) {
+      return TimeOfDayPreference.afternoon;
+    }
+    if (lower.contains('bed') || lower.contains('evening') || lower.contains('dinner') || lower.contains('night')) {
+      return TimeOfDayPreference.evening;
+    }
+    if (lower.contains('work')) {
+      // Assuming after work is evening for most
+      return TimeOfDayPreference.evening;
+    }
+    return TimeOfDayPreference.anytime;
   }
 
   void _skipForNow() {
@@ -127,21 +167,12 @@ class _FirstHabitScreenState extends ConsumerState<FirstHabitScreen> {
     final state = ref.watch(onboardingStateControllerProvider);
     final statsAsync = ref.watch(userStatsStreamProvider);
 
-    // DEBUG: Log archetype at build time
-    AppLogger.i(
-      'FirstHabitScreen build: selectedArchetype=${state.selectedArchetype}',
-    );
-
-    // Use Firestore archetype as fallback if onboarding state is null
-    // This works around the state persistence issue
     return statsAsync.when(
       data: (profile) {
         final archetype = state.selectedArchetype ?? profile.archetype;
         final theme = ArchetypeTheme.forArchetype(archetype);
-
-        AppLogger.i(
-          'FirstHabitScreen: using archetype=$archetype (state=${state.selectedArchetype}, firestore=${profile.archetype})',
-        );
+        // Show at most 3 habit suggestions to keep the screen clean
+        final suggestions = theme.suggestedHabits.take(3).toList();
 
         return Scaffold(
           body: Container(
@@ -259,8 +290,8 @@ class _FirstHabitScreenState extends ConsumerState<FirstHabitScreen> {
                               ),
                             ),
 
-                          // HABIT LIST
-                          ...theme.suggestedHabits.map((habit) {
+                          // HABIT LIST (max 3 suggestions)
+                          ...suggestions.map((habit) {
                             final isSelected =
                                 _selectedHabit == habit && !_isCustomHabit;
                             return _buildHabitCard(
@@ -444,14 +475,23 @@ class _FirstHabitScreenState extends ConsumerState<FirstHabitScreen> {
                                 borderRadius: BorderRadius.circular(16),
                               ),
                             ),
-                            child: Text(
-                              'CREATE MY FIRST HABIT',
-                              style: GoogleFonts.splineSans(
-                                fontSize: 14,
-                                fontWeight: FontWeight.w800,
-                                letterSpacing: 0.5,
-                              ),
-                            ),
+                            child: _isSaving
+                                ? const SizedBox(
+                                    height: 20,
+                                    width: 20,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                      color: Color(0xFF05100B),
+                                    ),
+                                  )
+                                : Text(
+                                    'CREATE MY FIRST HABIT',
+                                    style: GoogleFonts.splineSans(
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w800,
+                                      letterSpacing: 0.5,
+                                    ),
+                                  ),
                           ),
                         ),
                       ],

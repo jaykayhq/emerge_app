@@ -2,7 +2,7 @@ import 'package:emerge_app/core/error/failure.dart';
 import 'package:emerge_app/features/habits/domain/entities/habit.dart';
 import 'package:emerge_app/features/habits/domain/models/habit_activity.dart';
 import 'package:emerge_app/features/habits/domain/repositories/habit_repository.dart';
-import 'package:emerge_app/features/social/domain/entities/social_entities.dart';
+import 'package:emerge_app/features/blueprints/domain/models/blueprint.dart';
 import 'package:fpdart/fpdart.dart';
 
 class FakeHabitRepository implements HabitRepository {
@@ -82,22 +82,20 @@ class FakeHabitRepository implements HabitRepository {
   @override
   Future<Either<Failure, Unit>> createHabitsFromBlueprint({
     required String userId,
-    required CreatorBlueprint blueprint,
+    required Blueprint blueprint,
     String? reminderTime,
   }) async {
-    // Create mock habits from blueprint titles
-    for (int i = 0; i < blueprint.habitTitles.length; i++) {
+    // Create mock habits from blueprint habits
+    for (int i = 0; i < blueprint.habits.length; i++) {
+      final habitBlueprint = blueprint.habits[i];
       final habitId = 'mock_habit_${DateTime.now().millisecondsSinceEpoch}_$i';
       final habit = Habit(
         id: habitId,
         userId: userId,
-        title: blueprint.habitTitles[i],
+        title: habitBlueprint.title,
         createdAt: DateTime.now(),
         order: i,
-        attribute: HabitAttribute.values.firstWhere(
-          (e) => e.name == blueprint.creatorArchetype.toLowerCase(),
-          orElse: () => HabitAttribute.vitality,
-        ),
+        attribute: habitBlueprint.attribute,
       );
       _habits[habit.id] = habit;
     }

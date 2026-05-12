@@ -61,8 +61,8 @@ class HierarchicalHabitTimeline extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Order: morning, afternoon, evening (no 'anytime' category)
-    final timeSlots = ['morning', 'afternoon', 'evening'];
+    // Order: morning, afternoon, evening, anytime
+    final timeSlots = ['morning', 'afternoon', 'evening', 'anytime'];
     final slotsWithHabits = timeSlots
         .where((slot) => (groupedHabits[slot]?.length ?? 0) > 0)
         .toList();
@@ -142,6 +142,8 @@ class _HabitCategorySection extends StatelessWidget {
         return 'During Lunch';
       case 'evening':
         return 'Before Bed';
+      case 'anytime':
+        return 'Scheduled for Anytime';
       default:
         return slot;
     }
@@ -155,6 +157,8 @@ class _HabitCategorySection extends StatelessWidget {
         return Icons.wb_cloudy;
       case 'evening':
         return Icons.bedtime;
+      case 'anytime':
+        return Icons.access_time;
       default:
         return Icons.access_time;
     }
@@ -168,6 +172,8 @@ class _HabitCategorySection extends StatelessWidget {
         return const Color(0xFF64B5F6); // Day blue
       case 'evening':
         return const Color(0xFF7E57C2); // Evening purple
+      case 'anytime':
+        return const Color(0xFF2BEE79); // Emerge green
       default:
         return const Color(0xFF2BEE79); // Emerge green
     }

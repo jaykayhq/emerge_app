@@ -95,6 +95,75 @@ class GamificationService {
     );
   }
 
+  /// Distributes initial XP based on selected archetype.
+  /// Used during onboarding to ensure UI progress bars have data.
+  UserAvatarStats distributeInitialXp(
+    UserAvatarStats currentStats,
+    UserArchetype archetype,
+  ) {
+    // Starting pool is 15 points
+    int strength = 0;
+    int intellect = 0;
+    int vitality = 0;
+    int creativity = 0;
+    int focus = 0;
+    int spirit = 0;
+
+    switch (archetype) {
+      case UserArchetype.athlete:
+        strength = 7;
+        vitality = 5;
+        focus = 3;
+        break;
+      case UserArchetype.scholar:
+        intellect = 7;
+        focus = 5;
+        spirit = 3;
+        break;
+      case UserArchetype.creator:
+        creativity = 7;
+        vitality = 5;
+        intellect = 3;
+        break;
+      case UserArchetype.stoic:
+        focus = 7;
+        spirit = 5;
+        strength = 3;
+        break;
+      case UserArchetype.zealot:
+        spirit = 7;
+        strength = 5;
+        vitality = 3;
+        break;
+      case UserArchetype.none:
+        // Explorer gets even spread
+        strength = 3;
+        intellect = 3;
+        vitality = 3;
+        creativity = 3;
+        focus = 3;
+        break;
+    }
+
+    final newAttributeXp = Map<String, int>.from(currentStats.attributeXp);
+    if (strength > 0) newAttributeXp['strength'] = (newAttributeXp['strength'] ?? 0) + strength;
+    if (intellect > 0) newAttributeXp['intellect'] = (newAttributeXp['intellect'] ?? 0) + intellect;
+    if (vitality > 0) newAttributeXp['vitality'] = (newAttributeXp['vitality'] ?? 0) + vitality;
+    if (creativity > 0) newAttributeXp['creativity'] = (newAttributeXp['creativity'] ?? 0) + creativity;
+    if (focus > 0) newAttributeXp['focus'] = (newAttributeXp['focus'] ?? 0) + focus;
+    if (spirit > 0) newAttributeXp['spirit'] = (newAttributeXp['spirit'] ?? 0) + spirit;
+
+    return currentStats.copyWith(
+      strengthXp: currentStats.strengthXp + strength,
+      intellectXp: currentStats.intellectXp + intellect,
+      vitalityXp: currentStats.vitalityXp + vitality,
+      creativityXp: currentStats.creativityXp + creativity,
+      focusXp: currentStats.focusXp + focus,
+      spiritXp: currentStats.spiritXp + spirit,
+      attributeXp: newAttributeXp,
+    );
+  }
+
   /// Centralized level calculation from total XP
   static int calculateLevel(int totalXp) {
     return (totalXp / GamificationConstants.xpPerLevel).floor() + 1;

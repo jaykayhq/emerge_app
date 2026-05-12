@@ -423,11 +423,481 @@ class FirestoreSeedData {
         'adoptionCount': 6300,
         'createdAt': now.toIso8601String(),
         'imageUrl':
-            'https://images.unsplash.com/photo-1511296933631-18b5f0008d7b?w=400',
+            'https://images.unsplash.com/photo-1506126613408-eca07ce68773?w=400',
         'habitTitles': [
           'No Screens 1hr Before Bed',
           'Read Fiction',
           'Dark Room Setup',
+        ],
+      },
+      // --- ATHLETE BLUEPRINTS ---
+      {
+        'id': 'blueprint_longevity_stack',
+        'creatorUserId': 'system',
+        'creatorName': 'Peter Attia',
+        'creatorArchetype': 'Athlete',
+        'blueprintName': 'The Longevity Protocol',
+        'description':
+            'Master the four pillars of physical longevity: Strength, Zone 2, Stability, and VO2 Max.',
+        'category': 'Health',
+        'adoptionCount': 4500,
+        'createdAt': now.toIso8601String(),
+        'imageUrl':
+            'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=400',
+        'habitTitles': [
+          '45m Zone 2 Cardio',
+          'Heavy Compound Lift',
+          '1g Protein per lb',
+        ],
+        'isPremium': true,
+      },
+      {
+        'id': 'blueprint_hyrox_prep',
+        'creatorUserId': 'system',
+        'creatorName': 'Emerge Team',
+        'creatorArchetype': 'Athlete',
+        'blueprintName': 'Hyrox Foundation',
+        'description':
+            'The ultimate hybrid athlete training plan for performance and endurance.',
+        'category': 'Fitness',
+        'adoptionCount': 2100,
+        'createdAt': now.toIso8601String(),
+        'imageUrl':
+            'https://images.unsplash.com/photo-1517836357463-d25dfeac3438?w=400',
+        'habitTitles': [
+          '1km Interval Run',
+          'Sled Push/Pull',
+          'Wall Ball Reps',
+        ],
+      },
+      {
+        'id': 'blueprint_mobility_master',
+        'creatorUserId': 'system',
+        'creatorName': 'Emerge Team',
+        'creatorArchetype': 'Athlete',
+        'blueprintName': 'Functional Mobility',
+        'description':
+            'Unlock your joints and prevent injury with a daily functional movement ritual.',
+        'category': 'Vitality',
+        'adoptionCount': 3400,
+        'createdAt': now.toIso8601String(),
+        'imageUrl':
+            'https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?w=400',
+        'habitTitles': [
+          'Hip Opening Routine',
+          'Spine Mobility',
+          'Deep Squat Hold',
+        ],
+      },
+      // --- SCHOLAR BLUEPRINTS ---
+      {
+        'id': 'blueprint_polyglot_path',
+        'creatorUserId': 'system',
+        'creatorName': 'Tim Ferriss',
+        'creatorArchetype': 'Scholar',
+        'blueprintName': 'The Polyglot Path',
+        'description':
+            'Rapid language acquisition systems used by the world\'s top linguists.',
+        'category': 'Learning',
+        'adoptionCount': 5600,
+        'createdAt': now.toIso8601String(),
+        'imageUrl':
+            'https://images.unsplash.com/photo-1456513080510-7bf3a84b82f8?w=400',
+        'habitTitles': [
+          'Anki Flashcards',
+          'Language Immersion',
+          'Speaking Practice',
+        ],
+        'isPremium': true,
+      },
+      {
+        'id': 'blueprint_deep_learning',
+        'creatorUserId': 'system',
+        'creatorName': 'Emerge Team',
+        'creatorArchetype': 'Scholar',
+        'blueprintName': 'The Deep Learning Ritual',
+        'description':
+            'Master complex subjects through focused active recall and Feynman techniques.',
+        'category': 'Intellect',
+        'adoptionCount': 4200,
+        'createdAt': now.toIso8601String(),
+        'imageUrl':
+            'https://images.unsplash.com/photo-1456513080510-7bf3a84b82f8?w=400',
+        'habitTitles': [
+          '90m Focus Block',
+          'Active Recall Test',
+          'Explain to a Child',
+        ],
+      },
+      {
+        'id': 'blueprint_philosophy_daily',
+        'creatorUserId': 'system',
+        'creatorName': 'Ryan Holiday',
+        'creatorArchetype': 'Scholar',
+        'blueprintName': 'Stoic Reflections',
+        'description':
+            'Daily wisdom from the classics to build a resilient and clear mind.',
+        'category': 'Mindset',
+        'adoptionCount': 7800,
+        'createdAt': now.toIso8601String(),
+        'imageUrl':
+            'https://images.unsplash.com/photo-1507413245164-6160d8298b31?w=400',
+        'habitTitles': [
+          'Morning Meditation',
+          'Reading Classics',
+          'Evening Review',
+        ],
+      },
+      // --- CREATOR BLUEPRINTS ---
+      {
+        'id': 'blueprint_content_machine',
+        'creatorUserId': 'system',
+        'creatorName': 'MrBeast',
+        'creatorArchetype': 'Creator',
+        'blueprintName': 'The Content Engine',
+        'description':
+            'High-leverage systems for consistent creative output and audience growth.',
+        'category': 'Business',
+        'adoptionCount': 12000,
+        'createdAt': now.toIso8601String(),
+        'imageUrl':
+            'https://images.unsplash.com/photo-1492724441997-5dc865305da7?w=400',
+        'habitTitles': [
+          'Hook Writing',
+          'Deep Editing',
+          'Community Engagement',
+        ],
+        'isPremium': true,
+      },
+      {
+        'id': 'blueprint_indie_hacker',
+        'creatorUserId': 'system',
+        'creatorName': 'Pieter Levels',
+        'creatorArchetype': 'Creator',
+        'blueprintName': 'Solopreneur Sprint',
+        'description':
+            'Ship faster and build in public with this high-velocity founder stack.',
+        'category': 'Productivity',
+        'adoptionCount': 6700,
+        'createdAt': now.toIso8601String(),
+        'imageUrl':
+            'https://images.unsplash.com/photo-1498050108023-c5249f4df085?w=400',
+        'habitTitles': [
+          'Shipping Code',
+          'Marketing Activity',
+          'User Outreach',
+        ],
+        'isPremium': true,
+      },
+      {
+        'id': 'blueprint_artist_way',
+        'creatorUserId': 'system',
+        'creatorName': 'Julia Cameron',
+        'creatorArchetype': 'Creator',
+        'blueprintName': 'The Artist\'s Way',
+        'description':
+            'Reconnect with your creative spirit and unlock your inner genius.',
+        'category': 'Creativity',
+        'adoptionCount': 8900,
+        'createdAt': now.toIso8601String(),
+        'imageUrl':
+            'https://images.unsplash.com/photo-1452802447250-470a88ac82bc?w=400',
+        'habitTitles': [
+          'Morning Pages',
+          'Daily Sketch',
+          'Artist Date (Weekly)',
+        ],
+      },
+      // --- STOIC BLUEPRINTS ---
+      {
+        'id': 'blueprint_resilient_mind',
+        'creatorUserId': 'system',
+        'creatorName': 'David Goggins',
+        'creatorArchetype': 'Stoic',
+        'blueprintName': 'Mental Toughness',
+        'description':
+            'Callous your mind and become unfazed by life\'s challenges.',
+        'category': 'Mindset',
+        'adoptionCount': 15600,
+        'createdAt': now.toIso8601String(),
+        'imageUrl':
+            'https://images.unsplash.com/photo-1552674605-db6ffd4facb5?w=400',
+        'habitTitles': [
+          'Cold Shower',
+          'Voluntary Discomfort',
+          'Negative Visualization',
+        ],
+        'isPremium': true,
+      },
+      {
+        'id': 'blueprint_digital_minimalism',
+        'creatorUserId': 'system',
+        'creatorName': 'Cal Newport',
+        'creatorArchetype': 'Stoic',
+        'blueprintName': 'Digital Minimalism',
+        'description':
+            'Reclaim your attention in a world designed to steal it.',
+        'category': 'Focus',
+        'adoptionCount': 9200,
+        'createdAt': now.toIso8601String(),
+        'imageUrl':
+            'https://images.unsplash.com/photo-1512428559087-560fa5ceab42?w=400',
+        'habitTitles': [
+          'Strict App Limits',
+          'Phone-Free Meals',
+          'Offline Hobby',
+        ],
+      },
+      {
+        'id': 'blueprint_essentialist',
+        'creatorUserId': 'system',
+        'creatorName': 'Greg McKeown',
+        'creatorArchetype': 'Stoic',
+        'blueprintName': 'The Essentialist',
+        'description':
+            'The disciplined pursuit of less. Do only what truly matters.',
+        'category': 'Productivity',
+        'adoptionCount': 4500,
+        'createdAt': now.toIso8601String(),
+        'imageUrl':
+            'https://images.unsplash.com/photo-1484480974693-6ca0a78fb36b?w=400',
+        'habitTitles': [
+          'Priority Mapping',
+          'Saying No (Daily)',
+          'Deep Work Sprint',
+        ],
+      },
+      // --- ZEALOT BLUEPRINTS ---
+      {
+        'id': 'blueprint_spiritual_warrior',
+        'creatorUserId': 'system',
+        'creatorName': 'Emerge Team',
+        'creatorArchetype': 'Zealot',
+        'blueprintName': 'The Spiritual Warrior',
+        'description':
+            'Build a life centered on devotion, prayer, and sacred commitment.',
+        'category': 'Spirit',
+        'adoptionCount': 3400,
+        'createdAt': now.toIso8601String(),
+        'imageUrl':
+            'https://images.unsplash.com/photo-1507413245164-6160d8298b31?w=400',
+        'habitTitles': [
+          'Morning Prayer',
+          'Sacred Text Reading',
+          'Daily Fasting',
+        ],
+      },
+      {
+        'id': 'blueprint_zen_master',
+        'creatorUserId': 'system',
+        'creatorName': 'Thich Nhat Hanh',
+        'creatorArchetype': 'Zealot',
+        'blueprintName': 'Zen Mindfulness',
+        'description':
+            'Walk the path of peace with mindful presence in every moment.',
+        'category': 'Vitality',
+        'adoptionCount': 7800,
+        'createdAt': now.toIso8601String(),
+        'imageUrl':
+            'https://images.unsplash.com/photo-1528715471579-d1bcf0ba5e83?w=400',
+        'habitTitles': [
+          'Zazen Meditation',
+          'Mindful Eating',
+          'Walking Meditation',
+        ],
+        'isPremium': true,
+      },
+      {
+        'id': 'blueprint_karma_yoga',
+        'creatorUserId': 'system',
+        'creatorName': 'Emerge Team',
+        'creatorArchetype': 'Zealot',
+        'blueprintName': 'Path of Service',
+        'description':
+            'Find yourself by losing yourself in the service of others.',
+        'category': 'Spirit',
+        'adoptionCount': 2900,
+        'createdAt': now.toIso8601String(),
+        'imageUrl':
+            'https://images.unsplash.com/photo-1469571486292-0ba58a3f068b?w=400',
+        'habitTitles': [
+          'Kindness Act',
+          'Volunteer Hour',
+          'Mentor Session',
+        ],
+      },
+      {
+        'id': 'blueprint_monk_mode',
+        'creatorUserId': 'system',
+        'creatorName': 'Emerge Team',
+        'creatorArchetype': 'Zealot',
+        'blueprintName': 'Monk Mode Ritual',
+        'description':
+            'Intense focus and sacred isolation to achieve breakthrough results.',
+        'category': 'Focus',
+        'adoptionCount': 11000,
+        'createdAt': now.toIso8601String(),
+        'imageUrl':
+            'https://images.unsplash.com/photo-1518241353330-0f7941c2d9b5?w=400',
+        'habitTitles': [
+          'Silence Practice',
+          'No Consumption',
+          'Deep Reflection',
+        ],
+      },
+      {
+        'id': 'blueprint_vibration_boost',
+        'creatorUserId': 'system',
+        'creatorName': 'Emerge Team',
+        'creatorArchetype': 'Zealot',
+        'blueprintName': 'Energy Alignment',
+        'description':
+            'Raise your vibration through breathwork and intention.',
+        'category': 'Vitality',
+        'adoptionCount': 5200,
+        'createdAt': now.toIso8601String(),
+        'imageUrl':
+            'https://images.unsplash.com/photo-1506126613408-eca07ce68773?w=400',
+        'habitTitles': [
+          'Breathwork',
+          'Morning Affirmations',
+          'Sun Gazing',
+        ],
+      },
+      {
+        'id': 'blueprint_stoic_calm',
+        'creatorUserId': 'system',
+        'creatorName': 'Marcus Aurelius',
+        'creatorArchetype': 'Stoic',
+        'blueprintName': 'The Calm Ruler',
+        'description':
+            'Maintain inner peace while leading at the highest levels.',
+        'category': 'Mindset',
+        'adoptionCount': 9800,
+        'createdAt': now.toIso8601String(),
+        'imageUrl':
+            'https://images.unsplash.com/photo-1507413245164-6160d8298b31?w=400',
+        'habitTitles': [
+          'Morning Journal',
+          'Duty Checklist',
+          'Gratitude Walk',
+        ],
+        'isPremium': true,
+      },
+      {
+        'id': 'blueprint_historical_lens',
+        'creatorUserId': 'system',
+        'creatorName': 'Dan Carlin',
+        'creatorArchetype': 'Scholar',
+        'blueprintName': 'Hardcore History Buff',
+        'description':
+            'Understand the present by deeply immersing yourself in the past.',
+        'category': 'Learning',
+        'adoptionCount': 3400,
+        'createdAt': now.toIso8601String(),
+        'imageUrl':
+            'https://images.unsplash.com/photo-1461360370896-922624d12aa1?w=400',
+        'habitTitles': [
+          'Documentary Study',
+          'Archive Research',
+          'Period Reading',
+        ],
+      },
+      {
+        'id': 'blueprint_data_scientist',
+        'creatorUserId': 'system',
+        'creatorName': 'Emerge Team',
+        'creatorArchetype': 'Scholar',
+        'blueprintName': 'Data Intuition',
+        'description':
+            'Build the technical skills and intuition required for data mastery.',
+        'category': 'Intellect',
+        'adoptionCount': 2100,
+        'createdAt': now.toIso8601String(),
+        'imageUrl':
+            'https://images.unsplash.com/photo-1551288049-bbbda5366991?w=400',
+        'habitTitles': [
+          'Coding Practice',
+          'Math Theory',
+          'Project Building',
+        ],
+      },
+      {
+        'id': 'blueprint_podcaster_flow',
+        'creatorUserId': 'system',
+        'creatorName': 'Joe Rogan',
+        'creatorArchetype': 'Creator',
+        'blueprintName': 'Podcaster System',
+        'description':
+            'The daily habits of the world\'s most successful audio creators.',
+        'category': 'Business',
+        'adoptionCount': 6500,
+        'createdAt': now.toIso8601String(),
+        'imageUrl':
+            'https://images.unsplash.com/photo-1478737270239-2f02b77fc618?w=400',
+        'habitTitles': [
+          'Topic Research',
+          'Recording Session',
+          'Guest Outreach',
+        ],
+        'isPremium': true,
+      },
+      {
+        'id': 'blueprint_writer_ritual',
+        'creatorUserId': 'system',
+        'creatorName': 'Stephen King',
+        'creatorArchetype': 'Creator',
+        'blueprintName': 'The Novelist Path',
+        'description':
+            'Simple but effective habits to finish your first book.',
+        'category': 'Creativity',
+        'adoptionCount': 8900,
+        'createdAt': now.toIso8601String(),
+        'imageUrl':
+            'https://images.unsplash.com/photo-1455390582262-044cdead277a?w=400',
+        'habitTitles': [
+          '2000 Word Goal',
+          'Daily Character Log',
+          'No-Edit Draft Block',
+        ],
+        'isPremium': true,
+      },
+      {
+        'id': 'blueprint_athlete_recovery',
+        'creatorUserId': 'system',
+        'creatorName': 'Emerge Team',
+        'creatorArchetype': 'Athlete',
+        'blueprintName': 'Pro Recovery Stack',
+        'description':
+            'Elite level recovery habits to maximize your performance and longevity.',
+        'category': 'Vitality',
+        'adoptionCount': 4300,
+        'createdAt': now.toIso8601String(),
+        'imageUrl':
+            'https://images.unsplash.com/photo-1517836357463-d25dfeac3438?w=400',
+        'habitTitles': [
+          'Cold/Heat Therapy',
+          'Deep Sleep Reset',
+          'Anti-Inflammatory Meal',
+        ],
+      },
+      {
+        'id': 'blueprint_essential_minimalist',
+        'creatorUserId': 'system',
+        'creatorName': 'The Minimalists',
+        'creatorArchetype': 'Stoic',
+        'blueprintName': 'Minimalist Mindset',
+        'description':
+            'Simplify your surroundings to clarify your internal state.',
+        'category': 'Mindset',
+        'adoptionCount': 7600,
+        'createdAt': now.toIso8601String(),
+        'imageUrl':
+            'https://images.unsplash.com/photo-1512428559087-560fa5ceab42?w=400',
+        'habitTitles': [
+          'Daily Declutter',
+          'Intentional Purchase',
+          'Evening Calm',
         ],
       },
     ];

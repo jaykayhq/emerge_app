@@ -165,9 +165,6 @@ class _StructureNodeState extends State<StructureNode>
   @override
   Widget build(BuildContext context) {
     final isLocked = widget.node.state == NodeState.locked;
-    final isCompleted =
-        widget.node.state == NodeState.completed ||
-        widget.node.state == NodeState.mastered;
     final isAvailable = widget.node.state == NodeState.available;
     final isMilestone = widget.node.type == NodeType.milestone;
 
@@ -227,30 +224,6 @@ class _StructureNodeState extends State<StructureNode>
                         color: _getBorderColor(),
                         width: isAvailable ? 0 : 2,
                       ),
-                      boxShadow: [
-                        if (isAvailable)
-                          BoxShadow(
-                            color: widget.primaryColor.withValues(
-                              alpha: 0.3 + 0.3 * _pulseAnimation.value,
-                            ),
-                            blurRadius: 20,
-                            spreadRadius: 6,
-                          ),
-                        if (isAvailable)
-                          BoxShadow(
-                            color: widget.primaryColor.withValues(
-                              alpha: 0.15 + 0.15 * _pulseAnimation.value,
-                            ),
-                            blurRadius: 36,
-                            spreadRadius: 12,
-                          ),
-                        if (isCompleted)
-                          BoxShadow(
-                            color: widget.primaryColor.withValues(alpha:0.2),
-                            blurRadius: 8,
-                            spreadRadius: 2,
-                          ),
-                      ],
                     ),
                     child: Icon(
                       _getIcon(),

@@ -28,8 +28,18 @@ class HabitNotificationRepository {
     final userId = _auth.currentUser?.uid;
     if (userId == null) return;
 
+    // 0. Fetch user settings for notification gating
+    final userDoc = await _firestore.collection('users').doc(userId).get();
+    final archetypeNudges = userDoc.exists && userDoc.data() != null
+        ? (userDoc.data()!['settings']?['archetypeNudges'] as bool? ?? true)
+        : true;
+
     // 1. Send immediate welcome notification
-    await _notificationService.notifyHabitCreated(habit, archetype);
+    await _notificationService.notifyHabitCreated(
+      habit,
+      archetype,
+      archetypeNudges: archetypeNudges,
+    );
 
     // 2. Schedule recurring reminder
     final reminderTime =
@@ -48,6 +58,8 @@ class HabitNotificationRepository {
       timeString,
       habit.frequency,
       habit.specificDays,
+      attribute: habit.attribute,
+      archetypeNudges: archetypeNudges,
     );
 
     // 3. Create notification schedule document
@@ -78,6 +90,12 @@ class HabitNotificationRepository {
     final userId = _auth.currentUser?.uid;
     if (userId == null) return;
 
+    // Fetch user settings for notification gating
+    final userDoc = await _firestore.collection('users').doc(userId).get();
+    final archetypeNudges = userDoc.exists && userDoc.data() != null
+        ? (userDoc.data()!['settings']?['archetypeNudges'] as bool? ?? true)
+        : true;
+
     final reminderTime =
         habit.reminderTime ??
         TimeOfDay(
@@ -94,6 +112,8 @@ class HabitNotificationRepository {
       timeString,
       habit.frequency,
       habit.specificDays,
+      attribute: habit.attribute,
+      archetypeNudges: archetypeNudges,
     );
 
     await _firestore

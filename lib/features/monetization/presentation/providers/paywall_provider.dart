@@ -1,5 +1,4 @@
 import 'package:emerge_app/features/monetization/presentation/providers/subscription_provider.dart';
-import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:purchases_flutter/purchases_flutter.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
@@ -30,14 +29,6 @@ class PaywallController extends _$PaywallController {
     final repository = ref.read(monetizationRepositoryProvider);
 
     try {
-      if (kIsWeb) {
-        state = state.copyWith(
-          isLoading: false,
-          error: 'Premium subscriptions are currently available only on mobile.',
-        );
-        return;
-      }
-
       final result = await repository.getOfferings();
       result.fold(
         (error) => state = state.copyWith(isLoading: false, error: error),

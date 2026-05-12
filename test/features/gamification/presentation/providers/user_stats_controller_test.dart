@@ -2,6 +2,7 @@ import 'package:emerge_app/features/auth/domain/entities/user_extension.dart';
 import 'package:emerge_app/features/gamification/data/repositories/user_stats_repository.dart';
 import 'package:emerge_app/features/gamification/presentation/providers/user_stats_providers.dart';
 import 'package:emerge_app/features/social/domain/services/club_activity_service.dart';
+import 'package:emerge_app/core/services/event_bus.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
@@ -66,6 +67,8 @@ void main() {
       nodeId: any(named: 'nodeId'),
       nodeName: any(named: 'nodeName'),
     )).thenAnswer((_) async {});
+    when(() => mockRepository.updateWorldHealth(any(), any()))
+        .thenAnswer((_) async {});
 
     controller = UserStatsController(
       repository: mockRepository,
@@ -76,6 +79,7 @@ void main() {
   });
 
   tearDown(() {
+    EventBus.reset();
     controller.dispose();
   });
 
@@ -97,8 +101,7 @@ void main() {
       await controller.startMission('athlete_1_1');
 
       // Assert
-      verify(() => mockRepository.saveUserStats(any())).called(1);
-      final captured = verify(() => mockRepository.saveUserStats(any()))
+      final captured = verify(() => mockRepository.saveUserStats(captureAny()))
           .captured.single as UserProfile;
       expect(captured.worldState.activeNodes, contains('athlete_1_1'));
       expect(captured.worldState.activeNodes, hasLength(1));
@@ -190,8 +193,7 @@ void main() {
       await controller.completeMission('athlete_1_1', xpBoosts, 1);
 
       // Assert
-      verify(() => mockRepository.saveUserStats(any())).called(1);
-      final captured = verify(() => mockRepository.saveUserStats(any()))
+      final captured = verify(() => mockRepository.saveUserStats(captureAny()))
           .captured.single as UserProfile;
 
       // Node should be moved from active to claimed
@@ -275,8 +277,7 @@ void main() {
       await controller.completeMission('athlete_1_1', {'strength': 100}, 1);
 
       // Assert - level should be capped at highestCompletedNodeLevel + 1 = 2
-      verify(() => mockRepository.saveUserStats(any())).called(1);
-      final captured = verify(() => mockRepository.saveUserStats(any()))
+      final captured = verify(() => mockRepository.saveUserStats(captureAny()))
           .captured.single as UserProfile;
       expect(captured.avatarStats.level, lessThanOrEqualTo(2));
     });
@@ -293,8 +294,7 @@ void main() {
       await controller.emerge();
 
       // Assert
-      verify(() => mockRepository.saveUserStats(any())).called(1);
-      final captured = verify(() => mockRepository.saveUserStats(any()))
+      final captured = verify(() => mockRepository.saveUserStats(captureAny()))
           .captured.single as UserProfile;
       expect(captured.hasEmerged, isTrue);
     });
@@ -345,8 +345,7 @@ void main() {
       await controller.updateWorldState(newWorldState);
 
       // Assert
-      verify(() => mockRepository.saveUserStats(any())).called(1);
-      final captured = verify(() => mockRepository.saveUserStats(any()))
+      final captured = verify(() => mockRepository.saveUserStats(captureAny()))
           .captured.single as UserProfile;
       expect(captured.worldState.activeNodes, equals(['test-node']));
       expect(captured.worldState.highestCompletedNodeLevel, equals(1));
@@ -396,8 +395,7 @@ void main() {
       await controller.unlockBuilding('gym');
 
       // Assert
-      verify(() => mockRepository.saveUserStats(any())).called(1);
-      final captured = verify(() => mockRepository.saveUserStats(any()))
+      final captured = verify(() => mockRepository.saveUserStats(captureAny()))
           .captured.single as UserProfile;
       expect(captured.worldState.unlockedBuildings, contains('gym'));
     });

@@ -95,13 +95,6 @@ class WorldHealthBar extends StatelessWidget {
                       colors: [const Color(0xFF00E676), _stateColor],
                     ),
                     borderRadius: BorderRadius.circular(6),
-                    boxShadow: [
-                      BoxShadow(
-                        color: _stateColor.withValues(alpha:0.4),
-                        blurRadius: 8,
-                        spreadRadius: 1,
-                      ),
-                    ],
                   ),
                 ),
               ),

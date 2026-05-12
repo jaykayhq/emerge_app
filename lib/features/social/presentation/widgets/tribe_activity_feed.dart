@@ -105,15 +105,24 @@ class TribeActivityTile extends StatelessWidget {
         return 'conquered $title 🏆';
       case 'level_up':
         final level = data['newLevel'] as int? ?? 0;
-        return 'reached Level $level!';
+        return 'reached Level $level! 🎖️';
       case 'streak_milestone':
         final streak = data['streakDays'] as int? ?? 0;
         return 'hit a $streak-day streak! 🔥';
       case 'node_claim':
         final nodeName = data['nodeName'] as String? ?? 'a node';
-        return 'claimed the $nodeName! 🏰';
+        return 'claimed the $nodeName node 🏰';
+      case 'badge_earned':
+        final badgeName = data['badgeName'] as String? ?? 'a badge';
+        return 'earned the "$badgeName" badge 🎖️';
+      case 'partner_joined':
+        final partnerName = data['partnerName'] as String? ?? 'someone';
+        return 'formed an accountability bond with $partnerName 🤝';
+      case 'contract_committed':
+        final habitTitle = data['habitTitle'] as String? ?? 'a habit';
+        return 'committed to "$habitTitle" with high stakes ⚔️';
       default:
-        return 'did something';
+        return 'made a move';
     }
   }
 
@@ -133,6 +142,12 @@ class TribeActivityTile extends StatelessWidget {
         return '🎯';
       case 'member_joined':
         return '👋';
+      case 'node_claim':
+        return '🏰';
+      case 'partner_joined':
+        return '🤝';
+      case 'contract_committed':
+        return '⚔️';
       default:
         return '📌';
     }

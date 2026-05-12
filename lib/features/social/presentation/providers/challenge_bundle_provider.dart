@@ -15,17 +15,20 @@ class ChallengeBundle extends _$ChallengeBundle {
   @override
   Future<ChallengeBundleData> build() async {
     final repository = ref.read(challengeRepositoryProvider);
+    
+    // Watch auth state - standard Riverpod pattern
     final user = ref.watch(authStateChangesProvider).value;
-    final profile = ref.watch(userStatsStreamProvider).value;
-
-    // Return empty bundle if user or profile not ready
-    if (user == null || profile == null) {
+    if (user == null) {
       return ChallengeBundleData.empty();
     }
 
+    // Wait for profile data - this makes the bundle provider stay in loading state
+    // until the profile is ready, preventing "empty" flickers.
+    final profile = await ref.watch(userStatsStreamProvider.future);
+
     // Get archetype name - use 'athlete' as fallback for 'none' to ensure challenges show
     final archetypeName = profile.archetype.name == 'none'
-        ? 'athlete' // Default to athlete challenges for users without archetype
+        ? 'athlete' 
         : profile.archetype.name;
 
     // Single batch fetch - all data in one async operation

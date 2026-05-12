@@ -138,14 +138,15 @@ class SocialActivityService {
         }
 
         // 6. Update Core User Stats XP and Counters
+        // Use transaction.update with dot-notation paths for nested field merges
         final userStatsRef = _firestore.collection('user_stats').doc(userId);
-        transaction.set(userStatsRef, {
+        transaction.update(userStatsRef, {
           if (xpGained != null) 'avatarStats.totalXp': FieldValue.increment(xpGained),
           if (xpGained != null) 'avatarStats.${attribute}Xp': FieldValue.increment(xpGained),
           if (xpGained != null) 'totalXp': FieldValue.increment(xpGained),
           if (xpGained != null) '${attribute}Xp': FieldValue.increment(xpGained),
           'totalHabitsCompleted': FieldValue.increment(1),
-        }, SetOptions(merge: true));
+        });
       });
     } catch (e) {
       debugPrint('Error logging habit completion to social activity: $e');

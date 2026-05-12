@@ -39,7 +39,7 @@ final class ChallengeBundleProvider
   ChallengeBundle create() => ChallengeBundle();
 }
 
-String _$challengeBundleHash() => r'b56e604906e2a8188b1f96d302b171da577b90df';
+String _$challengeBundleHash() => r'd80b3637322b9424d69037c3babc55a672f19f4d';
 
 /// Consolidated challenge data provider
 /// Fetches all challenge data in a single batch to prevent multiple rebuild waves

@@ -97,14 +97,10 @@ class _ArchetypeAvatarState extends State<ArchetypeAvatar>
                   height: widget.size * 1.1,
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(widget.size * 0.4),
-                    boxShadow: [
-                      BoxShadow(
-                        color: primaryColor.withValues(alpha: 0.2 * auraPulse * (widget.level / 50).clamp(0, 1),
-                        ),
-                        blurRadius: widget.level * 3.0,
-                        spreadRadius: widget.level * 0.5,
-                      ),
-                    ],
+                    border: Border.all(
+                      color: primaryColor.withValues(alpha: 0.1),
+                      width: 1,
+                    ),
                   ),
                 ),
 

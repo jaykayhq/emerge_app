@@ -1,0 +1,99 @@
+﻿00:00 +0: loading C:/Users/HP/Downloads/emerge_app/test/core/services/social_notification_service_test.dart
+00:00 +0: (setUpAll)
+00:00 +0: SocialNotificationService sendNotification sends notification and increments unread count
+00:00 +0 -1: SocialNotificationService sendNotification sends notification and increments unread count [E]
+  type 'Null' is not a subtype of type 'Future<void>'
+  test\core\services\social_notification_service_test.dart 16:7            MockDocumentReference.set
+  package:emerge_app/core/services/social_notification_service.dart 41:54  SocialNotificationService.sendNotification
+  
+00:00 +0 -1: SocialNotificationService sendNotificationToMultiple sends notifications to multiple users in batch
+00:00 +0 -2: SocialNotificationService sendNotificationToMultiple sends notifications to multiple users in batch [E]
+  type 'MockDocumentReference' is not a subtype of type 'CollectionReference<Map<String, dynamic>>'
+  test\core\services\social_notification_service_test.dart 9:7             MockFirestore.collection
+  package:emerge_app/core/services/social_notification_service.dart 25:10  SocialNotificationService._notificationsCollection
+  package:emerge_app/core/services/social_notification_service.dart 58:22  SocialNotificationService.sendNotificationToMultiple
+  test\core\services\social_notification_service_test.dart 125:23          main.<fn>.<fn>.<fn>
+  
+00:00 +0 -2: SocialNotificationService sendNotificationToMultiple handles empty user list gracefully
+00:00 +0 -3: SocialNotificationService sendNotificationToMultiple handles empty user list gracefully [E]
+  type 'Null' is not a subtype of type 'WriteBatch'
+  test\core\services\social_notification_service_test.dart 9:7             MockFirestore.batch
+  package:emerge_app/core/services/social_notification_service.dart 55:30  SocialNotificationService.sendNotificationToMultiple
+  test\core\services\social_notification_service_test.dart 149:25          main.<fn>.<fn>.<fn>.<fn>
+  package:matcher                                                          expect
+  package:flutter_test/src/widget_tester.dart 473:18                       expect
+  test\core\services\social_notification_service_test.dart 148:9           main.<fn>.<fn>.<fn>
+  ===== asynchronous gap ===========================
+  dart:async                                                               Future._asyncCompleteError
+  test\core\services\social_notification_service_test.dart 149:25          main.<fn>.<fn>.<fn>.<fn>
+  package:matcher                                                          expect
+  package:flutter_test/src/widget_tester.dart 473:18                       expect
+  test\core\services\social_notification_service_test.dart 148:9           main.<fn>.<fn>.<fn>
+  
+00:00 +0 -3: SocialNotificationService markAsRead marks notification as read and decrements count
+00:00 +0 -4: SocialNotificationService markAsRead marks notification as read and decrements count [E]
+  type 'Null' is not a subtype of type 'Future<void>'
+  test\core\services\social_notification_service_test.dart 16:7            MockDocumentReference.update
+  package:emerge_app/core/services/social_notification_service.dart 74:64  SocialNotificationService.markAsRead
+  test\core\services\social_notification_service_test.dart 163:23          main.<fn>.<fn>.<fn>
+  
+00:00 +0 -4: SocialNotificationService markAllAsRead marks all unread notifications as read and resets count
+00:00 +0 -5: SocialNotificationService markAllAsRead marks all unread notifications as read and resets count [E]
+  No matching calls. All calls: MockDocumentReference.collection(notifications)
+  (If you called `verify(...).called(0);`, please instead use `verifyNever(...);`.)
+  package:matcher                                                  fail
+  package:mocktail/src/mocktail.dart 728:7                         _VerifyCall._checkWith
+  package:mocktail/src/mocktail.dart 519:18                        _makeVerify.<fn>
+  test\core\services\social_notification_service_test.dart 206:15  main.<fn>.<fn>.<fn>
+  
+00:00 +0 -5: SocialNotificationService markAllAsRead returns early when no unread notifications
+00:00 +1 -5: SocialNotificationService deleteNotification deletes notification and decrements count only if unread
+00:00 +1 -6: SocialNotificationService deleteNotification deletes notification and decrements count only if unread [E]
+  type 'Null' is not a subtype of type 'Future<void>'
+  test\core\services\social_notification_service_test.dart 16:7             MockDocumentReference.update
+  package:emerge_app/core/services/social_notification_service.dart 116:56  SocialNotificationService.deleteNotification
+  
+00:00 +1 -6: SocialNotificationService deleteNotification deletes read notification without decrementing count
+00:00 +1 -7: SocialNotificationService deleteNotification deletes read notification without decrementing count [E]
+  type 'Null' is not a subtype of type 'Future<void>'
+  test\core\services\social_notification_service_test.dart 16:7             MockDocumentReference.delete
+  package:emerge_app/core/services/social_notification_service.dart 121:18  SocialNotificationService.deleteNotification
+  
+00:00 +1 -7: SocialNotificationService deleteAllNotifications deletes all notifications and resets count
+[38;5;196mΓöîΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ[0m
+[38;5;196mΓöé type 'Null' is not a subtype of type 'Future<void>'[0m
+[38;5;196mΓö£ΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöä[0m
+[38;5;196mΓöé #0   MockBatch.commit (file:///C:/Users/HP/Downloads/emerge_app/test/core/services/social_notification_service_test.dart:23:7)[0m
+[38;5;196mΓöé #1   SocialNotificationService.deleteAllNotifications (package:emerge_app/core/services/social_notification_service.dart:141:19)[0m
+[38;5;196mΓöé #2   <asynchronous suspension>[0m
+[38;5;196mΓöé #3   main.<anonymous closure>.<anonymous closure>.<anonymous closure> (file:///C:/Users/HP/Downloads/emerge_app/test/core/services/social_notification_service_test.dart:296:9)[0m
+[38;5;196mΓöé #4   <asynchronous suspension>[0m
+[38;5;196mΓö£ΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöä[0m
+[38;5;196mΓöé Γ¢ö Failed to delete all notifications[0m
+[38;5;196mΓööΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ[0m
+00:00 +1 -8: SocialNotificationService deleteAllNotifications deletes all notifications and resets count [E]
+  No matching calls. All calls: MockDocumentReference.collection(notifications)
+  (If you called `verify(...).called(0);`, please instead use `verifyNever(...);`.)
+  package:matcher                                                  fail
+  package:mocktail/src/mocktail.dart 728:7                         _VerifyCall._checkWith
+  package:mocktail/src/mocktail.dart 519:18                        _makeVerify.<fn>
+  test\core\services\social_notification_service_test.dart 303:15  main.<fn>.<fn>.<fn>
+  
+00:00 +1 -8: SocialNotificationService deleteAllNotifications handles errors gracefully without throwing
+[38;5;196mΓöîΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ[0m
+[38;5;196mΓöé Exception: Network error[0m
+[38;5;196mΓö£ΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöä[0m
+[38;5;196mΓöé #0   When.thenThrow.<anonymous closure> (package:mocktail/src/mocktail.dart:249:7)[0m
+[38;5;196mΓöé #1   Mock.noSuchMethod (package:mocktail/src/mocktail.dart:131:37)[0m
+[38;5;196mΓöé #2   MockCollectionReference.get (file:///C:/Users/HP/Downloads/emerge_app/test/core/services/social_notification_service_test.dart:12:7)[0m
+[38;5;196mΓöé #3   SocialNotificationService.deleteAllNotifications (package:emerge_app/core/services/social_notification_service.dart:127:63)[0m
+[38;5;196mΓöé #4   main.<anonymous closure>.<anonymous closure>.<anonymous closure>.<anonymous closure> (file:///C:/Users/HP/Downloads/emerge_app/test/core/services/social_notification_service_test.dart:318:25)[0m
+[38;5;196mΓö£ΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöä[0m
+[38;5;196mΓöé Γ¢ö Failed to delete all notifications[0m
+[38;5;196mΓööΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ[0m
+00:00 +2 -8: SocialNotificationService Notification helpers createNotification creates correct structure
+00:00 +3 -8: SocialNotificationService Notification helpers createFriendRequestNotification has correct expiration
+00:00 +4 -8: SocialNotificationService Notification helpers createChallengeInviteNotification has 7-day expiration
+00:01 +5 -8: SocialNotificationService Notification helpers createLevelUpNotification has correct data
+00:01 +6 -8: (tearDownAll)
+00:01 +6 -8: Some tests failed.

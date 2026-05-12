@@ -41,13 +41,6 @@ class IdentityVotesCounter extends StatelessWidget {
                 color: EmergeColors.teal.withValues(alpha:0.3),
                 width: 1,
               ),
-              boxShadow: [
-                BoxShadow(
-                  color: EmergeColors.teal.withValues(alpha:0.2),
-                  blurRadius: 20,
-                  spreadRadius: -5,
-                ),
-              ],
             ),
             child: Row(
               children: [
@@ -136,13 +129,6 @@ class IdentityVotesCounter extends StatelessWidget {
             height: 44,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              boxShadow: [
-                BoxShadow(
-                  color: EmergeColors.teal.withValues(alpha:0.4),
-                  blurRadius: 12,
-                  spreadRadius: -2,
-                ),
-              ],
             ),
           ),
           // Ring

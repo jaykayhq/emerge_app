@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:emerge_app/core/theme/emerge_colors.dart';
 import 'package:emerge_app/features/auth/domain/entities/auth_user.dart';
 import 'package:emerge_app/features/gamification/domain/models/avatar.dart';
+import 'package:emerge_app/features/habits/domain/entities/habit.dart';
 import 'package:flutter/material.dart';
 
 /// Helper to convert dynamic timestamp values to DateTime
@@ -22,6 +23,16 @@ DateTime? _parseDateTime(dynamic value) {
   }
 
   return null;
+}
+
+/// Normalizes momentum scores to 0.0-1.0 range
+double _normalizeMomentum(dynamic value) {
+  if (value == null) return 0.5;
+  final num val = value as num;
+  if (val > 1.0) {
+    return (val / 100.0).clamp(0.0, 1.0);
+  }
+  return val.toDouble().clamp(0.0, 1.0);
 }
 
 enum UserArchetype { athlete, creator, scholar, stoic, zealot, none }
@@ -74,6 +85,7 @@ class UserAvatarStats {
   final int challengeXp;
   final int level;
   final int streak;
+  final int momentumScore; // 0-100
   final Map<String, int> attributeXp; // ADD THIS
 
   const UserAvatarStats({
@@ -86,6 +98,7 @@ class UserAvatarStats {
     this.challengeXp = 0,
     this.level = 1,
     this.streak = 0,
+    this.momentumScore = 0,
     this.attributeXp = const {}, // ADD THIS
   });
 
@@ -100,6 +113,7 @@ class UserAvatarStats {
       'challengeXp': challengeXp,
       'level': level,
       'streak': streak,
+      'momentumScore': momentumScore,
       'attributeXp': attributeXp,
     };
   }
@@ -115,6 +129,7 @@ class UserAvatarStats {
       challengeXp: map['challengeXp'] as int? ?? 0,
       level: map['level'] as int? ?? 1,
       streak: map['streak'] as int? ?? 0,
+      momentumScore: map['momentumScore'] as int? ?? 0,
       attributeXp: Map<String, int>.from(
         (map['attributeXp'] as Map?)?.map(
               (key, value) => MapEntry(key.toString(), value as int? ?? 0),
@@ -126,6 +141,15 @@ class UserAvatarStats {
   int get totalXp =>
       strengthXp + intellectXp + vitalityXp + creativityXp + focusXp + spiritXp;
 
+  HabitStreakState get momentumState {
+    if (momentumScore >= 90) return HabitStreakState.onFire;
+    if (momentumScore >= 70) return HabitStreakState.strong;
+    if (momentumScore >= 50) return HabitStreakState.building;
+    if (momentumScore >= 30) return HabitStreakState.atRisk;
+    if (momentumScore >= 10) return HabitStreakState.recovery;
+    return HabitStreakState.reset;
+  }
+
   UserAvatarStats copyWith({
     int? strengthXp,
     int? intellectXp,
@@ -136,6 +160,7 @@ class UserAvatarStats {
     int? challengeXp,
     int? level,
     int? streak,
+    int? momentumScore,
     Map<String, int>? attributeXp,
   }) {
     return UserAvatarStats(
@@ -148,6 +173,7 @@ class UserAvatarStats {
       challengeXp: challengeXp ?? this.challengeXp,
       level: level ?? this.level,
       streak: streak ?? this.streak,
+      momentumScore: momentumScore ?? this.momentumScore,
       attributeXp: attributeXp ?? this.attributeXp,
     );
   }
@@ -479,7 +505,7 @@ class UserProfile {
   final UserSettings settings;
   final DateTime? accountCreatedAt; // When the user account was created
   final bool hasEmerged; // Whether user has pressed Emerge at level 5
-  final double worldHealthScore; // Behavioral momentum score (0.0 to 1.0)
+  final double momentumScore; // Behavioral momentum score (0.0 to 1.0)
   final int totalHabitsCompleted;
   final int totalChallengesCompleted;
   final int totalQuestsCompleted;
@@ -507,7 +533,7 @@ class UserProfile {
     this.settings = const UserSettings(),
     this.accountCreatedAt,
     this.hasEmerged = false,
-    this.worldHealthScore = 0.5,
+    this.momentumScore = 0.5,
     this.totalHabitsCompleted = 0,
     this.totalChallengesCompleted = 0,
     this.totalQuestsCompleted = 0,
@@ -537,7 +563,7 @@ class UserProfile {
       'settings': settings.toMap(),
       'accountCreatedAt': accountCreatedAt?.toIso8601String(),
       'hasEmerged': hasEmerged,
-      'worldHealthScore': worldHealthScore,
+      'momentumScore': momentumScore,
       'totalHabitsCompleted': totalHabitsCompleted,
       'totalChallengesCompleted': totalChallengesCompleted,
       'totalQuestsCompleted': totalQuestsCompleted,
@@ -581,7 +607,7 @@ class UserProfile {
           : const UserSettings(),
       accountCreatedAt: _parseDateTime(map['accountCreatedAt']),
       hasEmerged: map['hasEmerged'] as bool? ?? false,
-      worldHealthScore: (map['worldHealthScore'] as num? ?? 0.5).toDouble(),
+      momentumScore: _normalizeMomentum(map['worldHealthScore'] ?? map['momentumScore']),
       totalHabitsCompleted: map['totalHabitsCompleted'] as int? ?? 0,
       totalChallengesCompleted: map['totalChallengesCompleted'] as int? ?? 0,
       totalQuestsCompleted: map['totalQuestsCompleted'] as int? ?? 0,
@@ -611,7 +637,7 @@ class UserProfile {
     UserSettings? settings,
     DateTime? accountCreatedAt,
     bool? hasEmerged,
-    double? worldHealthScore,
+    double? momentumScore,
     int? totalHabitsCompleted,
     int? totalChallengesCompleted,
     int? totalQuestsCompleted,
@@ -641,7 +667,7 @@ class UserProfile {
       settings: settings ?? this.settings,
       accountCreatedAt: accountCreatedAt ?? this.accountCreatedAt,
       hasEmerged: hasEmerged ?? this.hasEmerged,
-      worldHealthScore: worldHealthScore ?? this.worldHealthScore,
+      momentumScore: momentumScore ?? this.momentumScore,
       totalHabitsCompleted: totalHabitsCompleted ?? this.totalHabitsCompleted,
       totalChallengesCompleted:
           totalChallengesCompleted ?? this.totalChallengesCompleted,
@@ -663,6 +689,7 @@ class UserSettings {
   final bool aiInsights;
   final bool communityUpdates;
   final bool rewardsUpdates;
+  final bool archetypeNudges;
   final bool doNotDisturb;
 
   const UserSettings({
@@ -676,6 +703,7 @@ class UserSettings {
     this.aiInsights = true,
     this.communityUpdates = false,
     this.rewardsUpdates = true,
+    this.archetypeNudges = true,
     this.doNotDisturb = false,
   });
 
@@ -691,6 +719,7 @@ class UserSettings {
       'aiInsights': aiInsights,
       'communityUpdates': communityUpdates,
       'rewardsUpdates': rewardsUpdates,
+      'archetypeNudges': archetypeNudges,
       'doNotDisturb': doNotDisturb,
     };
   }
@@ -707,6 +736,7 @@ class UserSettings {
       aiInsights: map['aiInsights'] as bool? ?? true,
       communityUpdates: map['communityUpdates'] as bool? ?? false,
       rewardsUpdates: map['rewardsUpdates'] as bool? ?? true,
+      archetypeNudges: map['archetypeNudges'] as bool? ?? true,
       doNotDisturb: map['doNotDisturb'] as bool? ?? false,
     );
   }
@@ -722,6 +752,7 @@ class UserSettings {
     bool? aiInsights,
     bool? communityUpdates,
     bool? rewardsUpdates,
+    bool? archetypeNudges,
     bool? doNotDisturb,
   }) {
     return UserSettings(
@@ -735,6 +766,7 @@ class UserSettings {
       aiInsights: aiInsights ?? this.aiInsights,
       communityUpdates: communityUpdates ?? this.communityUpdates,
       rewardsUpdates: rewardsUpdates ?? this.rewardsUpdates,
+      archetypeNudges: archetypeNudges ?? this.archetypeNudges,
       doNotDisturb: doNotDisturb ?? this.doNotDisturb,
     );
   }

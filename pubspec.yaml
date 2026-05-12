@@ -47,9 +47,9 @@ dependencies:
   gap: ^3.0.1
   flutter_animate: ^4.5.2
   lottie: ^3.3.0
-  firebase_core: ^4.4.0
-  firebase_auth: ^6.1.4
-  cloud_firestore: ^6.1.2
+  firebase_core: ^4.7.0
+  firebase_auth: ^6.2.0
+  cloud_firestore: ^6.2.0
   google_sign_in: ^6.2.2
   google_mobile_ads: ^7.0.0
   purchases_flutter: ^9.12.3
@@ -86,6 +86,8 @@ dependencies:
   simple_animations: ^5.2.0
   cached_network_image: ^3.4.1
   shimmer: ^3.0.0
+  connectivity_plus: ^7.1.1
+  workmanager: ^0.9.0+3
 
 dev_dependencies:
   integration_test:
@@ -105,14 +107,14 @@ flutter_launcher_icons:
   android: "launcher_icon"
   ios: true
   image_path: "assets/icons/app_icon.png"
-  adaptive_icon_background: "#2A1B4E" # Constant Deep Violet base
+  adaptive_icon_background: "#0A0A1A" # Match Cosmic Void Dark
   adaptive_icon_foreground: "assets/icons/app_icon.png"
   min_sdk_android: 21
   web:
     generate: true
     image_path: "assets/icons/app_icon.png"
-    background_color: "#2A1B4E"
-    theme_color: "#2A1B4E"
+    background_color: "#0A0A1A"
+    theme_color: "#0A0A1A"
   windows:
     generate: true
     image_path: "assets/icons/app_icon.png"
@@ -134,6 +136,8 @@ flutter:
     - assets/icons/
     - assets/images/
     - assets/images/avatars/
+    - assets/images/challenges/
+    - assets/images/blueprints/
     - assets/images/levels/
     - assets/images/levels/athlete/
     - assets/images/levels/scholar/

@@ -146,7 +146,7 @@ class SettingsScreen extends ConsumerWidget {
                           ),
                         );
                       } else {
-                        context.push('/premium');
+                        context.push('/paywall');
                       }
                     },
                   );

@@ -1,213 +1,147 @@
 import 'package:emerge_app/core/theme/emerge_colors.dart';
-import 'package:emerge_app/features/social/domain/entities/social_entities.dart';
-import 'package:emerge_app/features/social/domain/models/challenge.dart';
-import 'package:emerge_app/features/social/presentation/providers/blueprint_providers.dart';
-import 'package:emerge_app/features/social/presentation/providers/challenge_bundle_provider.dart';
+import 'package:emerge_app/core/presentation/widgets/skeleton_shimmer.dart';
+import 'package:emerge_app/core/presentation/widgets/app_error_widget.dart';
+import 'package:emerge_app/features/blueprints/domain/models/blueprint.dart';
+import 'package:emerge_app/features/blueprints/data/repositories/blueprint_repository.dart';
 import 'package:emerge_app/features/social/presentation/screens/blueprint_detail_screen.dart';
-import 'package:emerge_app/features/social/presentation/screens/challenge_detail_screen.dart';
+import 'package:emerge_app/features/tutorial/presentation/providers/tutorial_provider.dart';
+import 'package:emerge_app/features/tutorial/presentation/widgets/tutorial_overlay.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-class SocialDiscoverTab extends ConsumerWidget {
+class SocialDiscoverTab extends ConsumerStatefulWidget {
   const SocialDiscoverTab({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final blueprintsAsync = ref.watch(blueprintsStreamProvider);
-    final featuredChallenges = ref.watch(featuredChallengesFromBundleProvider);
+  ConsumerState<SocialDiscoverTab> createState() => _SocialDiscoverTabState();
+}
+
+class _SocialDiscoverTabState extends ConsumerState<SocialDiscoverTab> {
+  final GlobalKey _blueprintsKey = GlobalKey();
+
+  @override
+  void initState() {
+    super.initState();
+    _checkTutorial();
+  }
+
+  void _checkTutorial() {
+    Future.delayed(const Duration(milliseconds: 1000), () {
+      if (!mounted) return;
+      final tutorialNotifier = ref.read(tutorialProvider.notifier);
+      final tutorialState = ref.read(tutorialProvider);
+
+      tutorialNotifier.enableTutorialAutoShow();
+
+      if (!tutorialState.isCompleted(TutorialStep.discover) &&
+          tutorialNotifier.shouldShowTutorial()) {
+        _showTutorial();
+      }
+    });
+  }
+
+  void _showTutorial() {
+    late OverlayEntry entry;
+    entry = OverlayEntry(
+      builder: (context) => TutorialOverlay(
+        steps: [
+          TutorialStepInfo(
+            title: 'Creator Blueprints',
+            description: 'Explore complete behavioral systems designed by top performers. Adopt them to fast-track your identity shift.',
+            targetKey: _blueprintsKey,
+          ),
+          TutorialStepInfo(
+            title: 'Choose Your Path',
+            description: 'Browse through different categories of blueprints to find the one that resonates with your future self.',
+            targetKey: _blueprintsKey,
+          ),
+        ],
+        onCompleted: () {
+          ref
+              .read(tutorialProvider.notifier)
+              .completeStep(TutorialStep.discover);
+          entry.remove();
+        },
+      ),
+    );
+    Overlay.of(context).insert(entry);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final blueprintsAsync = ref.watch(allBlueprintsStreamProvider);
 
     return blueprintsAsync.when(
       data: (blueprints) {
         // Group blueprints by category
-        final grouped = <String, List<CreatorBlueprint>>{};
+        final grouped = <String, List<Blueprint>>{};
         for (final bp in blueprints) {
-          final cat = bp.category ?? 'Uncategorized';
+          final cat = bp.category;
           grouped.putIfAbsent(cat, () => []).add(bp);
         }
 
         final categories = grouped.keys.toList()..sort();
 
-        return ListView(
+        if (categories.isEmpty) {
+          return const _EmptyState();
+        }
+
+        return RefreshIndicator(
+          onRefresh: () async {
+            ref.invalidate(allBlueprintsStreamProvider);
+          },
+          color: EmergeColors.teal,
+          child: ListView(
           padding: const EdgeInsets.only(top: 16, bottom: 40),
-          children: [
-            // Featured Challenges section
-            if (featuredChallenges.isNotEmpty)
-              _FeaturedChallengesStrip(challenges: featuredChallenges),
-
-            // Blueprint categories
-            if (categories.isEmpty && featuredChallenges.isEmpty)
-              const _EmptyState()
-            else
-              ...categories.map((category) {
-                final items = grouped[category]!;
-                return _CategoryStrip(title: category, items: items);
-              }),
-          ],
-        );
+          children: categories.asMap().entries.map((entry) {
+            final category = entry.value;
+            final items = grouped[category]!;
+            return _CategoryStrip(
+              key: entry.key == 0 ? _blueprintsKey : null,
+              title: category,
+              items: items,
+            );
+          }).toList(),
+        ),
+      );
       },
-      loading: () => const Center(
-        child: CircularProgressIndicator(color: EmergeColors.teal),
-      ),
+      loading: () => _buildShimmerLoading(),
       error: (err, stack) => Center(
-        child: Text(
-          'Error: $err',
-          style: const TextStyle(color: Colors.redAccent),
+        child: AppErrorWidget(
+          message: 'Could not load blueprints',
+          onRetry: () => ref.refresh(allBlueprintsStreamProvider),
         ),
       ),
     );
   }
-}
 
-class _FeaturedChallengesStrip extends StatelessWidget {
-  final List<Challenge> challenges;
-
-  const _FeaturedChallengesStrip({required this.challenges});
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                'FEATURED QUESTS',
-                style: GoogleFonts.outfit(
-                  color: EmergeColors.teal,
-                  fontSize: 14,
-                  fontWeight: FontWeight.bold,
-                  letterSpacing: 1.2,
-                ),
+  Widget _buildShimmerLoading() {
+    return ListView.builder(
+      padding: const EdgeInsets.symmetric(vertical: 24),
+      itemCount: 3,
+      itemBuilder: (context, index) => Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+            child: SkeletonShimmer(width: 150, height: 24),
+          ),
+          SizedBox(
+            height: 240,
+            child: ListView.builder(
+              scrollDirection: Axis.horizontal,
+              padding: const EdgeInsets.symmetric(horizontal: 12),
+              itemCount: 3,
+              itemBuilder: (context, i) => Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 8),
+                child: SkeletonShimmer(width: 240, height: 200, borderRadius: 20),
               ),
-              const Icon(Icons.star_rounded, color: EmergeColors.teal, size: 18),
-            ],
-          ),
-        ),
-        const Gap(8),
-        SizedBox(
-          height: 220,
-          child: ListView.builder(
-            scrollDirection: Axis.horizontal,
-            padding: const EdgeInsets.symmetric(horizontal: 12),
-            itemCount: challenges.length,
-            itemBuilder: (context, index) {
-              final challenge = challenges[index];
-              return _ChallengeStripCard(challenge: challenge);
-            },
-          ),
-        ),
-        const Gap(32),
-      ],
-    );
-  }
-}
-
-class _ChallengeStripCard extends StatelessWidget {
-  final Challenge challenge;
-
-  const _ChallengeStripCard({required this.challenge});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: 300,
-      margin: const EdgeInsets.symmetric(horizontal: 8),
-      child: GestureDetector(
-        onTap: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => ChallengeDetailScreen(challenge: challenge),
             ),
-          );
-        },
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(20),
-          child: Stack(
-            fit: StackFit.expand,
-            children: [
-              // Background Image
-              challenge.imageUrl.isNotEmpty
-                  ? (challenge.imageUrl.startsWith('images/')
-                      ? Image.asset(challenge.imageUrl, fit: BoxFit.cover)
-                      : Image.network(challenge.imageUrl, fit: BoxFit.cover))
-                  : Container(color: Colors.white10),
-              
-              // Gradient Overlay
-              Container(
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
-                    colors: [
-                      Colors.transparent,
-                      Colors.black.withValues(alpha:0.9),
-                    ],
-                  ),
-                ),
-              ),
-
-              // Content
-              Padding(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  children: [
-                    Row(
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                          decoration: BoxDecoration(
-                            color: Colors.black45,
-                            borderRadius: BorderRadius.circular(8),
-                            border: Border.all(color: Colors.white10),
-                          ),
-                          child: Text(
-                            '${challenge.xpReward} XP',
-                            style: const TextStyle(
-                              color: EmergeColors.yellow,
-                              fontSize: 10,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ),
-                        const Gap(8),
-                        const Icon(Icons.people, color: Colors.white70, size: 14),
-                        const Gap(4),
-                        Text(
-                          '${challenge.participants}',
-                          style: const TextStyle(color: Colors.white70, fontSize: 11),
-                        ),
-                      ],
-                    ),
-                    const Gap(8),
-                    Text(
-                      challenge.title,
-                      style: GoogleFonts.outfit(
-                        color: Colors.white,
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const Gap(4),
-                    Text(
-                      challenge.description,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(color: Colors.white60, fontSize: 12),
-                    ),
-                  ],
-                ),
-              ),
-            ],
           ),
-        ),
+          const SizedBox(height: 24),
+        ],
       ),
     );
   }
@@ -215,9 +149,9 @@ class _ChallengeStripCard extends StatelessWidget {
 
 class _CategoryStrip extends StatelessWidget {
   final String title;
-  final List<CreatorBlueprint> items;
+  final List<Blueprint> items;
 
-  const _CategoryStrip({required this.title, required this.items});
+  const _CategoryStrip({super.key, required this.title, required this.items});
 
   @override
   Widget build(BuildContext context) {
@@ -260,7 +194,7 @@ class _CategoryStrip extends StatelessWidget {
 }
 
 class _BlueprintStripCard extends StatelessWidget {
-  final CreatorBlueprint blueprint;
+  final Blueprint blueprint;
 
   const _BlueprintStripCard({required this.blueprint});
 
@@ -345,7 +279,7 @@ class _BlueprintStripCard extends StatelessWidget {
             ),
             const Gap(12),
             Text(
-              blueprint.blueprintName,
+              blueprint.title,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               style: GoogleFonts.outfit(

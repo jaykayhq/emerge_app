@@ -41,7 +41,7 @@ final class PaywallControllerProvider
   }
 }
 
-String _$paywallControllerHash() => r'ebc96563d9e427a582d07c9f194f80992073b56c';
+String _$paywallControllerHash() => r'96ed0e3cf8cdab923a4a5adbd90096d95f6ce4b4';
 
 abstract class _$PaywallController extends $Notifier<PaywallState> {
   PaywallState build();

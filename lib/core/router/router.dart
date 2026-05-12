@@ -1,4 +1,3 @@
-import 'package:emerge_app/core/utils/app_logger.dart';
 import 'package:emerge_app/core/presentation/screens/splash_screen.dart';
 import 'package:emerge_app/core/presentation/screens/world_splash_screen.dart';
 import 'package:emerge_app/core/presentation/widgets/scaffold_with_nav_bar.dart';
@@ -14,8 +13,14 @@ import 'package:emerge_app/features/profile/presentation/screens/future_self_stu
 import 'package:emerge_app/features/gamification/presentation/widgets/level_up_listener.dart';
 import 'package:emerge_app/features/habits/presentation/screens/advanced_create_habit_dialog.dart';
 import 'package:emerge_app/features/habits/presentation/screens/habit_detail_screen.dart';
+import 'package:emerge_app/features/world_map/presentation/screens/level_immersive_screen.dart';
+import 'package:emerge_app/features/social/presentation/screens/leaderboard_screen.dart';
+import 'package:emerge_app/features/gamification/presentation/screens/level_up_reward_screen.dart';
+import 'package:emerge_app/features/world_map/domain/models/archetype_maps_catalog.dart';
+import 'package:emerge_app/features/auth/domain/entities/user_extension.dart';
 
 import 'package:emerge_app/features/gamification/presentation/screens/weekly_recap_screen.dart';
+import 'package:emerge_app/features/gamification/presentation/screens/recap_hub_screen.dart';
 
 import 'package:emerge_app/features/ai/presentation/screens/ai_reflections_screen.dart';
 import 'package:emerge_app/features/onboarding/presentation/providers/onboarding_provider.dart';
@@ -32,6 +37,7 @@ import 'package:emerge_app/features/social/presentation/screens/social_screen.da
 import 'package:emerge_app/features/social/presentation/screens/challenges_screen.dart';
 import 'package:emerge_app/features/social/presentation/screens/challenge_detail_screen.dart';
 import 'package:emerge_app/features/social/presentation/screens/friends_screen.dart';
+import 'package:emerge_app/features/social/presentation/screens/all_tribes_screen.dart';
 import 'package:emerge_app/features/monetization/presentation/screens/habit_contract_screen.dart';
 
 
@@ -46,27 +52,12 @@ final _rootNavigatorKey = GlobalKey<NavigatorState>(debugLabel: 'root');
 
 @riverpod
 GoRouter router(Ref ref) {
-  // Create a ValueNotifier to trigger router refreshes
+  // Watch auth state to rebuild router only on login/logout
+  final authState = ref.watch(authStateChangesProvider);
+  
+  // Create a refresh notifier for onboarding completion only
   final refreshNotifier = ValueNotifier<int>(0);
-
-  // Cache onboarding completion to avoid redundant checks
-  bool? cachedOnboardingComplete;
-
-  // Listen to all dependencies that should trigger a redirect
-  ref.listen(authStateChangesProvider, (_, _) {
-    cachedOnboardingComplete = null; // Reset cache on auth change
-    refreshNotifier.value++;
-  });
   ref.listen(onboardingControllerProvider, (_, _) => refreshNotifier.value++);
-  ref.listen(userStatsStreamProvider, (_, _) {
-    // Don't reset cache if we already know onboarding is complete
-    if (cachedOnboardingComplete != true) {
-      refreshNotifier.value++;
-    }
-  });
-
-  // Dispose the notifier when the provider is disposed
-  ref.onDispose(refreshNotifier.dispose);
 
   return GoRouter(
     navigatorKey: _rootNavigatorKey,
@@ -75,10 +66,12 @@ GoRouter router(Ref ref) {
     redirect: (context, state) {
       final path = state.uri.path;
 
-      // Always allow splash screen to run its course
+      // 1. Always allow splash screen
       if (path == '/splash') return null;
 
-      final authState = ref.read(authStateChangesProvider);
+      // 2. Wait for auth state to initialize
+      if (authState.isLoading) return null;
+
       final isLoggedIn = authState.value?.isNotEmpty ?? false;
       final isFirstLaunch = ref.read(onboardingControllerProvider);
 
@@ -86,80 +79,41 @@ GoRouter router(Ref ref) {
       final isWelcome = path == '/welcome';
       final isLogin = path == '/login';
       final isSignup = path == '/signup';
-      final isOnboardingPath = path.startsWith('/onboarding');
       final isAuthScreen = isWelcome || isLogin || isSignup;
+      final isOnboardingPath = path.startsWith('/onboarding');
 
-      AppLogger.d(
-        'Router Redirect: path=$path, isLoggedIn=$isLoggedIn, isFirstLaunch=$isFirstLaunch',
-      );
-
-      // NOT LOGGED IN: Only allow welcome/login/signup
+      // 3. Handle Unauthenticated Users
       if (!isLoggedIn) {
         if (isAuthScreen) return null;
-        // First time users go to welcome, returning users go to login
         return isFirstLaunch ? '/welcome' : '/login';
       }
 
-      // LOGGED IN: Check onboarding progress
-      // Skip user stats check if we've already confirmed onboarding is complete
-      if (cachedOnboardingComplete == true) {
-        // Onboarding known to be complete - allow all paths
-        AppLogger.d('Router: Using cached onboarding complete=true');
-        if (isAuthScreen) return '/';
-        return null;
-      }
+      // 4. Handle Authenticated Users
+      
+      // Use ref.read for stats to avoid redundant rebuilds
+      final statsAsync = ref.read(userStatsStreamProvider);
+      
+      // If stats are loading, allow current path to continue (prevents loops)
+      if (statsAsync.isLoading) return null;
 
-      final userStatsAsync = ref.read(userStatsStreamProvider);
-      final userStats = userStatsAsync.value;
-
-      // If user stats are still loading, allow current path only if it's an onboarding path
-      // This prevents landing on the dashboard briefly for new users
-      if (userStats == null || userStatsAsync.isLoading) {
-        if (isOnboardingPath) {
-          return null;
-        }
-
-        // For returning users (not first launch on device), allow dashboard/tabs while loading
-        // For new users, wait for user stats to determine actual onboarding status
-        if (!isFirstLaunch) {
-          if (path == '/' ||
-              path == '/timeline' ||
-              path == '/tribes' ||
-              path == '/profile') {
-            return null;
-          }
-        }
-        // Don't redirect for new users - wait for user stats to load
-        return null;
-      }
+      final userStats = statsAsync.value;
+      if (userStats == null) return null;
 
       final onboardingProgress = userStats.onboardingProgress;
-      final isOnboardingComplete = onboardingProgress >= 4;
+      // Onboarding is complete if progress >= 3 OR we have a completion timestamp
+      // Threshold is 3 because the final step (World Reveal) marks the start of the app
+      final isOnboardingComplete = onboardingProgress >= 3 || userStats.onboardingCompletedAt != null;
 
-      // Cache the result if onboarding is complete
-      if (isOnboardingComplete) {
-        cachedOnboardingComplete = true;
-      }
-
-      AppLogger.d(
-        'Router: onboardingProgress=$onboardingProgress, isOnboardingComplete=$isOnboardingComplete, path=$path',
-      );
-
-      // If onboarding is incomplete, only allow onboarding paths
+      // If onboarding is incomplete, restrict to onboarding flow
       if (!isOnboardingComplete) {
-        if (isOnboardingPath) {
-          // Allow ALL onboarding paths - don't redirect while in onboarding flow
-          // This prevents the redirect loop
-          return null;
-        }
-        // Redirect to the appropriate onboarding step
+        if (isOnboardingPath) return null;
         return _getOnboardingRouteForProgress(onboardingProgress);
       }
 
-      // Onboarding complete: Allow all paths, redirect auth screens to home
+      // Onboarding is complete:
+      // Redirect auth screens to home, otherwise allow all paths (unblocks bottom nav)
       if (isAuthScreen) return '/';
-
-      // Allow all other paths for authenticated users with complete onboarding
+      
       return null;
     },
     routes: [
@@ -218,9 +172,41 @@ GoRouter router(Ref ref) {
                 builder: (context, state) => const WorldMapScreen(),
                 routes: [
                   GoRoute(
+                    path: 'recap-hub',
+                    parentNavigatorKey: _rootNavigatorKey,
+                    builder: (context, state) => const RecapHubScreen(),
+                  ),
+                  GoRoute(
                     path: 'recap',
                     parentNavigatorKey: _rootNavigatorKey,
-                    builder: (context, state) => const WeeklyRecapScreen(),
+                    builder: (context, state) {
+                      final id = state.uri.queryParameters['id'];
+                      final startStr = state.uri.queryParameters['start'];
+                      final endStr = state.uri.queryParameters['end'];
+                      
+                      DateTime? start;
+                      DateTime? end;
+                      
+                      if (startStr != null) start = DateTime.tryParse(startStr);
+                      if (endStr != null) end = DateTime.tryParse(endStr);
+                      
+                      return WeeklyRecapScreen(
+                        recapId: id,
+                        startDate: start,
+                        endDate: end,
+                      );
+                    },
+                  ),
+                  GoRoute(
+                    path: 'node/:nodeId',
+                    parentNavigatorKey: _rootNavigatorKey,
+                    builder: (context, state) {
+                      final id = state.pathParameters['nodeId']!;
+                      final archetype = ref.read(userStatsStreamProvider).value?.archetype ?? UserArchetype.scholar;
+                      final config = ArchetypeMapsCatalog.getMapForArchetype(archetype);
+                      final node = config.nodes.firstWhere((n) => n.id == id, orElse: () => config.nodes.first);
+                      return LevelImmersiveScreen(node: node, config: config);
+                    },
                   ),
                 ],
               ),
@@ -279,6 +265,20 @@ GoRouter router(Ref ref) {
                     parentNavigatorKey: _rootNavigatorKey,
                     builder: (context, state) => const HabitContractScreen(),
                   ),
+                  GoRoute(
+                    path: 'leaderboard',
+                    parentNavigatorKey: _rootNavigatorKey,
+                    builder: (context, state) {
+                      final tabStr = state.uri.queryParameters['tab'];
+                      final tabIndex = int.tryParse(tabStr ?? '0') ?? 0;
+                      return LeaderboardScreen(initialTabIndex: tabIndex);
+                    },
+                  ),
+                  GoRoute(
+                    path: 'all',
+                    parentNavigatorKey: _rootNavigatorKey,
+                    builder: (context, state) => const AllTribesScreen(),
+                  ),
                 ],
               ),
             ],
@@ -311,6 +311,15 @@ GoRouter router(Ref ref) {
                     path: 'goldilocks',
                     builder: (context, state) => const GoldilocksScreen(),
                   ),
+                  GoRoute(
+                    path: 'level-up-reward/:level',
+                    parentNavigatorKey: _rootNavigatorKey,
+                    builder: (context, state) {
+                      final levelStr = state.pathParameters['level'];
+                      final level = int.tryParse(levelStr ?? '1') ?? 1;
+                      return LevelUpRewardScreen(celebratedLevel: level);
+                    },
+                  ),
                 ],
               ),
             ],
@@ -322,16 +331,17 @@ GoRouter router(Ref ref) {
 }
 
 /// Helper function to get the onboarding route for a given progress level
-/// New flow: 0 = identity-studio, 1 = first-habit, 2 = world-reveal, 3+ = complete
+/// Flow: 0-1 = identity-studio, 2 = first-habit, 3 = world-reveal, 4+ = complete
 String _getOnboardingRouteForProgress(int progress) {
   switch (progress) {
     case 0:
-      return '/onboarding/identity-studio';
     case 1:
-      return '/onboarding/first-habit';
+      return '/onboarding/identity-studio';
     case 2:
+      return '/onboarding/first-habit';
+    case 3:
       return '/onboarding/world-reveal';
     default:
-      return '/'; // All onboarding complete, go to world
+      return '/'; // Should reach this case only briefly before isOnboardingComplete takes over
   }
 }

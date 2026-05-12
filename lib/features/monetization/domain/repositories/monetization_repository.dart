@@ -1,6 +1,9 @@
 import 'package:fpdart/fpdart.dart';
 import 'package:purchases_flutter/purchases_flutter.dart';
 
+/// Domain interface for monetization operations.
+/// Infrastructure concerns (caching, local storage) are NOT part of this interface —
+/// they are handled in the concrete [RevenueCatRepository] implementation.
 abstract class MonetizationRepository {
   /// Initialize the monetization SDK (e.g. RevenueCat)
   Future<void> initialize({String? uid});

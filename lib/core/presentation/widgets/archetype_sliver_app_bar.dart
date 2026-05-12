@@ -8,6 +8,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 class ArchetypeSliverAppBar extends ConsumerWidget {
   final String title;
   final Widget? badge;
+  final Widget? syncIndicator;
   final PreferredSizeWidget? bottom;
   final List<Widget>? actions;
 
@@ -15,6 +16,7 @@ class ArchetypeSliverAppBar extends ConsumerWidget {
     super.key,
     required this.title,
     this.badge,
+    this.syncIndicator,
     this.bottom,
     this.actions,
   });
@@ -61,6 +63,10 @@ class ArchetypeSliverAppBar extends ConsumerWidget {
             if (badge != null) ...[
               const SizedBox(width: 8),
               badge!,
+            ],
+            if (syncIndicator != null) ...[
+              const SizedBox(width: 8),
+              syncIndicator!,
             ],
           ],
         ),

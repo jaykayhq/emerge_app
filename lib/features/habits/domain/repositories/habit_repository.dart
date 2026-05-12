@@ -1,7 +1,7 @@
 import 'package:emerge_app/core/error/failure.dart';
 import 'package:emerge_app/features/habits/domain/entities/habit.dart';
 import 'package:emerge_app/features/habits/domain/models/habit_activity.dart';
-import 'package:emerge_app/features/social/domain/entities/social_entities.dart';
+import 'package:emerge_app/features/blueprints/domain/models/blueprint.dart';
 import 'package:fpdart/fpdart.dart';
 
 abstract class HabitRepository {
@@ -18,7 +18,6 @@ abstract class HabitRepository {
   Future<Habit?> getHabit(String habitId);
 
   // Verifies that habit stacking logic is supported by the repository
-  // Verifies that habit stacking logic is supported by the repository
   Future<List<Habit>> getHabitsByAnchor(String anchorHabitId);
 
   Future<List<HabitActivity>> getActivity(
@@ -29,7 +28,7 @@ abstract class HabitRepository {
 
   Future<Either<Failure, Unit>> createHabitsFromBlueprint({
     required String userId,
-    required CreatorBlueprint blueprint,
+    required Blueprint blueprint,
     String? reminderTime,
   });
 }

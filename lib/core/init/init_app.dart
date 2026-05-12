@@ -1,19 +1,34 @@
 import 'package:emerge_app/core/config/app_config.dart';
-import 'package:emerge_app/core/data/seed_runner.dart';
 import 'package:emerge_app/core/security/app_check_service.dart';
 import 'package:emerge_app/core/services/notification_service.dart';
-import 'package:emerge_app/features/monetization/data/repositories/revenue_cat_repository.dart';
 import 'package:emerge_app/features/onboarding/data/repositories/local_settings_repository.dart';
+import 'package:emerge_app/core/services/local_cache_service.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter/foundation.dart' show kDebugMode, kIsWeb;
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:google_mobile_ads/google_mobile_ads.dart';
-import 'package:firebase_auth/firebase_auth.dart' as firebase_auth;
 import 'package:emerge_app/firebase_options.dart';
+
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 Future<void> initApp() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Initialize Environment Variables first so they are available to other services
+  // On web, flutter_dotenv fetches .env via HTTP and throws if not served as an asset.
+  // We skip loading on web and fall back to AppConfig defaults/hardcoded values.
+  if (!kIsWeb) {
+    try {
+      await dotenv.load(fileName: ".env");
+      debugPrint('✅ .env loaded');
+    } catch (e) {
+      debugPrint('ℹ️ .env file not found - using defaults');
+    }
+  } else {
+    debugPrint('ℹ️ Skipping .env load on web - using defaults');
+  }
 
   // Set preferred orientations (no-op on web but guard for clarity)
   if (!kIsWeb) {
@@ -22,6 +37,24 @@ Future<void> initApp() async {
 
   // Initialize Firebase (Required before all others)
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+
+  // Initialize Local Cache (Hive) eagerly so localCacheServiceProvider is
+  // synchronous throughout the app. This MUST be called before runApp().
+  if (!kIsWeb) {
+    try {
+      await LocalCacheService.initialize();
+      debugPrint('✅ LocalCacheService (Hive) initialized');
+    } catch (e) {
+      debugPrint('⚠️ LocalCacheService initialization failed: $e');
+    }
+  }
+
+  // Enable Firestore Offline Persistence
+  FirebaseFirestore.instance.settings = const Settings(
+    persistenceEnabled: true,
+    cacheSizeBytes: Settings.CACHE_SIZE_UNLIMITED,
+  );
+  debugPrint('✅ Firestore offline persistence enabled');
 
   // Initialize App Check immediately after Firebase and BEFORE any other Firebase service
   if (AppConfig.enableFirebaseAppCheck) {
@@ -35,15 +68,8 @@ Future<void> initApp() async {
     debugPrint('⚠️ Firebase App Check is disabled via config');
   }
 
-  // Seed initial data (clubs and challenges) - safe to run multiple times
-  if (kDebugMode && !kIsWeb) {
-    try {
-      await seedOfficialClubs();
-      await seedChallenges();
-    } catch (e) {
-      debugPrint('⚠️ Seeding initial data failed: $e');
-    }
-  }
+  // Seed initial data (handled post-login or via admin script)
+  // Seeding calls removed from here to prevent permission errors before authentication.
 
   // 1. Initialize Remote Config first (as other services may depend on its values)
   try {
@@ -56,29 +82,37 @@ Future<void> initApp() async {
   // 2. Parallelize the remaining initializations to reduce startup time
   // Each task is wrapped in its own try-catch to ensure one failure doesn't block the others
   await Future.wait([
-    // AdMob
+    // AdMob with UMP SDK Consent
     () async {
       if (!kIsWeb) {
         try {
-          await MobileAds.instance.initialize();
-          debugPrint('✅ AdMob initialized');
+          final params = ConsentRequestParameters();
+          ConsentInformation.instance.requestConsentInfoUpdate(
+            params,
+            () async {
+              if (await ConsentInformation.instance.isConsentFormAvailable()) {
+                ConsentForm.loadAndShowConsentFormIfRequired((formError) async {
+                  if (formError == null) {
+                    await MobileAds.instance.initialize();
+                    debugPrint('✅ AdMob initialized after consent');
+                  } else {
+                    debugPrint('⚠️ Consent form error: $formError');
+                    await MobileAds.instance.initialize(); // Init anyway if error per AdMob docs
+                  }
+                });
+              } else {
+                 // No form available, initialize directly
+                 await MobileAds.instance.initialize();
+                 debugPrint('✅ AdMob initialized (no consent required)');
+              }
+            },
+            (error) async {
+              debugPrint('⚠️ Consent info update error: $error');
+              await MobileAds.instance.initialize(); // Fallback initialization
+            },
+          );
         } catch (e) {
           debugPrint('⚠️ AdMob initialization failed: $e');
-        }
-      }
-    }(),
-
-    // RevenueCat
-    () async {
-      if (!kIsWeb) {
-        try {
-          final revenueCatRepo = RevenueCatRepository();
-          final currentUser = firebase_auth.FirebaseAuth.instance.currentUser;
-          await revenueCatRepo.initialize(uid: currentUser?.uid);
-          debugPrint('✅ RevenueCat initialized');
-          // Verification check is deferred/moved to internal repository logic or handled lazily
-        } catch (e) {
-          debugPrint('⚠️ RevenueCat initialization failed: $e');
         }
       }
     }(),
@@ -87,9 +121,10 @@ Future<void> initApp() async {
     () async {
       try {
         await LocalSettingsRepository().init();
-        debugPrint('✅ Local Settings initialized');
+        // LocalCacheService is already initialized above via LocalCacheService.initialize()
+        debugPrint('✅ Local Storage (Hive) initialized');
       } catch (e) {
-        debugPrint('⚠️ Local Settings initialization failed: $e');
+        debugPrint('⚠️ Local Storage initialization failed: $e');
       }
     }(),
 

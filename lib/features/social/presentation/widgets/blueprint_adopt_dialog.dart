@@ -1,10 +1,10 @@
 import 'package:emerge_app/core/theme/emerge_colors.dart';
-import 'package:emerge_app/features/social/domain/entities/social_entities.dart';
+import 'package:emerge_app/features/blueprints/domain/models/blueprint.dart';
 import 'package:flutter/material.dart';
 import 'package:gap/gap.dart';
 
 class BlueprintAdoptDialog extends StatefulWidget {
-  final CreatorBlueprint blueprint;
+  final Blueprint blueprint;
   final Function(String? reminderTime) onAdopt;
 
   const BlueprintAdoptDialog({
@@ -50,7 +50,7 @@ class _BlueprintAdoptDialogState extends State<BlueprintAdoptDialog> {
             ),
             const Gap(16),
             Text(
-              'Apply this time to all ${widget.blueprint.habitTitles.length} habits in this stack.',
+              'Apply this time to all ${widget.blueprint.habits.length} habits in this stack.',
               style: TextStyle(color: Colors.white.withValues(alpha: 0.6)),
             ),
             const Gap(24),

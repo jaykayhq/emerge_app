@@ -47,7 +47,7 @@ final class FeaturedChallengesProvider
 }
 
 String _$featuredChallengesHash() =>
-    r'a652397d57315c702d53e27cddea549a242fc414';
+    r'a3dd3c2f6e464b345577ee1edbe8da942013ee54';
 
 @ProviderFor(allChallenges)
 final allChallengesProvider = AllChallengesProvider._();

@@ -28,7 +28,7 @@ class _WorldSplashScreenState extends State<WorldSplashScreen>
     // Automatically navigate after animations complete
     Future.delayed(const Duration(milliseconds: 1800), () {
       if (mounted) {
-        context.go('/world');
+        context.go('/');
       }
     });
   }
@@ -81,13 +81,13 @@ class _WorldSplashScreenState extends State<WorldSplashScreen>
                           shape: BoxShape.circle,
                           gradient: RadialGradient(
                             colors: [
-                              AppTheme.primary.withValues(alpha:0.8),
-                              AppTheme.primary.withValues(alpha:0.2),
+                              AppTheme.primary.withValues(alpha: 0.8),
+                              AppTheme.primary.withValues(alpha: 0.2),
                             ],
                           ),
                           boxShadow: [
                             BoxShadow(
-                              color: AppTheme.primary.withValues(alpha:0.5),
+                              color: AppTheme.primary.withValues(alpha: 0.5),
                               blurRadius: 40,
                               spreadRadius: 10,
                             ),
@@ -121,7 +121,7 @@ class _WorldSplashScreenState extends State<WorldSplashScreen>
                           letterSpacing: 4,
                           shadows: [
                             Shadow(
-                              color: AppTheme.primary.withValues(alpha:0.8),
+                              color: AppTheme.primary.withValues(alpha: 0.8),
                               blurRadius: 20,
                             ),
                           ],
@@ -137,7 +137,7 @@ class _WorldSplashScreenState extends State<WorldSplashScreen>
                   Text(
                         'Your sanctuary awaits',
                         style: TextStyle(
-                          color: Colors.white.withValues(alpha:0.8),
+                          color: Colors.white.withValues(alpha: 0.8),
                           fontSize: 16,
                           fontStyle: FontStyle.italic,
                           letterSpacing: 1,
@@ -155,7 +155,7 @@ class _WorldSplashScreenState extends State<WorldSplashScreen>
                     child: ClipRRect(
                       borderRadius: BorderRadius.circular(10),
                       child: LinearProgressIndicator(
-                        backgroundColor: Colors.white.withValues(alpha:0.1),
+                        backgroundColor: Colors.white.withValues(alpha: 0.1),
                         valueColor: AlwaysStoppedAnimation<Color>(
                           AppTheme.primary,
                         ),
@@ -176,7 +176,7 @@ class _WorldSplashScreenState extends State<WorldSplashScreen>
                     radius: 0.8,
                     colors: [
                       Colors.transparent,
-                      Colors.black.withValues(alpha:0.6),
+                      Colors.black.withValues(alpha: 0.6),
                     ],
                   ),
                 ),
@@ -190,23 +190,23 @@ class _WorldSplashScreenState extends State<WorldSplashScreen>
               right: 0,
               child: Center(
                 child: GestureDetector(
-                  onTap: () => context.go('/world'),
+                  onTap: () => context.go('/'),
                   child: Container(
                     padding: const EdgeInsets.symmetric(
                       horizontal: 16,
                       vertical: 8,
                     ),
                     decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha:0.1),
+                      color: Colors.white.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(20),
                       border: Border.all(
-                        color: Colors.white.withValues(alpha:0.2),
+                        color: Colors.white.withValues(alpha: 0.2),
                       ),
                     ),
                     child: Text(
                       'Tap to enter',
                       style: TextStyle(
-                        color: Colors.white.withValues(alpha:0.7),
+                        color: Colors.white.withValues(alpha: 0.7),
                         fontSize: 12,
                         letterSpacing: 1,
                       ),

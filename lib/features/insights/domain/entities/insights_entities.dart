@@ -22,8 +22,36 @@ class Recap {
     required this.summary,
     required this.consistencyChange,
   });
+ 
+  Map<String, dynamic> toMap() {
+    return {
+      'id': id,
+      'period': period,
+      'dateRange': dateRange,
+      'habitsCompleted': habitsCompleted,
+      'perfectDays': perfectDays,
+      'xpGained': xpGained,
+      'focusTime': focusTime,
+      'summary': summary,
+      'consistencyChange': consistencyChange,
+    };
+  }
+ 
+  factory Recap.fromMap(Map<String, dynamic> map) {
+    return Recap(
+      id: map['id'] as String? ?? 'empty',
+      period: map['period'] as String? ?? 'Weekly',
+      dateRange: map['dateRange'] as String? ?? '',
+      habitsCompleted: map['habitsCompleted'] as int? ?? 0,
+      perfectDays: map['perfectDays'] as int? ?? 0,
+      xpGained: map['xpGained'] as int? ?? 0,
+      focusTime: map['focusTime'] as String? ?? '0h',
+      summary: map['summary'] as String? ?? '',
+      consistencyChange: (map['consistencyChange'] as num?)?.toDouble() ?? 0.0,
+    );
+  }
 }
-
+ 
 class Reflection {
   final String id;
   final String date;
@@ -32,7 +60,7 @@ class Reflection {
   final String type; // e.g., "insight", "pattern", "suggestion", "daily"
   final double? moodValue; // 0.0-1.0 for daily reflections
   final DateTime? createdAt;
-
+ 
   const Reflection({
     required this.id,
     required this.date,
@@ -42,7 +70,7 @@ class Reflection {
     this.moodValue,
     this.createdAt,
   });
-
+ 
   /// Creates a map for Firestore serialization.
   /// Note: createdAt should be set to FieldValue.serverTimestamp() when saving.
   Map<String, dynamic> toMap({bool useServerTimestamp = true}) {
@@ -53,28 +81,29 @@ class Reflection {
       'content': content,
       'type': type,
       if (moodValue != null) 'moodValue': moodValue,
+      if (createdAt != null) 'createdAt': createdAt!.toIso8601String(),
     };
-
-    // Only include createdAt if we're not using server timestamp
-    // When useServerTimestamp is true, the repository should handle it
-    if (!useServerTimestamp && createdAt != null) {
-      map['createdAt'] = Timestamp.fromDate(createdAt!);
-    }
-
+ 
     return map;
   }
-
-  factory Reflection.fromMap(Map<String, dynamic> map, String docId) {
+ 
+  factory Reflection.fromMap(Map<String, dynamic> map, [String? docId]) {
+    final id = docId ?? map['id'] as String? ?? '';
+    DateTime? createdAt;
+    if (map['createdAt'] is Timestamp) {
+      createdAt = (map['createdAt'] as Timestamp).toDate();
+    } else if (map['createdAt'] is String) {
+      createdAt = DateTime.tryParse(map['createdAt'] as String);
+    }
+ 
     return Reflection(
-      id: docId,
+      id: id,
       date: map['date'] as String? ?? '',
       title: map['title'] as String? ?? '',
       content: map['content'] as String? ?? '',
       type: map['type'] as String? ?? 'insight',
       moodValue: (map['moodValue'] as num?)?.toDouble(),
-      createdAt: map['createdAt'] is Timestamp
-          ? (map['createdAt'] as Timestamp).toDate()
-          : null,
+      createdAt: createdAt,
     );
   }
 }

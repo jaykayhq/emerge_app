@@ -4,12 +4,19 @@ import 'package:emerge_app/features/monetization/data/repositories/revenue_cat_r
 import 'package:emerge_app/features/monetization/domain/repositories/monetization_repository.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
+import 'package:emerge_app/core/services/local_cache_service.dart';
 
 part 'subscription_provider.g.dart';
 
 @Riverpod(keepAlive: true)
 MonetizationRepository monetizationRepository(Ref ref) {
-  return RevenueCatRepository();
+  try {
+    final cacheService = ref.watch(localCacheServiceProvider);
+    return RevenueCatRepository(cacheService: cacheService);
+  } catch (_) {
+    // Cache not ready yet — initialize without cache (no offline premium status)
+    return RevenueCatRepository();
+  }
 }
 
 @Riverpod(keepAlive: true)
@@ -27,43 +34,45 @@ class IsPremium extends _$IsPremium {
     }
 
     // Initialize SDK with user ID on first build
-    await repo.initialize(uid: user.id);
+    if (user.id.isNotEmpty) {
+      await repo.initialize(uid: user.id);
+    }
 
-    // Listen to real-time subscription changes from RevenueCat SDK
-    // This is still needed for immediate UI updates during purchases
-    final sub = repo.premiumStatusStream.listen((isPremium) {
-      state = AsyncValue.data(isPremium);
+    // Initial check from RevenueCat SDK (Source of Truth)
+    final sdkResult = await repo.isPremium;
+    bool isPremium = sdkResult.fold(
+      (error) {
+        AppLogger.e('Initial premium check failed', error);
+        return false;
+      },
+      (val) => val,
+    );
+
+    // Listen to real-time subscription changes for immediate UI updates
+    final sub = repo.premiumStatusStream.listen((isPremiumUpdate) {
+      state = AsyncValue.data(isPremiumUpdate);
     });
     ref.onDispose(() => sub.cancel());
 
-    // Check premium status using Firebase Auth custom claims
-    // The RevenueCat Firebase extension automatically sets these claims
-    try {
-      // Get the actual Firebase Auth user
-      final firebaseUser = FirebaseAuth.instance.currentUser;
-      if (firebaseUser == null) {
-        // Fallback to RevenueCat SDK if Firebase user is not available
-        final result = await repo.isPremium;
-        return result.fold((error) {
-          AppLogger.e('Failed to check premium status from RevenueCat', error);
-          throw error;
-        }, (isPremium) => isPremium);
-      }
+    // If SDK says premium, we are done
+    if (isPremium) return true;
 
-      // Check custom claims for premium entitlement
-      final idTokenResult = await firebaseUser.getIdTokenResult();
-      final activeEntitlements = idTokenResult.claims?['activeEntitlements'] as List<dynamic>?;
-      final isPremium = activeEntitlements?.contains('premium') ?? false;
-      
-      return isPremium;
+    // Optional: Secondary check with Firebase Custom Claims
+    // This handles cases where the extension synced but SDK cache is stale
+    try {
+      final firebaseUser = FirebaseAuth.instance.currentUser;
+      if (firebaseUser != null) {
+        // Force refresh token to get latest claims
+        final idTokenResult = await firebaseUser.getIdTokenResult(true);
+        final activeEntitlements = idTokenResult.claims?['activeEntitlements'] as List<dynamic>?;
+        if (activeEntitlements?.contains('premium') ?? false) {
+          return true;
+        }
+      }
     } catch (e) {
-      AppLogger.e('Failed to check premium status from custom claims', e);
-      // Fallback to RevenueCat SDK if custom claims fail
-      final result = await repo.isPremium;
-      return result.fold((error) {
-        AppLogger.e('Failed to check premium status from RevenueCat', error);
-        throw error;
-      }, (isPremium) => isPremium);
+      AppLogger.w('Custom claims verification skipped or failed', error: e);
     }
+
+    return isPremium;
   }
 }

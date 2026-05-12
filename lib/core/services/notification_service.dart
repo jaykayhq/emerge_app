@@ -173,7 +173,7 @@ class NotificationService {
         ),
         androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
         matchDateTimeComponents: DateTimeComponents.dayOfWeekAndTime,
-        payload: '/world/recap',
+        payload: '/recap',
       );
     } catch (e, stack) {
       debugPrint('Error scheduling weekly recap: $e');
@@ -302,6 +302,8 @@ class NotificationService {
   ) {
     final theme = ArchetypeTheme.forArchetype(archetype);
     final primaryColor = theme.primaryColor;
+    // Map to specific archetype drawable icons
+    final iconName = NotificationIcons.archetypeIcons[archetype] ?? 'push_notification_icon';
 
     return AndroidNotificationDetails(
       channelId,
@@ -311,21 +313,26 @@ class NotificationService {
       priority: Priority.high,
       color: primaryColor,
       ledColor: primaryColor,
-      largeIcon: const DrawableResourceAndroidBitmap(
-        '@drawable/push_notification_icon',
-      ),
+      largeIcon: DrawableResourceAndroidBitmap(iconName),
       styleInformation: const BigTextStyleInformation(''),
     );
   }
 
   /// Sends immediate welcome notification when a new habit is created
-  Future<void> notifyHabitCreated(Habit habit, UserArchetype archetype) async {
+  Future<void> notifyHabitCreated(
+    Habit habit,
+    UserArchetype archetype, {
+    bool archetypeNudges = true,
+  }) async {
     try {
       final channelId = NotificationChannels.channelForArchetype(archetype);
-      final message = NotificationTemplates.welcomeMessage(
-        archetype,
-        habit.title,
-      );
+      final message = archetypeNudges
+          ? NotificationTemplates.welcomeMessage(
+              archetype,
+              habit.title,
+              attribute: habit.attribute,
+            )
+          : 'New habit started: ${habit.title}';
 
       await _localNotifications.show(
         id: habit.id.hashCode,
@@ -350,14 +357,19 @@ class NotificationService {
     UserArchetype archetype,
     String reminderTime,
     HabitFrequency frequency,
-    List<int> specificDays,
-  ) async {
+    List<int> specificDays, {
+    HabitAttribute? attribute,
+    bool archetypeNudges = true,
+  }) async {
     try {
       final channelId = NotificationChannels.channelForArchetype(archetype);
-      final message = NotificationTemplates.reminderMessage(
-        archetype,
-        habitTitle,
-      );
+      final message = archetypeNudges
+          ? NotificationTemplates.reminderMessage(
+              archetype,
+              habitTitle,
+              attribute: attribute,
+            )
+          : 'Reminder: $habitTitle';
 
       // Safe parsing with validation
       int hour, minute;
@@ -470,8 +482,10 @@ class NotificationService {
     UserArchetype archetype,
     String reminderTime,
     HabitFrequency frequency,
-    List<int> specificDays,
-  ) async {
+    List<int> specificDays, {
+    HabitAttribute? attribute,
+    bool archetypeNudges = true,
+  }) async {
     try {
       // Cancel existing notification
       await cancelHabitNotifications(habitId);
@@ -483,6 +497,8 @@ class NotificationService {
         reminderTime,
         frequency,
         specificDays,
+        attribute: attribute,
+        archetypeNudges: archetypeNudges,
       );
       debugPrint('Updated habit notification: $habitTitle');
     } catch (e) {

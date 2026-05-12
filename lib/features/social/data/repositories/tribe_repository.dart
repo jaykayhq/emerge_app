@@ -89,7 +89,6 @@ class FirestoreTribeRepository implements TribeRepository {
     return _firestore
         .collection('tribes')
         .where('type', isEqualTo: TribeType.official.name)
-        .orderBy('archetypeId')
         .snapshots()
         .map(
           (snapshot) =>
@@ -131,32 +130,48 @@ class FirestoreTribeRepository implements TribeRepository {
 
   @override
   Future<void> joinClub(String userId, String tribeId) async {
-    final tribeRef = _firestore.collection('tribes').doc(tribeId);
-
     try {
-      await _firestore.runTransaction((transaction) async {
-        final snapshot = await transaction.get(tribeRef);
-        if (!snapshot.exists) {
-          debugPrint('❌ Tribe $tribeId does not exist!');
-          throw Exception('Club does not exist!');
-        }
+      final tribeRef = _firestore.collection('tribes').doc(tribeId);
 
-        transaction.update(tribeRef, {
-          'members': FieldValue.arrayUnion([userId]),
-          'memberCount': FieldValue.increment(1),
-        });
+      // Verify the club exists before joining
+      final snapshot = await tribeRef.get();
+      if (!snapshot.exists) {
+        debugPrint('❌ Tribe $tribeId does not exist!');
+        throw Exception('Club does not exist!');
+      }
 
-        final userTribeRef = _firestore
-            .collection('users')
-            .doc(userId)
-            .collection('tribes')
-            .doc(tribeId);
-        transaction.set(userTribeRef, {
-          'joinedAt': FieldValue.serverTimestamp(),
-        });
+      final batch = _firestore.batch();
 
-        debugPrint('✅ User $userId joined tribe $tribeId successfully');
+      // 1. Write contributor record (allowed: auth.uid == memberId)
+      final contributorRef = tribeRef.collection('contributors').doc(userId);
+      batch.set(contributorRef, {
+        'userId': userId,
+        'joinedAt': FieldValue.serverTimestamp(),
+        'contributionCount': 0,
+        'totalHabitsCompleted': 0,
+        'totalXpContributed': 0,
+      }, SetOptions(merge: true));
+
+      // 2. Record membership in the user's own subcollection (allowed: isOwner)
+      final userTribeRef = _firestore
+          .collection('users')
+          .doc(userId)
+          .collection('tribes')
+          .doc(tribeId);
+      batch.set(userTribeRef, {
+        'tribeId': tribeId,
+        'joinedAt': FieldValue.serverTimestamp(),
       });
+
+      // 3. Update Tribe document atomically (allowed by new firestore.rules)
+      batch.update(tribeRef, {
+        'members': FieldValue.arrayUnion([userId]),
+        'memberCount': FieldValue.increment(1),
+        'lastStatsSync': FieldValue.serverTimestamp(),
+      });
+
+      await batch.commit();
+      debugPrint('✅ User $userId joined tribe $tribeId successfully');
     } catch (e) {
       debugPrint('❌ Error joining tribe $tribeId: $e');
       rethrow;
@@ -175,23 +190,20 @@ class FirestoreTribeRepository implements TribeRepository {
 
   @override
   Future<void> leaveClub(String userId, String tribeId) async {
+    // 1. Remove user's own tribe membership record (allowed: isOwner)
+    final userTribeRef = _firestore
+        .collection('users')
+        .doc(userId)
+        .collection('tribes')
+        .doc(tribeId);
+    await userTribeRef.delete();
+
+    // 2. Update Tribe document atomically (allowed by new firestore.rules)
     final tribeRef = _firestore.collection('tribes').doc(tribeId);
-
-    await _firestore.runTransaction((transaction) async {
-      final snapshot = await transaction.get(tribeRef);
-      if (!snapshot.exists) return;
-
-      transaction.update(tribeRef, {
-        'members': FieldValue.arrayRemove([userId]),
-        'memberCount': FieldValue.increment(-1),
-      });
-
-      final userTribeRef = _firestore
-          .collection('users')
-          .doc(userId)
-          .collection('tribes')
-          .doc(tribeId);
-      transaction.delete(userTribeRef);
+    await tribeRef.update({
+      'members': FieldValue.arrayRemove([userId]),
+      'memberCount': FieldValue.increment(-1),
+      'lastStatsSync': FieldValue.serverTimestamp(),
     });
   }
 }

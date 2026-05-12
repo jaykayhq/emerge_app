@@ -1,7 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:emerge_app/features/social/domain/models/cached_stats.dart';
 import 'package:emerge_app/features/social/presentation/providers/tribes_provider.dart';
-import 'package:emerge_app/features/social/data/services/tribe_stats_service.dart';
 
 class TribeStatsCache {
   final Map<String, CachedStats> _cache = {};

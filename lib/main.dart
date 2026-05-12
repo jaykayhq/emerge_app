@@ -1,11 +1,13 @@
 import 'package:emerge_app/core/init/init_app.dart';
+import 'package:emerge_app/core/data/seed_runner.dart';
 import 'package:emerge_app/core/router/router.dart';
+import 'package:emerge_app/core/services/background_sync_service.dart';
 import 'package:emerge_app/core/theme/app_theme.dart';
 import 'package:emerge_app/core/theme/theme_provider.dart';
 import 'package:emerge_app/core/services/notification_service.dart';
+import 'package:emerge_app/core/presentation/widgets/offline_banner.dart';
 import 'package:flutter/material.dart';
 import 'dart:async';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
@@ -28,13 +30,8 @@ Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
 
 void main() async {
   await initApp();
-
-  // Initialize Environment Variables (optional - continues if .env doesn't exist)
-  try {
-    await dotenv.load(fileName: ".env");
-  } catch (e) {
-    debugPrint('.env file not found - using default configuration');
-  }
+  await BackgroundSyncService.initialize();
+  await BackgroundSyncService.schedulePeriodicSync();
 
   // Initialize ProviderContainer
   final container = ProviderContainer();
@@ -106,9 +103,19 @@ class _EmergeAppState extends ConsumerState<EmergeApp> {
 
       next.when(
         data: (user) {
-          // User signed in - start heartbeat and identify in RevenueCat
-          presenceService.startHeartbeat(user.id);
-          unawaited(monetizationRepo.identify(user.id));
+          if (user.id.isNotEmpty) {
+            // User signed in - start heartbeat and identify in RevenueCat
+            presenceService.startHeartbeat(user.id);
+            unawaited(monetizationRepo.identify(user.id));
+            
+            // Seed initial data once authenticated - safe as these check for existing data
+            unawaited(seedOfficialClubs());
+            unawaited(seedChallenges());
+            unawaited(seedBlueprints());
+          } else {
+            presenceService.stopHeartbeat();
+            unawaited(monetizationRepo.reset());
+          }
         },
         loading: () => null,
         error: (_, _) {
@@ -128,14 +135,11 @@ class _EmergeAppState extends ConsumerState<EmergeApp> {
     // Default to Explorer theme initially, will update when user stats load
     ArchetypeTheme archetype = ArchetypeTheme.forArchetype(UserArchetype.none);
 
-    // Only watch userStatsStreamProvider if user is logged in
-    // This prevents unnecessary Firestore reads on splash/login screens
+    // Only watch currentArchetype if user is logged in
+    // This prevents unnecessary rebuilds on XP/stat updates
     if (isLoggedIn) {
-      final userStatsAsync = ref.watch(userStatsStreamProvider);
-      archetype = userStatsAsync.maybeWhen(
-        data: (profile) => ArchetypeTheme.forArchetype(profile.archetype),
-        orElse: () => ArchetypeTheme.forArchetype(UserArchetype.none),
-      );
+      final currentArchetype = ref.watch(currentArchetypeProvider);
+      archetype = ArchetypeTheme.forArchetype(currentArchetype);
     }
 
     return MaterialApp.router(
@@ -145,6 +149,9 @@ class _EmergeAppState extends ConsumerState<EmergeApp> {
       themeMode: themeMode,
       routerConfig: router,
       debugShowCheckedModeBanner: false,
+      builder: (context, child) {
+        return OfflineBanner(child: child ?? const SizedBox.shrink());
+      },
     );
   }
 }
