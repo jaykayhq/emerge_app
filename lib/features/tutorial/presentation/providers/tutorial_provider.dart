@@ -24,6 +24,7 @@ enum TutorialStep {
   gamification,
   challenges,
   friends,
+  discover,
 }
 
 /// State for tracking completed tutorials

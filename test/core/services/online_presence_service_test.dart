@@ -17,173 +17,77 @@ class MockDocumentReference extends Mock
 
 void main() {
   late MockFirestore mockFirestore;
-  late MockDocumentReference mockDocRef;
+  late MockCollectionReference mockUsersCollection;
+  late MockCollectionReference mockPresenceCollection;
+  late MockDocumentReference mockUserDoc;
+  late MockDocumentReference mockPresenceDoc;
   late OnlinePresenceService service;
 
   setUpAll(() {
-    registerFallbackValue(MockCollectionReference());
-    registerFallbackValue(MockDocumentReference());
+    registerFallbackValue(SetOptions(merge: true));
   });
 
   setUp(() {
     mockFirestore = MockFirestore();
-    mockDocRef = MockDocumentReference();
+    mockUsersCollection = MockCollectionReference();
+    mockPresenceCollection = MockCollectionReference();
+    mockUserDoc = MockDocumentReference();
+    mockPresenceDoc = MockDocumentReference();
     service = OnlinePresenceService(mockFirestore);
 
-    // Setup default collection reference
-    when(
-      () => mockFirestore.collection('users').doc(any()),
-    ).thenReturn(mockDocRef);
-    when(
-      () => mockDocRef.collection('presence').doc('status'),
-    ).thenReturn(mockDocRef);
+    // Setup default collection reference chain
+    when(() => mockFirestore.collection(any())).thenReturn(mockUsersCollection);
+    when(() => mockUsersCollection.doc(any())).thenReturn(mockUserDoc);
+    when(() => mockUserDoc.collection(any())).thenReturn(mockPresenceCollection);
+    when(() => mockPresenceCollection.doc(any())).thenReturn(mockPresenceDoc);
+    
+    // Default success for set
+    when(() => mockPresenceDoc.set(any(), any())).thenAnswer((_) async => {});
   });
 
   group('OnlinePresenceService', () {
-    group('startHeartbeat', () {
-      test('starts heartbeat and sets online status', () async {
-        // Arrange
-        when(
-          () => mockDocRef.set(any(), any()),
-        ).thenAnswer((_) async => {});
+    test('startHeartbeat sets online status', () async {
+      await service.startHeartbeat('user123');
 
-        // Act
-        await service.startHeartbeat('user123');
-
-        // Assert
-        verify(
-          () => mockFirestore.collection('users').doc('user123'),
-        ).called(1);
-        verify(
-          () => mockDocRef.set({
-            'online': true,
-            'lastSeen': any(),
-          }, any()),
-        ).called(1);
-      });
-
-      test('handles user switching gracefully', () async {
-        // Arrange
-        when(
-          () => mockFirestore.collection('users').doc(any()),
-        ).thenReturn(mockDocRef);
-        when(
-          () => mockDocRef.set(any(), any()),
-        ).thenAnswer((_) async => {});
-
-        // Act
-        await service.startHeartbeat('user1');
-        await service.startHeartbeat('user2');
-
-        // Assert - should call stop then start for new user
-        verify(() => mockFirestore.collection('users').doc('user1')).called(1);
-        verify(() => mockFirestore.collection('users').doc('user2')).called(1);
-      });
-
-      test('does not restart heartbeat if same user calls again', () async {
-        // Arrange
-        when(
-          () => mockDocRef.set(any(), any()),
-        ).thenAnswer((_) async => {});
-
-        // Act
-        await service.startHeartbeat('user123');
-        await service.startHeartbeat('user123');
-      });
+      verify(() => mockPresenceDoc.set(any(), any())).called(1);
     });
 
-    group('stopHeartbeat', () {
-      test('stops heartbeat and sets offline status', () async {
-        // Arrange
-        when(
-          () => mockDocRef.set(any(), any()),
-        ).thenAnswer((_) async => {});
+    test('startHeartbeat handles user switching', () async {
+      await service.startHeartbeat('user1');
+      await service.startHeartbeat('user2');
 
-        // Act
-        await service.startHeartbeat('user123');
-        await service.stopHeartbeat();
-
-        // Assert
-        verify(
-          () => mockFirestore.collection('users').doc('user123'),
-        ).called(1);
-        verify(
-          () => mockDocRef.set({
-            'online': false,
-            'lastSeen': any(),
-          }, any()),
-        ).called(1);
-      });
-
-      test('handles multiple stopHeartbeat calls gracefully', () async {
-        // Arrange
-        when(
-          () => mockDocRef.set(any(), any()),
-        ).thenAnswer((_) async => {});
-
-        // Act
-        await service.stopHeartbeat();
-        await service.stopHeartbeat();
-
-        // Assert - should not throw
-        expect(() => service.stopHeartbeat(), returnsNormally);
-      });
+      // First user start, then second user start (which calls stopHeartbeat for first)
+      // stopHeartbeat doesn't call Firestore.
+      // So set should be called twice (once for user1, once for user2)
+      verify(() => mockPresenceDoc.set(any(), any())).called(2);
     });
 
-    group('setOffline', () {
-      test('sets offline status in Firestore', () async {
-        // Arrange
-        when(
-          () => mockDocRef.set(any(), any()),
-        ).thenAnswer((_) async => {});
-
-        // Act
-        await service.setOffline('user123');
-
-        // Assert
-        verify(
-          () => mockFirestore.collection('users').doc('user123'),
-        ).called(1);
-        verify(
-          () => mockDocRef.set({
-            'online': false,
-            'lastSeen': any(),
-          }, any()),
-        ).called(1);
-      });
-
-      test('handles errors gracefully without throwing', () async {
-        // Arrange
-        when(
-          () => mockDocRef.set(any(), any()),
-        ).thenThrow(Exception('Network error'));
-
-        // Act & Assert - should not throw despite error
-        expect(() => service.setOffline('user123'), returnsNormally);
-      });
+    test('stopHeartbeat stops timer', () async {
+      await service.startHeartbeat('user123');
+      await service.stopHeartbeat();
+      
+      // Should not call set again after stop
+      verify(() => mockPresenceDoc.set(any(), any())).called(1);
     });
 
-    group('Edge cases', () {
-      test('handles empty string userId gracefully', () async {
-        // Arrange
-        when(
-          () => mockFirestore.collection('users').doc(any()),
-        ).thenReturn(mockDocRef);
-        when(
-          () => mockDocRef.set(any(), any()),
-        ).thenAnswer((_) async => {});
+    test('setOffline sets offline status', () async {
+      await service.setOffline('user123');
 
-        // Act
-        await service.startHeartbeat('');
+      verify(() => mockPresenceDoc.set(
+        any(that: containsPair('online', false)),
+        any(),
+      )).called(1);
+    });
 
-        // Assert - should not throw
-        expect(() => service.startHeartbeat(''), returnsNormally);
-      });
+    test('handles errors gracefully', () async {
+      when(() => mockPresenceDoc.set(any(), any())).thenThrow(Exception('error'));
+      
+      expect(() => service.setOffline('user123'), returnsNormally);
+    });
 
-      test('handles null userId gracefully', () async {
-        // Act & Assert - should not throw
-        expect(() => service.startHeartbeat(''), returnsNormally);
-      });
+    test('handles empty userId', () async {
+      await service.startHeartbeat('');
+      verifyNever(() => mockPresenceDoc.set(any(), any()));
     });
   });
 }

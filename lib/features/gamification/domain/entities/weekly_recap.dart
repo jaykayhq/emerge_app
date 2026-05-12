@@ -20,6 +20,8 @@ class UserWeeklyRecap extends Equatable {
   final HabitDifficulty? recommendedDifficultyAdjustment;
   final List<String> velocityInsights;
   final bool isComplete;
+  final bool isLocked;
+  final bool isAiGenerated;
 
   const UserWeeklyRecap({
     required this.id,
@@ -38,6 +40,8 @@ class UserWeeklyRecap extends Equatable {
     this.recommendedDifficultyAdjustment,
     this.velocityInsights = const [],
     this.isComplete = true,
+    this.isLocked = false,
+    this.isAiGenerated = false,
   });
 
   Map<String, dynamic> toMap() {
@@ -58,6 +62,8 @@ class UserWeeklyRecap extends Equatable {
       'recommendedDifficultyAdjustment': recommendedDifficultyAdjustment?.name,
       'velocityInsights': velocityInsights,
       'isComplete': isComplete,
+      'isLocked': isLocked,
+      'isAiGenerated': isAiGenerated,
     };
   }
 
@@ -84,16 +90,20 @@ class UserWeeklyRecap extends Equatable {
           : null,
       velocityInsights: List<String>.from(map['velocityInsights'] ?? []),
       isComplete: map['isComplete'] as bool? ?? true,
+      isLocked: map['isLocked'] as bool? ?? false,
+      isAiGenerated: map['isAiGenerated'] as bool? ?? false,
     );
   }
 
 
   @override
-  List<Object> get props => [
+  List<Object?> get props => [
     id,
     userId,
     startDate,
     endDate,
     totalHabitsCompleted,
+    isLocked,
+    isAiGenerated,
   ];
 }

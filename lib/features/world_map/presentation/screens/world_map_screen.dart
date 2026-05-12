@@ -1,7 +1,6 @@
 import 'dart:ui';
 
 import 'package:emerge_app/core/theme/app_theme.dart';
-import 'package:emerge_app/core/utils/app_logger.dart';
 import 'package:emerge_app/features/auth/domain/entities/user_extension.dart';
 import 'package:emerge_app/features/gamification/presentation/providers/user_stats_providers.dart';
 import 'package:emerge_app/features/world_map/domain/models/archetype_map_config.dart';
@@ -129,10 +128,6 @@ class _WorldMapScreenState extends ConsumerState<WorldMapScreen> {
       child: statsAsync.when(
         data: (profile) {
           final archetype = profile.archetype;
-          // DEBUG: Log archetype being loaded
-          AppLogger.i(
-            'WorldMapScreen: Loaded archetype=$archetype, effectiveLevel=${profile.effectiveLevel}',
-          );
           final mapConfig = ArchetypeMapsCatalog.getMapForArchetype(archetype);
           final currentLevel = profile.effectiveLevel;
           final currentBiome = ArchetypeMapConfig.getBiomeForLevel(
@@ -638,27 +633,30 @@ class _StatItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [
-        Icon(icon, color: color, size: 20),
-        const SizedBox(height: 4),
-        Text(
-          value,
-          style: const TextStyle(
-            color: Colors.white,
-            fontWeight: FontWeight.bold,
-            fontSize: 14,
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      child: Column(
+        children: [
+          Icon(icon, color: color, size: 20),
+          const SizedBox(height: 4),
+          Text(
+            value,
+            style: const TextStyle(
+              color: Colors.white,
+              fontWeight: FontWeight.bold,
+              fontSize: 14,
+            ),
           ),
-        ),
-        Text(
-          label.toUpperCase(),
-          style: const TextStyle(
-            color: Colors.white54,
-            fontSize: 10,
-            letterSpacing: 1,
+          Text(
+            label.toUpperCase(),
+            style: const TextStyle(
+              color: Colors.white54,
+              fontSize: 10,
+              letterSpacing: 1,
+            ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }
@@ -668,14 +666,14 @@ class _WorldOrb extends ConsumerWidget {
   const _WorldOrb({required this.profile});
 
   Color get _orbColor {
-    final score = profile.worldHealthScore;
+    final score = profile.momentumScore;
     if (score >= 0.75) return const Color(0xFF00FF9C);
     if (score >= 0.4) return const Color(0xFF4FC3F7);
     return const Color(0xFFFF7043);
   }
 
   String get _stateLabel {
-    final score = profile.worldHealthScore;
+    final score = profile.momentumScore;
     if (score >= 0.75) return 'Thriving';
     if (score >= 0.4) return 'Neutral';
     return 'Decaying';
@@ -693,11 +691,12 @@ class _WorldOrb extends ConsumerWidget {
             height: 32,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              color: _orbColor.withValues(alpha:0.15),
-              border: Border.all(color: _orbColor.withValues(alpha:0.6), width: 1.5),
+              color: _orbColor.withValues(alpha: 0.15),
+              border:
+                  Border.all(color: _orbColor.withValues(alpha: 0.6), width: 1.5),
               boxShadow: [
                 BoxShadow(
-                  color: _orbColor.withValues(alpha:0.4),
+                  color: _orbColor.withValues(alpha: 0.4),
                   blurRadius: 10,
                   spreadRadius: 1,
                 ),
@@ -720,7 +719,7 @@ class _WorldOrb extends ConsumerWidget {
   }
 
   void _showWorldStateSheet(BuildContext context, WidgetRef ref) {
-    final score = (profile.worldHealthScore * 100).round();
+    final score = (profile.momentumScore * 100).round();
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
@@ -817,6 +816,25 @@ class _WorldStateSheet extends StatelessWidget {
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 24),
+          const SizedBox(height: 32),
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton.icon(
+              onPressed: () {
+                Navigator.pop(context);
+                context.push('/recap-hub');
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: EmergeColors.violet,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.all(16),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              ),
+              icon: const Icon(Icons.auto_awesome),
+              label: const Text('WEEKLY RECAP & INSIGHTS', style: TextStyle(fontWeight: FontWeight.bold)),
+            ),
+          ),
+          const SizedBox(height: 12),
           SizedBox(
             width: double.infinity,
             child: OutlinedButton(

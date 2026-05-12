@@ -85,18 +85,18 @@ class _CosmicBackgroundState extends State<CosmicBackground>
 
           // Layer 2: Nebula effects (swirling cosmic clouds)
           if (widget.showNebula)
-            Opacity(
-              opacity: widget.opacity,
-              child: Positioned.fill(
+            Positioned.fill(
+              child: Opacity(
+                opacity: widget.opacity,
                 child: _NebulaLayer(elapsed: _elapsed, animate: widget.animate),
               ),
             ),
 
           // Layer 3: Star field (twinkling stars)
           if (widget.showStars)
-            Opacity(
-              opacity: widget.opacity,
-              child: Positioned.fill(
+            Positioned.fill(
+              child: Opacity(
+                opacity: widget.opacity,
                 child: _StarFieldLayer(
                   elapsed: _elapsed,
                   animate: widget.animate,
@@ -106,9 +106,9 @@ class _CosmicBackgroundState extends State<CosmicBackground>
 
           // Layer 4: Cosmic dust (wispy streaks)
           if (widget.showCosmicDust)
-            Opacity(
-              opacity: widget.opacity,
-              child: Positioned.fill(
+            Positioned.fill(
+              child: Opacity(
+                opacity: widget.opacity,
                 child: _CosmicDustLayer(
                   elapsed: _elapsed,
                   animate: widget.animate,
@@ -117,9 +117,9 @@ class _CosmicBackgroundState extends State<CosmicBackground>
             ),
 
           // Layer 5: Central glow (Valley of New Beginnings highlight)
-          Opacity(
-            opacity: widget.opacity * 0.6,
-            child: Positioned.fill(
+          Positioned.fill(
+            child: Opacity(
+              opacity: widget.opacity * 0.6,
               child: Container(
                 decoration: BoxDecoration(
                   gradient: RadialGradient(
@@ -128,7 +128,7 @@ class _CosmicBackgroundState extends State<CosmicBackground>
                     colors: [
                       const Color(
                         0xFF2A1A3A,
-                      ).withValues(alpha:0.3), // Mid-tone purple
+                      ).withValues(alpha: 0.3), // Mid-tone purple
                       Colors.transparent,
                     ],
                   ),

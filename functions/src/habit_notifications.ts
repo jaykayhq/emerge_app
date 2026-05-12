@@ -286,9 +286,11 @@ export const onHabitChanged = onDocumentWritten("users/{userId}/habits/{habitId}
 
       const userData = userDoc.data();
       const archetype = userData?.archetype || "none";
+      const settings = userData?.settings || {};
       const notificationsEnabled = userData?.notificationsEnabled !== false;
+      const archetypeNudges = settings.archetypeNudges !== false;
 
-      if (after.reminderEnabled && notificationsEnabled) {
+      if (after.reminderEnabled && notificationsEnabled && archetypeNudges) {
         const title = "Habit Created";
         const body = getTemplateMessage(archetype, "welcome", after.title || "Your new habit");
         await sendNotification(userId, title, body, "habit_welcome", { habitId, archetype });
@@ -396,7 +398,8 @@ export const sendDailyInsights = onSchedule({
     const usersSnapshot = await firestore.collection("users").get();
     for (const userDoc of usersSnapshot.docs) {
       const userData = userDoc.data();
-      if (userData.notificationsEnabled === false) continue;
+      const settings = userData?.settings || {};
+      if (userData.notificationsEnabled === false || settings.aiInsights === false) continue;
 
       const userId = userDoc.id;
       const archetype = userData.archetype || "none";
@@ -429,7 +432,13 @@ export const notifyAchievement = onDocumentCreated("users/{userId}/achievements/
 
   try {
     const userDoc = await firestore.collection("users").doc(userId).get();
-    const archetype = userDoc.data()?.archetype || "none";
+    const userData = userDoc.data();
+    const settings = userData?.settings || {};
+    const archetype = userData?.archetype || "none";
+
+    if (userData?.notificationsEnabled === false || settings.rewardsUpdates === false) {
+      return;
+    }
 
     await sendNotification(userId, "Achievement Earned!", `${achievement.title}: ${achievement.description}`, "achievement", {
       achievementId: event.params.achievementId,

@@ -25,6 +25,8 @@ class Tribe {
   final DateTime? brandSponsorshipEnd;
   final bool isFeatured; // For official club spotlight
   final int? maxMembers; // For private clubs
+  final int totalHabitsCompleted; // Added for stats accuracy
+  final int totalChallengesCompleted; // Added for stats accuracy
 
   const Tribe({
     required this.id,
@@ -50,6 +52,8 @@ class Tribe {
     this.brandSponsorshipEnd,
     this.isFeatured = false,
     this.maxMembers,
+    this.totalHabitsCompleted = 0,
+    this.totalChallengesCompleted = 0,
   });
 
   Map<String, dynamic> toMap() {
@@ -77,23 +81,31 @@ class Tribe {
       'brandSponsorshipEnd': brandSponsorshipEnd?.toIso8601String(),
       'isFeatured': isFeatured,
       'maxMembers': maxMembers,
+      'totalHabitsCompleted': totalHabitsCompleted,
+      'totalChallengesCompleted': totalChallengesCompleted,
     };
   }
 
   factory Tribe.fromMap(Map<String, dynamic> map) {
     // Parse sponsorship dates
+    DateTime? parseDateTime(dynamic value) {
+      if (value == null) return null;
+      if (value is DateTime) return value;
+      try {
+        return (value as dynamic).toDate();
+      } catch (_) {}
+      if (value is String) return DateTime.tryParse(value);
+      return null;
+    }
+
     DateTime? brandSponsorshipStart;
     if (map['brandSponsorshipStart'] != null) {
-      brandSponsorshipStart = DateTime.tryParse(
-        map['brandSponsorshipStart'] as String,
-      );
+      brandSponsorshipStart = parseDateTime(map['brandSponsorshipStart']);
     }
 
     DateTime? brandSponsorshipEnd;
     if (map['brandSponsorshipEnd'] != null) {
-      brandSponsorshipEnd = DateTime.tryParse(
-        map['brandSponsorshipEnd'] as String,
-      );
+      brandSponsorshipEnd = parseDateTime(map['brandSponsorshipEnd']);
     }
 
     return Tribe(
@@ -114,9 +126,7 @@ class Tribe {
       archetypeId: map['archetypeId'],
       isVerified: map['isVerified'] ?? false,
       level: map['level']?.toInt() ?? 1,
-      createdAt: map['createdAt'] != null
-          ? DateTime.tryParse(map['createdAt'])
-          : null,
+      createdAt: parseDateTime(map['createdAt']),
       members: List<String>.from(map['members'] ?? []),
       // New affiliate/club fields
       affiliatePartnerId: map['affiliatePartnerId'],
@@ -125,6 +135,8 @@ class Tribe {
       brandSponsorshipEnd: brandSponsorshipEnd,
       isFeatured: map['isFeatured'] ?? false,
       maxMembers: map['maxMembers']?.toInt(),
+      totalHabitsCompleted: map['totalHabitsCompleted']?.toInt() ?? 0,
+      totalChallengesCompleted: map['totalChallengesCompleted']?.toInt() ?? 0,
     );
   }
 }

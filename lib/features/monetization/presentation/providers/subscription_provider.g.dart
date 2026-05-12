@@ -55,7 +55,7 @@ final class MonetizationRepositoryProvider
 }
 
 String _$monetizationRepositoryHash() =>
-    r'f79b9a3db446c65f59a8406009b481c1743b0d7e';
+    r'a060b3a06127e71056a7937a2e7eb8df9048bd94';
 
 @ProviderFor(IsPremium)
 final isPremiumProvider = IsPremiumProvider._();
@@ -80,7 +80,7 @@ final class IsPremiumProvider extends $AsyncNotifierProvider<IsPremium, bool> {
   IsPremium create() => IsPremium();
 }
 
-String _$isPremiumHash() => r'bae83774273d278f39acffceccc5b22af38b2c80';
+String _$isPremiumHash() => r'18ca9098fa038153c8562e7dd02620fb72cff3a9';
 
 abstract class _$IsPremium extends $AsyncNotifier<bool> {
   FutureOr<bool> build();

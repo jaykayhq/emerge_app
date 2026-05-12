@@ -1,11 +1,9 @@
-import 'dart:async';
-import 'package:emerge_app/features/social/data/repositories/blueprint_repository.dart';
 import 'package:emerge_app/core/theme/emerge_colors.dart';
 import 'package:emerge_app/features/auth/presentation/providers/auth_providers.dart';
 import 'package:emerge_app/features/habits/presentation/providers/habit_providers.dart';
 import 'package:emerge_app/core/presentation/widgets/world_background.dart';
 import 'package:emerge_app/core/domain/models/app_world_theme.dart';
-import 'package:emerge_app/features/social/domain/entities/social_entities.dart';
+import 'package:emerge_app/features/blueprints/domain/models/blueprint.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
@@ -15,7 +13,7 @@ import 'package:go_router/go_router.dart';
 import 'package:emerge_app/features/social/presentation/widgets/blueprint_adopt_dialog.dart';
 
 class BlueprintDetailScreen extends ConsumerWidget {
-  final CreatorBlueprint blueprint;
+  final Blueprint blueprint;
 
   const BlueprintDetailScreen({super.key, required this.blueprint});
 
@@ -105,7 +103,7 @@ class BlueprintDetailScreen extends ConsumerWidget {
           ],
         ),
         title: Text(
-          blueprint.blueprintName,
+          blueprint.title,
           style: GoogleFonts.outfit(
             fontWeight: FontWeight.bold,
             fontSize: 18,
@@ -194,9 +192,9 @@ class BlueprintDetailScreen extends ConsumerWidget {
           ),
         ),
         const Gap(16),
-        ...blueprint.habitTitles.asMap().entries.map((entry) {
+        ...blueprint.habits.asMap().entries.map((entry) {
           final index = entry.key;
-          final title = entry.value;
+          final habit = entry.value;
           return Padding(
             padding: const EdgeInsets.only(bottom: 12),
             child: Row(
@@ -221,7 +219,7 @@ class BlueprintDetailScreen extends ConsumerWidget {
                 ),
                 const Gap(16),
                 Text(
-                  title,
+                  habit.title,
                   style: const TextStyle(color: Colors.white, fontSize: 16),
                 ),
               ],
@@ -275,16 +273,11 @@ class BlueprintDetailScreen extends ConsumerWidget {
                       }
                     },
                     (_) async {
-                      // Increment adoption count in background
-                      unawaited(ref
-                          .read(blueprintRepositoryProvider)
-                          .adoptBlueprint(blueprint.id));
-
                       if (context.mounted) {
                         ScaffoldMessenger.of(context).showSnackBar(
                           const SnackBar(
                             content: Text(
-                                'Blueprint adopted! Your new habit stack is ready.'),
+                                'Adopted successfully'),
                             backgroundColor: EmergeColors.teal,
                           ),
                         );

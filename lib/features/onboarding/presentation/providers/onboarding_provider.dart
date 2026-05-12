@@ -12,7 +12,6 @@ import 'package:emerge_app/core/utils/app_logger.dart';
 import 'package:emerge_app/features/gamification/data/repositories/user_stats_repository.dart';
 import 'package:emerge_app/features/gamification/presentation/providers/user_stats_providers.dart';
 import 'package:emerge_app/features/habits/domain/entities/habit.dart';
-import 'package:emerge_app/features/habits/presentation/providers/habit_providers.dart';
 import 'package:emerge_app/features/habits/presentation/providers/dashboard_state_provider.dart';
 import 'package:emerge_app/features/social/presentation/providers/tribes_provider.dart';
 import 'package:uuid/uuid.dart';
@@ -105,11 +104,27 @@ class OnboardingController extends _$OnboardingController {
         (profile) => profile,
       );
 
+      // Get initial stats based on archetype if not already set
+      final selectedArchetype = onboardingState.selectedArchetype ?? UserArchetype.none;
+      final currentStats = existingProfile?.avatarStats ?? const UserAvatarStats();
+      
+      // Only distribute if this is the first time (total XP is 0)
+      final totalXp = currentStats.strengthXp + currentStats.intellectXp + 
+                      currentStats.vitalityXp + currentStats.creativityXp + 
+                      currentStats.focusXp + currentStats.spiritXp;
+                      
+      final updatedStats = totalXp == 0 
+          ? ref.read(gamificationServiceProvider).distributeInitialXp(
+              currentStats,
+              selectedArchetype,
+            )
+          : currentStats;
+
       // Prefer onboarding state values (most recent user selections) over stored values
       final updatedProfile =
           existingProfile?.copyWith(
-            archetype:
-                onboardingState.selectedArchetype ?? existingProfile.archetype,
+            archetype: selectedArchetype,
+            avatarStats: updatedStats,
             motive: onboardingState.motive ?? existingProfile.motive,
             why: onboardingState.why ?? existingProfile.why,
             anchors: onboardingState.anchors.isNotEmpty
@@ -126,7 +141,8 @@ class OnboardingController extends _$OnboardingController {
           ) ??
           UserProfile(
             uid: user.id,
-            archetype: onboardingState.selectedArchetype ?? UserArchetype.none,
+            archetype: selectedArchetype,
+            avatarStats: updatedStats,
             motive: onboardingState.motive,
             why: onboardingState.why,
             anchors: onboardingState.anchors,
@@ -392,9 +408,9 @@ class OnboardingController extends _$OnboardingController {
         }
       }
 
-      // Force refresh of habits after creating onboarding habits
-      // This ensures the dashboard gets updated with the newly created habits
-      ref.invalidate(habitsProvider);
+      // Habits will be refreshed automatically via the Firestore stream listener
+      // in DashboardStateNotifier. Do NOT call ref.invalidate(habitsProvider) here
+      // as it disposes active providers mid-flight.
     }
   }
 }

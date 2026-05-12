@@ -77,10 +77,10 @@ class TribeStatsService {
             }
           }
 
-          // Also check for direct totalXp field (fallback)
-          final directTotalXp = data['totalXp'] as int?;
-          if (directTotalXp != null) {
-            totalXp += directTotalXp;
+          // Also check for direct totalXp or currentXp fields (fallback)
+          final directXp = (data['currentXp'] as int?) ?? (data['totalXp'] as int?);
+          if (directXp != null) {
+            totalXp += directXp;
           }
         }
       }
@@ -135,47 +135,71 @@ class TribeStatsService {
       final members = data['members'] as List<dynamic>?;
       final memberCount = members?.length ?? 0;
 
-      // Calculate total XP from members
+      // Calculate total stats from members with batching (Firestore 'in' limit is 30)
       int totalXp = 0;
+      int totalHabitsCompleted = 0;
+      int totalChallengesCompleted = 0;
+
       if (members != null && members.isNotEmpty) {
         final memberIds = members.cast<String>();
-        final userStatsSnapshot = await _firestore
-            .collection('user_stats')
-            .where(FieldPath.documentId, whereIn: memberIds.take(30))
-            .get();
+        const batchSize = 30;
 
-        for (final doc in userStatsSnapshot.docs) {
-          final userData = doc.data();
-          final avatarStats = userData['avatarStats'] as Map<String, dynamic>?;
-          if (avatarStats != null) {
-            // Only sum the 6 attribute XP fields (exclude level, streak, attributeXp map)
-            totalXp += avatarStats['strengthXp'] as int? ?? 0;
-            totalXp += avatarStats['intellectXp'] as int? ?? 0;
-            totalXp += avatarStats['vitalityXp'] as int? ?? 0;
-            totalXp += avatarStats['creativityXp'] as int? ?? 0;
-            totalXp += avatarStats['focusXp'] as int? ?? 0;
-            totalXp += avatarStats['spiritXp'] as int? ?? 0;
+        for (var i = 0; i < memberIds.length; i += batchSize) {
+          final batch = memberIds.skip(i).take(batchSize).toList();
+          final userStatsSnapshot = await _firestore
+              .collection('user_stats')
+              .where(FieldPath.documentId, whereIn: batch)
+              .get();
 
-            // Also sum any custom attribute XP from the attributeXp map
-            final customAttributeXp =
-                avatarStats['attributeXp'] as Map<String, dynamic>?;
-            if (customAttributeXp != null) {
-              for (final value in customAttributeXp.values) {
-                if (value is int) totalXp += value;
+          for (final doc in userStatsSnapshot.docs) {
+            final userData = doc.data();
+            
+            // 1. Accumulate XP (Robustly)
+            final avatarStats = userData['avatarStats'] as Map<String, dynamic>?;
+            int userXp = 0;
+            
+            if (avatarStats != null) {
+              // Try totalXp first, then currentXp, then sum of attributes as fallback
+              userXp = (avatarStats['totalXp'] as int?) ?? 
+                       (avatarStats['currentXp'] as int?) ?? 0;
+              
+              if (userXp == 0) {
+                userXp += avatarStats['strengthXp'] as int? ?? 0;
+                userXp += avatarStats['intellectXp'] as int? ?? 0;
+                userXp += avatarStats['vitalityXp'] as int? ?? 0;
+                userXp += avatarStats['creativityXp'] as int? ?? 0;
+                userXp += avatarStats['focusXp'] as int? ?? 0;
+                userXp += avatarStats['spiritXp'] as int? ?? 0;
+              }
+            } else {
+              userXp = (userData['totalXp'] as int?) ?? 
+                       (userData['currentXp'] as int?) ?? 0;
+            }
+            totalXp += userXp;
+
+            // 2. Accumulate Habits and Challenges
+            totalHabitsCompleted += (userData['totalHabitsCompleted'] as int?) ?? 0;
+            totalChallengesCompleted += (userData['totalChallengesCompleted'] as int?) ?? 0;
+            
+            // If totalChallengesCompleted is 0, try totalQuestsCompleted as fallback
+            if ((userData['totalChallengesCompleted'] as int? ?? 0) == 0) {
+              final questsDone = (userData['totalQuestsCompleted'] as int?) ?? 0;
+              if (questsDone > 0) {
+                totalChallengesCompleted += questsDone;
+              } else {
+                // Last fallback: use the 'completedChallenges' field from UserStats
+                totalChallengesCompleted += (userData['completedChallenges'] as int?) ?? 0;
               }
             }
           }
-          final directTotalXp = userData['totalXp'] as int?;
-          if (directTotalXp != null) totalXp += directTotalXp;
         }
       }
 
       return {
         'memberCount': memberCount,
         'totalXp': totalXp,
-        'totalHabitsCompleted': data['totalHabitsCompleted'] as int? ?? 0,
-        'totalChallengesCompleted':
-            data['totalChallengesCompleted'] as int? ?? 0,
+        'totalHabitsCompleted': totalHabitsCompleted,
+        'totalChallengesCompleted': totalChallengesCompleted,
       };
     } catch (e) {
       debugPrint('Error getting tribe stats for $tribeId: $e');
@@ -187,6 +211,7 @@ class TribeStatsService {
       };
     }
   }
+
 
   /// Updates the tribe document with calculated stats
   ///

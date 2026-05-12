@@ -24,18 +24,15 @@ class FirestoreLeaderboardRepository implements LeaderboardRepository {
     return _firestore
         .collection('club_leaderboards')
         .where('clubId', isEqualTo: clubId)
-        .orderBy('xp', descending: true)
-        .orderBy('lastUpdated', descending: true)
         .limit(100)
         .snapshots()
         .handleError((error, stack) {
           AppLogger.e('Error watching club leaderboard', error, stack);
         })
         .map((snapshot) {
-          // Calculate rank based on position in sorted list
-          return snapshot.docs.map((doc) {
+          // Sort entries by XP descending client-side to avoid needing a composite index
+          final entries = snapshot.docs.map((doc) {
             final data = doc.data();
-            final index = snapshot.docs.indexOf(doc);
             return LeaderboardEntry(
               userId: data['userId'] as String? ?? '',
               userName: data['userName'] as String? ?? 'Anonymous',
@@ -45,12 +42,17 @@ class FirestoreLeaderboardRepository implements LeaderboardRepository {
                 (e) => e.name == data['archetype'],
                 orElse: () => UserArchetype.none,
               ),
-              rank: index + 1, // 1-based rank
+              rank: 0,
               lastUpdated: data['lastUpdated'] != null
                   ? DateTime.tryParse(data['lastUpdated'] as String)
                   : null,
             );
           }).toList();
+          entries.sort((a, b) => b.xp.compareTo(a.xp));
+          for (int i = 0; i < entries.length; i++) {
+            entries[i] = entries[i].copyWith(rank: i + 1);
+          }
+          return entries;
         });
   }
 
@@ -67,18 +69,15 @@ class FirestoreLeaderboardRepository implements LeaderboardRepository {
     return _firestore
         .collection('challenge_leaderboards')
         .where('challengeId', isEqualTo: challengeId)
-        .orderBy('xp', descending: true)
-        .orderBy('lastUpdated', descending: true)
         .limit(100)
         .snapshots()
         .handleError((error, stack) {
           AppLogger.e('Error watching challenge leaderboard', error, stack);
         })
         .map((snapshot) {
-          // Calculate rank based on position in sorted list
-          return snapshot.docs.map((doc) {
+          // Sort entries by XP descending client-side to avoid needing a composite index
+          final entries = snapshot.docs.map((doc) {
             final data = doc.data();
-            final index = snapshot.docs.indexOf(doc);
             return LeaderboardEntry(
               userId: data['userId'] as String? ?? '',
               userName: data['userName'] as String? ?? 'Anonymous',
@@ -88,12 +87,16 @@ class FirestoreLeaderboardRepository implements LeaderboardRepository {
                 (e) => e.name == data['archetype'],
                 orElse: () => UserArchetype.none,
               ),
-              rank: index + 1, // 1-based rank
               lastUpdated: data['lastUpdated'] != null
                   ? DateTime.tryParse(data['lastUpdated'] as String)
                   : null,
             );
           }).toList();
+          entries.sort((a, b) => b.xp.compareTo(a.xp));
+          for (int i = 0; i < entries.length; i++) {
+            entries[i] = entries[i].copyWith(rank: i + 1);
+          }
+          return entries;
         });
   }
 

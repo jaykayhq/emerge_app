@@ -254,12 +254,6 @@ class _WorldVisualizationState extends State<WorldVisualization>
       decoration: BoxDecoration(
         color: seasonData.color.withValues(alpha: 0.8),
         borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: seasonData.color.withValues(alpha: 0.4),
-            blurRadius: 8,
-          ),
-        ],
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -335,13 +329,6 @@ class _ZoneHotspot extends StatelessWidget {
                   shape: BoxShape.circle,
                   color: adjustedColor.withValues(alpha: 0.3),
                   border: Border.all(color: adjustedColor, width: 2),
-                  boxShadow: [
-                    BoxShadow(
-                      color: adjustedColor.withValues(alpha: 0.5),
-                      blurRadius: health > 0.7 ? 15 : 5,
-                      spreadRadius: health > 0.7 ? 2 : 0,
-                    ),
-                  ],
                 ),
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,

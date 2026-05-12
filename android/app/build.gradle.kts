@@ -101,6 +101,9 @@ android {
             isMinifyEnabled = false
             isShrinkResources = false
 
+            // IMPORTANT: Use release signing for debug builds to test Google Play Billing locally
+            signingConfig = signingConfigs.getByName("release")
+
             buildConfigField("boolean", "DEBUG_MODE", "true")
             buildConfigField("String", "BUILD_TYPE", "\"debug\"")
         }

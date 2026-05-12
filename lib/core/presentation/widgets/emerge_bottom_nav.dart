@@ -24,15 +24,8 @@ class EmergeBottomNav extends StatelessWidget {
     final currentIndex = navigationShell.currentIndex;
 
     return Container(
-      decoration: BoxDecoration(
+      decoration: const BoxDecoration(
         color: EmergeColors.background,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha:0.2),
-            blurRadius: 10,
-            offset: const Offset(0, -2),
-          ),
-        ],
       ),
       child: SafeArea(
         top: false,
@@ -178,15 +171,7 @@ class _DiamondFab extends StatelessWidget {
         child: Container(
           width: EmergeDimensions.fabSize, // 56px standard
           height: EmergeDimensions.fabSize,
-          decoration: BoxDecoration(
-            boxShadow: [
-              BoxShadow(
-                color: EmergeColors.teal.withValues(alpha:0.4),
-                blurRadius: 12,
-                offset: const Offset(0, 4),
-              ),
-            ],
-          ),
+          decoration: const BoxDecoration(),
           child: Transform.rotate(
             angle: 0.785398, // 45 degrees in radians
             child: Container(

@@ -1,7 +1,6 @@
 import 'package:emerge_app/core/presentation/providers/social_preload_provider.dart';
 import 'package:emerge_app/core/utils/app_logger.dart';
 import 'package:emerge_app/features/onboarding/presentation/providers/onboarding_provider.dart';
-import 'package:emerge_app/features/gamification/presentation/providers/user_stats_providers.dart';
 import 'package:emerge_app/core/presentation/widgets/animated_flame_logo.dart';
 import 'package:emerge_app/features/tutorial/presentation/providers/tutorial_provider.dart';
 
@@ -103,11 +102,6 @@ class _WorldRevealScreenState extends ConsumerState<WorldRevealScreen>
           .read(onboardingControllerProvider.notifier)
           .completeMilestone(3);
 
-      // Create onboarding habits
-      await ref
-          .read(onboardingControllerProvider.notifier)
-          .createOnboardingHabits();
-
       // Complete onboarding
       await ref
           .read(onboardingControllerProvider.notifier)
@@ -138,20 +132,6 @@ class _WorldRevealScreenState extends ConsumerState<WorldRevealScreen>
 
   @override
   Widget build(BuildContext context) {
-    final state = ref.read(onboardingStateControllerProvider);
-
-    // DEBUG: Log archetype at build time
-    AppLogger.i(
-      'WorldRevealScreen build: selectedArchetype=${state.selectedArchetype}',
-    );
-
-    // Also log from Firestore to compare
-    ref.read(userStatsStreamProvider).whenData((profile) {
-      AppLogger.i(
-        'WorldRevealScreen: Firestore archetype=${profile.archetype}',
-      );
-    });
-
     // Cosmic purple background
     return Scaffold(
       body: Container(

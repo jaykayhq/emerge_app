@@ -85,7 +85,7 @@ class TribeChallengeMiniCard extends StatelessWidget {
           border: Border.all(color: Colors.white.withValues(alpha:0.1)),
           image: challenge.imageUrl.isNotEmpty
               ? DecorationImage(
-                  image: challenge.imageUrl.startsWith('images/')
+                  image: challenge.imageUrl.startsWith('images/') || challenge.imageUrl.startsWith('assets/images/')
                       ? AssetImage(challenge.imageUrl) as ImageProvider
                       : NetworkImage(challenge.imageUrl),
                   fit: BoxFit.cover,

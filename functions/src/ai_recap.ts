@@ -24,6 +24,15 @@ export const generateAiRecap = onCall({
   try {
     // 1. Fetch User Data & Habits
     const userDoc = await db.collection("user_stats").doc(userId).get();
+    const userData = userDoc.data();
+    
+    // PREMIUM GUARD: Only premium users get AI insights
+    const isPremium = userData?.isPremium === true;
+    if (!isPremium) {
+      console.warn(`[generateAiRecap] Non-premium user ${userId} attempted to generate AI recap.`);
+      throw new HttpsError("permission-denied", "AI Insights are a premium feature.");
+    }
+
     const habitsSnap = await db.collection("habits").where("userId", "==", userId).get();
     
     if (habitsSnap.empty) {
@@ -36,14 +45,21 @@ export const generateAiRecap = onCall({
       habitMap[doc.id] = doc.data();
     });
 
-    // 2. Fetch Last 14 Days of Activity
-    const fourteenDaysAgo = new Date();
-    fourteenDaysAgo.setDate(fourteenDaysAgo.getDate() - 14);
+    // 2. Fetch Activity History
+    const now = new Date();
+    const defaultStart = new Date();
+    defaultStart.setDate(now.getDate() - 14);
+
+    const startDate = request.data.startDate ? new Date(request.data.startDate) : defaultStart;
+    const endDate = request.data.endDate ? new Date(request.data.endDate) : now;
+
+    console.log(`[generateAiRecap] Fetching activity from ${startDate.toISOString()} to ${endDate.toISOString()}`);
 
     const activitySnap = await db.collection("user_activity")
       .where("userId", "==", userId)
       .where("type", "==", "habit_completion")
-      .where("date", ">=", admin.firestore.Timestamp.fromDate(fourteenDaysAgo))
+      .where("date", ">=", admin.firestore.Timestamp.fromDate(startDate))
+      .where("date", "<=", admin.firestore.Timestamp.fromDate(endDate))
       .get();
 
     console.log(`[generateAiRecap] Found ${activitySnap.size} activities for the last 14 days`);
@@ -77,11 +93,13 @@ export const generateAiRecap = onCall({
     const recalibrations: string[] = [];
     const habitUpdates: Promise<any>[] = [];
 
+    const daysInRange = Math.max(1, Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)));
+    
     for (const [habitId, count] of Object.entries(completionsPerHabit)) {
       const habitData = habitMap[habitId];
       if (!habitData) continue;
 
-      const velocity = count / 14.0;
+      const velocity = count / daysInRange;
       
       // If performing exceptionally well on a non-hard habit, suggest hardening
       if (velocity > 0.8 && habitData.difficulty !== "hard") {
@@ -127,7 +145,7 @@ export const generateAiRecap = onCall({
               },
               {
                 role: "user",
-                content: `Last 14 days activity: ${JSON.stringify(completionsPerHabit)}. Top habit: ${topHabitTitle}. Total completions: ${totalCompletions}. Provide JSON: {"headline": "...", "insight": "..."}`,
+                content: `Activity from ${startDate.toDateString()} to ${endDate.toDateString()}: ${JSON.stringify(completionsPerHabit)}. Top habit: ${topHabitTitle}. Total completions: ${totalCompletions}. Provide JSON: {"headline": "...", "insight": "..."}`,
               },
             ],
             response_format: { type: "json_object" },
@@ -149,16 +167,16 @@ export const generateAiRecap = onCall({
     }
 
     // 6. Assemble & Save Recap
-    const now = new Date();
+    const currentTime = new Date();
     const sevenDaysAgo = new Date();
-    sevenDaysAgo.setDate(now.getDate() - 7);
+    sevenDaysAgo.setDate(currentTime.getDate() - 7);
 
-    const recapId = `recap_${now.getTime()}`;
+    const recapId = `recap_${currentTime.getTime()}`;
     const recapData = {
       id: recapId,
       userId: userId,
-      startDate: sevenDaysAgo.toISOString(),
-      endDate: now.toISOString(),
+      startDate: startDate.toISOString(),
+      endDate: endDate.toISOString(),
       totalHabitsCompleted: totalCompletions,
       perfectDays: Math.floor(totalCompletions / 2), // Simplified for now
       totalXpEarned: totalCompletions * 20,

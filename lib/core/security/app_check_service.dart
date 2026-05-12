@@ -24,6 +24,7 @@ class AppCheckService {
           debugPrint(
             '🐛 Web Debug Mode: Skipping Firebase App Check to avoid ReCAPTCHA localhost errors',
           );
+          return appCheck;
         } else {
           // Web mode: ReCaptcha V3 is the standard provider
           // SECURITY: Use environment variable for ReCAPTCHA site key

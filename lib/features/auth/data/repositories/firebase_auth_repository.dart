@@ -9,6 +9,7 @@ import 'package:fpdart/fpdart.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:cloud_functions/cloud_functions.dart';
 import 'package:emerge_app/features/auth/domain/entities/user_extension.dart';
 
 class FirebaseAuthRepository implements AuthRepository {
@@ -270,54 +271,21 @@ class FirebaseAuthRepository implements AuthRepository {
   @override
   Future<Either<Failure, void>> deleteAccount() async {
     try {
-      final user = _firebaseAuth.currentUser;
-      if (user == null) {
-        return const Left(AuthFailure('User not logged in'));
+      // Call the server-side deleteMyAccount function which uses Admin SDK
+      // to wipe all user data across Firestore AND delete the Auth account.
+      final functions = FirebaseFunctions.instance;
+      final result = await functions.httpsCallable('deleteMyAccount').call();
+
+      if (result.data != null && (result.data as Map)['success'] == true) {
+        return const Right(null);
       }
-      final uid = user.uid;
-
-      // Delete user's habits subcollection
-      final habitsSnapshot = await _firestore
-          .collection('users')
-          .doc(uid)
-          .collection('habits')
-          .get();
-      for (final doc in habitsSnapshot.docs) {
-        await doc.reference.delete();
-      }
-
-      // Delete user profile from 'users' collection
-      await _firestore.collection('users').doc(uid).delete();
-
-      // Delete from 'user_stats' collection (legacy mirror)
-      await _firestore.collection('user_stats').doc(uid).delete();
-
-      // Remove from any tribes
-      final tribeQuery = await _firestore
-          .collection('tribes')
-          .where('memberIds', arrayContains: uid)
-          .get();
-      for (final tribeDoc in tribeQuery.docs) {
-        await tribeDoc.reference.update({
-          'memberIds': FieldValue.arrayRemove([uid]),
-          'memberCount': FieldValue.increment(-1),
-        });
-      }
-
-      // Finally delete the Firebase Auth account
-      await user.delete();
-
-      return const Right(null);
-    } on FirebaseAuthException catch (e) {
+      return const Left(ServerFailure('Account deletion failed unexpectedly'));
+    } on FirebaseFunctionsException catch (e) {
       AppLogger.e('Delete account failed', e);
-      if (e.code == 'requires-recent-login') {
-        return const Left(
-          AuthFailure(
-            'For security, please log out and log back in before deleting your account.',
-          ),
-        );
+      if (e.code == 'unauthenticated') {
+        return const Left(AuthFailure('Please log in again before deleting your account.'));
       }
-      return Left(AuthFailure(e.message ?? 'Delete failed'));
+      return Left(ServerFailure(e.message ?? 'Delete failed'));
     } catch (e, s) {
       AppLogger.e('Delete account failed', e, s);
       return Left(ServerFailure(e.toString()));

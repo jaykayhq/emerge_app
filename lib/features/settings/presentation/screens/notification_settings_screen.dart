@@ -145,6 +145,17 @@ class NotificationSettingsScreen extends ConsumerWidget {
                   settings.copyWith(rewardsUpdates: val),
                 ),
               ),
+              _buildSwitchTile(
+                'Archetype Nudges',
+                'Identity-based behavioral triggers',
+                settings.archetypeNudges,
+                (val) => _updateSettings(
+                  context,
+                  ref,
+                  userProfile,
+                  settings.copyWith(archetypeNudges: val),
+                ),
+              ),
             ]),
             const Gap(24),
 

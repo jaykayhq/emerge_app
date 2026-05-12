@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:equatable/equatable.dart';
 import 'package:flutter/material.dart';
 
@@ -98,6 +99,116 @@ class Habit extends Equatable {
     this.momentumScore = 0,
     this.consecutiveMisses = 0,
   });
+
+  Map<String, dynamic> toMap() {
+    return {
+      'id': id,
+      'userId': userId,
+      'title': title,
+      'cue': cue,
+      'routine': routine,
+      'reward': reward,
+      'frequency': frequency.name,
+      'specificDays': specificDays,
+      'reminderTime': reminderTime != null
+          ? '${reminderTime!.hour.toString().padLeft(2, '0')}:${reminderTime!.minute.toString().padLeft(2, '0')}'
+          : null,
+      'difficulty': difficulty.name,
+      'isArchived': isArchived,
+      'createdAt': Timestamp.fromDate(createdAt),
+      'currentStreak': currentStreak,
+      'longestStreak': longestStreak,
+      'lastCompletedDate': lastCompletedDate != null
+          ? Timestamp.fromDate(lastCompletedDate!)
+          : null,
+      'impact': impact.name,
+      'twoMinuteVersion': twoMinuteVersion,
+      'identityTags': identityTags,
+      'contractActive': contractActive,
+      'attribute': attribute.name,
+      'imageUrl': imageUrl,
+      'timeOfDayPreference': timeOfDayPreference?.name,
+      'anchorHabitId': anchorHabitId,
+      'order': order,
+      'location': location,
+      'timerDurationMinutes': timerDurationMinutes,
+      'environmentPriming': environmentPriming,
+      'integrationType': integrationType.name,
+      'integrationTarget': integrationTarget,
+      'momentumScore': momentumScore,
+      'consecutiveMisses': consecutiveMisses,
+    };
+  }
+
+  factory Habit.fromMap(Map<String, dynamic> map) {
+    TimeOfDay? reminderTime;
+    final rawReminderTime = map['reminderTime'];
+    if (rawReminderTime is String) {
+      final parts = rawReminderTime.split(':');
+      if (parts.length == 2) {
+        reminderTime = TimeOfDay(
+          hour: int.parse(parts[0]),
+          minute: int.parse(parts[1]),
+        );
+      }
+    }
+
+    return Habit(
+      id: map['id'] ?? '',
+      userId: map['userId'] ?? '',
+      title: map['title'] ?? '',
+      cue: map['cue'] ?? '',
+      routine: map['routine'] ?? '',
+      reward: map['reward'] ?? '',
+      frequency: HabitFrequency.values.firstWhere(
+        (e) => e.name == map['frequency'],
+        orElse: () => HabitFrequency.daily,
+      ),
+      specificDays: List<int>.from(map['specificDays'] ?? []),
+      reminderTime: reminderTime,
+      difficulty: HabitDifficulty.values.firstWhere(
+        (e) => e.name == map['difficulty'],
+        orElse: () => HabitDifficulty.medium,
+      ),
+      isArchived: map['isArchived'] ?? false,
+      createdAt: DateTime.tryParse(map['createdAt'] ?? '') ?? DateTime.now(),
+      currentStreak: map['currentStreak'] ?? 0,
+      longestStreak: map['longestStreak'] ?? 0,
+      lastCompletedDate: map['lastCompletedDate'] != null
+          ? DateTime.tryParse(map['lastCompletedDate'])
+          : null,
+      impact: HabitImpact.values.firstWhere(
+        (e) => e.name == map['impact'],
+        orElse: () => HabitImpact.neutral,
+      ),
+      twoMinuteVersion: map['twoMinuteVersion'],
+      identityTags: List<String>.from(map['identityTags'] ?? []),
+      contractActive: map['contractActive'] ?? false,
+      attribute: HabitAttribute.values.firstWhere(
+        (e) => e.name == map['attribute'],
+        orElse: () => HabitAttribute.vitality,
+      ),
+      imageUrl: map['imageUrl'],
+      timeOfDayPreference: map['timeOfDayPreference'] != null
+          ? TimeOfDayPreference.values.firstWhere(
+              (e) => e.name == map['timeOfDayPreference'],
+              orElse: () => TimeOfDayPreference.anytime,
+            )
+          : null,
+      anchorHabitId: map['anchorHabitId'],
+      order: map['order'] ?? 0,
+      location: map['location'],
+      timerDurationMinutes: map['timerDurationMinutes'] ?? 2,
+      environmentPriming: List<String>.from(map['environmentPriming'] ?? []),
+      integrationType: HabitIntegrationType.values.firstWhere(
+        (e) => e.name == map['integrationType'],
+        orElse: () => HabitIntegrationType.none,
+      ),
+      integrationTarget: map['integrationTarget'],
+      momentumScore: map['momentumScore'] ?? 0,
+      consecutiveMisses: map['consecutiveMisses'] ?? 0,
+    );
+  }
 
   static Habit empty() {
     return Habit(id: '', userId: '', title: '', createdAt: DateTime.now(), momentumScore: 0, consecutiveMisses: 0);
@@ -229,8 +340,7 @@ class Habit extends Equatable {
 
 extension HabitExtension on Habit {
   String? get timelineSection {
-    if (timeOfDayPreference == null ||
-        timeOfDayPreference == TimeOfDayPreference.anytime) {
+    if (timeOfDayPreference == null) {
       return null;
     }
     return timeOfDayPreference!.name;

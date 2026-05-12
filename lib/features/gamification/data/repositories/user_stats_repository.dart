@@ -4,9 +4,23 @@ import 'package:emerge_app/features/auth/domain/entities/user_extension.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:rxdart/rxdart.dart';
 
+import 'package:emerge_app/core/services/local_cache_service.dart';
+import 'package:emerge_app/features/gamification/data/repositories/cache_aware_user_stats_repository.dart';
+
 final userStatsRepositoryProvider = Provider<UserStatsRepository>((ref) {
-  return UserStatsRepository(FirebaseFirestore.instance);
+  final remoteRepository = UserStatsRepository(FirebaseFirestore.instance);
+  try {
+    // localCacheServiceProvider throws AssertionError if Hive hasn't
+    // initialized yet. Fall back gracefully to the remote-only repository
+    // so the rest of the provider graph never sees an exception here.
+    final cacheService = ref.watch(localCacheServiceProvider);
+    return CacheAwareUserStatsRepository(remoteRepository, cacheService);
+  } catch (_) {
+    // Cache not ready — return remote-only repository without crashing.
+    return remoteRepository;
+  }
 });
+
 
 class UserStatsRepository {
   final FirebaseFirestore _firestore;
@@ -22,6 +36,19 @@ class UserStatsRepository {
         .collection('user_stats')
         .doc(profile.uid)
         .set(profile.toMap(), SetOptions(merge: true));
+  }
+
+  Future<void> updateWorldHealth(String uid, int score) async {
+    final entropy = (1.0 - (score / 100.0)).clamp(0.0, 1.0);
+    await _firestore.collection('user_stats').doc(uid).set({
+      'worldHealthScore': score,
+      'worldState': {
+        'entropy': entropy,
+      },
+      'avatarStats': {
+        'momentumScore': score,
+      }
+    }, SetOptions(merge: true));
   }
 
   /// Atomically syncs the profile to BOTH `users` and `user_stats` collections
@@ -148,6 +175,29 @@ class UserStatsRepository {
 
     if (snapshot.docs.isEmpty) return null;
     return snapshot.docs.first.data();
+  }
+
+  Future<Map<String, dynamic>?> getRecap(String userId, String recapId) async {
+    final snapshot = await _firestore
+        .collection('user_stats')
+        .doc(userId)
+        .collection('recaps')
+        .doc(recapId)
+        .get();
+
+    return snapshot.data();
+  }
+
+  Future<List<Map<String, dynamic>>> getRecaps(String userId, {int limit = 10}) async {
+    final snapshot = await _firestore
+        .collection('user_stats')
+        .doc(userId)
+        .collection('recaps')
+        .orderBy('endDate', descending: true)
+        .limit(limit)
+        .get();
+
+    return snapshot.docs.map((doc) => doc.data()).toList();
   }
 
   Future<void> saveRecap(String userId, Map<String, dynamic> recapData) async {

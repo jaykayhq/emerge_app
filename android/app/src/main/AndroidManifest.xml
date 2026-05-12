@@ -39,7 +39,7 @@
         </activity>
         <meta-data
             android:name="com.google.android.gms.ads.APPLICATION_ID"
-            android:value="ca-app-pub-3940256099942544~3347511713"/> <!-- Test AdMob App ID - Replace with your real App ID for production -->
+            android:value="ca-app-pub-5049162599848475~2869117515"/>
 
         <!-- Firebase App Check -->
         <meta-data

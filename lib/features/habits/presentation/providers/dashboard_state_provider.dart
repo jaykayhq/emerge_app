@@ -1,9 +1,11 @@
+import 'package:emerge_app/core/services/remote_config_service.dart';
 import 'package:emerge_app/core/utils/app_logger.dart';
 import 'package:emerge_app/features/auth/domain/entities/user_extension.dart';
 import 'package:emerge_app/features/gamification/domain/models/blueprint.dart';
 import 'package:emerge_app/features/gamification/presentation/providers/gamification_providers.dart';
 import 'package:emerge_app/features/habits/domain/entities/habit.dart';
 import 'package:emerge_app/features/habits/presentation/providers/habit_providers.dart';
+import 'package:emerge_app/features/monetization/presentation/providers/subscription_provider.dart';
 import 'package:emerge_app/features/onboarding/domain/entities/onboarding_milestone.dart';
 import 'package:emerge_app/features/onboarding/presentation/providers/onboarding_provider.dart';
 import 'package:equatable/equatable.dart';
@@ -152,10 +154,12 @@ class DashboardState extends Equatable {
 class DashboardStateNotifier extends _$DashboardStateNotifier {
   @override
   DashboardState build() {
-    // Listen to habits stream and sync to state
+    // Listen to habits stream and sync to state.
+    // State updates are deferred to a microtask to avoid mutating the provider
+    // synchronously during the build phase (Riverpod constraint).
     ref.listen<AsyncValue<List<Habit>>>(habitsProvider, (prev, next) {
       next.whenData((serverHabits) {
-        _syncHabitsFromServer(serverHabits);
+        Future.microtask(() => _syncHabitsFromServer(serverHabits));
       });
     });
 
@@ -164,17 +168,19 @@ class DashboardStateNotifier extends _$DashboardStateNotifier {
       prev,
       next,
     ) {
-      state = state.copyWith(activeMilestones: next);
+      Future.microtask(() => state = state.copyWith(activeMilestones: next));
     });
 
     // Listen to user profile for archetype/attributes
     ref.listen<AsyncValue<UserProfile?>>(userProfileProvider, (prev, next) {
       next.whenData((profile) {
         if (profile != null) {
-          state = state.copyWith(
-            archetype: profile.archetype,
-            why: profile.why,
-            attributes: _convertAttributes(profile),
+          Future.microtask(
+            () => state = state.copyWith(
+              archetype: profile.archetype,
+              why: profile.why,
+              attributes: _convertAttributes(profile),
+            ),
           );
         }
       });
@@ -222,8 +228,8 @@ class DashboardStateNotifier extends _$DashboardStateNotifier {
     state = state.copyWith(habits: mergedHabits, pendingHabitIds: stillPending);
   }
 
-  /// Create a habit with optimistic update
-  /// The habit appears immediately in the dashboard before server confirmation
+  /// Create a habit with optimistic update.
+  /// The habit appears immediately in the dashboard before server confirmation.
   Future<void> createHabitOptimistic(Habit habit) async {
     // 1. Optimistic update - add habit immediately
     state = state.copyWith(
@@ -234,18 +240,20 @@ class DashboardStateNotifier extends _$DashboardStateNotifier {
     );
 
     try {
-      // 2. Actually create on server
-      await ref.read(createHabitProvider(habit).future);
+      // 2. Persist to server directly via repository.
+      //    We intentionally bypass createHabitProvider (auto-dispose family)
+      //    because calling it via ref.read() races with ProviderScope rebuilds
+      //    triggered by navigation (context.go), which disposes the in-flight
+      //    provider before its Future resolves.
+      await _persistHabit(habit);
 
-      // 3. On success, keep in pendingHabitIds until stream confirms
-      // _syncHabitsFromServer will remove it when the habit appears in server data
+      // 3. On success, keep in pendingHabitIds until Firestore stream confirms
       state = state.copyWith(isCreatingHabit: false);
-
       AppLogger.i('Habit created successfully: ${habit.id}');
     } catch (e, s) {
       AppLogger.e('Failed to create habit', e, s);
 
-      // 4. On failure, remove optimistic habit and show error
+      // 4. On failure, roll back optimistic habit and surface error
       state = state.copyWith(
         habits: state.habits.where((h) => h.id != habit.id).toList(),
         pendingHabitIds: state.pendingHabitIds.difference({habit.id}),
@@ -255,6 +263,44 @@ class DashboardStateNotifier extends _$DashboardStateNotifier {
 
       rethrow;
     }
+  }
+
+  /// Persist a single habit to Firestore directly via the repository.
+  ///
+  /// This mirrors the logic in [createHabitProvider] without the auto-dispose
+  /// lifecycle that races with navigation-triggered ProviderScope rebuilds.
+  Future<void> _persistHabit(Habit habit) async {
+    // Subscription limit check — bypassed for onboarding/anchor habits.
+    final isOnboarding =
+        habit.identityTags.contains('onboarding') ||
+        habit.identityTags.contains('anchor');
+
+    if (!isOnboarding) {
+      final isPremium = await ref.read(isPremiumProvider.future);
+      if (!isPremium) {
+        final currentHabits = ref.read(habitsProvider).value ?? [];
+        final freeHabitLimit =
+            ref.read(remoteConfigServiceProvider).freeHabitLimit;
+        if (currentHabits.length >= freeHabitLimit) {
+          throw SubscriptionLimitReachedException(
+            'You have reached the limit of $freeHabitLimit active habits '
+            'on the free tier. Upgrade to Premium for unlimited habits!',
+          );
+        }
+      }
+    }
+
+    final repository = ref.read(habitRepositoryProvider);
+    final result = await repository.createHabit(habit);
+    result.fold(
+      (failure) {
+        AppLogger.e('Failed to create habit', failure, StackTrace.current);
+        throw Exception(failure.message);
+      },
+      (_) {
+        AppLogger.i('Habit persisted to Firestore: ${habit.id}');
+      },
+    );
   }
 
   /// Activate a blueprint - creates all habits from the blueprint
@@ -290,9 +336,9 @@ class DashboardStateNotifier extends _$DashboardStateNotifier {
         pendingHabitIds: {...state.pendingHabitIds, ...pendingIds},
       );
 
-      // Create each habit on server
+      // Create each habit on server directly (bypass auto-dispose provider)
       for (final habit in createdHabits) {
-        await ref.read(createHabitProvider(habit).future);
+        await _persistHabit(habit);
       }
 
       state = state.copyWith(

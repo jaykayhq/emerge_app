@@ -2,6 +2,7 @@ import 'dart:math';
 import 'package:emerge_app/features/world_map/domain/models/world_node.dart';
 import 'package:emerge_app/features/world_map/presentation/widgets/structure_node.dart';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 /// A scrollable map layout that arranges nodes in an S-curve.
 /// Nodes are stacked behind each other vertically, simulating depth
@@ -128,12 +129,28 @@ class CurvedMapLayout extends StatelessWidget {
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      StructureNode(
-                        key: i == 0 ? firstNodeKey : null,
-                        node: node,
-                        primaryColor: primaryColor,
-                        onTap: () => onNodeTap(node),
-                        size: size,
+                      // Thought bubble recap button beside active nodes
+                      Stack(
+                        clipBehavior: Clip.none,
+                        alignment: Alignment.center,
+                        children: [
+                          StructureNode(
+                            key: i == 0 ? firstNodeKey : null,
+                            node: node,
+                            primaryColor: primaryColor,
+                            onTap: () => onNodeTap(node),
+                            size: size,
+                          ),
+                          if (node.state == NodeState.inProgress)
+                            Positioned(
+                              right: -88,
+                              top: -8,
+                              child: _ThoughtBubble(
+                                context: context,
+                                primaryColor: primaryColor,
+                              ),
+                            ),
+                        ],
                       ),
                       const SizedBox(height: 8),
                       if (node.state != NodeState.locked)
@@ -143,13 +160,13 @@ class CurvedMapLayout extends StatelessWidget {
                             vertical: 4,
                           ),
                           decoration: BoxDecoration(
-                            color: Colors.black.withValues(alpha:0.5),
+                            color: Colors.black.withValues(alpha: 0.5),
                             borderRadius: BorderRadius.circular(12),
                           ),
                           child: Text(
                             'LVL ${node.requiredLevel}',
                             style: TextStyle(
-                              color: Colors.white.withValues(alpha:0.8),
+                              color: Colors.white.withValues(alpha: 0.8),
                               fontSize: 10,
                               fontWeight: FontWeight.bold,
                               letterSpacing: 1.0,
@@ -239,4 +256,86 @@ class _PathPainter extends CustomPainter {
         oldDelegate.spacingY != spacingY ||
         oldDelegate.amplitude != amplitude;
   }
+}
+
+/// A thought-bubble style button that floats beside active (in-progress) nodes.
+/// Tapping it navigates to the Recap Hub.
+class _ThoughtBubble extends StatelessWidget {
+  final BuildContext context;
+  final Color primaryColor;
+
+  const _ThoughtBubble({required this.context, required this.primaryColor});
+
+  @override
+  Widget build(BuildContext context) {
+    const bubbleColor = Color(0xFF6C3DE8); // violet
+    return GestureDetector(
+      onTap: () => context.push('/recap-hub'),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // Tail pointing left toward the node
+          CustomPaint(
+            size: const Size(8, 10),
+            painter: _BubbleTailPainter(color: bubbleColor),
+          ),
+          // Pill body
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+            decoration: BoxDecoration(
+              color: bubbleColor.withValues(alpha: 0.85),
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(
+                color: Colors.white.withValues(alpha: 0.25),
+                width: 1,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: bubbleColor.withValues(alpha: 0.5),
+                  blurRadius: 12,
+                  spreadRadius: 1,
+                ),
+              ],
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(Icons.auto_awesome, color: Colors.white, size: 12),
+                const SizedBox(width: 4),
+                const Text(
+                  'Recap',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 11,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: 0.3,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Draws a small leftward-pointing triangle tail for the thought bubble.
+class _BubbleTailPainter extends CustomPainter {
+  final Color color;
+  const _BubbleTailPainter({required this.color});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()..color = color;
+    final path = Path()
+      ..moveTo(size.width, 0)
+      ..lineTo(0, size.height / 2)
+      ..lineTo(size.width, size.height)
+      ..close();
+    canvas.drawPath(path, paint);
+  }
+
+  @override
+  bool shouldRepaint(_BubbleTailPainter old) => old.color != color;
 }

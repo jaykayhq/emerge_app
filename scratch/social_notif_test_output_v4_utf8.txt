@@ -1,0 +1,110 @@
+﻿00:00 +0: loading C:/Users/HP/Downloads/emerge_app/test/core/services/social_notification_service_test.dart
+00:00 +0: (setUpAll)
+00:00 +0: SocialNotificationService sendNotification sends notification and increments unread count
+00:00 +0 -1: SocialNotificationService sendNotification sends notification and increments unread count [E]
+  Expected: <1>
+    Actual: <2>
+  Unexpected number of calls
+  
+  package:matcher                                                  expect
+  package:mocktail/src/mocktail.dart 595:5                         VerificationResult.called
+  test\core\services\social_notification_service_test.dart 111:11  main.<fn>.<fn>.<fn>
+  
+00:00 +0 -1: SocialNotificationService sendNotificationToMultiple sends notifications to multiple users in batch
+00:00 +0 -2: SocialNotificationService sendNotificationToMultiple sends notifications to multiple users in batch [E]
+  type 'MockDocumentReference' is not a subtype of type 'CollectionReference<Map<String, dynamic>>'
+  test\core\services\social_notification_service_test.dart 9:7             MockFirestore.collection
+  package:emerge_app/core/services/social_notification_service.dart 25:10  SocialNotificationService._notificationsCollection
+  package:emerge_app/core/services/social_notification_service.dart 58:22  SocialNotificationService.sendNotificationToMultiple
+  test\core\services\social_notification_service_test.dart 141:23          main.<fn>.<fn>.<fn>
+  
+00:00 +0 -2: SocialNotificationService sendNotificationToMultiple handles empty user list gracefully
+00:00 +1 -2: SocialNotificationService markAsRead marks notification as read and decrements count
+00:00 +1 -3: SocialNotificationService markAsRead marks notification as read and decrements count [E]
+  Invalid argument(s): An argument matcher (like `any()`) was either not used as an immediate argument to Symbol("update") (argument matchers can only be used as an argument for the very method being stubbed or verified), or was used as a named argument without the Mocktail "named" API (Each argument matcher that is used as a named argument needs to specify the name of the argument it is being used in. For example: `when(() => obj.fn(x: any(named: "x")))`).
+  package:mocktail/src/_is_invocation.dart 252:7                   _InvocationForMatchedArguments._reconstitutePositionalArgs
+  package:mocktail/src/_is_invocation.dart 126:33                  new _InvocationForMatchedArguments
+  package:mocktail/src/_is_invocation.dart 111:18                  _useMatchedInvocationIfSet
+  package:mocktail/src/mocktail.dart 112:18                        Mock.noSuchMethod
+  test\core\services\social_notification_service_test.dart 16:7    MockDocumentReference.update
+  test\core\services\social_notification_service_test.dart 184:26  main.<fn>.<fn>.<fn>.<fn>
+  package:mocktail/src/mocktail.dart 508:9                         _makeVerify.<fn>
+  test\core\services\social_notification_service_test.dart 182:15  main.<fn>.<fn>.<fn>
+  
+00:00 +1 -3: SocialNotificationService markAllAsRead marks all unread notifications as read and resets count
+00:01 +1 -4: SocialNotificationService markAllAsRead marks all unread notifications as read and resets count [E]
+  type 'Null' is not a subtype of type 'CollectionReference<Map<String, dynamic>>'
+  test\core\services\social_notification_service_test.dart 9:7             MockFirestore.collection
+  package:emerge_app/core/services/social_notification_service.dart 25:10  SocialNotificationService._notificationsCollection
+  package:emerge_app/core/services/social_notification_service.dart 87:31  SocialNotificationService.markAllAsRead
+  test\core\services\social_notification_service_test.dart 212:23          main.<fn>.<fn>.<fn>
+  
+00:01 +1 -4: SocialNotificationService markAllAsRead returns early when no unread notifications
+00:01 +1 -5: SocialNotificationService markAllAsRead returns early when no unread notifications [E]
+  type 'Null' is not a subtype of type 'CollectionReference<Map<String, dynamic>>'
+  test\core\services\social_notification_service_test.dart 9:7             MockFirestore.collection
+  package:emerge_app/core/services/social_notification_service.dart 25:10  SocialNotificationService._notificationsCollection
+  package:emerge_app/core/services/social_notification_service.dart 87:31  SocialNotificationService.markAllAsRead
+  test\core\services\social_notification_service_test.dart 241:30          main.<fn>.<fn>.<fn>.<fn>
+  package:matcher                                                          expect
+  package:flutter_test/src/widget_tester.dart 473:18                       expect
+  test\core\services\social_notification_service_test.dart 241:9           main.<fn>.<fn>.<fn>
+  ===== asynchronous gap ===========================
+  dart:async                                                               Future._asyncCompleteError
+  test\core\services\social_notification_service_test.dart 241:30          main.<fn>.<fn>.<fn>.<fn>
+  package:matcher                                                          expect
+  package:flutter_test/src/widget_tester.dart 473:18                       expect
+  test\core\services\social_notification_service_test.dart 241:9           main.<fn>.<fn>.<fn>
+  
+00:01 +1 -5: SocialNotificationService deleteNotification deletes notification and decrements count only if unread
+00:01 +1 -6: SocialNotificationService deleteNotification deletes notification and decrements count only if unread [E]
+  type 'Null' is not a subtype of type 'CollectionReference<Map<String, dynamic>>'
+  test\core\services\social_notification_service_test.dart 9:7              MockFirestore.collection
+  package:emerge_app/core/services/social_notification_service.dart 25:10   SocialNotificationService._notificationsCollection
+  package:emerge_app/core/services/social_notification_service.dart 111:20  SocialNotificationService.deleteNotification
+  test\core\services\social_notification_service_test.dart 260:25           main.<fn>.<fn>.<fn>
+  
+00:01 +1 -6: SocialNotificationService deleteNotification deletes read notification without decrementing count
+00:01 +1 -7: SocialNotificationService deleteNotification deletes read notification without decrementing count [E]
+  type 'Null' is not a subtype of type 'CollectionReference<Map<String, dynamic>>'
+  test\core\services\social_notification_service_test.dart 9:7              MockFirestore.collection
+  package:emerge_app/core/services/social_notification_service.dart 25:10   SocialNotificationService._notificationsCollection
+  package:emerge_app/core/services/social_notification_service.dart 111:20  SocialNotificationService.deleteNotification
+  test\core\services\social_notification_service_test.dart 287:23           main.<fn>.<fn>.<fn>
+  
+00:01 +1 -7: SocialNotificationService deleteAllNotifications deletes all notifications and resets count
+[38;5;196mΓöîΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ[0m
+[38;5;196mΓöé type 'Null' is not a subtype of type 'CollectionReference<Map<String, dynamic>>'[0m
+[38;5;196mΓö£ΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöä[0m
+[38;5;196mΓöé #0   MockFirestore.collection (file:///C:/Users/HP/Downloads/emerge_app/test/core/services/social_notification_service_test.dart:9:7)[0m
+[38;5;196mΓöé #1   SocialNotificationService._notificationsCollection (package:emerge_app/core/services/social_notification_service.dart:25:10)[0m
+[38;5;196mΓöé #2   SocialNotificationService.deleteAllNotifications (package:emerge_app/core/services/social_notification_service.dart:127:30)[0m
+[38;5;196mΓöé #3   main.<anonymous closure>.<anonymous closure>.<anonymous closure> (file:///C:/Users/HP/Downloads/emerge_app/test/core/services/social_notification_service_test.dart:311:23)[0m
+[38;5;196mΓöé #4   Declarer.test.<anonymous closure>.<anonymous closure> (package:test_api/src/backend/declarer.dart:253:25)[0m
+[38;5;196mΓö£ΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöä[0m
+[38;5;196mΓöé Γ¢ö Failed to delete all notifications[0m
+[38;5;196mΓööΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ[0m
+00:02 +1 -8: SocialNotificationService deleteAllNotifications deletes all notifications and resets count [E]
+  Bad state: Verification appears to be in progress. 5 verify calls have been stored. [VerifyCall<mock: MockFirestore, memberName: Symbol("collection")>, ..., VerifyCall<mock: MockFirestore, memberName: Symbol("collection")>]
+  package:mocktail/src/mocktail.dart 497:5                        _makeVerify
+  package:mocktail/src/mocktail.dart 335:22                       verify
+  test\core\services\social_notification_service_test.dart 314:9  main.<fn>.<fn>.<fn>
+  
+00:02 +1 -8: SocialNotificationService deleteAllNotifications handles errors gracefully without throwing
+[38;5;196mΓöîΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ[0m
+[38;5;196mΓöé type 'Null' is not a subtype of type 'CollectionReference<Map<String, dynamic>>'[0m
+[38;5;196mΓö£ΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöä[0m
+[38;5;196mΓöé #0   MockFirestore.collection (file:///C:/Users/HP/Downloads/emerge_app/test/core/services/social_notification_service_test.dart:9:7)[0m
+[38;5;196mΓöé #1   SocialNotificationService._notificationsCollection (package:emerge_app/core/services/social_notification_service.dart:25:10)[0m
+[38;5;196mΓöé #2   SocialNotificationService.deleteAllNotifications (package:emerge_app/core/services/social_notification_service.dart:127:30)[0m
+[38;5;196mΓöé #3   main.<anonymous closure>.<anonymous closure>.<anonymous closure>.<anonymous closure> (file:///C:/Users/HP/Downloads/emerge_app/test/core/services/social_notification_service_test.dart:333:25)[0m
+[38;5;196mΓöé #4   _ReturnsNormally.typedMatches (package:matcher/src/core_matchers.dart:156:22)[0m
+[38;5;196mΓö£ΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöäΓöä[0m
+[38;5;196mΓöé Γ¢ö Failed to delete all notifications[0m
+[38;5;196mΓööΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ[0m
+00:02 +2 -8: SocialNotificationService Notification helpers createNotification creates correct structure
+00:02 +3 -8: SocialNotificationService Notification helpers createFriendRequestNotification has correct expiration
+00:02 +4 -8: SocialNotificationService Notification helpers createChallengeInviteNotification has 7-day expiration
+00:02 +5 -8: SocialNotificationService Notification helpers createLevelUpNotification has correct data
+00:02 +6 -8: (tearDownAll)
+00:02 +6 -8: Some tests failed.

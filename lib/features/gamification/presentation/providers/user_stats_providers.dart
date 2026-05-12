@@ -1,5 +1,5 @@
 import 'dart:async';
-import 'package:cloud_firestore/cloud_firestore.dart';
+
 
 import 'package:emerge_app/core/services/event_bus.dart';
 import 'package:emerge_app/core/utils/app_logger.dart';
@@ -26,6 +26,27 @@ final userStatsStreamProvider = StreamProvider<UserProfile>((ref) {
   final repository = ref.watch(userStatsRepositoryProvider);
   return repository.watchUserStats(user.id);
 });
+
+/// Provider that only emits when the user's archetype changes.
+/// This prevents expensive MaterialApp rebuilds when only XP/stats change.
+@riverpod
+UserArchetype currentArchetype(Ref ref) {
+  final profileAsync = ref.watch(userStatsStreamProvider);
+  return profileAsync.maybeWhen(
+    data: (profile) => profile.archetype,
+    orElse: () => UserArchetype.none,
+  );
+}
+
+/// Selector for onboarding completion status
+@riverpod
+bool isOnboardingComplete(Ref ref) {
+  final profileAsync = ref.watch(userStatsStreamProvider);
+  return profileAsync.maybeWhen(
+    data: (profile) => profile.onboardingCompletedAt != null,
+    orElse: () => false,
+  );
+}
 
 /// Split provider that only watches avatarStats field
 /// Prevents full profile rebuilds when only avatar stats change
@@ -135,10 +156,7 @@ class UserStatsController {
     if (userId.isEmpty) return;
     try {
       final score = MomentumService().computeWorldHealth(habits);
-      await FirebaseFirestore.instance.collection('user_stats').doc(userId).set(
-        {'worldHealthScore': score},
-        SetOptions(merge: true),
-      );
+      await repository.updateWorldHealth(userId, score);
       AppLogger.d('World health recalculated: $score');
     } catch (e) {
       AppLogger.e('Error recalculating world health', e);
@@ -284,6 +302,7 @@ class UserStatsController {
         activeNodes: activeNodes,
         claimedNodes: claimedNodes,
         highestCompletedNodeLevel: newHighest,
+        entropy: (currentWorldState.entropy - 0.1).clamp(0.0, 1.0),
       );
 
       // 4. Cap level by node gate: min(xpLevel, highestCompletedNodeLevel + 1)

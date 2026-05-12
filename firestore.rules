@@ -83,8 +83,8 @@ service cloud.firestore {
              (!habit.keys().hasAny(['momentumScore']) || (habit.momentumScore is number && habit.momentumScore >= 0 && habit.momentumScore <= 100)) &&
              (!habit.keys().hasAny(['consecutiveMisses']) || (habit.consecutiveMisses is number && habit.consecutiveMisses >= 0)) &&
              // New fields for scheduling
-             (!habit.keys().hasAny(['reminderTime']) || (habit.reminderTime is string && habit.reminderTime.matches('^([01]\\d|2[0-3]):([0-5]\\d)$'))) &&
-             (!habit.keys().hasAny(['timeOfDayPreference']) || (habit.timeOfDayPreference is string && habit.timeOfDayPreference in ['morning', 'afternoon', 'evening', 'anytime']));
+             (!habit.keys().hasAny(['reminderTime']) || habit.reminderTime == null || (habit.reminderTime is string && habit.reminderTime.matches('^([01]\\d|2[0-3]):([0-5]\\d)$'))) &&
+             (!habit.keys().hasAny(['timeOfDayPreference']) || habit.timeOfDayPreference == null || (habit.timeOfDayPreference is string && habit.timeOfDayPreference in ['morning', 'afternoon', 'evening', 'anytime']));
     }
 
     // Helper function to validate post content
@@ -150,6 +150,9 @@ service cloud.firestore {
              (!data.keys().hasAny(['equippedTitleId']) || data.equippedTitleId == null || data.equippedTitleId is string) &&
              (!data.keys().hasAny(['equippedNameplateId']) || data.equippedNameplateId == null || data.equippedNameplateId is string) &&
              (!data.keys().hasAny(['equippedEmblemIds']) || data.equippedEmblemIds is list) &&
+             
+             // World Health and Momentum
+             (!data.keys().hasAny(['worldHealthScore']) || data.worldHealthScore is number) &&
              
              // Social and habit counts (allow increment/updates)
              (!data.keys().hasAny(['totalHabitsCompleted']) || data.totalHabitsCompleted is number) &&
@@ -244,13 +247,12 @@ service cloud.firestore {
       allow delete: if isAuthenticated() && resource.data.userId == request.auth.uid;
     }
 
-    // Tribes / Archetype Clubs (fixed, not user-created)
+    // Tribes / Archetype Clubs (fixed, official clubs — not user-created)
+    // Root tribe document is managed by Cloud Functions for memberCount/members.
+    // Clients may only merge-update specific aggregate stat fields.
     match /tribes/{tribeId} {
-      allow read: if isAuthenticated();
-      // Allow creation for initial seeding of official clubs
+      allow read: if true;
       allow create, update: if isAuthenticated();
-      // Prevent deletion of official clubs
-      allow delete: if false;
 
 
       // Tribe contributor-specific metrics and details
@@ -259,7 +261,10 @@ service cloud.firestore {
         allow create: if isAuthenticated() && request.auth.uid == memberId;
         allow update: if isAuthenticated() && request.auth.uid == memberId &&
           request.resource.data.diff(resource.data).affectedKeys()
-            .hasOnly(['lastActivity', 'contributionCount', 'lastContributionAt', 'totalHabitsCompleted', 'totalChallengesCompleted', 'totalXpContributed', 'archetype', 'userName', 'userId']);
+            .hasOnly(['lastActivity', 'contributionCount', 'lastContributionAt',
+                      'totalHabitsCompleted', 'totalChallengesCompleted',
+                      'totalXpContributed', 'archetype', 'userName', 'userId',
+                      'joinedAt', 'leftAt']);
       }
 
       // Club activity feed
@@ -284,10 +289,8 @@ service cloud.firestore {
 
     // Challenges — catalog entries
     match /challenges/{challengeId} {
-      allow read, create: if isAuthenticated();
-      // Only allow updating participant count — full CRUD managed by Cloud Functions
-      allow update: if isAuthenticated() &&
-        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['participants']);
+      allow read: if true;
+      allow create, update: if isAuthenticated();
       allow delete: if false;
 
       match /participants/{participantId} {
@@ -324,10 +327,20 @@ service cloud.firestore {
       allow delete: if isOwner(resource.data.userId);
     }
 
+    // Helper to validate recap data
+    function isValidRecap(recap) {
+      return recap.keys().hasAll(['id', 'userId', 'startDate', 'endDate', 'totalHabitsCompleted']) &&
+             recap.userId == request.auth.uid &&
+             recap.startDate is string &&
+             recap.endDate is string &&
+             recap.totalHabitsCompleted is number;
+    }
+
     // Insights (Recaps & Reflections)
     match /user_stats/{userId}/recaps/{recapId} {
       allow read: if isOwner(userId);
-      allow write: if false;
+      allow create, update: if isOwner(userId) && isValidRecap(request.resource.data);
+      allow delete: if isOwner(userId);
     }
 
     match /user_stats/{userId}/reflections/{reflectionId} {
@@ -369,10 +382,11 @@ service cloud.firestore {
       allow write: if request.auth != null && request.auth.token.admin == true;
     }
 
-    // Creator Blueprints (habit stacks shared by creators)
-    match /creator_blueprints/{blueprintId} {
-      allow read, create, update: if isAuthenticated();
-      allow delete: if false; 
+    // Blueprints (habit stacks shared by Emerge)
+    match /blueprints/{blueprintId} {
+      allow read: if true;
+      allow create, update: if isAuthenticated();
+      allow delete: if request.auth != null && request.auth.token.admin == true;
     }
 
     // Challenge Templates (Read-only, Write by Admin)
@@ -390,11 +404,13 @@ service cloud.firestore {
                    (resource.data.recipientId == request.auth.uid || resource.data.senderId == request.auth.uid);
     }
 
-    // User Activity (Logs) - For XP and Habit tracking
+    // User Activity (Logs) - Immutable behavioral log for XP tracking
+    // update/delete blocked client-side to prevent XP farming exploits
+    // Only Cloud Functions (onUserActivityCreated) may process these
     match /user_activity/{activityId} {
       allow read: if isAuthenticated() && resource.data.userId == request.auth.uid;
       allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid;
-      allow update, delete: if isAuthenticated() && resource.data.userId == request.auth.uid;
+      allow update, delete: if false;
     }
 
 

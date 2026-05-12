@@ -135,13 +135,13 @@ class AppTheme {
         surface: backgroundLight,
         onSurface: textMainLight,
       ),
-      // Spline Sans font
+      // Spline Sans font with fallback for missing glyphs
       textTheme: GoogleFonts.splineSansTextTheme(
         ThemeData.light().textTheme.apply(
           bodyColor: textMainLight,
           displayColor: textMainLight,
         ),
-      ),
+      ).apply(fontFamilyFallback: ['Noto Sans', 'Noto Color Emoji']),
       appBarTheme: const AppBarTheme(
         backgroundColor: Colors.transparent,
         elevation: 0,
@@ -195,13 +195,13 @@ class AppTheme {
         surface: surfaceDark,
         onSurface: textMainDark,
       ),
-      // Spline Sans font (from Stitch design)
+      // Spline Sans font with fallback for missing glyphs
       textTheme: GoogleFonts.splineSansTextTheme(
         ThemeData.dark().textTheme.apply(
           bodyColor: textMainDark,
           displayColor: textMainDark,
         ),
-      ),
+      ).apply(fontFamilyFallback: ['Noto Sans', 'Noto Color Emoji']),
       appBarTheme: const AppBarTheme(
         backgroundColor: Colors.transparent,
         elevation: 0,

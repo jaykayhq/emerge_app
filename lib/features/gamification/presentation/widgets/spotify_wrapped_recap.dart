@@ -1,4 +1,4 @@
-import 'package:emerge_app/core/presentation/widgets/emerge_branding.dart';
+import 'package:emerge_app/core/presentation/widgets/animated_flame_logo.dart';
 import 'package:emerge_app/features/gamification/domain/entities/weekly_recap.dart';
 import 'package:emerge_app/features/gamification/presentation/providers/user_stats_providers.dart';
 import 'package:flutter/material.dart';
@@ -32,16 +32,6 @@ class _SpotifyWrappedRecapState extends ConsumerState<SpotifyWrappedRecap>
   int _currentPage = 0;
   late AnimationController _gradientController;
 
-  // Gradient colors for each slide
-  static const List<List<Color>> _slideGradients = [
-    [Color(0xFF0D1B2A), Color(0xFF1B263B)], // Progress - Deep Navy
-    [Color(0xFF0A0A0A), Color(0xFF1A1A1A)], // Identity - Black/Dark Grey
-    [Color(0xFF1A0A2A), Color(0xFF2A1B4E)], // Intro - Purple
-    [Color(0xFF112218), Color(0xFF1DB954)], // Stats - Green
-    [Color(0xFF2A1A3A), Color(0xFFFFD700)], // Top Habit - Gold
-    [Color(0xFF0A1A3A), Color(0xFF9C27B0)], // Outro - Blue/Purple
-  ];
-
   @override
   void initState() {
     super.initState();
@@ -52,12 +42,60 @@ class _SpotifyWrappedRecapState extends ConsumerState<SpotifyWrappedRecap>
     );
   }
 
-  int get _totalSlides {
-    int count = 4; // Intro, Stats, Top Habit, Outro
-    if (widget.recap.dominantIdentityThisWeek != null) count++;
-    if (!widget.recap.isComplete) count++;
-    return count;
+  // Slide types to manage gradients and visibility
+  List<Widget> _getSlides() {
+    final slides = <Widget>[];
+    
+    // 0. Progress slide (Only if not complete)
+    if (!widget.recap.isComplete) {
+      slides.add(_ProgressSlide(recap: widget.recap));
+    }
+    
+    // 1. Intro (Always first)
+    slides.add(_WrappedIntro(recap: widget.recap));
+    
+    // 2. Identity (If available)
+    if (widget.recap.dominantIdentityThisWeek != null) {
+      slides.add(_IdentitySlide(
+        identity: widget.recap.dominantIdentityThisWeek!,
+        headline: widget.recap.identityHeadline ?? '',
+        motive: ref.watch(userStatsStreamProvider).value?.dominantMotive,
+      ));
+    }
+    
+    // 3. Stats
+    slides.add(_WrappedStats(recap: widget.recap));
+    
+    // 4. Top Habit
+    slides.add(_WrappedTopHabit(recap: widget.recap));
+    
+    // 5. AI Insight
+    slides.add(_AiInsightSlide(recap: widget.recap));
+    
+    // 6. Outro
+    slides.add(_WrappedOutro(recap: widget.recap, onShare: _shareRecap));
+    
+    return slides;
   }
+
+  List<Color> _getCurrentGradient() {
+    final slides = _getSlides();
+    if (_currentPage >= slides.length) return [const Color(0xFF0D1B2A), const Color(0xFF1B263B)];
+    
+    final currentSlide = slides[_currentPage];
+    
+    if (currentSlide is _ProgressSlide) return [const Color(0xFF0D1B2A), const Color(0xFF1B263B)];
+    if (currentSlide is _WrappedIntro) return [const Color(0xFF1A0A2A), const Color(0xFF2A1B4E)];
+    if (currentSlide is _IdentitySlide) return [const Color(0xFF0A0A0A), const Color(0xFF1A1A1A)];
+    if (currentSlide is _WrappedStats) return [const Color(0xFF112218), const Color(0xFF1DB954)];
+    if (currentSlide is _WrappedTopHabit) return [const Color(0xFF2A1A3A), const Color(0xFFFFD700)];
+    if (currentSlide is _AiInsightSlide) return [const Color(0xFF2C0735), const Color(0xFF4B296B)];
+    if (currentSlide is _WrappedOutro) return [const Color(0xFF0A1A3A), const Color(0xFF9C27B0)];
+    
+    return [const Color(0xFF0D1B2A), const Color(0xFF1B263B)];
+  }
+
+  int get _totalSlides => _getSlides().length;
 
   @override
   void dispose() {
@@ -106,13 +144,22 @@ Building my identity, one habit at a time. 💪
 
   @override
   Widget build(BuildContext context) {
+    final slides = _getSlides();
+    
     return Stack(
       fit: StackFit.expand,
       children: [
         // Animated gradient background
         _buildAnimatedBackground(),
 
-        // Close button
+        // Main content
+        PageView(
+          controller: _pageController,
+          onPageChanged: _onPageChanged,
+          children: slides,
+        ),
+
+        // Close button (Placed after PageView to be on top)
         Positioned(
           top: 50,
           right: 16,
@@ -126,27 +173,6 @@ Building my identity, one habit at a time. 💪
               onPressed: widget.onClose,
             ),
           ),
-        ),
-
-        // Main content
-        PageView(
-          controller: _pageController,
-          onPageChanged: _onPageChanged,
-          children: [
-            // Progress slide is now just the first part of the experience, not a gate
-            _ProgressSlide(recap: widget.recap),
-            
-            if (widget.recap.dominantIdentityThisWeek != null)
-              _IdentitySlide(
-                identity: widget.recap.dominantIdentityThisWeek!,
-                headline: widget.recap.identityHeadline ?? '',
-                motive: ref.watch(userStatsStreamProvider).value?.dominantMotive,
-              ),
-            _WrappedIntro(recap: widget.recap),
-            _WrappedStats(recap: widget.recap),
-            _WrappedTopHabit(recap: widget.recap),
-            _WrappedOutro(recap: widget.recap, onShare: _shareRecap),
-          ],
         ),
 
         // Progress dots
@@ -165,7 +191,7 @@ Building my identity, one habit at a time. 💪
             gradient: LinearGradient(
               begin: Alignment.topCenter,
               end: Alignment.bottomCenter,
-              colors: _slideGradients[_currentPage],
+              colors: _getCurrentGradient(),
             ),
           ),
         );
@@ -228,7 +254,7 @@ class _WrappedIntro extends StatelessWidget {
           SizedBox(
             height: 80,
             width: 80,
-            child: const EmergeLogoWidget(size: 80, animate: true),
+            child: const AnimatedFlameLogo(size: 80),
           ).animate().fadeIn(duration: 600.ms).scale(),
 
           const Gap(40),
@@ -895,6 +921,178 @@ class _ProgressSlide extends StatelessWidget {
           ),
         ).animate().fadeIn(delay: 1500.ms),
       ],
+    );
+  }
+}
+
+class _AiInsightSlide extends StatelessWidget {
+  final UserWeeklyRecap recap;
+
+  const _AiInsightSlide({required this.recap});
+
+  @override
+  Widget build(BuildContext context) {
+    if (recap.isLocked) {
+      return _buildLockedState(context);
+    }
+
+    return _buildUnlockedState(context);
+  }
+
+  Widget _buildLockedState(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 32),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          // Locked Icon with Glow
+          Container(
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.05),
+              shape: BoxShape.circle,
+              border: Border.all(
+                color: EmergeColors.violet.withValues(alpha: 0.3),
+                width: 2,
+              ),
+            ),
+            child: const Icon(
+              Icons.lock_outline_rounded,
+              color: EmergeColors.violet,
+              size: 64,
+            ),
+          ).animate().shake(duration: 1000.ms).fadeIn(),
+
+          const Gap(40),
+
+          Text(
+            'AI INSIGHTS',
+            style: Theme.of(context).textTheme.displaySmall?.copyWith(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w900,
+                  letterSpacing: 4,
+                ),
+          ).animate().fadeIn(delay: 300.ms),
+
+          const Gap(16),
+
+          Text(
+            'Unlock deep behavioral analysis and AI-powered growth patterns.',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              color: Colors.white.withValues(alpha: 0.7),
+              fontSize: 18,
+              height: 1.5,
+            ),
+          ).animate().fadeIn(delay: 600.ms),
+
+          const Gap(48),
+
+          // Upgrade Button
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                colors: [EmergeColors.violet, EmergeColors.teal],
+              ),
+              borderRadius: BorderRadius.circular(30),
+              boxShadow: [
+                BoxShadow(
+                  color: EmergeColors.violet.withValues(alpha: 0.4),
+                  blurRadius: 20,
+                  offset: const Offset(0, 10),
+                ),
+              ],
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(Icons.auto_awesome, color: Colors.white, size: 20),
+                const Gap(12),
+                Text(
+                  'UPGRADE TO UNLOCK',
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                        letterSpacing: 1.2,
+                      ),
+                ),
+              ],
+            ),
+          ).animate().scale(delay: 900.ms, curve: Curves.elasticOut),
+          
+          const Gap(24),
+          
+          Text(
+            'FREE FOR ALL PREMIUM MEMBERS',
+            style: TextStyle(
+              color: Colors.white.withValues(alpha: 0.4),
+              fontSize: 12,
+              letterSpacing: 1.5,
+            ),
+          ).animate().fadeIn(delay: 1200.ms),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildUnlockedState(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 32),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const Icon(
+            Icons.auto_awesome,
+            color: EmergeColors.violet,
+            size: 48,
+          ).animate().scale().fadeIn(),
+
+          const Gap(32),
+
+          Text(
+            'AI ANALYSIS',
+            style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                  color: EmergeColors.violet,
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: 4,
+                ),
+          ).animate().fadeIn(delay: 300.ms),
+
+          const Gap(24),
+
+          Container(
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.08),
+              borderRadius: BorderRadius.circular(24),
+              border: Border.all(
+                color: EmergeColors.violet.withValues(alpha: 0.2),
+              ),
+            ),
+            child: Text(
+              recap.aiInsight ?? 'Analysis complete. Your patterns show a strong lean towards consistency in morning routines.',
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 18,
+                height: 1.6,
+                fontStyle: FontStyle.italic,
+              ),
+            ),
+          ).animate().fadeIn(delay: 600.ms).slideY(begin: 0.1, end: 0),
+
+          const Gap(32),
+
+          Text(
+            'Refined by Emerge AI',
+            style: TextStyle(
+              color: Colors.white.withValues(alpha: 0.4),
+              fontSize: 14,
+            ),
+          ).animate().fadeIn(delay: 900.ms),
+        ],
+      ),
     );
   }
 }

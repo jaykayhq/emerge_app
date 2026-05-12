@@ -9,7 +9,7 @@ import 'package:emerge_app/features/habits/domain/models/habit_activity.dart';
 import 'package:emerge_app/features/habits/domain/repositories/habit_repository.dart';
 import 'package:emerge_app/features/social/domain/services/club_activity_service.dart';
 import 'package:emerge_app/features/habits/domain/services/momentum_service.dart';
-import 'package:emerge_app/features/social/domain/entities/social_entities.dart';
+import 'package:emerge_app/features/blueprints/domain/models/blueprint.dart';
 import 'package:fpdart/fpdart.dart';
 
 class FirestoreHabitRepository implements HabitRepository {
@@ -27,6 +27,25 @@ class FirestoreHabitRepository implements HabitRepository {
   /// Uses null coalescing on all fields to prevent crashes on malformed data.
   Habit _mapDocToHabit(DocumentSnapshot<Map<String, dynamic>> doc) {
     final data = doc.data()!;
+    
+    // Support both legacy map format and new HH:mm string format
+    TimeOfDay? reminderTime;
+    final rawReminderTime = data['reminderTime'];
+    if (rawReminderTime is String) {
+      final parts = rawReminderTime.split(':');
+      if (parts.length == 2) {
+        reminderTime = TimeOfDay(
+          hour: int.parse(parts[0]),
+          minute: int.parse(parts[1]),
+        );
+      }
+    } else if (rawReminderTime is Map) {
+      reminderTime = TimeOfDay(
+        hour: (rawReminderTime['hour'] as int?) ?? 0,
+        minute: (rawReminderTime['minute'] as int?) ?? 0,
+      );
+    }
+
     return Habit(
       id: doc.id,
       userId: (data['userId'] as String?) ?? '',
@@ -47,18 +66,7 @@ class FirestoreHabitRepository implements HabitRepository {
         (e) => e.name == data['difficulty'],
         orElse: () => HabitDifficulty.medium,
       ),
-      reminderTime: data['reminderTime'] != null
-          ? TimeOfDay(
-              hour:
-                  (data['reminderTime'] as Map<String, dynamic>)['hour']
-                      as int? ??
-                  0,
-              minute:
-                  (data['reminderTime'] as Map<String, dynamic>)['minute']
-                      as int? ??
-                  0,
-            )
-          : null,
+      reminderTime: reminderTime,
       location: data['location'] as String?,
       isArchived: (data['isArchived'] as bool?) ?? false,
       createdAt: data['createdAt'] != null
@@ -140,10 +148,7 @@ class FirestoreHabitRepository implements HabitRepository {
         'specificDays': habit.specificDays,
         'difficulty': habit.difficulty.name,
         'reminderTime': habit.reminderTime != null
-            ? {
-                'hour': habit.reminderTime!.hour,
-                'minute': habit.reminderTime!.minute,
-              }
+            ? '${habit.reminderTime!.hour.toString().padLeft(2, '0')}:${habit.reminderTime!.minute.toString().padLeft(2, '0')}'
             : null,
         'location': habit.location,
         'isArchived': habit.isArchived,
@@ -192,10 +197,7 @@ class FirestoreHabitRepository implements HabitRepository {
         'specificDays': habit.specificDays,
         'difficulty': habit.difficulty.name,
         'reminderTime': habit.reminderTime != null
-            ? {
-                'hour': habit.reminderTime!.hour,
-                'minute': habit.reminderTime!.minute,
-              }
+            ? '${habit.reminderTime!.hour.toString().padLeft(2, '0')}:${habit.reminderTime!.minute.toString().padLeft(2, '0')}'
             : null,
         'location': habit.location,
         'isArchived': habit.isArchived,
@@ -514,14 +516,13 @@ class FirestoreHabitRepository implements HabitRepository {
   @override
   Future<Either<Failure, Unit>> createHabitsFromBlueprint({
     required String userId,
-    required CreatorBlueprint blueprint,
+    required Blueprint blueprint,
     String? reminderTime,
   }) async {
     try {
       final batch = _firestore.batch();
-      final specs = blueprint.habitSpecs;
-      final titles = blueprint.habitTitles;
-      final count = specs.isNotEmpty ? specs.length : titles.length;
+      final habits = blueprint.habits;
+      final count = habits.length;
 
       TimeOfDay? overrideTime;
       if (reminderTime != null) {
@@ -535,15 +536,14 @@ class FirestoreHabitRepository implements HabitRepository {
       }
 
       for (int i = 0; i < count; i++) {
-        final title = specs.isNotEmpty ? specs[i].title : titles[i];
-        final spec = (specs.isNotEmpty && i < specs.length) ? specs[i] : null;
+        final habitBlueprint = habits[i];
         
         TimeOfDayPreference? tdp;
-        TimeOfDay? habitTime = overrideTime ?? spec?.defaultTime;
+        TimeOfDay? habitTime = overrideTime ?? habitBlueprint.defaultTime;
 
-        if (spec?.timeOfDay != null) {
+        if (habitBlueprint.timeOfDay != null) {
           tdp = TimeOfDayPreference.values.firstWhere(
-            (e) => e.name.toLowerCase() == spec!.timeOfDay!.toLowerCase(),
+            (e) => e.name.toLowerCase() == habitBlueprint.timeOfDay!.toLowerCase(),
             orElse: () => TimeOfDayPreference.anytime,
           );
         }
@@ -561,18 +561,15 @@ class FirestoreHabitRepository implements HabitRepository {
 
         final ref = _firestore
             .collection('habits')
-            .doc(); // Use top-level habits collection to match watchHabits
+            .doc(); 
             
         final habit = Habit(
           id: ref.id,
           userId: userId,
-          title: title,
+          title: habitBlueprint.title,
           createdAt: DateTime.now(),
           order: i,
-          attribute: HabitAttribute.values.firstWhere(
-            (e) => e.name == blueprint.creatorArchetype.toLowerCase(),
-            orElse: () => HabitAttribute.vitality,
-          ),
+          attribute: habitBlueprint.attribute,
           reminderTime: habitTime,
           timeOfDayPreference: tdp,
         );
@@ -587,10 +584,7 @@ class FirestoreHabitRepository implements HabitRepository {
           'specificDays': habit.specificDays,
           'difficulty': habit.difficulty.name,
           'reminderTime': habit.reminderTime != null
-              ? {
-                  'hour': habit.reminderTime!.hour,
-                  'minute': habit.reminderTime!.minute,
-                }
+              ? '${habit.reminderTime!.hour.toString().padLeft(2, '0')}:${habit.reminderTime!.minute.toString().padLeft(2, '0')}'
               : null,
           'location': habit.location,
           'isArchived': habit.isArchived,
@@ -604,6 +598,7 @@ class FirestoreHabitRepository implements HabitRepository {
           'impact': habit.impact.name,
           'order': habit.order,
           'anchorHabitId': habit.anchorHabitId,
+          'bottomHabitId': null, // Added to match Habit model if needed, but not in Habit entity
           'identityTags': habit.identityTags,
           'timerDurationMinutes': habit.timerDurationMinutes,
           'environmentPriming': habit.environmentPriming,
@@ -617,7 +612,7 @@ class FirestoreHabitRepository implements HabitRepository {
 
       // Increment adoption count on blueprint
       batch.update(
-        _firestore.collection('creator_blueprints').doc(blueprint.id),
+        _firestore.collection('blueprints').doc(blueprint.id),
         {'adoptionCount': FieldValue.increment(1)},
       );
 

@@ -134,13 +134,7 @@ class EmergeDialogConfig {
   );
 
   /// Get box shadow for dialog
-  static List<BoxShadow> getBoxShadow(Color primaryColor) => [
-    BoxShadow(
-      color: primaryColor.withValues(alpha: 0.15),
-      blurRadius: 24,
-      spreadRadius: 2,
-    ),
-  ];
+  static List<BoxShadow> getBoxShadow(Color primaryColor) => [];
 
   /// Get standard dialog decoration
   static BoxDecoration getDecoration(Color primaryColor) => BoxDecoration(

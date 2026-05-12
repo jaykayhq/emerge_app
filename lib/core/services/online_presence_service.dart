@@ -20,6 +20,7 @@ class OnlinePresenceService {
   /// If a heartbeat is already running for a different user, it will be
   /// stopped before starting the new one.
   Future<void> startHeartbeat(String userId) async {
+    if (userId.isEmpty) return;
     // Stop existing heartbeat if running for a different user
     if (_currentUserId != null && _currentUserId != userId) {
       await stopHeartbeat();
@@ -78,6 +79,7 @@ class OnlinePresenceService {
   /// their status to offline. Note that without this, other users will
   /// see the user as offline based on the lastSeen timestamp.
   Future<void> setOffline(String userId) async {
+    if (userId.isEmpty) return;
     try {
       await _firestore
           .collection('users')

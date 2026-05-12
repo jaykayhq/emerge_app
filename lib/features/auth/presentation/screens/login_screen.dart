@@ -275,13 +275,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           gradient: const LinearGradient(
                             colors: [EmergeColors.violet, EmergeColors.coral],
                           ),
-                          boxShadow: [
-                            BoxShadow(
-                              color: EmergeColors.violet.withValues(alpha: 0.3),
-                              blurRadius: 12,
-                              offset: const Offset(0, 4),
-                            ),
-                          ],
                         ),
                         child: ElevatedButton(
                           onPressed: _isLoading ? null : _login,
@@ -589,15 +582,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                           EmergeColors.coral,
                                         ],
                                       ),
-                                      boxShadow: [
-                                        BoxShadow(
-                                          color: EmergeColors.violet.withValues(
-                                            alpha: 0.3,
-                                          ),
-                                          blurRadius: 12,
-                                          offset: const Offset(0, 4),
-                                        ),
-                                      ],
                                     ),
                                     child: ElevatedButton(
                                       onPressed: _isLoading ? null : _login,

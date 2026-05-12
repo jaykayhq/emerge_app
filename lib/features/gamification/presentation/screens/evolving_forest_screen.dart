@@ -1,6 +1,7 @@
 import 'dart:math';
 
 import 'package:confetti/confetti.dart';
+import 'package:emerge_app/core/constants/gamification_constants.dart';
 import 'package:emerge_app/core/theme/app_theme.dart';
 import 'package:emerge_app/features/auth/domain/entities/user_extension.dart';
 import 'package:emerge_app/features/gamification/presentation/providers/user_stats_providers.dart';
@@ -65,7 +66,7 @@ class _EvolvingForestScreenState extends ConsumerState<EvolvingForestScreen> {
         actions: [
           IconButton(
             icon: const Icon(Icons.movie_filter),
-            onPressed: () => context.push('/world/recap'),
+            onPressed: () => context.push('/recap'),
             tooltip: 'Cinematic Recap',
           ),
         ],
@@ -188,7 +189,7 @@ class _EvolvingForestScreenState extends ConsumerState<EvolvingForestScreen> {
                               const Gap(12),
                               FloatingActionButton(
                                 heroTag: 'recap',
-                                onPressed: () => context.push('/world/recap'),
+                                onPressed: () => context.push('/recap'),
                                 backgroundColor: AppTheme.surfaceDark,
                                 child: const Icon(
                                   Icons.movie_filter,
@@ -252,12 +253,11 @@ class _EvolvingForestScreenState extends ConsumerState<EvolvingForestScreen> {
   }
 
   Widget _buildXpBar(dynamic stats) {
-    // XP to next level = 100 * level (simple formula based on repository)
-    // Current Level starts at 1. Level 1 -> 2 needs 100 XP.
-    // Repo formula: newLevel = (newXp / 100).floor() + 1
-    // So distinct levels are at 0, 100, 200...
-    final currentLevelBaseXp = (stats.level - 1) * 100;
-    final nextLevelXp = stats.level * 100;
+    // Level formula: level = (totalXp / xpPerLevel).floor() + 1
+    // where xpPerLevel = 500 (GamificationConstants.xpPerLevel)
+    const xpPerLevel = GamificationConstants.xpPerLevel;
+    final currentLevelBaseXp = (stats.level - 1) * xpPerLevel;
+    final nextLevelXp = stats.level * xpPerLevel;
     final progress =
         (stats.totalXp - currentLevelBaseXp) /
         (nextLevelXp - currentLevelBaseXp);

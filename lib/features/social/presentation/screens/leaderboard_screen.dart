@@ -2,6 +2,7 @@ import 'package:emerge_app/core/presentation/widgets/app_error_widget.dart';
 import 'package:emerge_app/core/presentation/widgets/emerge_loading_skeleton.dart';
 import 'package:emerge_app/core/theme/app_theme.dart';
 import 'package:emerge_app/features/gamification/presentation/providers/user_stats_providers.dart';
+import 'package:emerge_app/features/social/domain/models/tribe.dart';
 import 'package:emerge_app/features/social/presentation/providers/friends_leaderboard_provider.dart';
 import 'package:emerge_app/features/social/presentation/providers/leaderboard_provider.dart';
 import 'package:emerge_app/features/social/presentation/providers/tribes_provider.dart';
@@ -148,6 +149,24 @@ class _FriendsLeaderboardTab extends ConsumerWidget {
   }
 }
 
+String _archetypeToClubId(String archetype) {
+  switch (archetype.toLowerCase()) {
+    case 'athlete':
+      return 'morning_warriors';
+    case 'scholar':
+      return 'deep_work_society';
+    case 'stoic':
+      return 'mindful_masters';
+    case 'creator':
+      return 'creative_collective';
+    case 'zealot':
+    case 'mystic':
+      return 'lunar_seekers';
+    default:
+      return '${archetype}_club';
+  }
+}
+
 class _TribeLeaderboardTab extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -164,7 +183,7 @@ class _TribeLeaderboardTab extends ConsumerWidget {
           );
         }
 
-        final clubId = profile.archetype.name;
+        final clubId = _archetypeToClubId(profile.archetype.name);
         final leaderboardAsync = ref.watch(clubLeaderboardProvider(clubId));
 
         return Column(
@@ -253,28 +272,25 @@ class _WorldLeaderboardTab extends ConsumerWidget {
 
     return tribesAsync.when(
       data: (tribes) {
+        // Sort tribes by their own totalXp field (stored on the Tribe model)
+        final sorted = List<Tribe>.from(tribes.whereType<Tribe>())
+          ..sort((a, b) => b.totalXp.compareTo(a.totalXp));
+
         return ListView.builder(
           padding: const EdgeInsets.symmetric(horizontal: 16),
-          itemCount: tribes.length,
+          itemCount: sorted.length,
           itemBuilder: (context, index) {
-            final tribe = tribes[index];
-            // Watch real-time stats for each tribe
+            final tribe = sorted[index];
             final statsAsync = ref.watch(realTimeTribeStatsProvider(tribe.id));
 
             return Padding(
               padding: const EdgeInsets.only(bottom: 12),
               child: statsAsync.when(
-                data: (stats) {
-                  // Sort by real-time total XP
-                  final sortedIndex = tribes.indexWhere(
-                    (t) => t.id == tribe.id,
-                  );
-                  return _TribeLeaderboardItem(
-                    tribe: tribe,
-                    stats: stats,
-                    rank: sortedIndex + 1,
-                  );
-                },
+                data: (stats) => _TribeLeaderboardItem(
+                  tribe: tribe,
+                  stats: stats,
+                  rank: index + 1,
+                ),
                 loading: () => _TribeLeaderboardItem(
                   tribe: tribe,
                   stats: TribeStats(

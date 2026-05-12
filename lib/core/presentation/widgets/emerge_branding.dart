@@ -68,15 +68,6 @@ class _EmergeLogoWidgetState extends State<EmergeLogoWidget>
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               color: EmergeColors.background.withValues(alpha: 0.5),
-              boxShadow: [
-                BoxShadow(
-                  color: EmergeColors.teal.withValues(
-                    alpha: 0.2 * _progressAnimation.value,
-                  ),
-                  blurRadius: 30,
-                  spreadRadius: 5,
-                ),
-              ],
             ),
             child: CustomPaint(
               painter: UnfoldingELogoPainter(

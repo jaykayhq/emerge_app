@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
+import 'package:emerge_app/features/blueprints/data/repositories/blueprint_repository.dart';
 import 'package:emerge_app/features/social/data/seeds/official_clubs_seed.dart';
 
 /// Run this function once to seed Firestore with official clubs
@@ -8,26 +9,28 @@ Future<void> seedOfficialClubs({FirebaseFirestore? firestore}) async {
   final fs = firestore ?? FirebaseFirestore.instance;
 
   try {
-    // Get official clubs from seed data
-    final clubsMap = OfficialClubsSeed.getOfficialClubsMap();
-
-    // Check if clubs already exist
-    final existingSnapshot = await fs
-        .collection('tribes')
-        .where('type', isEqualTo: 'official')
-        .limit(1)
-        .get();
-
-    if (existingSnapshot.docs.isNotEmpty) {
-      debugPrint('🔄 Official clubs already exist. Skipping seed.');
+    // Skip if clubs already exist
+    final existing = await fs.collection('tribes').limit(1).get();
+    if (existing.docs.isNotEmpty) {
+      debugPrint('🔄 Clubs already exist. Skipping seed.');
       return;
     }
 
-    // Seed the clubs
+    // Get official clubs from seed data
+    final clubsMap = OfficialClubsSeed.getOfficialClubsMap();
+
+    // Seed official clubs
     final batch = fs.batch();
     for (final entry in clubsMap.entries) {
       final docRef = fs.collection('tribes').doc(entry.key);
-      batch.set(docRef, entry.value);
+      batch.set(
+        docRef,
+        {
+          ...entry.value,
+          'id': entry.key,
+          'createdAt': FieldValue.serverTimestamp(),
+        },
+      );
     }
     await batch.commit();
 
@@ -139,5 +142,20 @@ Future<void> seedChallenges({FirebaseFirestore? firestore}) async {
     debugPrint('✅ Seeded ${challenges.length} challenges!');
   } catch (e) {
     debugPrint('❌ Error seeding challenges: $e');
+  }
+}
+
+/// Seeds the 25 curated creator blueprints (5 per archetype) into Firestore.
+/// Uses batch set with merge:true so it is safe to run on every launch —
+/// documents are created if missing or updated if already present.
+Future<void> seedBlueprints({FirebaseFirestore? firestore}) async {
+  try {
+    final repo = BlueprintRepository(
+      firestore ?? FirebaseFirestore.instance,
+    );
+    await repo.seedBlueprintsIfEmpty();
+    debugPrint('✅ Blueprints seeded/synced');
+  } catch (e) {
+    debugPrint('❌ Error seeding blueprints: $e');
   }
 }

@@ -6,6 +6,7 @@ import 'package:emerge_app/features/gamification/domain/entities/weekly_recap.da
 import 'package:emerge_app/features/habits/presentation/providers/habit_providers.dart'; // For habit repo provider
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cloud_functions/cloud_functions.dart';
+import 'package:emerge_app/features/monetization/presentation/providers/subscription_provider.dart';
 import 'package:uuid/uuid.dart';
 
 final weeklyRecapServiceProvider = Provider((ref) => WeeklyRecapService(ref));
@@ -15,106 +16,120 @@ class WeeklyRecapService {
 
   WeeklyRecapService(this._ref);
 
-  Future<UserWeeklyRecap?> generateRecapIfNeeded(String userId) async {
-    final now = DateTime.now();
+  /// Generates or retrieves a recap for a specific date range.
+  /// If [startDate] or [endDate] are null, it defaults to the last 7 days.
+  Future<UserWeeklyRecap?> generateRecap({
+    required String userId,
+    String? recapId,
+    DateTime? startDate,
+    DateTime? endDate,
+    bool forceRefresh = false,
+  }) async {
     final userStatsRepository = _ref.read(userStatsRepositoryProvider);
 
-    // 1. Check for cached recap from TODAY
-    final latestRecapData = await userStatsRepository.getLatestRecap(userId);
-    if (latestRecapData != null) {
-      final latestRecap = UserWeeklyRecap.fromMap(latestRecapData);
-      final recapDate = latestRecap.endDate;
-      final isSameDay = recapDate.year == now.year &&
-          recapDate.month == now.month &&
-          recapDate.day == now.day;
-
-      // Only reuse if it's the SAME day and it's already "complete"
-      // If it's not complete, we might want to refresh it to show today's progress
-      if (isSameDay && latestRecap.isComplete) {
-        return latestRecap;
+    // 1. If recapId is provided, fetch specific recap
+    if (recapId != null) {
+      final recapData = await userStatsRepository.getRecap(userId, recapId);
+      if (recapData != null) {
+        return UserWeeklyRecap.fromMap(recapData);
       }
     }
 
-    // 2. Determine Date Range
-    // For a dynamic recap, we look back up to 7 days, or since user joined
-    final userProfile = await userStatsRepository.getUserStats(userId);
-    DateTime startDate = now.subtract(const Duration(days: 7));
+    final now = DateTime.now();
+    final end = endDate ?? now;
+    final start = startDate ?? end.subtract(const Duration(days: 7));
     
-    // If user joined recently, start from their join date
-    final userJoinDate = userProfile.accountCreatedAt ?? DateTime.now().subtract(const Duration(days: 7));
-    if (userJoinDate.isAfter(startDate)) {
-      startDate = userJoinDate;
+    final isPremium = _ref.read(isPremiumProvider).value ?? false;
+
+    if (!forceRefresh) {
+      final existingRecapData = await userStatsRepository.getLatestRecap(userId);
+      // For a better experience, we should ideally search by rangeId, 
+      // but for now, we'll check if the latest matches roughly.
+      if (existingRecapData != null) {
+        final existing = UserWeeklyRecap.fromMap(existingRecapData);
+        if (existing.startDate.isAtSameMomentAs(start) && 
+            existing.endDate.isAtSameMomentAs(end) &&
+            existing.isComplete) {
+          return existing;
+        }
+      }
     }
 
-    // Always allow recap to show if there's at least some data
-    // We'll mark it as "complete" only if it's been a full cycle, 
-    // but the UI won't block based on this anymore.
-    final diff = now.difference(startDate).inDays;
-    final isComplete = diff >= 6; 
-
-    // 3. Fetch Activity History
+    // 2. Fetch Activity History
     final activities = await userStatsRepository.getWeeklyActivity(
       userId,
-      startDate,
-      now,
+      start,
+      end,
     );
 
-    // 4. Generate and Save (Attempt AI first)
+    final userProfile = await userStatsRepository.getUserStats(userId);
+    final diff = end.difference(start).inDays;
+    final isComplete = diff >= 6; 
+
+    // 3. Generate and Save
     UserWeeklyRecap? recap;
-    try {
-      final functions = FirebaseFunctions.instance;
-      // Note: We pass the range to the AI if it supported it, but our function
-      // currently just looks back 14 days internally. We'll stick to that but
-      // fix the UI side.
-      final result = await functions.httpsCallable('generateAiRecap').call({
-        'userId': userId,
-      });
-      
-      if (result.data['success'] == true) {
-        final localRecap = await _calculateRecap(userId, activities, startDate, now, userProfile);
-        recap = UserWeeklyRecap(
-          id: result.data['recapId'] ?? localRecap.id,
-          userId: userId,
-          startDate: startDate,
-          endDate: now,
-          totalHabitsCompleted: localRecap.totalHabitsCompleted,
-          perfectDays: localRecap.perfectDays,
-          totalXpEarned: localRecap.totalXpEarned,
-          topHabitName: localRecap.topHabitName,
-          currentLevel: localRecap.currentLevel,
-          worldGrowthPercentage: localRecap.worldGrowthPercentage,
-          dominantIdentityThisWeek: localRecap.dominantIdentityThisWeek,
-          identityHeadline: localRecap.identityHeadline,
-          aiInsight: result.data['insight'],
-          velocityInsights: List<String>.from(result.data['adjustments'] ?? []),
-          isComplete: isComplete,
-        );
+    
+    // GATED INSIGHTS LOGIC
+    if (isPremium) {
+      try {
+        final functions = FirebaseFunctions.instance;
+        final result = await functions.httpsCallable('generateAiRecap').call({
+          'startDate': start.toIso8601String(),
+          'endDate': end.toIso8601String(),
+        });
+        
+        if (result.data['success'] == true) {
+          final localRecap = await _calculateRecap(userId, activities, start, end, userProfile);
+          recap = UserWeeklyRecap(
+            id: result.data['recapId'] ?? localRecap.id,
+            userId: userId,
+            startDate: start,
+            endDate: end,
+            totalHabitsCompleted: localRecap.totalHabitsCompleted,
+            perfectDays: localRecap.perfectDays,
+            totalXpEarned: localRecap.totalXpEarned,
+            topHabitName: localRecap.topHabitName,
+            currentLevel: localRecap.currentLevel,
+            worldGrowthPercentage: localRecap.worldGrowthPercentage,
+            dominantIdentityThisWeek: localRecap.dominantIdentityThisWeek,
+            identityHeadline: localRecap.identityHeadline,
+            aiInsight: result.data['insight'],
+            velocityInsights: List<String>.from(result.data['adjustments'] ?? []),
+            isComplete: isComplete,
+            isAiGenerated: true,
+            isLocked: false,
+          );
+        }
+      } catch (e) {
+        AppLogger.d('AI Recap Error: $e');
+        // Fallback to local calculation (treated as non-premium or failed)
       }
-    } catch (e) {
-      AppLogger.d('AI Recap Error: $e');
-      // Fallback to local calculation
-      recap = await _calculateRecap(userId, activities, startDate, now, userProfile);
+    }
+
+    // If still null (not premium, AI failed, or skipped), generate local-only
+    if (recap == null) {
+      final local = await _calculateRecap(userId, activities, start, end, userProfile);
       recap = UserWeeklyRecap(
-        id: recap.id,
-        userId: recap.userId,
-        startDate: recap.startDate,
-        endDate: recap.endDate,
-        totalHabitsCompleted: recap.totalHabitsCompleted,
-        perfectDays: recap.perfectDays,
-        totalXpEarned: recap.totalXpEarned,
-        topHabitName: recap.topHabitName,
-        currentLevel: recap.currentLevel,
-        worldGrowthPercentage: recap.worldGrowthPercentage,
-        dominantIdentityThisWeek: recap.dominantIdentityThisWeek,
-        identityHeadline: recap.identityHeadline,
+        id: local.id,
+        userId: userId,
+        startDate: start,
+        endDate: end,
+        totalHabitsCompleted: local.totalHabitsCompleted,
+        perfectDays: local.perfectDays,
+        totalXpEarned: local.totalXpEarned,
+        topHabitName: local.topHabitName,
+        currentLevel: local.currentLevel,
+        worldGrowthPercentage: local.worldGrowthPercentage,
+        dominantIdentityThisWeek: local.dominantIdentityThisWeek,
+        identityHeadline: local.identityHeadline,
         isComplete: isComplete,
+        isAiGenerated: false,
+        isLocked: !isPremium, // Mark as locked if user isn't premium
       );
     }
 
-    if (recap != null) {
-      // Save to Firestore via repository
-      await userStatsRepository.saveRecap(userId, recap.toMap());
-    }
+    // Save to Firestore
+    await userStatsRepository.saveRecap(userId, recap.toMap());
     
     return recap;
   }

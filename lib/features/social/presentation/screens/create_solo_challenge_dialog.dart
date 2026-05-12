@@ -68,8 +68,13 @@ class _CreateSoloChallengeDialogState
         id: challengeId,
         title: _titleController.text.trim(),
         description: _descController.text.trim(),
-        imageUrl:
-            'assets/images/challenges/${_category.name}_custom.png', // Fallback or placeholder path
+        imageUrl: switch (_category) {
+          ChallengeCategory.fitness => 'https://images.unsplash.com/photo-1517836357463-d25dfeac3438?q=80&w=1000',
+          ChallengeCategory.learning => 'https://images.unsplash.com/photo-1456513080510-7bf3a84b82f8?q=80&w=1000',
+          ChallengeCategory.productivity => 'https://images.unsplash.com/photo-1499750310107-5fef28a66643?q=80&w=1000',
+          ChallengeCategory.mindfulness => 'https://images.unsplash.com/photo-1506126613408-eca07ce68773?q=80&w=1000',
+          _ => 'https://images.unsplash.com/photo-1497215728101-856f4ea42174?q=80&w=1000',
+        },
         reward: '${_durationDays * 10} XP',
         participants: 1, // You are the first participant
         daysLeft: _durationDays,

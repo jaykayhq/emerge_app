@@ -30,6 +30,7 @@ class RemoteConfigService {
       // RevenueCat API Keys (fallback to empty if Remote Config unavailable)
       'revenuecat_google_api_key': '',
       'revenuecat_apple_api_key': '',
+      'revenuecat_web_api_key': '',
       'onboarding_archetypes': jsonEncode([
         {
           'id': 'athlete',
@@ -125,18 +126,25 @@ class RemoteConfigService {
 
   /// Get RevenueCat API key from Remote Config
   String getRevenueCatApiKey(String platform) {
-    final key = _remoteConfig.getString(
-      platform == 'android'
-          ? 'revenuecat_google_api_key'
-          : 'revenuecat_apple_api_key',
-    );
-    return key;
+    String configKey = 'revenuecat_google_api_key';
+    if (platform == 'ios') {
+      configKey = 'revenuecat_apple_api_key';
+    } else if (platform == 'web') {
+      configKey = 'revenuecat_web_api_key';
+    }
+
+    return _remoteConfig.getString(configKey);
   }
 
   /// Check if RevenueCat keys are configured in Remote Config
   bool isRevenueCatConfigured(String platform) {
     final key = getRevenueCatApiKey(platform);
-    return key.isNotEmpty && key != 'YOUR_REVENUECAT_API_KEY';
+    return key.isNotEmpty;
+  }
+
+  /// Get a string value from Remote Config
+  String getString(String key) {
+    return _remoteConfig.getString(key);
   }
 
   OnboardingConfig getOnboardingConfig() {

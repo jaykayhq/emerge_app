@@ -1,1 +1,25 @@
-{}
+{
+  "parameters": {
+    "revenuecat_google_api_key": {
+      "defaultValue": {
+        "value": "goog_OLTkFmwnoJSFGerwpJaeMHTJarp"
+      },
+      "description": "RevenueCat Public API key for Android",
+      "valueType": "STRING"
+    },
+    "revenuecat_apple_api_key": {
+      "defaultValue": {
+        "value": ""
+      },
+      "description": "RevenueCat Public API key for iOS",
+      "valueType": "STRING"
+    },
+    "revenuecat_web_api_key": {
+      "defaultValue": {
+        "value": "strp_sb_gzYXaxhwmWkadNWZMaAsAOXY"
+      },
+      "description": "RevenueCat Stripe API key for Web",
+      "valueType": "STRING"
+    }
+  }
+}

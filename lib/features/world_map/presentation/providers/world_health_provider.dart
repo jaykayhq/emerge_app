@@ -34,7 +34,7 @@ final worldHealthStreamProvider = StreamProvider<double>((ref) {
 
   final repository = ref.watch(userStatsRepositoryProvider);
   return repository.watchUserStats(user.id).map((profile) {
-    return (profile.worldHealthScore).clamp(0.0, 1.0);
+    return (profile.momentumScore).clamp(0.0, 1.0);
   });
 });
 
