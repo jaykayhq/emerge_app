@@ -252,27 +252,7 @@ class _BlueprintStripCard extends StatelessWidget {
                       ),
                     ),
 
-                    // Badge
-                    Positioned(
-                      top: 12,
-                      left: 12,
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                        decoration: BoxDecoration(
-                          color: Colors.black54,
-                          borderRadius: BorderRadius.circular(8),
-                          border: Border.all(color: Colors.white10),
-                        ),
-                        child: Text(
-                          blueprint.creatorArchetype.toUpperCase(),
-                          style: const TextStyle(
-                            color: EmergeColors.teal,
-                            fontSize: 9,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
-                    ),
+
                   ],
                 ),
               ),
