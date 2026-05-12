@@ -42,19 +42,9 @@ class BlueprintRepository {
         return;
       }
 
-      // Delete old archetype blueprints (v1) if present
-      final oldBlueprints = await _firestore
-          .collection('blueprints')
-          .where('creatorUserId', isEqualTo: 'system')
-          .get();
-      if (oldBlueprints.docs.isNotEmpty) {
-        final deleteBatch = _firestore.batch();
-        for (final doc in oldBlueprints.docs) {
-          deleteBatch.delete(doc.reference);
-        }
-        await deleteBatch.commit();
-        AppLogger.i('BlueprintRepository: Cleared ${oldBlueprints.docs.length} old blueprints.');
-      }
+      // Note: Old archetype blueprints (v1) remain in Firestore but are
+      // filtered out in the UI by allowed categories list. Server-side
+      // cleanup via Firebase Console or Cloud Function recommended for production.
 
       final List<Blueprint> seedData = [
         // MORNING
