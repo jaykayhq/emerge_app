@@ -26,17 +26,34 @@ class BlueprintRepository {
     });
   }
 
+  /// Current seed version — bump when seed data changes to force re-seed
+  static const int _seedVersion = 2;
+
   Future<void> seedBlueprintsIfEmpty() async {
     try {
-      final existing = await _firestore
+      // Check if v2 seed data already exists
+      final v2Check = await _firestore
           .collection('blueprints')
-          .where('creatorUserId', isEqualTo: 'system')
-          .limit(25)
+          .doc('morning_1')
           .get();
           
-      if (existing.docs.length >= 25) {
-        AppLogger.i('BlueprintRepository: Blueprints already seeded.');
+      if (v2Check.exists) {
+        AppLogger.i('BlueprintRepository: Blueprints already seeded (v$_seedVersion).');
         return;
+      }
+
+      // Delete old archetype blueprints (v1) if present
+      final oldBlueprints = await _firestore
+          .collection('blueprints')
+          .where('creatorUserId', isEqualTo: 'system')
+          .get();
+      if (oldBlueprints.docs.isNotEmpty) {
+        final deleteBatch = _firestore.batch();
+        for (final doc in oldBlueprints.docs) {
+          deleteBatch.delete(doc.reference);
+        }
+        await deleteBatch.commit();
+        AppLogger.i('BlueprintRepository: Cleared ${oldBlueprints.docs.length} old blueprints.');
       }
 
       final List<Blueprint> seedData = [
