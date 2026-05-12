@@ -1057,14 +1057,11 @@ class _ActiveChallengesSection extends StatelessWidget {
   Widget build(BuildContext context) {
     final List<Challenge> activeChallenges = [];
     if (bundle != null) {
-      if (bundle!.weeklySpotlight != null && 
-          bundle!.weeklySpotlight!.status == ChallengeStatus.active) {
-        activeChallenges.add(bundle!.weeklySpotlight!);
-      }
-      if (bundle!.dailyQuest != null && 
-          bundle!.dailyQuest!.status == ChallengeStatus.active) {
-        activeChallenges.add(bundle!.dailyQuest!);
-      }
+      // Check user's active weekly/daily (not featured catalog versions)
+      final activeWeekly = bundle!.activeWeeklyChallenge;
+      if (activeWeekly != null) activeChallenges.add(activeWeekly);
+      final activeDaily = bundle!.activeDailyChallenge;
+      if (activeDaily != null) activeChallenges.add(activeDaily);
       activeChallenges.addAll(bundle!.activeSoloChallenges);
     }
 
