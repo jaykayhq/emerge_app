@@ -3,6 +3,8 @@ import 'package:emerge_app/core/services/remote_config_service.dart';
 import 'package:emerge_app/core/utils/app_logger.dart';
 import 'package:emerge_app/features/habits/data/repositories/firestore_habit_repository.dart';
 import 'package:emerge_app/features/auth/presentation/providers/auth_providers.dart';
+import 'package:emerge_app/core/cache/cache_aware_habit_repository.dart';
+import 'package:emerge_app/core/services/local_cache_service.dart';
 
 import 'package:emerge_app/features/habits/domain/entities/habit.dart';
 import 'package:emerge_app/features/habits/domain/models/habit_activity.dart';
@@ -19,7 +21,7 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 part 'habit_providers.g.dart';
 
 /// Fallback free tier habit limit when Remote Config is unavailable.
-const int kDefaultFreeHabitLimit = 3;
+const int kDefaultFreeHabitLimit = 5;
 
 class SubscriptionLimitReachedException implements Exception {
   final String message;
@@ -33,11 +35,22 @@ MomentumService momentumService(Ref ref) => MomentumService();
 HabitRepository habitRepository(Ref ref) {
   final socialActivityService = ref.watch(socialActivityServiceProvider);
   final userStatsRepository = ref.watch(userStatsRepositoryProvider);
-  return FirestoreHabitRepository(
+
+  final remoteRepository = FirestoreHabitRepository(
     FirebaseFirestore.instance,
     socialActivityService,
     userStatsRepository,
   );
+
+  try {
+    // localCacheServiceProvider throws AssertionError if Hive hasn't
+    // initialized yet — fall back to remote-only to avoid crashing the
+    // entire habit provider graph during app startup.
+    final localCache = ref.watch(localCacheServiceProvider);
+    return CacheAwareHabitRepository(remoteRepository, localCache);
+  } catch (_) {
+    return remoteRepository;
+  }
 }
 
 @riverpod
@@ -109,9 +122,11 @@ Stream<List<Habit>> habits(Ref ref) {
 
 @riverpod
 Future<void> createHabit(Ref ref, Habit habit) async {
+  final keepAliveLink = ref.keepAlive();
   try {
     // Check limit logic
     final isPremium = await ref.read(isPremiumProvider.future);
+    if (!ref.mounted) return;
 
     if (!isPremium) {
       // Check current habit count
@@ -129,10 +144,6 @@ Future<void> createHabit(Ref ref, Habit habit) async {
             .read(remoteConfigServiceProvider)
             .freeHabitLimit;
         if (currentHabits.length >= freeHabitLimit) {
-          // Check if provider is still mounted before throwing
-          if (!ref.mounted) {
-            return; // Provider was disposed, silently return
-          }
           throw SubscriptionLimitReachedException(
             'You have reached the limit of $freeHabitLimit active habits on the free tier. Upgrade to Premium for unlimited habits!',
           );
@@ -142,13 +153,12 @@ Future<void> createHabit(Ref ref, Habit habit) async {
 
     final repository = ref.read(habitRepositoryProvider);
     final result = await repository.createHabit(habit);
+    if (!ref.mounted) return;
 
     result.fold(
       (failure) {
         AppLogger.e('Failed to create habit', failure, StackTrace.current);
-        if (ref.mounted) {
-          throw Exception(failure.message);
-        }
+        throw Exception(failure.message);
       },
       (_) {
         AppLogger.i('Successfully created habit: ${habit.id}');
@@ -157,95 +167,112 @@ Future<void> createHabit(Ref ref, Habit habit) async {
   } catch (e, s) {
     AppLogger.e('Error in createHabit provider', e, s);
     rethrow;
+  } finally {
+    keepAliveLink.close();
   }
 }
 
 @riverpod
 Future<HabitCompletionResult> completeHabit(Ref ref, String habitId) async {
-  final repository = ref.read(habitRepositoryProvider);
-  final userAsync = ref.read(authStateChangesProvider);
-  final userId = userAsync.value?.id;
+  final keepAliveLink = ref.keepAlive();
+  try {
+    final repository = ref.read(habitRepositoryProvider);
+    final userAsync = ref.read(authStateChangesProvider);
+    final userId = userAsync.value?.id;
 
-  final result = await repository.completeHabit(habitId, DateTime.now());
+    final result = await repository.completeHabit(habitId, DateTime.now());
 
-  return result.fold(
-    (failure) {
-      AppLogger.e('Failed to complete habit', failure, StackTrace.current);
-      if (ref.mounted) {
-        throw Exception(failure.message);
-      }
-      return HabitCompletionResult(xpEarned: 0, newStreak: 0);
-    },
-    (isCompleted) async {
-      if (isCompleted) {
-        AppLogger.i('Successfully completed habit: $habitId');
-        if (userId != null) {
-          final habit = await repository.getHabit(habitId);
-          if (habit != null) {
-            final baseXp = _calculateBaseXp(habit);
-            final currentStreak = habit.currentStreak;
-            final newStreak = currentStreak + 1;
+    return await result.fold(
+      (failure) async {
+        AppLogger.e('Failed to complete habit', failure, StackTrace.current);
+        if (ref.mounted) {
+          throw Exception(failure.message);
+        }
+        return const HabitCompletionResult(xpEarned: 0, newStreak: 0);
+      },
+      (isCompleted) async {
+        if (isCompleted) {
+          AppLogger.i('Successfully completed habit: $habitId');
+          if (userId != null) {
+            final habit = await repository.getHabit(habitId);
+            if (habit != null) {
+              final baseXp = _calculateBaseXp(habit);
+              final currentStreak = habit.currentStreak;
+              final newStreak = currentStreak + 1;
 
-            final xpResult = calculateXpBreakdown(
-              habit: habit,
-              baseXp: baseXp,
-              currentStreak: newStreak,
-            );
-
-            final isMilestone = VariableRewardService.isStreakMilestone(
-              newStreak,
-            );
-
-            if (isMilestone) {
-              AppLogger.i(
-                'Streak milestone reached: $newStreak days for habit $habitId',
+              final xpResult = calculateXpBreakdown(
+                habit: habit,
+                baseXp: baseXp,
+                currentStreak: newStreak,
               );
-              ref
-                  .read(cueNotifierProvider.notifier)
-                  .queueMilestoneCue(habit, newStreak);
+
+              final isMilestone = VariableRewardService.isStreakMilestone(
+                newStreak,
+              );
+
+              if (isMilestone) {
+                AppLogger.i(
+                  'Streak milestone reached: $newStreak days for habit $habitId',
+                );
+                if (ref.mounted) {
+                  ref
+                      .read(cueNotifierProvider.notifier)
+                      .queueMilestoneCue(habit, newStreak);
+                }
+              }
+
+              AppLogger.i(
+                'Habit completed: $habitId. XP: ${xpResult.totalXp}, Streak: $newStreak, Milestone: $isMilestone',
+              );
+
+              // Recalculate world health after completion
+              try {
+                final currentHabits = await repository.watchHabits(userId).first;
+                if (ref.mounted) {
+                  await ref
+                      .read(userStatsControllerProvider)
+                      .recalculateWorldHealth(currentHabits);
+                }
+              } catch (e) {
+                AppLogger.e('Failed to recalculate world health', e);
+              }
+
+              return HabitCompletionResult(
+                xpEarned: xpResult.totalXp,
+                newStreak: newStreak,
+                isStreakMilestone: isMilestone,
+                breakdown: xpResult,
+              );
             }
+          }
+          return const HabitCompletionResult(xpEarned: 0, newStreak: 0);
+        } else {
+          AppLogger.i('Habit completion undone: $habitId');
 
-            AppLogger.i(
-              'Habit completed: $habitId. XP: ${xpResult.totalXp}, Streak: $newStreak, Milestone: $isMilestone',
-            );
-
-            // Recalculate world health after completion
+          if (userId != null) {
             try {
               final currentHabits = await repository.watchHabits(userId).first;
               if (ref.mounted) {
-                await ref.read(userStatsControllerProvider).recalculateWorldHealth(currentHabits);
+                await ref
+                    .read(userStatsControllerProvider)
+                    .recalculateWorldHealth(currentHabits);
               }
             } catch (e) {
-              AppLogger.e('Failed to recalculate world health', e);
+              AppLogger.e('Failed to recalculate world health on undo', e);
             }
+          }
 
-            return HabitCompletionResult(
-              xpEarned: xpResult.totalXp,
-              newStreak: newStreak,
-              isStreakMilestone: isMilestone,
-              breakdown: xpResult,
-            );
-          }
+          return const HabitCompletionResult(
+            xpEarned: 0,
+            newStreak: 0,
+            isUndo: true,
+          );
         }
-        return HabitCompletionResult(xpEarned: 0, newStreak: 0);
-      } else {
-        AppLogger.i('Habit completion undone: $habitId');
-        
-        if (userId != null) {
-          try {
-            final currentHabits = await repository.watchHabits(userId).first;
-            if (ref.mounted) {
-              await ref.read(userStatsControllerProvider).recalculateWorldHealth(currentHabits);
-            }
-          } catch (e) {
-            AppLogger.e('Failed to recalculate world health on undo', e);
-          }
-        }
-        
-        return HabitCompletionResult(xpEarned: 0, newStreak: 0, isUndo: true);
-      }
-    },
-  );
+      },
+    );
+  } finally {
+    keepAliveLink.close();
+  }
 }
 
 int _calculateBaseXp(Habit habit) {
