@@ -1,7 +1,6 @@
 import 'package:emerge_app/core/drift/database.dart';
 import 'package:emerge_app/core/drift_repositories/drift_challenge_repository.dart';
 import 'package:emerge_app/core/game_loop/game_loop_engine.dart';
-import 'package:emerge_app/core/sync/sync_providers.dart';
 import 'package:emerge_app/features/auth/presentation/providers/auth_providers.dart';
 import 'package:emerge_app/features/gamification/presentation/providers/user_stats_providers.dart';
 import 'package:emerge_app/features/social/domain/models/challenge.dart';
@@ -15,8 +14,7 @@ part 'challenge_provider.g.dart';
 final challengeRepositoryProvider = Provider<ChallengeRepository>((ref) {
   final db = ref.watch(appDatabaseProvider);
   final engine = LocalGameLoopEngine();
-  final syncEngine = ref.watch(enhancedSyncEngineProvider);
-  return DriftChallengeRepository(db, engine, syncEngine);
+  return DriftChallengeRepository(db, engine);
 });
 
 @Riverpod(keepAlive: true)

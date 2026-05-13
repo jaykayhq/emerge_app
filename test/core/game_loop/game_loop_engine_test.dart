@@ -1,6 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:emerge_app/core/game_loop/game_loop_engine.dart';
-import 'package:emerge_app/core/game_loop/game_loop_result.dart';
 
 void main() {
   late LocalGameLoopEngine engine;

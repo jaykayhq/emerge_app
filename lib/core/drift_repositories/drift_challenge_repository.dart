@@ -1,7 +1,6 @@
 import 'package:emerge_app/core/drift/database.dart';
 import 'package:emerge_app/core/error/failure.dart';
 import 'package:emerge_app/core/game_loop/game_loop_engine.dart';
-import 'package:emerge_app/core/sync/sync_engine.dart';
 import 'package:emerge_app/features/social/domain/models/challenge.dart';
 import 'package:emerge_app/features/social/domain/models/challenge_catalog.dart';
 import 'package:emerge_app/features/social/domain/repositories/challenge_repository.dart';
@@ -10,9 +9,8 @@ import 'package:fpdart/fpdart.dart';
 class DriftChallengeRepository implements ChallengeRepository {
   final AppDatabase _db;
   final LocalGameLoopEngine _engine;
-  final EnhancedSyncEngine _syncEngine;
 
-  DriftChallengeRepository(this._db, this._engine, this._syncEngine);
+  DriftChallengeRepository(this._db, this._engine);
 
   @override
   Future<Either<Failure, Unit>> joinChallenge(String userId, String challengeId) async {

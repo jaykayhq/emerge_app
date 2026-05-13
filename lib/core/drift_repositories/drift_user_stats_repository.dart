@@ -116,17 +116,18 @@ class DriftUserStatsRepository {
     String? attribute,
     int? streakDay,
   }) async {
-    await _firestore.collection('user_activity').add({
+    final data = <String, dynamic>{
       'userId': userId,
       'date': Timestamp.fromDate(date),
       'type': type,
       'createdAt': FieldValue.serverTimestamp(),
-      if (habitId != null) 'habitId': habitId,
-      if (sourceId != null) 'sourceId': sourceId,
-      if (difficulty != null) 'difficulty': difficulty,
-      if (attribute != null) 'attribute': attribute,
-      if (streakDay != null) 'streakDay': streakDay,
-    });
+    };
+    if (habitId != null) data['habitId'] = habitId;
+    if (sourceId != null) data['sourceId'] = sourceId;
+    if (difficulty != null) data['difficulty'] = difficulty;
+    if (attribute != null) data['attribute'] = attribute;
+    if (streakDay != null) data['streakDay'] = streakDay;
+    await _firestore.collection('user_activity').add(data);
   }
 
   UserProfile _rowToProfile(UserStatsTableData row) {
