@@ -27,7 +27,6 @@ import 'package:emerge_app/features/tutorial/presentation/widgets/tutorial_overl
 import 'package:emerge_app/core/presentation/widgets/world_background.dart';
 import 'package:emerge_app/core/domain/models/app_world_theme.dart';
 import 'package:emerge_app/core/presentation/widgets/archetype_sliver_app_bar.dart';
-import 'package:emerge_app/core/presentation/widgets/sync_status_indicator.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -235,7 +234,7 @@ class _TimelineScreenState extends ConsumerState<TimelineScreen> {
       slivers: [
         ArchetypeSliverAppBar(
           title: 'TIMELINE',
-          syncIndicator: const SyncStatusIndicator(),
+          syncIndicator: null,
           badge: Consumer(
             builder: (context, ref, _) {
               final isPremium = ref.watch(isPremiumProvider).value ?? false;

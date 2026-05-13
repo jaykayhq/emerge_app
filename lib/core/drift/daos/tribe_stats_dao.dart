@@ -16,6 +16,10 @@ class TribeStatsDao extends DatabaseAccessor<AppDatabase> with _$TribeStatsDaoMi
     return select(tribeStatsTable).watch();
   }
 
+  Future<TribeStatsTableData?> getByArchetype(String archetypeId) {
+    return (select(tribeStatsTable)..where((t) => t.archetypeId.equals(archetypeId))).getSingleOrNull();
+  }
+
   Future<TribeStatsTableData?> getStats(String tribeId) {
     return (select(tribeStatsTable)..where((t) => t.tribeId.equals(tribeId))).getSingleOrNull();
   }

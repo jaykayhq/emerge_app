@@ -55,7 +55,7 @@ final class BlueprintActivationNotifierProvider
 }
 
 String _$blueprintActivationNotifierHash() =>
-    r'fc5eaa8c6d4852558655da9bcfb305545ae13952';
+    r'3252247f4a0be39dabc3d20ca77064d1e62b4046';
 
 /// Blueprint Activation Notifier
 /// Handles the flow of selecting and activating blueprints
