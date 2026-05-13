@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:emerge_app/core/drift/database.dart';
 import 'package:emerge_app/core/drift/daos/mutation_queue_dao.dart';
-import 'package:flutter/foundation.dart';
+import 'package:emerge_app/core/utils/app_logger.dart';
 
 class EnhancedSyncEngine {
   final MutationQueueDao _mutationQueue;
@@ -13,28 +13,28 @@ class EnhancedSyncEngine {
 
   Future<void> processMutationQueue() async {
     if (_isProcessing) {
-      debugPrint('SyncEngine: Already processing, skipping');
+      AppLogger.d('SyncEngine: Already processing, skipping');
       return;
     }
     _isProcessing = true;
     try {
       final mutations = await _mutationQueue.getAllPending();
       if (mutations.isEmpty) {
-        debugPrint('SyncEngine: No pending mutations.');
+        AppLogger.d('SyncEngine: No pending mutations.');
         return;
       }
 
-      debugPrint('SyncEngine: Processing ${mutations.length} mutations...');
+      AppLogger.d('SyncEngine: Processing ${mutations.length} mutations...');
 
       for (final mutation in mutations) {
         final success = await _applyMutation(mutation);
         if (success) {
           await _mutationQueue.deleteProcessed(mutation.id);
-          debugPrint('SyncEngine: Synced mutation ${mutation.id}');
+          AppLogger.d('SyncEngine: Synced mutation ${mutation.id}');
         } else {
           await _mutationQueue.incrementRetry(mutation.id);
           if (mutation.retryCount >= 3) {
-            debugPrint('SyncEngine: Dropping mutation ${mutation.id} after 3 retries');
+            AppLogger.d('SyncEngine: Dropping mutation ${mutation.id} after 3 retries');
             await _mutationQueue.deleteProcessed(mutation.id);
           }
           break;
@@ -69,7 +69,7 @@ class EnhancedSyncEngine {
       }
       return true;
     } catch (e) {
-      debugPrint('SyncEngine: Error applying mutation: $e');
+      AppLogger.d('SyncEngine: Error applying mutation: $e');
       return false;
     }
   }

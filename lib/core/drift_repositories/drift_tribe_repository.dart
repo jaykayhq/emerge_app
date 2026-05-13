@@ -1,6 +1,8 @@
+import 'package:drift/drift.dart' show Value;
 import 'package:emerge_app/core/drift/database.dart';
 import 'package:emerge_app/core/sync/sync_engine.dart';
 import 'package:emerge_app/features/social/data/repositories/tribe_repository.dart';
+import 'package:emerge_app/features/social/data/seeds/official_clubs_seed.dart';
 import 'package:emerge_app/features/social/domain/models/tribe.dart';
 
 class DriftTribeRepository implements TribeRepository {
@@ -11,14 +13,24 @@ class DriftTribeRepository implements TribeRepository {
 
   @override
   Future<Tribe?> getArchetypeClub(String archetypeId) async {
-    final tribe = await _db.tribeStatsDao.getStats(archetypeId);
-    if (tribe == null) return null;
-    return _rowToTribe(tribe);
+    final rows = await _db.tribeStatsDao.getAll();
+    var tribe = rows.where((r) => r.archetypeId == archetypeId).firstOrNull;
+    if (tribe != null) return _rowToTribe(tribe);
+
+    await _seedLocalClubs();
+    final seeded = await _db.tribeStatsDao.getAll();
+    tribe = seeded.where((r) => r.archetypeId == archetypeId).firstOrNull;
+    if (tribe != null) return _rowToTribe(tribe);
+    return null;
   }
 
   @override
   Future<List<Tribe>> getArchetypeClubs() async {
-    final rows = await _db.tribeStatsDao.getAll();
+    var rows = await _db.tribeStatsDao.getAll();
+    if (rows.isEmpty) {
+      await _seedLocalClubs();
+      rows = await _db.tribeStatsDao.getAll();
+    }
     return rows.map(_rowToTribe).toList();
   }
 
@@ -27,6 +39,28 @@ class DriftTribeRepository implements TribeRepository {
     return _db.tribeStatsDao.watchAll().map((rows) {
       return rows.map(_rowToTribe).toList();
     });
+  }
+
+  Future<void> _seedLocalClubs() async {
+    final clubsMap = OfficialClubsSeed.getOfficialClubsMap();
+    for (final entry in clubsMap.entries) {
+      final data = entry.value;
+      final archetypeId = data['archetypeId'] as String? ?? '';
+      final clubId = entry.key;
+      await _db.tribeStatsDao.upsertStats(TribeStatsTableCompanion(
+        tribeId: Value(clubId),
+        tribeName: Value(data['name'] as String? ?? ''),
+        archetypeId: Value(archetypeId),
+        memberCount: const Value(0),
+        totalXp: const Value(0),
+        totalHabitsCompleted: const Value(0),
+        totalChallengesCompleted: const Value(0),
+        userContributionXp: const Value(0),
+        userHabitsCompleted: const Value(0),
+        userChallengesCompleted: const Value(0),
+        updatedAt: Value(DateTime.now().toIso8601String()),
+      ));
+    }
   }
 
   @override
