@@ -19,6 +19,7 @@ import 'package:emerge_app/features/auth/domain/entities/user_extension.dart';
 import 'package:emerge_app/features/auth/presentation/providers/auth_providers.dart';
 import 'package:emerge_app/features/gamification/presentation/providers/user_stats_providers.dart';
 import 'package:emerge_app/features/monetization/presentation/providers/subscription_provider.dart';
+import 'package:emerge_app/core/sync/sync_providers.dart';
 
 @pragma('vm:entry-point')
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
@@ -32,6 +33,9 @@ void main() async {
 
   // Initialize ProviderContainer
   final container = ProviderContainer();
+
+  // Start the sync trigger service (listens for connectivity changes)
+  container.read(syncTriggerServiceProvider);
 
   // Remote Config and Notifications are now initialized in parallel within initApp()
   // We only schedule the weekly recap here (which is fast)
