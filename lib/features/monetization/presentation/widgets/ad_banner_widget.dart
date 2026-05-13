@@ -33,11 +33,13 @@ class _AdBannerWidgetState extends ConsumerState<AdBannerWidget>
     with TickerProviderStateMixin, AutomaticKeepAliveClientMixin {
   BannerAd? _bannerAd;
   bool _isLoaded = false;
+  bool _disposed = false;
 
   @override
   bool get wantKeepAlive => true;
 
   // Animation controllers for cosmic motion effects
+  // Started only when ad is loaded to avoid unnecessary repaints
   late final AnimationController _nebulaController;
   late final AnimationController _particleController;
   late final Animation<double> _nebulaAnimation;
@@ -51,16 +53,18 @@ class _AdBannerWidgetState extends ConsumerState<AdBannerWidget>
   void initState() {
     super.initState();
 
-    // Initialize animation controllers for cosmic effects
+    // Initialize animation controllers but do NOT start them yet.
+    // Only start when ad is actually loaded to avoid jank from
+    // continuous CustomPainter repaints on the placeholder.
     _nebulaController = AnimationController(
       duration: const Duration(seconds: 12),
       vsync: this,
-    )..repeat(reverse: true);
+    );
 
     _particleController = AnimationController(
       duration: const Duration(seconds: 8),
       vsync: this,
-    )..repeat();
+    );
 
     _nebulaAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
       CurvedAnimation(
@@ -77,6 +81,7 @@ class _AdBannerWidgetState extends ConsumerState<AdBannerWidget>
     );
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (_disposed) return;
       final isConnected = ref.read(isConnectedProvider);
       if (isConnected) {
         _loadAd();
@@ -85,52 +90,57 @@ class _AdBannerWidgetState extends ConsumerState<AdBannerWidget>
   }
 
   void _loadAd() {
-    _bannerAd = BannerAd(
+    final ad = BannerAd(
       adUnitId: _adUnitId,
       request: const AdRequest(),
       size: AdSize.banner,
       listener: BannerAdListener(
         onAdLoaded: (ad) {
-          if (mounted) {
-            setState(() {
-              _isLoaded = true;
-            });
+          if (_disposed) {
+            ad.dispose();
+            return;
           }
+          // Start cosmic animations only when ad is actually visible
+          _nebulaController.repeat(reverse: true);
+          _particleController.repeat();
+          setState(() {
+            _isLoaded = true;
+          });
         },
         onAdFailedToLoad: (ad, err) {
           ad.dispose();
+          if (_disposed) return;
+          _bannerAd = null;
           // Try to reload after a delay for better ad fill rates
           Future.delayed(const Duration(seconds: 30), () {
-            if (mounted) {
-              final isConnected = ref.read(isConnectedProvider);
-              final isPremium = ref.read(isPremiumProvider);
-              // Only reload if we're connected and we know the user is not premium
-              // Handle the AsyncValue properly - we know isPremium is AsyncValue<bool>
-              if (isConnected) {
-                bool shouldShowAds = false;
-                // If we have definitive data, use it
-                if (!isPremium.isLoading && isPremium.hasValue) {
-                  final bool isPremiumValue = isPremium.requireValue;
-                  shouldShowAds = !isPremiumValue;
-                }
-                // If we're still loading, don't show ads (be conservative)
-
-                if (shouldShowAds) {
-                  _loadAd();
-                }
+            if (_disposed || !mounted) return;
+            final isConnected = ref.read(isConnectedProvider);
+            final isPremium = ref.read(isPremiumProvider);
+            if (isConnected) {
+              bool shouldShowAds = false;
+              if (!isPremium.isLoading && isPremium.hasValue) {
+                final bool isPremiumValue = isPremium.requireValue;
+                shouldShowAds = !isPremiumValue;
+              }
+              if (shouldShowAds) {
+                _loadAd();
               }
             }
           });
         },
       ),
-    )..load();
+    );
+    _bannerAd = ad;
+    ad.load();
   }
 
   @override
   void dispose() {
+    _disposed = true;
     _nebulaController.dispose();
     _particleController.dispose();
     _bannerAd?.dispose();
+    _bannerAd = null;
     super.dispose();
   }
 

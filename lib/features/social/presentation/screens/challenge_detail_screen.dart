@@ -465,6 +465,8 @@ class ChallengeDetailScreen extends ConsumerWidget {
             result.fold(
               (failure) => _showError(screenContext, failure.message),
               (_) async {
+                ref.invalidate(userChallengesProvider);
+                ref.invalidate(archetypeChallengesProvider);
                 if (screenContext.mounted) {
                   _showSuccess(screenContext, 'QUEST STARTED! (+25 XP)');
                   screenContext.go('/tribes/challenges');

@@ -48,12 +48,17 @@ void main() async {
   // Seed data is now handled by Firebase Admin SDK (functions/src/seed.ts)
   // Run: cd functions && npm run seed
 
-  // Initialize AdMob
+  // Initialize AdMob test device configuration
   if (!kIsWeb) {
-    // SECURITY: Only use test device IDs in debug builds
-    // In production, this will be an empty list, allowing real ads to show
+    // SECURITY: Only use test device IDs in debug builds.
+    // In production, this will be an empty list, allowing real ads to show.
+    //
+    // To find your device's test ID, run the app in debug mode and look for:
+    //   "Use RequestConfiguration.Builder().setTestDeviceIds(
+    //     Arrays.asList("YOUR_DEVICE_HASH")) to get test ads"
+    // in the terminal output. Add the hash below.
     final testDeviceIds = kDebugMode
-        ? ['969B3D2A344E9087F453B5A0415B8136']
+        ? ['31E09946B646AE0846AFCAB3B270684F']
         : const <String>[];
     await MobileAds.instance.updateRequestConfiguration(
       RequestConfiguration(testDeviceIds: testDeviceIds),
