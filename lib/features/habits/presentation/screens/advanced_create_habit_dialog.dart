@@ -18,8 +18,7 @@ import 'package:go_router/go_router.dart';
 import 'package:uuid/uuid.dart';
 import 'package:emerge_app/core/theme/emerge_colors.dart';
 import 'package:emerge_app/features/monetization/presentation/widgets/premium_limit_dialog.dart';
-import 'package:emerge_app/features/monetization/presentation/providers/subscription_provider.dart';
-import 'package:emerge_app/core/services/remote_config_service.dart';
+
 
 /// Redesigned Create Habit Dialog with Stitch-inspired cosmic glassmorphism
 class AdvancedCreateHabitDialog extends ConsumerStatefulWidget {

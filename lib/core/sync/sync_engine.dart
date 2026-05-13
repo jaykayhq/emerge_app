@@ -7,31 +7,41 @@ import 'package:flutter/foundation.dart';
 class EnhancedSyncEngine {
   final MutationQueueDao _mutationQueue;
   final FirebaseFirestore _firestore;
+  bool _isProcessing = false;
 
   EnhancedSyncEngine(this._mutationQueue, this._firestore);
 
   Future<void> processMutationQueue() async {
-    final mutations = await _mutationQueue.getAllPending();
-    if (mutations.isEmpty) {
-      debugPrint('SyncEngine: No pending mutations.');
+    if (_isProcessing) {
+      debugPrint('SyncEngine: Already processing, skipping');
       return;
     }
-
-    debugPrint('SyncEngine: Processing ${mutations.length} mutations...');
-
-    for (final mutation in mutations) {
-      final success = await _applyMutation(mutation);
-      if (success) {
-        await _mutationQueue.deleteProcessed(mutation.id);
-        debugPrint('SyncEngine: Synced mutation ${mutation.id}');
-      } else {
-        await _mutationQueue.incrementRetry(mutation.id);
-        if (mutation.retryCount >= 3) {
-          debugPrint('SyncEngine: Dropping mutation ${mutation.id} after 3 retries');
-          await _mutationQueue.deleteProcessed(mutation.id);
-        }
-        break;
+    _isProcessing = true;
+    try {
+      final mutations = await _mutationQueue.getAllPending();
+      if (mutations.isEmpty) {
+        debugPrint('SyncEngine: No pending mutations.');
+        return;
       }
+
+      debugPrint('SyncEngine: Processing ${mutations.length} mutations...');
+
+      for (final mutation in mutations) {
+        final success = await _applyMutation(mutation);
+        if (success) {
+          await _mutationQueue.deleteProcessed(mutation.id);
+          debugPrint('SyncEngine: Synced mutation ${mutation.id}');
+        } else {
+          await _mutationQueue.incrementRetry(mutation.id);
+          if (mutation.retryCount >= 3) {
+            debugPrint('SyncEngine: Dropping mutation ${mutation.id} after 3 retries');
+            await _mutationQueue.deleteProcessed(mutation.id);
+          }
+          break;
+        }
+      }
+    } finally {
+      _isProcessing = false;
     }
   }
 

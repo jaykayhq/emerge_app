@@ -253,21 +253,7 @@ class OnboardingController extends _$OnboardingController {
     // Uses atomic batch write to both users and user_stats under the hood
     await saveOnboardingData();
 
-    // Connect to gamification system by logging the milestone completion
-    final user = ref.read(authStateChangesProvider).value;
-    if (user?.isNotEmpty == true) {
-      try {
-        final userStatsRepo = ref.read(userStatsRepositoryProvider);
-
-        AppLogger.i('Milestone $milestoneIndex completed');
-      } catch (e, stack) {
-        AppLogger.e(
-          'Error updating gamification stats for milestone completion',
-          e,
-          stack,
-        );
-      }
-    }
+    AppLogger.i('Milestone $milestoneIndex completed');
   }
 
   Future<void> createOnboardingHabits() async {

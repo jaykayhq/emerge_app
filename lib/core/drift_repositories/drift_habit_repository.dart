@@ -6,7 +6,6 @@ import 'package:emerge_app/core/sync/sync_engine.dart';
 import 'package:emerge_app/features/habits/domain/entities/habit.dart';
 import 'package:emerge_app/features/habits/domain/models/habit_activity.dart';
 import 'package:emerge_app/features/habits/domain/repositories/habit_repository.dart';
-import 'package:emerge_app/features/habits/domain/services/momentum_service.dart';
 import 'package:emerge_app/features/blueprints/domain/models/blueprint.dart';
 import 'package:fpdart/fpdart.dart';
 
@@ -59,7 +58,7 @@ class DriftHabitRepository implements HabitRepository {
       );
 
       return const Right(unit);
-    } catch (e, s) {
+    } catch (e, _) {
       return Left(ServerFailure(e.toString()));
     }
   }
@@ -93,7 +92,7 @@ class DriftHabitRepository implements HabitRepository {
       );
 
       return const Right(unit);
-    } catch (e, s) {
+    } catch (e, _) {
       return Left(ServerFailure(e.toString()));
     }
   }
@@ -120,7 +119,7 @@ class DriftHabitRepository implements HabitRepository {
       );
 
       return const Right(unit);
-    } catch (e, s) {
+    } catch (e, _) {
       return Left(ServerFailure(e.toString()));
     }
   }
@@ -231,7 +230,7 @@ class DriftHabitRepository implements HabitRepository {
       );
 
       return const Right(true);
-    } catch (e, s) {
+    } catch (e, _) {
       return Left(ServerFailure(e.toString()));
     }
   }
@@ -297,7 +296,7 @@ class DriftHabitRepository implements HabitRepository {
         );
       }
       return const Right(unit);
-    } catch (e, s) {
+    } catch (e, _) {
       return Left(ServerFailure(e.toString()));
     }
   }
