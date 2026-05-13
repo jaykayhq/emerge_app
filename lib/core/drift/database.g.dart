@@ -202,6 +202,28 @@ class $UserStatsTableTable extends UserStatsTable
     type: DriftSqlType.string,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _onboardingProgressMeta =
+      const VerificationMeta('onboardingProgress');
+  @override
+  late final GeneratedColumn<int> onboardingProgress = GeneratedColumn<int>(
+    'onboarding_progress',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  static const VerificationMeta _onboardingCompletedAtMeta =
+      const VerificationMeta('onboardingCompletedAt');
+  @override
+  late final GeneratedColumn<String> onboardingCompletedAt =
+      GeneratedColumn<String>(
+        'onboarding_completed_at',
+        aliasedName,
+        true,
+        type: DriftSqlType.string,
+        requiredDuringInsert: false,
+      );
   @override
   List<GeneratedColumn> get $columns => [
     userId,
@@ -221,6 +243,8 @@ class $UserStatsTableTable extends UserStatsTable
     worldStateJson,
     updatedAt,
     syncedAt,
+    onboardingProgress,
+    onboardingCompletedAt,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -353,6 +377,24 @@ class $UserStatsTableTable extends UserStatsTable
         syncedAt.isAcceptableOrUnknown(data['synced_at']!, _syncedAtMeta),
       );
     }
+    if (data.containsKey('onboarding_progress')) {
+      context.handle(
+        _onboardingProgressMeta,
+        onboardingProgress.isAcceptableOrUnknown(
+          data['onboarding_progress']!,
+          _onboardingProgressMeta,
+        ),
+      );
+    }
+    if (data.containsKey('onboarding_completed_at')) {
+      context.handle(
+        _onboardingCompletedAtMeta,
+        onboardingCompletedAt.isAcceptableOrUnknown(
+          data['onboarding_completed_at']!,
+          _onboardingCompletedAtMeta,
+        ),
+      );
+    }
     return context;
   }
 
@@ -430,6 +472,14 @@ class $UserStatsTableTable extends UserStatsTable
         DriftSqlType.string,
         data['${effectivePrefix}synced_at'],
       ),
+      onboardingProgress: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}onboarding_progress'],
+      )!,
+      onboardingCompletedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}onboarding_completed_at'],
+      ),
     );
   }
 
@@ -458,6 +508,8 @@ class UserStatsTableData extends DataClass
   final String? worldStateJson;
   final String updatedAt;
   final String? syncedAt;
+  final int onboardingProgress;
+  final String? onboardingCompletedAt;
   const UserStatsTableData({
     required this.userId,
     required this.totalXp,
@@ -476,6 +528,8 @@ class UserStatsTableData extends DataClass
     this.worldStateJson,
     required this.updatedAt,
     this.syncedAt,
+    required this.onboardingProgress,
+    this.onboardingCompletedAt,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -504,6 +558,10 @@ class UserStatsTableData extends DataClass
     map['updated_at'] = Variable<String>(updatedAt);
     if (!nullToAbsent || syncedAt != null) {
       map['synced_at'] = Variable<String>(syncedAt);
+    }
+    map['onboarding_progress'] = Variable<int>(onboardingProgress);
+    if (!nullToAbsent || onboardingCompletedAt != null) {
+      map['onboarding_completed_at'] = Variable<String>(onboardingCompletedAt);
     }
     return map;
   }
@@ -535,6 +593,10 @@ class UserStatsTableData extends DataClass
       syncedAt: syncedAt == null && nullToAbsent
           ? const Value.absent()
           : Value(syncedAt),
+      onboardingProgress: Value(onboardingProgress),
+      onboardingCompletedAt: onboardingCompletedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(onboardingCompletedAt),
     );
   }
 
@@ -561,6 +623,10 @@ class UserStatsTableData extends DataClass
       worldStateJson: serializer.fromJson<String?>(json['worldStateJson']),
       updatedAt: serializer.fromJson<String>(json['updatedAt']),
       syncedAt: serializer.fromJson<String?>(json['syncedAt']),
+      onboardingProgress: serializer.fromJson<int>(json['onboardingProgress']),
+      onboardingCompletedAt: serializer.fromJson<String?>(
+        json['onboardingCompletedAt'],
+      ),
     );
   }
   @override
@@ -584,6 +650,10 @@ class UserStatsTableData extends DataClass
       'worldStateJson': serializer.toJson<String?>(worldStateJson),
       'updatedAt': serializer.toJson<String>(updatedAt),
       'syncedAt': serializer.toJson<String?>(syncedAt),
+      'onboardingProgress': serializer.toJson<int>(onboardingProgress),
+      'onboardingCompletedAt': serializer.toJson<String?>(
+        onboardingCompletedAt,
+      ),
     };
   }
 
@@ -605,6 +675,8 @@ class UserStatsTableData extends DataClass
     Value<String?> worldStateJson = const Value.absent(),
     String? updatedAt,
     Value<String?> syncedAt = const Value.absent(),
+    int? onboardingProgress,
+    Value<String?> onboardingCompletedAt = const Value.absent(),
   }) => UserStatsTableData(
     userId: userId ?? this.userId,
     totalXp: totalXp ?? this.totalXp,
@@ -625,6 +697,10 @@ class UserStatsTableData extends DataClass
         : this.worldStateJson,
     updatedAt: updatedAt ?? this.updatedAt,
     syncedAt: syncedAt.present ? syncedAt.value : this.syncedAt,
+    onboardingProgress: onboardingProgress ?? this.onboardingProgress,
+    onboardingCompletedAt: onboardingCompletedAt.present
+        ? onboardingCompletedAt.value
+        : this.onboardingCompletedAt,
   );
   UserStatsTableData copyWithCompanion(UserStatsTableCompanion data) {
     return UserStatsTableData(
@@ -661,6 +737,12 @@ class UserStatsTableData extends DataClass
           : this.worldStateJson,
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
       syncedAt: data.syncedAt.present ? data.syncedAt.value : this.syncedAt,
+      onboardingProgress: data.onboardingProgress.present
+          ? data.onboardingProgress.value
+          : this.onboardingProgress,
+      onboardingCompletedAt: data.onboardingCompletedAt.present
+          ? data.onboardingCompletedAt.value
+          : this.onboardingCompletedAt,
     );
   }
 
@@ -683,7 +765,9 @@ class UserStatsTableData extends DataClass
           ..write('avatarJson: $avatarJson, ')
           ..write('worldStateJson: $worldStateJson, ')
           ..write('updatedAt: $updatedAt, ')
-          ..write('syncedAt: $syncedAt')
+          ..write('syncedAt: $syncedAt, ')
+          ..write('onboardingProgress: $onboardingProgress, ')
+          ..write('onboardingCompletedAt: $onboardingCompletedAt')
           ..write(')'))
         .toString();
   }
@@ -707,6 +791,8 @@ class UserStatsTableData extends DataClass
     worldStateJson,
     updatedAt,
     syncedAt,
+    onboardingProgress,
+    onboardingCompletedAt,
   );
   @override
   bool operator ==(Object other) =>
@@ -728,7 +814,9 @@ class UserStatsTableData extends DataClass
           other.avatarJson == this.avatarJson &&
           other.worldStateJson == this.worldStateJson &&
           other.updatedAt == this.updatedAt &&
-          other.syncedAt == this.syncedAt);
+          other.syncedAt == this.syncedAt &&
+          other.onboardingProgress == this.onboardingProgress &&
+          other.onboardingCompletedAt == this.onboardingCompletedAt);
 }
 
 class UserStatsTableCompanion extends UpdateCompanion<UserStatsTableData> {
@@ -749,6 +837,8 @@ class UserStatsTableCompanion extends UpdateCompanion<UserStatsTableData> {
   final Value<String?> worldStateJson;
   final Value<String> updatedAt;
   final Value<String?> syncedAt;
+  final Value<int> onboardingProgress;
+  final Value<String?> onboardingCompletedAt;
   final Value<int> rowid;
   const UserStatsTableCompanion({
     this.userId = const Value.absent(),
@@ -768,6 +858,8 @@ class UserStatsTableCompanion extends UpdateCompanion<UserStatsTableData> {
     this.worldStateJson = const Value.absent(),
     this.updatedAt = const Value.absent(),
     this.syncedAt = const Value.absent(),
+    this.onboardingProgress = const Value.absent(),
+    this.onboardingCompletedAt = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   UserStatsTableCompanion.insert({
@@ -788,6 +880,8 @@ class UserStatsTableCompanion extends UpdateCompanion<UserStatsTableData> {
     this.worldStateJson = const Value.absent(),
     this.updatedAt = const Value.absent(),
     this.syncedAt = const Value.absent(),
+    this.onboardingProgress = const Value.absent(),
+    this.onboardingCompletedAt = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : userId = Value(userId);
   static Insertable<UserStatsTableData> custom({
@@ -808,6 +902,8 @@ class UserStatsTableCompanion extends UpdateCompanion<UserStatsTableData> {
     Expression<String>? worldStateJson,
     Expression<String>? updatedAt,
     Expression<String>? syncedAt,
+    Expression<int>? onboardingProgress,
+    Expression<String>? onboardingCompletedAt,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
@@ -828,6 +924,9 @@ class UserStatsTableCompanion extends UpdateCompanion<UserStatsTableData> {
       if (worldStateJson != null) 'world_state_json': worldStateJson,
       if (updatedAt != null) 'updated_at': updatedAt,
       if (syncedAt != null) 'synced_at': syncedAt,
+      if (onboardingProgress != null) 'onboarding_progress': onboardingProgress,
+      if (onboardingCompletedAt != null)
+        'onboarding_completed_at': onboardingCompletedAt,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -850,6 +949,8 @@ class UserStatsTableCompanion extends UpdateCompanion<UserStatsTableData> {
     Value<String?>? worldStateJson,
     Value<String>? updatedAt,
     Value<String?>? syncedAt,
+    Value<int>? onboardingProgress,
+    Value<String?>? onboardingCompletedAt,
     Value<int>? rowid,
   }) {
     return UserStatsTableCompanion(
@@ -870,6 +971,9 @@ class UserStatsTableCompanion extends UpdateCompanion<UserStatsTableData> {
       worldStateJson: worldStateJson ?? this.worldStateJson,
       updatedAt: updatedAt ?? this.updatedAt,
       syncedAt: syncedAt ?? this.syncedAt,
+      onboardingProgress: onboardingProgress ?? this.onboardingProgress,
+      onboardingCompletedAt:
+          onboardingCompletedAt ?? this.onboardingCompletedAt,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -928,6 +1032,14 @@ class UserStatsTableCompanion extends UpdateCompanion<UserStatsTableData> {
     if (syncedAt.present) {
       map['synced_at'] = Variable<String>(syncedAt.value);
     }
+    if (onboardingProgress.present) {
+      map['onboarding_progress'] = Variable<int>(onboardingProgress.value);
+    }
+    if (onboardingCompletedAt.present) {
+      map['onboarding_completed_at'] = Variable<String>(
+        onboardingCompletedAt.value,
+      );
+    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -954,6 +1066,8 @@ class UserStatsTableCompanion extends UpdateCompanion<UserStatsTableData> {
           ..write('worldStateJson: $worldStateJson, ')
           ..write('updatedAt: $updatedAt, ')
           ..write('syncedAt: $syncedAt, ')
+          ..write('onboardingProgress: $onboardingProgress, ')
+          ..write('onboardingCompletedAt: $onboardingCompletedAt, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -5768,6 +5882,8 @@ typedef $$UserStatsTableTableCreateCompanionBuilder =
       Value<String?> worldStateJson,
       Value<String> updatedAt,
       Value<String?> syncedAt,
+      Value<int> onboardingProgress,
+      Value<String?> onboardingCompletedAt,
       Value<int> rowid,
     });
 typedef $$UserStatsTableTableUpdateCompanionBuilder =
@@ -5789,6 +5905,8 @@ typedef $$UserStatsTableTableUpdateCompanionBuilder =
       Value<String?> worldStateJson,
       Value<String> updatedAt,
       Value<String?> syncedAt,
+      Value<int> onboardingProgress,
+      Value<String?> onboardingCompletedAt,
       Value<int> rowid,
     });
 
@@ -5883,6 +6001,16 @@ class $$UserStatsTableTableFilterComposer
 
   ColumnFilters<String> get syncedAt => $composableBuilder(
     column: $table.syncedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get onboardingProgress => $composableBuilder(
+    column: $table.onboardingProgress,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get onboardingCompletedAt => $composableBuilder(
+    column: $table.onboardingCompletedAt,
     builder: (column) => ColumnFilters(column),
   );
 }
@@ -5980,6 +6108,16 @@ class $$UserStatsTableTableOrderingComposer
     column: $table.syncedAt,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<int> get onboardingProgress => $composableBuilder(
+    column: $table.onboardingProgress,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get onboardingCompletedAt => $composableBuilder(
+    column: $table.onboardingCompletedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$UserStatsTableTableAnnotationComposer
@@ -6057,6 +6195,16 @@ class $$UserStatsTableTableAnnotationComposer
 
   GeneratedColumn<String> get syncedAt =>
       $composableBuilder(column: $table.syncedAt, builder: (column) => column);
+
+  GeneratedColumn<int> get onboardingProgress => $composableBuilder(
+    column: $table.onboardingProgress,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get onboardingCompletedAt => $composableBuilder(
+    column: $table.onboardingCompletedAt,
+    builder: (column) => column,
+  );
 }
 
 class $$UserStatsTableTableTableManager
@@ -6113,6 +6261,8 @@ class $$UserStatsTableTableTableManager
                 Value<String?> worldStateJson = const Value.absent(),
                 Value<String> updatedAt = const Value.absent(),
                 Value<String?> syncedAt = const Value.absent(),
+                Value<int> onboardingProgress = const Value.absent(),
+                Value<String?> onboardingCompletedAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => UserStatsTableCompanion(
                 userId: userId,
@@ -6132,6 +6282,8 @@ class $$UserStatsTableTableTableManager
                 worldStateJson: worldStateJson,
                 updatedAt: updatedAt,
                 syncedAt: syncedAt,
+                onboardingProgress: onboardingProgress,
+                onboardingCompletedAt: onboardingCompletedAt,
                 rowid: rowid,
               ),
           createCompanionCallback:
@@ -6153,6 +6305,8 @@ class $$UserStatsTableTableTableManager
                 Value<String?> worldStateJson = const Value.absent(),
                 Value<String> updatedAt = const Value.absent(),
                 Value<String?> syncedAt = const Value.absent(),
+                Value<int> onboardingProgress = const Value.absent(),
+                Value<String?> onboardingCompletedAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => UserStatsTableCompanion.insert(
                 userId: userId,
@@ -6172,6 +6326,8 @@ class $$UserStatsTableTableTableManager
                 worldStateJson: worldStateJson,
                 updatedAt: updatedAt,
                 syncedAt: syncedAt,
+                onboardingProgress: onboardingProgress,
+                onboardingCompletedAt: onboardingCompletedAt,
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0

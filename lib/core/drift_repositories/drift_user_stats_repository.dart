@@ -26,6 +26,8 @@ class DriftUserStatsRepository {
       'updatedAt': DateTime.now().toIso8601String(),
       'avatarJson': profile.avatarStats.toMap().toString(),
       'worldStateJson': profile.worldState.toMap().toString(),
+      'onboardingProgress': profile.onboardingProgress,
+      'onboardingCompletedAt': profile.onboardingCompletedAt?.toIso8601String(),
     });
   }
 
@@ -151,6 +153,10 @@ class DriftUserStatsRepository {
       worldState: UserWorldState(
         entropy: 1.0 - row.worldHealthScore,
       ),
+      onboardingProgress: row.onboardingProgress,
+      onboardingCompletedAt: row.onboardingCompletedAt != null
+          ? DateTime.tryParse(row.onboardingCompletedAt!)
+          : null,
     );
   }
 }

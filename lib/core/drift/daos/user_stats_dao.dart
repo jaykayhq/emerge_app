@@ -83,6 +83,8 @@ class UserStatsDao extends DatabaseAccessor<AppDatabase> with _$UserStatsDaoMixi
       archetype: Value(data['archetype'] as String?),
       avatarJson: Value(data['avatarJson'] as String?),
       worldStateJson: Value(data['worldStateJson'] as String?),
+      onboardingProgress: Value(data['onboardingProgress'] as int? ?? 0),
+      onboardingCompletedAt: Value(data['onboardingCompletedAt'] as String?),
       syncedAt: Value(DateTime.now().toIso8601String()),
       updatedAt: Value(data['updatedAt'] as String? ?? DateTime.now().toIso8601String()),
     ));
