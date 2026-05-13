@@ -1020,31 +1020,43 @@ class SettingsScreen extends ConsumerWidget {
                             child: CircularProgressIndicator(color: Colors.red),
                           ),
                         );
-                        final result = await ref
-                            .read(authRepositoryProvider)
-                            .deleteAccount();
-                        if (context.mounted) {
-                          Navigator.of(context).pop(); // Dismiss loading
-                          result.fold(
-                            (failure) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: Text(failure.message),
-                                  backgroundColor: Colors.red,
-                                ),
-                              );
-                            },
-                            (_) {
-                              // Account deleted — router will redirect to login
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                  content: Text(
-                                    'Account deleted. We\'re sorry to see you go.',
+                        try {
+                          final result = await ref
+                              .read(authRepositoryProvider)
+                              .deleteAccount();
+                          if (context.mounted) {
+                            Navigator.of(context).pop(); // Dismiss loading
+                            result.fold(
+                              (failure) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text(failure.message),
+                                    backgroundColor: Colors.red,
                                   ),
-                                ),
-                              );
-                            },
-                          );
+                                );
+                              },
+                              (_) {
+                                // Account deleted — router will redirect to login
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                    content: Text(
+                                      'Account deleted. We\'re sorry to see you go.',
+                                    ),
+                                  ),
+                                );
+                              },
+                            );
+                          }
+                        } catch (e) {
+                          if (context.mounted) {
+                            Navigator.of(context).pop(); // Dismiss loading
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text('Failed to delete account: $e'),
+                                backgroundColor: Colors.red,
+                              ),
+                            );
+                          }
                         }
                       }
                     : null,

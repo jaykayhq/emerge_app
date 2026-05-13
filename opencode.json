@@ -14,7 +14,8 @@
       "type": "local",
       "command": [
         "dart",
-        "mcp-server"
+        "mcp-server",
+        "--force-roots-fallback"
       ],
       "enabled": true,
       "environment": {}

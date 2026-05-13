@@ -40,6 +40,10 @@ class _LevelImmersiveScreenState extends ConsumerState<LevelImmersiveScreen> {
   final GlobalKey _healthBarKey = GlobalKey();
   final GlobalKey _actionButtonKey = GlobalKey();
 
+  // Tracks node state locally so the button updates instantly after
+  // starting a mission without waiting for the database stream.
+  NodeState? _overriddenNodeState;
+
   @override
   void initState() {
     super.initState();
@@ -658,10 +662,11 @@ class _LevelImmersiveScreenState extends ConsumerState<LevelImmersiveScreen> {
     UserProfile profile, {
     Key? key,
   }) {
-    final isLocked = widget.node.state == NodeState.locked;
-    final isCompleted = widget.node.state == NodeState.completed ||
-        widget.node.state == NodeState.mastered;
-    final isInProgress = widget.node.state == NodeState.inProgress;
+    final effectiveState = _overriddenNodeState ?? widget.node.state;
+    final isLocked = effectiveState == NodeState.locked;
+    final isCompleted = effectiveState == NodeState.completed ||
+        effectiveState == NodeState.mastered;
+    final isInProgress = effectiveState == NodeState.inProgress;
 
     return SizedBox(
       key: key,
@@ -715,9 +720,12 @@ class _LevelImmersiveScreenState extends ConsumerState<LevelImmersiveScreen> {
 
   Future<void> _handleAction(BuildContext context, WidgetRef ref) async {
     try {
-      if (widget.node.state == NodeState.available) {
+      if ((_overriddenNodeState ?? widget.node.state) == NodeState.available) {
         await ref.read(userStatsControllerProvider).startMission(widget.node.id);
         if (context.mounted) {
+          setState(() {
+            _overriddenNodeState = NodeState.inProgress;
+          });
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text('Mission started: ${widget.node.name}'),
@@ -726,7 +734,7 @@ class _LevelImmersiveScreenState extends ConsumerState<LevelImmersiveScreen> {
             ),
           );
         }
-      } else if (widget.node.state == NodeState.inProgress) {
+      } else if ((_overriddenNodeState ?? widget.node.state) == NodeState.inProgress) {
         final xpBoosts = widget.node.xpBoosts.map((k, v) => MapEntry(k.name, v));
         await ref
             .read(userStatsControllerProvider)

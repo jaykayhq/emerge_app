@@ -170,6 +170,9 @@ class DriftHabitRepository implements HabitRepository {
       final newLevel = _engine.computeLevel(newTotalXp);
       final attr = result.attribute;
 
+      final now = DateTime.now();
+      String? tribeId;
+
       await _db.transaction(() async {
         await _db.habitsDao.updateStreak(
           habitId,
@@ -197,7 +200,7 @@ class DriftHabitRepository implements HabitRepository {
         );
 
         await _db.habitCompletionsDao.insertFromData(
-          id: '${habitId}_${DateTime.now().millisecondsSinceEpoch}',
+          id: '${habitId}_${now.millisecondsSinceEpoch}',
           habitId: habitId,
           userId: statsRow.userId,
           completedAt: date.toIso8601String(),
@@ -215,8 +218,26 @@ class DriftHabitRepository implements HabitRepository {
             update.isCompleted ? 'completed' : 'active',
           );
         }
+
+        // Update tribe contribution stats
+        if (statsRow.archetype != null && statsRow.archetype != 'none') {
+          final tribeRows = await _db.tribeStatsDao.getAll();
+          final userTribe = tribeRows.where(
+            (t) => t.archetypeId == statsRow.archetype,
+          ).firstOrNull;
+          if (userTribe != null) {
+            tribeId = userTribe.tribeId;
+            await _db.tribeStatsDao.incrementContribution(
+              userTribe.tribeId,
+              xp: result.xpGained,
+              habits: 1,
+              challenges: 0,
+            );
+          }
+        }
       });
 
+      // Enqueue user stats sync
       await _syncEngine.enqueueSet(
         collectionPath: 'user_stats',
         documentId: statsRow.userId,
@@ -225,9 +246,60 @@ class DriftHabitRepository implements HabitRepository {
           'level': newLevel,
           'streak': result.newStreak,
           '${attr}Xp': _getAttributeXp(statsRow, attr) + result.xpGained,
-          'updatedAt': DateTime.now().toIso8601String(),
+          'archetype': statsRow.archetype,
+          'updatedAt': now.toIso8601String(),
         },
       );
+
+      // Enqueue tribe contribution sync
+      if (tribeId != null) {
+        final leaderboardId = '${statsRow.userId}_$tribeId';
+        final nowStr = now.toIso8601String();
+
+        await _syncEngine.enqueueSet(
+          collectionPath: 'tribes/$tribeId/contributors',
+          documentId: statsRow.userId,
+          data: {
+            'userId': statsRow.userId,
+            'xpContributed': _getAttributeXp(statsRow, 'strength') +
+                _getAttributeXp(statsRow, 'intellect') +
+                _getAttributeXp(statsRow, 'vitality') +
+                _getAttributeXp(statsRow, 'creativity') +
+                _getAttributeXp(statsRow, 'focus') +
+                _getAttributeXp(statsRow, 'spirit'),
+            'habitsCompleted': 1,
+            'lastActivity': nowStr,
+          },
+        );
+
+        await _syncEngine.enqueueSet(
+          collectionPath: 'club_leaderboards',
+          documentId: leaderboardId,
+          data: {
+            'userId': statsRow.userId,
+            'tribeId': tribeId,
+            'xp': newTotalXp,
+            'level': newLevel,
+            'archetype': statsRow.archetype,
+            'lastUpdated': nowStr,
+          },
+        );
+
+        final tribeStats = await _db.tribeStatsDao.getStats(tribeId!);
+        if (tribeStats != null) {
+          await _syncEngine.enqueueUpdate(
+            collectionPath: 'tribes',
+            documentId: tribeId!,
+            data: {
+              'totalXp': tribeStats.totalXp,
+              'totalHabitsCompleted': tribeStats.totalHabitsCompleted,
+              'totalChallengesCompleted': tribeStats.totalChallengesCompleted,
+              'memberCount': tribeStats.memberCount,
+              'updatedAt': nowStr,
+            },
+          );
+        }
+      }
 
       return const Right(true);
     } catch (e, _) {

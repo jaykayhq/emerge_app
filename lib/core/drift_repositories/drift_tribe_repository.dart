@@ -35,10 +35,16 @@ class DriftTribeRepository implements TribeRepository {
   }
 
   @override
-  Stream<List<Tribe>> watchArchetypeClubs() {
-    return _db.tribeStatsDao.watchAll().map((rows) {
-      return rows.map(_rowToTribe).toList();
-    });
+  Stream<List<Tribe>> watchArchetypeClubs() async* {
+    var rows = await _db.tribeStatsDao.getAll();
+    if (rows.isEmpty) {
+      await _seedLocalClubs();
+      rows = await _db.tribeStatsDao.getAll();
+    }
+    yield rows.map(_rowToTribe).toList();
+    await for (final updatedRows in _db.tribeStatsDao.watchAll()) {
+      yield updatedRows.map(_rowToTribe).toList();
+    }
   }
 
   Future<void> _seedLocalClubs() async {
@@ -75,6 +81,7 @@ class DriftTribeRepository implements TribeRepository {
 
   @override
   Future<void> joinClub(String userId, String tribeId) async {
+    await _db.tribeStatsDao.incrementMemberCount(tribeId, delta: 1);
     await _syncEngine.enqueueUpdate(
       collectionPath: 'users/$userId/tribes',
       documentId: tribeId,
@@ -84,6 +91,7 @@ class DriftTribeRepository implements TribeRepository {
 
   @override
   Future<void> leaveClub(String userId, String tribeId) async {
+    await _db.tribeStatsDao.incrementMemberCount(tribeId, delta: -1);
     await _syncEngine.enqueueMutation(
       collectionPath: 'users/$userId/tribes',
       documentId: tribeId,
@@ -93,11 +101,17 @@ class DriftTribeRepository implements TribeRepository {
 
   @override
   Future<List<Tribe>> getUserTribes(String userId) async {
-    return [];
+    final rows = await _db.tribeStatsDao.getAll();
+    return rows.map(_rowToTribe).toList();
   }
 
   @override
-  Future<void> seedTribesIfEmpty() async {}
+  Future<void> seedTribesIfEmpty() async {
+    final rows = await _db.tribeStatsDao.getAll();
+    if (rows.isEmpty) {
+      await _seedLocalClubs();
+    }
+  }
 
   Tribe _rowToTribe(TribeStatsTableData row) {
     return Tribe(

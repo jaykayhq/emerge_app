@@ -1,7 +1,7 @@
 import 'package:emerge_app/core/theme/archetype_theme.dart';
 import 'package:emerge_app/core/utils/app_logger.dart';
 import 'package:emerge_app/features/auth/domain/entities/user_extension.dart';
-import 'package:emerge_app/features/onboarding/presentation/providers/onboarding_provider.dart';
+import 'package:emerge_app/features/onboarding/presentation/providers/onboarding_state_notifier.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -81,23 +81,24 @@ class _IdentityStudioScreenState extends ConsumerState<IdentityStudioScreen> {
       return;
     }
 
-    // Update onboarding state
-    ref.read(onboardingStateControllerProvider.notifier).update((s) {
-      final newState = s.copyWith(
-        selectedArchetype: _selectedArchetype,
-        motive: motiveToSave,
-      );
-      AppLogger.i(
-        'Identity Studio: Updated onboarding state: selectedArchetype=${newState.selectedArchetype}, motive=${newState.motive}',
-      );
-      return newState;
-    });
+    // Unify Onboarding State: Set Archetype and Motive in Enhanced Notifier
+    ref
+        .read(enhancedOnboardingProvider.notifier)
+        .selectArchetype(_selectedArchetype!);
+        
+    if (motiveToSave != null) {
+      ref.read(enhancedOnboardingProvider.notifier).setMotive(motiveToSave);
+    }
+
+    AppLogger.i(
+      'Identity Studio: Updated enhanced onboarding state: selectedArchetype=$_selectedArchetype, motive=$motiveToSave',
+    );
 
     // Ensure state is persisted before proceeding
     await Future.delayed(const Duration(milliseconds: 100));
 
     // PERSIST PROGRESS: Complete the first milestone (Archetype/Motive)
-    await ref.read(onboardingControllerProvider.notifier).completeMilestone(0);
+    await ref.read(enhancedOnboardingProvider.notifier).completeMilestone(0);
 
     // Navigate directly to first habit screen (skip map attributes)
     if (mounted) {

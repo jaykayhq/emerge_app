@@ -46,4 +46,14 @@ class TribeStatsDao extends DatabaseAccessor<AppDatabase> with _$TribeStatsDaoMi
       updatedAt: Value(DateTime.now().toIso8601String()),
     ));
   }
+
+  Future<void> incrementMemberCount(String tribeId, {int delta = 1}) async {
+    final current = await getStats(tribeId);
+    if (current == null) return;
+    await upsertStats(TribeStatsTableCompanion(
+      tribeId: Value(tribeId),
+      memberCount: Value((current.memberCount + delta).clamp(0, 999999)),
+      updatedAt: Value(DateTime.now().toIso8601String()),
+    ));
+  }
 }

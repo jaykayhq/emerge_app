@@ -117,7 +117,11 @@ class HabitTemplateCarousel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = ArchetypeTheme.forArchetype(archetype);
+    // If archetype hasn't loaded yet (none), fall back to athlete templates
+    final effectiveArchetype = archetype == UserArchetype.none
+        ? UserArchetype.athlete
+        : archetype;
+    final theme = ArchetypeTheme.forArchetype(effectiveArchetype);
     final templates = theme.suggestedHabits
         .map(
           (h) => HabitTemplate.fromSuggestion(h, category: theme.archetypeName),
