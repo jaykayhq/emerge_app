@@ -3,7 +3,7 @@ import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:emerge_app/core/utils/app_logger.dart';
 import 'package:emerge_app/features/auth/domain/entities/user_extension.dart';
-import 'package:emerge_app/features/gamification/data/repositories/user_stats_repository.dart';
+import 'package:emerge_app/core/drift_repositories/drift_user_stats_repository.dart';
 
 /// Domain service for calculating dynamic world health based on user activity.
 ///
@@ -14,7 +14,7 @@ import 'package:emerge_app/features/gamification/data/repositories/user_stats_re
 ///
 /// Returns a value between 0.0 (completely decayed) and 1.0 (thriving).
 class WorldHealthService {
-  final UserStatsRepository _repository;
+  final DriftUserStatsRepository _repository;
   final Map<String, double> _cache = {};
   DateTime? _lastCacheTime;
   static const _cacheDuration = Duration(minutes: 5);

@@ -8,12 +8,9 @@ part of 'leaderboard_provider.dart';
 
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint, type=warning
-/// Provides the LeaderboardRepository instance
 
 @ProviderFor(leaderboardRepository)
 final leaderboardRepositoryProvider = LeaderboardRepositoryProvider._();
-
-/// Provides the LeaderboardRepository instance
 
 final class LeaderboardRepositoryProvider
     extends
@@ -23,7 +20,6 @@ final class LeaderboardRepositoryProvider
           LeaderboardRepository
         >
     with $Provider<LeaderboardRepository> {
-  /// Provides the LeaderboardRepository instance
   LeaderboardRepositoryProvider._()
     : super(
         from: null,
@@ -59,16 +55,10 @@ final class LeaderboardRepositoryProvider
 }
 
 String _$leaderboardRepositoryHash() =>
-    r'84a9d3da348d03766aa3311d9d112b2a0e71b2b4';
-
-/// Stream provider for club leaderboard
-/// Returns empty stream if user is not authenticated
+    r'4c7453db12a2d228b59a8c63b8f9fa39c0206231';
 
 @ProviderFor(clubLeaderboard)
 final clubLeaderboardProvider = ClubLeaderboardFamily._();
-
-/// Stream provider for club leaderboard
-/// Returns empty stream if user is not authenticated
 
 final class ClubLeaderboardProvider
     extends
@@ -80,8 +70,6 @@ final class ClubLeaderboardProvider
     with
         $FutureModifier<List<LeaderboardEntry>>,
         $StreamProvider<List<LeaderboardEntry>> {
-  /// Stream provider for club leaderboard
-  /// Returns empty stream if user is not authenticated
   ClubLeaderboardProvider._({
     required ClubLeaderboardFamily super.from,
     required String super.argument,
@@ -128,9 +116,6 @@ final class ClubLeaderboardProvider
 
 String _$clubLeaderboardHash() => r'b70916aa5c24310a374867e3050fa7be1a5109b3';
 
-/// Stream provider for club leaderboard
-/// Returns empty stream if user is not authenticated
-
 final class ClubLeaderboardFamily extends $Family
     with $FunctionalFamilyOverride<Stream<List<LeaderboardEntry>>, String> {
   ClubLeaderboardFamily._()
@@ -142,9 +127,6 @@ final class ClubLeaderboardFamily extends $Family
         isAutoDispose: true,
       );
 
-  /// Stream provider for club leaderboard
-  /// Returns empty stream if user is not authenticated
-
   ClubLeaderboardProvider call(String clubId) =>
       ClubLeaderboardProvider._(argument: clubId, from: this);
 
@@ -152,14 +134,8 @@ final class ClubLeaderboardFamily extends $Family
   String toString() => r'clubLeaderboardProvider';
 }
 
-/// Stream provider for challenge leaderboard
-/// Returns empty stream if user is not authenticated
-
 @ProviderFor(challengeLeaderboard)
 final challengeLeaderboardProvider = ChallengeLeaderboardFamily._();
-
-/// Stream provider for challenge leaderboard
-/// Returns empty stream if user is not authenticated
 
 final class ChallengeLeaderboardProvider
     extends
@@ -171,8 +147,6 @@ final class ChallengeLeaderboardProvider
     with
         $FutureModifier<List<LeaderboardEntry>>,
         $StreamProvider<List<LeaderboardEntry>> {
-  /// Stream provider for challenge leaderboard
-  /// Returns empty stream if user is not authenticated
   ChallengeLeaderboardProvider._({
     required ChallengeLeaderboardFamily super.from,
     required String super.argument,
@@ -220,9 +194,6 @@ final class ChallengeLeaderboardProvider
 String _$challengeLeaderboardHash() =>
     r'9518ab4945c2e2b03cf55a32dbcda451a0658762';
 
-/// Stream provider for challenge leaderboard
-/// Returns empty stream if user is not authenticated
-
 final class ChallengeLeaderboardFamily extends $Family
     with $FunctionalFamilyOverride<Stream<List<LeaderboardEntry>>, String> {
   ChallengeLeaderboardFamily._()
@@ -233,9 +204,6 @@ final class ChallengeLeaderboardFamily extends $Family
         $allTransitiveDependencies: null,
         isAutoDispose: true,
       );
-
-  /// Stream provider for challenge leaderboard
-  /// Returns empty stream if user is not authenticated
 
   ChallengeLeaderboardProvider call(String challengeId) =>
       ChallengeLeaderboardProvider._(argument: challengeId, from: this);

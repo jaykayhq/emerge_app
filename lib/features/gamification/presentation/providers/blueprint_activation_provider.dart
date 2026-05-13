@@ -1,7 +1,6 @@
 import 'package:emerge_app/core/utils/app_logger.dart';
 import 'package:emerge_app/features/auth/presentation/providers/auth_providers.dart';
 import 'package:emerge_app/features/gamification/data/repositories/blueprints_repository.dart';
-import 'package:emerge_app/features/gamification/data/repositories/user_stats_repository.dart';
 import 'package:emerge_app/features/gamification/domain/models/blueprint.dart';
 import 'package:emerge_app/features/habits/presentation/providers/dashboard_state_provider.dart';
 import 'package:equatable/equatable.dart';
@@ -130,9 +129,6 @@ class BlueprintActivationNotifier extends _$BlueprintActivationNotifier {
       final dashboardNotifier = ref.read(dashboardStateProvider.notifier);
       await dashboardNotifier.activateBlueprint(blueprint, user.id);
 
-      // Log activity for gamification
-      await _logBlueprintActivation(blueprint, user.id);
-
       // Mark as activated
       state = state.copyWith(
         isActivating: false,
@@ -151,23 +147,6 @@ class BlueprintActivationNotifier extends _$BlueprintActivationNotifier {
         error: 'Failed to activate blueprint: ${e.toString()}',
       );
       return false;
-    }
-  }
-
-  Future<void> _logBlueprintActivation(
-    Blueprint blueprint,
-    String userId,
-  ) async {
-    try {
-      final userStatsRepo = ref.read(userStatsRepositoryProvider);
-      await userStatsRepo.logActivity(
-        userId: userId,
-        type: 'blueprint_activated',
-        sourceId: blueprint.id,
-        date: DateTime.now(),
-      );
-    } catch (e, s) {
-      AppLogger.e('Failed to log blueprint activation', e, s);
     }
   }
 

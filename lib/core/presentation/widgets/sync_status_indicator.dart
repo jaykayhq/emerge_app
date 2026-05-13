@@ -1,14 +1,14 @@
-import 'package:emerge_app/core/services/local_cache_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:emerge_app/core/sync/sync_providers.dart';
 
 class SyncStatusIndicator extends ConsumerWidget {
   const SyncStatusIndicator({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final queueSizeAsync = ref.watch(syncQueueSizeProvider);
+    final queueSizeAsync = ref.watch(pendingSyncCountProvider);
 
     return queueSizeAsync.when(
       data: (size) {
@@ -31,30 +31,24 @@ class SyncStatusIndicator extends ConsumerWidget {
             mainAxisSize: MainAxisSize.min,
             children: [
               const SizedBox(
-                width: 12,
-                height: 12,
+                width: 8,
+                height: 8,
                 child: CircularProgressIndicator(
-                  strokeWidth: 2,
-                  valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                  strokeWidth: 1.5,
+                  color: Colors.white,
                 ),
               ),
               const SizedBox(width: 6),
               Text(
-                '$size pending',
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 10,
-                  fontWeight: FontWeight.bold,
-                ),
+                'Syncing $size...',
+                style: const TextStyle(color: Colors.white, fontSize: 12),
               ),
             ],
           ),
-        ).animate()
-          .fadeIn()
-          .scale(begin: const Offset(0.8, 0.8), end: const Offset(1.0, 1.0));
+        ).animate().fadeIn();
       },
       loading: () => const SizedBox.shrink(),
-      error: (_, _) => const SizedBox.shrink(),
+      error: (_, __) => const SizedBox.shrink(),
     );
   }
 }

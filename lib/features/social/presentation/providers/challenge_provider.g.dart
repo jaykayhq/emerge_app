@@ -47,7 +47,7 @@ final class FeaturedChallengesProvider
 }
 
 String _$featuredChallengesHash() =>
-    r'a3dd3c2f6e464b345577ee1edbe8da942013ee54';
+    r'a652397d57315c702d53e27cddea549a242fc414';
 
 @ProviderFor(allChallenges)
 final allChallengesProvider = AllChallengesProvider._();
@@ -127,12 +127,8 @@ final class UserChallengesProvider
 
 String _$userChallengesHash() => r'a40c1872ac144785be07f86b83d8563322b143f8';
 
-/// Challenges filtered by the current user's archetype
-
 @ProviderFor(archetypeChallenges)
 final archetypeChallengesProvider = ArchetypeChallengesProvider._();
-
-/// Challenges filtered by the current user's archetype
 
 final class ArchetypeChallengesProvider
     extends
@@ -142,7 +138,6 @@ final class ArchetypeChallengesProvider
           FutureOr<List<Challenge>>
         >
     with $FutureModifier<List<Challenge>>, $FutureProvider<List<Challenge>> {
-  /// Challenges filtered by the current user's archetype
   ArchetypeChallengesProvider._()
     : super(
         from: null,
@@ -172,12 +167,8 @@ final class ArchetypeChallengesProvider
 String _$archetypeChallengesHash() =>
     r'caf6410b71e0161ba7e7c0ceb5d2a55158923da5';
 
-/// Weekly spotlight challenge for the user's archetype
-
 @ProviderFor(weeklySpotlight)
 final weeklySpotlightProvider = WeeklySpotlightProvider._();
-
-/// Weekly spotlight challenge for the user's archetype
 
 final class WeeklySpotlightProvider
     extends
@@ -187,7 +178,6 @@ final class WeeklySpotlightProvider
           FutureOr<Challenge?>
         >
     with $FutureModifier<Challenge?>, $FutureProvider<Challenge?> {
-  /// Weekly spotlight challenge for the user's archetype
   WeeklySpotlightProvider._()
     : super(
         from: null,
@@ -215,12 +205,8 @@ final class WeeklySpotlightProvider
 
 String _$weeklySpotlightHash() => r'91a996098665d3b922cdf5833cc53226d43d3eef';
 
-/// Daily quest for the user's archetype
-
 @ProviderFor(dailyQuest)
 final dailyQuestProvider = DailyQuestProvider._();
-
-/// Daily quest for the user's archetype
 
 final class DailyQuestProvider
     extends
@@ -230,7 +216,6 @@ final class DailyQuestProvider
           FutureOr<Challenge?>
         >
     with $FutureModifier<Challenge?>, $FutureProvider<Challenge?> {
-  /// Daily quest for the user's archetype
   DailyQuestProvider._()
     : super(
         from: null,
