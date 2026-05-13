@@ -105,11 +105,12 @@ class _TribeTabContentState extends ConsumerState<TribeTabContent> {
             final theme = ArchetypeTheme.forArchetype(profile.archetype);
 
             // Find the club that matches the user's archetype
-            final userClub = clubs.isNotEmpty
-                ? clubs.firstWhere(
+            final matchingIndex = clubs.isNotEmpty
+                ? clubs.indexWhere(
                     (club) => club.archetypeId == profile.archetype.name,
                   )
-                : null;
+                : -1;
+            final userClub = matchingIndex != -1 ? clubs[matchingIndex] : null;
 
             if (userClub == null) {
               return const _EmptyState(

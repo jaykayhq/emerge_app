@@ -30,7 +30,7 @@ class AdBannerWidget extends ConsumerStatefulWidget {
 }
 
 class _AdBannerWidgetState extends ConsumerState<AdBannerWidget>
-    with SingleTickerProviderStateMixin, AutomaticKeepAliveClientMixin {
+    with TickerProviderStateMixin, AutomaticKeepAliveClientMixin {
   BannerAd? _bannerAd;
   bool _isLoaded = false;
 
