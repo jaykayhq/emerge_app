@@ -36,6 +36,7 @@ const db = admin.firestore();
 
 const DEFAULT_XP_CONFIG: Record<string, number> = {
   habit_complete: 10,
+  habit_completion: 10,
   joined_challenge: 25,
   joined_tribe: 50,
   reflection_saved: 15,
@@ -230,8 +231,27 @@ export const onUserActivityCreated = onDocumentCreated("user_activity/{activityI
         const tribeRef = db.collection("tribes").doc(clubId);
         transaction.update(tribeRef, {
           totalXp: admin.firestore.FieldValue.increment(xpGain),
+          totalHabitsCompleted: admin.firestore.FieldValue.increment(1),
           lastStatsSync: admin.firestore.FieldValue.serverTimestamp()
         });
+
+        // Write to tribe activity feed
+        if (activity.type === "habit_completion" || activity.type === "habit_complete") {
+          const activityId = `${activity.userId}_${activity.habitId || ""}_${Date.now()}`;
+          const activityFeedRef = tribeRef.collection("activity").doc(activityId);
+          transaction.set(activityFeedRef, {
+            type: "habit_complete",
+            userId: activity.userId,
+            userName: "",
+            data: {
+              habitId: activity.habitId,
+              habitTitle: "",
+              streakDay: activity.streakDay || 0,
+              attribute: activity.attribute || "",
+            },
+            timestamp: admin.firestore.FieldValue.serverTimestamp(),
+          });
+        }
       }
     }
 

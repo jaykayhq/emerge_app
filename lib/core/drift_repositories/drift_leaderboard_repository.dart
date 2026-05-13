@@ -52,16 +52,16 @@ class DriftLeaderboardRepository implements LeaderboardRepository {
     try {
       if (clubId != null && clubId.isNotEmpty) {
         final id = '${userId}_$clubId';
-        await _db.leaderboardEntriesDao.upsertEntry(LeaderboardEntriesTableCompanion(
-          id: Value(id),
-          tribeId: Value(clubId),
-          userId: Value(userId),
-          userName: Value(userName ?? 'Anonymous'),
-          xp: Value(xp),
-          level: Value(level),
-          archetype: Value(archetype.name),
-          updatedAt: Value(DateTime.now().toIso8601String()),
-        ));
+        await _db.leaderboardEntriesDao.insertFromData(
+          id: id,
+          tribeId: clubId,
+          userId: userId,
+          userName: userName ?? 'Anonymous',
+          xp: xp,
+          level: level,
+          archetype: archetype.name,
+          updatedAt: DateTime.now().toIso8601String(),
+        );
 
         await _syncEngine.enqueueSet(
           collectionPath: 'club_leaderboards',

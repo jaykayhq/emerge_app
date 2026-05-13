@@ -33,24 +33,24 @@ class DriftHabitRepository implements HabitRepository {
   @override
   Future<Either<Failure, Unit>> createHabit(Habit habit) async {
     try {
-      await _db.habitsDao.upsertHabit(HabitsTableCompanion(
-        id: Value(habit.id),
-        userId: Value(habit.userId),
-        title: Value(habit.title),
-        cue: Value(habit.cue),
-        routine: Value(habit.routine),
-        reward: Value(habit.reward),
-        frequency: Value(habit.frequency.name),
-        difficulty: Value(habit.difficulty.name),
-        attribute: Value(habit.attribute.name),
-        currentStreak: Value(habit.currentStreak),
-        longestStreak: Value(habit.longestStreak),
-        momentumScore: Value(habit.momentumScore),
-        consecutiveMisses: Value(habit.consecutiveMisses),
-        isArchived: Value(habit.isArchived ? 1 : 0),
-        createdAt: Value(habit.createdAt.toIso8601String()),
-        updatedAt: Value(DateTime.now().toIso8601String()),
-      ));
+      await _db.habitsDao.insertFromData(
+        id: habit.id,
+        userId: habit.userId,
+        title: habit.title,
+        cue: habit.cue,
+        routine: habit.routine,
+        reward: habit.reward,
+        frequency: habit.frequency.name,
+        difficulty: habit.difficulty.name,
+        attribute: habit.attribute.name,
+        currentStreak: habit.currentStreak,
+        longestStreak: habit.longestStreak,
+        momentumScore: habit.momentumScore,
+        consecutiveMisses: habit.consecutiveMisses,
+        isArchived: habit.isArchived ? 1 : 0,
+        createdAt: habit.createdAt.toIso8601String(),
+        updatedAt: DateTime.now().toIso8601String(),
+      );
 
       await _syncEngine.enqueueSet(
         collectionPath: 'habits',
@@ -67,24 +67,24 @@ class DriftHabitRepository implements HabitRepository {
   @override
   Future<Either<Failure, Unit>> updateHabit(Habit habit) async {
     try {
-      await _db.habitsDao.upsertHabit(HabitsTableCompanion(
-        id: Value(habit.id),
-        userId: Value(habit.userId),
-        title: Value(habit.title),
-        cue: Value(habit.cue),
-        routine: Value(habit.routine),
-        reward: Value(habit.reward),
-        frequency: Value(habit.frequency.name),
-        difficulty: Value(habit.difficulty.name),
-        attribute: Value(habit.attribute.name),
-        currentStreak: Value(habit.currentStreak),
-        longestStreak: Value(habit.longestStreak),
-        momentumScore: Value(habit.momentumScore),
-        consecutiveMisses: Value(habit.consecutiveMisses),
-        isArchived: Value(habit.isArchived ? 1 : 0),
-        createdAt: Value(habit.createdAt.toIso8601String()),
-        updatedAt: Value(DateTime.now().toIso8601String()),
-      ));
+      await _db.habitsDao.insertFromData(
+        id: habit.id,
+        userId: habit.userId,
+        title: habit.title,
+        cue: habit.cue,
+        routine: habit.routine,
+        reward: habit.reward,
+        frequency: habit.frequency.name,
+        difficulty: habit.difficulty.name,
+        attribute: habit.attribute.name,
+        currentStreak: habit.currentStreak,
+        longestStreak: habit.longestStreak,
+        momentumScore: habit.momentumScore,
+        consecutiveMisses: habit.consecutiveMisses,
+        isArchived: habit.isArchived ? 1 : 0,
+        createdAt: habit.createdAt.toIso8601String(),
+        updatedAt: DateTime.now().toIso8601String(),
+      );
 
       await _syncEngine.enqueueUpdate(
         collectionPath: 'habits',
@@ -101,11 +101,17 @@ class DriftHabitRepository implements HabitRepository {
   @override
   Future<Either<Failure, Unit>> deleteHabit(String habitId) async {
     try {
-      await _db.habitsDao.upsertHabit(HabitsTableCompanion(
-        id: Value(habitId),
-        isArchived: const Value(1),
-        updatedAt: Value(DateTime.now().toIso8601String()),
-      ));
+      final existing = await _db.habitsDao.getHabit(habitId);
+      if (existing != null) {
+        await _db.habitsDao.insertFromData(
+          id: existing.id,
+          userId: existing.userId,
+          title: existing.title,
+          isArchived: 1,
+          createdAt: existing.createdAt,
+          updatedAt: DateTime.now().toIso8601String(),
+        );
+      }
 
       await _syncEngine.enqueueUpdate(
         collectionPath: 'habits',
@@ -191,18 +197,16 @@ class DriftHabitRepository implements HabitRepository {
           (statsRow.worldHealthScore + result.worldHealthDelta).clamp(0.0, 1.0),
         );
 
-        await _db.habitCompletionsDao.insertCompletion(
-          HabitCompletionsTableCompanion(
-            id: Value('${habitId}_${DateTime.now().millisecondsSinceEpoch}'),
-            habitId: Value(habitId),
-            userId: Value(statsRow.userId),
-            completedAt: Value(date.toIso8601String()),
-            xpGained: Value(result.xpGained),
-            attribute: Value(attr),
-            momentumAtCompletion: Value(result.newMomentumScore),
-            streakDay: Value(result.newStreak),
-            wasRecovery: Value(result.isRecovery ? 1 : 0),
-          ),
+        await _db.habitCompletionsDao.insertFromData(
+          id: '${habitId}_${DateTime.now().millisecondsSinceEpoch}',
+          habitId: habitId,
+          userId: statsRow.userId,
+          completedAt: date.toIso8601String(),
+          xpGained: result.xpGained,
+          attribute: attr,
+          momentumAtCompletion: result.newMomentumScore,
+          streakDay: result.newStreak,
+          wasRecovery: result.isRecovery ? 1 : 0,
         );
 
         for (final update in result.challengeUpdates.values) {
@@ -240,18 +244,17 @@ class DriftHabitRepository implements HabitRepository {
 
   @override
   Future<List<Habit>> getHabitsByAnchor(String anchorHabitId) async {
-    final all = await (select(_db.habitsTable)..where((t) => t.isArchived.equals(0))).get();
-    return all.where((r) => r.attribute == anchorHabitId).map((r) => _rowToHabit(r)).toList();
+    final rows = await _db.habitsDao.getByAttribute(anchorHabitId);
+    return rows.map((r) => _rowToHabit(r)).toList();
   }
 
   @override
   Future<List<HabitActivity>> getActivity(String userId, DateTime start, DateTime end) async {
-    final rows = await (select(_db.habitCompletionsTable)
-      ..where((t) => t.userId.equals(userId) & t.completedAt.isBetweenValues(
-        start.toIso8601String(),
-        end.toIso8601String(),
-      )))
-      .get();
+    final rows = await _db.habitCompletionsDao.getBetweenDates(
+      userId,
+      start.toIso8601String(),
+      end.toIso8601String(),
+    );
 
     return rows.map((r) => HabitActivity(
       id: r.id,
@@ -273,14 +276,14 @@ class DriftHabitRepository implements HabitRepository {
       for (int i = 0; i < habits.length; i++) {
         final h = habits[i];
         final habitId = '${blueprint.id}_${i}_${DateTime.now().millisecondsSinceEpoch}';
-        await _db.habitsDao.upsertHabit(HabitsTableCompanion(
-          id: Value(habitId),
-          userId: Value(userId),
-          title: Value(h.title),
-          attribute: Value(h.attribute.name),
-          createdAt: Value(DateTime.now().toIso8601String()),
-          updatedAt: Value(DateTime.now().toIso8601String()),
-        ));
+        await _db.habitsDao.insertFromData(
+          id: habitId,
+          userId: userId,
+          title: h.title,
+          attribute: h.attribute.name,
+          createdAt: DateTime.now().toIso8601String(),
+          updatedAt: DateTime.now().toIso8601String(),
+        );
 
         await _syncEngine.enqueueSet(
           collectionPath: 'habits',

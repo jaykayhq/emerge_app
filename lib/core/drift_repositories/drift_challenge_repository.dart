@@ -20,18 +20,16 @@ class DriftChallengeRepository implements ChallengeRepository {
       final challenge = ChallengeCatalog.getChallengeById(challengeId);
       if (challenge == null) return Left(ServerFailure('Challenge not found'));
 
-      await _db.challengeProgressDao.upsertProgress(ChallengeProgressTableCompanion(
-        challengeId: Value(challengeId),
-        userId: Value(userId),
-        title: Value(challenge.title),
-        attribute: Value(challenge.xpReward > 0 ? 'vitality' : null),
-        currentDay: const Value(0),
-        totalDays: Value(challenge.totalDays),
-        status: const Value('active'),
-        xpReward: Value(challenge.xpReward),
-        joinedAt: Value(DateTime.now().toIso8601String()),
-        updatedAt: Value(DateTime.now().toIso8601String()),
-      ));
+      await _db.challengeProgressDao.insertFromData(
+        challengeId: challengeId,
+        userId: userId,
+        title: challenge.title,
+        attribute: challenge.xpReward > 0 ? 'vitality' : null,
+        totalDays: challenge.totalDays,
+        xpReward: challenge.xpReward,
+        joinedAt: DateTime.now().toIso8601String(),
+        updatedAt: DateTime.now().toIso8601String(),
+      );
 
       return const Right(unit);
     } catch (e) {
@@ -40,9 +38,7 @@ class DriftChallengeRepository implements ChallengeRepository {
   }
 
   @override
-  Future<Either<Failure, Unit>> updateProgress(
-    String userId, String challengeId, int progress,
-  ) async {
+  Future<Either<Failure, Unit>> updateProgress(String userId, String challengeId, int progress) async {
     try {
       final challenges = await _db.challengeProgressDao.getActive(userId);
       final challenge = challenges.where((c) => c.challengeId == challengeId).firstOrNull;
@@ -77,12 +73,9 @@ class DriftChallengeRepository implements ChallengeRepository {
   }
 
   @override
-  Future<Either<Failure, Unit>> completeChallengeWithReward(
-    String userId, String challengeId,
-  ) async {
+  Future<Either<Failure, Unit>> completeChallengeWithReward(String userId, String challengeId) async {
     try {
       await _db.challengeProgressDao.updateDay(challengeId, 0, 'completed');
-
       return const Right(unit);
     } catch (e) {
       return Left(ServerFailure(e.toString()));
@@ -96,10 +89,7 @@ class DriftChallengeRepository implements ChallengeRepository {
 
   @override
   Future<List<Challenge>> getUserChallenges(String userId) async {
-    final rows = await _db.challengeProgressDao.getActive(userId);
-    final all = await (select(_db.challengeProgressTable)
-      ..where((t) => t.userId.equals(userId)))
-      .get();
+    final all = await _db.challengeProgressDao.getActive(userId);
     return all.map((r) => Challenge(
       id: r.challengeId,
       title: r.title ?? '',
@@ -142,22 +132,18 @@ class DriftChallengeRepository implements ChallengeRepository {
 
   @override
   Future<void> createSoloChallenge(String userId, Challenge challenge) async {
-    await _db.challengeProgressDao.upsertProgress(ChallengeProgressTableCompanion(
-      challengeId: Value(challenge.id),
-      userId: Value(userId),
-      title: Value(challenge.title),
-      currentDay: const Value(0),
-      totalDays: Value(challenge.totalDays),
-      status: const Value('active'),
-      xpReward: Value(challenge.xpReward),
-      updatedAt: Value(DateTime.now().toIso8601String()),
-    ));
+    await _db.challengeProgressDao.insertFromData(
+      challengeId: challenge.id,
+      userId: userId,
+      title: challenge.title,
+      totalDays: challenge.totalDays,
+      xpReward: challenge.xpReward,
+      updatedAt: DateTime.now().toIso8601String(),
+    );
   }
 
   @override
-  Future<List<Map<String, dynamic>>> getLeaderboard(
-    String challengeId, {int limit = 3},
-  ) async {
+  Future<List<Map<String, dynamic>>> getLeaderboard(String challengeId, {int limit = 3}) async {
     return [];
   }
 

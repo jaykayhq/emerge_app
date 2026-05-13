@@ -2,7 +2,6 @@ import 'package:emerge_app/core/config/app_config.dart';
 import 'package:emerge_app/core/security/app_check_service.dart';
 import 'package:emerge_app/core/services/notification_service.dart';
 import 'package:emerge_app/features/onboarding/data/repositories/local_settings_repository.dart';
-import 'package:emerge_app/core/services/local_cache_service.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
@@ -37,17 +36,6 @@ Future<void> initApp() async {
 
   // Initialize Firebase (Required before all others)
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
-
-  // Initialize Local Cache (Hive) eagerly so localCacheServiceProvider is
-  // synchronous throughout the app. This MUST be called before runApp().
-  if (!kIsWeb) {
-    try {
-      await LocalCacheService.initialize();
-      debugPrint('✅ LocalCacheService (Hive) initialized');
-    } catch (e) {
-      debugPrint('⚠️ LocalCacheService initialization failed: $e');
-    }
-  }
 
   // Enable Firestore Offline Persistence
   FirebaseFirestore.instance.settings = const Settings(
@@ -117,14 +105,13 @@ Future<void> initApp() async {
       }
     }(),
 
-    // Local Storage (Hive)
+    // Local Settings
     () async {
       try {
         await LocalSettingsRepository().init();
-        // LocalCacheService is already initialized above via LocalCacheService.initialize()
-        debugPrint('✅ Local Storage (Hive) initialized');
+        debugPrint('✅ Local Settings initialized');
       } catch (e) {
-        debugPrint('⚠️ Local Storage initialization failed: $e');
+        debugPrint('⚠️ Local Settings initialization failed: $e');
       }
     }(),
 

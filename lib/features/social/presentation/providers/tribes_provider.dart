@@ -78,10 +78,22 @@ final clubActivityProvider =
           .collection('tribes')
           .doc(tribeId)
           .collection('activity')
-          .orderBy('timestamp', descending: true)
-          .limit(20)
           .snapshots()
-          .map((snapshot) => snapshot.docs.map((doc) => doc.data()).toList());
+          .map((snapshot) {
+            final activities = snapshot.docs
+                .map((doc) => doc.data())
+                .toList();
+            // Sort by timestamp descending client-side (avoids composite index requirement)
+            activities.sort((a, b) {
+              final aTs = a['timestamp'] as Timestamp?;
+              final bTs = b['timestamp'] as Timestamp?;
+              if (aTs == null && bTs == null) return 0;
+              if (aTs == null) return 1;
+              if (bTs == null) return -1;
+              return bTs.compareTo(aTs);
+            });
+            return activities.take(20).toList();
+          });
     });
 
 /// Real-time stream of the global activity feed.

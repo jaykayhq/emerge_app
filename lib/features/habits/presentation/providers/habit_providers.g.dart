@@ -91,7 +91,7 @@ final class HabitRepositoryProvider
   }
 }
 
-String _$habitRepositoryHash() => r'1424dd969dc5e34ab3d32fb23c301bfe9da3d805';
+String _$habitRepositoryHash() => r'29ca48d61c537c6c88ad4878fb5badf78a7180dc';
 
 @ProviderFor(habits)
 final habitsProvider = HabitsProvider._();
@@ -130,7 +130,7 @@ final class HabitsProvider
   }
 }
 
-String _$habitsHash() => r'8806632e3af19c32e7c31a05719058facd941d11';
+String _$habitsHash() => r'1bba867566d4ca343675794bce9bb3296d23a4ef';
 
 @ProviderFor(createHabit)
 final createHabitProvider = CreateHabitFamily._();
