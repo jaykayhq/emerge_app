@@ -18,6 +18,8 @@ class UserStatsTable extends Table {
   TextColumn get worldStateJson => text().nullable()();
   TextColumn get updatedAt => text().withDefault(Constant(''))();
   TextColumn get syncedAt => text().nullable()();
+  IntColumn get onboardingProgress => integer().withDefault(const Constant(0))();
+  TextColumn get onboardingCompletedAt => text().nullable()();
 
   @override
   Set<Column> get primaryKey => {userId};
