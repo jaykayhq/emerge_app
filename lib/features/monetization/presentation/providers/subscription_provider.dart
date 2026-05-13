@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:emerge_app/core/utils/app_logger.dart';
 import 'package:emerge_app/features/auth/presentation/providers/auth_providers.dart';
 import 'package:emerge_app/features/monetization/data/repositories/revenue_cat_repository.dart';
@@ -18,43 +19,43 @@ class IsPremium extends _$IsPremium {
     final repo = ref.watch(monetizationRepositoryProvider);
     final authState = ref.watch(authStateChangesProvider);
 
-    // Wait for user to be authenticated before initializing
     final user = authState.value;
-    if (user == null) {
-      // User not authenticated yet, return false (not premium)
-      return false;
-    }
+    if (user == null) return false;
 
-    // Initialize SDK with user ID on first build
     if (user.id.isNotEmpty) {
       await repo.initialize(uid: user.id);
     }
 
-    // Initial check from RevenueCat SDK (Source of Truth)
-    final sdkResult = await repo.isPremium;
-    bool isPremium = sdkResult.fold(
-      (error) {
-        AppLogger.e('Initial premium check failed', error);
-        return false;
-      },
-      (val) => val,
-    );
+    // Retry RevenueCat check up to 3 times
+    bool isPremium = false;
+    for (int attempt = 0; attempt < 3; attempt++) {
+      try {
+        final sdkResult = await repo.isPremium;
+        isPremium = sdkResult.fold(
+          (error) {
+            if (attempt < 2) Future.delayed(Duration(seconds: 1 << attempt));
+            return false;
+          },
+          (val) => val,
+        );
+        if (sdkResult.isRight()) break;
+      } catch (e) {
+        if (attempt < 2) await Future.delayed(Duration(seconds: 1 << attempt));
+      }
+    }
 
-    // Listen to real-time subscription changes for immediate UI updates
+    // Real-time listener for subscription changes
     final sub = repo.premiumStatusStream.listen((isPremiumUpdate) {
       state = AsyncValue.data(isPremiumUpdate);
     });
     ref.onDispose(() => sub.cancel());
 
-    // If SDK says premium, we are done
     if (isPremium) return true;
 
-    // Optional: Secondary check with Firebase Custom Claims
-    // This handles cases where the extension synced but SDK cache is stale
+    // Retry Firebase Custom Claims check
     try {
       final firebaseUser = FirebaseAuth.instance.currentUser;
       if (firebaseUser != null) {
-        // Force refresh token to get latest claims
         final idTokenResult = await firebaseUser.getIdTokenResult(true);
         final activeEntitlements = idTokenResult.claims?['activeEntitlements'] as List<dynamic>?;
         if (activeEntitlements?.contains('premium') ?? false) {
@@ -62,9 +63,14 @@ class IsPremium extends _$IsPremium {
         }
       }
     } catch (e) {
-      AppLogger.w('Custom claims verification skipped or failed', error: e);
+      AppLogger.w('Custom claims verification failed', error: e);
     }
 
     return isPremium;
+  }
+
+  Future<void> retry() async {
+    state = const AsyncLoading();
+    state = AsyncValue.data(await build());
   }
 }
