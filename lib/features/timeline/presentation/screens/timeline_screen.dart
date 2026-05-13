@@ -9,7 +9,9 @@ import 'package:emerge_app/features/habits/presentation/providers/habit_provider
 import 'package:emerge_app/features/habits/presentation/widgets/miss_recovery_sheet.dart';
 import 'package:emerge_app/features/insights/data/repositories/insights_repository.dart';
 import 'package:emerge_app/features/insights/domain/entities/insights_entities.dart';
+import 'package:emerge_app/features/monetization/domain/services/ad_manager_service.dart';
 import 'package:emerge_app/features/monetization/presentation/providers/subscription_provider.dart';
+import 'package:emerge_app/features/monetization/presentation/widgets/ad_banner_widget.dart';
 import 'package:emerge_app/features/timeline/presentation/widgets/month_calendar_strip.dart';
 import 'package:emerge_app/features/timeline/presentation/widgets/ai_coach_card.dart';
 import 'package:emerge_app/features/timeline/presentation/widgets/current_mission_banner.dart';
@@ -395,6 +397,21 @@ class _TimelineScreenState extends ConsumerState<TimelineScreen> {
 
         const SliverToBoxAdapter(child: SizedBox(height: 24)),
 
+        // Identity-first banner ad (premium users auto-hide)
+        SliverToBoxAdapter(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: Column(
+              children: [
+                const AdBannerWidget(),
+                const SizedBox(height: 16),
+              ],
+            ),
+          ),
+        ),
+
+        const SliverToBoxAdapter(child: SizedBox(height: 8)),
+
         SliverToBoxAdapter(
           child: ref.watch(isPremiumProvider).when(
                 data: (isPremium) => AiCoachCard(
@@ -463,6 +480,104 @@ class _TimelineScreenState extends ConsumerState<TimelineScreen> {
         SliverToBoxAdapter(
           child: ReflectionCard(
             onLogReflection: (value, note) => _saveReflection(value, note),
+          ),
+        ),
+
+        const SliverToBoxAdapter(child: SizedBox(height: 16)),
+
+        // Rewarded ad: Watch ad for bonus XP
+        SliverToBoxAdapter(
+          child: Consumer(
+            builder: (context, ref, _) {
+              final isPremium = ref.watch(isPremiumProvider).value ?? false;
+              if (isPremium) return const SizedBox.shrink();
+
+              return Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: GlassmorphismCard(
+                  glowColor: EmergeColors.warmGold,
+                  child: Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(10),
+                          decoration: BoxDecoration(
+                            color: EmergeColors.warmGold.withValues(alpha: 0.15),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: const Icon(
+                            Icons.play_circle_outline,
+                            color: EmergeColors.warmGold,
+                            size: 28,
+                          ),
+                        ),
+                        const SizedBox(width: 14),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Text(
+                                'Bonus XP Boost',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 14,
+                                ),
+                              ),
+                              const SizedBox(height: 2),
+                              Text(
+                                'Watch a short ad to earn bonus XP',
+                                style: TextStyle(
+                                  color: Colors.white.withValues(alpha: 0.6),
+                                  fontSize: 12,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        TextButton(
+                          onPressed: () {
+                            ref.read(adManagerProvider).showRewardedAd(
+                              onRewarded: () {
+                                if (context.mounted) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                      content: Text('+25 Bonus XP earned!'),
+                                      backgroundColor: EmergeColors.warmGold,
+                                      behavior: SnackBarBehavior.floating,
+                                    ),
+                                  );
+                                }
+                              },
+                              onFailed: () {
+                                if (context.mounted) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                      content: Text('Ad not available. Try again later.'),
+                                      backgroundColor: Colors.grey,
+                                      behavior: SnackBarBehavior.floating,
+                                    ),
+                                  );
+                                }
+                              },
+                            );
+                          },
+                          child: const Text(
+                            'WATCH',
+                            style: TextStyle(
+                              color: EmergeColors.warmGold,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 12,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              );
+            },
           ),
         ),
 
@@ -585,6 +700,11 @@ class _TimelineScreenState extends ConsumerState<TimelineScreen> {
             ),
           ),
         );
+      }
+
+      // Show interstitial ad after habit completion (rate-limited to 12h)
+      if (!result.isUndo && mounted) {
+        ref.read(adManagerProvider).showInterstitialAd();
       }
     } catch (e) {
       if (mounted) {
