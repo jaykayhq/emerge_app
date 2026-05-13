@@ -1,21 +1,17 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:emerge_app/core/drift/database.dart';
+import 'package:emerge_app/core/drift_repositories/drift_tribe_repository.dart';
+import 'package:emerge_app/core/sync/sync_providers.dart';
 import 'package:emerge_app/features/social/data/repositories/tribe_repository.dart';
 import 'package:emerge_app/features/social/data/services/tribe_stats_service.dart';
 import 'package:emerge_app/features/social/domain/models/tribe.dart';
 import 'package:emerge_app/features/social/domain/services/club_activity_service.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import 'package:emerge_app/core/services/local_cache_service.dart';
-import 'package:emerge_app/features/social/data/repositories/cache_aware_tribe_repository.dart';
-
 final tribeRepositoryProvider = Provider<TribeRepository>((ref) {
-  final remoteRepository = FirestoreTribeRepository(FirebaseFirestore.instance);
-  try {
-    final cacheService = ref.watch(localCacheServiceProvider);
-    return CacheAwareTribeRepository(remoteRepository, cacheService);
-  } catch (_) {
-    return remoteRepository;
-  }
+  final db = ref.watch(appDatabaseProvider);
+  final syncEngine = ref.watch(enhancedSyncEngineProvider);
+  return DriftTribeRepository(db, syncEngine);
 });
 
 /// Provider for TribeStatsService - calculates real-time tribe statistics

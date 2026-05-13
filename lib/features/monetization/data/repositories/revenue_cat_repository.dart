@@ -6,18 +6,11 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:fpdart/fpdart.dart';
 import 'package:purchases_flutter/purchases_flutter.dart';
-import 'package:emerge_app/core/services/local_cache_service.dart';
-
 class RevenueCatRepository implements MonetizationRepository {
   String? _googleApiKey;
   String? _appleApiKey;
-  bool _isConfigured = false;
-  String? _currentUid;
-  final LocalCacheService? _cacheService;
 
-  /// [cacheService] is optional — when provided, enables 48-hour offline premium grace period.
-  RevenueCatRepository({LocalCacheService? cacheService})
-      : _cacheService = cacheService;
+  RevenueCatRepository();
 
   static const _entitlementId =
       'premium'; // The identifier you set in RevenueCat
@@ -212,21 +205,6 @@ class RevenueCatRepository implements MonetizationRepository {
       
       return Right(isPremium);
     } on PlatformException catch (e) {
-      // Offline Grace Period: If we can't fetch from RC, check local cache
-      final cachedStatus = _cacheService?.getPremiumStatus();
-      if (cachedStatus != null) {
-        final lastCheckStr = cachedStatus['lastCheck'] as String;
-        final lastCheck = DateTime.parse(lastCheckStr);
-        final isPremiumCached = cachedStatus['isPremium'] as bool;
-        
-        // If it was premium and checked within 48 hours, allow it
-        if (isPremiumCached && 
-            DateTime.now().difference(lastCheck).inHours < 48) {
-          AppLogger.i('RevenueCat: Using offline grace period status (Premium: true)');
-          return const Right(true);
-        }
-      }
-      
       AppLogger.w('RevenueCat: Failed to check premium status offline: ${e.message}');
       return Left(e.message ?? 'Failed to check subscription status');
     } catch (e) {

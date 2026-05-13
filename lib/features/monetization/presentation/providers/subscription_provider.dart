@@ -4,8 +4,6 @@ import 'package:emerge_app/features/monetization/data/repositories/revenue_cat_r
 import 'package:emerge_app/features/monetization/domain/repositories/monetization_repository.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
-import 'package:emerge_app/core/services/local_cache_service.dart';
-
 part 'subscription_provider.g.dart';
 
 @Riverpod(keepAlive: true)

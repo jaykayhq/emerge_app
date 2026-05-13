@@ -62,13 +62,6 @@ class OnboardingController extends _$OnboardingController {
 
         // SYNC: Atomically save to both users and user_stats collections
         await userStatsRepo.syncUserIdentity(updatedProfile);
-
-        // Log the onboarding completion activity
-        await userStatsRepo.logActivity(
-          userId: user.id,
-          type: 'onboarding_completed',
-          date: DateTime.now(),
-        );
       } catch (e, stack) {
         AppLogger.e(
           'Error updating user stats on onboarding completion',
@@ -266,14 +259,6 @@ class OnboardingController extends _$OnboardingController {
       try {
         final userStatsRepo = ref.read(userStatsRepositoryProvider);
 
-        // Log the milestone completion activity
-        await userStatsRepo.logActivity(
-          userId: user!.id,
-          type: 'onboarding_milestone_completed',
-          sourceId: 'milestone_$milestoneIndex',
-          date: DateTime.now(),
-        );
-
         AppLogger.i('Milestone $milestoneIndex completed');
       } catch (e, stack) {
         AppLogger.e(
@@ -390,15 +375,6 @@ class OnboardingController extends _$OnboardingController {
         try {
           await dashboardNotifier.createHabitOptimistic(newHabit);
 
-          // Log activity
-          final userStatsRepo = ref.read(userStatsRepositoryProvider);
-          await userStatsRepo.logActivity(
-            userId: user.id,
-            type: 'habit_created',
-            habitId: newHabit.id,
-            sourceId: 'onboarding',
-            date: DateTime.now(),
-          );
         } catch (e) {
           AppLogger.e(
             'Failed to create onboarding habit',
@@ -525,15 +501,10 @@ final attributesProvider = Provider<Map<String, int>>((ref) {
 /// Returns empty list if onboarding is complete or if user profile isn't loaded
 @riverpod
 List<OnboardingMilestone> activeMilestones(Ref ref) {
-  // Try userProfileProvider first, fall back to userStatsStreamProvider
-  final userProfileAsync = ref.watch(userProfileProvider);
   final userStatsAsync = ref.watch(userStatsStreamProvider);
 
-  // Get progress from either provider (prefer userProfile if available)
   int progress = 0;
-  if (userProfileAsync.value != null) {
-    progress = userProfileAsync.value?.onboardingProgress ?? 0;
-  } else if (userStatsAsync.value != null) {
+  if (userStatsAsync.value != null) {
     progress = userStatsAsync.value?.onboardingProgress ?? 0;
   }
 

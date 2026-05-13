@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:emerge_app/core/drift/database.dart';
 import 'package:emerge_app/core/drift/daos/mutation_queue_dao.dart';
 import 'package:flutter/foundation.dart';
 

@@ -6,6 +6,7 @@ import 'package:emerge_app/core/utils/app_logger.dart';
 import 'package:emerge_app/features/auth/domain/entities/user_extension.dart';
 import 'package:emerge_app/features/auth/presentation/providers/auth_providers.dart';
 import 'package:emerge_app/core/drift_repositories/drift_user_stats_repository.dart';
+import 'package:emerge_app/features/gamification/data/repositories/user_stats_repository.dart';
 import 'package:emerge_app/features/gamification/domain/services/gamification_service.dart';
 import 'package:emerge_app/features/habits/domain/entities/habit.dart';
 import 'package:emerge_app/features/habits/domain/services/momentum_service.dart';
@@ -15,8 +16,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'user_stats_providers.g.dart';
-
-final gamificationServiceProvider = Provider((ref) => GamificationService());
 
 final userStatsStreamProvider = StreamProvider<UserProfile>((ref) {
   final userAsync = ref.watch(authStateChangesProvider);
