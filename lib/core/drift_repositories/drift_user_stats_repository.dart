@@ -1,11 +1,13 @@
 import 'dart:async';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:emerge_app/core/drift/database.dart';
 import 'package:emerge_app/features/auth/domain/entities/user_extension.dart';
 
 class DriftUserStatsRepository {
   final AppDatabase _db;
+  final FirebaseFirestore _firestore;
 
-  DriftUserStatsRepository(this._db);
+  DriftUserStatsRepository(this._db) : _firestore = FirebaseFirestore.instance;
 
   Future<void> saveUserStats(UserProfile profile) async {
     await _db.userStatsDao.upsertFromFirebase(profile.uid, {
@@ -46,6 +48,85 @@ class DriftUserStatsRepository {
     final row = await _db.userStatsDao.getStats(uid);
     if (row == null) return UserProfile(uid: uid);
     return _rowToProfile(row);
+  }
+
+  Future<Map<String, dynamic>?> getLatestRecap(String userId) async {
+    final snapshot = await _firestore
+        .collection('user_stats')
+        .doc(userId)
+        .collection('recaps')
+        .orderBy('endDate', descending: true)
+        .limit(1)
+        .get();
+    if (snapshot.docs.isEmpty) return null;
+    return snapshot.docs.first.data();
+  }
+
+  Future<Map<String, dynamic>?> getRecap(String userId, String recapId) async {
+    final doc = await _firestore
+        .collection('user_stats')
+        .doc(userId)
+        .collection('recaps')
+        .doc(recapId)
+        .get();
+    return doc.data();
+  }
+
+  Future<List<Map<String, dynamic>>> getRecaps(String userId, {int limit = 10}) async {
+    final snapshot = await _firestore
+        .collection('user_stats')
+        .doc(userId)
+        .collection('recaps')
+        .orderBy('endDate', descending: true)
+        .limit(limit)
+        .get();
+    return snapshot.docs.map((doc) => doc.data()).toList();
+  }
+
+  Future<void> saveRecap(String userId, Map<String, dynamic> recapData) async {
+    await _firestore
+        .collection('user_stats')
+        .doc(userId)
+        .collection('recaps')
+        .doc(recapData['id'] as String)
+        .set(recapData);
+  }
+
+  Future<List<Map<String, dynamic>>> getWeeklyActivity(
+    String userId,
+    DateTime start,
+    DateTime end,
+  ) async {
+    final snapshot = await _firestore
+        .collection('user_activity')
+        .where('userId', isEqualTo: userId)
+        .where('date', isGreaterThanOrEqualTo: Timestamp.fromDate(start))
+        .where('date', isLessThanOrEqualTo: Timestamp.fromDate(end))
+        .get();
+    return snapshot.docs.map((doc) => doc.data()).toList();
+  }
+
+  Future<void> logActivity({
+    required String userId,
+    required String type,
+    String? habitId,
+    String? sourceId,
+    required DateTime date,
+    String? difficulty,
+    String? attribute,
+    int? streakDay,
+  }) async {
+    await _firestore.collection('user_activity').add({
+      'userId': userId,
+      'date': Timestamp.fromDate(date),
+      'type': type,
+      'createdAt': FieldValue.serverTimestamp(),
+      if (habitId != null) 'habitId': habitId,
+      if (sourceId != null) 'sourceId': sourceId,
+      if (difficulty != null) 'difficulty': difficulty,
+      if (attribute != null) 'attribute': attribute,
+      if (streakDay != null) 'streakDay': streakDay,
+    });
   }
 
   UserProfile _rowToProfile(UserStatsTableData row) {

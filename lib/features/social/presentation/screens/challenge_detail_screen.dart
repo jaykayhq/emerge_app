@@ -466,13 +466,6 @@ class ChallengeDetailScreen extends ConsumerWidget {
             result.fold(
               (failure) => _showError(screenContext, failure.message),
               (_) async {
-                final userStatsRepo = ref.read(userStatsRepositoryProvider);
-                await userStatsRepo.logActivity(
-                  userId: user.id,
-                  type: 'joined_challenge',
-                  sourceId: challenge.id,
-                  date: DateTime.now(),
-                );
                 if (screenContext.mounted) {
                   _showSuccess(screenContext, 'QUEST STARTED! (+25 XP)');
                   screenContext.go('/tribes/challenges');

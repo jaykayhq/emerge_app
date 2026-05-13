@@ -1,28 +1,27 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:emerge_app/core/drift/database.dart';
+import 'package:emerge_app/core/drift_repositories/drift_challenge_repository.dart';
+import 'package:emerge_app/core/game_loop/game_loop_engine.dart';
+import 'package:emerge_app/core/sync/sync_providers.dart';
 import 'package:emerge_app/features/auth/presentation/providers/auth_providers.dart';
 import 'package:emerge_app/features/gamification/presentation/providers/user_stats_providers.dart';
-import 'package:emerge_app/features/social/data/repositories/challenge_repository.dart';
 import 'package:emerge_app/features/social/domain/models/challenge.dart';
 import 'package:emerge_app/features/social/domain/models/challenge_catalog.dart';
 import 'package:emerge_app/features/social/domain/repositories/challenge_repository.dart';
-import 'package:emerge_app/features/social/domain/services/club_activity_service.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'challenge_provider.g.dart';
 
 final challengeRepositoryProvider = Provider<ChallengeRepository>((ref) {
-  final firestore = FirebaseFirestore.instance;
-  final socialService = SocialActivityService(firestore: firestore);
-  return FirestoreChallengeRepository(firestore, socialService);
+  final db = ref.watch(appDatabaseProvider);
+  final engine = LocalGameLoopEngine();
+  final syncEngine = ref.watch(enhancedSyncEngineProvider);
+  return DriftChallengeRepository(db, engine, syncEngine);
 });
 
 @Riverpod(keepAlive: true)
 Future<List<Challenge>> featuredChallenges(Ref ref) async {
   final repository = ref.read(challengeRepositoryProvider);
-  if (repository is FirestoreChallengeRepository) {
-    await repository.seedChallengesIfEmpty();
-  }
   return repository.getChallenges(featuredOnly: true);
 }
 
@@ -40,7 +39,6 @@ Future<List<Challenge>> userChallenges(Ref ref) async {
   return repository.getUserChallenges(user.id);
 }
 
-/// Challenges filtered by the current user's archetype
 @Riverpod(keepAlive: true)
 Future<List<Challenge>> archetypeChallenges(Ref ref) async {
   final repository = ref.read(challengeRepositoryProvider);
@@ -49,7 +47,6 @@ Future<List<Challenge>> archetypeChallenges(Ref ref) async {
   return repository.getChallengesByArchetype(profile.archetype.name);
 }
 
-/// Weekly spotlight challenge for the user's archetype
 @Riverpod(keepAlive: true)
 Future<Challenge?> weeklySpotlight(Ref ref) async {
   final repository = ref.read(challengeRepositoryProvider);
@@ -58,7 +55,6 @@ Future<Challenge?> weeklySpotlight(Ref ref) async {
   return repository.getWeeklySpotlight(archetypeId: profile.archetype.name);
 }
 
-/// Daily quest for the user's archetype
 @Riverpod(keepAlive: true)
 Future<Challenge?> dailyQuest(Ref ref) async {
   final profile = ref.watch(userStatsStreamProvider).value;
@@ -66,7 +62,6 @@ Future<Challenge?> dailyQuest(Ref ref) async {
   return ChallengeCatalog.getDailyQuest(profile.archetype.name);
 }
 
-/// Leaderboard for a specific challenge
 final challengeLeaderboardProvider =
     FutureProvider.family<List<Map<String, dynamic>>, String>((
       ref,

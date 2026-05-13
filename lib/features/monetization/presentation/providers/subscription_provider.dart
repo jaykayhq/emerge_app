@@ -8,13 +8,7 @@ part 'subscription_provider.g.dart';
 
 @Riverpod(keepAlive: true)
 MonetizationRepository monetizationRepository(Ref ref) {
-  try {
-    final cacheService = ref.watch(localCacheServiceProvider);
-    return RevenueCatRepository(cacheService: cacheService);
-  } catch (_) {
-    // Cache not ready yet — initialize without cache (no offline premium status)
-    return RevenueCatRepository();
-  }
+  return RevenueCatRepository();
 }
 
 @Riverpod(keepAlive: true)

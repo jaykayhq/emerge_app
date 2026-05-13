@@ -55,7 +55,7 @@ final class MonetizationRepositoryProvider
 }
 
 String _$monetizationRepositoryHash() =>
-    r'a8d5b5ec85fd1a0f3487396f7dee55a939cb814b';
+    r'f79b9a3db446c65f59a8406009b481c1743b0d7e';
 
 @ProviderFor(IsPremium)
 final isPremiumProvider = IsPremiumProvider._();

@@ -526,18 +526,6 @@ class EnhancedOnboardingNotifier extends _$EnhancedOnboardingNotifier {
   Future<void> _logMilestoneActivity(int milestoneIndex) async {
     final user = ref.read(authStateChangesProvider).value;
     if (user?.isNotEmpty != true) return;
-
-    try {
-      final userStatsRepo = ref.read(userStatsRepositoryProvider);
-      await userStatsRepo.logActivity(
-        userId: user!.id,
-        type: 'onboarding_milestone_completed',
-        sourceId: 'milestone_$milestoneIndex',
-        date: DateTime.now(),
-      );
-    } catch (e, s) {
-      AppLogger.e('Failed to log milestone activity', e, s);
-    }
   }
 
   /// Clear error state

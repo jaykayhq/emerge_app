@@ -6,9 +6,12 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:fpdart/fpdart.dart';
 import 'package:purchases_flutter/purchases_flutter.dart';
+
 class RevenueCatRepository implements MonetizationRepository {
   String? _googleApiKey;
   String? _appleApiKey;
+  bool _isConfigured = false;
+  String? _currentUid;
 
   RevenueCatRepository();
 
@@ -199,9 +202,6 @@ class RevenueCatRepository implements MonetizationRepository {
       final customerInfo = await Purchases.getCustomerInfo();
       final isPremium =
           customerInfo.entitlements.all[_entitlementId]?.isActive ?? false;
-      
-      // Cache the result
-      await _cacheService?.savePremiumStatus(isPremium);
       
       return Right(isPremium);
     } on PlatformException catch (e) {
