@@ -10,5 +10,5 @@ final enhancedSyncEngineProvider = Provider<EnhancedSyncEngine>((ref) {
 
 final pendingSyncCountProvider = StreamProvider<int>((ref) {
   final dao = ref.watch(mutationQueueDaoProvider);
-  return dao.watchPending().map((list) => list.length);
+  return Stream.periodic(const Duration(seconds: 2), (_) => dao.getAllPending().then((l) => l.length)).asyncMap((f) => f);
 });

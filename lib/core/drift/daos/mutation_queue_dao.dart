@@ -8,10 +8,9 @@ part 'mutation_queue_dao.g.dart';
 class MutationQueueDao extends DatabaseAccessor<AppDatabase> with _$MutationQueueDaoMixin {
   MutationQueueDao(super.db);
 
-  Future<List<MutationQueueTableData>> getAllPending() {
-    return select(mutationQueueTable)
-      .orderBy([(t) => OrderingTerm(expression: t.createdAt, mode: OrderingMode.asc)])
-      .get();
+  Future<List<MutationQueueTableData>> getAllPending() async {
+    final query = select(mutationQueueTable)..orderBy([(t) => OrderingTerm(expression: t.createdAt, mode: OrderingMode.asc)]);
+    return await query.get();
   }
 
   Future<void> enqueue({required String collectionPath, required String documentId, required String operation, String? dataJson}) {
