@@ -19,6 +19,28 @@ class LeaderboardEntriesDao extends DatabaseAccessor<AppDatabase> with _$Leaderb
     return into(leaderboardEntriesTable).insertOnConflictUpdate(entry);
   }
 
+  Future<void> insertFromData({
+    required String id,
+    required String tribeId,
+    required String userId,
+    String userName = 'Anonymous',
+    int xp = 0,
+    int level = 1,
+    String? archetype,
+    required String updatedAt,
+  }) {
+    return into(leaderboardEntriesTable).insertOnConflictUpdate(LeaderboardEntriesTableCompanion(
+      id: Value(id),
+      tribeId: Value(tribeId),
+      userId: Value(userId),
+      userName: Value(userName),
+      xp: Value(xp),
+      level: Value(level),
+      archetype: Value(archetype),
+      updatedAt: Value(updatedAt),
+    ));
+  }
+
   Future<void> updateUserScore(String id, {required int xp, required int level, required String userName, required String archetype}) async {
     await (update(leaderboardEntriesTable)..where((t) => t.id.equals(id))).write(
       LeaderboardEntriesTableCompanion(

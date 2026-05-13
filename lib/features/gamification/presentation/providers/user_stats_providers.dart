@@ -5,7 +5,7 @@ import 'package:emerge_app/core/services/event_bus.dart';
 import 'package:emerge_app/core/utils/app_logger.dart';
 import 'package:emerge_app/features/auth/domain/entities/user_extension.dart';
 import 'package:emerge_app/features/auth/presentation/providers/auth_providers.dart';
-import 'package:emerge_app/features/gamification/data/repositories/user_stats_repository.dart';
+import 'package:emerge_app/core/drift_repositories/drift_user_stats_repository.dart';
 import 'package:emerge_app/features/gamification/domain/services/gamification_service.dart';
 import 'package:emerge_app/features/habits/domain/entities/habit.dart';
 import 'package:emerge_app/features/habits/domain/services/momentum_service.dart';
@@ -103,7 +103,7 @@ final userStatsControllerProvider = Provider((ref) {
 });
 
 class UserStatsController {
-  final UserStatsRepository repository;
+  final DriftUserStatsRepository repository;
   final SocialActivityService socialActivityService;
   final String userId;
   final String userName;

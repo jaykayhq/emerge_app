@@ -1,10 +1,10 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:emerge_app/core/drift/database.dart';
+import 'package:emerge_app/core/drift_repositories/drift_habit_repository.dart';
+import 'package:emerge_app/core/game_loop/game_loop_engine.dart';
 import 'package:emerge_app/core/services/remote_config_service.dart';
+import 'package:emerge_app/core/sync/sync_engine.dart';
 import 'package:emerge_app/core/utils/app_logger.dart';
-import 'package:emerge_app/features/habits/data/repositories/firestore_habit_repository.dart';
 import 'package:emerge_app/features/auth/presentation/providers/auth_providers.dart';
-import 'package:emerge_app/core/cache/cache_aware_habit_repository.dart';
-import 'package:emerge_app/core/services/local_cache_service.dart';
 
 import 'package:emerge_app/features/habits/domain/entities/habit.dart';
 import 'package:emerge_app/features/habits/domain/models/habit_activity.dart';
@@ -13,8 +13,6 @@ import 'package:emerge_app/features/habits/domain/services/variable_reward_servi
 import 'package:emerge_app/features/habits/domain/services/momentum_service.dart';
 import 'package:emerge_app/features/habits/presentation/providers/cue_providers.dart';
 import 'package:emerge_app/features/monetization/presentation/providers/subscription_provider.dart';
-import 'package:emerge_app/features/gamification/data/repositories/user_stats_repository.dart';
-import 'package:emerge_app/features/social/presentation/providers/tribes_provider.dart';
 import 'package:emerge_app/features/gamification/presentation/providers/user_stats_providers.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
@@ -33,24 +31,10 @@ MomentumService momentumService(Ref ref) => MomentumService();
 
 @Riverpod(keepAlive: true)
 HabitRepository habitRepository(Ref ref) {
-  final socialActivityService = ref.watch(socialActivityServiceProvider);
-  final userStatsRepository = ref.watch(userStatsRepositoryProvider);
-
-  final remoteRepository = FirestoreHabitRepository(
-    FirebaseFirestore.instance,
-    socialActivityService,
-    userStatsRepository,
-  );
-
-  try {
-    // localCacheServiceProvider throws AssertionError if Hive hasn't
-    // initialized yet — fall back to remote-only to avoid crashing the
-    // entire habit provider graph during app startup.
-    final localCache = ref.watch(localCacheServiceProvider);
-    return CacheAwareHabitRepository(remoteRepository, localCache);
-  } catch (_) {
-    return remoteRepository;
-  }
+  final db = ref.watch(appDatabaseProvider);
+  final engine = LocalGameLoopEngine();
+  final syncEngine = ref.watch(enhancedSyncEngineProvider);
+  return DriftHabitRepository(db: db, gameLoopEngine: engine, syncEngine: syncEngine);
 }
 
 @riverpod
@@ -64,11 +48,12 @@ Stream<List<Habit>> habits(Ref ref) {
       final stream = repository.watchHabits(user.id);
 
       // Run daily decay logic on first load
+      final momentumService = ref.read(momentumServiceProvider);
       stream.first.then((habitsList) async {
+        if (!ref.mounted) return;
         try {
           final today = DateTime.now();
           bool hasChanges = false;
-          final momentumService = ref.read(momentumServiceProvider);
 
           for (final habit in habitsList) {
             if (habit.isArchived) continue;
@@ -95,15 +80,14 @@ Stream<List<Habit>> habits(Ref ref) {
             }
           }
 
+          if (!ref.mounted) return;
           if (hasChanges) {
             final updated = await repository.watchHabits(user.id).first;
             if (ref.mounted) {
               await ref.read(userStatsControllerProvider).recalculateWorldHealth(updated);
             }
           } else {
-            if (ref.mounted) {
-              await ref.read(userStatsControllerProvider).recalculateWorldHealth(habitsList);
-            }
+            await ref.read(userStatsControllerProvider).recalculateWorldHealth(habitsList);
           }
         } catch (e, s) {
           AppLogger.e('Error running daily decay', e, s);

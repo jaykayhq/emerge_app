@@ -8,6 +8,14 @@ part 'tribe_stats_dao.g.dart';
 class TribeStatsDao extends DatabaseAccessor<AppDatabase> with _$TribeStatsDaoMixin {
   TribeStatsDao(super.db);
 
+  Future<List<TribeStatsTableData>> getAll() {
+    return select(tribeStatsTable).get();
+  }
+
+  Stream<List<TribeStatsTableData>> watchAll() {
+    return select(tribeStatsTable).watch();
+  }
+
   Future<TribeStatsTableData?> getStats(String tribeId) {
     return (select(tribeStatsTable)..where((t) => t.tribeId.equals(tribeId))).getSingleOrNull();
   }

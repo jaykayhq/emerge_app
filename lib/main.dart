@@ -1,7 +1,6 @@
 import 'package:emerge_app/core/init/init_app.dart';
 import 'package:emerge_app/core/data/seed_runner.dart';
 import 'package:emerge_app/core/router/router.dart';
-import 'package:emerge_app/core/services/background_sync_service.dart';
 import 'package:emerge_app/core/theme/app_theme.dart';
 import 'package:emerge_app/core/theme/theme_provider.dart';
 import 'package:emerge_app/core/services/notification_service.dart';
@@ -30,8 +29,6 @@ Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
 
 void main() async {
   await initApp();
-  await BackgroundSyncService.initialize();
-  await BackgroundSyncService.schedulePeriodicSync();
 
   // Initialize ProviderContainer
   final container = ProviderContainer();

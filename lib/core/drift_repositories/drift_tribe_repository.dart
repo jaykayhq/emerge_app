@@ -18,28 +18,24 @@ class DriftTribeRepository implements TribeRepository {
 
   @override
   Future<List<Tribe>> getArchetypeClubs() async {
-    final rows = await (select(_db.tribeStatsTable)).get();
+    final rows = await _db.tribeStatsDao.getAll();
     return rows.map(_rowToTribe).toList();
   }
 
   @override
   Stream<List<Tribe>> watchArchetypeClubs() {
-    return (select(_db.tribeStatsTable)).watch().map((rows) {
+    return _db.tribeStatsDao.watchAll().map((rows) {
       return rows.map(_rowToTribe).toList();
     });
   }
 
   @override
-  Future<List<Map<String, dynamic>>> getClubContributors(
-    String tribeId, {int limit = 10},
-  ) async {
+  Future<List<Map<String, dynamic>>> getClubContributors(String tribeId, {int limit = 10}) async {
     return [];
   }
 
   @override
-  Future<List<Map<String, dynamic>>> getClubActivity(
-    String tribeId, {int limit = 20},
-  ) async {
+  Future<List<Map<String, dynamic>>> getClubActivity(String tribeId, {int limit = 20}) async {
     return [];
   }
 
