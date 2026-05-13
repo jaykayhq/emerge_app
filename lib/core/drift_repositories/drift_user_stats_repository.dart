@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:emerge_app/core/drift/database.dart';
 import 'package:emerge_app/features/auth/domain/entities/user_extension.dart';
@@ -132,6 +133,18 @@ class DriftUserStatsRepository {
     await _firestore.collection('user_activity').add(data);
   }
 
+  UserWorldState _parseWorldState(UserStatsTableData row) {
+    if (row.worldStateJson == null || row.worldStateJson!.isEmpty) {
+      return UserWorldState(entropy: 1.0 - row.worldHealthScore);
+    }
+    try {
+      final map = jsonDecode(row.worldStateJson!) as Map<String, dynamic>;
+      return UserWorldState.fromMap(map);
+    } catch (_) {
+      return UserWorldState(entropy: 1.0 - row.worldHealthScore);
+    }
+  }
+
   UserProfile _rowToProfile(UserStatsTableData row) {
     return UserProfile(
       uid: row.userId,
@@ -150,9 +163,7 @@ class DriftUserStatsRepository {
         level: row.level,
         streak: row.streak,
       ),
-      worldState: UserWorldState(
-        entropy: 1.0 - row.worldHealthScore,
-      ),
+      worldState: _parseWorldState(row),
       onboardingProgress: row.onboardingProgress,
       onboardingCompletedAt: row.onboardingCompletedAt != null
           ? DateTime.tryParse(row.onboardingCompletedAt!)

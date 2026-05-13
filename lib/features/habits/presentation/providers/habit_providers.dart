@@ -4,6 +4,7 @@ import 'package:emerge_app/core/game_loop/game_loop_engine.dart';
 import 'package:emerge_app/core/services/remote_config_service.dart';
 import 'package:emerge_app/core/sync/sync_providers.dart';
 import 'package:emerge_app/core/utils/app_logger.dart';
+import 'package:flutter/foundation.dart' show debugPrint;
 import 'package:emerge_app/features/auth/presentation/providers/auth_providers.dart';
 
 import 'package:emerge_app/features/habits/domain/entities/habit.dart';
@@ -108,32 +109,36 @@ Stream<List<Habit>> habits(Ref ref) {
 Future<void> createHabit(Ref ref, Habit habit) async {
   final keepAliveLink = ref.keepAlive();
   try {
-    // Check limit logic
-    final isPremium = await ref.read(isPremiumProvider.future);
-    if (!ref.mounted) return;
+    // Check habit limit FIRST (fail fast, no network call).
+    // Skip the check for onboarding/anchor habits.
+    final isOnboarding =
+        habit.identityTags.contains('onboarding') ||
+        habit.identityTags.contains('anchor');
 
-    if (!isPremium) {
-      // Check current habit count
-      // BUT: Allow creation if this is an onboarding habit (bypass limit)
-      final isOnboarding =
-          habit.identityTags.contains('onboarding') ||
-          habit.identityTags.contains(
-            'anchor',
-          ); // Anchors are also part of onboarding flow
+    if (!isOnboarding) {
+      final repository = ref.read(habitRepositoryProvider);
+      final currentHabits = await repository.watchHabits(habit.userId).first;
+      if (!ref.mounted) return;
+      final filtered = currentHabits.where((h) => !h.isArchived).toList();
+      final freeHabitLimit = ref
+          .read(remoteConfigServiceProvider)
+          .freeHabitLimit;
 
-      if (!isOnboarding) {
-        final habitsAsync = ref.read(habitsProvider);
-        final currentHabits = habitsAsync.value ?? [];
-        final freeHabitLimit = ref
-            .read(remoteConfigServiceProvider)
-            .freeHabitLimit;
-        if (currentHabits.length >= freeHabitLimit) {
+      debugPrint('createHabit check: ${filtered.length} active habits, limit=$freeHabitLimit');
+
+      if (filtered.length >= freeHabitLimit) {
+        // Limit exceeded — check premium (only slow path, rare case)
+        final isPremium = await ref.read(isPremiumProvider.future);
+        if (!ref.mounted) return;
+        if (!isPremium) {
           throw SubscriptionLimitReachedException(
             'You have reached the limit of $freeHabitLimit active habits on the free tier. Upgrade to Premium for unlimited habits!',
           );
         }
       }
     }
+
+    if (!ref.mounted) return;
 
     final repository = ref.read(habitRepositoryProvider);
     final result = await repository.createHabit(habit);

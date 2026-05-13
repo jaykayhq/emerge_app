@@ -7,6 +7,7 @@ import 'package:emerge_app/features/habits/domain/entities/habit.dart';
 import 'package:emerge_app/features/habits/presentation/providers/dashboard_state_provider.dart';
 import 'package:emerge_app/features/onboarding/data/services/remote_config_service.dart';
 import 'package:emerge_app/features/onboarding/presentation/providers/onboarding_provider.dart';
+import 'package:emerge_app/features/social/presentation/providers/tribes_provider.dart';
 import 'package:equatable/equatable.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:uuid/uuid.dart';
@@ -339,6 +340,24 @@ class EnhancedOnboardingNotifier extends _$EnhancedOnboardingNotifier {
 
       // Persist final state
       await _persistToBackend();
+
+      // Officially join the archetype club
+      if (state.selectedArchetype != null && state.selectedArchetype != UserArchetype.none) {
+        try {
+          final tribeRepo = ref.read(tribeRepositoryProvider);
+          final club = await tribeRepo.getArchetypeClub(
+            state.selectedArchetype!.name,
+          );
+          if (club != null) {
+            final user = ref.read(authStateChangesProvider).value;
+            if (user != null) {
+              await tribeRepo.joinClub(user.id, club.id);
+            }
+          }
+        } catch (e, stack) {
+          AppLogger.e('Failed to join official club during onboarding', e, stack);
+        }
+      }
 
       AppLogger.i('Onboarding completed successfully');
     } catch (e, s) {

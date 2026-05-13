@@ -256,8 +256,14 @@ class ChallengeCatalog {
     );
   }
 
-  /// Get a specific generated challenge by its ID.
+  /// Get a specific challenge by its ID.
+  /// Searches featured templates, weekly spotlights, and daily quests.
   static Challenge? getChallengeById(String id) {
+    // Check featured templates first
+    final match = _templates.where((c) => c.id == id).firstOrNull;
+    if (match != null) return match;
+
+    // Check weekly and daily generated quests for each archetype
     final archetypes = ['athlete', 'scholar', 'creator', 'stoic', 'zealot'];
     for (final archetype in archetypes) {
       final weekly = getWeeklySpotlight(archetype);

@@ -21,7 +21,10 @@
         {
             "name": "Emerge App",
             "request": "launch",
-            "type": "dart"
+            "type": "dart",
+            "args": [
+                "--android-log-filter-tags=Ads:W"
+            ]
         },
         {
             "name": "Emerge App (Android Device)",
@@ -29,6 +32,7 @@
             "type": "dart",
             "deviceId": "24048RN6CG",
             "args": [
+                "--android-log-filter-tags=Ads:W",
                 "--dart-define=REVENUECAT_GOOGLE_API_KEY=goog_YOUR_API_KEY_HERE"
             ]
         },

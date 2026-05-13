@@ -5,6 +5,7 @@ import 'package:emerge_app/core/domain/models/app_world_theme.dart';
 import 'package:emerge_app/features/auth/presentation/providers/auth_providers.dart';
 import 'package:emerge_app/features/social/domain/models/challenge.dart';
 import 'package:emerge_app/features/social/presentation/providers/challenge_provider.dart';
+import 'package:emerge_app/features/social/presentation/providers/challenge_bundle_provider.dart';
 import 'package:emerge_app/features/social/presentation/widgets/quest_confirmation_sheet.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -467,6 +468,7 @@ class ChallengeDetailScreen extends ConsumerWidget {
               (_) async {
                 ref.invalidate(userChallengesProvider);
                 ref.invalidate(archetypeChallengesProvider);
+                ref.invalidate(challengeBundleProvider);
                 if (screenContext.mounted) {
                   _showSuccess(screenContext, 'QUEST STARTED! (+25 XP)');
                   screenContext.go('/tribes/challenges');

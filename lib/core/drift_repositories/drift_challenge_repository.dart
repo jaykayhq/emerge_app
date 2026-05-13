@@ -88,23 +88,30 @@ class DriftChallengeRepository implements ChallengeRepository {
   @override
   Future<List<Challenge>> getUserChallenges(String userId) async {
     final all = await _db.challengeProgressDao.getActive(userId);
-    return all.map((r) => Challenge(
-      id: r.challengeId,
-      title: r.title ?? '',
-      description: '',
-      imageUrl: '',
-      reward: '',
-      participants: 0,
-      daysLeft: r.totalDays - r.currentDay,
-      totalDays: r.totalDays,
-      currentDay: r.currentDay,
-      status: ChallengeStatus.values.firstWhere(
-        (e) => e.name == r.status,
-        orElse: () => ChallengeStatus.featured,
-      ),
-      xpReward: r.xpReward,
-      steps: [],
-    )).toList();
+    return all.map((r) {
+      // Look up the original template from catalog to get metadata
+      // (imageUrl, description, reward, steps) not stored in the DB
+      final template = ChallengeCatalog.getChallengeById(r.challengeId);
+      return Challenge(
+        id: r.challengeId,
+        title: r.title ?? template?.title ?? '',
+        description: template?.description ?? '',
+        imageUrl: template?.imageUrl ?? '',
+        reward: template?.reward ?? '',
+        participants: template?.participants ?? 0,
+        daysLeft: r.totalDays - r.currentDay,
+        totalDays: r.totalDays,
+        currentDay: r.currentDay,
+        status: ChallengeStatus.values.firstWhere(
+          (e) => e.name == r.status,
+          orElse: () => ChallengeStatus.featured,
+        ),
+        xpReward: r.xpReward,
+        steps: template?.steps ?? [],
+        archetypeId: template?.archetypeId,
+        category: template?.category ?? ChallengeCategory.all,
+      );
+    }).toList();
   }
 
   @override

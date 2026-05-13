@@ -6,25 +6,11 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter/foundation.dart' show kDebugMode, kIsWeb;
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:emerge_app/firebase_options.dart';
 
 import 'package:flutter_dotenv/flutter_dotenv.dart';
-
-/// Suppresses verbose AdMob GMA Debug logs after SDK initialization.
-/// These logs are auto-enabled by the Ads SDK for debuggable apps and
-/// produce massive terminal output (every network request/response).
-Future<void> _suppressAdmobLogs() async {
-  if (kDebugMode) {
-    try {
-      await MethodChannel('com.emerge.emerge_app/ads')
-          .invokeMethod('suppressVerboseLogging');
-    } catch (_) {
-      // Channel handler may not be registered - non-critical
-    }
-  }
-}
 
 Future<void> initApp() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -96,25 +82,21 @@ Future<void> initApp() async {
                     ConsentForm.loadAndShowConsentFormIfRequired((formError) async {
                                   if (formError == null) {
                                     await MobileAds.instance.initialize();
-                                    await _suppressAdmobLogs();
                                     debugPrint('✅ AdMob initialized after consent');
                                   } else {
                                     debugPrint('⚠️ Consent form error: $formError');
                                     await MobileAds.instance.initialize(); // Init anyway if error per AdMob docs
-                                    await _suppressAdmobLogs();
                                   }
                 });
               } else {
                  // No form available, initialize directly
                  await MobileAds.instance.initialize();
-                 await _suppressAdmobLogs();
                  debugPrint('✅ AdMob initialized (no consent required)');
               }
             },
             (error) async {
               debugPrint('⚠️ Consent info update error: $error');
               await MobileAds.instance.initialize(); // Fallback initialization
-              await _suppressAdmobLogs();
             },
           );
         } catch (e) {

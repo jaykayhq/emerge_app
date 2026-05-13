@@ -1,3 +1,6 @@
 {
-  "dart.flutterSdkPath": "C:\\src\\flutter"
+  "dart.flutterSdkPath": "C:\\src\\flutter",
+  "dart.flutterRunAdditionalArgs": [
+    "--android-log-filter-tags=Ads:W"
+  ]
 }
