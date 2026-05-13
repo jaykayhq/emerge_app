@@ -50,6 +50,7 @@ class HierarchicalHabitTimeline extends StatelessWidget {
   final DateTime selectedDate;
   final void Function(Habit habit) onHabitTap;
   final void Function(Habit habit) onHabitToggle;
+  final void Function(Habit habit) onHabitDelete;
 
   const HierarchicalHabitTimeline({
     super.key,
@@ -57,6 +58,7 @@ class HierarchicalHabitTimeline extends StatelessWidget {
     required this.selectedDate,
     required this.onHabitTap,
     required this.onHabitToggle,
+    required this.onHabitDelete,
   });
 
   @override
@@ -83,6 +85,7 @@ class HierarchicalHabitTimeline extends StatelessWidget {
               selectedDate: selectedDate,
               onHabitTap: onHabitTap,
               onHabitToggle: onHabitToggle,
+              onHabitDelete: onHabitDelete,
               isLast: slot == slotsWithHabits.last,
             ),
         ],
@@ -123,6 +126,7 @@ class _HabitCategorySection extends StatelessWidget {
   final DateTime selectedDate;
   final void Function(Habit) onHabitTap;
   final void Function(Habit) onHabitToggle;
+  final void Function(Habit) onHabitDelete;
   final bool isLast;
 
   const _HabitCategorySection({
@@ -131,6 +135,7 @@ class _HabitCategorySection extends StatelessWidget {
     required this.selectedDate,
     required this.onHabitTap,
     required this.onHabitToggle,
+    required this.onHabitDelete,
     required this.isLast,
   });
 
@@ -201,6 +206,7 @@ class _HabitCategorySection extends StatelessWidget {
             selectedDate: selectedDate,
             onTap: () => onHabitTap(habit),
             onToggle: () => onHabitToggle(habit),
+            onDelete: () => onHabitDelete(habit),
             showConnector: index < habits.length - 1,
           );
         }),
@@ -281,6 +287,7 @@ class _IndentedHabitItem extends StatefulWidget {
   final DateTime selectedDate;
   final VoidCallback onTap;
   final VoidCallback onToggle;
+  final VoidCallback? onDelete;
   final bool showConnector;
 
   const _IndentedHabitItem({
@@ -288,6 +295,7 @@ class _IndentedHabitItem extends StatefulWidget {
     required this.selectedDate,
     required this.onTap,
     required this.onToggle,
+    this.onDelete,
     required this.showConnector,
   });
 
@@ -361,70 +369,79 @@ class _IndentedHabitItemState extends State<_IndentedHabitItem> {
     final color = attributeColor(widget.habit.attribute);
     final label = attributeLabel(widget.habit.attribute);
 
-    return Padding(
-      padding: const EdgeInsets.only(left: 24, bottom: 8),
-      child: Column(
-        children: [
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Vertical connector line
-              if (widget.showConnector)
-                Padding(
-                  padding: const EdgeInsets.only(left: 5, top: 0),
-                  child: Container(
-                    width: 2,
-                    height: 48,
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.topCenter,
-                        end: Alignment.bottomCenter,
-                        colors: [
-                          color.withValues(alpha:0.3),
-                          color.withValues(alpha:0.1),
-                        ],
-                      ),
-                    ),
-                  ),
-                )
-              else
-                const SizedBox(width: 12),
-              // Habit item container
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-
-
-                    GestureDetector(
-                      onTap: widget.onTap,
-                      onLongPress: !completed ? widget.onToggle : null,
-                      child: Container(
-                        padding: const EdgeInsets.all(12),
-                        decoration: BoxDecoration(
-                          color: completed
-                              ? Colors.white.withValues(alpha:0.04)
-                              : Colors.white.withValues(alpha:0.06),
-                          borderRadius: BorderRadius.circular(10),
-                          border: Border.all(
-                            color: completed
-                                ? color.withValues(alpha:0.3)
-                                : Colors.white.withValues(alpha:0.1),
-                            width: 1,
-                          ),
+    return Dismissible(
+      key: Key('habit_dismiss_${widget.habit.id}'),
+      direction: DismissDirection.horizontal,
+      background: _buildDeleteBackground(),
+      secondaryBackground: _buildCompleteBackground(color),
+      confirmDismiss: _confirmDismiss,
+      dismissThresholds: const {
+        DismissDirection.startToEnd: 0.4,
+        DismissDirection.endToStart: 0.4,
+      },
+      child: Padding(
+        padding: const EdgeInsets.only(left: 24, bottom: 8),
+        child: Column(
+          children: [
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Vertical connector line
+                if (widget.showConnector)
+                  Padding(
+                    padding: const EdgeInsets.only(left: 5, top: 0),
+                    child: Container(
+                      width: 2,
+                      height: 48,
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.topCenter,
+                          end: Alignment.bottomCenter,
+                          colors: [
+                            color.withValues(alpha:0.3),
+                            color.withValues(alpha:0.1),
+                          ],
                         ),
-                        child: completed
-                            ? _buildCompleted(color)
-                            : _buildPending(color, label),
                       ),
                     ),
+                  )
+                else
+                  const SizedBox(width: 12),
+                // Habit item container
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
 
-                    // Expanding details drawer
-                    AnimatedSize(
-                      duration: const Duration(milliseconds: 300),
-                      curve: Curves.easeOutCubic,
-                      alignment: Alignment.topCenter,
-                      child: (_isExpanded && !completed)
+
+                      GestureDetector(
+                        onTap: widget.onTap,
+                        child: Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: completed
+                                ? Colors.white.withValues(alpha:0.04)
+                                : Colors.white.withValues(alpha:0.06),
+                            borderRadius: BorderRadius.circular(10),
+                            border: Border.all(
+                              color: completed
+                                  ? color.withValues(alpha:0.3)
+                                  : Colors.white.withValues(alpha:0.1),
+                              width: 1,
+                            ),
+                          ),
+                          child: completed
+                              ? _buildCompleted(color)
+                              : _buildPending(color, label),
+                        ),
+                      ),
+
+                      // Expanding details drawer
+                      AnimatedSize(
+                        duration: const Duration(milliseconds: 300),
+                        curve: Curves.easeOutCubic,
+                        alignment: Alignment.topCenter,
+                        child: (_isExpanded && !completed)
                           ? Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
@@ -553,7 +570,105 @@ class _IndentedHabitItemState extends State<_IndentedHabitItem> {
           ),
         ],
       ),
+      ),
     );
+  }
+
+  Widget _buildDeleteBackground() {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.red.withValues(alpha: 0.85),
+        borderRadius: BorderRadius.circular(10),
+      ),
+      alignment: Alignment.centerLeft,
+      padding: const EdgeInsets.only(left: 24),
+      child: const Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(Icons.delete_outline, color: Colors.white, size: 24),
+          SizedBox(width: 8),
+          Text(
+            'Delete',
+            style: TextStyle(
+              color: Colors.white,
+              fontWeight: FontWeight.bold,
+              fontSize: 15,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCompleteBackground(Color color) {
+    return Container(
+      decoration: BoxDecoration(
+        color: const Color(0xFF2BEE79).withValues(alpha: 0.85),
+        borderRadius: BorderRadius.circular(10),
+      ),
+      alignment: Alignment.centerRight,
+      padding: const EdgeInsets.only(right: 24),
+      child: const Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            'Complete',
+            style: TextStyle(
+              color: Colors.white,
+              fontWeight: FontWeight.bold,
+              fontSize: 15,
+            ),
+          ),
+          SizedBox(width: 8),
+          Icon(Icons.check_circle_outline, color: Colors.white, size: 24),
+        ],
+      ),
+    );
+  }
+
+  Future<bool> _confirmDismiss(DismissDirection direction) async {
+    if (direction == DismissDirection.endToStart) {
+      widget.onToggle();
+      return false;
+    } else {
+      final confirmed = await _showDeleteConfirmation();
+      if (confirmed) {
+        widget.onDelete?.call();
+        return true;
+      }
+      return false;
+    }
+  }
+
+  Future<bool> _showDeleteConfirmation() async {
+    final result = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: const Color(0xFF1A1A2E),
+        title: const Text(
+          'Delete Habit',
+          style: TextStyle(color: Colors.white),
+        ),
+        content: const Text(
+          'Are you sure you want to permanently delete this habit and all its history?',
+          style: TextStyle(color: Colors.white70),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: const Text(
+              'Delete',
+              style: TextStyle(color: Colors.red),
+            ),
+          ),
+        ],
+      ),
+    );
+    return result ?? false;
   }
 
   Widget _buildPending(Color color, String label) {
@@ -562,10 +677,13 @@ class _IndentedHabitItemState extends State<_IndentedHabitItem> {
         // Checkbox
         Padding(
           padding: const EdgeInsets.only(right: 12),
-          child: Icon(
-            Icons.radio_button_unchecked,
-            color: color.withValues(alpha:0.5),
-            size: 20,
+          child: GestureDetector(
+            onTap: widget.onToggle,
+            child: Icon(
+              Icons.radio_button_unchecked,
+              color: color.withValues(alpha:0.5),
+              size: 20,
+            ),
           ),
         ),
         // Habit info
