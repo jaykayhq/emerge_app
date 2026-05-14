@@ -46,7 +46,7 @@ final class EnhancedOnboardingNotifierProvider
 }
 
 String _$enhancedOnboardingNotifierHash() =>
-    r'b19aa8bb859206e74f987c4acda4565e4664d19e';
+    r'186c0e76670a006c4efbfc74156e4c618a7196a7';
 
 /// Enhanced Onboarding State Notifier with dashboard sync
 

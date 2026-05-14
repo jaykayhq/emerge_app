@@ -1,5 +1,5 @@
 import 'package:drift/drift.dart';
-import '../database.dart';
+import '../app_database.dart';
 import '../tables/tribe_stats_table.dart';
 
 part 'tribe_stats_dao.g.dart';

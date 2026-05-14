@@ -1,4 +1,3 @@
-import 'package:drift/drift.dart' show Value;
 import 'package:emerge_app/core/drift/database.dart';
 import 'package:emerge_app/core/sync/sync_engine.dart';
 import 'package:emerge_app/features/social/data/repositories/tribe_repository.dart';

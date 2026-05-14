@@ -1,5 +1,5 @@
 import 'package:drift/drift.dart';
-import '../database.dart';
+import '../app_database.dart';
 import '../tables/user_stats_table.dart';
 
 part 'user_stats_dao.g.dart';

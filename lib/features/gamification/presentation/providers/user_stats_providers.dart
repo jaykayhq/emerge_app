@@ -4,7 +4,7 @@ import 'package:emerge_app/core/services/event_bus.dart';
 import 'package:emerge_app/core/utils/app_logger.dart';
 import 'package:emerge_app/features/auth/domain/entities/user_extension.dart';
 import 'package:emerge_app/features/auth/presentation/providers/auth_providers.dart';
-import 'package:emerge_app/core/drift_repositories/drift_user_stats_repository.dart';
+import 'package:emerge_app/core/drift_repositories/repositories_barrel.dart';
 import 'package:emerge_app/features/gamification/data/repositories/user_stats_repository.dart';
 import 'package:emerge_app/features/gamification/domain/services/gamification_service.dart';
 import 'package:emerge_app/features/habits/domain/entities/habit.dart';
@@ -22,7 +22,7 @@ final userStatsStreamProvider = StreamProvider<UserProfile>((ref) {
   if (user == null) return Stream.value(const UserProfile(uid: ''));
 
   final repository = ref.watch(userStatsRepositoryProvider);
-  return repository.watchUserStats(user.id);
+  return repository.watchUserStats(user.id).where((p) => p != null).cast<UserProfile>();
 });
 
 /// Provider that only emits when the user's archetype changes.
@@ -168,6 +168,10 @@ class UserStatsController {
     try {
       // Get current profile
       final currentProfile = await repository.getUserStats(userId);
+      if (currentProfile == null) {
+        AppLogger.w('No current profile found for user $userId');
+        return;
+      }
 
       // Update with new world state
       final updatedProfile = currentProfile.copyWith(worldState: newWorldState);
@@ -188,6 +192,10 @@ class UserStatsController {
 
     try {
       final currentProfile = await repository.getUserStats(userId);
+      if (currentProfile == null) {
+        AppLogger.w('No current profile found');
+        return;
+      }
       final gamificationService = GamificationService();
 
       final newWorldState = gamificationService.unlockBuilding(
@@ -211,6 +219,10 @@ class UserStatsController {
 
     try {
       final currentProfile = await repository.getUserStats(userId);
+      if (currentProfile == null) {
+        AppLogger.w('No current profile found');
+        return;
+      }
       final currentWorldState = currentProfile.worldState;
 
       // Prevent duplicate starts
@@ -244,6 +256,10 @@ class UserStatsController {
 
     try {
       final currentProfile = await repository.getUserStats(userId);
+      if (currentProfile == null) {
+        AppLogger.w('No current profile found');
+        return;
+      }
       final currentWorldState = currentProfile.worldState;
       final gamificationService = GamificationService();
 
@@ -350,6 +366,10 @@ class UserStatsController {
 
     try {
       final currentProfile = await repository.getUserStats(userId);
+      if (currentProfile == null) {
+        AppLogger.w('No current profile found');
+        return;
+      }
       if (currentProfile.hasEmerged) return; // Already emerged
 
       final updatedProfile = currentProfile.copyWith(hasEmerged: true);

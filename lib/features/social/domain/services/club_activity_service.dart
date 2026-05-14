@@ -1,8 +1,6 @@
 import 'package:emerge_app/core/drift/database.dart';
-import 'package:emerge_app/core/drift/daos/tribe_activity_dao.dart';
-import 'package:emerge_app/core/sync/sync_engine.dart';
+import 'package:emerge_app/core/sync/sync_engine_barrel.dart';
 import 'package:flutter/foundation.dart';
-import 'package:drift/drift.dart';
 
 import 'package:emerge_app/features/social/domain/repositories/leaderboard_repository.dart';
 import 'package:emerge_app/features/auth/domain/entities/user_extension.dart';
