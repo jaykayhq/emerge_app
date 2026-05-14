@@ -98,7 +98,6 @@ class _HabitDetailScreenState extends ConsumerState<HabitDetailScreen> {
     }
   }
 
-
   void _addPrimingRule() {
     final rule = _primingController.text.trim();
     if (rule.isNotEmpty) {
@@ -199,9 +198,7 @@ class _HabitDetailScreenState extends ConsumerState<HabitDetailScreen> {
       ),
       child: habitsAsync.when(
         data: (habits) {
-          final habit = habits
-              .where((h) => h.id == widget.habitId)
-              .firstOrNull;
+          final habit = habits.where((h) => h.id == widget.habitId).firstOrNull;
           if (habit == null) {
             return const Center(
               child: Text(
@@ -357,8 +354,7 @@ class _HabitDetailScreenState extends ConsumerState<HabitDetailScreen> {
                               context: context,
                               barrierDismissible: false,
                               builder: (_) => TwoMinuteTimerDialog(
-                                habitTitle:
-                                    _twoMinuteController.text.isNotEmpty
+                                habitTitle: _twoMinuteController.text.isNotEmpty
                                     ? _twoMinuteController.text
                                     : habit.title,
                                 neonColor: neonColor,
@@ -372,9 +368,7 @@ class _HabitDetailScreenState extends ConsumerState<HabitDetailScreen> {
                             );
                           },
                           icon: const Icon(Icons.play_arrow),
-                          label: Text(
-                            'Start $_timerDurationMinutes-Min Timer',
-                          ),
+                          label: Text('Start $_timerDurationMinutes-Min Timer'),
                           style: OutlinedButton.styleFrom(
                             foregroundColor: neonColor,
                             side: BorderSide(
@@ -471,8 +465,6 @@ class _HabitDetailScreenState extends ConsumerState<HabitDetailScreen> {
                     ],
                   ),
                 ),
-
-
 
                 // Environment Priming Section
                 GlassmorphismCard(
@@ -582,8 +574,7 @@ class _HabitDetailScreenState extends ConsumerState<HabitDetailScreen> {
                                       size: 16,
                                       color: AppTheme.textSecondaryDark,
                                     ),
-                                    onPressed: () =>
-                                        _removePrimingRule(index),
+                                    onPressed: () => _removePrimingRule(index),
                                   ),
                                 ],
                               ),
@@ -741,9 +732,7 @@ class _HabitDetailScreenState extends ConsumerState<HabitDetailScreen> {
                             }
                           },
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.red.withValues(
-                              alpha: 0.2,
-                            ),
+                            backgroundColor: Colors.red.withValues(alpha: 0.2),
                             foregroundColor: Colors.red,
                             side: BorderSide(
                               color: Colors.red.withValues(alpha: 0.5),

@@ -115,19 +115,19 @@ class FirebaseAuthRepository implements AuthRepository {
       final updatedUser = _firebaseAuth.currentUser;
 
       // Create UserProfile in Firestore
-      final userProfile = UserProfile(uid: updatedUser?.uid ?? user.uid);
+      final userProfile = UserProfile(
+        uid: updatedUser?.uid ?? user.uid,
+        displayName: updatedUser?.displayName ?? sanitizedUsername,
+      );
       final profileMap = userProfile.toMap();
       profileMap['email'] = updatedUser?.email ?? user.email ?? '';
-      profileMap['displayName'] = updatedUser?.displayName ?? sanitizedUsername;
       profileMap['createdAt'] = FieldValue.serverTimestamp();
 
       await _firestore.collection('users').doc(userProfile.uid).set(profileMap);
-
-      // Create UserStats in Firestore (using UserProfile structure as expected by UserStatsRepository)
       await _firestore
           .collection('user_stats')
           .doc(userProfile.uid)
-          .set(userProfile.toMap());
+          .set(profileMap);
 
       return Right(
         AuthUser(
@@ -183,16 +183,18 @@ class FirebaseAuthRepository implements AuthRepository {
       // Create or update user profile in Firestore
       final userDoc = await _firestore.collection('users').doc(user.uid).get();
       if (!userDoc.exists) {
-        final userProfile = UserProfile(uid: user.uid);
+        final displayName = user.displayName?.isNotEmpty == true
+            ? user.displayName!
+            : user.email?.split('@').first ?? 'User';
+        final userProfile = UserProfile(
+          uid: user.uid,
+          displayName: displayName,
+        );
         final profileMap = userProfile.toMap();
         profileMap['email'] = user.email ?? '';
-        profileMap['displayName'] = user.displayName ?? '';
         profileMap['createdAt'] = FieldValue.serverTimestamp();
         await _firestore.collection('users').doc(user.uid).set(profileMap);
-        await _firestore
-            .collection('user_stats')
-            .doc(user.uid)
-            .set(userProfile.toMap());
+        await _firestore.collection('user_stats').doc(user.uid).set(profileMap);
       }
 
       return Right(
@@ -283,7 +285,9 @@ class FirebaseAuthRepository implements AuthRepository {
     } on FirebaseFunctionsException catch (e) {
       AppLogger.e('Delete account failed', e);
       if (e.code == 'unauthenticated') {
-        return const Left(AuthFailure('Please log in again before deleting your account.'));
+        return const Left(
+          AuthFailure('Please log in again before deleting your account.'),
+        );
       }
       return Left(ServerFailure(e.message ?? 'Delete failed'));
     } catch (e, s) {

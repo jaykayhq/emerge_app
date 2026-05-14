@@ -64,7 +64,10 @@ class _NebulaBackgroundState extends State<NebulaBackground>
   }
 
   void _generateElements() {
-    final config = NebulaStateConfig.forState(widget.healthState, entropy: widget.entropy);
+    final config = NebulaStateConfig.forState(
+      widget.healthState,
+      entropy: widget.entropy,
+    );
     final random = math.Random(widget.biome.index * 42 + widget.level);
 
     // Procedural evolution: every 5 levels increases the density/richness
@@ -74,8 +77,8 @@ class _NebulaBackgroundState extends State<NebulaBackground>
     ); // 0 to 10 max
 
     // Generate stars - more stars as you evolve, scaled by health
-    final starCount =
-        ((60 + (evolutionPhase * 15)) * config.starDensityFactor).toInt();
+    final starCount = ((60 + (evolutionPhase * 15)) * config.starDensityFactor)
+        .toInt();
     _stars = List.generate(
       starCount,
       (i) => _Star.random(random, evolutionPhase),
@@ -131,7 +134,10 @@ class _NebulaBackgroundState extends State<NebulaBackground>
           AnimatedBuilder(
             animation: _nebulaController,
             builder: (context, child) {
-              final config = NebulaStateConfig.forState(widget.healthState, entropy: widget.entropy);
+              final config = NebulaStateConfig.forState(
+                widget.healthState,
+                entropy: widget.entropy,
+              );
               return CustomPaint(
                 painter: _NebulaPainter(
                   clouds: _nebulaClouds,
@@ -149,7 +155,10 @@ class _NebulaBackgroundState extends State<NebulaBackground>
           AnimatedBuilder(
             animation: _starController,
             builder: (context, child) {
-              final config = NebulaStateConfig.forState(widget.healthState, entropy: widget.entropy);
+              final config = NebulaStateConfig.forState(
+                widget.healthState,
+                entropy: widget.entropy,
+              );
               return CustomPaint(
                 painter: _StarFieldPainter(
                   stars: _stars,
@@ -165,7 +174,10 @@ class _NebulaBackgroundState extends State<NebulaBackground>
           AnimatedBuilder(
             animation: _particleController,
             builder: (context, child) {
-              final config = NebulaStateConfig.forState(widget.healthState, entropy: widget.entropy);
+              final config = NebulaStateConfig.forState(
+                widget.healthState,
+                entropy: widget.entropy,
+              );
               return CustomPaint(
                 painter: _ParticleFieldPainter(
                   particles: _particles,
@@ -211,8 +223,8 @@ class _NebulaBackgroundState extends State<NebulaBackground>
           radius: 1.0,
           colors: [
             Colors.transparent,
-            Colors.black.withValues(alpha:0.3),
-            Colors.black.withValues(alpha:0.7),
+            Colors.black.withValues(alpha: 0.3),
+            Colors.black.withValues(alpha: 0.7),
           ],
           stops: const [0.4, 0.8, 1.0],
         ),
@@ -370,7 +382,7 @@ class _StarFieldPainter extends CustomPainter {
       );
       final currentBrightness = star.brightness * (0.5 + 0.5 * twinkle);
 
-      paint.color = Colors.white.withValues(alpha:currentBrightness);
+      paint.color = Colors.white.withValues(alpha: currentBrightness);
 
       final position = Offset(star.x * size.width, star.y * size.height);
 
@@ -415,15 +427,19 @@ class _NebulaPainter extends CustomPainter {
     final saturation = config.colorSaturation.clamp(0.0, 1.0);
     // If saturation > 1.0, we actually want more vibrancy, but for now we clamp for simplicity
     // or we could lerp from gray to target.
-    
-    final paintPrimary = Color.lerp(desaturationColor, primaryColor, saturation) ?? primaryColor;
-    final paintAccent = Color.lerp(desaturationColor, accentColor, saturation) ?? accentColor;
+
+    final paintPrimary =
+        Color.lerp(desaturationColor, primaryColor, saturation) ?? primaryColor;
+    final paintAccent =
+        Color.lerp(desaturationColor, accentColor, saturation) ?? accentColor;
 
     for (final cloud in clouds) {
       // Slow drift movement scaled by health speed
       final adjustedProgress = progress * config.driftSpeedFactor;
-      final driftX = math.sin(adjustedProgress * math.pi * 2 + cloud.x * 10) * 0.02;
-      final driftY = math.cos(adjustedProgress * math.pi * 2 + cloud.y * 10) * 0.01;
+      final driftX =
+          math.sin(adjustedProgress * math.pi * 2 + cloud.x * 10) * 0.02;
+      final driftY =
+          math.cos(adjustedProgress * math.pi * 2 + cloud.y * 10) * 0.01;
 
       final center = Offset(
         (cloud.x + driftX) * size.width,
@@ -436,9 +452,11 @@ class _NebulaPainter extends CustomPainter {
       // Draw soft gradient cloud scaled by health opacity
       final gradient = RadialGradient(
         colors: [
-          color.withValues(alpha:cloud.opacity * config.nebulaOpacity / 0.12),
-          color.withValues(alpha:cloud.opacity * 0.5 * config.nebulaOpacity / 0.12),
-          color.withValues(alpha:0),
+          color.withValues(alpha: cloud.opacity * config.nebulaOpacity / 0.12),
+          color.withValues(
+            alpha: cloud.opacity * 0.5 * config.nebulaOpacity / 0.12,
+          ),
+          color.withValues(alpha: 0),
         ],
         stops: const [0.0, 0.5, 1.0],
       );
@@ -490,9 +508,10 @@ class _ParticleFieldPainter extends CustomPainter {
 
       // Fade in/out at edges
       final fadeY = y < 0.1 ? y / 0.1 : (y > 0.9 ? (1.0 - y) / 0.1 : 1.0);
-      final opacity = 0.3 * fadeY * config.colorSaturation; // Desaturate particles too
+      final opacity =
+          0.3 * fadeY * config.colorSaturation; // Desaturate particles too
 
-      paint.color = color.withValues(alpha:opacity);
+      paint.color = color.withValues(alpha: opacity);
       canvas.drawCircle(position, particle.size, paint);
     }
   }

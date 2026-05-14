@@ -19,7 +19,6 @@ import 'package:uuid/uuid.dart';
 import 'package:emerge_app/core/theme/emerge_colors.dart';
 import 'package:emerge_app/features/monetization/presentation/widgets/premium_limit_dialog.dart';
 
-
 /// Redesigned Create Habit Dialog with Stitch-inspired cosmic glassmorphism
 class AdvancedCreateHabitDialog extends ConsumerStatefulWidget {
   const AdvancedCreateHabitDialog({super.key});
@@ -292,7 +291,10 @@ class _AdvancedCreateHabitDialogState
             context: context,
             builder: (context) => PremiumLimitDialog(
               title: 'Habit Capacity Reached',
-              message: e.toString().replaceAll('SubscriptionLimitReachedException: ', ''),
+              message: e.toString().replaceAll(
+                'SubscriptionLimitReachedException: ',
+                '',
+              ),
             ),
           );
         }
@@ -313,7 +315,7 @@ class _AdvancedCreateHabitDialogState
     setState(() {
       _titleController.text = template.title;
       _emoji = template.emoji;
-      
+
       // Use structured preference if available, otherwise fallback to legacy parsing
       if (template.timeOfDayPreference != null) {
         _timeOfDay = template.timeOfDayPreference!;

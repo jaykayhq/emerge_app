@@ -36,10 +36,7 @@ class AvatarConfig {
     required int level,
   }) {
     final phase = SilhouetteEvolutionState.phaseFromLevel(level);
-    return AvatarConfig(
-      archetype: archetype,
-      evolvedState: phase,
-    );
+    return AvatarConfig(archetype: archetype, evolvedState: phase);
   }
 
   /// Whether the evolution overlay should be rendered.

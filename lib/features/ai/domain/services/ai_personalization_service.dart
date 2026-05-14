@@ -23,9 +23,15 @@ class AiPersonalizationService {
     Map<String, int>? attributes,
     String? dominantMotive,
   }) async {
-    final identityContext = archetype != null ? 'User Archetype: $archetype. ' : '';
-    final attributeContext = attributes != null ? 'Core Attributes: $attributes. ' : '';
-    final motiveContext = dominantMotive != null ? 'Dominant Motive: $dominantMotive. ' : '';
+    final identityContext = archetype != null
+        ? 'User Archetype: $archetype. '
+        : '';
+    final attributeContext = attributes != null
+        ? 'Core Attributes: $attributes. '
+        : '';
+    final motiveContext = dominantMotive != null
+        ? 'Dominant Motive: $dominantMotive. '
+        : '';
 
     final systemPrompt =
         'You are a wise and encouraging mentor. The user has just shared their deep "Why" for building habits. '
@@ -62,7 +68,9 @@ class AiPersonalizationService {
         )
         .toList();
 
-    final motiveContext = dominantMotive != null ? ' The user is driven by: $dominantMotive.' : '';
+    final motiveContext = dominantMotive != null
+        ? ' The user is driven by: $dominantMotive.'
+        : '';
     final systemPrompt =
         'You are the Goldilocks Engine. Your job is to analyze habit performance and suggest difficulty adjustments.$motiveContext '
         'Rules:'
@@ -116,7 +124,9 @@ class AiPersonalizationService {
         )
         .toList();
 
-    final motiveContext = dominantMotive != null ? ' Consider their dominant motive ($dominantMotive) in your analysis.' : '';
+    final motiveContext = dominantMotive != null
+        ? ' Consider their dominant motive ($dominantMotive) in your analysis.'
+        : '';
     final systemPrompt =
         'You are an Insight Engine. Analyze the user'
         "'"

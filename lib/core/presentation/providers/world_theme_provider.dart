@@ -34,5 +34,6 @@ class WorldThemeNotifier extends Notifier<AppWorldTheme> {
   }
 }
 
-final worldThemeProvider =
-    NotifierProvider<WorldThemeNotifier, AppWorldTheme>(WorldThemeNotifier.new);
+final worldThemeProvider = NotifierProvider<WorldThemeNotifier, AppWorldTheme>(
+  WorldThemeNotifier.new,
+);

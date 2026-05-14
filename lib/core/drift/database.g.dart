@@ -18,6 +18,28 @@ class $UserStatsTableTable extends UserStatsTable
     type: DriftSqlType.string,
     requiredDuringInsert: true,
   );
+  static const VerificationMeta _displayNameMeta = const VerificationMeta(
+    'displayName',
+  );
+  @override
+  late final GeneratedColumn<String> displayName = GeneratedColumn<String>(
+    'display_name',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _photoUrlMeta = const VerificationMeta(
+    'photoUrl',
+  );
+  @override
+  late final GeneratedColumn<String> photoUrl = GeneratedColumn<String>(
+    'photo_url',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   static const VerificationMeta _totalXpMeta = const VerificationMeta(
     'totalXp',
   );
@@ -157,6 +179,79 @@ class $UserStatsTableTable extends UserStatsTable
     type: DriftSqlType.string,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _characterClassMeta = const VerificationMeta(
+    'characterClass',
+  );
+  @override
+  late final GeneratedColumn<String> characterClass = GeneratedColumn<String>(
+    'character_class',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _motiveMeta = const VerificationMeta('motive');
+  @override
+  late final GeneratedColumn<String> motive = GeneratedColumn<String>(
+    'motive',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _whyMeta = const VerificationMeta('why');
+  @override
+  late final GeneratedColumn<String> why = GeneratedColumn<String>(
+    'why',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _anchorsJsonMeta = const VerificationMeta(
+    'anchorsJson',
+  );
+  @override
+  late final GeneratedColumn<String> anchorsJson = GeneratedColumn<String>(
+    'anchors_json',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _habitStacksJsonMeta = const VerificationMeta(
+    'habitStacksJson',
+  );
+  @override
+  late final GeneratedColumn<String> habitStacksJson = GeneratedColumn<String>(
+    'habit_stacks_json',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _skippedOnboardingStepsJsonMeta =
+      const VerificationMeta('skippedOnboardingStepsJson');
+  @override
+  late final GeneratedColumn<String> skippedOnboardingStepsJson =
+      GeneratedColumn<String>(
+        'skipped_onboarding_steps_json',
+        aliasedName,
+        true,
+        type: DriftSqlType.string,
+        requiredDuringInsert: false,
+      );
+  static const VerificationMeta _settingsJsonMeta = const VerificationMeta(
+    'settingsJson',
+  );
+  @override
+  late final GeneratedColumn<String> settingsJson = GeneratedColumn<String>(
+    'settings_json',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   static const VerificationMeta _avatarJsonMeta = const VerificationMeta(
     'avatarJson',
   );
@@ -224,9 +319,49 @@ class $UserStatsTableTable extends UserStatsTable
         type: DriftSqlType.string,
         requiredDuringInsert: false,
       );
+  static const VerificationMeta _onboardingStartedAtMeta =
+      const VerificationMeta('onboardingStartedAt');
+  @override
+  late final GeneratedColumn<String> onboardingStartedAt =
+      GeneratedColumn<String>(
+        'onboarding_started_at',
+        aliasedName,
+        true,
+        type: DriftSqlType.string,
+        requiredDuringInsert: false,
+      );
+  static const VerificationMeta _hasEmergedMeta = const VerificationMeta(
+    'hasEmerged',
+  );
+  @override
+  late final GeneratedColumn<bool> hasEmerged = GeneratedColumn<bool>(
+    'has_emerged',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("has_emerged" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _momentumScoreMeta = const VerificationMeta(
+    'momentumScore',
+  );
+  @override
+  late final GeneratedColumn<double> momentumScore = GeneratedColumn<double>(
+    'momentum_score',
+    aliasedName,
+    false,
+    type: DriftSqlType.double,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0.5),
+  );
   @override
   List<GeneratedColumn> get $columns => [
     userId,
+    displayName,
+    photoUrl,
     totalXp,
     level,
     streak,
@@ -239,12 +374,22 @@ class $UserStatsTableTable extends UserStatsTable
     challengeXp,
     worldHealthScore,
     archetype,
+    characterClass,
+    motive,
+    why,
+    anchorsJson,
+    habitStacksJson,
+    skippedOnboardingStepsJson,
+    settingsJson,
     avatarJson,
     worldStateJson,
     updatedAt,
     syncedAt,
     onboardingProgress,
     onboardingCompletedAt,
+    onboardingStartedAt,
+    hasEmerged,
+    momentumScore,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -265,6 +410,21 @@ class $UserStatsTableTable extends UserStatsTable
       );
     } else if (isInserting) {
       context.missing(_userIdMeta);
+    }
+    if (data.containsKey('display_name')) {
+      context.handle(
+        _displayNameMeta,
+        displayName.isAcceptableOrUnknown(
+          data['display_name']!,
+          _displayNameMeta,
+        ),
+      );
+    }
+    if (data.containsKey('photo_url')) {
+      context.handle(
+        _photoUrlMeta,
+        photoUrl.isAcceptableOrUnknown(data['photo_url']!, _photoUrlMeta),
+      );
     }
     if (data.containsKey('total_xp')) {
       context.handle(
@@ -350,6 +510,63 @@ class $UserStatsTableTable extends UserStatsTable
         archetype.isAcceptableOrUnknown(data['archetype']!, _archetypeMeta),
       );
     }
+    if (data.containsKey('character_class')) {
+      context.handle(
+        _characterClassMeta,
+        characterClass.isAcceptableOrUnknown(
+          data['character_class']!,
+          _characterClassMeta,
+        ),
+      );
+    }
+    if (data.containsKey('motive')) {
+      context.handle(
+        _motiveMeta,
+        motive.isAcceptableOrUnknown(data['motive']!, _motiveMeta),
+      );
+    }
+    if (data.containsKey('why')) {
+      context.handle(
+        _whyMeta,
+        why.isAcceptableOrUnknown(data['why']!, _whyMeta),
+      );
+    }
+    if (data.containsKey('anchors_json')) {
+      context.handle(
+        _anchorsJsonMeta,
+        anchorsJson.isAcceptableOrUnknown(
+          data['anchors_json']!,
+          _anchorsJsonMeta,
+        ),
+      );
+    }
+    if (data.containsKey('habit_stacks_json')) {
+      context.handle(
+        _habitStacksJsonMeta,
+        habitStacksJson.isAcceptableOrUnknown(
+          data['habit_stacks_json']!,
+          _habitStacksJsonMeta,
+        ),
+      );
+    }
+    if (data.containsKey('skipped_onboarding_steps_json')) {
+      context.handle(
+        _skippedOnboardingStepsJsonMeta,
+        skippedOnboardingStepsJson.isAcceptableOrUnknown(
+          data['skipped_onboarding_steps_json']!,
+          _skippedOnboardingStepsJsonMeta,
+        ),
+      );
+    }
+    if (data.containsKey('settings_json')) {
+      context.handle(
+        _settingsJsonMeta,
+        settingsJson.isAcceptableOrUnknown(
+          data['settings_json']!,
+          _settingsJsonMeta,
+        ),
+      );
+    }
     if (data.containsKey('avatar_json')) {
       context.handle(
         _avatarJsonMeta,
@@ -395,6 +612,30 @@ class $UserStatsTableTable extends UserStatsTable
         ),
       );
     }
+    if (data.containsKey('onboarding_started_at')) {
+      context.handle(
+        _onboardingStartedAtMeta,
+        onboardingStartedAt.isAcceptableOrUnknown(
+          data['onboarding_started_at']!,
+          _onboardingStartedAtMeta,
+        ),
+      );
+    }
+    if (data.containsKey('has_emerged')) {
+      context.handle(
+        _hasEmergedMeta,
+        hasEmerged.isAcceptableOrUnknown(data['has_emerged']!, _hasEmergedMeta),
+      );
+    }
+    if (data.containsKey('momentum_score')) {
+      context.handle(
+        _momentumScoreMeta,
+        momentumScore.isAcceptableOrUnknown(
+          data['momentum_score']!,
+          _momentumScoreMeta,
+        ),
+      );
+    }
     return context;
   }
 
@@ -408,6 +649,14 @@ class $UserStatsTableTable extends UserStatsTable
         DriftSqlType.string,
         data['${effectivePrefix}user_id'],
       )!,
+      displayName: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}display_name'],
+      ),
+      photoUrl: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}photo_url'],
+      ),
       totalXp: attachedDatabase.typeMapping.read(
         DriftSqlType.int,
         data['${effectivePrefix}total_xp'],
@@ -456,6 +705,34 @@ class $UserStatsTableTable extends UserStatsTable
         DriftSqlType.string,
         data['${effectivePrefix}archetype'],
       ),
+      characterClass: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}character_class'],
+      ),
+      motive: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}motive'],
+      ),
+      why: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}why'],
+      ),
+      anchorsJson: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}anchors_json'],
+      ),
+      habitStacksJson: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}habit_stacks_json'],
+      ),
+      skippedOnboardingStepsJson: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}skipped_onboarding_steps_json'],
+      ),
+      settingsJson: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}settings_json'],
+      ),
       avatarJson: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}avatar_json'],
@@ -480,6 +757,18 @@ class $UserStatsTableTable extends UserStatsTable
         DriftSqlType.string,
         data['${effectivePrefix}onboarding_completed_at'],
       ),
+      onboardingStartedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}onboarding_started_at'],
+      ),
+      hasEmerged: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}has_emerged'],
+      )!,
+      momentumScore: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}momentum_score'],
+      )!,
     );
   }
 
@@ -492,6 +781,8 @@ class $UserStatsTableTable extends UserStatsTable
 class UserStatsTableData extends DataClass
     implements Insertable<UserStatsTableData> {
   final String userId;
+  final String? displayName;
+  final String? photoUrl;
   final int totalXp;
   final int level;
   final int streak;
@@ -504,14 +795,26 @@ class UserStatsTableData extends DataClass
   final int challengeXp;
   final double worldHealthScore;
   final String? archetype;
+  final String? characterClass;
+  final String? motive;
+  final String? why;
+  final String? anchorsJson;
+  final String? habitStacksJson;
+  final String? skippedOnboardingStepsJson;
+  final String? settingsJson;
   final String? avatarJson;
   final String? worldStateJson;
   final String updatedAt;
   final String? syncedAt;
   final int onboardingProgress;
   final String? onboardingCompletedAt;
+  final String? onboardingStartedAt;
+  final bool hasEmerged;
+  final double momentumScore;
   const UserStatsTableData({
     required this.userId,
+    this.displayName,
+    this.photoUrl,
     required this.totalXp,
     required this.level,
     required this.streak,
@@ -524,17 +827,33 @@ class UserStatsTableData extends DataClass
     required this.challengeXp,
     required this.worldHealthScore,
     this.archetype,
+    this.characterClass,
+    this.motive,
+    this.why,
+    this.anchorsJson,
+    this.habitStacksJson,
+    this.skippedOnboardingStepsJson,
+    this.settingsJson,
     this.avatarJson,
     this.worldStateJson,
     required this.updatedAt,
     this.syncedAt,
     required this.onboardingProgress,
     this.onboardingCompletedAt,
+    this.onboardingStartedAt,
+    required this.hasEmerged,
+    required this.momentumScore,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
     map['user_id'] = Variable<String>(userId);
+    if (!nullToAbsent || displayName != null) {
+      map['display_name'] = Variable<String>(displayName);
+    }
+    if (!nullToAbsent || photoUrl != null) {
+      map['photo_url'] = Variable<String>(photoUrl);
+    }
     map['total_xp'] = Variable<int>(totalXp);
     map['level'] = Variable<int>(level);
     map['streak'] = Variable<int>(streak);
@@ -548,6 +867,29 @@ class UserStatsTableData extends DataClass
     map['world_health_score'] = Variable<double>(worldHealthScore);
     if (!nullToAbsent || archetype != null) {
       map['archetype'] = Variable<String>(archetype);
+    }
+    if (!nullToAbsent || characterClass != null) {
+      map['character_class'] = Variable<String>(characterClass);
+    }
+    if (!nullToAbsent || motive != null) {
+      map['motive'] = Variable<String>(motive);
+    }
+    if (!nullToAbsent || why != null) {
+      map['why'] = Variable<String>(why);
+    }
+    if (!nullToAbsent || anchorsJson != null) {
+      map['anchors_json'] = Variable<String>(anchorsJson);
+    }
+    if (!nullToAbsent || habitStacksJson != null) {
+      map['habit_stacks_json'] = Variable<String>(habitStacksJson);
+    }
+    if (!nullToAbsent || skippedOnboardingStepsJson != null) {
+      map['skipped_onboarding_steps_json'] = Variable<String>(
+        skippedOnboardingStepsJson,
+      );
+    }
+    if (!nullToAbsent || settingsJson != null) {
+      map['settings_json'] = Variable<String>(settingsJson);
     }
     if (!nullToAbsent || avatarJson != null) {
       map['avatar_json'] = Variable<String>(avatarJson);
@@ -563,12 +905,23 @@ class UserStatsTableData extends DataClass
     if (!nullToAbsent || onboardingCompletedAt != null) {
       map['onboarding_completed_at'] = Variable<String>(onboardingCompletedAt);
     }
+    if (!nullToAbsent || onboardingStartedAt != null) {
+      map['onboarding_started_at'] = Variable<String>(onboardingStartedAt);
+    }
+    map['has_emerged'] = Variable<bool>(hasEmerged);
+    map['momentum_score'] = Variable<double>(momentumScore);
     return map;
   }
 
   UserStatsTableCompanion toCompanion(bool nullToAbsent) {
     return UserStatsTableCompanion(
       userId: Value(userId),
+      displayName: displayName == null && nullToAbsent
+          ? const Value.absent()
+          : Value(displayName),
+      photoUrl: photoUrl == null && nullToAbsent
+          ? const Value.absent()
+          : Value(photoUrl),
       totalXp: Value(totalXp),
       level: Value(level),
       streak: Value(streak),
@@ -583,6 +936,26 @@ class UserStatsTableData extends DataClass
       archetype: archetype == null && nullToAbsent
           ? const Value.absent()
           : Value(archetype),
+      characterClass: characterClass == null && nullToAbsent
+          ? const Value.absent()
+          : Value(characterClass),
+      motive: motive == null && nullToAbsent
+          ? const Value.absent()
+          : Value(motive),
+      why: why == null && nullToAbsent ? const Value.absent() : Value(why),
+      anchorsJson: anchorsJson == null && nullToAbsent
+          ? const Value.absent()
+          : Value(anchorsJson),
+      habitStacksJson: habitStacksJson == null && nullToAbsent
+          ? const Value.absent()
+          : Value(habitStacksJson),
+      skippedOnboardingStepsJson:
+          skippedOnboardingStepsJson == null && nullToAbsent
+          ? const Value.absent()
+          : Value(skippedOnboardingStepsJson),
+      settingsJson: settingsJson == null && nullToAbsent
+          ? const Value.absent()
+          : Value(settingsJson),
       avatarJson: avatarJson == null && nullToAbsent
           ? const Value.absent()
           : Value(avatarJson),
@@ -597,6 +970,11 @@ class UserStatsTableData extends DataClass
       onboardingCompletedAt: onboardingCompletedAt == null && nullToAbsent
           ? const Value.absent()
           : Value(onboardingCompletedAt),
+      onboardingStartedAt: onboardingStartedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(onboardingStartedAt),
+      hasEmerged: Value(hasEmerged),
+      momentumScore: Value(momentumScore),
     );
   }
 
@@ -607,6 +985,8 @@ class UserStatsTableData extends DataClass
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return UserStatsTableData(
       userId: serializer.fromJson<String>(json['userId']),
+      displayName: serializer.fromJson<String?>(json['displayName']),
+      photoUrl: serializer.fromJson<String?>(json['photoUrl']),
       totalXp: serializer.fromJson<int>(json['totalXp']),
       level: serializer.fromJson<int>(json['level']),
       streak: serializer.fromJson<int>(json['streak']),
@@ -619,6 +999,15 @@ class UserStatsTableData extends DataClass
       challengeXp: serializer.fromJson<int>(json['challengeXp']),
       worldHealthScore: serializer.fromJson<double>(json['worldHealthScore']),
       archetype: serializer.fromJson<String?>(json['archetype']),
+      characterClass: serializer.fromJson<String?>(json['characterClass']),
+      motive: serializer.fromJson<String?>(json['motive']),
+      why: serializer.fromJson<String?>(json['why']),
+      anchorsJson: serializer.fromJson<String?>(json['anchorsJson']),
+      habitStacksJson: serializer.fromJson<String?>(json['habitStacksJson']),
+      skippedOnboardingStepsJson: serializer.fromJson<String?>(
+        json['skippedOnboardingStepsJson'],
+      ),
+      settingsJson: serializer.fromJson<String?>(json['settingsJson']),
       avatarJson: serializer.fromJson<String?>(json['avatarJson']),
       worldStateJson: serializer.fromJson<String?>(json['worldStateJson']),
       updatedAt: serializer.fromJson<String>(json['updatedAt']),
@@ -627,6 +1016,11 @@ class UserStatsTableData extends DataClass
       onboardingCompletedAt: serializer.fromJson<String?>(
         json['onboardingCompletedAt'],
       ),
+      onboardingStartedAt: serializer.fromJson<String?>(
+        json['onboardingStartedAt'],
+      ),
+      hasEmerged: serializer.fromJson<bool>(json['hasEmerged']),
+      momentumScore: serializer.fromJson<double>(json['momentumScore']),
     );
   }
   @override
@@ -634,6 +1028,8 @@ class UserStatsTableData extends DataClass
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return <String, dynamic>{
       'userId': serializer.toJson<String>(userId),
+      'displayName': serializer.toJson<String?>(displayName),
+      'photoUrl': serializer.toJson<String?>(photoUrl),
       'totalXp': serializer.toJson<int>(totalXp),
       'level': serializer.toJson<int>(level),
       'streak': serializer.toJson<int>(streak),
@@ -646,6 +1042,15 @@ class UserStatsTableData extends DataClass
       'challengeXp': serializer.toJson<int>(challengeXp),
       'worldHealthScore': serializer.toJson<double>(worldHealthScore),
       'archetype': serializer.toJson<String?>(archetype),
+      'characterClass': serializer.toJson<String?>(characterClass),
+      'motive': serializer.toJson<String?>(motive),
+      'why': serializer.toJson<String?>(why),
+      'anchorsJson': serializer.toJson<String?>(anchorsJson),
+      'habitStacksJson': serializer.toJson<String?>(habitStacksJson),
+      'skippedOnboardingStepsJson': serializer.toJson<String?>(
+        skippedOnboardingStepsJson,
+      ),
+      'settingsJson': serializer.toJson<String?>(settingsJson),
       'avatarJson': serializer.toJson<String?>(avatarJson),
       'worldStateJson': serializer.toJson<String?>(worldStateJson),
       'updatedAt': serializer.toJson<String>(updatedAt),
@@ -654,11 +1059,16 @@ class UserStatsTableData extends DataClass
       'onboardingCompletedAt': serializer.toJson<String?>(
         onboardingCompletedAt,
       ),
+      'onboardingStartedAt': serializer.toJson<String?>(onboardingStartedAt),
+      'hasEmerged': serializer.toJson<bool>(hasEmerged),
+      'momentumScore': serializer.toJson<double>(momentumScore),
     };
   }
 
   UserStatsTableData copyWith({
     String? userId,
+    Value<String?> displayName = const Value.absent(),
+    Value<String?> photoUrl = const Value.absent(),
     int? totalXp,
     int? level,
     int? streak,
@@ -671,14 +1081,26 @@ class UserStatsTableData extends DataClass
     int? challengeXp,
     double? worldHealthScore,
     Value<String?> archetype = const Value.absent(),
+    Value<String?> characterClass = const Value.absent(),
+    Value<String?> motive = const Value.absent(),
+    Value<String?> why = const Value.absent(),
+    Value<String?> anchorsJson = const Value.absent(),
+    Value<String?> habitStacksJson = const Value.absent(),
+    Value<String?> skippedOnboardingStepsJson = const Value.absent(),
+    Value<String?> settingsJson = const Value.absent(),
     Value<String?> avatarJson = const Value.absent(),
     Value<String?> worldStateJson = const Value.absent(),
     String? updatedAt,
     Value<String?> syncedAt = const Value.absent(),
     int? onboardingProgress,
     Value<String?> onboardingCompletedAt = const Value.absent(),
+    Value<String?> onboardingStartedAt = const Value.absent(),
+    bool? hasEmerged,
+    double? momentumScore,
   }) => UserStatsTableData(
     userId: userId ?? this.userId,
+    displayName: displayName.present ? displayName.value : this.displayName,
+    photoUrl: photoUrl.present ? photoUrl.value : this.photoUrl,
     totalXp: totalXp ?? this.totalXp,
     level: level ?? this.level,
     streak: streak ?? this.streak,
@@ -691,6 +1113,19 @@ class UserStatsTableData extends DataClass
     challengeXp: challengeXp ?? this.challengeXp,
     worldHealthScore: worldHealthScore ?? this.worldHealthScore,
     archetype: archetype.present ? archetype.value : this.archetype,
+    characterClass: characterClass.present
+        ? characterClass.value
+        : this.characterClass,
+    motive: motive.present ? motive.value : this.motive,
+    why: why.present ? why.value : this.why,
+    anchorsJson: anchorsJson.present ? anchorsJson.value : this.anchorsJson,
+    habitStacksJson: habitStacksJson.present
+        ? habitStacksJson.value
+        : this.habitStacksJson,
+    skippedOnboardingStepsJson: skippedOnboardingStepsJson.present
+        ? skippedOnboardingStepsJson.value
+        : this.skippedOnboardingStepsJson,
+    settingsJson: settingsJson.present ? settingsJson.value : this.settingsJson,
     avatarJson: avatarJson.present ? avatarJson.value : this.avatarJson,
     worldStateJson: worldStateJson.present
         ? worldStateJson.value
@@ -701,10 +1136,19 @@ class UserStatsTableData extends DataClass
     onboardingCompletedAt: onboardingCompletedAt.present
         ? onboardingCompletedAt.value
         : this.onboardingCompletedAt,
+    onboardingStartedAt: onboardingStartedAt.present
+        ? onboardingStartedAt.value
+        : this.onboardingStartedAt,
+    hasEmerged: hasEmerged ?? this.hasEmerged,
+    momentumScore: momentumScore ?? this.momentumScore,
   );
   UserStatsTableData copyWithCompanion(UserStatsTableCompanion data) {
     return UserStatsTableData(
       userId: data.userId.present ? data.userId.value : this.userId,
+      displayName: data.displayName.present
+          ? data.displayName.value
+          : this.displayName,
+      photoUrl: data.photoUrl.present ? data.photoUrl.value : this.photoUrl,
       totalXp: data.totalXp.present ? data.totalXp.value : this.totalXp,
       level: data.level.present ? data.level.value : this.level,
       streak: data.streak.present ? data.streak.value : this.streak,
@@ -729,6 +1173,23 @@ class UserStatsTableData extends DataClass
           ? data.worldHealthScore.value
           : this.worldHealthScore,
       archetype: data.archetype.present ? data.archetype.value : this.archetype,
+      characterClass: data.characterClass.present
+          ? data.characterClass.value
+          : this.characterClass,
+      motive: data.motive.present ? data.motive.value : this.motive,
+      why: data.why.present ? data.why.value : this.why,
+      anchorsJson: data.anchorsJson.present
+          ? data.anchorsJson.value
+          : this.anchorsJson,
+      habitStacksJson: data.habitStacksJson.present
+          ? data.habitStacksJson.value
+          : this.habitStacksJson,
+      skippedOnboardingStepsJson: data.skippedOnboardingStepsJson.present
+          ? data.skippedOnboardingStepsJson.value
+          : this.skippedOnboardingStepsJson,
+      settingsJson: data.settingsJson.present
+          ? data.settingsJson.value
+          : this.settingsJson,
       avatarJson: data.avatarJson.present
           ? data.avatarJson.value
           : this.avatarJson,
@@ -743,6 +1204,15 @@ class UserStatsTableData extends DataClass
       onboardingCompletedAt: data.onboardingCompletedAt.present
           ? data.onboardingCompletedAt.value
           : this.onboardingCompletedAt,
+      onboardingStartedAt: data.onboardingStartedAt.present
+          ? data.onboardingStartedAt.value
+          : this.onboardingStartedAt,
+      hasEmerged: data.hasEmerged.present
+          ? data.hasEmerged.value
+          : this.hasEmerged,
+      momentumScore: data.momentumScore.present
+          ? data.momentumScore.value
+          : this.momentumScore,
     );
   }
 
@@ -750,6 +1220,8 @@ class UserStatsTableData extends DataClass
   String toString() {
     return (StringBuffer('UserStatsTableData(')
           ..write('userId: $userId, ')
+          ..write('displayName: $displayName, ')
+          ..write('photoUrl: $photoUrl, ')
           ..write('totalXp: $totalXp, ')
           ..write('level: $level, ')
           ..write('streak: $streak, ')
@@ -762,19 +1234,31 @@ class UserStatsTableData extends DataClass
           ..write('challengeXp: $challengeXp, ')
           ..write('worldHealthScore: $worldHealthScore, ')
           ..write('archetype: $archetype, ')
+          ..write('characterClass: $characterClass, ')
+          ..write('motive: $motive, ')
+          ..write('why: $why, ')
+          ..write('anchorsJson: $anchorsJson, ')
+          ..write('habitStacksJson: $habitStacksJson, ')
+          ..write('skippedOnboardingStepsJson: $skippedOnboardingStepsJson, ')
+          ..write('settingsJson: $settingsJson, ')
           ..write('avatarJson: $avatarJson, ')
           ..write('worldStateJson: $worldStateJson, ')
           ..write('updatedAt: $updatedAt, ')
           ..write('syncedAt: $syncedAt, ')
           ..write('onboardingProgress: $onboardingProgress, ')
-          ..write('onboardingCompletedAt: $onboardingCompletedAt')
+          ..write('onboardingCompletedAt: $onboardingCompletedAt, ')
+          ..write('onboardingStartedAt: $onboardingStartedAt, ')
+          ..write('hasEmerged: $hasEmerged, ')
+          ..write('momentumScore: $momentumScore')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode => Object.hash(
+  int get hashCode => Object.hashAll([
     userId,
+    displayName,
+    photoUrl,
     totalXp,
     level,
     streak,
@@ -787,18 +1271,30 @@ class UserStatsTableData extends DataClass
     challengeXp,
     worldHealthScore,
     archetype,
+    characterClass,
+    motive,
+    why,
+    anchorsJson,
+    habitStacksJson,
+    skippedOnboardingStepsJson,
+    settingsJson,
     avatarJson,
     worldStateJson,
     updatedAt,
     syncedAt,
     onboardingProgress,
     onboardingCompletedAt,
-  );
+    onboardingStartedAt,
+    hasEmerged,
+    momentumScore,
+  ]);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
       (other is UserStatsTableData &&
           other.userId == this.userId &&
+          other.displayName == this.displayName &&
+          other.photoUrl == this.photoUrl &&
           other.totalXp == this.totalXp &&
           other.level == this.level &&
           other.streak == this.streak &&
@@ -811,16 +1307,28 @@ class UserStatsTableData extends DataClass
           other.challengeXp == this.challengeXp &&
           other.worldHealthScore == this.worldHealthScore &&
           other.archetype == this.archetype &&
+          other.characterClass == this.characterClass &&
+          other.motive == this.motive &&
+          other.why == this.why &&
+          other.anchorsJson == this.anchorsJson &&
+          other.habitStacksJson == this.habitStacksJson &&
+          other.skippedOnboardingStepsJson == this.skippedOnboardingStepsJson &&
+          other.settingsJson == this.settingsJson &&
           other.avatarJson == this.avatarJson &&
           other.worldStateJson == this.worldStateJson &&
           other.updatedAt == this.updatedAt &&
           other.syncedAt == this.syncedAt &&
           other.onboardingProgress == this.onboardingProgress &&
-          other.onboardingCompletedAt == this.onboardingCompletedAt);
+          other.onboardingCompletedAt == this.onboardingCompletedAt &&
+          other.onboardingStartedAt == this.onboardingStartedAt &&
+          other.hasEmerged == this.hasEmerged &&
+          other.momentumScore == this.momentumScore);
 }
 
 class UserStatsTableCompanion extends UpdateCompanion<UserStatsTableData> {
   final Value<String> userId;
+  final Value<String?> displayName;
+  final Value<String?> photoUrl;
   final Value<int> totalXp;
   final Value<int> level;
   final Value<int> streak;
@@ -833,15 +1341,27 @@ class UserStatsTableCompanion extends UpdateCompanion<UserStatsTableData> {
   final Value<int> challengeXp;
   final Value<double> worldHealthScore;
   final Value<String?> archetype;
+  final Value<String?> characterClass;
+  final Value<String?> motive;
+  final Value<String?> why;
+  final Value<String?> anchorsJson;
+  final Value<String?> habitStacksJson;
+  final Value<String?> skippedOnboardingStepsJson;
+  final Value<String?> settingsJson;
   final Value<String?> avatarJson;
   final Value<String?> worldStateJson;
   final Value<String> updatedAt;
   final Value<String?> syncedAt;
   final Value<int> onboardingProgress;
   final Value<String?> onboardingCompletedAt;
+  final Value<String?> onboardingStartedAt;
+  final Value<bool> hasEmerged;
+  final Value<double> momentumScore;
   final Value<int> rowid;
   const UserStatsTableCompanion({
     this.userId = const Value.absent(),
+    this.displayName = const Value.absent(),
+    this.photoUrl = const Value.absent(),
     this.totalXp = const Value.absent(),
     this.level = const Value.absent(),
     this.streak = const Value.absent(),
@@ -854,16 +1374,28 @@ class UserStatsTableCompanion extends UpdateCompanion<UserStatsTableData> {
     this.challengeXp = const Value.absent(),
     this.worldHealthScore = const Value.absent(),
     this.archetype = const Value.absent(),
+    this.characterClass = const Value.absent(),
+    this.motive = const Value.absent(),
+    this.why = const Value.absent(),
+    this.anchorsJson = const Value.absent(),
+    this.habitStacksJson = const Value.absent(),
+    this.skippedOnboardingStepsJson = const Value.absent(),
+    this.settingsJson = const Value.absent(),
     this.avatarJson = const Value.absent(),
     this.worldStateJson = const Value.absent(),
     this.updatedAt = const Value.absent(),
     this.syncedAt = const Value.absent(),
     this.onboardingProgress = const Value.absent(),
     this.onboardingCompletedAt = const Value.absent(),
+    this.onboardingStartedAt = const Value.absent(),
+    this.hasEmerged = const Value.absent(),
+    this.momentumScore = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   UserStatsTableCompanion.insert({
     required String userId,
+    this.displayName = const Value.absent(),
+    this.photoUrl = const Value.absent(),
     this.totalXp = const Value.absent(),
     this.level = const Value.absent(),
     this.streak = const Value.absent(),
@@ -876,16 +1408,28 @@ class UserStatsTableCompanion extends UpdateCompanion<UserStatsTableData> {
     this.challengeXp = const Value.absent(),
     this.worldHealthScore = const Value.absent(),
     this.archetype = const Value.absent(),
+    this.characterClass = const Value.absent(),
+    this.motive = const Value.absent(),
+    this.why = const Value.absent(),
+    this.anchorsJson = const Value.absent(),
+    this.habitStacksJson = const Value.absent(),
+    this.skippedOnboardingStepsJson = const Value.absent(),
+    this.settingsJson = const Value.absent(),
     this.avatarJson = const Value.absent(),
     this.worldStateJson = const Value.absent(),
     this.updatedAt = const Value.absent(),
     this.syncedAt = const Value.absent(),
     this.onboardingProgress = const Value.absent(),
     this.onboardingCompletedAt = const Value.absent(),
+    this.onboardingStartedAt = const Value.absent(),
+    this.hasEmerged = const Value.absent(),
+    this.momentumScore = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : userId = Value(userId);
   static Insertable<UserStatsTableData> custom({
     Expression<String>? userId,
+    Expression<String>? displayName,
+    Expression<String>? photoUrl,
     Expression<int>? totalXp,
     Expression<int>? level,
     Expression<int>? streak,
@@ -898,16 +1442,28 @@ class UserStatsTableCompanion extends UpdateCompanion<UserStatsTableData> {
     Expression<int>? challengeXp,
     Expression<double>? worldHealthScore,
     Expression<String>? archetype,
+    Expression<String>? characterClass,
+    Expression<String>? motive,
+    Expression<String>? why,
+    Expression<String>? anchorsJson,
+    Expression<String>? habitStacksJson,
+    Expression<String>? skippedOnboardingStepsJson,
+    Expression<String>? settingsJson,
     Expression<String>? avatarJson,
     Expression<String>? worldStateJson,
     Expression<String>? updatedAt,
     Expression<String>? syncedAt,
     Expression<int>? onboardingProgress,
     Expression<String>? onboardingCompletedAt,
+    Expression<String>? onboardingStartedAt,
+    Expression<bool>? hasEmerged,
+    Expression<double>? momentumScore,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
       if (userId != null) 'user_id': userId,
+      if (displayName != null) 'display_name': displayName,
+      if (photoUrl != null) 'photo_url': photoUrl,
       if (totalXp != null) 'total_xp': totalXp,
       if (level != null) 'level': level,
       if (streak != null) 'streak': streak,
@@ -920,6 +1476,14 @@ class UserStatsTableCompanion extends UpdateCompanion<UserStatsTableData> {
       if (challengeXp != null) 'challenge_xp': challengeXp,
       if (worldHealthScore != null) 'world_health_score': worldHealthScore,
       if (archetype != null) 'archetype': archetype,
+      if (characterClass != null) 'character_class': characterClass,
+      if (motive != null) 'motive': motive,
+      if (why != null) 'why': why,
+      if (anchorsJson != null) 'anchors_json': anchorsJson,
+      if (habitStacksJson != null) 'habit_stacks_json': habitStacksJson,
+      if (skippedOnboardingStepsJson != null)
+        'skipped_onboarding_steps_json': skippedOnboardingStepsJson,
+      if (settingsJson != null) 'settings_json': settingsJson,
       if (avatarJson != null) 'avatar_json': avatarJson,
       if (worldStateJson != null) 'world_state_json': worldStateJson,
       if (updatedAt != null) 'updated_at': updatedAt,
@@ -927,12 +1491,18 @@ class UserStatsTableCompanion extends UpdateCompanion<UserStatsTableData> {
       if (onboardingProgress != null) 'onboarding_progress': onboardingProgress,
       if (onboardingCompletedAt != null)
         'onboarding_completed_at': onboardingCompletedAt,
+      if (onboardingStartedAt != null)
+        'onboarding_started_at': onboardingStartedAt,
+      if (hasEmerged != null) 'has_emerged': hasEmerged,
+      if (momentumScore != null) 'momentum_score': momentumScore,
       if (rowid != null) 'rowid': rowid,
     });
   }
 
   UserStatsTableCompanion copyWith({
     Value<String>? userId,
+    Value<String?>? displayName,
+    Value<String?>? photoUrl,
     Value<int>? totalXp,
     Value<int>? level,
     Value<int>? streak,
@@ -945,16 +1515,28 @@ class UserStatsTableCompanion extends UpdateCompanion<UserStatsTableData> {
     Value<int>? challengeXp,
     Value<double>? worldHealthScore,
     Value<String?>? archetype,
+    Value<String?>? characterClass,
+    Value<String?>? motive,
+    Value<String?>? why,
+    Value<String?>? anchorsJson,
+    Value<String?>? habitStacksJson,
+    Value<String?>? skippedOnboardingStepsJson,
+    Value<String?>? settingsJson,
     Value<String?>? avatarJson,
     Value<String?>? worldStateJson,
     Value<String>? updatedAt,
     Value<String?>? syncedAt,
     Value<int>? onboardingProgress,
     Value<String?>? onboardingCompletedAt,
+    Value<String?>? onboardingStartedAt,
+    Value<bool>? hasEmerged,
+    Value<double>? momentumScore,
     Value<int>? rowid,
   }) {
     return UserStatsTableCompanion(
       userId: userId ?? this.userId,
+      displayName: displayName ?? this.displayName,
+      photoUrl: photoUrl ?? this.photoUrl,
       totalXp: totalXp ?? this.totalXp,
       level: level ?? this.level,
       streak: streak ?? this.streak,
@@ -967,6 +1549,14 @@ class UserStatsTableCompanion extends UpdateCompanion<UserStatsTableData> {
       challengeXp: challengeXp ?? this.challengeXp,
       worldHealthScore: worldHealthScore ?? this.worldHealthScore,
       archetype: archetype ?? this.archetype,
+      characterClass: characterClass ?? this.characterClass,
+      motive: motive ?? this.motive,
+      why: why ?? this.why,
+      anchorsJson: anchorsJson ?? this.anchorsJson,
+      habitStacksJson: habitStacksJson ?? this.habitStacksJson,
+      skippedOnboardingStepsJson:
+          skippedOnboardingStepsJson ?? this.skippedOnboardingStepsJson,
+      settingsJson: settingsJson ?? this.settingsJson,
       avatarJson: avatarJson ?? this.avatarJson,
       worldStateJson: worldStateJson ?? this.worldStateJson,
       updatedAt: updatedAt ?? this.updatedAt,
@@ -974,6 +1564,9 @@ class UserStatsTableCompanion extends UpdateCompanion<UserStatsTableData> {
       onboardingProgress: onboardingProgress ?? this.onboardingProgress,
       onboardingCompletedAt:
           onboardingCompletedAt ?? this.onboardingCompletedAt,
+      onboardingStartedAt: onboardingStartedAt ?? this.onboardingStartedAt,
+      hasEmerged: hasEmerged ?? this.hasEmerged,
+      momentumScore: momentumScore ?? this.momentumScore,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -983,6 +1576,12 @@ class UserStatsTableCompanion extends UpdateCompanion<UserStatsTableData> {
     final map = <String, Expression>{};
     if (userId.present) {
       map['user_id'] = Variable<String>(userId.value);
+    }
+    if (displayName.present) {
+      map['display_name'] = Variable<String>(displayName.value);
+    }
+    if (photoUrl.present) {
+      map['photo_url'] = Variable<String>(photoUrl.value);
     }
     if (totalXp.present) {
       map['total_xp'] = Variable<int>(totalXp.value);
@@ -1020,6 +1619,29 @@ class UserStatsTableCompanion extends UpdateCompanion<UserStatsTableData> {
     if (archetype.present) {
       map['archetype'] = Variable<String>(archetype.value);
     }
+    if (characterClass.present) {
+      map['character_class'] = Variable<String>(characterClass.value);
+    }
+    if (motive.present) {
+      map['motive'] = Variable<String>(motive.value);
+    }
+    if (why.present) {
+      map['why'] = Variable<String>(why.value);
+    }
+    if (anchorsJson.present) {
+      map['anchors_json'] = Variable<String>(anchorsJson.value);
+    }
+    if (habitStacksJson.present) {
+      map['habit_stacks_json'] = Variable<String>(habitStacksJson.value);
+    }
+    if (skippedOnboardingStepsJson.present) {
+      map['skipped_onboarding_steps_json'] = Variable<String>(
+        skippedOnboardingStepsJson.value,
+      );
+    }
+    if (settingsJson.present) {
+      map['settings_json'] = Variable<String>(settingsJson.value);
+    }
     if (avatarJson.present) {
       map['avatar_json'] = Variable<String>(avatarJson.value);
     }
@@ -1040,6 +1662,17 @@ class UserStatsTableCompanion extends UpdateCompanion<UserStatsTableData> {
         onboardingCompletedAt.value,
       );
     }
+    if (onboardingStartedAt.present) {
+      map['onboarding_started_at'] = Variable<String>(
+        onboardingStartedAt.value,
+      );
+    }
+    if (hasEmerged.present) {
+      map['has_emerged'] = Variable<bool>(hasEmerged.value);
+    }
+    if (momentumScore.present) {
+      map['momentum_score'] = Variable<double>(momentumScore.value);
+    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -1050,6 +1683,8 @@ class UserStatsTableCompanion extends UpdateCompanion<UserStatsTableData> {
   String toString() {
     return (StringBuffer('UserStatsTableCompanion(')
           ..write('userId: $userId, ')
+          ..write('displayName: $displayName, ')
+          ..write('photoUrl: $photoUrl, ')
           ..write('totalXp: $totalXp, ')
           ..write('level: $level, ')
           ..write('streak: $streak, ')
@@ -1062,12 +1697,22 @@ class UserStatsTableCompanion extends UpdateCompanion<UserStatsTableData> {
           ..write('challengeXp: $challengeXp, ')
           ..write('worldHealthScore: $worldHealthScore, ')
           ..write('archetype: $archetype, ')
+          ..write('characterClass: $characterClass, ')
+          ..write('motive: $motive, ')
+          ..write('why: $why, ')
+          ..write('anchorsJson: $anchorsJson, ')
+          ..write('habitStacksJson: $habitStacksJson, ')
+          ..write('skippedOnboardingStepsJson: $skippedOnboardingStepsJson, ')
+          ..write('settingsJson: $settingsJson, ')
           ..write('avatarJson: $avatarJson, ')
           ..write('worldStateJson: $worldStateJson, ')
           ..write('updatedAt: $updatedAt, ')
           ..write('syncedAt: $syncedAt, ')
           ..write('onboardingProgress: $onboardingProgress, ')
           ..write('onboardingCompletedAt: $onboardingCompletedAt, ')
+          ..write('onboardingStartedAt: $onboardingStartedAt, ')
+          ..write('hasEmerged: $hasEmerged, ')
+          ..write('momentumScore: $momentumScore, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -1276,6 +1921,28 @@ class $HabitsTableTable extends HabitsTable
     type: DriftSqlType.string,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _timeOfDayPreferenceMeta =
+      const VerificationMeta('timeOfDayPreference');
+  @override
+  late final GeneratedColumn<String> timeOfDayPreference =
+      GeneratedColumn<String>(
+        'time_of_day_preference',
+        aliasedName,
+        true,
+        type: DriftSqlType.string,
+        requiredDuringInsert: false,
+      );
+  static const VerificationMeta _reminderTimeMeta = const VerificationMeta(
+    'reminderTime',
+  );
+  @override
+  late final GeneratedColumn<String> reminderTime = GeneratedColumn<String>(
+    'reminder_time',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -1296,6 +1963,8 @@ class $HabitsTableTable extends HabitsTable
     createdAt,
     updatedAt,
     syncedAt,
+    timeOfDayPreference,
+    reminderTime,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -1439,6 +2108,24 @@ class $HabitsTableTable extends HabitsTable
         syncedAt.isAcceptableOrUnknown(data['synced_at']!, _syncedAtMeta),
       );
     }
+    if (data.containsKey('time_of_day_preference')) {
+      context.handle(
+        _timeOfDayPreferenceMeta,
+        timeOfDayPreference.isAcceptableOrUnknown(
+          data['time_of_day_preference']!,
+          _timeOfDayPreferenceMeta,
+        ),
+      );
+    }
+    if (data.containsKey('reminder_time')) {
+      context.handle(
+        _reminderTimeMeta,
+        reminderTime.isAcceptableOrUnknown(
+          data['reminder_time']!,
+          _reminderTimeMeta,
+        ),
+      );
+    }
     return context;
   }
 
@@ -1520,6 +2207,14 @@ class $HabitsTableTable extends HabitsTable
         DriftSqlType.string,
         data['${effectivePrefix}synced_at'],
       ),
+      timeOfDayPreference: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}time_of_day_preference'],
+      ),
+      reminderTime: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}reminder_time'],
+      ),
     );
   }
 
@@ -1548,6 +2243,8 @@ class HabitsTableData extends DataClass implements Insertable<HabitsTableData> {
   final String createdAt;
   final String updatedAt;
   final String? syncedAt;
+  final String? timeOfDayPreference;
+  final String? reminderTime;
   const HabitsTableData({
     required this.id,
     required this.userId,
@@ -1567,6 +2264,8 @@ class HabitsTableData extends DataClass implements Insertable<HabitsTableData> {
     required this.createdAt,
     required this.updatedAt,
     this.syncedAt,
+    this.timeOfDayPreference,
+    this.reminderTime,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -1601,6 +2300,12 @@ class HabitsTableData extends DataClass implements Insertable<HabitsTableData> {
     if (!nullToAbsent || syncedAt != null) {
       map['synced_at'] = Variable<String>(syncedAt);
     }
+    if (!nullToAbsent || timeOfDayPreference != null) {
+      map['time_of_day_preference'] = Variable<String>(timeOfDayPreference);
+    }
+    if (!nullToAbsent || reminderTime != null) {
+      map['reminder_time'] = Variable<String>(reminderTime);
+    }
     return map;
   }
 
@@ -1634,6 +2339,12 @@ class HabitsTableData extends DataClass implements Insertable<HabitsTableData> {
       syncedAt: syncedAt == null && nullToAbsent
           ? const Value.absent()
           : Value(syncedAt),
+      timeOfDayPreference: timeOfDayPreference == null && nullToAbsent
+          ? const Value.absent()
+          : Value(timeOfDayPreference),
+      reminderTime: reminderTime == null && nullToAbsent
+          ? const Value.absent()
+          : Value(reminderTime),
     );
   }
 
@@ -1663,6 +2374,10 @@ class HabitsTableData extends DataClass implements Insertable<HabitsTableData> {
       createdAt: serializer.fromJson<String>(json['createdAt']),
       updatedAt: serializer.fromJson<String>(json['updatedAt']),
       syncedAt: serializer.fromJson<String?>(json['syncedAt']),
+      timeOfDayPreference: serializer.fromJson<String?>(
+        json['timeOfDayPreference'],
+      ),
+      reminderTime: serializer.fromJson<String?>(json['reminderTime']),
     );
   }
   @override
@@ -1687,6 +2402,8 @@ class HabitsTableData extends DataClass implements Insertable<HabitsTableData> {
       'createdAt': serializer.toJson<String>(createdAt),
       'updatedAt': serializer.toJson<String>(updatedAt),
       'syncedAt': serializer.toJson<String?>(syncedAt),
+      'timeOfDayPreference': serializer.toJson<String?>(timeOfDayPreference),
+      'reminderTime': serializer.toJson<String?>(reminderTime),
     };
   }
 
@@ -1709,6 +2426,8 @@ class HabitsTableData extends DataClass implements Insertable<HabitsTableData> {
     String? createdAt,
     String? updatedAt,
     Value<String?> syncedAt = const Value.absent(),
+    Value<String?> timeOfDayPreference = const Value.absent(),
+    Value<String?> reminderTime = const Value.absent(),
   }) => HabitsTableData(
     id: id ?? this.id,
     userId: userId ?? this.userId,
@@ -1730,6 +2449,10 @@ class HabitsTableData extends DataClass implements Insertable<HabitsTableData> {
     createdAt: createdAt ?? this.createdAt,
     updatedAt: updatedAt ?? this.updatedAt,
     syncedAt: syncedAt.present ? syncedAt.value : this.syncedAt,
+    timeOfDayPreference: timeOfDayPreference.present
+        ? timeOfDayPreference.value
+        : this.timeOfDayPreference,
+    reminderTime: reminderTime.present ? reminderTime.value : this.reminderTime,
   );
   HabitsTableData copyWithCompanion(HabitsTableCompanion data) {
     return HabitsTableData(
@@ -1765,6 +2488,12 @@ class HabitsTableData extends DataClass implements Insertable<HabitsTableData> {
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
       syncedAt: data.syncedAt.present ? data.syncedAt.value : this.syncedAt,
+      timeOfDayPreference: data.timeOfDayPreference.present
+          ? data.timeOfDayPreference.value
+          : this.timeOfDayPreference,
+      reminderTime: data.reminderTime.present
+          ? data.reminderTime.value
+          : this.reminderTime,
     );
   }
 
@@ -1788,7 +2517,9 @@ class HabitsTableData extends DataClass implements Insertable<HabitsTableData> {
           ..write('isArchived: $isArchived, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
-          ..write('syncedAt: $syncedAt')
+          ..write('syncedAt: $syncedAt, ')
+          ..write('timeOfDayPreference: $timeOfDayPreference, ')
+          ..write('reminderTime: $reminderTime')
           ..write(')'))
         .toString();
   }
@@ -1813,6 +2544,8 @@ class HabitsTableData extends DataClass implements Insertable<HabitsTableData> {
     createdAt,
     updatedAt,
     syncedAt,
+    timeOfDayPreference,
+    reminderTime,
   );
   @override
   bool operator ==(Object other) =>
@@ -1835,7 +2568,9 @@ class HabitsTableData extends DataClass implements Insertable<HabitsTableData> {
           other.isArchived == this.isArchived &&
           other.createdAt == this.createdAt &&
           other.updatedAt == this.updatedAt &&
-          other.syncedAt == this.syncedAt);
+          other.syncedAt == this.syncedAt &&
+          other.timeOfDayPreference == this.timeOfDayPreference &&
+          other.reminderTime == this.reminderTime);
 }
 
 class HabitsTableCompanion extends UpdateCompanion<HabitsTableData> {
@@ -1857,6 +2592,8 @@ class HabitsTableCompanion extends UpdateCompanion<HabitsTableData> {
   final Value<String> createdAt;
   final Value<String> updatedAt;
   final Value<String?> syncedAt;
+  final Value<String?> timeOfDayPreference;
+  final Value<String?> reminderTime;
   final Value<int> rowid;
   const HabitsTableCompanion({
     this.id = const Value.absent(),
@@ -1877,6 +2614,8 @@ class HabitsTableCompanion extends UpdateCompanion<HabitsTableData> {
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
     this.syncedAt = const Value.absent(),
+    this.timeOfDayPreference = const Value.absent(),
+    this.reminderTime = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   HabitsTableCompanion.insert({
@@ -1898,6 +2637,8 @@ class HabitsTableCompanion extends UpdateCompanion<HabitsTableData> {
     required String createdAt,
     required String updatedAt,
     this.syncedAt = const Value.absent(),
+    this.timeOfDayPreference = const Value.absent(),
+    this.reminderTime = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : id = Value(id),
        userId = Value(userId),
@@ -1923,6 +2664,8 @@ class HabitsTableCompanion extends UpdateCompanion<HabitsTableData> {
     Expression<String>? createdAt,
     Expression<String>? updatedAt,
     Expression<String>? syncedAt,
+    Expression<String>? timeOfDayPreference,
+    Expression<String>? reminderTime,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
@@ -1944,6 +2687,9 @@ class HabitsTableCompanion extends UpdateCompanion<HabitsTableData> {
       if (createdAt != null) 'created_at': createdAt,
       if (updatedAt != null) 'updated_at': updatedAt,
       if (syncedAt != null) 'synced_at': syncedAt,
+      if (timeOfDayPreference != null)
+        'time_of_day_preference': timeOfDayPreference,
+      if (reminderTime != null) 'reminder_time': reminderTime,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -1967,6 +2713,8 @@ class HabitsTableCompanion extends UpdateCompanion<HabitsTableData> {
     Value<String>? createdAt,
     Value<String>? updatedAt,
     Value<String?>? syncedAt,
+    Value<String?>? timeOfDayPreference,
+    Value<String?>? reminderTime,
     Value<int>? rowid,
   }) {
     return HabitsTableCompanion(
@@ -1988,6 +2736,8 @@ class HabitsTableCompanion extends UpdateCompanion<HabitsTableData> {
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
       syncedAt: syncedAt ?? this.syncedAt,
+      timeOfDayPreference: timeOfDayPreference ?? this.timeOfDayPreference,
+      reminderTime: reminderTime ?? this.reminderTime,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -2049,6 +2799,14 @@ class HabitsTableCompanion extends UpdateCompanion<HabitsTableData> {
     if (syncedAt.present) {
       map['synced_at'] = Variable<String>(syncedAt.value);
     }
+    if (timeOfDayPreference.present) {
+      map['time_of_day_preference'] = Variable<String>(
+        timeOfDayPreference.value,
+      );
+    }
+    if (reminderTime.present) {
+      map['reminder_time'] = Variable<String>(reminderTime.value);
+    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -2076,6 +2834,8 @@ class HabitsTableCompanion extends UpdateCompanion<HabitsTableData> {
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
           ..write('syncedAt: $syncedAt, ')
+          ..write('timeOfDayPreference: $timeOfDayPreference, ')
+          ..write('reminderTime: $reminderTime, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -5813,6 +6573,565 @@ class MutationQueueTableCompanion
   }
 }
 
+class $TribeActivityTableTable extends TribeActivityTable
+    with TableInfo<$TribeActivityTableTable, TribeActivityTableData> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $TribeActivityTableTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _userIdMeta = const VerificationMeta('userId');
+  @override
+  late final GeneratedColumn<String> userId = GeneratedColumn<String>(
+    'user_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _userNameMeta = const VerificationMeta(
+    'userName',
+  );
+  @override
+  late final GeneratedColumn<String> userName = GeneratedColumn<String>(
+    'user_name',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('Someone'),
+  );
+  static const VerificationMeta _tribeIdMeta = const VerificationMeta(
+    'tribeId',
+  );
+  @override
+  late final GeneratedColumn<String> tribeId = GeneratedColumn<String>(
+    'tribe_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _typeMeta = const VerificationMeta('type');
+  @override
+  late final GeneratedColumn<String> type = GeneratedColumn<String>(
+    'type',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _descriptionMeta = const VerificationMeta(
+    'description',
+  );
+  @override
+  late final GeneratedColumn<String> description = GeneratedColumn<String>(
+    'description',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _valueMeta = const VerificationMeta('value');
+  @override
+  late final GeneratedColumn<int> value = GeneratedColumn<int>(
+    'value',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  static const VerificationMeta _timestampMeta = const VerificationMeta(
+    'timestamp',
+  );
+  @override
+  late final GeneratedColumn<String> timestamp = GeneratedColumn<String>(
+    'timestamp',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _syncedAtMeta = const VerificationMeta(
+    'syncedAt',
+  );
+  @override
+  late final GeneratedColumn<String> syncedAt = GeneratedColumn<String>(
+    'synced_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    userId,
+    userName,
+    tribeId,
+    type,
+    description,
+    value,
+    timestamp,
+    syncedAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'tribe_activity_table';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<TribeActivityTableData> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('user_id')) {
+      context.handle(
+        _userIdMeta,
+        userId.isAcceptableOrUnknown(data['user_id']!, _userIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_userIdMeta);
+    }
+    if (data.containsKey('user_name')) {
+      context.handle(
+        _userNameMeta,
+        userName.isAcceptableOrUnknown(data['user_name']!, _userNameMeta),
+      );
+    }
+    if (data.containsKey('tribe_id')) {
+      context.handle(
+        _tribeIdMeta,
+        tribeId.isAcceptableOrUnknown(data['tribe_id']!, _tribeIdMeta),
+      );
+    }
+    if (data.containsKey('type')) {
+      context.handle(
+        _typeMeta,
+        type.isAcceptableOrUnknown(data['type']!, _typeMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_typeMeta);
+    }
+    if (data.containsKey('description')) {
+      context.handle(
+        _descriptionMeta,
+        description.isAcceptableOrUnknown(
+          data['description']!,
+          _descriptionMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_descriptionMeta);
+    }
+    if (data.containsKey('value')) {
+      context.handle(
+        _valueMeta,
+        value.isAcceptableOrUnknown(data['value']!, _valueMeta),
+      );
+    }
+    if (data.containsKey('timestamp')) {
+      context.handle(
+        _timestampMeta,
+        timestamp.isAcceptableOrUnknown(data['timestamp']!, _timestampMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_timestampMeta);
+    }
+    if (data.containsKey('synced_at')) {
+      context.handle(
+        _syncedAtMeta,
+        syncedAt.isAcceptableOrUnknown(data['synced_at']!, _syncedAtMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  TribeActivityTableData map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return TribeActivityTableData(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      userId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}user_id'],
+      )!,
+      userName: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}user_name'],
+      )!,
+      tribeId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}tribe_id'],
+      ),
+      type: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}type'],
+      )!,
+      description: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}description'],
+      )!,
+      value: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}value'],
+      )!,
+      timestamp: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}timestamp'],
+      )!,
+      syncedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}synced_at'],
+      ),
+    );
+  }
+
+  @override
+  $TribeActivityTableTable createAlias(String alias) {
+    return $TribeActivityTableTable(attachedDatabase, alias);
+  }
+}
+
+class TribeActivityTableData extends DataClass
+    implements Insertable<TribeActivityTableData> {
+  final String id;
+  final String userId;
+  final String userName;
+  final String? tribeId;
+  final String type;
+  final String description;
+  final int value;
+  final String timestamp;
+  final String? syncedAt;
+  const TribeActivityTableData({
+    required this.id,
+    required this.userId,
+    required this.userName,
+    this.tribeId,
+    required this.type,
+    required this.description,
+    required this.value,
+    required this.timestamp,
+    this.syncedAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['user_id'] = Variable<String>(userId);
+    map['user_name'] = Variable<String>(userName);
+    if (!nullToAbsent || tribeId != null) {
+      map['tribe_id'] = Variable<String>(tribeId);
+    }
+    map['type'] = Variable<String>(type);
+    map['description'] = Variable<String>(description);
+    map['value'] = Variable<int>(value);
+    map['timestamp'] = Variable<String>(timestamp);
+    if (!nullToAbsent || syncedAt != null) {
+      map['synced_at'] = Variable<String>(syncedAt);
+    }
+    return map;
+  }
+
+  TribeActivityTableCompanion toCompanion(bool nullToAbsent) {
+    return TribeActivityTableCompanion(
+      id: Value(id),
+      userId: Value(userId),
+      userName: Value(userName),
+      tribeId: tribeId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(tribeId),
+      type: Value(type),
+      description: Value(description),
+      value: Value(value),
+      timestamp: Value(timestamp),
+      syncedAt: syncedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(syncedAt),
+    );
+  }
+
+  factory TribeActivityTableData.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return TribeActivityTableData(
+      id: serializer.fromJson<String>(json['id']),
+      userId: serializer.fromJson<String>(json['userId']),
+      userName: serializer.fromJson<String>(json['userName']),
+      tribeId: serializer.fromJson<String?>(json['tribeId']),
+      type: serializer.fromJson<String>(json['type']),
+      description: serializer.fromJson<String>(json['description']),
+      value: serializer.fromJson<int>(json['value']),
+      timestamp: serializer.fromJson<String>(json['timestamp']),
+      syncedAt: serializer.fromJson<String?>(json['syncedAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'userId': serializer.toJson<String>(userId),
+      'userName': serializer.toJson<String>(userName),
+      'tribeId': serializer.toJson<String?>(tribeId),
+      'type': serializer.toJson<String>(type),
+      'description': serializer.toJson<String>(description),
+      'value': serializer.toJson<int>(value),
+      'timestamp': serializer.toJson<String>(timestamp),
+      'syncedAt': serializer.toJson<String?>(syncedAt),
+    };
+  }
+
+  TribeActivityTableData copyWith({
+    String? id,
+    String? userId,
+    String? userName,
+    Value<String?> tribeId = const Value.absent(),
+    String? type,
+    String? description,
+    int? value,
+    String? timestamp,
+    Value<String?> syncedAt = const Value.absent(),
+  }) => TribeActivityTableData(
+    id: id ?? this.id,
+    userId: userId ?? this.userId,
+    userName: userName ?? this.userName,
+    tribeId: tribeId.present ? tribeId.value : this.tribeId,
+    type: type ?? this.type,
+    description: description ?? this.description,
+    value: value ?? this.value,
+    timestamp: timestamp ?? this.timestamp,
+    syncedAt: syncedAt.present ? syncedAt.value : this.syncedAt,
+  );
+  TribeActivityTableData copyWithCompanion(TribeActivityTableCompanion data) {
+    return TribeActivityTableData(
+      id: data.id.present ? data.id.value : this.id,
+      userId: data.userId.present ? data.userId.value : this.userId,
+      userName: data.userName.present ? data.userName.value : this.userName,
+      tribeId: data.tribeId.present ? data.tribeId.value : this.tribeId,
+      type: data.type.present ? data.type.value : this.type,
+      description: data.description.present
+          ? data.description.value
+          : this.description,
+      value: data.value.present ? data.value.value : this.value,
+      timestamp: data.timestamp.present ? data.timestamp.value : this.timestamp,
+      syncedAt: data.syncedAt.present ? data.syncedAt.value : this.syncedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('TribeActivityTableData(')
+          ..write('id: $id, ')
+          ..write('userId: $userId, ')
+          ..write('userName: $userName, ')
+          ..write('tribeId: $tribeId, ')
+          ..write('type: $type, ')
+          ..write('description: $description, ')
+          ..write('value: $value, ')
+          ..write('timestamp: $timestamp, ')
+          ..write('syncedAt: $syncedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    userId,
+    userName,
+    tribeId,
+    type,
+    description,
+    value,
+    timestamp,
+    syncedAt,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is TribeActivityTableData &&
+          other.id == this.id &&
+          other.userId == this.userId &&
+          other.userName == this.userName &&
+          other.tribeId == this.tribeId &&
+          other.type == this.type &&
+          other.description == this.description &&
+          other.value == this.value &&
+          other.timestamp == this.timestamp &&
+          other.syncedAt == this.syncedAt);
+}
+
+class TribeActivityTableCompanion
+    extends UpdateCompanion<TribeActivityTableData> {
+  final Value<String> id;
+  final Value<String> userId;
+  final Value<String> userName;
+  final Value<String?> tribeId;
+  final Value<String> type;
+  final Value<String> description;
+  final Value<int> value;
+  final Value<String> timestamp;
+  final Value<String?> syncedAt;
+  final Value<int> rowid;
+  const TribeActivityTableCompanion({
+    this.id = const Value.absent(),
+    this.userId = const Value.absent(),
+    this.userName = const Value.absent(),
+    this.tribeId = const Value.absent(),
+    this.type = const Value.absent(),
+    this.description = const Value.absent(),
+    this.value = const Value.absent(),
+    this.timestamp = const Value.absent(),
+    this.syncedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  TribeActivityTableCompanion.insert({
+    required String id,
+    required String userId,
+    this.userName = const Value.absent(),
+    this.tribeId = const Value.absent(),
+    required String type,
+    required String description,
+    this.value = const Value.absent(),
+    required String timestamp,
+    this.syncedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       userId = Value(userId),
+       type = Value(type),
+       description = Value(description),
+       timestamp = Value(timestamp);
+  static Insertable<TribeActivityTableData> custom({
+    Expression<String>? id,
+    Expression<String>? userId,
+    Expression<String>? userName,
+    Expression<String>? tribeId,
+    Expression<String>? type,
+    Expression<String>? description,
+    Expression<int>? value,
+    Expression<String>? timestamp,
+    Expression<String>? syncedAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (userId != null) 'user_id': userId,
+      if (userName != null) 'user_name': userName,
+      if (tribeId != null) 'tribe_id': tribeId,
+      if (type != null) 'type': type,
+      if (description != null) 'description': description,
+      if (value != null) 'value': value,
+      if (timestamp != null) 'timestamp': timestamp,
+      if (syncedAt != null) 'synced_at': syncedAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  TribeActivityTableCompanion copyWith({
+    Value<String>? id,
+    Value<String>? userId,
+    Value<String>? userName,
+    Value<String?>? tribeId,
+    Value<String>? type,
+    Value<String>? description,
+    Value<int>? value,
+    Value<String>? timestamp,
+    Value<String?>? syncedAt,
+    Value<int>? rowid,
+  }) {
+    return TribeActivityTableCompanion(
+      id: id ?? this.id,
+      userId: userId ?? this.userId,
+      userName: userName ?? this.userName,
+      tribeId: tribeId ?? this.tribeId,
+      type: type ?? this.type,
+      description: description ?? this.description,
+      value: value ?? this.value,
+      timestamp: timestamp ?? this.timestamp,
+      syncedAt: syncedAt ?? this.syncedAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (userId.present) {
+      map['user_id'] = Variable<String>(userId.value);
+    }
+    if (userName.present) {
+      map['user_name'] = Variable<String>(userName.value);
+    }
+    if (tribeId.present) {
+      map['tribe_id'] = Variable<String>(tribeId.value);
+    }
+    if (type.present) {
+      map['type'] = Variable<String>(type.value);
+    }
+    if (description.present) {
+      map['description'] = Variable<String>(description.value);
+    }
+    if (value.present) {
+      map['value'] = Variable<int>(value.value);
+    }
+    if (timestamp.present) {
+      map['timestamp'] = Variable<String>(timestamp.value);
+    }
+    if (syncedAt.present) {
+      map['synced_at'] = Variable<String>(syncedAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('TribeActivityTableCompanion(')
+          ..write('id: $id, ')
+          ..write('userId: $userId, ')
+          ..write('userName: $userName, ')
+          ..write('tribeId: $tribeId, ')
+          ..write('type: $type, ')
+          ..write('description: $description, ')
+          ..write('value: $value, ')
+          ..write('timestamp: $timestamp, ')
+          ..write('syncedAt: $syncedAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
@@ -5832,6 +7151,8 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   );
   late final $MutationQueueTableTable mutationQueueTable =
       $MutationQueueTableTable(this);
+  late final $TribeActivityTableTable tribeActivityTable =
+      $TribeActivityTableTable(this);
   late final UserStatsDao userStatsDao = UserStatsDao(this as AppDatabase);
   late final HabitsDao habitsDao = HabitsDao(this as AppDatabase);
   late final HabitCompletionsDao habitCompletionsDao = HabitCompletionsDao(
@@ -5847,6 +7168,9 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final MutationQueueDao mutationQueueDao = MutationQueueDao(
     this as AppDatabase,
   );
+  late final TribeActivityDao tribeActivityDao = TribeActivityDao(
+    this as AppDatabase,
+  );
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -5860,12 +7184,15 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     leaderboardEntriesTable,
     blueprintsTable,
     mutationQueueTable,
+    tribeActivityTable,
   ];
 }
 
 typedef $$UserStatsTableTableCreateCompanionBuilder =
     UserStatsTableCompanion Function({
       required String userId,
+      Value<String?> displayName,
+      Value<String?> photoUrl,
       Value<int> totalXp,
       Value<int> level,
       Value<int> streak,
@@ -5878,17 +7205,29 @@ typedef $$UserStatsTableTableCreateCompanionBuilder =
       Value<int> challengeXp,
       Value<double> worldHealthScore,
       Value<String?> archetype,
+      Value<String?> characterClass,
+      Value<String?> motive,
+      Value<String?> why,
+      Value<String?> anchorsJson,
+      Value<String?> habitStacksJson,
+      Value<String?> skippedOnboardingStepsJson,
+      Value<String?> settingsJson,
       Value<String?> avatarJson,
       Value<String?> worldStateJson,
       Value<String> updatedAt,
       Value<String?> syncedAt,
       Value<int> onboardingProgress,
       Value<String?> onboardingCompletedAt,
+      Value<String?> onboardingStartedAt,
+      Value<bool> hasEmerged,
+      Value<double> momentumScore,
       Value<int> rowid,
     });
 typedef $$UserStatsTableTableUpdateCompanionBuilder =
     UserStatsTableCompanion Function({
       Value<String> userId,
+      Value<String?> displayName,
+      Value<String?> photoUrl,
       Value<int> totalXp,
       Value<int> level,
       Value<int> streak,
@@ -5901,12 +7240,22 @@ typedef $$UserStatsTableTableUpdateCompanionBuilder =
       Value<int> challengeXp,
       Value<double> worldHealthScore,
       Value<String?> archetype,
+      Value<String?> characterClass,
+      Value<String?> motive,
+      Value<String?> why,
+      Value<String?> anchorsJson,
+      Value<String?> habitStacksJson,
+      Value<String?> skippedOnboardingStepsJson,
+      Value<String?> settingsJson,
       Value<String?> avatarJson,
       Value<String?> worldStateJson,
       Value<String> updatedAt,
       Value<String?> syncedAt,
       Value<int> onboardingProgress,
       Value<String?> onboardingCompletedAt,
+      Value<String?> onboardingStartedAt,
+      Value<bool> hasEmerged,
+      Value<double> momentumScore,
       Value<int> rowid,
     });
 
@@ -5921,6 +7270,16 @@ class $$UserStatsTableTableFilterComposer
   });
   ColumnFilters<String> get userId => $composableBuilder(
     column: $table.userId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get displayName => $composableBuilder(
+    column: $table.displayName,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get photoUrl => $composableBuilder(
+    column: $table.photoUrl,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -5984,6 +7343,41 @@ class $$UserStatsTableTableFilterComposer
     builder: (column) => ColumnFilters(column),
   );
 
+  ColumnFilters<String> get characterClass => $composableBuilder(
+    column: $table.characterClass,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get motive => $composableBuilder(
+    column: $table.motive,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get why => $composableBuilder(
+    column: $table.why,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get anchorsJson => $composableBuilder(
+    column: $table.anchorsJson,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get habitStacksJson => $composableBuilder(
+    column: $table.habitStacksJson,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get skippedOnboardingStepsJson => $composableBuilder(
+    column: $table.skippedOnboardingStepsJson,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get settingsJson => $composableBuilder(
+    column: $table.settingsJson,
+    builder: (column) => ColumnFilters(column),
+  );
+
   ColumnFilters<String> get avatarJson => $composableBuilder(
     column: $table.avatarJson,
     builder: (column) => ColumnFilters(column),
@@ -6013,6 +7407,21 @@ class $$UserStatsTableTableFilterComposer
     column: $table.onboardingCompletedAt,
     builder: (column) => ColumnFilters(column),
   );
+
+  ColumnFilters<String> get onboardingStartedAt => $composableBuilder(
+    column: $table.onboardingStartedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get hasEmerged => $composableBuilder(
+    column: $table.hasEmerged,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get momentumScore => $composableBuilder(
+    column: $table.momentumScore,
+    builder: (column) => ColumnFilters(column),
+  );
 }
 
 class $$UserStatsTableTableOrderingComposer
@@ -6026,6 +7435,16 @@ class $$UserStatsTableTableOrderingComposer
   });
   ColumnOrderings<String> get userId => $composableBuilder(
     column: $table.userId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get displayName => $composableBuilder(
+    column: $table.displayName,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get photoUrl => $composableBuilder(
+    column: $table.photoUrl,
     builder: (column) => ColumnOrderings(column),
   );
 
@@ -6089,6 +7508,41 @@ class $$UserStatsTableTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get characterClass => $composableBuilder(
+    column: $table.characterClass,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get motive => $composableBuilder(
+    column: $table.motive,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get why => $composableBuilder(
+    column: $table.why,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get anchorsJson => $composableBuilder(
+    column: $table.anchorsJson,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get habitStacksJson => $composableBuilder(
+    column: $table.habitStacksJson,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get skippedOnboardingStepsJson => $composableBuilder(
+    column: $table.skippedOnboardingStepsJson,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get settingsJson => $composableBuilder(
+    column: $table.settingsJson,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<String> get avatarJson => $composableBuilder(
     column: $table.avatarJson,
     builder: (column) => ColumnOrderings(column),
@@ -6118,6 +7572,21 @@ class $$UserStatsTableTableOrderingComposer
     column: $table.onboardingCompletedAt,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<String> get onboardingStartedAt => $composableBuilder(
+    column: $table.onboardingStartedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get hasEmerged => $composableBuilder(
+    column: $table.hasEmerged,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get momentumScore => $composableBuilder(
+    column: $table.momentumScore,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$UserStatsTableTableAnnotationComposer
@@ -6131,6 +7600,14 @@ class $$UserStatsTableTableAnnotationComposer
   });
   GeneratedColumn<String> get userId =>
       $composableBuilder(column: $table.userId, builder: (column) => column);
+
+  GeneratedColumn<String> get displayName => $composableBuilder(
+    column: $table.displayName,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get photoUrl =>
+      $composableBuilder(column: $table.photoUrl, builder: (column) => column);
 
   GeneratedColumn<int> get totalXp =>
       $composableBuilder(column: $table.totalXp, builder: (column) => column);
@@ -6180,6 +7657,37 @@ class $$UserStatsTableTableAnnotationComposer
   GeneratedColumn<String> get archetype =>
       $composableBuilder(column: $table.archetype, builder: (column) => column);
 
+  GeneratedColumn<String> get characterClass => $composableBuilder(
+    column: $table.characterClass,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get motive =>
+      $composableBuilder(column: $table.motive, builder: (column) => column);
+
+  GeneratedColumn<String> get why =>
+      $composableBuilder(column: $table.why, builder: (column) => column);
+
+  GeneratedColumn<String> get anchorsJson => $composableBuilder(
+    column: $table.anchorsJson,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get habitStacksJson => $composableBuilder(
+    column: $table.habitStacksJson,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get skippedOnboardingStepsJson => $composableBuilder(
+    column: $table.skippedOnboardingStepsJson,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get settingsJson => $composableBuilder(
+    column: $table.settingsJson,
+    builder: (column) => column,
+  );
+
   GeneratedColumn<String> get avatarJson => $composableBuilder(
     column: $table.avatarJson,
     builder: (column) => column,
@@ -6203,6 +7711,21 @@ class $$UserStatsTableTableAnnotationComposer
 
   GeneratedColumn<String> get onboardingCompletedAt => $composableBuilder(
     column: $table.onboardingCompletedAt,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get onboardingStartedAt => $composableBuilder(
+    column: $table.onboardingStartedAt,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<bool> get hasEmerged => $composableBuilder(
+    column: $table.hasEmerged,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<double> get momentumScore => $composableBuilder(
+    column: $table.momentumScore,
     builder: (column) => column,
   );
 }
@@ -6245,6 +7768,8 @@ class $$UserStatsTableTableTableManager
           updateCompanionCallback:
               ({
                 Value<String> userId = const Value.absent(),
+                Value<String?> displayName = const Value.absent(),
+                Value<String?> photoUrl = const Value.absent(),
                 Value<int> totalXp = const Value.absent(),
                 Value<int> level = const Value.absent(),
                 Value<int> streak = const Value.absent(),
@@ -6257,15 +7782,28 @@ class $$UserStatsTableTableTableManager
                 Value<int> challengeXp = const Value.absent(),
                 Value<double> worldHealthScore = const Value.absent(),
                 Value<String?> archetype = const Value.absent(),
+                Value<String?> characterClass = const Value.absent(),
+                Value<String?> motive = const Value.absent(),
+                Value<String?> why = const Value.absent(),
+                Value<String?> anchorsJson = const Value.absent(),
+                Value<String?> habitStacksJson = const Value.absent(),
+                Value<String?> skippedOnboardingStepsJson =
+                    const Value.absent(),
+                Value<String?> settingsJson = const Value.absent(),
                 Value<String?> avatarJson = const Value.absent(),
                 Value<String?> worldStateJson = const Value.absent(),
                 Value<String> updatedAt = const Value.absent(),
                 Value<String?> syncedAt = const Value.absent(),
                 Value<int> onboardingProgress = const Value.absent(),
                 Value<String?> onboardingCompletedAt = const Value.absent(),
+                Value<String?> onboardingStartedAt = const Value.absent(),
+                Value<bool> hasEmerged = const Value.absent(),
+                Value<double> momentumScore = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => UserStatsTableCompanion(
                 userId: userId,
+                displayName: displayName,
+                photoUrl: photoUrl,
                 totalXp: totalXp,
                 level: level,
                 streak: streak,
@@ -6278,17 +7816,29 @@ class $$UserStatsTableTableTableManager
                 challengeXp: challengeXp,
                 worldHealthScore: worldHealthScore,
                 archetype: archetype,
+                characterClass: characterClass,
+                motive: motive,
+                why: why,
+                anchorsJson: anchorsJson,
+                habitStacksJson: habitStacksJson,
+                skippedOnboardingStepsJson: skippedOnboardingStepsJson,
+                settingsJson: settingsJson,
                 avatarJson: avatarJson,
                 worldStateJson: worldStateJson,
                 updatedAt: updatedAt,
                 syncedAt: syncedAt,
                 onboardingProgress: onboardingProgress,
                 onboardingCompletedAt: onboardingCompletedAt,
+                onboardingStartedAt: onboardingStartedAt,
+                hasEmerged: hasEmerged,
+                momentumScore: momentumScore,
                 rowid: rowid,
               ),
           createCompanionCallback:
               ({
                 required String userId,
+                Value<String?> displayName = const Value.absent(),
+                Value<String?> photoUrl = const Value.absent(),
                 Value<int> totalXp = const Value.absent(),
                 Value<int> level = const Value.absent(),
                 Value<int> streak = const Value.absent(),
@@ -6301,15 +7851,28 @@ class $$UserStatsTableTableTableManager
                 Value<int> challengeXp = const Value.absent(),
                 Value<double> worldHealthScore = const Value.absent(),
                 Value<String?> archetype = const Value.absent(),
+                Value<String?> characterClass = const Value.absent(),
+                Value<String?> motive = const Value.absent(),
+                Value<String?> why = const Value.absent(),
+                Value<String?> anchorsJson = const Value.absent(),
+                Value<String?> habitStacksJson = const Value.absent(),
+                Value<String?> skippedOnboardingStepsJson =
+                    const Value.absent(),
+                Value<String?> settingsJson = const Value.absent(),
                 Value<String?> avatarJson = const Value.absent(),
                 Value<String?> worldStateJson = const Value.absent(),
                 Value<String> updatedAt = const Value.absent(),
                 Value<String?> syncedAt = const Value.absent(),
                 Value<int> onboardingProgress = const Value.absent(),
                 Value<String?> onboardingCompletedAt = const Value.absent(),
+                Value<String?> onboardingStartedAt = const Value.absent(),
+                Value<bool> hasEmerged = const Value.absent(),
+                Value<double> momentumScore = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => UserStatsTableCompanion.insert(
                 userId: userId,
+                displayName: displayName,
+                photoUrl: photoUrl,
                 totalXp: totalXp,
                 level: level,
                 streak: streak,
@@ -6322,12 +7885,22 @@ class $$UserStatsTableTableTableManager
                 challengeXp: challengeXp,
                 worldHealthScore: worldHealthScore,
                 archetype: archetype,
+                characterClass: characterClass,
+                motive: motive,
+                why: why,
+                anchorsJson: anchorsJson,
+                habitStacksJson: habitStacksJson,
+                skippedOnboardingStepsJson: skippedOnboardingStepsJson,
+                settingsJson: settingsJson,
                 avatarJson: avatarJson,
                 worldStateJson: worldStateJson,
                 updatedAt: updatedAt,
                 syncedAt: syncedAt,
                 onboardingProgress: onboardingProgress,
                 onboardingCompletedAt: onboardingCompletedAt,
+                onboardingStartedAt: onboardingStartedAt,
+                hasEmerged: hasEmerged,
+                momentumScore: momentumScore,
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0
@@ -6375,6 +7948,8 @@ typedef $$HabitsTableTableCreateCompanionBuilder =
       required String createdAt,
       required String updatedAt,
       Value<String?> syncedAt,
+      Value<String?> timeOfDayPreference,
+      Value<String?> reminderTime,
       Value<int> rowid,
     });
 typedef $$HabitsTableTableUpdateCompanionBuilder =
@@ -6397,6 +7972,8 @@ typedef $$HabitsTableTableUpdateCompanionBuilder =
       Value<String> createdAt,
       Value<String> updatedAt,
       Value<String?> syncedAt,
+      Value<String?> timeOfDayPreference,
+      Value<String?> reminderTime,
       Value<int> rowid,
     });
 
@@ -6496,6 +8073,16 @@ class $$HabitsTableTableFilterComposer
 
   ColumnFilters<String> get syncedAt => $composableBuilder(
     column: $table.syncedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get timeOfDayPreference => $composableBuilder(
+    column: $table.timeOfDayPreference,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get reminderTime => $composableBuilder(
+    column: $table.reminderTime,
     builder: (column) => ColumnFilters(column),
   );
 }
@@ -6598,6 +8185,16 @@ class $$HabitsTableTableOrderingComposer
     column: $table.syncedAt,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<String> get timeOfDayPreference => $composableBuilder(
+    column: $table.timeOfDayPreference,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get reminderTime => $composableBuilder(
+    column: $table.reminderTime,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$HabitsTableTableAnnotationComposer
@@ -6676,6 +8273,16 @@ class $$HabitsTableTableAnnotationComposer
 
   GeneratedColumn<String> get syncedAt =>
       $composableBuilder(column: $table.syncedAt, builder: (column) => column);
+
+  GeneratedColumn<String> get timeOfDayPreference => $composableBuilder(
+    column: $table.timeOfDayPreference,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get reminderTime => $composableBuilder(
+    column: $table.reminderTime,
+    builder: (column) => column,
+  );
 }
 
 class $$HabitsTableTableTableManager
@@ -6727,6 +8334,8 @@ class $$HabitsTableTableTableManager
                 Value<String> createdAt = const Value.absent(),
                 Value<String> updatedAt = const Value.absent(),
                 Value<String?> syncedAt = const Value.absent(),
+                Value<String?> timeOfDayPreference = const Value.absent(),
+                Value<String?> reminderTime = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => HabitsTableCompanion(
                 id: id,
@@ -6747,6 +8356,8 @@ class $$HabitsTableTableTableManager
                 createdAt: createdAt,
                 updatedAt: updatedAt,
                 syncedAt: syncedAt,
+                timeOfDayPreference: timeOfDayPreference,
+                reminderTime: reminderTime,
                 rowid: rowid,
               ),
           createCompanionCallback:
@@ -6769,6 +8380,8 @@ class $$HabitsTableTableTableManager
                 required String createdAt,
                 required String updatedAt,
                 Value<String?> syncedAt = const Value.absent(),
+                Value<String?> timeOfDayPreference = const Value.absent(),
+                Value<String?> reminderTime = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => HabitsTableCompanion.insert(
                 id: id,
@@ -6789,6 +8402,8 @@ class $$HabitsTableTableTableManager
                 createdAt: createdAt,
                 updatedAt: updatedAt,
                 syncedAt: syncedAt,
+                timeOfDayPreference: timeOfDayPreference,
+                reminderTime: reminderTime,
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0
@@ -8708,6 +10323,297 @@ typedef $$MutationQueueTableTableProcessedTableManager =
       MutationQueueTableData,
       PrefetchHooks Function()
     >;
+typedef $$TribeActivityTableTableCreateCompanionBuilder =
+    TribeActivityTableCompanion Function({
+      required String id,
+      required String userId,
+      Value<String> userName,
+      Value<String?> tribeId,
+      required String type,
+      required String description,
+      Value<int> value,
+      required String timestamp,
+      Value<String?> syncedAt,
+      Value<int> rowid,
+    });
+typedef $$TribeActivityTableTableUpdateCompanionBuilder =
+    TribeActivityTableCompanion Function({
+      Value<String> id,
+      Value<String> userId,
+      Value<String> userName,
+      Value<String?> tribeId,
+      Value<String> type,
+      Value<String> description,
+      Value<int> value,
+      Value<String> timestamp,
+      Value<String?> syncedAt,
+      Value<int> rowid,
+    });
+
+class $$TribeActivityTableTableFilterComposer
+    extends Composer<_$AppDatabase, $TribeActivityTableTable> {
+  $$TribeActivityTableTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get userId => $composableBuilder(
+    column: $table.userId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get userName => $composableBuilder(
+    column: $table.userName,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get tribeId => $composableBuilder(
+    column: $table.tribeId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get type => $composableBuilder(
+    column: $table.type,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get description => $composableBuilder(
+    column: $table.description,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get value => $composableBuilder(
+    column: $table.value,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get timestamp => $composableBuilder(
+    column: $table.timestamp,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get syncedAt => $composableBuilder(
+    column: $table.syncedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$TribeActivityTableTableOrderingComposer
+    extends Composer<_$AppDatabase, $TribeActivityTableTable> {
+  $$TribeActivityTableTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get userId => $composableBuilder(
+    column: $table.userId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get userName => $composableBuilder(
+    column: $table.userName,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get tribeId => $composableBuilder(
+    column: $table.tribeId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get type => $composableBuilder(
+    column: $table.type,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get description => $composableBuilder(
+    column: $table.description,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get value => $composableBuilder(
+    column: $table.value,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get timestamp => $composableBuilder(
+    column: $table.timestamp,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get syncedAt => $composableBuilder(
+    column: $table.syncedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$TribeActivityTableTableAnnotationComposer
+    extends Composer<_$AppDatabase, $TribeActivityTableTable> {
+  $$TribeActivityTableTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get userId =>
+      $composableBuilder(column: $table.userId, builder: (column) => column);
+
+  GeneratedColumn<String> get userName =>
+      $composableBuilder(column: $table.userName, builder: (column) => column);
+
+  GeneratedColumn<String> get tribeId =>
+      $composableBuilder(column: $table.tribeId, builder: (column) => column);
+
+  GeneratedColumn<String> get type =>
+      $composableBuilder(column: $table.type, builder: (column) => column);
+
+  GeneratedColumn<String> get description => $composableBuilder(
+    column: $table.description,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get value =>
+      $composableBuilder(column: $table.value, builder: (column) => column);
+
+  GeneratedColumn<String> get timestamp =>
+      $composableBuilder(column: $table.timestamp, builder: (column) => column);
+
+  GeneratedColumn<String> get syncedAt =>
+      $composableBuilder(column: $table.syncedAt, builder: (column) => column);
+}
+
+class $$TribeActivityTableTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $TribeActivityTableTable,
+          TribeActivityTableData,
+          $$TribeActivityTableTableFilterComposer,
+          $$TribeActivityTableTableOrderingComposer,
+          $$TribeActivityTableTableAnnotationComposer,
+          $$TribeActivityTableTableCreateCompanionBuilder,
+          $$TribeActivityTableTableUpdateCompanionBuilder,
+          (
+            TribeActivityTableData,
+            BaseReferences<
+              _$AppDatabase,
+              $TribeActivityTableTable,
+              TribeActivityTableData
+            >,
+          ),
+          TribeActivityTableData,
+          PrefetchHooks Function()
+        > {
+  $$TribeActivityTableTableTableManager(
+    _$AppDatabase db,
+    $TribeActivityTableTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$TribeActivityTableTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$TribeActivityTableTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$TribeActivityTableTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> userId = const Value.absent(),
+                Value<String> userName = const Value.absent(),
+                Value<String?> tribeId = const Value.absent(),
+                Value<String> type = const Value.absent(),
+                Value<String> description = const Value.absent(),
+                Value<int> value = const Value.absent(),
+                Value<String> timestamp = const Value.absent(),
+                Value<String?> syncedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => TribeActivityTableCompanion(
+                id: id,
+                userId: userId,
+                userName: userName,
+                tribeId: tribeId,
+                type: type,
+                description: description,
+                value: value,
+                timestamp: timestamp,
+                syncedAt: syncedAt,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required String userId,
+                Value<String> userName = const Value.absent(),
+                Value<String?> tribeId = const Value.absent(),
+                required String type,
+                required String description,
+                Value<int> value = const Value.absent(),
+                required String timestamp,
+                Value<String?> syncedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => TribeActivityTableCompanion.insert(
+                id: id,
+                userId: userId,
+                userName: userName,
+                tribeId: tribeId,
+                type: type,
+                description: description,
+                value: value,
+                timestamp: timestamp,
+                syncedAt: syncedAt,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$TribeActivityTableTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $TribeActivityTableTable,
+      TribeActivityTableData,
+      $$TribeActivityTableTableFilterComposer,
+      $$TribeActivityTableTableOrderingComposer,
+      $$TribeActivityTableTableAnnotationComposer,
+      $$TribeActivityTableTableCreateCompanionBuilder,
+      $$TribeActivityTableTableUpdateCompanionBuilder,
+      (
+        TribeActivityTableData,
+        BaseReferences<
+          _$AppDatabase,
+          $TribeActivityTableTable,
+          TribeActivityTableData
+        >,
+      ),
+      TribeActivityTableData,
+      PrefetchHooks Function()
+    >;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -8734,6 +10640,8 @@ class $AppDatabaseManager {
       $$BlueprintsTableTableTableManager(_db, _db.blueprintsTable);
   $$MutationQueueTableTableTableManager get mutationQueueTable =>
       $$MutationQueueTableTableTableManager(_db, _db.mutationQueueTable);
+  $$TribeActivityTableTableTableManager get tribeActivityTable =>
+      $$TribeActivityTableTableTableManager(_db, _db.tribeActivityTable);
 }
 
 // **************************************************************************
@@ -9137,3 +11045,49 @@ final class MutationQueueDaoProvider
 }
 
 String _$mutationQueueDaoHash() => r'd874d48f2ee5a6d9f55b7af4d7ff3d79dc246d81';
+
+@ProviderFor(tribeActivityDao)
+final tribeActivityDaoProvider = TribeActivityDaoProvider._();
+
+final class TribeActivityDaoProvider
+    extends
+        $FunctionalProvider<
+          TribeActivityDao,
+          TribeActivityDao,
+          TribeActivityDao
+        >
+    with $Provider<TribeActivityDao> {
+  TribeActivityDaoProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'tribeActivityDaoProvider',
+        isAutoDispose: false,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$tribeActivityDaoHash();
+
+  @$internal
+  @override
+  $ProviderElement<TribeActivityDao> $createElement($ProviderPointer pointer) =>
+      $ProviderElement(pointer);
+
+  @override
+  TribeActivityDao create(Ref ref) {
+    return tribeActivityDao(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(TribeActivityDao value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<TribeActivityDao>(value),
+    );
+  }
+}
+
+String _$tribeActivityDaoHash() => r'de601102a250401a43f7f6d392941bf457d5c6ce';

@@ -12,19 +12,21 @@ final enhancedSyncEngineProvider = Provider<EnhancedSyncEngine>((ref) {
 
 final pendingSyncCountProvider = StreamProvider<int>((ref) {
   final dao = ref.watch(mutationQueueDaoProvider);
-  return Stream.periodic(const Duration(seconds: 2), (_) => dao.getAllPending().then((l) => l.length)).asyncMap((f) => f);
+  return Stream.periodic(
+    const Duration(seconds: 2),
+    (_) => dao.getAllPending().then((l) => l.length),
+  ).asyncMap((f) => f);
 });
 
 final syncTriggerServiceProvider = Provider<SyncTriggerService>((ref) {
   final syncEngine = ref.watch(enhancedSyncEngineProvider);
-  final service = SyncTriggerService(
-    syncEngine,
-    (ConnectivityListener listener) {
-      ref.listen(connectivityStreamProvider, (_, next) {
-        next.whenData((results) => listener(results));
-      });
-    },
-  );
+  final service = SyncTriggerService(syncEngine, (
+    ConnectivityListener listener,
+  ) {
+    ref.listen(connectivityStreamProvider, (_, next) {
+      next.whenData((results) => listener(results));
+    });
+  });
   ref.onDispose(() => service.stop());
   service.start();
   return service;

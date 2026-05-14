@@ -9,17 +9,21 @@ class HabitsDao extends DatabaseAccessor<AppDatabase> with _$HabitsDaoMixin {
   HabitsDao(super.db);
 
   Future<List<HabitsTableData>> getByAttribute(String attribute) {
-    return (select(habitsTable)..where((t) => t.attribute.equals(attribute))).get();
+    return (select(
+      habitsTable,
+    )..where((t) => t.attribute.equals(attribute))).get();
   }
 
   Future<HabitsTableData?> getHabit(String id) {
-    return (select(habitsTable)..where((t) => t.id.equals(id))).getSingleOrNull();
+    return (select(
+      habitsTable,
+    )..where((t) => t.id.equals(id))).getSingleOrNull();
   }
 
   Stream<List<HabitsTableData>> watchHabits(String userId) {
-    return (select(habitsTable)
-      ..where((t) => t.userId.equals(userId) & t.isArchived.equals(0)))
-      .watch();
+    return (select(
+      habitsTable,
+    )..where((t) => t.userId.equals(userId) & t.isArchived.equals(0))).watch();
   }
 
   Future<void> upsertHabit(Insertable<HabitsTableData> entry) {
@@ -43,28 +47,39 @@ class HabitsDao extends DatabaseAccessor<AppDatabase> with _$HabitsDaoMixin {
     int isArchived = 0,
     required String createdAt,
     required String updatedAt,
+    String? timeOfDayPreference,
+    String? reminderTime,
   }) {
-    return into(habitsTable).insertOnConflictUpdate(HabitsTableCompanion(
-      id: Value(id),
-      userId: Value(userId),
-      title: Value(title),
-      cue: Value(cue),
-      routine: Value(routine),
-      reward: Value(reward),
-      frequency: Value(frequency),
-      difficulty: Value(difficulty),
-      attribute: Value(attribute),
-      currentStreak: Value(currentStreak),
-      longestStreak: Value(longestStreak),
-      momentumScore: Value(momentumScore),
-      consecutiveMisses: Value(consecutiveMisses),
-      isArchived: Value(isArchived),
-      createdAt: Value(createdAt),
-      updatedAt: Value(updatedAt),
-    ));
+    return into(habitsTable).insertOnConflictUpdate(
+      HabitsTableCompanion(
+        id: Value(id),
+        userId: Value(userId),
+        title: Value(title),
+        cue: Value(cue),
+        routine: Value(routine),
+        reward: Value(reward),
+        frequency: Value(frequency),
+        difficulty: Value(difficulty),
+        attribute: Value(attribute),
+        currentStreak: Value(currentStreak),
+        longestStreak: Value(longestStreak),
+        momentumScore: Value(momentumScore),
+        consecutiveMisses: Value(consecutiveMisses),
+        isArchived: Value(isArchived),
+        createdAt: Value(createdAt),
+        updatedAt: Value(updatedAt),
+        timeOfDayPreference: Value(timeOfDayPreference),
+        reminderTime: Value(reminderTime),
+      ),
+    );
   }
 
-  Future<void> updateStreak(String id, int currentStreak, int longestStreak, String? lastCompletedDate) async {
+  Future<void> updateStreak(
+    String id,
+    int currentStreak,
+    int longestStreak,
+    String? lastCompletedDate,
+  ) async {
     await (update(habitsTable)..where((t) => t.id.equals(id))).write(
       HabitsTableCompanion(
         currentStreak: Value(currentStreak),
@@ -75,7 +90,11 @@ class HabitsDao extends DatabaseAccessor<AppDatabase> with _$HabitsDaoMixin {
     );
   }
 
-  Future<void> updateMomentum(String id, int momentumScore, int consecutiveMisses) async {
+  Future<void> updateMomentum(
+    String id,
+    int momentumScore,
+    int consecutiveMisses,
+  ) async {
     await (update(habitsTable)..where((t) => t.id.equals(id))).write(
       HabitsTableCompanion(
         momentumScore: Value(momentumScore),

@@ -29,5 +29,6 @@ abstract class LeaderboardRepository {
     String? userName,
     String? clubId,
     String? challengeId,
+    bool isIncrement = false,
   });
 }

@@ -142,9 +142,7 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
                                 isLoading: paywallState.isLoading,
                                 onTap: () {
                                   ref
-                                      .read(
-                                        paywallControllerProvider.notifier,
-                                      )
+                                      .read(paywallControllerProvider.notifier)
                                       .purchasePackage(package);
                                 },
                               ),

@@ -1,7 +1,6 @@
 import 'package:emerge_app/core/utils/app_logger.dart';
 import 'package:emerge_app/features/auth/domain/entities/user_extension.dart';
 import 'package:emerge_app/features/auth/presentation/providers/auth_providers.dart';
-import 'package:emerge_app/features/gamification/data/repositories/user_stats_repository.dart';
 import 'package:emerge_app/features/gamification/presentation/providers/gamification_providers.dart';
 import 'package:emerge_app/features/habits/domain/entities/habit.dart';
 import 'package:emerge_app/features/habits/presentation/providers/dashboard_state_provider.dart';
@@ -11,6 +10,7 @@ import 'package:emerge_app/features/social/presentation/providers/tribes_provide
 import 'package:equatable/equatable.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:uuid/uuid.dart';
+import 'package:emerge_app/core/drift/database.dart';
 
 part 'onboarding_state_notifier.g.dart';
 
@@ -176,11 +176,16 @@ class EnhancedOnboardingNotifier extends _$EnhancedOnboardingNotifier {
   }
 
   /// Select an archetype (Milestone 1)
-  void selectArchetype(UserArchetype archetype) {
+  Future<void> selectArchetype(UserArchetype archetype) async {
     state = state.copyWith(selectedArchetype: archetype);
 
-    // Sync to dashboard immediately
     _syncToDashboard();
+
+    try {
+      await _persistToBackend();
+    } catch (e, s) {
+      AppLogger.e('Failed to persist archetype selection', e, s);
+    }
   }
 
   /// Update attribute points (Milestone 2)
@@ -206,14 +211,20 @@ class EnhancedOnboardingNotifier extends _$EnhancedOnboardingNotifier {
   }
 
   /// Set the user's "why" statement (Milestone 3)
-  void setWhy(String why) {
+  Future<void> setWhy(String why) async {
     state = state.copyWith(why: why);
     _syncToDashboard();
+    await _persistToBackend();
   }
 
   /// Set the user's motive
-  void setMotive(String motive) {
+  Future<void> setMotive(String motive) async {
     state = state.copyWith(motive: motive);
+    try {
+      await _persistToBackend();
+    } catch (e, s) {
+      AppLogger.e('Failed to persist motive', e, s);
+    }
   }
 
   /// Add an anchor routine (Milestone 4)
@@ -342,7 +353,8 @@ class EnhancedOnboardingNotifier extends _$EnhancedOnboardingNotifier {
       await _persistToBackend();
 
       // Officially join the archetype club
-      if (state.selectedArchetype != null && state.selectedArchetype != UserArchetype.none) {
+      if (state.selectedArchetype != null &&
+          state.selectedArchetype != UserArchetype.none) {
         try {
           final tribeRepo = ref.read(tribeRepositoryProvider);
           final club = await tribeRepo.getArchetypeClub(
@@ -355,7 +367,11 @@ class EnhancedOnboardingNotifier extends _$EnhancedOnboardingNotifier {
             }
           }
         } catch (e, stack) {
-          AppLogger.e('Failed to join official club during onboarding', e, stack);
+          AppLogger.e(
+            'Failed to join official club during onboarding',
+            e,
+            stack,
+          );
         }
       }
 
@@ -486,45 +502,22 @@ class EnhancedOnboardingNotifier extends _$EnhancedOnboardingNotifier {
 
     final userProfileRepo = ref.read(userProfileRepositoryProvider);
 
-    // Get existing profile or create new one
-    // Use try-catch to handle provider disposal
-    UserProfile? existingProfile;
-    try {
-      existingProfile = await ref.read(userProfileProvider.future);
-    } catch (_) {
-      // Provider was disposed, create a new profile
-      existingProfile = null;
-    }
-
-    final updatedProfile =
-        existingProfile?.copyWith(
-          archetype: state.selectedArchetype ?? UserArchetype.none,
-          motive: state.motive,
-          why: state.why,
-          anchors: state.anchors,
-          habitStacks: state.habitStacks,
-          onboardingProgress: state.currentStep,
-          skippedOnboardingSteps: _getSkippedStepNames(),
-          onboardingCompletedAt: state.currentStep >= 5 ? DateTime.now() : null,
-        ) ??
-        UserProfile(
-          uid: user!.id,
-          archetype: state.selectedArchetype ?? UserArchetype.none,
-          motive: state.motive,
-          why: state.why,
-          anchors: state.anchors,
-          habitStacks: state.habitStacks,
-          onboardingProgress: state.currentStep,
-          skippedOnboardingSteps: _getSkippedStepNames(),
-          onboardingStartedAt: DateTime.now(),
-          onboardingCompletedAt: state.currentStep >= 5 ? DateTime.now() : null,
-        );
+    final updatedProfile = UserProfile(
+      uid: user!.id,
+      displayName: user.displayName,
+      photoUrl: user.photoUrl,
+      archetype: state.selectedArchetype ?? UserArchetype.none,
+      motive: state.motive,
+      why: state.why,
+      anchors: state.anchors,
+      habitStacks: state.habitStacks,
+      onboardingProgress: state.currentStep,
+      skippedOnboardingSteps: _getSkippedStepNames(),
+      onboardingStartedAt: DateTime.now(),
+      onboardingCompletedAt: state.currentStep >= 5 ? DateTime.now() : null,
+    );
 
     await userProfileRepo.updateProfile(updatedProfile);
-
-    // Also save to user_stats for compatibility with userStatsStreamProvider
-    final userStatsRepo = ref.read(userStatsRepositoryProvider);
-    await userStatsRepo.saveUserStats(updatedProfile);
   }
 
   List<String> _getSkippedStepNames() {
@@ -554,6 +547,9 @@ class EnhancedOnboardingNotifier extends _$EnhancedOnboardingNotifier {
 
   /// Reset onboarding (for testing or re-onboarding)
   Future<void> resetOnboarding() async {
+    // Purge local database to ensure a clean slate
+    await ref.read(appDatabaseProvider).clearAll();
+
     final localSettings = ref.read(localSettingsRepositoryProvider);
     await localSettings.resetOnboarding();
 

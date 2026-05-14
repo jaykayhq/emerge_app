@@ -30,10 +30,7 @@ class ScaffoldWithNavBar extends ConsumerWidget {
     });
 
     return Scaffold(
-      body: WorldBackground(
-        useSafeArea: false,
-        child: navigationShell,
-      ),
+      body: WorldBackground(useSafeArea: false, child: navigationShell),
       bottomNavigationBar: EmergeBottomNav(
         navigationShell: navigationShell,
         onFabPressed: () => context.push('/timeline/create-habit'),
@@ -49,11 +46,8 @@ class ScaffoldWithNavBar extends ConsumerWidget {
       showDialog<void>(
         context: context,
         barrierColor: Colors.transparent,
-        builder: (_) => CuePopupDialog(
-          cue: cue,
-          onActionTaken: () {},
-          onDismissed: () {},
-        ),
+        builder: (_) =>
+            CuePopupDialog(cue: cue, onActionTaken: () {}, onDismissed: () {}),
       );
     } else {
       // Show as a top-of-screen banner via overlay for gentle cues

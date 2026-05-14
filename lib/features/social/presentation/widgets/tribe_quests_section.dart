@@ -65,7 +65,9 @@ class TribeChallengeMiniCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final progress = challenge.totalDays > 0 ? challenge.currentDay / challenge.totalDays : 0.0;
+    final progress = challenge.totalDays > 0
+        ? challenge.currentDay / challenge.totalDays
+        : 0.0;
 
     return GestureDetector(
       onTap: () {
@@ -80,17 +82,19 @@ class TribeChallengeMiniCard extends StatelessWidget {
         width: 200,
         margin: const EdgeInsets.only(right: 12),
         decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha:0.05),
+          color: Colors.white.withValues(alpha: 0.05),
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: Colors.white.withValues(alpha:0.1)),
+          border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
           image: challenge.imageUrl.isNotEmpty
               ? DecorationImage(
-                  image: challenge.imageUrl.startsWith('images/') || challenge.imageUrl.startsWith('assets/images/')
+                  image:
+                      challenge.imageUrl.startsWith('images/') ||
+                          challenge.imageUrl.startsWith('assets/images/')
                       ? AssetImage(challenge.imageUrl) as ImageProvider
                       : NetworkImage(challenge.imageUrl),
                   fit: BoxFit.cover,
                   colorFilter: ColorFilter.mode(
-                    Colors.black.withValues(alpha:0.7),
+                    Colors.black.withValues(alpha: 0.7),
                     BlendMode.darken,
                   ),
                 )
@@ -102,10 +106,7 @@ class TribeChallengeMiniCard extends StatelessWidget {
             gradient: LinearGradient(
               begin: Alignment.topCenter,
               end: Alignment.bottomCenter,
-              colors: [
-                Colors.transparent,
-                Colors.black.withValues(alpha:0.8),
-              ],
+              colors: [Colors.transparent, Colors.black.withValues(alpha: 0.8)],
             ),
           ),
           padding: const EdgeInsets.all(12),

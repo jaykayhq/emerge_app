@@ -194,7 +194,7 @@ class CurvedMapLayout extends StatelessWidget {
           nodeCount: nodes.length,
           spacingY: spacingY,
           amplitude: amplitude,
-          pathColor: primaryColor.withValues(alpha:0.3),
+          pathColor: primaryColor.withValues(alpha: 0.3),
         ),
       ),
     );
@@ -246,7 +246,7 @@ class _PathPainter extends CustomPainter {
     }
 
     // Add glow effect to the path
-    canvas.drawShadow(path, pathColor.withValues(alpha:0.5), 10, true);
+    canvas.drawShadow(path, pathColor.withValues(alpha: 0.5), 10, true);
     canvas.drawPath(path, paint);
   }
 

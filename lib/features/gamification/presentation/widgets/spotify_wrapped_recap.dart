@@ -45,53 +45,63 @@ class _SpotifyWrappedRecapState extends ConsumerState<SpotifyWrappedRecap>
   // Slide types to manage gradients and visibility
   List<Widget> _getSlides() {
     final slides = <Widget>[];
-    
+
     // 0. Progress slide (Only if not complete)
     if (!widget.recap.isComplete) {
       slides.add(_ProgressSlide(recap: widget.recap));
     }
-    
+
     // 1. Intro (Always first)
     slides.add(_WrappedIntro(recap: widget.recap));
-    
+
     // 2. Identity (If available)
     if (widget.recap.dominantIdentityThisWeek != null) {
-      slides.add(_IdentitySlide(
-        identity: widget.recap.dominantIdentityThisWeek!,
-        headline: widget.recap.identityHeadline ?? '',
-        motive: ref.watch(userStatsStreamProvider).value?.dominantMotive,
-      ));
+      slides.add(
+        _IdentitySlide(
+          identity: widget.recap.dominantIdentityThisWeek!,
+          headline: widget.recap.identityHeadline ?? '',
+          motive: ref.watch(userStatsStreamProvider).value?.dominantMotive,
+        ),
+      );
     }
-    
+
     // 3. Stats
     slides.add(_WrappedStats(recap: widget.recap));
-    
+
     // 4. Top Habit
     slides.add(_WrappedTopHabit(recap: widget.recap));
-    
+
     // 5. AI Insight
     slides.add(_AiInsightSlide(recap: widget.recap));
-    
+
     // 6. Outro
     slides.add(_WrappedOutro(recap: widget.recap, onShare: _shareRecap));
-    
+
     return slides;
   }
 
   List<Color> _getCurrentGradient() {
     final slides = _getSlides();
-    if (_currentPage >= slides.length) return [const Color(0xFF0D1B2A), const Color(0xFF1B263B)];
-    
+    if (_currentPage >= slides.length)
+      return [const Color(0xFF0D1B2A), const Color(0xFF1B263B)];
+
     final currentSlide = slides[_currentPage];
-    
-    if (currentSlide is _ProgressSlide) return [const Color(0xFF0D1B2A), const Color(0xFF1B263B)];
-    if (currentSlide is _WrappedIntro) return [const Color(0xFF1A0A2A), const Color(0xFF2A1B4E)];
-    if (currentSlide is _IdentitySlide) return [const Color(0xFF0A0A0A), const Color(0xFF1A1A1A)];
-    if (currentSlide is _WrappedStats) return [const Color(0xFF112218), const Color(0xFF1DB954)];
-    if (currentSlide is _WrappedTopHabit) return [const Color(0xFF2A1A3A), const Color(0xFFFFD700)];
-    if (currentSlide is _AiInsightSlide) return [const Color(0xFF2C0735), const Color(0xFF4B296B)];
-    if (currentSlide is _WrappedOutro) return [const Color(0xFF0A1A3A), const Color(0xFF9C27B0)];
-    
+
+    if (currentSlide is _ProgressSlide)
+      return [const Color(0xFF0D1B2A), const Color(0xFF1B263B)];
+    if (currentSlide is _WrappedIntro)
+      return [const Color(0xFF1A0A2A), const Color(0xFF2A1B4E)];
+    if (currentSlide is _IdentitySlide)
+      return [const Color(0xFF0A0A0A), const Color(0xFF1A1A1A)];
+    if (currentSlide is _WrappedStats)
+      return [const Color(0xFF112218), const Color(0xFF1DB954)];
+    if (currentSlide is _WrappedTopHabit)
+      return [const Color(0xFF2A1A3A), const Color(0xFFFFD700)];
+    if (currentSlide is _AiInsightSlide)
+      return [const Color(0xFF2C0735), const Color(0xFF4B296B)];
+    if (currentSlide is _WrappedOutro)
+      return [const Color(0xFF0A1A3A), const Color(0xFF9C27B0)];
+
     return [const Color(0xFF0D1B2A), const Color(0xFF1B263B)];
   }
 
@@ -145,7 +155,7 @@ Building my identity, one habit at a time. 💪
   @override
   Widget build(BuildContext context) {
     final slides = _getSlides();
-    
+
     return Stack(
       fit: StackFit.expand,
       children: [
@@ -872,10 +882,10 @@ class _ProgressSlide extends StatelessWidget {
             'IDENTITY\nEMERGING',
             textAlign: TextAlign.center,
             style: Theme.of(context).textTheme.displaySmall?.copyWith(
-                  color: Colors.white,
-                  fontWeight: FontWeight.w900,
-                  letterSpacing: 6,
-                ),
+              color: Colors.white,
+              fontWeight: FontWeight.w900,
+              letterSpacing: 6,
+            ),
           ).animate().fadeIn(delay: 400.ms).slideY(begin: 0.2, end: 0),
           const Gap(24),
           Text(
@@ -968,10 +978,10 @@ class _AiInsightSlide extends StatelessWidget {
           Text(
             'AI INSIGHTS',
             style: Theme.of(context).textTheme.displaySmall?.copyWith(
-                  color: Colors.white,
-                  fontWeight: FontWeight.w900,
-                  letterSpacing: 4,
-                ),
+              color: Colors.white,
+              fontWeight: FontWeight.w900,
+              letterSpacing: 4,
+            ),
           ).animate().fadeIn(delay: 300.ms),
 
           const Gap(16),
@@ -1012,17 +1022,17 @@ class _AiInsightSlide extends StatelessWidget {
                 Text(
                   'UPGRADE TO UNLOCK',
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                        letterSpacing: 1.2,
-                      ),
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: 1.2,
+                  ),
                 ),
               ],
             ),
           ).animate().scale(delay: 900.ms, curve: Curves.elasticOut),
-          
+
           const Gap(24),
-          
+
           Text(
             'FREE FOR ALL PREMIUM MEMBERS',
             style: TextStyle(
@@ -1053,10 +1063,10 @@ class _AiInsightSlide extends StatelessWidget {
           Text(
             'AI ANALYSIS',
             style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                  color: EmergeColors.violet,
-                  fontWeight: FontWeight.bold,
-                  letterSpacing: 4,
-                ),
+              color: EmergeColors.violet,
+              fontWeight: FontWeight.bold,
+              letterSpacing: 4,
+            ),
           ).animate().fadeIn(delay: 300.ms),
 
           const Gap(24),
@@ -1071,7 +1081,8 @@ class _AiInsightSlide extends StatelessWidget {
               ),
             ),
             child: Text(
-              recap.aiInsight ?? 'Analysis complete. Your patterns show a strong lean towards consistency in morning routines.',
+              recap.aiInsight ??
+                  'Analysis complete. Your patterns show a strong lean towards consistency in morning routines.',
               textAlign: TextAlign.center,
               style: const TextStyle(
                 color: Colors.white,

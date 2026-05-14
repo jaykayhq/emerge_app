@@ -101,14 +101,14 @@ class HierarchicalHabitTimeline extends StatelessWidget {
           children: [
             Icon(
               Icons.self_improvement,
-              color: Colors.white.withValues(alpha:0.3),
+              color: Colors.white.withValues(alpha: 0.3),
               size: 48,
             ),
             const SizedBox(height: 12),
             Text(
               'No habits scheduled today',
               style: TextStyle(
-                color: Colors.white.withValues(alpha:0.6),
+                color: Colors.white.withValues(alpha: 0.6),
                 fontSize: 14,
               ),
             ),
@@ -243,7 +243,7 @@ class _CategoryHeader extends StatelessWidget {
             color: color,
             boxShadow: [
               BoxShadow(
-                color: color.withValues(alpha:0.5),
+                color: color.withValues(alpha: 0.5),
                 blurRadius: 4,
                 spreadRadius: 1,
               ),
@@ -265,7 +265,7 @@ class _CategoryHeader extends StatelessWidget {
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
           decoration: BoxDecoration(
-            color: color.withValues(alpha:0.2),
+            color: color.withValues(alpha: 0.2),
             borderRadius: BorderRadius.circular(10),
           ),
           child: Text(
@@ -307,23 +307,23 @@ class _IndentedHabitItemState extends State<_IndentedHabitItem> {
   bool _isExpanded = false;
   int _remainingSeconds = 0;
   bool _isTimerRunning = false;
-  
+
   @override
   void initState() {
     super.initState();
     _remainingSeconds = widget.habit.timerDurationMinutes * 60;
   }
-  
+
   void _startTimer() {
     if (_isTimerRunning) return;
     setState(() => _isTimerRunning = true);
-    
+
     _tickTimer();
   }
-  
+
   void _tickTimer() {
     if (!mounted || !_isTimerRunning) return;
-    
+
     if (_remainingSeconds > 0) {
       Future.delayed(const Duration(seconds: 1), () {
         if (!mounted || !_isTimerRunning) return;
@@ -398,8 +398,8 @@ class _IndentedHabitItemState extends State<_IndentedHabitItem> {
                           begin: Alignment.topCenter,
                           end: Alignment.bottomCenter,
                           colors: [
-                            color.withValues(alpha:0.3),
-                            color.withValues(alpha:0.1),
+                            color.withValues(alpha: 0.3),
+                            color.withValues(alpha: 0.1),
                           ],
                         ),
                       ),
@@ -412,21 +412,19 @@ class _IndentedHabitItemState extends State<_IndentedHabitItem> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-
-
                       GestureDetector(
                         onTap: widget.onTap,
                         child: Container(
                           padding: const EdgeInsets.all(12),
                           decoration: BoxDecoration(
                             color: completed
-                                ? Colors.white.withValues(alpha:0.04)
-                                : Colors.white.withValues(alpha:0.06),
+                                ? Colors.white.withValues(alpha: 0.04)
+                                : Colors.white.withValues(alpha: 0.06),
                             borderRadius: BorderRadius.circular(10),
                             border: Border.all(
                               color: completed
-                                  ? color.withValues(alpha:0.3)
-                                  : Colors.white.withValues(alpha:0.1),
+                                  ? color.withValues(alpha: 0.3)
+                                  : Colors.white.withValues(alpha: 0.1),
                               width: 1,
                             ),
                           ),
@@ -442,134 +440,153 @@ class _IndentedHabitItemState extends State<_IndentedHabitItem> {
                         curve: Curves.easeOutCubic,
                         alignment: Alignment.topCenter,
                         child: (_isExpanded && !completed)
-                          ? Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                const SizedBox(height: 8),
-                                // 2-Minute Version
-                                if (widget.habit.twoMinuteVersion != null && widget.habit.twoMinuteVersion!.isNotEmpty)
-                                  Padding(
-                                    padding: const EdgeInsets.only(left: 16.0, bottom: 8.0),
-                                    child: Container(
-                                      padding: const EdgeInsets.all(12),
-                                      decoration: BoxDecoration(
-                                        color: color.withValues(alpha:0.05),
-                                        borderRadius: BorderRadius.circular(8),
-                                        border: Border.all(color: color.withValues(alpha:0.2)),
-                                      ),
-                                      child: Column(
-                                        crossAxisAlignment: CrossAxisAlignment.start,
-                                        children: [
-                                          Text(
-                                            '2-MINUTE VERSION',
-                                            style: TextStyle(
-                                              color: color,
-                                              fontSize: 10,
-                                              fontWeight: FontWeight.bold,
-                                            ),
-                                          ),
-                                          const SizedBox(height: 4),
-                                          Text(
-                                            widget.habit.twoMinuteVersion!,
-                                            style: const TextStyle(
-                                              color: Colors.white70,
-                                              fontSize: 12,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  ),
-
-                                // Environmental Priming nodes
-                                if (widget.habit.environmentPriming.isNotEmpty) ...[
-                                  for (final priming in widget.habit.environmentPriming)
+                            ? Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  const SizedBox(height: 8),
+                                  // 2-Minute Version
+                                  if (widget.habit.twoMinuteVersion != null &&
+                                      widget.habit.twoMinuteVersion!.isNotEmpty)
                                     Padding(
-                                      padding: const EdgeInsets.only(bottom: 8.0, left: 16.0),
-                                      child: Row(
-                                        children: [
-                                          Icon(
-                                            Icons.check_box_outline_blank,
-                                            size: 16,
-                                            color: color.withValues(alpha:0.5),
+                                      padding: const EdgeInsets.only(
+                                        left: 16.0,
+                                        bottom: 8.0,
+                                      ),
+                                      child: Container(
+                                        padding: const EdgeInsets.all(12),
+                                        decoration: BoxDecoration(
+                                          color: color.withValues(alpha: 0.05),
+                                          borderRadius: BorderRadius.circular(
+                                            8,
                                           ),
-                                          const SizedBox(width: 8),
-                                          Expanded(
-                                            child: Text(
-                                              priming,
+                                          border: Border.all(
+                                            color: color.withValues(alpha: 0.2),
+                                          ),
+                                        ),
+                                        child: Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          children: [
+                                            Text(
+                                              '2-MINUTE VERSION',
                                               style: TextStyle(
-                                                color: Colors.white.withValues(alpha:0.7),
+                                                color: color,
+                                                fontSize: 10,
+                                                fontWeight: FontWeight.bold,
+                                              ),
+                                            ),
+                                            const SizedBox(height: 4),
+                                            Text(
+                                              widget.habit.twoMinuteVersion!,
+                                              style: const TextStyle(
+                                                color: Colors.white70,
                                                 fontSize: 12,
                                               ),
                                             ),
-                                          ),
-                                        ],
+                                          ],
+                                        ),
                                       ),
                                     ),
-                                ],
-                              ],
-                            )
-                          : const SizedBox.shrink(),
-                    ),
 
-                    // Temptation Bundling (Reward) node
-                    if (widget.habit.reward.isNotEmpty) ...[
-                      const SizedBox(height: 8),
-                      Padding(
-                        padding: const EdgeInsets.only(left: 16.0),
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 10,
-                            vertical: 6,
-                          ),
-                          decoration: BoxDecoration(
-                            color: completed
-                                ? color.withValues(alpha:0.2)
-                                : Colors.white.withValues(alpha:0.05),
-                            borderRadius: BorderRadius.circular(8),
-                            border: Border.all(
+                                  // Environmental Priming nodes
+                                  if (widget
+                                      .habit
+                                      .environmentPriming
+                                      .isNotEmpty) ...[
+                                    for (final priming
+                                        in widget.habit.environmentPriming)
+                                      Padding(
+                                        padding: const EdgeInsets.only(
+                                          bottom: 8.0,
+                                          left: 16.0,
+                                        ),
+                                        child: Row(
+                                          children: [
+                                            Icon(
+                                              Icons.check_box_outline_blank,
+                                              size: 16,
+                                              color: color.withValues(
+                                                alpha: 0.5,
+                                              ),
+                                            ),
+                                            const SizedBox(width: 8),
+                                            Expanded(
+                                              child: Text(
+                                                priming,
+                                                style: TextStyle(
+                                                  color: Colors.white
+                                                      .withValues(alpha: 0.7),
+                                                  fontSize: 12,
+                                                ),
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                  ],
+                                ],
+                              )
+                            : const SizedBox.shrink(),
+                      ),
+
+                      // Temptation Bundling (Reward) node
+                      if (widget.habit.reward.isNotEmpty) ...[
+                        const SizedBox(height: 8),
+                        Padding(
+                          padding: const EdgeInsets.only(left: 16.0),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 10,
+                              vertical: 6,
+                            ),
+                            decoration: BoxDecoration(
                               color: completed
-                                  ? color.withValues(alpha:0.5)
-                                  : Colors.white.withValues(alpha:0.1),
+                                  ? color.withValues(alpha: 0.2)
+                                  : Colors.white.withValues(alpha: 0.05),
+                              borderRadius: BorderRadius.circular(8),
+                              border: Border.all(
+                                color: completed
+                                    ? color.withValues(alpha: 0.5)
+                                    : Colors.white.withValues(alpha: 0.1),
+                              ),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(
+                                  completed
+                                      ? Icons.card_giftcard
+                                      : Icons.lock_outline,
+                                  size: 14,
+                                  color: completed
+                                      ? color
+                                      : Colors.white.withValues(alpha: 0.5),
+                                ),
+                                const SizedBox(width: 6),
+                                Text(
+                                  widget.habit.reward,
+                                  style: TextStyle(
+                                    color: completed
+                                        ? Colors.white
+                                        : Colors.white.withValues(alpha: 0.5),
+                                    fontSize: 12,
+                                    fontWeight: completed
+                                        ? FontWeight.bold
+                                        : FontWeight.normal,
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(
-                                completed
-                                    ? Icons.card_giftcard
-                                    : Icons.lock_outline,
-                                size: 14,
-                                color: completed
-                                    ? color
-                                    : Colors.white.withValues(alpha:0.5),
-                              ),
-                              const SizedBox(width: 6),
-                              Text(
-                                widget.habit.reward,
-                                style: TextStyle(
-                                  color: completed
-                                      ? Colors.white
-                                      : Colors.white.withValues(alpha:0.5),
-                                  fontSize: 12,
-                                  fontWeight: completed
-                                      ? FontWeight.bold
-                                      : FontWeight.normal,
-                                ),
-                              ),
-                            ],
-                          ),
                         ),
-                      ),
+                      ],
                     ],
-                  ],
+                  ),
                 ),
-              ),
-            ],
-          ),
-        ],
-      ),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -660,10 +677,7 @@ class _IndentedHabitItemState extends State<_IndentedHabitItem> {
           ),
           TextButton(
             onPressed: () => Navigator.of(context).pop(true),
-            child: const Text(
-              'Delete',
-              style: TextStyle(color: Colors.red),
-            ),
+            child: const Text('Delete', style: TextStyle(color: Colors.red)),
           ),
         ],
       ),
@@ -681,7 +695,7 @@ class _IndentedHabitItemState extends State<_IndentedHabitItem> {
             onTap: widget.onToggle,
             child: Icon(
               Icons.radio_button_unchecked,
-              color: color.withValues(alpha:0.5),
+              color: color.withValues(alpha: 0.5),
               size: 20,
             ),
           ),
@@ -702,13 +716,15 @@ class _IndentedHabitItemState extends State<_IndentedHabitItem> {
             ],
           ),
         ),
-        
+
         // Expand details button
-        if (widget.habit.environmentPriming.isNotEmpty || (widget.habit.twoMinuteVersion != null && widget.habit.twoMinuteVersion!.isNotEmpty))
+        if (widget.habit.environmentPriming.isNotEmpty ||
+            (widget.habit.twoMinuteVersion != null &&
+                widget.habit.twoMinuteVersion!.isNotEmpty))
           IconButton(
             icon: Icon(
               _isExpanded ? Icons.expand_less : Icons.expand_more,
-              color: color.withValues(alpha:0.7),
+              color: color.withValues(alpha: 0.7),
               size: 20,
             ),
             padding: EdgeInsets.zero,
@@ -719,9 +735,9 @@ class _IndentedHabitItemState extends State<_IndentedHabitItem> {
               });
             },
           ),
-          
+
         const SizedBox(width: 8),
-        
+
         // Timer Button
         if (widget.habit.timerDurationMinutes > 0 && _remainingSeconds > 0)
           GestureDetector(
@@ -733,9 +749,13 @@ class _IndentedHabitItemState extends State<_IndentedHabitItem> {
               padding: const EdgeInsets.symmetric(horizontal: 12),
               margin: const EdgeInsets.only(right: 8),
               decoration: BoxDecoration(
-                color: _isTimerRunning ? color.withValues(alpha:0.2) : Colors.white.withValues(alpha:0.1),
+                color: _isTimerRunning
+                    ? color.withValues(alpha: 0.2)
+                    : Colors.white.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(24),
-                border: Border.all(color: _isTimerRunning ? color : Colors.transparent),
+                border: Border.all(
+                  color: _isTimerRunning ? color : Colors.transparent,
+                ),
               ),
               child: Row(
                 mainAxisSize: MainAxisSize.min,
@@ -763,7 +783,7 @@ class _IndentedHabitItemState extends State<_IndentedHabitItem> {
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
           decoration: BoxDecoration(
-            color: color.withValues(alpha:0.15),
+            color: color.withValues(alpha: 0.15),
             borderRadius: BorderRadius.circular(4),
           ),
           child: Text(
@@ -784,8 +804,9 @@ class _IndentedHabitItemState extends State<_IndentedHabitItem> {
     int baseXp = 10;
     if (widget.habit.difficulty.toString().contains('medium')) baseXp = 20;
     if (widget.habit.difficulty.toString().contains('hard')) baseXp = 30;
-    final xp = (baseXp * (1 + (widget.habit.currentStreak * 0.1).clamp(0.0, 0.5)))
-        .toInt();
+    final xp =
+        (baseXp * (1 + (widget.habit.currentStreak * 0.1).clamp(0.0, 0.5)))
+            .toInt();
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
@@ -877,7 +898,7 @@ class HabitTimelineSection extends StatelessWidget {
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
                       color: allDone
-                          ? accentColor.withValues(alpha:0.2)
+                          ? accentColor.withValues(alpha: 0.2)
                           : const Color(0xFF193324),
                       border: allDone
                           ? null
@@ -995,13 +1016,13 @@ class _HabitTimelineItem extends StatelessWidget {
           child: Container(
             decoration: BoxDecoration(
               color: completed
-                  ? Colors.white.withValues(alpha:0.04)
-                  : Colors.white.withValues(alpha:0.08),
+                  ? Colors.white.withValues(alpha: 0.04)
+                  : Colors.white.withValues(alpha: 0.08),
               borderRadius: BorderRadius.circular(12),
               border: Border.all(
                 color: completed
-                    ? color.withValues(alpha:0.15)
-                    : color.withValues(alpha:0.25),
+                    ? color.withValues(alpha: 0.15)
+                    : color.withValues(alpha: 0.25),
                 width: 1,
               ),
             ),
@@ -1027,14 +1048,14 @@ class _HabitTimelineItem extends StatelessWidget {
                               Icon(
                                 Icons.check_box_outline_blank,
                                 size: 16,
-                                color: color.withValues(alpha:0.5),
+                                color: color.withValues(alpha: 0.5),
                               ),
                               const SizedBox(width: 8),
                               Expanded(
                                 child: Text(
                                   priming,
                                   style: TextStyle(
-                                    color: Colors.white.withValues(alpha:0.7),
+                                    color: Colors.white.withValues(alpha: 0.7),
                                     fontSize: 12,
                                   ),
                                 ),
@@ -1055,7 +1076,7 @@ class _HabitTimelineItem extends StatelessWidget {
                                   padding: const EdgeInsets.only(right: 12),
                                   child: Icon(
                                     Icons.radio_button_unchecked,
-                                    color: color.withValues(alpha:0.5),
+                                    color: color.withValues(alpha: 0.5),
                                     size: 24,
                                   ),
                                 ),
@@ -1153,13 +1174,13 @@ class _HabitTimelineItem extends StatelessWidget {
                         ),
                         decoration: BoxDecoration(
                           color: completed
-                              ? color.withValues(alpha:0.2)
-                              : Colors.white.withValues(alpha:0.05),
+                              ? color.withValues(alpha: 0.2)
+                              : Colors.white.withValues(alpha: 0.05),
                           borderRadius: BorderRadius.circular(8),
                           border: Border.all(
                             color: completed
-                                ? color.withValues(alpha:0.5)
-                                : Colors.white.withValues(alpha:0.1),
+                                ? color.withValues(alpha: 0.5)
+                                : Colors.white.withValues(alpha: 0.1),
                           ),
                         ),
                         child: Row(
@@ -1172,7 +1193,7 @@ class _HabitTimelineItem extends StatelessWidget {
                               size: 14,
                               color: completed
                                   ? color
-                                  : Colors.white.withValues(alpha:0.5),
+                                  : Colors.white.withValues(alpha: 0.5),
                             ),
                             const SizedBox(width: 6),
                             Text(
@@ -1180,7 +1201,7 @@ class _HabitTimelineItem extends StatelessWidget {
                               style: TextStyle(
                                 color: completed
                                     ? Colors.white
-                                    : Colors.white.withValues(alpha:0.5),
+                                    : Colors.white.withValues(alpha: 0.5),
                                 fontSize: 12,
                                 fontWeight: completed
                                     ? FontWeight.bold

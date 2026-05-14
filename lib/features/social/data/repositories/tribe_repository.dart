@@ -27,6 +27,15 @@ abstract class TribeRepository {
     int limit = 20,
   });
 
+  /// Watch recent activity feed for a club.
+  Stream<List<Map<String, dynamic>>> watchClubActivity(
+    String tribeId, {
+    int limit = 20,
+  });
+
+  /// Watch global activity feed.
+  Stream<List<Map<String, dynamic>>> watchGlobalActivity({int limit = 30});
+
   /// Join a club (auto-called when user selects archetype).
   Future<void> joinClub(String userId, String tribeId);
 
@@ -126,6 +135,31 @@ class FirestoreTribeRepository implements TribeRepository {
         .get();
 
     return snapshot.docs.map((doc) => doc.data()).toList();
+  }
+
+  @override
+  Stream<List<Map<String, dynamic>>> watchClubActivity(
+    String tribeId, {
+    int limit = 20,
+  }) {
+    return _firestore
+        .collection('tribes')
+        .doc(tribeId)
+        .collection('activity')
+        .orderBy('timestamp', descending: true)
+        .limit(limit)
+        .snapshots()
+        .map((snapshot) => snapshot.docs.map((doc) => doc.data()).toList());
+  }
+
+  @override
+  Stream<List<Map<String, dynamic>>> watchGlobalActivity({int limit = 30}) {
+    return _firestore
+        .collection('global_activities')
+        .orderBy('timestamp', descending: true)
+        .limit(limit)
+        .snapshots()
+        .map((snapshot) => snapshot.docs.map((doc) => doc.data()).toList());
   }
 
   @override

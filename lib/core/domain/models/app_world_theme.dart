@@ -94,19 +94,25 @@ class NebulaStateConfig {
     required this.particleCountFactor,
   });
 
-  static NebulaStateConfig forState(WorldHealthState state, {double entropy = 0.0}) {
+  static NebulaStateConfig forState(
+    WorldHealthState state, {
+    double entropy = 0.0,
+  }) {
     final baseConfig = _getBaseConfig(state);
-    
+
     // Entropy reduces saturation and speed significantly
     final entropyFactor = (1.0 - entropy).clamp(0.0, 1.0);
-    
+
     return NebulaStateConfig(
       starDensityFactor: baseConfig.starDensityFactor * (1.0 - (entropy * 0.5)),
       driftSpeedFactor: baseConfig.driftSpeedFactor * entropyFactor,
-      nebulaOpacity: baseConfig.nebulaOpacity * (1.0 + (entropy * 0.5)), // Entropy makes it cloudier/foggier
+      nebulaOpacity:
+          baseConfig.nebulaOpacity *
+          (1.0 + (entropy * 0.5)), // Entropy makes it cloudier/foggier
       colorSaturation: baseConfig.colorSaturation * entropyFactor,
       twinkleSpeedFactor: baseConfig.twinkleSpeedFactor * entropyFactor,
-      particleCountFactor: baseConfig.particleCountFactor * (1.0 - (entropy * 0.7)),
+      particleCountFactor:
+          baseConfig.particleCountFactor * (1.0 - (entropy * 0.7)),
     );
   }
 

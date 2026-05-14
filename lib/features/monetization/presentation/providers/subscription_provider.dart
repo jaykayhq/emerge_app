@@ -31,13 +31,10 @@ class IsPremium extends _$IsPremium {
     for (int attempt = 0; attempt < 3; attempt++) {
       try {
         final sdkResult = await repo.isPremium;
-        isPremium = sdkResult.fold(
-          (error) {
-            if (attempt < 2) Future.delayed(Duration(seconds: 1 << attempt));
-            return false;
-          },
-          (val) => val,
-        );
+        isPremium = sdkResult.fold((error) {
+          if (attempt < 2) Future.delayed(Duration(seconds: 1 << attempt));
+          return false;
+        }, (val) => val);
         if (sdkResult.isRight()) break;
       } catch (e) {
         if (attempt < 2) await Future.delayed(Duration(seconds: 1 << attempt));
@@ -57,7 +54,8 @@ class IsPremium extends _$IsPremium {
       final firebaseUser = FirebaseAuth.instance.currentUser;
       if (firebaseUser != null) {
         final idTokenResult = await firebaseUser.getIdTokenResult(true);
-        final activeEntitlements = idTokenResult.claims?['activeEntitlements'] as List<dynamic>?;
+        final activeEntitlements =
+            idTokenResult.claims?['activeEntitlements'] as List<dynamic>?;
         if (activeEntitlements?.contains('premium') ?? false) {
           return true;
         }

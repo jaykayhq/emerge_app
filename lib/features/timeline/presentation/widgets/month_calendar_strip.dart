@@ -40,7 +40,9 @@ class _MonthCalendarStripState extends State<MonthCalendarStrip> {
     super.initState();
     _selectedDate = widget.selectedDate ?? DateTime.now();
     _generateMonthDays();
-    WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToSelectedDate());
+    WidgetsBinding.instance.addPostFrameCallback(
+      (_) => _scrollToSelectedDate(),
+    );
   }
 
   void _generateMonthDays() {
@@ -53,14 +55,15 @@ class _MonthCalendarStripState extends State<MonthCalendarStrip> {
 
   void _scrollToSelectedDate() {
     if (!_scrollController.hasClients) return;
-    
+
     final index = _monthDays.indexWhere((d) => _isSameDay(d, _selectedDate));
     if (index == -1) return;
 
     const itemWidth = 64.0;
     final screenWidth = MediaQuery.of(context).size.width;
-    final scrollOffset = (index * itemWidth) - (screenWidth / 2) + (itemWidth / 2);
-    
+    final scrollOffset =
+        (index * itemWidth) - (screenWidth / 2) + (itemWidth / 2);
+
     _scrollController.animateTo(
       scrollOffset.clamp(0.0, _scrollController.position.maxScrollExtent),
       duration: const Duration(milliseconds: 300),
@@ -83,7 +86,7 @@ class _MonthCalendarStripState extends State<MonthCalendarStrip> {
         color: Colors.transparent,
         border: Border(
           bottom: BorderSide(
-            color: EmergeColors.hexLine.withValues(alpha:0.3),
+            color: EmergeColors.hexLine.withValues(alpha: 0.3),
             width: 1,
           ),
         ),
@@ -94,10 +97,7 @@ class _MonthCalendarStripState extends State<MonthCalendarStrip> {
         itemCount: _monthDays.length,
         padding: const EdgeInsets.symmetric(horizontal: 8),
         itemBuilder: (context, index) {
-          return SizedBox(
-            width: 64,
-            child: _buildDayItem(_monthDays[index]),
-          );
+          return SizedBox(width: 64, child: _buildDayItem(_monthDays[index]));
         },
       ),
     );
@@ -131,19 +131,19 @@ class _MonthCalendarStripState extends State<MonthCalendarStrip> {
           color: isSelected
               ? EmergeEarthyColors.terracotta
               : isToday
-              ? EmergeEarthyColors.terracotta.withValues(alpha:0.15)
+              ? EmergeEarthyColors.terracotta.withValues(alpha: 0.15)
               : Colors.transparent,
           borderRadius: BorderRadius.circular(12),
           border: isToday && !isSelected
               ? Border.all(
-                  color: EmergeEarthyColors.terracotta.withValues(alpha:0.5),
+                  color: EmergeEarthyColors.terracotta.withValues(alpha: 0.5),
                 )
               : null,
           // Glow effect for today
           boxShadow: isToday
               ? [
                   BoxShadow(
-                    color: EmergeEarthyColors.terracotta.withValues(alpha:0.3),
+                    color: EmergeEarthyColors.terracotta.withValues(alpha: 0.3),
                     blurRadius: 8,
                     spreadRadius: -2,
                   ),
@@ -206,7 +206,7 @@ class _MonthCalendarStripState extends State<MonthCalendarStrip> {
         color: color,
         boxShadow: [
           BoxShadow(
-            color: color.withValues(alpha:0.5),
+            color: color.withValues(alpha: 0.5),
             blurRadius: 4,
             spreadRadius: 0,
           ),

@@ -85,7 +85,9 @@ class _WorldMapScreenState extends ConsumerState<WorldMapScreen> {
             title: 'Map Navigation',
             description:
                 'Scroll vertically to explore different biomes. Each section represents a new phase of your evolution.',
-            targetKey: _scrollController.hasClients ? null : null, // General tip
+            targetKey: _scrollController.hasClients
+                ? null
+                : null, // General tip
             alignment: Alignment.center,
           ),
           TutorialStepInfo(
@@ -148,7 +150,6 @@ class _WorldMapScreenState extends ConsumerState<WorldMapScreen> {
 
           return Stack(
             children: [
-
               // Layer 2: Map content (Curved Layout)
               SafeArea(
                 bottom: false,
@@ -334,7 +335,7 @@ class _WorldMapScreenState extends ConsumerState<WorldMapScreen> {
   ) {
     showDialog(
       context: context,
-      barrierColor: Colors.black.withValues(alpha:0.7),
+      barrierColor: Colors.black.withValues(alpha: 0.7),
       builder: (dialogContext) => NodeQuestDialog(
         node: node,
         primaryColor: config.primaryColor,
@@ -383,10 +384,10 @@ class _GlassmorphismTopBar extends StatelessWidget {
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha:0.08),
+              color: Colors.white.withValues(alpha: 0.08),
               borderRadius: BorderRadius.circular(16),
               border: Border.all(
-                color: config.primaryColor.withValues(alpha:0.2),
+                color: config.primaryColor.withValues(alpha: 0.2),
               ),
             ),
             child: Column(
@@ -398,11 +399,11 @@ class _GlassmorphismTopBar extends StatelessWidget {
                     Container(
                       padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
-                        color: config.primaryColor.withValues(alpha:0.2),
+                        color: config.primaryColor.withValues(alpha: 0.2),
                         shape: BoxShape.circle,
                         boxShadow: [
                           BoxShadow(
-                            color: config.primaryColor.withValues(alpha:0.3),
+                            color: config.primaryColor.withValues(alpha: 0.3),
                             blurRadius: 12,
                             spreadRadius: 1,
                           ),
@@ -422,7 +423,8 @@ class _GlassmorphismTopBar extends StatelessWidget {
                         children: [
                           Text(
                             config.mapName,
-                            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                            style: Theme.of(context).textTheme.titleMedium
+                                ?.copyWith(
                                   color: Colors.white,
                                   fontWeight: FontWeight.bold,
                                   letterSpacing: 0.5,
@@ -432,18 +434,27 @@ class _GlassmorphismTopBar extends StatelessWidget {
                             children: [
                               Text(
                                 'Valley of New Beginnings',
-                                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                      color: config.primaryColor.withValues(alpha:0.8),
+                                style: Theme.of(context).textTheme.bodySmall
+                                    ?.copyWith(
+                                      color: config.primaryColor.withValues(
+                                        alpha: 0.8,
+                                      ),
                                       fontSize: 10,
                                     ),
                               ),
                               const SizedBox(width: 8),
                               Consumer(
                                 builder: (context, ref, _) {
-                                  final isPremium = ref.watch(isPremiumProvider).value ?? false;
-                                  if (!isPremium) return const SizedBox.shrink();
+                                  final isPremium =
+                                      ref.watch(isPremiumProvider).value ??
+                                      false;
+                                  if (!isPremium)
+                                    return const SizedBox.shrink();
                                   return Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 6,
+                                      vertical: 2,
+                                    ),
                                     decoration: BoxDecoration(
                                       color: Colors.amber,
                                       borderRadius: BorderRadius.circular(4),
@@ -471,10 +482,10 @@ class _GlassmorphismTopBar extends StatelessWidget {
                         vertical: 8,
                       ),
                       decoration: BoxDecoration(
-                        color: config.primaryColor.withValues(alpha:0.15),
+                        color: config.primaryColor.withValues(alpha: 0.15),
                         borderRadius: BorderRadius.circular(12),
                         border: Border.all(
-                          color: config.primaryColor.withValues(alpha:0.6),
+                          color: config.primaryColor.withValues(alpha: 0.6),
                           width: 1.5,
                         ),
                       ),
@@ -495,14 +506,15 @@ class _GlassmorphismTopBar extends StatelessWidget {
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
                           border: Border.all(
-                            color: config.primaryColor.withValues(alpha:0.4),
+                            color: config.primaryColor.withValues(alpha: 0.4),
                             width: 1.5,
                           ),
                         ),
                         child: CircleAvatar(
                           radius: 16,
-                          backgroundColor:
-                              config.primaryColor.withValues(alpha:0.1),
+                          backgroundColor: config.primaryColor.withValues(
+                            alpha: 0.1,
+                          ),
                           child: Icon(
                             Icons.person_outline,
                             color: config.primaryColor,
@@ -522,8 +534,12 @@ class _GlassmorphismTopBar extends StatelessWidget {
                     final progress = (stats.totalXp % 500) / 500.0;
                     return LinearProgressIndicator(
                       value: progress,
-                      backgroundColor: config.primaryColor.withValues(alpha:0.15),
-                      valueColor: AlwaysStoppedAnimation<Color>(config.primaryColor),
+                      backgroundColor: config.primaryColor.withValues(
+                        alpha: 0.15,
+                      ),
+                      valueColor: AlwaysStoppedAnimation<Color>(
+                        config.primaryColor,
+                      ),
                       minHeight: 2,
                       borderRadius: BorderRadius.circular(99),
                     );
@@ -574,10 +590,10 @@ class _GlassmorphismStatsBar extends StatelessWidget {
             32, // Extra bottom padding for safe area
           ),
           decoration: BoxDecoration(
-            color: Colors.black.withValues(alpha:0.6),
+            color: Colors.black.withValues(alpha: 0.6),
             border: Border(
               top: BorderSide(
-                color: config.primaryColor.withValues(alpha:0.3),
+                color: config.primaryColor.withValues(alpha: 0.3),
                 width: 1,
               ),
             ),
@@ -692,8 +708,10 @@ class _WorldOrb extends ConsumerWidget {
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               color: _orbColor.withValues(alpha: 0.15),
-              border:
-                  Border.all(color: _orbColor.withValues(alpha: 0.6), width: 1.5),
+              border: Border.all(
+                color: _orbColor.withValues(alpha: 0.6),
+                width: 1.5,
+              ),
               boxShadow: [
                 BoxShadow(
                   color: _orbColor.withValues(alpha: 0.4),
@@ -747,11 +765,14 @@ class _WorldStateSheet extends StatelessWidget {
   Widget build(BuildContext context) {
     String advice;
     if (score >= 75) {
-      advice = 'Your world is flourishing. Keep your habits alive to maintain this.';
+      advice =
+          'Your world is flourishing. Keep your habits alive to maintain this.';
     } else if (score >= 40) {
-      advice = 'Your world is stable. Complete more habits today to make it thrive.';
+      advice =
+          'Your world is stable. Complete more habits today to make it thrive.';
     } else {
-      advice = 'Your world is decaying. Complete any habit now to start recovery.';
+      advice =
+          'Your world is decaying. Complete any habit now to start recovery.';
     }
 
     return Container(
@@ -766,15 +787,18 @@ class _WorldStateSheet extends StatelessWidget {
           Container(
             width: 40,
             height: 4,
-            decoration: BoxDecoration(color: Colors.white24, borderRadius: BorderRadius.circular(99)),
+            decoration: BoxDecoration(
+              color: Colors.white24,
+              borderRadius: BorderRadius.circular(99),
+            ),
           ),
           const SizedBox(height: 24),
           Text(
             'World State',
             style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
-                ),
+              color: Colors.white,
+              fontWeight: FontWeight.bold,
+            ),
           ),
           const SizedBox(height: 16),
           Stack(
@@ -786,13 +810,17 @@ class _WorldStateSheet extends StatelessWidget {
                 child: CircularProgressIndicator(
                   value: score / 100,
                   strokeWidth: 6,
-                  backgroundColor: orbColor.withValues(alpha:0.15),
+                  backgroundColor: orbColor.withValues(alpha: 0.15),
                   valueColor: AlwaysStoppedAnimation<Color>(orbColor),
                 ),
               ),
               Text(
                 '$score',
-                style: TextStyle(color: orbColor, fontSize: 22, fontWeight: FontWeight.bold),
+                style: TextStyle(
+                  color: orbColor,
+                  fontSize: 22,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
             ],
           ),
@@ -800,9 +828,9 @@ class _WorldStateSheet extends StatelessWidget {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             decoration: BoxDecoration(
-              color: orbColor.withValues(alpha:0.1),
+              color: orbColor.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(99),
-              border: Border.all(color: orbColor.withValues(alpha:0.4)),
+              border: Border.all(color: orbColor.withValues(alpha: 0.4)),
             ),
             child: Text(
               stateLabel,
@@ -828,10 +856,15 @@ class _WorldStateSheet extends StatelessWidget {
                 backgroundColor: EmergeColors.violet,
                 foregroundColor: Colors.white,
                 padding: const EdgeInsets.all(16),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
               ),
               icon: const Icon(Icons.auto_awesome),
-              label: const Text('WEEKLY RECAP & INSIGHTS', style: TextStyle(fontWeight: FontWeight.bold)),
+              label: const Text(
+                'WEEKLY RECAP & INSIGHTS',
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
             ),
           ),
           const SizedBox(height: 12),

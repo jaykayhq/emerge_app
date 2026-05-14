@@ -7,7 +7,7 @@ void main() {
       // Assuming test environment acts like development
       final bannerId = AppConfig.getAdUnitId('banner', 'android');
       expect(bannerId, equals('ca-app-pub-3940256099942544/6300978111'));
-      
+
       final iosBannerId = AppConfig.getAdUnitId('banner', 'ios');
       expect(iosBannerId, equals('ca-app-pub-3940256099942544/2934735716'));
     });

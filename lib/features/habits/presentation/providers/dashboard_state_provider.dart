@@ -279,8 +279,9 @@ class DashboardStateNotifier extends _$DashboardStateNotifier {
       final isPremium = await ref.read(isPremiumProvider.future);
       if (!isPremium) {
         final currentHabits = ref.read(habitsProvider).value ?? [];
-        final freeHabitLimit =
-            ref.read(remoteConfigServiceProvider).freeHabitLimit;
+        final freeHabitLimit = ref
+            .read(remoteConfigServiceProvider)
+            .freeHabitLimit;
         if (currentHabits.length >= freeHabitLimit) {
           throw SubscriptionLimitReachedException(
             'You have reached the limit of $freeHabitLimit active habits '

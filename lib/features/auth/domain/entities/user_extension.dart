@@ -330,7 +330,9 @@ class UserWorldState {
       claimedNodes: List<String>.from(map['claimedNodes'] ?? []),
       activeNodes: List<String>.from(map['activeNodes'] ?? []),
       highestCompletedNodeLevel: map['highestCompletedNodeLevel'] as int? ?? 0,
-      activeEntropyEffects: List<String>.from(map['activeEntropyEffects'] ?? []),
+      activeEntropyEffects: List<String>.from(
+        map['activeEntropyEffects'] ?? [],
+      ),
     );
   }
 
@@ -373,7 +375,6 @@ class UserWorldState {
       activeEntropyEffects: activeEntropyEffects ?? this.activeEntropyEffects,
     );
   }
-
 
   /// Create initial world state with default zones
   factory UserWorldState.initial() {
@@ -471,6 +472,8 @@ class HabitStack {
 
 class UserProfile {
   final String uid;
+  final String? displayName;
+  final String? photoUrl;
   final UserArchetype archetype;
   final Map<String, int> identityVotes; // e.g., {'Runner': 10, 'Reader': 5}
   final UserAvatarStats avatarStats;
@@ -512,6 +515,8 @@ class UserProfile {
 
   const UserProfile({
     required this.uid,
+    this.displayName,
+    this.photoUrl,
     this.archetype = UserArchetype.none,
     this.identityVotes = const {},
     this.avatarStats = const UserAvatarStats(),
@@ -542,6 +547,8 @@ class UserProfile {
   Map<String, dynamic> toMap() {
     return {
       'uid': uid,
+      'displayName': displayName,
+      'photoUrl': photoUrl,
       'archetype': archetype.name,
       'identityVotes': identityVotes,
       'avatarStats': avatarStats.toMap(),
@@ -570,9 +577,34 @@ class UserProfile {
     };
   }
 
+  Map<String, dynamic> toFirestore() {
+    final map = toMap();
+    // Use Timestamps for Firestore
+    if (onboardingStartedAt != null) {
+      map['onboardingStartedAt'] = Timestamp.fromDate(onboardingStartedAt!);
+    }
+    if (onboardingCompletedAt != null) {
+      map['onboardingCompletedAt'] = Timestamp.fromDate(onboardingCompletedAt!);
+    }
+    if (accountCreatedAt != null) {
+      map['accountCreatedAt'] = Timestamp.fromDate(accountCreatedAt!);
+    }
+    if (worldState.lastActiveDate != null) {
+      // Note: mapping logic needs to be careful with nested maps
+      final worldMap = Map<String, dynamic>.from(map['worldState']);
+      worldMap['lastActiveDate'] = Timestamp.fromDate(
+        worldState.lastActiveDate!,
+      );
+      map['worldState'] = worldMap;
+    }
+    return map;
+  }
+
   factory UserProfile.fromMap(Map<String, dynamic> map) {
     return UserProfile(
       uid: map['uid'] as String? ?? '',
+      displayName: map['displayName'] as String?,
+      photoUrl: map['photoUrl'] as String?,
       archetype: UserArchetype.values.firstWhere(
         (e) => e.name == map['archetype'],
         orElse: () => UserArchetype.none,
@@ -607,7 +639,9 @@ class UserProfile {
           : const UserSettings(),
       accountCreatedAt: _parseDateTime(map['accountCreatedAt']),
       hasEmerged: map['hasEmerged'] as bool? ?? false,
-      momentumScore: _normalizeMomentum(map['worldHealthScore'] ?? map['momentumScore']),
+      momentumScore: _normalizeMomentum(
+        map['worldHealthScore'] ?? map['momentumScore'],
+      ),
       totalHabitsCompleted: map['totalHabitsCompleted'] as int? ?? 0,
       totalChallengesCompleted: map['totalChallengesCompleted'] as int? ?? 0,
       totalQuestsCompleted: map['totalQuestsCompleted'] as int? ?? 0,
@@ -616,6 +650,8 @@ class UserProfile {
 
   UserProfile copyWith({
     String? uid,
+    String? displayName,
+    String? photoUrl,
     UserArchetype? archetype,
     Map<String, int>? identityVotes,
     UserAvatarStats? avatarStats,
@@ -644,6 +680,8 @@ class UserProfile {
   }) {
     return UserProfile(
       uid: uid ?? this.uid,
+      displayName: displayName ?? this.displayName,
+      photoUrl: photoUrl ?? this.photoUrl,
       archetype: archetype ?? this.archetype,
       identityVotes: identityVotes ?? this.identityVotes,
       avatarStats: avatarStats ?? this.avatarStats,

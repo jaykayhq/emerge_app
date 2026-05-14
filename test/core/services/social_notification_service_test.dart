@@ -48,14 +48,16 @@ void main() {
     registerFallbackValue(MockDocumentReference());
     registerFallbackValue(MockQuery());
     registerFallbackValue(MockCollectionReference());
-    registerFallbackValue(AppNotification(
-      id: '',
-      type: AppNotificationType.friendRequest,
-      title: '',
-      body: '',
-      createdAt: DateTime(2025),
-    ));
-    registerFallbackValue(const { 'unreadNotificationCount': 0 });
+    registerFallbackValue(
+      AppNotification(
+        id: '',
+        type: AppNotificationType.friendRequest,
+        title: '',
+        body: '',
+        createdAt: DateTime(2025),
+      ),
+    );
+    registerFallbackValue(const {'unreadNotificationCount': 0});
     registerFallbackValue(SetOptions(merge: true));
   });
 
@@ -72,29 +74,41 @@ void main() {
     clearInteractions(mockBatch);
 
     // Root: firestore.collection('users') -> mockUsersCollection
-    when(() => mockFirestore.collection('users')).thenReturn(mockUsersCollection);
+    when(
+      () => mockFirestore.collection('users'),
+    ).thenReturn(mockUsersCollection);
     when(() => mockFirestore.collection(any())).thenReturn(mockUsersCollection);
-    
+
     // User Level: users.doc(id) -> mockUserDoc
     when(() => mockUsersCollection.doc(any())).thenReturn(mockUserDoc);
-    
+
     // Notification Level: userDoc.collection('notifications') -> mockNotificationsCollection
-    when(() => mockUserDoc.collection('notifications')).thenReturn(mockNotificationsCollection);
-    when(() => mockUserDoc.collection(any())).thenReturn(mockNotificationsCollection);
-    
+    when(
+      () => mockUserDoc.collection('notifications'),
+    ).thenReturn(mockNotificationsCollection);
+    when(
+      () => mockUserDoc.collection(any()),
+    ).thenReturn(mockNotificationsCollection);
+
     // Notification Doc Level: notifications.doc(id) -> mockNotificationDoc
-    when(() => mockNotificationsCollection.doc(any())).thenReturn(mockNotificationDoc);
-    when(() => mockNotificationsCollection.add(any())).thenAnswer((_) async => mockNotificationDoc);
-    
+    when(
+      () => mockNotificationsCollection.doc(any()),
+    ).thenReturn(mockNotificationDoc);
+    when(
+      () => mockNotificationsCollection.add(any()),
+    ).thenAnswer((_) async => mockNotificationDoc);
+
     // Mutation stubs for User Doc
     when(() => mockUserDoc.set(any(), any())).thenAnswer((_) async {});
     when(() => mockUserDoc.update(any())).thenAnswer((_) async {});
-    
+
     // Mutation stubs for Notification Doc
     when(() => mockNotificationDoc.set(any(), any())).thenAnswer((_) async {});
     when(() => mockNotificationDoc.update(any())).thenAnswer((_) async {});
     when(() => mockNotificationDoc.delete()).thenAnswer((_) async {});
-    when(() => mockNotificationDoc.get()).thenAnswer((_) async => MockDocumentSnapshot());
+    when(
+      () => mockNotificationDoc.get(),
+    ).thenAnswer((_) async => MockDocumentSnapshot());
 
     // Batch setup
     mockBatch = MockBatch();
@@ -103,20 +117,43 @@ void main() {
     when(() => mockBatch.set(any(), any())).thenAnswer((_) {});
     when(() => mockBatch.update(any(), any())).thenAnswer((_) {});
     when(() => mockBatch.delete(any())).thenAnswer((_) {});
-    
+
     // Query stubs
     final mockQuery = MockQuery();
     final mockQuerySnapshot = MockQuerySnapshot();
-    when(() => mockNotificationsCollection.get()).thenAnswer((_) async => mockQuerySnapshot);
-    when(() => mockNotificationsCollection.where(any(), isEqualTo: any(named: 'isEqualTo'))).thenReturn(mockQuery);
-    when(() => mockNotificationsCollection.where(any(), isLessThan: any(named: 'isLessThan'))).thenReturn(mockQuery);
-    when(() => mockNotificationsCollection.orderBy(any(), descending: any(named: 'descending'))).thenReturn(mockQuery);
-    
+    when(
+      () => mockNotificationsCollection.get(),
+    ).thenAnswer((_) async => mockQuerySnapshot);
+    when(
+      () => mockNotificationsCollection.where(
+        any(),
+        isEqualTo: any(named: 'isEqualTo'),
+      ),
+    ).thenReturn(mockQuery);
+    when(
+      () => mockNotificationsCollection.where(
+        any(),
+        isLessThan: any(named: 'isLessThan'),
+      ),
+    ).thenReturn(mockQuery);
+    when(
+      () => mockNotificationsCollection.orderBy(
+        any(),
+        descending: any(named: 'descending'),
+      ),
+    ).thenReturn(mockQuery);
+
     when(() => mockQuery.get()).thenAnswer((_) async => mockQuerySnapshot);
-    when(() => mockQuery.where(any(), isEqualTo: any(named: 'isEqualTo'))).thenReturn(mockQuery);
-    when(() => mockQuery.orderBy(any(), descending: any(named: 'descending'))).thenReturn(mockQuery);
+    when(
+      () => mockQuery.where(any(), isEqualTo: any(named: 'isEqualTo')),
+    ).thenReturn(mockQuery);
+    when(
+      () => mockQuery.orderBy(any(), descending: any(named: 'descending')),
+    ).thenReturn(mockQuery);
     when(() => mockQuery.limit(any())).thenReturn(mockQuery);
-    when(() => mockQuery.snapshots()).thenAnswer((_) => Stream.value(mockQuerySnapshot));
+    when(
+      () => mockQuery.snapshots(),
+    ).thenAnswer((_) => Stream.value(mockQuerySnapshot));
     when(() => mockQuerySnapshot.docs).thenReturn([]);
   });
 
@@ -157,7 +194,7 @@ void main() {
         // Act
         await service.sendNotificationToMultiple([
           'user1',
-          'user2'
+          'user2',
         ], mockNotification);
 
         // Assert
@@ -166,13 +203,16 @@ void main() {
       });
 
       test('handles empty user list gracefully', () async {
-        await service.sendNotificationToMultiple([], AppNotification(
-          id: '',
-          type: AppNotificationType.challengeInvite,
-          title: '',
-          body: '',
-          createdAt: DateTime.now(),
-        ));
+        await service.sendNotificationToMultiple(
+          [],
+          AppNotification(
+            id: '',
+            type: AppNotificationType.challengeInvite,
+            title: '',
+            body: '',
+            createdAt: DateTime.now(),
+          ),
+        );
       });
     });
 
@@ -194,8 +234,13 @@ void main() {
         final mockQuerySnapshot = MockQuerySnapshot();
         final mockDocSnapshot = MockQueryDocumentSnapshot();
         final mockQuery = MockQuery();
-        
-        when(() => mockNotificationsCollection.where(any(), isEqualTo: any(named: 'isEqualTo'))).thenReturn(mockQuery);
+
+        when(
+          () => mockNotificationsCollection.where(
+            any(),
+            isEqualTo: any(named: 'isEqualTo'),
+          ),
+        ).thenReturn(mockQuery);
         when(() => mockQuery.get()).thenAnswer((_) async => mockQuerySnapshot);
         when(() => mockQuerySnapshot.docs).thenReturn([mockDocSnapshot]);
         when(() => mockDocSnapshot.reference).thenReturn(mockNotificationDoc);
@@ -205,9 +250,13 @@ void main() {
         await service.markAllAsRead('user123');
 
         // Assert
-        verify(() => mockNotificationsCollection.where('read', isEqualTo: false)).called(1);
+        verify(
+          () => mockNotificationsCollection.where('read', isEqualTo: false),
+        ).called(1);
         verify(() => mockBatch.update(any(), any())).called(1);
-        verify(() => mockUserDoc.update({'unreadNotificationCount': 0})).called(1);
+        verify(
+          () => mockUserDoc.update({'unreadNotificationCount': 0}),
+        ).called(1);
         verify(() => mockBatch.commit()).called(1);
       });
 
@@ -218,9 +267,7 @@ void main() {
         when(
           () => mockNotificationsCollection.where('read', isEqualTo: false),
         ).thenReturn(mockQuery);
-        when(
-          () => mockQuery.get(),
-        ).thenAnswer((_) async => mockQuerySnapshot);
+        when(() => mockQuery.get()).thenAnswer((_) async => mockQuerySnapshot);
         when(() => mockQuerySnapshot.docs).thenReturn([]);
 
         // Act & Assert - should not throw
@@ -240,14 +287,16 @@ void main() {
           when(
             () => mockNotificationsCollection.doc(any()),
           ).thenReturn(mockNotificationDoc);
-          when(() => mockNotificationDoc.get()).thenAnswer((_) async => mockSnapshot);
+          when(
+            () => mockNotificationDoc.get(),
+          ).thenAnswer((_) async => mockSnapshot);
 
           // Act
           await service.deleteNotification('user123', 'notif123');
 
-        // Assert
-        verify(() => mockNotificationDoc.delete()).called(1);
-        verify(() => mockUserDoc.update(any())).called(1);
+          // Assert
+          verify(() => mockNotificationDoc.delete()).called(1);
+          verify(() => mockUserDoc.update(any())).called(1);
         },
       );
 
@@ -260,16 +309,16 @@ void main() {
         when(
           () => mockNotificationsCollection.doc(any()),
         ).thenReturn(mockNotificationDoc);
-        when(() => mockNotificationDoc.get()).thenAnswer((_) async => mockSnapshot);
+        when(
+          () => mockNotificationDoc.get(),
+        ).thenAnswer((_) async => mockSnapshot);
 
         // Act
         await service.deleteNotification('user123', 'notif123');
 
         // Assert
         verify(() => mockNotificationDoc.delete()).called(1);
-        verifyNever(
-          () => mockUserDoc.update(any()),
-        );
+        verifyNever(() => mockUserDoc.update(any()));
       });
     });
 
@@ -280,7 +329,7 @@ void main() {
         when(
           () => mockNotificationsCollection.get(),
         ).thenAnswer((_) async => mockQuerySnapshot);
-        
+
         final mockDocSnapshot = MockQueryDocumentSnapshot();
         when(() => mockDocSnapshot.reference).thenReturn(mockNotificationDoc);
         when(() => mockQuerySnapshot.docs).thenReturn([mockDocSnapshot]);
@@ -291,7 +340,9 @@ void main() {
         // Assert
         verify(() => mockNotificationsCollection.get()).called(1);
         verify(() => mockBatch.delete(any())).called(1);
-        verify(() => mockUserDoc.update({'unreadNotificationCount': 0})).called(1);
+        verify(
+          () => mockUserDoc.update({'unreadNotificationCount': 0}),
+        ).called(1);
         verify(() => mockBatch.commit()).called(1);
       });
 
@@ -381,8 +432,13 @@ void main() {
         final mockQuerySnapshot = MockQuerySnapshot();
         final mockDocSnapshot = MockQueryDocumentSnapshot();
         final mockQuery = MockQuery();
-        
-        when(() => mockNotificationsCollection.where(any(), isLessThan: any(named: 'isLessThan'))).thenReturn(mockQuery);
+
+        when(
+          () => mockNotificationsCollection.where(
+            any(),
+            isLessThan: any(named: 'isLessThan'),
+          ),
+        ).thenReturn(mockQuery);
         when(() => mockQuery.get()).thenAnswer((_) async => mockQuerySnapshot);
         when(() => mockQuerySnapshot.docs).thenReturn([mockDocSnapshot]);
         when(() => mockDocSnapshot.reference).thenReturn(mockNotificationDoc);

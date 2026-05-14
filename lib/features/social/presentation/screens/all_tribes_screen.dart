@@ -26,7 +26,11 @@ class AllTribesScreen extends ConsumerWidget {
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new, color: Colors.white, size: 20),
+          icon: const Icon(
+            Icons.arrow_back_ios_new,
+            color: Colors.white,
+            size: 20,
+          ),
           onPressed: () => Navigator.of(context).pop(),
         ),
       ),
@@ -54,9 +58,7 @@ class AllTribesScreen extends ConsumerWidget {
             ),
           );
         },
-        loading: () => const Center(
-          child: EmergeLoadingSkeleton(itemCount: 5),
-        ),
+        loading: () => const Center(child: EmergeLoadingSkeleton(itemCount: 5)),
         error: (error, stack) => Center(
           child: AppErrorWidget(
             message: 'Could not load tribes',

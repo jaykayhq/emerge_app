@@ -24,9 +24,10 @@ class ArchetypeSliverAppBar extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final userProfileAsync = ref.watch(userStatsStreamProvider);
-    
+
     // Provide a default fallback while loading
-    final archetype = userProfileAsync.asData?.value.archetype ?? UserArchetype.none;
+    final archetype =
+        userProfileAsync.asData?.value.archetype ?? UserArchetype.none;
     final archetypeTheme = ArchetypeTheme.forArchetype(archetype);
 
     return SliverAppBar(
@@ -53,17 +54,11 @@ class ArchetypeSliverAppBar extends ConsumerWidget {
                 fontWeight: FontWeight.bold,
                 letterSpacing: 1.2,
                 shadows: [
-                  Shadow(
-                    color: archetypeTheme.primaryColor,
-                    blurRadius: 8,
-                  ),
+                  Shadow(color: archetypeTheme.primaryColor, blurRadius: 8),
                 ],
               ),
             ),
-            if (badge != null) ...[
-              const SizedBox(width: 8),
-              badge!,
-            ],
+            if (badge != null) ...[const SizedBox(width: 8), badge!],
             if (syncIndicator != null) ...[
               const SizedBox(width: 8),
               syncIndicator!,

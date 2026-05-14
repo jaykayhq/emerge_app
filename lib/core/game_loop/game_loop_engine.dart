@@ -8,10 +8,14 @@ class LocalGameLoopEngine {
   static const double _maxStreakBonus = 0.50;
   static const int _completionBoost = 10;
 
-  int computeXpGain({required double difficultyMultiplier, required int streak}) {
+  int computeXpGain({
+    required double difficultyMultiplier,
+    required int streak,
+  }) {
     double streakBonus = (streak / _streakBonusStepDays) * _streakBonusPerStep;
     if (streakBonus > _maxStreakBonus) streakBonus = _maxStreakBonus;
-    return ((_baseXpPerHabit * difficultyMultiplier) * (1 + streakBonus)).round();
+    return ((_baseXpPerHabit * difficultyMultiplier) * (1 + streakBonus))
+        .round();
   }
 
   int computeLevel(int totalXp) {
@@ -56,7 +60,9 @@ class LocalGameLoopEngine {
 
     final isRecovery = consecutiveMisses > 0;
     final newStreak = currentStreak + 1;
-    final newLongestStreak = newStreak > longestStreak ? newStreak : longestStreak;
+    final newLongestStreak = newStreak > longestStreak
+        ? newStreak
+        : longestStreak;
     final xpGained = computeXpGain(
       difficultyMultiplier: difficultyMultiplier,
       streak: newStreak,

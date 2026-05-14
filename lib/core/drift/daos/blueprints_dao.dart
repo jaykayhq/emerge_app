@@ -5,7 +5,8 @@ import '../tables/blueprints_table.dart';
 part 'blueprints_dao.g.dart';
 
 @DriftAccessor(tables: [BlueprintsTable])
-class BlueprintsDao extends DatabaseAccessor<AppDatabase> with _$BlueprintsDaoMixin {
+class BlueprintsDao extends DatabaseAccessor<AppDatabase>
+    with _$BlueprintsDaoMixin {
   BlueprintsDao(super.db);
 
   Future<List<BlueprintsTableData>> getAll() {

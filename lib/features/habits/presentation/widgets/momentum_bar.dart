@@ -68,7 +68,9 @@ class MomentumBar extends StatelessWidget {
                 duration: const Duration(milliseconds: 600),
                 curve: Curves.easeOutCubic,
                 height: 4,
-                width: constraints.maxWidth * (momentumScore / 100).clamp(0.0, 1.0),
+                width:
+                    constraints.maxWidth *
+                    (momentumScore / 100).clamp(0.0, 1.0),
                 decoration: BoxDecoration(
                   color: _stateColor,
                   borderRadius: BorderRadius.circular(99),

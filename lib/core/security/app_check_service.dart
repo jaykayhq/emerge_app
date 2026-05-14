@@ -36,9 +36,7 @@ class AppCheckService {
             debugPrint('   Continuing without App Check for web...');
             return appCheck;
           }
-          await appCheck.activate(
-            providerWeb: ReCaptchaV3Provider(siteKey),
-          );
+          await appCheck.activate(providerWeb: ReCaptchaV3Provider(siteKey));
         }
       } else if (kDebugMode) {
         // Debug mode: Use debug providers for development

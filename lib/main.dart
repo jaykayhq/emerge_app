@@ -113,7 +113,7 @@ class _EmergeAppState extends ConsumerState<EmergeApp> {
             // User signed in - start heartbeat and identify in RevenueCat
             presenceService.startHeartbeat(user.id);
             unawaited(monetizationRepo.identify(user.id));
-            
+
             // Seed initial data once authenticated - safe as these check for existing data
             unawaited(seedOfficialClubs());
             unawaited(seedChallenges());

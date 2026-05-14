@@ -146,12 +146,20 @@ class GamificationService {
     }
 
     final newAttributeXp = Map<String, int>.from(currentStats.attributeXp);
-    if (strength > 0) newAttributeXp['strength'] = (newAttributeXp['strength'] ?? 0) + strength;
-    if (intellect > 0) newAttributeXp['intellect'] = (newAttributeXp['intellect'] ?? 0) + intellect;
-    if (vitality > 0) newAttributeXp['vitality'] = (newAttributeXp['vitality'] ?? 0) + vitality;
-    if (creativity > 0) newAttributeXp['creativity'] = (newAttributeXp['creativity'] ?? 0) + creativity;
-    if (focus > 0) newAttributeXp['focus'] = (newAttributeXp['focus'] ?? 0) + focus;
-    if (spirit > 0) newAttributeXp['spirit'] = (newAttributeXp['spirit'] ?? 0) + spirit;
+    if (strength > 0)
+      newAttributeXp['strength'] = (newAttributeXp['strength'] ?? 0) + strength;
+    if (intellect > 0)
+      newAttributeXp['intellect'] =
+          (newAttributeXp['intellect'] ?? 0) + intellect;
+    if (vitality > 0)
+      newAttributeXp['vitality'] = (newAttributeXp['vitality'] ?? 0) + vitality;
+    if (creativity > 0)
+      newAttributeXp['creativity'] =
+          (newAttributeXp['creativity'] ?? 0) + creativity;
+    if (focus > 0)
+      newAttributeXp['focus'] = (newAttributeXp['focus'] ?? 0) + focus;
+    if (spirit > 0)
+      newAttributeXp['spirit'] = (newAttributeXp['spirit'] ?? 0) + spirit;
 
     return currentStats.copyWith(
       strengthXp: currentStats.strengthXp + strength,

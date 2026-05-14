@@ -91,7 +91,9 @@ class NotificationService {
                   .collection('users')
                   .doc(user.uid)
                   .set({'fcmToken': token}, SetOptions(merge: true));
-              debugPrint('FCM token updated successfully for user: ${user.uid}');
+              debugPrint(
+                'FCM token updated successfully for user: ${user.uid}',
+              );
             } catch (e) {
               // Log error but don't crash - notification token update is non-critical
               debugPrint('Failed to update FCM token: $e');
@@ -303,7 +305,8 @@ class NotificationService {
     final theme = ArchetypeTheme.forArchetype(archetype);
     final primaryColor = theme.primaryColor;
     // Map to specific archetype drawable icons
-    final iconName = NotificationIcons.archetypeIcons[archetype] ?? 'push_notification_icon';
+    final iconName =
+        NotificationIcons.archetypeIcons[archetype] ?? 'push_notification_icon';
 
     return AndroidNotificationDetails(
       channelId,

@@ -18,11 +18,7 @@ class ChallengeDetailScreen extends ConsumerWidget {
   final Challenge? challenge;
   final String? challengeId;
 
-  const ChallengeDetailScreen({
-    super.key,
-    this.challenge,
-    this.challengeId,
-  });
+  const ChallengeDetailScreen({super.key, this.challenge, this.challengeId});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -33,7 +29,9 @@ class ChallengeDetailScreen extends ConsumerWidget {
     return challengeAsync.when(
       loading: () => const Scaffold(
         backgroundColor: EmergeColors.background,
-        body: Center(child: CircularProgressIndicator(color: EmergeColors.teal)),
+        body: Center(
+          child: CircularProgressIndicator(color: EmergeColors.teal),
+        ),
       ),
       error: (err, stack) => Scaffold(
         backgroundColor: EmergeColors.background,
@@ -86,7 +84,11 @@ class ChallengeDetailScreen extends ConsumerWidget {
                           children: [
                             Hero(
                               tag: 'challenge_image_${challenge.id}',
-                              child: challenge.imageUrl.startsWith('images/') || challenge.imageUrl.startsWith('assets/images/')
+                              child:
+                                  challenge.imageUrl.startsWith('images/') ||
+                                      challenge.imageUrl.startsWith(
+                                        'assets/images/',
+                                      )
                                   ? Image.asset(
                                       challenge.imageUrl,
                                       fit: BoxFit.cover,
@@ -94,16 +96,22 @@ class ChallengeDetailScreen extends ConsumerWidget {
                                   : Image.network(
                                       challenge.imageUrl,
                                       fit: BoxFit.cover,
-                                      errorBuilder: (context, error, stackTrace) => Container(
-                                        color: AppTheme.surfaceDark,
-                                        child: const Center(
-                                          child: Icon(
-                                            Icons.image_not_supported_outlined,
-                                            size: 48,
-                                            color: Colors.white24,
+                                      errorBuilder:
+                                          (
+                                            context,
+                                            error,
+                                            stackTrace,
+                                          ) => Container(
+                                            color: AppTheme.surfaceDark,
+                                            child: const Center(
+                                              child: Icon(
+                                                Icons
+                                                    .image_not_supported_outlined,
+                                                size: 48,
+                                                color: Colors.white24,
+                                              ),
+                                            ),
                                           ),
-                                        ),
-                                      ),
                                     ),
                             ),
                             // Cinematic Gradient Overlay
@@ -115,7 +123,9 @@ class ChallengeDetailScreen extends ConsumerWidget {
                                   colors: [
                                     Colors.black.withValues(alpha: 0.3),
                                     Colors.transparent,
-                                    EmergeColors.background.withValues(alpha: 0.8),
+                                    EmergeColors.background.withValues(
+                                      alpha: 0.8,
+                                    ),
                                     EmergeColors.background,
                                   ],
                                   stops: const [0.0, 0.4, 0.8, 1.0],
@@ -134,7 +144,10 @@ class ChallengeDetailScreen extends ConsumerWidget {
                             child: Container(
                               color: Colors.white.withValues(alpha: 0.1),
                               child: IconButton(
-                                icon: const Icon(Icons.arrow_back, color: Colors.white),
+                                icon: const Icon(
+                                  Icons.arrow_back,
+                                  color: Colors.white,
+                                ),
                                 onPressed: () => context.pop(),
                               ),
                             ),
@@ -149,60 +162,89 @@ class ChallengeDetailScreen extends ConsumerWidget {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Row(
-                              children: [
-                                Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                                  decoration: BoxDecoration(
-                                    color: AppTheme.primary.withValues(alpha: 0.15),
-                                    borderRadius: BorderRadius.circular(20),
-                                    border: Border.all(color: AppTheme.primary.withValues(alpha: 0.3)),
-                                  ),
-                                  child: Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      const Icon(Icons.bolt, size: 14, color: AppTheme.primary),
-                                      const Gap(4),
-                                      Text(
-                                        '+${challenge.xpReward} XP',
-                                        style: const TextStyle(
-                                          color: AppTheme.primary,
-                                          fontWeight: FontWeight.bold,
-                                          fontSize: 12,
+                                  children: [
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 12,
+                                        vertical: 6,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        color: AppTheme.primary.withValues(
+                                          alpha: 0.15,
+                                        ),
+                                        borderRadius: BorderRadius.circular(20),
+                                        border: Border.all(
+                                          color: AppTheme.primary.withValues(
+                                            alpha: 0.3,
+                                          ),
                                         ),
                                       ),
-                                    ],
-                                  ),
-                                ),
-                                const Gap(12),
-                                if (challenge.isPremium)
-                                  Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                                    decoration: BoxDecoration(
-                                      color: EmergeColors.yellow.withValues(alpha: 0.15),
-                                      borderRadius: BorderRadius.circular(20),
-                                      border: Border.all(color: EmergeColors.yellow.withValues(alpha: 0.3)),
-                                    ),
-                                    child: const Text(
-                                      'PREMIUM',
-                                      style: TextStyle(
-                                        color: EmergeColors.yellow,
-                                        fontWeight: FontWeight.bold,
-                                        fontSize: 10,
+                                      child: Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          const Icon(
+                                            Icons.bolt,
+                                            size: 14,
+                                            color: AppTheme.primary,
+                                          ),
+                                          const Gap(4),
+                                          Text(
+                                            '+${challenge.xpReward} XP',
+                                            style: const TextStyle(
+                                              color: AppTheme.primary,
+                                              fontWeight: FontWeight.bold,
+                                              fontSize: 12,
+                                            ),
+                                          ),
+                                        ],
                                       ),
                                     ),
-                                  ),
-                              ],
-                            ).animate().fadeIn(delay: 200.ms).slideX(begin: -0.1),
+                                    const Gap(12),
+                                    if (challenge.isPremium)
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 12,
+                                          vertical: 6,
+                                        ),
+                                        decoration: BoxDecoration(
+                                          color: EmergeColors.yellow.withValues(
+                                            alpha: 0.15,
+                                          ),
+                                          borderRadius: BorderRadius.circular(
+                                            20,
+                                          ),
+                                          border: Border.all(
+                                            color: EmergeColors.yellow
+                                                .withValues(alpha: 0.3),
+                                          ),
+                                        ),
+                                        child: const Text(
+                                          'PREMIUM',
+                                          style: TextStyle(
+                                            color: EmergeColors.yellow,
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 10,
+                                          ),
+                                        ),
+                                      ),
+                                  ],
+                                )
+                                .animate()
+                                .fadeIn(delay: 200.ms)
+                                .slideX(begin: -0.1),
                             const Gap(16),
                             Text(
-                              challenge.title,
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 32,
-                                fontWeight: FontWeight.w900,
-                                letterSpacing: -0.5,
-                              ),
-                            ).animate().fadeIn(delay: 300.ms).slideY(begin: 0.1),
+                                  challenge.title,
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 32,
+                                    fontWeight: FontWeight.w900,
+                                    letterSpacing: -0.5,
+                                  ),
+                                )
+                                .animate()
+                                .fadeIn(delay: 300.ms)
+                                .slideY(begin: 0.1),
                             const Gap(12),
                             Text(
                               challenge.description,
@@ -217,12 +259,15 @@ class ChallengeDetailScreen extends ConsumerWidget {
                             // Progress Section
                             if (challenge.status == ChallengeStatus.active) ...[
                               Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
                                 children: [
                                   Text(
                                     'CURRENT PROGRESS',
                                     style: TextStyle(
-                                      color: Colors.white.withValues(alpha: 0.4),
+                                      color: Colors.white.withValues(
+                                        alpha: 0.4,
+                                      ),
                                       fontSize: 12,
                                       fontWeight: FontWeight.w800,
                                       letterSpacing: 1.5,
@@ -240,34 +285,52 @@ class ChallengeDetailScreen extends ConsumerWidget {
                               ).animate().fadeIn(delay: 500.ms),
                               const Gap(12),
                               Stack(
-                                children: [
-                                  Container(
-                                    height: 12,
-                                    width: double.infinity,
-                                    decoration: BoxDecoration(
-                                      color: Colors.white.withValues(alpha: 0.05),
-                                      borderRadius: BorderRadius.circular(6),
-                                    ),
-                                  ),
-                                  AnimatedContainer(
-                                    duration: const Duration(milliseconds: 1000),
-                                    curve: Curves.easeOutExpo,
-                                    height: 12,
-                                    width: MediaQuery.of(context).size.width * 0.88 * progress,
-                                    decoration: BoxDecoration(
-                                      gradient: EmergeColors.neonGradient,
-                                      borderRadius: BorderRadius.circular(6),
-                                      boxShadow: [
-                                        BoxShadow(
-                                          color: AppTheme.primary.withValues(alpha: 0.3),
-                                          blurRadius: 10,
-                                          spreadRadius: 2,
+                                    children: [
+                                      Container(
+                                        height: 12,
+                                        width: double.infinity,
+                                        decoration: BoxDecoration(
+                                          color: Colors.white.withValues(
+                                            alpha: 0.05,
+                                          ),
+                                          borderRadius: BorderRadius.circular(
+                                            6,
+                                          ),
                                         ),
-                                      ],
-                                    ),
+                                      ),
+                                      AnimatedContainer(
+                                        duration: const Duration(
+                                          milliseconds: 1000,
+                                        ),
+                                        curve: Curves.easeOutExpo,
+                                        height: 12,
+                                        width:
+                                            MediaQuery.of(context).size.width *
+                                            0.88 *
+                                            progress,
+                                        decoration: BoxDecoration(
+                                          gradient: EmergeColors.neonGradient,
+                                          borderRadius: BorderRadius.circular(
+                                            6,
+                                          ),
+                                          boxShadow: [
+                                            BoxShadow(
+                                              color: AppTheme.primary
+                                                  .withValues(alpha: 0.3),
+                                              blurRadius: 10,
+                                              spreadRadius: 2,
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ],
+                                  )
+                                  .animate()
+                                  .fadeIn(delay: 600.ms)
+                                  .scaleX(
+                                    begin: 0,
+                                    alignment: Alignment.centerLeft,
                                   ),
-                                ],
-                              ).animate().fadeIn(delay: 600.ms).scaleX(begin: 0, alignment: Alignment.centerLeft),
                               const Gap(40),
                             ],
 
@@ -289,94 +352,122 @@ class ChallengeDetailScreen extends ConsumerWidget {
                     SliverPadding(
                       padding: const EdgeInsets.symmetric(horizontal: 24),
                       sliver: SliverList(
-                        delegate: SliverChildBuilderDelegate(
-                          (context, index) {
-                            final step = challenge.steps[index];
-                            final isCompleted = step.day <= challenge.currentDay;
-                            final isCurrent = step.day == challenge.currentDay + 1 && challenge.status == ChallengeStatus.active;
+                        delegate: SliverChildBuilderDelegate((context, index) {
+                          final step = challenge.steps[index];
+                          final isCompleted = step.day <= challenge.currentDay;
+                          final isCurrent =
+                              step.day == challenge.currentDay + 1 &&
+                              challenge.status == ChallengeStatus.active;
 
-                            return IntrinsicHeight(
-                              child: Row(
-                                crossAxisAlignment: CrossAxisAlignment.stretch,
-                                children: [
-                                  // Progress Line
-                                  Column(
-                                    children: [
-                                      Container(
-                                        width: 24,
-                                        height: 24,
-                                        decoration: BoxDecoration(
-                                          shape: BoxShape.circle,
-                                          color: isCompleted
-                                              ? AppTheme.primary
-                                              : isCurrent
-                                                  ? AppTheme.primary.withValues(alpha: 0.2)
-                                                  : Colors.white.withValues(alpha: 0.1),
-                                          border: isCurrent
-                                              ? Border.all(color: AppTheme.primary, width: 2)
-                                              : null,
-                                          boxShadow: isCompleted ? [
-                                            BoxShadow(
-                                              color: AppTheme.primary.withValues(alpha: 0.3),
-                                              blurRadius: 8,
+                          return IntrinsicHeight(
+                            child: Row(
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              children: [
+                                // Progress Line
+                                Column(
+                                  children: [
+                                    Container(
+                                      width: 24,
+                                      height: 24,
+                                      decoration: BoxDecoration(
+                                        shape: BoxShape.circle,
+                                        color: isCompleted
+                                            ? AppTheme.primary
+                                            : isCurrent
+                                            ? AppTheme.primary.withValues(
+                                                alpha: 0.2,
+                                              )
+                                            : Colors.white.withValues(
+                                                alpha: 0.1,
+                                              ),
+                                        border: isCurrent
+                                            ? Border.all(
+                                                color: AppTheme.primary,
+                                                width: 2,
+                                              )
+                                            : null,
+                                        boxShadow: isCompleted
+                                            ? [
+                                                BoxShadow(
+                                                  color: AppTheme.primary
+                                                      .withValues(alpha: 0.3),
+                                                  blurRadius: 8,
+                                                ),
+                                              ]
+                                            : [],
+                                      ),
+                                      child: isCompleted
+                                          ? const Icon(
+                                              Icons.check,
+                                              size: 14,
+                                              color: Colors.black,
                                             )
-                                          ] : [],
-                                        ),
-                                        child: isCompleted
-                                            ? const Icon(Icons.check, size: 14, color: Colors.black)
-                                            : Center(
-                                                child: Text(
-                                                  '${step.day}',
-                                                  style: TextStyle(
-                                                    fontSize: 10,
-                                                    fontWeight: FontWeight.bold,
-                                                    color: isCurrent ? AppTheme.primary : Colors.white24,
-                                                  ),
+                                          : Center(
+                                              child: Text(
+                                                '${step.day}',
+                                                style: TextStyle(
+                                                  fontSize: 10,
+                                                  fontWeight: FontWeight.bold,
+                                                  color: isCurrent
+                                                      ? AppTheme.primary
+                                                      : Colors.white24,
                                                 ),
                                               ),
-                                      ),
-                                      if (index < challenge.steps.length - 1)
-                                        Expanded(
-                                          child: Container(
-                                            width: 2,
-                                            color: isCompleted
-                                                ? AppTheme.primary.withValues(alpha: 0.5)
-                                                : Colors.white.withValues(alpha: 0.05),
-                                          ),
+                                            ),
+                                    ),
+                                    if (index < challenge.steps.length - 1)
+                                      Expanded(
+                                        child: Container(
+                                          width: 2,
+                                          color: isCompleted
+                                              ? AppTheme.primary.withValues(
+                                                  alpha: 0.5,
+                                                )
+                                              : Colors.white.withValues(
+                                                  alpha: 0.05,
+                                                ),
                                         ),
+                                      ),
+                                  ],
+                                ),
+                                const Gap(20),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        step.title,
+                                        style: TextStyle(
+                                          color: isCompleted
+                                              ? Colors.white
+                                              : Colors.white.withValues(
+                                                  alpha: 0.4,
+                                                ),
+                                          fontSize: 16,
+                                          fontWeight: isCurrent || isCompleted
+                                              ? FontWeight.bold
+                                              : FontWeight.normal,
+                                        ),
+                                      ),
+                                      const Gap(4),
+                                      Text(
+                                        step.description,
+                                        style: TextStyle(
+                                          color: Colors.white.withValues(
+                                            alpha: 0.3,
+                                          ),
+                                          fontSize: 13,
+                                        ),
+                                      ),
+                                      const Gap(24),
                                     ],
                                   ),
-                                  const Gap(20),
-                                  Expanded(
-                                    child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                      children: [
-                                        Text(
-                                          step.title,
-                                          style: TextStyle(
-                                            color: isCompleted ? Colors.white : Colors.white.withValues(alpha: 0.4),
-                                            fontSize: 16,
-                                            fontWeight: isCurrent || isCompleted ? FontWeight.bold : FontWeight.normal,
-                                          ),
-                                        ),
-                                        const Gap(4),
-                                        Text(
-                                          step.description,
-                                          style: TextStyle(
-                                            color: Colors.white.withValues(alpha: 0.3),
-                                            fontSize: 13,
-                                          ),
-                                        ),
-                                        const Gap(24),
-                                      ],
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            );
-                          },
-                          childCount: challenge.steps.length,
-                        ),
+                                ),
+                              ],
+                            ),
+                          );
+                        }, childCount: challenge.steps.length),
                       ),
                     ),
                     const SliverToBoxAdapter(child: Gap(120)),
@@ -395,17 +486,24 @@ class ChallengeDetailScreen extends ConsumerWidget {
           ),
         );
       },
-  );
-}
+    );
+  }
 
-  Widget _buildActionButton(BuildContext context, WidgetRef ref, Challenge challenge) {
-    if (challenge.status != ChallengeStatus.featured && challenge.status != ChallengeStatus.active) {
+  Widget _buildActionButton(
+    BuildContext context,
+    WidgetRef ref,
+    Challenge challenge,
+  ) {
+    if (challenge.status != ChallengeStatus.featured &&
+        challenge.status != ChallengeStatus.active) {
       return const SizedBox.shrink();
     }
 
     final label = challenge.status == ChallengeStatus.featured
         ? 'JOIN QUEST'
-        : (challenge.currentDay + 1 >= challenge.totalDays ? 'FINISH QUEST' : 'COMPLETE DAY ${challenge.currentDay + 1}');
+        : (challenge.currentDay + 1 >= challenge.totalDays
+              ? 'FINISH QUEST'
+              : 'COMPLETE DAY ${challenge.currentDay + 1}');
 
     return ClipRRect(
       borderRadius: BorderRadius.circular(16),
@@ -449,7 +547,11 @@ class ChallengeDetailScreen extends ConsumerWidget {
     );
   }
 
-  void _showConfirmation(BuildContext screenContext, WidgetRef ref, Challenge challenge) {
+  void _showConfirmation(
+    BuildContext screenContext,
+    WidgetRef ref,
+    Challenge challenge,
+  ) {
     showModalBottomSheet(
       context: screenContext,
       backgroundColor: Colors.transparent,
@@ -477,14 +579,20 @@ class ChallengeDetailScreen extends ConsumerWidget {
             );
           } else {
             final newProgress = challenge.currentDay + 1;
-            final result = await repo.updateProgress(user.id, challenge.id, newProgress);
+            final result = await repo.updateProgress(
+              user.id,
+              challenge.id,
+              newProgress,
+            );
             result.fold(
               (failure) => _showError(screenContext, failure.message),
               (_) {
                 final isCompleted = newProgress >= challenge.totalDays;
                 _showSuccess(
                   screenContext,
-                  isCompleted ? 'QUEST COMPLETE! (+${challenge.xpReward} XP)' : 'PROGRESS SAVED!',
+                  isCompleted
+                      ? 'QUEST COMPLETE! (+${challenge.xpReward} XP)'
+                      : 'PROGRESS SAVED!',
                 );
                 screenContext.pop();
               },

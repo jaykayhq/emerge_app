@@ -96,20 +96,33 @@ class _AiReflectionsScreenState extends ConsumerState<AiReflectionsScreen> {
                     data: (habits) {
                       return FutureBuilder<List<dynamic>>(
                         future: Future.wait([
-                          ref.read(aiPersonalizationServiceProvider).generateIdentityInsights(
-                            habits,
-                            dominantMotive: ref.read(userStatsStreamProvider).value?.dominantMotive,
-                          ),
-                          ref.read(aiPersonalizationServiceProvider).analyzeHabitPerformance(
-                            habits,
-                            dominantMotive: ref.read(userStatsStreamProvider).value?.dominantMotive,
-                          ),
+                          ref
+                              .read(aiPersonalizationServiceProvider)
+                              .generateIdentityInsights(
+                                habits,
+                                dominantMotive: ref
+                                    .read(userStatsStreamProvider)
+                                    .value
+                                    ?.dominantMotive,
+                              ),
+                          ref
+                              .read(aiPersonalizationServiceProvider)
+                              .analyzeHabitPerformance(
+                                habits,
+                                dominantMotive: ref
+                                    .read(userStatsStreamProvider)
+                                    .value
+                                    ?.dominantMotive,
+                              ),
                         ]),
                         builder: (context, snapshot) {
                           if (snapshot.connectionState ==
                               ConnectionState.waiting) {
                             return ListView.separated(
-                              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 20,
+                                vertical: 24,
+                              ),
                               itemCount: 3,
                               separatorBuilder: (_, _) =>
                                   const SizedBox(height: 20),
@@ -122,7 +135,13 @@ class _AiReflectionsScreenState extends ConsumerState<AiReflectionsScreen> {
                               child: Column(
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
-                                  Icon(Icons.auto_awesome, color: EmergeColors.teal.withValues(alpha: 0.3), size: 64),
+                                  Icon(
+                                    Icons.auto_awesome,
+                                    color: EmergeColors.teal.withValues(
+                                      alpha: 0.3,
+                                    ),
+                                    size: 64,
+                                  ),
                                   const Gap(16),
                                   Text(
                                     'The Oracle is meditating...',
@@ -139,21 +158,33 @@ class _AiReflectionsScreenState extends ConsumerState<AiReflectionsScreen> {
 
                           final results = snapshot.data ?? [[], []];
                           final insights = results[0] as List<AiInsight>;
-                          final adjustments = results[1] as List<GoldilocksAdjustment>;
+                          final adjustments =
+                              results[1] as List<GoldilocksAdjustment>;
 
                           // Combine both into a single list of cards
-                          final allItems = <dynamic>[...insights, ...adjustments];
+                          final allItems = <dynamic>[
+                            ...insights,
+                            ...adjustments,
+                          ];
 
                           if (allItems.isEmpty) {
                             return Center(
                               child: Column(
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
-                                  Icon(Icons.auto_awesome, color: EmergeColors.teal.withValues(alpha: 0.1), size: 48),
+                                  Icon(
+                                    Icons.auto_awesome,
+                                    color: EmergeColors.teal.withValues(
+                                      alpha: 0.1,
+                                    ),
+                                    size: 48,
+                                  ),
                                   const Gap(16),
                                   Text(
                                     "Continue your journey to receive guidance.",
-                                    style: TextStyle(color: AppTheme.textSecondaryDark),
+                                    style: TextStyle(
+                                      color: AppTheme.textSecondaryDark,
+                                    ),
                                   ),
                                 ],
                               ),
@@ -162,7 +193,10 @@ class _AiReflectionsScreenState extends ConsumerState<AiReflectionsScreen> {
 
                           return ListView.separated(
                             key: _wisdomKey,
-                            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 20,
+                              vertical: 24,
+                            ),
                             itemCount: allItems.length,
                             separatorBuilder: (_, _) =>
                                 const SizedBox(height: 20),
@@ -173,7 +207,8 @@ class _AiReflectionsScreenState extends ConsumerState<AiReflectionsScreen> {
                               } else {
                                 return _GoldilocksAdjustmentCard(
                                   adjustment: item as GoldilocksAdjustment,
-                                  onAccept: () => _applyAdjustment(habits, item),
+                                  onAccept: () =>
+                                      _applyAdjustment(habits, item),
                                 );
                               }
                             },
@@ -314,7 +349,10 @@ class _AiReflectionsScreenState extends ConsumerState<AiReflectionsScreen> {
                 ),
                 padding: const EdgeInsets.symmetric(horizontal: 16),
               ),
-              child: const Text('UPGRADE', style: TextStyle(fontWeight: FontWeight.bold)),
+              child: const Text(
+                'UPGRADE',
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
             ),
           ],
         ),
@@ -367,15 +405,16 @@ class _GoldilocksAdjustmentCard extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final isPremium = ref.watch(isPremiumProvider).value ?? false;
-    final icon = adjustment.type == AdjustmentType.increase 
-        ? Icons.trending_up 
+    final icon = adjustment.type == AdjustmentType.increase
+        ? Icons.trending_up
         : Icons.trending_down;
-    final color = adjustment.type == AdjustmentType.increase 
-        ? EmergeColors.green 
+    final color = adjustment.type == AdjustmentType.increase
+        ? EmergeColors.green
         : Colors.amber;
 
     return OracleCard(
-      title: '${adjustment.habitTitle}: Level ${adjustment.type == AdjustmentType.increase ? "Up" : "Down"}',
+      title:
+          '${adjustment.habitTitle}: Level ${adjustment.type == AdjustmentType.increase ? "Up" : "Down"}',
       description: adjustment.reason,
       quote: adjustment.suggestion,
       icon: icon,
@@ -400,8 +439,12 @@ class _GoldilocksAdjustmentCard extends ConsumerWidget {
             child: ElevatedButton(
               onPressed: isPremium ? onAccept : () => context.push('/paywall'),
               style: ElevatedButton.styleFrom(
-                backgroundColor: isPremium ? EmergeColors.teal : AppTheme.surfaceDark,
-                foregroundColor: isPremium ? Colors.white : AppTheme.textSecondaryDark,
+                backgroundColor: isPremium
+                    ? EmergeColors.teal
+                    : AppTheme.surfaceDark,
+                foregroundColor: isPremium
+                    ? Colors.white
+                    : AppTheme.textSecondaryDark,
                 shape: const StadiumBorder(),
                 elevation: 0,
               ),
@@ -464,24 +507,36 @@ class _InsightCard extends ConsumerWidget {
                   context.push('/paywall');
                   return;
                 }
-                
+
                 // Binding to the AI Coach advice logic
                 _showCoachAdviceDialog(context, ref, insight);
               },
               style: ElevatedButton.styleFrom(
                 elevation: 0,
-                backgroundColor: isPremium ? EmergeColors.violet : AppTheme.surfaceDark,
-                foregroundColor: isPremium ? Colors.white : AppTheme.textSecondaryDark,
+                backgroundColor: isPremium
+                    ? EmergeColors.violet
+                    : AppTheme.surfaceDark,
+                foregroundColor: isPremium
+                    ? Colors.white
+                    : AppTheme.textSecondaryDark,
                 shape: const StadiumBorder(),
                 padding: const EdgeInsets.symmetric(vertical: 12),
-                side: isPremium ? null : BorderSide(color: EmergeColors.hexLine),
+                side: isPremium
+                    ? null
+                    : BorderSide(color: EmergeColors.hexLine),
               ),
-              child: Text(isPremium ? 'Adjust My Schedule' : 'Unlock Oracle Coach'),
+              child: Text(
+                isPremium ? 'Adjust My Schedule' : 'Unlock Oracle Coach',
+              ),
             ),
     );
   }
 
-  void _showCoachAdviceDialog(BuildContext context, WidgetRef ref, AiInsight insight) {
+  void _showCoachAdviceDialog(
+    BuildContext context,
+    WidgetRef ref,
+    AiInsight insight,
+  ) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -489,13 +544,21 @@ class _InsightCard extends ConsumerWidget {
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
         title: Text(
           "Oracle's Advice",
-          style: TextStyle(color: AppTheme.textMainDark, fontWeight: FontWeight.bold),
+          style: TextStyle(
+            color: AppTheme.textMainDark,
+            fontWeight: FontWeight.bold,
+          ),
         ),
         content: FutureBuilder<String>(
-          future: ref.read(aiPersonalizationServiceProvider).enhanceUserWhy(
-            "I want to adjust my schedule based on the pattern: ${insight.description}",
-            dominantMotive: ref.read(userStatsStreamProvider).value?.dominantMotive,
-          ),
+          future: ref
+              .read(aiPersonalizationServiceProvider)
+              .enhanceUserWhy(
+                "I want to adjust my schedule based on the pattern: ${insight.description}",
+                dominantMotive: ref
+                    .read(userStatsStreamProvider)
+                    .value
+                    ?.dominantMotive,
+              ),
           builder: (context, snapshot) {
             if (snapshot.connectionState == ConnectionState.waiting) {
               return SizedBox(
@@ -522,7 +585,10 @@ class _InsightCard extends ConsumerWidget {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: Text("I Understand", style: TextStyle(color: EmergeColors.violet)),
+            child: Text(
+              "I Understand",
+              style: TextStyle(color: EmergeColors.violet),
+            ),
           ),
         ],
       ),
@@ -557,7 +623,11 @@ class _InsightSkeleton extends StatelessWidget {
           const SizedBox(height: 8),
           const SkeletonShimmer(width: 200, height: 14),
           const SizedBox(height: 20),
-          const SkeletonShimmer(width: double.infinity, height: 48, borderRadius: 24),
+          const SkeletonShimmer(
+            width: double.infinity,
+            height: 48,
+            borderRadius: 24,
+          ),
         ],
       ),
     );

@@ -44,7 +44,7 @@ class DayHabitListSheet extends StatelessWidget {
 
     return Container(
       decoration: BoxDecoration(
-        color: EmergeEarthyColors.baseBackground.withValues(alpha:0.95),
+        color: EmergeEarthyColors.baseBackground.withValues(alpha: 0.95),
         borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
       ),
       child: Column(
@@ -55,7 +55,7 @@ class DayHabitListSheet extends StatelessWidget {
             width: 40,
             height: 4,
             decoration: BoxDecoration(
-              color: EmergeEarthyColors.terracotta.withValues(alpha:0.3),
+              color: EmergeEarthyColors.terracotta.withValues(alpha: 0.3),
               borderRadius: BorderRadius.circular(2),
             ),
           ),
@@ -72,7 +72,7 @@ class DayHabitListSheet extends StatelessWidget {
           Text(
             '${completedOnDay.length} habit${completedOnDay.length != 1 ? 's' : ''} completed',
             style: TextStyle(
-              color: EmergeEarthyColors.cream.withValues(alpha:0.7),
+              color: EmergeEarthyColors.cream.withValues(alpha: 0.7),
               fontSize: 14,
             ),
           ),
@@ -83,7 +83,7 @@ class DayHabitListSheet extends StatelessWidget {
               child: Text(
                 'No habits were completed on this day',
                 style: TextStyle(
-                  color: EmergeEarthyColors.cream.withValues(alpha:0.5),
+                  color: EmergeEarthyColors.cream.withValues(alpha: 0.5),
                   fontSize: 14,
                 ),
                 textAlign: TextAlign.center,
@@ -107,10 +107,10 @@ class DayHabitListSheet extends StatelessWidget {
                   return Container(
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
-                      color: attrColor.withValues(alpha:0.1),
+                      color: attrColor.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(12),
                       border: Border.all(
-                        color: attrColor.withValues(alpha:0.3),
+                        color: attrColor.withValues(alpha: 0.3),
                       ),
                     ),
                     child: Row(
@@ -142,7 +142,7 @@ class DayHabitListSheet extends StatelessWidget {
                                       vertical: 2,
                                     ),
                                     decoration: BoxDecoration(
-                                      color: attrColor.withValues(alpha:0.2),
+                                      color: attrColor.withValues(alpha: 0.2),
                                       borderRadius: BorderRadius.circular(8),
                                     ),
                                     child: Text(
@@ -167,7 +167,7 @@ class DayHabitListSheet extends StatelessWidget {
                                           '${habit.currentStreak} day streak',
                                           style: TextStyle(
                                             color: EmergeEarthyColors.cream
-                                                .withValues(alpha:0.7),
+                                                .withValues(alpha: 0.7),
                                             fontSize: 11,
                                           ),
                                         ),
@@ -193,7 +193,7 @@ class DayHabitListSheet extends StatelessWidget {
                             Text(
                               'XP',
                               style: TextStyle(
-                                color: attrColor.withValues(alpha:0.7),
+                                color: attrColor.withValues(alpha: 0.7),
                                 fontSize: 10,
                                 fontWeight: FontWeight.bold,
                               ),

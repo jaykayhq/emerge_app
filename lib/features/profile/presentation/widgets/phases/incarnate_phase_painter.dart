@@ -49,8 +49,8 @@ class IncarnatePhasePainter extends CustomPainter {
 
     final gradient = RadialGradient(
       colors: [
-        primaryColor.withValues(alpha:0.12),
-        primaryColor.withValues(alpha:0.04),
+        primaryColor.withValues(alpha: 0.12),
+        primaryColor.withValues(alpha: 0.04),
         Colors.transparent,
       ],
       stops: const [0.0, 0.5, 1.0],
@@ -87,17 +87,17 @@ class IncarnatePhasePainter extends CustomPainter {
           primaryColor,
           Colors.black,
           0.65,
-        )!.withValues(alpha:opacity),
+        )!.withValues(alpha: opacity),
         Color.lerp(
           primaryColor,
           Colors.black,
           0.80,
-        )!.withValues(alpha:opacity),
+        )!.withValues(alpha: opacity),
         Color.lerp(
           primaryColor,
           Colors.black,
           0.90,
-        )!.withValues(alpha:opacity * 0.95),
+        )!.withValues(alpha: opacity * 0.95),
       ],
       stops: const [0.0, 0.5, 1.0],
     );
@@ -122,7 +122,7 @@ class IncarnatePhasePainter extends CustomPainter {
 
     // Right-side rim light
     final rimPaint = Paint()
-      ..color = primaryColor.withValues(alpha:0.4)
+      ..color = primaryColor.withValues(alpha: 0.4)
       ..style = PaintingStyle.stroke
       ..strokeWidth = 2.5
       ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 3);
@@ -134,7 +134,7 @@ class IncarnatePhasePainter extends CustomPainter {
     canvas.clipRect(Rect.fromLTWH(cx, 0, size.width / 2, size.height));
 
     final brightRimPaint = Paint()
-      ..color = primaryColor.withValues(alpha:0.55)
+      ..color = primaryColor.withValues(alpha: 0.55)
       ..style = PaintingStyle.stroke
       ..strokeWidth = 3
       ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 5);
@@ -156,8 +156,8 @@ class IncarnatePhasePainter extends CustomPainter {
 
     final gradient = RadialGradient(
       colors: [
-        primaryColor.withValues(alpha:0.25 * pulse),
-        primaryColor.withValues(alpha:0.10 * pulse),
+        primaryColor.withValues(alpha: 0.25 * pulse),
+        primaryColor.withValues(alpha: 0.10 * pulse),
         Colors.transparent,
       ],
       stops: const [0.0, 0.4, 1.0],
@@ -184,7 +184,7 @@ class IncarnatePhasePainter extends CustomPainter {
     double breathScale,
   ) {
     final linePaint = Paint()
-      ..color = primaryColor.withValues(alpha:0.12)
+      ..color = primaryColor.withValues(alpha: 0.12)
       ..style = PaintingStyle.stroke
       ..strokeWidth = 1
       ..strokeCap = StrokeCap.round
@@ -306,8 +306,8 @@ class IncarnatePhasePainter extends CustomPainter {
 
       final alpha = 0.3 * (1 - rise);
       particlePaint.color = i % 3 == 0
-          ? Colors.white.withValues(alpha:alpha * 0.7)
-          : primaryColor.withValues(alpha:alpha);
+          ? Colors.white.withValues(alpha: alpha * 0.7)
+          : primaryColor.withValues(alpha: alpha);
 
       canvas.drawCircle(Offset(x, y), pSize, particlePaint);
     }

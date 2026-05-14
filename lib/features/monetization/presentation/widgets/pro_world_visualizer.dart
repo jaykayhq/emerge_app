@@ -50,24 +50,27 @@ class ProWorldVisualizer extends ConsumerWidget {
     // Current standard WorldVisualizer logic basically
     final safeStage = level.clamp(1, 5);
     final imagePath = 'assets/images/forest_stage_$safeStage.png';
-    
+
     return Image.asset(
       imagePath,
       fit: BoxFit.cover,
       width: double.infinity,
       height: double.infinity,
       errorBuilder: (context, error, stackTrace) => Container(
-        color: theme == 'city' ? const Color(0xFF1a1a2e) : const Color(0xFF1a472a),
+        color: theme == 'city'
+            ? const Color(0xFF1a1a2e)
+            : const Color(0xFF1a472a),
       ),
     );
   }
 
   // NOTE: In a real app, these would be local assets or networked images.
   // For this implementation, I'm using the screenshot URLs from Stitch as constants.
-  
+
   Widget _buildCityGrowth() {
     return CachedNetworkImage(
-      imageUrl: 'https://lh3.googleusercontent.com/aida/ADBb0ui5zB7TcLh1B-6jrCkYqx-1M3vLH3ICURZJ_0etZUt9xfZWw0tjRFTiVO5RwTVp95XgeXyKFh13TukO-QN6j-TzplsgrPxj0I6PDtf-8bGgD7pFOCF4BaMpfMRqey3GPpPtM6WT2qPLlL8C1gfmJnXEou_8_MRqFXMtCNB994ampAD2wReiqR6caqIhd7yRsNmGTyjN3N94MonHFw52vZ11tJnqJrBl6EYbCZoJiIUHLqKdVwtbxJMjTZg',
+      imageUrl:
+          'https://lh3.googleusercontent.com/aida/ADBb0ui5zB7TcLh1B-6jrCkYqx-1M3vLH3ICURZJ_0etZUt9xfZWw0tjRFTiVO5RwTVp95XgeXyKFh13TukO-QN6j-TzplsgrPxj0I6PDtf-8bGgD7pFOCF4BaMpfMRqey3GPpPtM6WT2qPLlL8C1gfmJnXEou_8_MRqFXMtCNB994ampAD2wReiqR6caqIhd7yRsNmGTyjN3N94MonHFw52vZ11tJnqJrBl6EYbCZoJiIUHLqKdVwtbxJMjTZg',
       fit: BoxFit.cover,
       placeholder: (context, url) => Container(color: const Color(0xFF1a1a2e)),
       errorWidget: (context, url, error) => _buildStandardView(),
@@ -76,7 +79,8 @@ class ProWorldVisualizer extends ConsumerWidget {
 
   Widget _buildCityDecay() {
     return CachedNetworkImage(
-      imageUrl: 'https://lh3.googleusercontent.com/aida/ADBb0uh3-kR5Kg1MriZcMv_LClIrAyb6QkcFhQZ7MYka83simow6NYJxEiEbOpYwncgU6FuGOCwqeID6cxt-JTXMfx_ZE1BQOK70Y0ZOORCZotmx-_0CCwTDihwbDmtRb8SBFsyb0Mfmn51CNRnaECGIcYCqwgsZzEgcZwas92L0id4NyCKw_M8T5kWYnt5sivPzCrm75jQBkY4VHnOcI8jJjCaF5qn77Hi6xKaqTO5z4NkBbQGAYC9S6WKRC0I',
+      imageUrl:
+          'https://lh3.googleusercontent.com/aida/ADBb0uh3-kR5Kg1MriZcMv_LClIrAyb6QkcFhQZ7MYka83simow6NYJxEiEbOpYwncgU6FuGOCwqeID6cxt-JTXMfx_ZE1BQOK70Y0ZOORCZotmx-_0CCwTDihwbDmtRb8SBFsyb0Mfmn51CNRnaECGIcYCqwgsZzEgcZwas92L0id4NyCKw_M8T5kWYnt5sivPzCrm75jQBkY4VHnOcI8jJjCaF5qn77Hi6xKaqTO5z4NkBbQGAYC9S6WKRC0I',
       fit: BoxFit.cover,
       placeholder: (context, url) => Container(color: const Color(0xFF1a1a2e)),
       errorWidget: (context, url, error) => _buildStandardView(),
@@ -85,7 +89,8 @@ class ProWorldVisualizer extends ConsumerWidget {
 
   Widget _buildForestGrowth() {
     return CachedNetworkImage(
-      imageUrl: 'https://lh3.googleusercontent.com/aida/ADBb0uiF1i49zaayajxjry382z3cZCSxiqNjn7W4ETqCSF9rYbAVXLCAs3-r24PEZQmkU2pgisHiUBKW76ykFECnFE9QrXBCoyNsI6TOUeEcGUbV5gmZZCdXdxpvxP73OEqsrkx7L5DaHSNsehsCgCXH5qxCC-gkKcwCrFKfqTzuWTwqdfN8aOmJ3reE4vS8ypPpI9WFhAYhAy_LYj1iOV4g71_zzYP-zjAx_9p66HFs_LSVydj82UT42uUDDbI',
+      imageUrl:
+          'https://lh3.googleusercontent.com/aida/ADBb0uiF1i49zaayajxjry382z3cZCSxiqNjn7W4ETqCSF9rYbAVXLCAs3-r24PEZQmkU2pgisHiUBKW76ykFECnFE9QrXBCoyNsI6TOUeEcGUbV5gmZZCdXdxpvxP73OEqsrkx7L5DaHSNsehsCgCXH5qxCC-gkKcwCrFKfqTzuWTwqdfN8aOmJ3reE4vS8ypPpI9WFhAYhAy_LYj1iOV4g71_zzYP-zjAx_9p66HFs_LSVydj82UT42uUDDbI',
       fit: BoxFit.cover,
       placeholder: (context, url) => Container(color: const Color(0xFF1a472a)),
       errorWidget: (context, url, error) => _buildStandardView(),
@@ -94,7 +99,8 @@ class ProWorldVisualizer extends ConsumerWidget {
 
   Widget _buildForestDecay() {
     return CachedNetworkImage(
-      imageUrl: 'https://lh3.googleusercontent.com/aida/ADBb0ujm9aewspnNjtaqdSGsTIUoTs5ePoGloxT4hZ5p_W16hbGzg63kqLVw9BMmMrGag0nVV3EYClzPvKUbO5Oh4TW-vb1JdiiM0O7e1_qZjfOsCTtNcdfySO_BZ4WnYllGuzMIUuImxIUK2Ud_87sv3xUATvnwyPDP9jeJYUUEdA1rPQcrvZvA_DSubbRqqf6t-jsudXwVW-Feqet-RvGj__t5aKUEf7-4_wMk2_NhxeMB-q1Yf7abhhNLnD0',
+      imageUrl:
+          'https://lh3.googleusercontent.com/aida/ADBb0ujm9aewspnNjtaqdSGsTIUoTs5ePoGloxT4hZ5p_W16hbGzg63kqLVw9BMmMrGag0nVV3EYClzPvKUbO5Oh4TW-vb1JdiiM0O7e1_qZjfOsCTtNcdfySO_BZ4WnYllGuzMIUuImxIUK2Ud_87sv3xUATvnwyPDP9jeJYUUEdA1rPQcrvZvA_DSubbRqqf6t-jsudXwVW-Feqet-RvGj__t5aKUEf7-4_wMk2_NhxeMB-q1Yf7abhhNLnD0',
       fit: BoxFit.cover,
       placeholder: (context, url) => Container(color: const Color(0xFF1a472a)),
       errorWidget: (context, url, error) => _buildStandardView(),

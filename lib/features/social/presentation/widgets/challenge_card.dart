@@ -53,7 +53,7 @@ class ChallengeCard extends StatelessWidget {
         decoration: BoxDecoration(
           color: AppTheme.surfaceDark,
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: Colors.white.withValues(alpha:0.1)),
+          border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -73,8 +73,8 @@ class ChallengeCard extends StatelessWidget {
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
                         colors: [
-                          AppTheme.primary.withValues(alpha:0.3),
-                          AppTheme.secondary.withValues(alpha:0.3),
+                          AppTheme.primary.withValues(alpha: 0.3),
+                          AppTheme.secondary.withValues(alpha: 0.3),
                         ],
                       ),
                     ),
@@ -132,7 +132,7 @@ class ChallengeCard extends StatelessWidget {
                               vertical: 4,
                             ),
                             decoration: BoxDecoration(
-                              color: Colors.amber.withValues(alpha:0.9),
+                              color: Colors.amber.withValues(alpha: 0.9),
                               borderRadius: BorderRadius.circular(8),
                               border: Border.all(
                                 color: Colors.amber.shade700,
@@ -167,7 +167,7 @@ class ChallengeCard extends StatelessWidget {
                               vertical: 4,
                             ),
                             decoration: BoxDecoration(
-                              color: Colors.black.withValues(alpha:0.6),
+                              color: Colors.black.withValues(alpha: 0.6),
                               borderRadius: BorderRadius.circular(8),
                             ),
                             child: Text(
@@ -193,7 +193,7 @@ class ChallengeCard extends StatelessWidget {
                           vertical: 6,
                         ),
                         decoration: BoxDecoration(
-                          color: AppTheme.secondary.withValues(alpha:0.9),
+                          color: AppTheme.secondary.withValues(alpha: 0.9),
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: Text(
@@ -300,7 +300,7 @@ class ChallengeCard extends StatelessWidget {
       child: Icon(
         Icons.emoji_events,
         size: 48,
-        color: AppTheme.primary.withValues(alpha:0.5),
+        color: AppTheme.primary.withValues(alpha: 0.5),
       ),
     );
   }
@@ -327,7 +327,7 @@ class _PrizeChip extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
-        color: color.withValues(alpha:0.15),
+        color: color.withValues(alpha: 0.15),
         borderRadius: BorderRadius.circular(8),
       ),
       child: Row(

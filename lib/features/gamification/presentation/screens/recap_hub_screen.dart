@@ -46,15 +46,20 @@ class RecapHubScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildContent(BuildContext context, WidgetRef ref, List<UserWeeklyRecap> recaps, bool isPremium) {
+  Widget _buildContent(
+    BuildContext context,
+    WidgetRef ref,
+    List<UserWeeklyRecap> recaps,
+    bool isPremium,
+  ) {
     return ListView(
       padding: const EdgeInsets.all(20),
       children: [
         // 1. Featured Section (Current Week)
         _buildFeaturedSection(context, ref, recaps, isPremium),
-        
+
         const SizedBox(height: 32),
-        
+
         // 2. Journey Archive
         const Text(
           'Journey History',
@@ -65,7 +70,7 @@ class RecapHubScreen extends ConsumerWidget {
           ),
         ),
         const SizedBox(height: 16),
-        
+
         if (recaps.isEmpty)
           const Center(
             child: Padding(
@@ -79,13 +84,18 @@ class RecapHubScreen extends ConsumerWidget {
           )
         else
           ...recaps.map((recap) => _buildRecapItem(context, recap, isPremium)),
-          
+
         const SizedBox(height: 80), // Space for FAB
       ],
     );
   }
 
-  Widget _buildFeaturedSection(BuildContext context, WidgetRef ref, List<UserWeeklyRecap> recaps, bool isPremium) {
+  Widget _buildFeaturedSection(
+    BuildContext context,
+    WidgetRef ref,
+    List<UserWeeklyRecap> recaps,
+    bool isPremium,
+  ) {
     return GestureDetector(
       onTap: () => context.push('/recap'), // Launch passive recap
       child: GlassmorphismCard(
@@ -143,8 +153,13 @@ class RecapHubScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildRecapItem(BuildContext context, UserWeeklyRecap recap, bool isPremium) {
-    final dateStr = "${DateFormat('MMM d').format(recap.startDate)} - ${DateFormat('MMM d').format(recap.endDate)}";
+  Widget _buildRecapItem(
+    BuildContext context,
+    UserWeeklyRecap recap,
+    bool isPremium,
+  ) {
+    final dateStr =
+        "${DateFormat('MMM d').format(recap.startDate)} - ${DateFormat('MMM d').format(recap.endDate)}";
     final isLocked = recap.isLocked && !isPremium;
 
     return Padding(
@@ -189,7 +204,10 @@ class RecapHubScreen extends ConsumerWidget {
                     ),
                     Text(
                       '${recap.totalHabitsCompleted} habits · ${recap.totalXpEarned} XP',
-                      style: const TextStyle(fontSize: 12, color: Colors.white54),
+                      style: const TextStyle(
+                        fontSize: 12,
+                        color: Colors.white54,
+                      ),
                     ),
                   ],
                 ),

@@ -15,7 +15,7 @@ class ChallengeBundle extends _$ChallengeBundle {
   @override
   Future<ChallengeBundleData> build() async {
     final repository = ref.read(challengeRepositoryProvider);
-    
+
     // Watch auth state - standard Riverpod pattern
     final user = ref.watch(authStateChangesProvider).value;
     if (user == null) {
@@ -28,7 +28,7 @@ class ChallengeBundle extends _$ChallengeBundle {
 
     // Get archetype name - use 'athlete' as fallback for 'none' to ensure challenges show
     final archetypeName = profile.archetype.name == 'none'
-        ? 'athlete' 
+        ? 'athlete'
         : profile.archetype.name;
 
     // Single batch fetch - all data in one async operation
@@ -45,7 +45,9 @@ class ChallengeBundle extends _$ChallengeBundle {
     ]);
 
     // Also fetch general featured challenges available to all users
-    final featuredChallenges = await repository.getChallenges(featuredOnly: true);
+    final featuredChallenges = await repository.getChallenges(
+      featuredOnly: true,
+    );
 
     return ChallengeBundleData(
       weeklySpotlight: results[0] as Challenge?,

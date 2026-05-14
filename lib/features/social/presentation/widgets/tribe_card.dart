@@ -35,8 +35,8 @@ class TribeCard extends ConsumerWidget {
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [
-            EmergeColors.glassWhite.withValues(alpha:0.1),
-            EmergeColors.glassWhite.withValues(alpha:0.05),
+            EmergeColors.glassWhite.withValues(alpha: 0.1),
+            EmergeColors.glassWhite.withValues(alpha: 0.05),
           ],
         ),
         borderRadius: BorderRadius.circular(16),
@@ -182,9 +182,9 @@ class _MembershipButton extends ConsumerWidget {
             }
           } catch (e) {
             if (context.mounted) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text('Error: $e')),
-              );
+              ScaffoldMessenger.of(
+                context,
+              ).showSnackBar(SnackBar(content: Text('Error: $e')));
             }
           }
         },
@@ -240,10 +240,7 @@ class _StatItem extends StatelessWidget {
         ),
         Text(
           label,
-          style: const TextStyle(
-            fontSize: 10,
-            color: Colors.white60,
-          ),
+          style: const TextStyle(fontSize: 10, color: Colors.white60),
         ),
       ],
     );

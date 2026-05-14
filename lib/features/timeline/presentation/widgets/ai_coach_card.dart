@@ -44,7 +44,7 @@ class AiCoachCard extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: _accent.withValues(alpha:0.2),
+                  color: _accent.withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Icon(Icons.smart_toy, color: _accent, size: 20),
@@ -110,7 +110,7 @@ class AiCoachCard extends StatelessWidget {
                     Text(
                       'Personalized insights for your journey',
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: EmergeColors.tealMuted.withValues(alpha:0.7),
+                        color: EmergeColors.tealMuted.withValues(alpha: 0.7),
                         fontSize: 11,
                       ),
                     ),
@@ -146,10 +146,10 @@ class AiCoachCard extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: EmergeColors.teal.withValues(alpha:0.1),
+                color: EmergeColors.teal.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(
-                  color: EmergeColors.teal.withValues(alpha:0.3),
+                  color: EmergeColors.teal.withValues(alpha: 0.3),
                 ),
               ),
               child: Row(
@@ -234,9 +234,7 @@ class _ActionButton extends StatelessWidget {
         decoration: BoxDecoration(
           color: color.withValues(alpha: 0.2), // Increased default visibility
           borderRadius: BorderRadius.circular(10),
-          border: Border.all(
-            color: color.withValues(alpha: 0.4),
-          ),
+          border: Border.all(color: color.withValues(alpha: 0.4)),
         ),
         child: FittedBox(
           fit: BoxFit.scaleDown,
@@ -247,7 +245,7 @@ class _ActionButton extends StatelessWidget {
               if (isLockedState)
                 Icon(
                   Icons.lock_outline,
-                  color: color.withValues(alpha:0.5),
+                  color: color.withValues(alpha: 0.5),
                   size: 16,
                 )
               else

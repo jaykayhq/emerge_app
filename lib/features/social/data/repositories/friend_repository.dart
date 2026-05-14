@@ -169,7 +169,9 @@ class FirestoreFriendRepository implements FriendRepository {
     if (_socialActivityService != null) {
       _socialActivityService.logPartnerJoined(
         userId: recipientId,
-        userName: data['recipientName'] ?? 'A member', // Assuming we add this to request
+        userName:
+            data['recipientName'] ??
+            'A member', // Assuming we add this to request
         archetype: data['recipientArchetype'] ?? 'Stoic',
         partnerName: data['senderName'] ?? 'a partner',
       );

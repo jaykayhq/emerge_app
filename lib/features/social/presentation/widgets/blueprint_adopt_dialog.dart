@@ -44,9 +44,9 @@ class _BlueprintAdoptDialogState extends State<BlueprintAdoptDialog> {
             Text(
               'When will you commit?',
               style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
-                  ),
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+              ),
             ),
             const Gap(16),
             Text(
@@ -63,7 +63,9 @@ class _BlueprintAdoptDialogState extends State<BlueprintAdoptDialog> {
                     onPressed: () => Navigator.pop(context),
                     child: Text(
                       'CANCEL',
-                      style: TextStyle(color: Colors.white.withValues(alpha: 0.5)),
+                      style: TextStyle(
+                        color: Colors.white.withValues(alpha: 0.5),
+                      ),
                     ),
                   ),
                 ),
@@ -73,7 +75,8 @@ class _BlueprintAdoptDialogState extends State<BlueprintAdoptDialog> {
                     onPressed: () {
                       String? timeString;
                       if (_selectedTime != null) {
-                        timeString = '${_selectedTime!.hour.toString().padLeft(2, '0')}:${_selectedTime!.minute.toString().padLeft(2, '0')}';
+                        timeString =
+                            '${_selectedTime!.hour.toString().padLeft(2, '0')}:${_selectedTime!.minute.toString().padLeft(2, '0')}';
                       }
                       widget.onAdopt(timeString);
                       Navigator.pop(context);
@@ -85,7 +88,10 @@ class _BlueprintAdoptDialogState extends State<BlueprintAdoptDialog> {
                         borderRadius: BorderRadius.circular(12),
                       ),
                     ),
-                    child: const Text('ADOPT', style: TextStyle(fontWeight: FontWeight.bold)),
+                    child: const Text(
+                      'ADOPT',
+                      style: TextStyle(fontWeight: FontWeight.bold),
+                    ),
                   ),
                 ),
               ],
@@ -145,7 +151,9 @@ class _BlueprintAdoptDialogState extends State<BlueprintAdoptDialog> {
               style: TextStyle(
                 color: _selectedTime != null ? Colors.white : Colors.white54,
                 fontSize: 16,
-                fontWeight: _selectedTime != null ? FontWeight.bold : FontWeight.normal,
+                fontWeight: _selectedTime != null
+                    ? FontWeight.bold
+                    : FontWeight.normal,
               ),
             ),
             const Spacer(),
@@ -155,7 +163,11 @@ class _BlueprintAdoptDialogState extends State<BlueprintAdoptDialog> {
                 onPressed: () => setState(() => _selectedTime = null),
               )
             else
-              const Icon(Icons.arrow_forward_ios, size: 14, color: Colors.white24),
+              const Icon(
+                Icons.arrow_forward_ios,
+                size: 14,
+                color: Colors.white24,
+              ),
           ],
         ),
       ),

@@ -89,7 +89,9 @@ class WelcomeScreen extends ConsumerWidget {
                           ),
                           boxShadow: [
                             BoxShadow(
-                              color: const Color(0xFF8E44AD).withValues(alpha: 0.3),
+                              color: const Color(
+                                0xFF8E44AD,
+                              ).withValues(alpha: 0.3),
                               blurRadius: 20,
                               offset: const Offset(0, 4),
                             ),

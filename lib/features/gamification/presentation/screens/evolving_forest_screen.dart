@@ -74,14 +74,18 @@ class _EvolvingForestScreenState extends ConsumerState<EvolvingForestScreen> {
       body: statsAsync.when(
         data: (profile) {
           final world = profile.worldState;
-          
+
           // Determine the active theme based on user settings or fallback to stats
           final selectedTheme = profile.worldTheme;
           final String activeTheme;
-          if (selectedTheme != null && selectedTheme.isNotEmpty && selectedTheme != 'Default') {
+          if (selectedTheme != null &&
+              selectedTheme.isNotEmpty &&
+              selectedTheme != 'Default') {
             activeTheme = selectedTheme;
           } else {
-            activeTheme = world.forestLevel > world.cityLevel ? 'forest' : 'city';
+            activeTheme = world.forestLevel > world.cityLevel
+                ? 'forest'
+                : 'city';
           }
 
           return Stack(

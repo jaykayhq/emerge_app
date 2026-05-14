@@ -2,7 +2,8 @@ import 'dart:async';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:emerge_app/core/sync/sync_engine.dart';
 
-typedef ConnectivityListener = Future<void> Function(List<ConnectivityResult> results);
+typedef ConnectivityListener =
+    Future<void> Function(List<ConnectivityResult> results);
 
 class SyncTriggerService {
   final EnhancedSyncEngine _syncEngine;
@@ -22,12 +23,13 @@ class SyncTriggerService {
   }
 
   Future<void> onConnectivityChanged(List<ConnectivityResult> results) async {
-    final isConnected = results.any((result) =>
-      result == ConnectivityResult.mobile ||
-      result == ConnectivityResult.wifi ||
-      result == ConnectivityResult.ethernet ||
-      result == ConnectivityResult.vpn ||
-      result == ConnectivityResult.other
+    final isConnected = results.any(
+      (result) =>
+          result == ConnectivityResult.mobile ||
+          result == ConnectivityResult.wifi ||
+          result == ConnectivityResult.ethernet ||
+          result == ConnectivityResult.vpn ||
+          result == ConnectivityResult.other,
     );
 
     if (isConnected && !_isSyncInProgress) {

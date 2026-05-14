@@ -50,11 +50,7 @@ class PremiumLimitDialog extends StatelessWidget {
                     color: Colors.cyanAccent.withValues(alpha: 0.1),
                     shape: BoxShape.circle,
                   ),
-                  child: Icon(
-                    icon,
-                    color: Colors.cyanAccent,
-                    size: 40,
-                  ),
+                  child: Icon(icon, color: Colors.cyanAccent, size: 40),
                 ),
                 const Gap(20),
                 Text(

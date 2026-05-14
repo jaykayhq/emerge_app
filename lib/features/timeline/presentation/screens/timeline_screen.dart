@@ -1,4 +1,3 @@
-
 import 'package:emerge_app/core/presentation/widgets/glassmorphism_card.dart';
 import 'package:emerge_app/core/theme/emerge_earthy_theme.dart';
 import 'package:emerge_app/features/ai/domain/services/ai_personalization_service.dart';
@@ -127,7 +126,10 @@ class _TimelineScreenState extends ConsumerState<TimelineScreen> {
       if (habits.isNotEmpty) {
         final insights = await aiService.generateIdentityInsights(
           habits,
-          dominantMotive: ref.read(userStatsStreamProvider).value?.dominantMotive,
+          dominantMotive: ref
+              .read(userStatsStreamProvider)
+              .value
+              ?.dominantMotive,
         );
         if (insights.isNotEmpty && mounted) {
           setState(() {
@@ -187,7 +189,9 @@ class _TimelineScreenState extends ConsumerState<TimelineScreen> {
 
     ref.listen<AsyncValue<List<Habit>>>(habitsProvider, (previous, next) {
       if (next is AsyncData<List<Habit>> && !_hasCheckedMisses) {
-        final missed = next.value.where((h) => h.consecutiveMisses > 0).toList();
+        final missed = next.value
+            .where((h) => h.consecutiveMisses > 0)
+            .toList();
         if (missed.isNotEmpty) {
           _hasCheckedMisses = true;
           WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -320,16 +324,16 @@ class _TimelineScreenState extends ConsumerState<TimelineScreen> {
                       ? "Today's Timeline"
                       : "${_selectedDate.month}/${_selectedDate.day} Timeline",
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                      ),
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
                 const Spacer(),
                 Text(
                   '$completedCount/${habits.length}',
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: EmergeColors.tealMuted,
-                      ),
+                    color: EmergeColors.tealMuted,
+                  ),
                 ),
               ],
             ),
@@ -364,16 +368,16 @@ class _TimelineScreenState extends ConsumerState<TimelineScreen> {
                   const SizedBox(height: 12),
                   Text(
                     'No habits yet',
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                          color: Colors.white,
-                        ),
+                    style: Theme.of(
+                      context,
+                    ).textTheme.titleMedium?.copyWith(color: Colors.white),
                   ),
                   const SizedBox(height: 4),
                   Text(
                     'Create your first habit to start your identity journey',
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: EmergeColors.tealMuted,
-                        ),
+                      color: EmergeColors.tealMuted,
+                    ),
                     textAlign: TextAlign.center,
                   ),
                   const SizedBox(height: 16),
@@ -401,10 +405,7 @@ class _TimelineScreenState extends ConsumerState<TimelineScreen> {
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
             child: Column(
-              children: [
-                const AdBannerWidget(),
-                const SizedBox(height: 16),
-              ],
+              children: [const AdBannerWidget(), const SizedBox(height: 16)],
             ),
           ),
         ),
@@ -412,7 +413,9 @@ class _TimelineScreenState extends ConsumerState<TimelineScreen> {
         const SliverToBoxAdapter(child: SizedBox(height: 8)),
 
         SliverToBoxAdapter(
-          child: ref.watch(isPremiumProvider).when(
+          child: ref
+              .watch(isPremiumProvider)
+              .when(
                 data: (isPremium) => AiCoachCard(
                   key: _aiCoachKey,
                   insight: _aiInsight,
@@ -502,7 +505,9 @@ class _TimelineScreenState extends ConsumerState<TimelineScreen> {
                         Container(
                           padding: const EdgeInsets.all(10),
                           decoration: BoxDecoration(
-                            color: EmergeColors.warmGold.withValues(alpha: 0.15),
+                            color: EmergeColors.warmGold.withValues(
+                              alpha: 0.15,
+                            ),
                             borderRadius: BorderRadius.circular(12),
                           ),
                           child: const Icon(
@@ -537,30 +542,39 @@ class _TimelineScreenState extends ConsumerState<TimelineScreen> {
                         ),
                         TextButton(
                           onPressed: () {
-                            ref.read(adManagerProvider).showRewardedAd(
-                              onRewarded: () {
-                                if (context.mounted) {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(
-                                      content: Text('+25 Bonus XP earned!'),
-                                      backgroundColor: EmergeColors.warmGold,
-                                      behavior: SnackBarBehavior.floating,
-                                    ),
-                                  );
-                                }
-                              },
-                              onFailed: () {
-                                if (context.mounted) {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(
-                                      content: Text('Ad not available. Try again later.'),
-                                      backgroundColor: Colors.grey,
-                                      behavior: SnackBarBehavior.floating,
-                                    ),
-                                  );
-                                }
-                              },
-                            );
+                            ref
+                                .read(adManagerProvider)
+                                .showRewardedAd(
+                                  onRewarded: () {
+                                    if (context.mounted) {
+                                      ScaffoldMessenger.of(
+                                        context,
+                                      ).showSnackBar(
+                                        const SnackBar(
+                                          content: Text('+25 Bonus XP earned!'),
+                                          backgroundColor:
+                                              EmergeColors.warmGold,
+                                          behavior: SnackBarBehavior.floating,
+                                        ),
+                                      );
+                                    }
+                                  },
+                                  onFailed: () {
+                                    if (context.mounted) {
+                                      ScaffoldMessenger.of(
+                                        context,
+                                      ).showSnackBar(
+                                        const SnackBar(
+                                          content: Text(
+                                            'Ad not available. Try again later.',
+                                          ),
+                                          backgroundColor: Colors.grey,
+                                          behavior: SnackBarBehavior.floating,
+                                        ),
+                                      );
+                                    }
+                                  },
+                                );
                           },
                           child: const Text(
                             'WATCH',
@@ -595,9 +609,9 @@ class _TimelineScreenState extends ConsumerState<TimelineScreen> {
           const SizedBox(height: 16),
           Text(
             'Error loading timeline',
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  color: Colors.white,
-                ),
+            style: Theme.of(
+              context,
+            ).textTheme.titleMedium?.copyWith(color: Colors.white),
           ),
           const SizedBox(height: 8),
           Text(
@@ -619,7 +633,8 @@ class _TimelineScreenState extends ConsumerState<TimelineScreen> {
 
   void _toggleHabitCompletion(Habit habit) {
     final now = DateTime.now();
-    final isCompleted = habit.lastCompletedDate != null &&
+    final isCompleted =
+        habit.lastCompletedDate != null &&
         habit.lastCompletedDate!.year == now.year &&
         habit.lastCompletedDate!.month == now.month &&
         habit.lastCompletedDate!.day == now.day;
@@ -633,8 +648,12 @@ class _TimelineScreenState extends ConsumerState<TimelineScreen> {
 
   Future<void> _deleteHabit(Habit habit) async {
     try {
-      final result = await ref.read(habitRepositoryProvider).deleteHabit(habit.id);
-      await ref.read(notificationServiceProvider).cancelHabitNotifications(habit.id);
+      final result = await ref
+          .read(habitRepositoryProvider)
+          .deleteHabit(habit.id);
+      await ref
+          .read(notificationServiceProvider)
+          .cancelHabitNotifications(habit.id);
       result.fold(
         (failure) {
           if (mounted) {
@@ -758,7 +777,9 @@ class _TimelineScreenState extends ConsumerState<TimelineScreen> {
       date:
           '${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}',
       title: _getMoodTitle(moodValue),
-      content: (note == null || note.isEmpty) ? 'Daily reflection logged' : note,
+      content: (note == null || note.isEmpty)
+          ? 'Daily reflection logged'
+          : note,
       type: 'daily',
       moodValue: moodValue,
       createdAt: now,

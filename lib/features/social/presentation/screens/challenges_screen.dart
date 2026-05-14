@@ -61,7 +61,7 @@ class _ChallengesScreenState extends ConsumerState<ChallengesScreen> {
   void _showTutorialAfterFrame() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
-      
+
       final tutorialNotifier = ref.read(tutorialProvider.notifier);
       final tutorialState = ref.read(tutorialProvider);
 
@@ -81,17 +81,20 @@ class _ChallengesScreenState extends ConsumerState<ChallengesScreen> {
         steps: [
           TutorialStepInfo(
             title: 'Active Challenges',
-            description: 'This is your arena. Track your Solo Quests, Daily Quests, and Weekly Spotlights here.',
+            description:
+                'This is your arena. Track your Solo Quests, Daily Quests, and Weekly Spotlights here.',
             targetKey: _filterKey,
           ),
           TutorialStepInfo(
             title: 'Filter Your Path',
-            description: 'Quickly switch between your active quests or view your past victories.',
+            description:
+                'Quickly switch between your active quests or view your past victories.',
             targetKey: _filterKey,
           ),
           TutorialStepInfo(
             title: 'Create Your Own',
-            description: 'Need a specific habit anchored? Create a custom Solo Quest to challenge yourself.',
+            description:
+                'Need a specific habit anchored? Create a custom Solo Quest to challenge yourself.',
             targetKey: _createKey,
             alignment: Alignment.topCenter,
           ),
@@ -113,7 +116,9 @@ class _ChallengesScreenState extends ConsumerState<ChallengesScreen> {
     final bundleAsync = ref.watch(challengeBundleProvider);
 
     final content = Container(
-      decoration: widget.showAppBar ? BoxDecoration(gradient: AppTheme.cosmicGradient) : null,
+      decoration: widget.showAppBar
+          ? BoxDecoration(gradient: AppTheme.cosmicGradient)
+          : null,
       child: SafeArea(
         top: widget.showAppBar,
         child: Stack(
@@ -163,165 +168,45 @@ class _ChallengesScreenState extends ConsumerState<ChallengesScreen> {
       onRefresh: _onRefresh,
       color: EmergeColors.teal,
       child: CustomScrollView(
-      slivers: [
-        // App Bar
-        if (widget.showAppBar)
-          SliverAppBar(
-            backgroundColor: Colors.transparent,
-            floating: true,
-            leading: IconButton(
-              icon: const Icon(Icons.arrow_back, color: Colors.white),
-              onPressed: () => Navigator.of(context).pop(),
-            ),
-            title: const Text(
-              'ACTIVE CHALLENGES',
-              style: TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.bold,
-                fontSize: 16,
-                letterSpacing: 1,
+        slivers: [
+          // App Bar
+          if (widget.showAppBar)
+            SliverAppBar(
+              backgroundColor: Colors.transparent,
+              floating: true,
+              leading: IconButton(
+                icon: const Icon(Icons.arrow_back, color: Colors.white),
+                onPressed: () => Navigator.of(context).pop(),
               ),
-            ),
-            centerTitle: true,
-          ),
-
-        // Filter Pills
-        SliverToBoxAdapter(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            child: _FilterPillsRow(
-              key: _filterKey,
-              filters: _filters,
-              selected: _selectedFilter,
-              onSelected: (i) => setState(() => _selectedFilter = i),
-            ),
-          ),
-        ),
-
-        const SliverToBoxAdapter(child: Gap(20)),
-
-        if (_selectedFilter == 0) ...[
-          // Weekly Spotlight Section
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: Row(
-                children: [
-                  const Icon(
-                    Icons.auto_awesome,
-                    size: 18,
-                    color: EmergeColors.yellow,
-                  ),
-                  const Gap(8),
-                  const Text(
-                    'Weekly Spotlight',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 16,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-          const SliverToBoxAdapter(child: Gap(12)),
-          SliverToBoxAdapter(child: _WeeklySpotlightSection(bundle: bundle)),
-          const SliverToBoxAdapter(child: Gap(28)),
-
-          // Daily Quest Section
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: Row(
-                children: [
-                  const Icon(Icons.today, size: 18, color: EmergeColors.coral),
-                  const Gap(8),
-                  const Text(
-                    'Daily Quest',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 16,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-          const SliverToBoxAdapter(child: Gap(12)),
-          SliverToBoxAdapter(child: _DailyQuestSection(bundle: bundle)),
-          const SliverToBoxAdapter(child: Gap(28)),
-        ],
-
-        if (_selectedFilter == 1) ...[
-          // EXPLICIT ACTIVE SECTION
-          SliverToBoxAdapter(
-            child: _ActiveChallengesSection(bundle: bundle),
-          ),
-        ],
-
-        if (_selectedFilter == 0 || _selectedFilter == 2) ...[
-          // Solo Quests Section
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const Text(
-                    'Solo Quests',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 16,
-                    ),
-                  ),
-                  if (_selectedFilter == 2)
-                    Text(
-                      '${bundle?.activeSoloChallenges.length ?? 0} Active',
-                      style: const TextStyle(color: EmergeColors.teal, fontSize: 13),
-                    ),
-                ],
-              ),
-            ),
-          ),
-          const SliverToBoxAdapter(child: Gap(16)),
-          SliverToBoxAdapter(child: _QuestCardsSection(bundle: bundle)),
-          const SliverToBoxAdapter(child: Gap(28)),
-        ],
-
-        if (_selectedFilter == 0 || _selectedFilter == 3) ...[
-          // Daily Quest Section (Duplicate for filter 3)
-          if (_selectedFilter == 3) ...[
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: Row(
-                  children: [
-                    const Icon(Icons.today, size: 18, color: EmergeColors.coral),
-                    const Gap(8),
-                    const Text(
-                      'Daily Quest',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 16,
-                      ),
-                    ),
-                  ],
+              title: const Text(
+                'ACTIVE CHALLENGES',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 16,
+                  letterSpacing: 1,
                 ),
               ),
+              centerTitle: true,
             ),
-            const SliverToBoxAdapter(child: Gap(12)),
-            SliverToBoxAdapter(child: _DailyQuestSection(bundle: bundle)),
-            const SliverToBoxAdapter(child: Gap(28)),
-          ],
-        ],
 
-        if (_selectedFilter == 0 || _selectedFilter == 4) ...[
-          // Weekly Spotlight (Duplicate for filter 4)
-          if (_selectedFilter == 4) ...[
+          // Filter Pills
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              child: _FilterPillsRow(
+                key: _filterKey,
+                filters: _filters,
+                selected: _selectedFilter,
+                onSelected: (i) => setState(() => _selectedFilter = i),
+              ),
+            ),
+          ),
+
+          const SliverToBoxAdapter(child: Gap(20)),
+
+          if (_selectedFilter == 0) ...[
+            // Weekly Spotlight Section
             SliverToBoxAdapter(
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -348,77 +233,208 @@ class _ChallengesScreenState extends ConsumerState<ChallengesScreen> {
             const SliverToBoxAdapter(child: Gap(12)),
             SliverToBoxAdapter(child: _WeeklySpotlightSection(bundle: bundle)),
             const SliverToBoxAdapter(child: Gap(28)),
+
+            // Daily Quest Section
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: Row(
+                  children: [
+                    const Icon(
+                      Icons.today,
+                      size: 18,
+                      color: EmergeColors.coral,
+                    ),
+                    const Gap(8),
+                    const Text(
+                      'Daily Quest',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            const SliverToBoxAdapter(child: Gap(12)),
+            SliverToBoxAdapter(child: _DailyQuestSection(bundle: bundle)),
+            const SliverToBoxAdapter(child: Gap(28)),
           ],
-        ],
 
-        if (_selectedFilter == 0) ...[
-          // Archetype Challenges Section
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: Row(
-                children: [
-                  const Icon(
-                    Icons.emoji_events,
-                    size: 18,
-                    color: EmergeColors.yellow,
-                  ),
-                  const Gap(8),
-                  const Text(
-                    'For Your Path',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 16,
+          if (_selectedFilter == 1) ...[
+            // EXPLICIT ACTIVE SECTION
+            SliverToBoxAdapter(child: _ActiveChallengesSection(bundle: bundle)),
+          ],
+
+          if (_selectedFilter == 0 || _selectedFilter == 2) ...[
+            // Solo Quests Section
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text(
+                      'Solo Quests',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                      ),
                     ),
-                  ),
-                ],
+                    if (_selectedFilter == 2)
+                      Text(
+                        '${bundle?.activeSoloChallenges.length ?? 0} Active',
+                        style: const TextStyle(
+                          color: EmergeColors.teal,
+                          fontSize: 13,
+                        ),
+                      ),
+                  ],
+                ),
               ),
             ),
-          ),
-          const SliverToBoxAdapter(child: Gap(16)),
-          SliverToBoxAdapter(
-            child: _ArchetypeChallengesSection(bundle: bundle),
-          ),
-          const SliverToBoxAdapter(child: Gap(28)),
-        ],
+            const SliverToBoxAdapter(child: Gap(16)),
+            SliverToBoxAdapter(child: _QuestCardsSection(bundle: bundle)),
+            const SliverToBoxAdapter(child: Gap(28)),
+          ],
 
-        if (_selectedFilter == 5) ...[
-          // Completed Challenges Section
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: Row(
-                children: [
-                  const Icon(
-                    Icons.verified,
-                    size: 18,
-                    color: EmergeColors.teal,
+          if (_selectedFilter == 0 || _selectedFilter == 3) ...[
+            // Daily Quest Section (Duplicate for filter 3)
+            if (_selectedFilter == 3) ...[
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: Row(
+                    children: [
+                      const Icon(
+                        Icons.today,
+                        size: 18,
+                        color: EmergeColors.coral,
+                      ),
+                      const Gap(8),
+                      const Text(
+                        'Daily Quest',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                        ),
+                      ),
+                    ],
                   ),
-                  const Gap(8),
-                  const Text(
-                    'Completed',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 16,
+                ),
+              ),
+              const SliverToBoxAdapter(child: Gap(12)),
+              SliverToBoxAdapter(child: _DailyQuestSection(bundle: bundle)),
+              const SliverToBoxAdapter(child: Gap(28)),
+            ],
+          ],
+
+          if (_selectedFilter == 0 || _selectedFilter == 4) ...[
+            // Weekly Spotlight (Duplicate for filter 4)
+            if (_selectedFilter == 4) ...[
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: Row(
+                    children: [
+                      const Icon(
+                        Icons.auto_awesome,
+                        size: 18,
+                        color: EmergeColors.yellow,
+                      ),
+                      const Gap(8),
+                      const Text(
+                        'Weekly Spotlight',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const SliverToBoxAdapter(child: Gap(12)),
+              SliverToBoxAdapter(
+                child: _WeeklySpotlightSection(bundle: bundle),
+              ),
+              const SliverToBoxAdapter(child: Gap(28)),
+            ],
+          ],
+
+          if (_selectedFilter == 0) ...[
+            // Archetype Challenges Section
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: Row(
+                  children: [
+                    const Icon(
+                      Icons.emoji_events,
+                      size: 18,
+                      color: EmergeColors.yellow,
                     ),
-                  ),
-                ],
+                    const Gap(8),
+                    const Text(
+                      'For Your Path',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
-          ),
-          const SliverToBoxAdapter(child: Gap(16)),
-          SliverToBoxAdapter(
-            child: _CompletedChallengesSection(bundle: bundle),
-          ),
-          const SliverToBoxAdapter(child: Gap(28)),
-        ],
+            const SliverToBoxAdapter(child: Gap(16)),
+            SliverToBoxAdapter(
+              child: _ArchetypeChallengesSection(bundle: bundle),
+            ),
+            const SliverToBoxAdapter(child: Gap(28)),
+          ],
 
-        const SliverToBoxAdapter(child: Gap(80)),
-      ],
-    ),
-  );
+          if (_selectedFilter == 5) ...[
+            // Completed Challenges Section
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: Row(
+                  children: [
+                    const Icon(
+                      Icons.verified,
+                      size: 18,
+                      color: EmergeColors.teal,
+                    ),
+                    const Gap(8),
+                    const Text(
+                      'Completed',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            const SliverToBoxAdapter(child: Gap(16)),
+            SliverToBoxAdapter(
+              child: _CompletedChallengesSection(bundle: bundle),
+            ),
+            const SliverToBoxAdapter(child: Gap(28)),
+          ],
+
+          const SliverToBoxAdapter(child: Gap(80)),
+        ],
+      ),
+    );
   }
 }
 
@@ -456,8 +472,8 @@ class _FilterPillsRow extends StatelessWidget {
                   vertical: 10,
                 ),
                 decoration: BoxDecoration(
-                  color: isSelected 
-                      ? AppTheme.primary.withValues(alpha: 0.15) 
+                  color: isSelected
+                      ? AppTheme.primary.withValues(alpha: 0.15)
                       : Colors.white.withValues(alpha: 0.05),
                   borderRadius: BorderRadius.circular(16),
                   border: Border.all(
@@ -466,13 +482,15 @@ class _FilterPillsRow extends StatelessWidget {
                         : Colors.white.withValues(alpha: 0.1),
                     width: 1.5,
                   ),
-                  boxShadow: isSelected ? [
-                    BoxShadow(
-                      color: AppTheme.primary.withValues(alpha: 0.1),
-                      blurRadius: 10,
-                      spreadRadius: 1,
-                    )
-                  ] : [],
+                  boxShadow: isSelected
+                      ? [
+                          BoxShadow(
+                            color: AppTheme.primary.withValues(alpha: 0.1),
+                            blurRadius: 10,
+                            spreadRadius: 1,
+                          ),
+                        ]
+                      : [],
                 ),
                 child: Text(
                   entry.value.toUpperCase(),
@@ -524,7 +542,6 @@ class _WeeklySpotlightSection extends StatelessWidget {
     );
   }
 }
-
 
 class _EmptySpotlightCard extends StatelessWidget {
   @override
@@ -604,7 +621,6 @@ class _DailyQuestSectionState extends ConsumerState<_DailyQuestSection> {
     );
   }
 }
-
 
 class _EmptyDailyQuestCard extends StatelessWidget {
   @override
@@ -700,7 +716,8 @@ class _QuestCardsSection extends StatelessWidget {
               onTap: () {
                 Navigator.of(context).push(
                   MaterialPageRoute(
-                    builder: (context) => ChallengeDetailScreen(challenge: quest),
+                    builder: (context) =>
+                        ChallengeDetailScreen(challenge: quest),
                   ),
                 );
               },
@@ -758,7 +775,8 @@ class _CompletedChallengesSection extends StatelessWidget {
               onTap: () {
                 Navigator.of(context).push(
                   MaterialPageRoute(
-                    builder: (context) => ChallengeDetailScreen(challenge: quest),
+                    builder: (context) =>
+                        ChallengeDetailScreen(challenge: quest),
                   ),
                 );
               },
@@ -768,7 +786,6 @@ class _CompletedChallengesSection extends StatelessWidget {
     );
   }
 }
-
 
 // ============ ARCHETYPE CHALLENGES (from Bundle) ============
 
@@ -872,7 +889,10 @@ class _ChallengesTabContentState extends ConsumerState<ChallengesTabContent> {
           const SliverToBoxAdapter(child: Gap(16)),
           SliverFillRemaining(
             child: Center(
-              child: Text('Error loading challenges', style: TextStyle(color: Colors.white)),
+              child: Text(
+                'Error loading challenges',
+                style: TextStyle(color: Colors.white),
+              ),
             ),
           ),
         ],
@@ -885,7 +905,10 @@ class _ChallengesTabContentState extends ConsumerState<ChallengesTabContent> {
             // Filter Pills
             SliverToBoxAdapter(
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 8,
+                ),
                 child: _FilterPillsRow(
                   filters: _filters,
                   selected: _selectedFilter,
@@ -922,7 +945,9 @@ class _ChallengesTabContentState extends ConsumerState<ChallengesTabContent> {
                 ),
               ),
               const SliverToBoxAdapter(child: Gap(12)),
-              SliverToBoxAdapter(child: _WeeklySpotlightSection(bundle: bundle)),
+              SliverToBoxAdapter(
+                child: _WeeklySpotlightSection(bundle: bundle),
+              ),
               const SliverToBoxAdapter(child: Gap(28)),
             ],
 
@@ -933,7 +958,11 @@ class _ChallengesTabContentState extends ConsumerState<ChallengesTabContent> {
                   padding: const EdgeInsets.symmetric(horizontal: 16),
                   child: Row(
                     children: [
-                      const Icon(Icons.today, size: 18, color: EmergeColors.coral),
+                      const Icon(
+                        Icons.today,
+                        size: 18,
+                        color: EmergeColors.coral,
+                      ),
                       const Gap(8),
                       const Text(
                         'Daily Quest',
@@ -970,7 +999,10 @@ class _ChallengesTabContentState extends ConsumerState<ChallengesTabContent> {
                       ),
                       Text(
                         'View All',
-                        style: TextStyle(color: EmergeColors.teal, fontSize: 13),
+                        style: TextStyle(
+                          color: EmergeColors.teal,
+                          fontSize: 13,
+                        ),
                       ),
                     ],
                   ),
@@ -1007,7 +1039,9 @@ class _ChallengesTabContentState extends ConsumerState<ChallengesTabContent> {
                 ),
               ),
               const SliverToBoxAdapter(child: Gap(16)),
-              SliverToBoxAdapter(child: _ArchetypeChallengesSection(bundle: bundle)),
+              SliverToBoxAdapter(
+                child: _ArchetypeChallengesSection(bundle: bundle),
+              ),
               const SliverToBoxAdapter(child: Gap(28)),
             ],
 
@@ -1037,7 +1071,9 @@ class _ChallengesTabContentState extends ConsumerState<ChallengesTabContent> {
                 ),
               ),
               const SliverToBoxAdapter(child: Gap(16)),
-              SliverToBoxAdapter(child: _CompletedChallengesSection(bundle: bundle)),
+              SliverToBoxAdapter(
+                child: _CompletedChallengesSection(bundle: bundle),
+              ),
               const SliverToBoxAdapter(child: Gap(28)),
             ],
 
@@ -1049,6 +1085,7 @@ class _ChallengesTabContentState extends ConsumerState<ChallengesTabContent> {
     );
   }
 }
+
 class _ActiveChallengesSection extends StatelessWidget {
   final ChallengeBundleData? bundle;
   const _ActiveChallengesSection({this.bundle});
@@ -1092,15 +1129,17 @@ class _ActiveChallengesSection extends StatelessWidget {
               ],
             ),
           ),
-          ...activeChallenges.map((c) => QuestCardStitch(
-            challenge: c,
-            onTap: () => Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => ChallengeDetailScreen(challenge: c),
+          ...activeChallenges.map(
+            (c) => QuestCardStitch(
+              challenge: c,
+              onTap: () => Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => ChallengeDetailScreen(challenge: c),
+                ),
               ),
             ),
-          )),
+          ),
         ],
       ),
     );

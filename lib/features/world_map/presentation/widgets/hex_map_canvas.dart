@@ -208,7 +208,7 @@ class _CenterButton extends StatelessWidget {
       child: BackdropFilter(
         filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
         child: Material(
-          color: Colors.white.withValues(alpha:0.1),
+          color: Colors.white.withValues(alpha: 0.1),
           child: InkWell(
             onTap: onPressed,
             borderRadius: BorderRadius.circular(12),
@@ -216,7 +216,7 @@ class _CenterButton extends StatelessWidget {
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: color.withValues(alpha:0.3)),
+                border: Border.all(color: color.withValues(alpha: 0.3)),
               ),
               child: Icon(Icons.my_location, color: color, size: 22),
             ),
@@ -278,15 +278,15 @@ class _PremiumHexGridPainter extends CustomPainter {
           // Determine path color based on connection state
           final isActive = target.state != NodeState.locked;
           final pathColor = isActive
-              ? primaryColor.withValues(alpha:0.6)
-              : Colors.grey.withValues(alpha:0.2);
+              ? primaryColor.withValues(alpha: 0.6)
+              : Colors.grey.withValues(alpha: 0.2);
 
           // Draw glow for active paths
           if (isActive) {
             final glowPaint = Paint()
               ..style = PaintingStyle.stroke
               ..strokeWidth = 6
-              ..color = primaryColor.withValues(alpha:0.15)
+              ..color = primaryColor.withValues(alpha: 0.15)
               ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 4);
             canvas.drawLine(start, end, glowPaint);
           }
@@ -321,12 +321,12 @@ class _PremiumHexGridPainter extends CustomPainter {
           final t = (pathProgress + node.id.hashCode * 0.1) % 1.0;
           final particlePos = Offset.lerp(start, end, t)!;
 
-          particlePaint.color = primaryColor.withValues(alpha:0.8);
+          particlePaint.color = primaryColor.withValues(alpha: 0.8);
           particlePaint.maskFilter = const MaskFilter.blur(BlurStyle.normal, 3);
           canvas.drawCircle(particlePos, 4, particlePaint);
 
           particlePaint.maskFilter = null;
-          particlePaint.color = Colors.white.withValues(alpha:0.9);
+          particlePaint.color = Colors.white.withValues(alpha: 0.9);
           canvas.drawCircle(particlePos, 2, particlePaint);
         } catch (e) {
           // Target not found
@@ -404,7 +404,7 @@ class _PremiumHexGridPainter extends CustomPainter {
 
     final shadowPaint = Paint()
       ..style = PaintingStyle.fill
-      ..color = Colors.black.withValues(alpha:0.4)
+      ..color = Colors.black.withValues(alpha: 0.4)
       ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 8);
 
     canvas.drawPath(shadowPath, shadowPaint);
@@ -455,7 +455,7 @@ class _PremiumHexGridPainter extends CustomPainter {
       final edgePaint = Paint()
         ..style = PaintingStyle.stroke
         ..strokeWidth = 1.0
-        ..color = style.color.withValues(alpha:0.3);
+        ..color = style.color.withValues(alpha: 0.3);
 
       canvas.drawPath(facePath, edgePaint);
     }
@@ -501,8 +501,8 @@ class _PremiumHexGridPainter extends CustomPainter {
       ..style = PaintingStyle.fill
       ..shader = RadialGradient(
         colors: [
-          style.color.withValues(alpha:0.4 * style.glowIntensity),
-          style.color.withValues(alpha:0.1 * style.glowIntensity),
+          style.color.withValues(alpha: 0.4 * style.glowIntensity),
+          style.color.withValues(alpha: 0.1 * style.glowIntensity),
           Colors.transparent,
         ],
         stops: const [0.0, 0.5, 1.0],
@@ -514,7 +514,7 @@ class _PremiumHexGridPainter extends CustomPainter {
     final highlightOffset = center + const Offset(-8, -8);
     final highlightPaint = Paint()
       ..style = PaintingStyle.fill
-      ..color = Colors.white.withValues(alpha:0.3 * style.glowIntensity)
+      ..color = Colors.white.withValues(alpha: 0.3 * style.glowIntensity)
       ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 4);
 
     canvas.drawCircle(highlightOffset, size * 0.15, highlightPaint);
@@ -530,7 +530,7 @@ class _PremiumHexGridPainter extends CustomPainter {
     final glowRadius =
         size * (1.0 + style.glowIntensity * 0.3 + pulseValue * 0.1);
     final glowPaint = Paint()
-      ..color = style.color.withValues(alpha:0.25 * style.glowIntensity)
+      ..color = style.color.withValues(alpha: 0.25 * style.glowIntensity)
       ..maskFilter = MaskFilter.blur(BlurStyle.normal, glowRadius * 0.4);
 
     canvas.drawCircle(center, size * 1.1, glowPaint);
@@ -558,7 +558,7 @@ class _PremiumHexGridPainter extends CustomPainter {
     final bevelPaint = Paint()
       ..style = PaintingStyle.stroke
       ..strokeWidth = 1.0
-      ..color = Colors.white.withValues(alpha:0.15);
+      ..color = Colors.white.withValues(alpha: 0.15);
 
     canvas.drawPath(innerPath, bevelPaint);
   }
@@ -603,7 +603,7 @@ class _PremiumHexGridPainter extends CustomPainter {
       case NodeState.completed:
         return _NodeStyle(
           color: primaryColor,
-          fillColor: primaryColor.withValues(alpha:0.15),
+          fillColor: primaryColor.withValues(alpha: 0.15),
           iconColor: primaryColor,
           glowIntensity: 0.7,
           borderWidth: 3.0,
@@ -611,7 +611,7 @@ class _PremiumHexGridPainter extends CustomPainter {
       case NodeState.inProgress:
         return _NodeStyle(
           color: accentColor,
-          fillColor: accentColor.withValues(alpha:0.2),
+          fillColor: accentColor.withValues(alpha: 0.2),
           iconColor: accentColor,
           glowIntensity: 0.9,
           borderWidth: 3.0,
@@ -619,15 +619,15 @@ class _PremiumHexGridPainter extends CustomPainter {
       case NodeState.available:
         return _NodeStyle(
           color: primaryColor,
-          fillColor: primaryColor.withValues(alpha:0.1),
-          iconColor: primaryColor.withValues(alpha:0.8),
+          fillColor: primaryColor.withValues(alpha: 0.1),
+          iconColor: primaryColor.withValues(alpha: 0.8),
           glowIntensity: 0.5 + pulseValue * 0.3,
           borderWidth: 2.5,
         );
       case NodeState.locked:
         return _NodeStyle(
           color: Colors.grey.shade600,
-          fillColor: Colors.grey.shade900.withValues(alpha:0.3),
+          fillColor: Colors.grey.shade900.withValues(alpha: 0.3),
           iconColor: Colors.grey.shade700,
           glowIntensity: 0.0,
           borderWidth: 1.5,
@@ -689,7 +689,7 @@ class _PremiumHexGridPainter extends CustomPainter {
       ..style = PaintingStyle.stroke
       ..strokeWidth = 3
       ..strokeCap = StrokeCap.round
-      ..color = color.withValues(alpha:0.8);
+      ..color = color.withValues(alpha: 0.8);
 
     // Background ring
     canvas.drawArc(
@@ -697,7 +697,7 @@ class _PremiumHexGridPainter extends CustomPainter {
       -pi / 2,
       2 * pi,
       false,
-      paint..color = color.withValues(alpha:0.2),
+      paint..color = color.withValues(alpha: 0.2),
     );
 
     // Progress arc
@@ -720,7 +720,7 @@ class _PremiumHexGridPainter extends CustomPainter {
 
     // Badge glow
     final glowPaint = Paint()
-      ..color = color.withValues(alpha:0.5)
+      ..color = color.withValues(alpha: 0.5)
       ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 4);
     canvas.drawCircle(badgeCenter, 10, glowPaint);
 
@@ -742,9 +742,9 @@ class _PremiumHexGridPainter extends CustomPainter {
         style: TextStyle(
           fontSize: 11,
           fontWeight: FontWeight.w600,
-          color: color.withValues(alpha:0.9),
+          color: color.withValues(alpha: 0.9),
           shadows: [
-            Shadow(color: Colors.black.withValues(alpha:0.8), blurRadius: 4),
+            Shadow(color: Colors.black.withValues(alpha: 0.8), blurRadius: 4),
           ],
         ),
       ),

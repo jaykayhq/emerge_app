@@ -51,10 +51,11 @@ class PaywallController extends _$PaywallController {
     try {
       final repository = ref.read(monetizationRepositoryProvider);
       final result = await repository.purchasePremium();
-      
+
       result.fold(
         (error) => state = state.copyWith(isLoading: false, error: error),
-        (isPremium) => state = state.copyWith(isLoading: false, isSuccess: isPremium),
+        (isPremium) =>
+            state = state.copyWith(isLoading: false, isSuccess: isPremium),
       );
     } catch (e) {
       state = state.copyWith(
@@ -69,10 +70,11 @@ class PaywallController extends _$PaywallController {
     try {
       final repository = ref.read(monetizationRepositoryProvider);
       final result = await repository.restorePurchases();
-      
+
       result.fold(
         (error) => state = state.copyWith(isLoading: false, error: error),
-        (isPremium) => state = state.copyWith(isLoading: false, isSuccess: isPremium),
+        (isPremium) =>
+            state = state.copyWith(isLoading: false, isSuccess: isPremium),
       );
     } catch (e) {
       state = state.copyWith(

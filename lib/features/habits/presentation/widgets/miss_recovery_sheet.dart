@@ -8,10 +8,7 @@ import 'package:emerge_app/features/habits/domain/entities/habit.dart';
 class MissRecoverySheet extends ConsumerWidget {
   final List<Habit> missedHabits;
 
-  const MissRecoverySheet({
-    super.key,
-    required this.missedHabits,
-  });
+  const MissRecoverySheet({super.key, required this.missedHabits});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -24,9 +21,7 @@ class MissRecoverySheet extends ConsumerWidget {
           decoration: BoxDecoration(
             color: const Color(0xFF0A0A1A).withValues(alpha: 0.8),
             borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-            border: Border.all(
-              color: Colors.white.withValues(alpha: 0.1),
-            ),
+            border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
           ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -43,17 +38,14 @@ class MissRecoverySheet extends ConsumerWidget {
               const SizedBox(height: 24),
 
               // Icon & Title
-              const Text(
-                '🌱',
-                style: TextStyle(fontSize: 48),
-              ),
+              const Text('🌱', style: TextStyle(fontSize: 48)),
               const SizedBox(height: 12),
               Text(
                 'A Fresh Start',
                 style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                    ),
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
               const SizedBox(height: 8),
               Text(
@@ -89,17 +81,21 @@ class MissRecoverySheet extends ConsumerWidget {
                       ),
                     ),
                     const SizedBox(height: 12),
-                    ...missedHabits.take(3).map((h) => Padding(
-                          padding: const EdgeInsets.only(bottom: 4),
-                          child: Text(
-                            h.title,
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 14,
-                              fontWeight: FontWeight.w500,
+                    ...missedHabits
+                        .take(3)
+                        .map(
+                          (h) => Padding(
+                            padding: const EdgeInsets.only(bottom: 4),
+                            child: Text(
+                              h.title,
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 14,
+                                fontWeight: FontWeight.w500,
+                              ),
                             ),
                           ),
-                        )),
+                        ),
                     if (missedHabits.length > 3)
                       Text(
                         '+ ${missedHabits.length - 3} more',

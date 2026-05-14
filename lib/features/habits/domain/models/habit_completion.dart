@@ -7,8 +7,8 @@ class HabitCompletion extends Equatable {
   final String userId;
   final DateTime completedAt;
   final int momentumAtCompletion;
-  final int? completedAtHour;    // 0-23, for AI time-pattern detection
-  final bool wasRecovery;        // true if completed after a miss
+  final int? completedAtHour; // 0-23, for AI time-pattern detection
+  final bool wasRecovery; // true if completed after a miss
 
   const HabitCompletion({
     required this.id,
@@ -46,12 +46,12 @@ class HabitCompletion extends Equatable {
 
   @override
   List<Object?> get props => [
-        id,
-        habitId,
-        userId,
-        completedAt,
-        momentumAtCompletion,
-        completedAtHour,
-        wasRecovery,
-      ];
+    id,
+    habitId,
+    userId,
+    completedAt,
+    momentumAtCompletion,
+    completedAtHour,
+    wasRecovery,
+  ];
 }

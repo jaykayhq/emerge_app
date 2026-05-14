@@ -98,19 +98,24 @@ class OnboardingController extends _$OnboardingController {
       );
 
       // Get initial stats based on archetype if not already set
-      final selectedArchetype = onboardingState.selectedArchetype ?? UserArchetype.none;
-      final currentStats = existingProfile?.avatarStats ?? const UserAvatarStats();
-      
+      final selectedArchetype =
+          onboardingState.selectedArchetype ?? UserArchetype.none;
+      final currentStats =
+          existingProfile?.avatarStats ?? const UserAvatarStats();
+
       // Only distribute if this is the first time (total XP is 0)
-      final totalXp = currentStats.strengthXp + currentStats.intellectXp + 
-                      currentStats.vitalityXp + currentStats.creativityXp + 
-                      currentStats.focusXp + currentStats.spiritXp;
-                      
-      final updatedStats = totalXp == 0 
-          ? ref.read(gamificationServiceProvider).distributeInitialXp(
-              currentStats,
-              selectedArchetype,
-            )
+      final totalXp =
+          currentStats.strengthXp +
+          currentStats.intellectXp +
+          currentStats.vitalityXp +
+          currentStats.creativityXp +
+          currentStats.focusXp +
+          currentStats.spiritXp;
+
+      final updatedStats = totalXp == 0
+          ? ref
+                .read(gamificationServiceProvider)
+                .distributeInitialXp(currentStats, selectedArchetype)
           : currentStats;
 
       // Prefer onboarding state values (most recent user selections) over stored values
@@ -360,7 +365,6 @@ class OnboardingController extends _$OnboardingController {
 
         try {
           await dashboardNotifier.createHabitOptimistic(newHabit);
-
         } catch (e) {
           AppLogger.e(
             'Failed to create onboarding habit',

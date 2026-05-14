@@ -78,7 +78,8 @@ class TribeStatsService {
           }
 
           // Also check for direct totalXp or currentXp fields (fallback)
-          final directXp = (data['currentXp'] as int?) ?? (data['totalXp'] as int?);
+          final directXp =
+              (data['currentXp'] as int?) ?? (data['totalXp'] as int?);
           if (directXp != null) {
             totalXp += directXp;
           }
@@ -153,16 +154,19 @@ class TribeStatsService {
 
           for (final doc in userStatsSnapshot.docs) {
             final userData = doc.data();
-            
+
             // 1. Accumulate XP (Robustly)
-            final avatarStats = userData['avatarStats'] as Map<String, dynamic>?;
+            final avatarStats =
+                userData['avatarStats'] as Map<String, dynamic>?;
             int userXp = 0;
-            
+
             if (avatarStats != null) {
               // Try totalXp first, then currentXp, then sum of attributes as fallback
-              userXp = (avatarStats['totalXp'] as int?) ?? 
-                       (avatarStats['currentXp'] as int?) ?? 0;
-              
+              userXp =
+                  (avatarStats['totalXp'] as int?) ??
+                  (avatarStats['currentXp'] as int?) ??
+                  0;
+
               if (userXp == 0) {
                 userXp += avatarStats['strengthXp'] as int? ?? 0;
                 userXp += avatarStats['intellectXp'] as int? ?? 0;
@@ -172,23 +176,29 @@ class TribeStatsService {
                 userXp += avatarStats['spiritXp'] as int? ?? 0;
               }
             } else {
-              userXp = (userData['totalXp'] as int?) ?? 
-                       (userData['currentXp'] as int?) ?? 0;
+              userXp =
+                  (userData['totalXp'] as int?) ??
+                  (userData['currentXp'] as int?) ??
+                  0;
             }
             totalXp += userXp;
 
             // 2. Accumulate Habits and Challenges
-            totalHabitsCompleted += (userData['totalHabitsCompleted'] as int?) ?? 0;
-            totalChallengesCompleted += (userData['totalChallengesCompleted'] as int?) ?? 0;
-            
+            totalHabitsCompleted +=
+                (userData['totalHabitsCompleted'] as int?) ?? 0;
+            totalChallengesCompleted +=
+                (userData['totalChallengesCompleted'] as int?) ?? 0;
+
             // If totalChallengesCompleted is 0, try totalQuestsCompleted as fallback
             if ((userData['totalChallengesCompleted'] as int? ?? 0) == 0) {
-              final questsDone = (userData['totalQuestsCompleted'] as int?) ?? 0;
+              final questsDone =
+                  (userData['totalQuestsCompleted'] as int?) ?? 0;
               if (questsDone > 0) {
                 totalChallengesCompleted += questsDone;
               } else {
                 // Last fallback: use the 'completedChallenges' field from UserStats
-                totalChallengesCompleted += (userData['completedChallenges'] as int?) ?? 0;
+                totalChallengesCompleted +=
+                    (userData['completedChallenges'] as int?) ?? 0;
               }
             }
           }
@@ -211,7 +221,6 @@ class TribeStatsService {
       };
     }
   }
-
 
   /// Updates the tribe document with calculated stats
   ///

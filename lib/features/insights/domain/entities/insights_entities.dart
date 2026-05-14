@@ -22,7 +22,7 @@ class Recap {
     required this.summary,
     required this.consistencyChange,
   });
- 
+
   Map<String, dynamic> toMap() {
     return {
       'id': id,
@@ -36,7 +36,7 @@ class Recap {
       'consistencyChange': consistencyChange,
     };
   }
- 
+
   factory Recap.fromMap(Map<String, dynamic> map) {
     return Recap(
       id: map['id'] as String? ?? 'empty',
@@ -51,7 +51,7 @@ class Recap {
     );
   }
 }
- 
+
 class Reflection {
   final String id;
   final String date;
@@ -60,7 +60,7 @@ class Reflection {
   final String type; // e.g., "insight", "pattern", "suggestion", "daily"
   final double? moodValue; // 0.0-1.0 for daily reflections
   final DateTime? createdAt;
- 
+
   const Reflection({
     required this.id,
     required this.date,
@@ -70,7 +70,7 @@ class Reflection {
     this.moodValue,
     this.createdAt,
   });
- 
+
   /// Creates a map for Firestore serialization.
   /// Note: createdAt should be set to FieldValue.serverTimestamp() when saving.
   Map<String, dynamic> toMap({bool useServerTimestamp = true}) {
@@ -83,10 +83,10 @@ class Reflection {
       if (moodValue != null) 'moodValue': moodValue,
       if (createdAt != null) 'createdAt': createdAt!.toIso8601String(),
     };
- 
+
     return map;
   }
- 
+
   factory Reflection.fromMap(Map<String, dynamic> map, [String? docId]) {
     final id = docId ?? map['id'] as String? ?? '';
     DateTime? createdAt;
@@ -95,7 +95,7 @@ class Reflection {
     } else if (map['createdAt'] is String) {
       createdAt = DateTime.tryParse(map['createdAt'] as String);
     }
- 
+
     return Reflection(
       id: id,
       date: map['date'] as String? ?? '',
