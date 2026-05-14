@@ -1,6 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:emerge_app/core/drift/database.dart';
-import 'package:emerge_app/core/drift_repositories/drift_challenge_repository.dart';
+import 'package:emerge_app/core/drift_repositories/repositories_barrel.dart';
 import 'package:emerge_app/core/firestore_repositories/firestore_challenge_repository.dart';
 import 'package:emerge_app/core/game_loop/game_loop_engine.dart';
 import 'package:emerge_app/features/auth/presentation/providers/auth_providers.dart';

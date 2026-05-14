@@ -1007,7 +1007,7 @@ class SettingsScreen extends ConsumerWidget {
                         );
                         try {
                           // 1. Wipe local database immediately
-                          final db = ref.read(appDatabaseProvider);
+                          final db = ref.read(appDatabaseProvider)!;
                           await db.clearAll();
 
                           // 2. Trigger remote deletion with timeout

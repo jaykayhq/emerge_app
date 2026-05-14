@@ -1,5 +1,5 @@
 import 'package:drift/drift.dart';
-import '../database.dart';
+import '../app_database.dart';
 import '../tables/habit_completions_table.dart';
 
 part 'habit_completions_dao.g.dart';

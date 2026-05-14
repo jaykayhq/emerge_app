@@ -1,6 +1,6 @@
 import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:emerge_app/core/drift_repositories/drift_user_stats_repository.dart';
+import 'package:emerge_app/core/drift_repositories/repositories_barrel.dart';
 import 'package:emerge_app/features/auth/domain/entities/user_extension.dart';
 
 /// Firestore-backed implementation of user stats operations.

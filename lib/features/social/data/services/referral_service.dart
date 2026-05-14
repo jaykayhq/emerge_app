@@ -4,7 +4,7 @@ import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flutter/foundation.dart';
 import 'dart:math';
 
-import 'package:emerge_app/core/sync/sync_engine.dart';
+import 'package:emerge_app/core/sync/sync_engine_barrel.dart';
 
 /// Service for managing user referral codes and tracking
 /// Implements the referral reward system for user growth

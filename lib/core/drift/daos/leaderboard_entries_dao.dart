@@ -1,5 +1,5 @@
 import 'package:drift/drift.dart';
-import '../database.dart';
+import '../app_database.dart';
 import '../tables/leaderboard_entries_table.dart';
 
 part 'leaderboard_entries_dao.g.dart';

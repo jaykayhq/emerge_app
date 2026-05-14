@@ -1,5 +1,5 @@
 import 'package:drift/drift.dart';
-import '../database.dart';
+import '../app_database.dart';
 import '../tables/blueprints_table.dart';
 
 part 'blueprints_dao.g.dart';

@@ -1,5 +1,5 @@
 import 'package:drift/drift.dart';
-import '../database.dart';
+import '../app_database.dart';
 import '../tables/habits_table.dart';
 
 part 'habits_dao.g.dart';

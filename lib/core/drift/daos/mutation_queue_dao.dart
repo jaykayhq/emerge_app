@@ -1,5 +1,5 @@
 import 'package:drift/drift.dart';
-import '../database.dart';
+import '../app_database.dart';
 import '../tables/mutation_queue_table.dart';
 
 part 'mutation_queue_dao.g.dart';

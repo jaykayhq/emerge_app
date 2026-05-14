@@ -1,5 +1,5 @@
 import 'package:drift/drift.dart';
-import '../database.dart';
+import '../app_database.dart';
 import '../tables/challenge_progress_table.dart';
 
 part 'challenge_progress_dao.g.dart';

@@ -3,7 +3,7 @@ import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:emerge_app/core/utils/app_logger.dart';
 import 'package:emerge_app/features/auth/domain/entities/user_extension.dart';
-import 'package:emerge_app/core/drift_repositories/drift_user_stats_repository.dart';
+import 'package:emerge_app/core/drift_repositories/repositories_barrel.dart';
 
 /// Domain service for calculating dynamic world health based on user activity.
 ///
@@ -220,6 +220,7 @@ class WorldHealthService {
       'Cache miss or stale, calculating fresh world health for user $userId',
     );
     final profile = await _repository.getUserStats(userId);
+    if (profile == null) return 1.0;
     final health = await calculateWorldHealth(profile);
 
     // Update cache

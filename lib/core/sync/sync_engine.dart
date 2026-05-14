@@ -1,7 +1,7 @@
 import 'dart:convert';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:emerge_app/core/drift/database.dart';
-import 'package:emerge_app/core/drift/daos/mutation_queue_dao.dart';
 import 'package:emerge_app/core/utils/app_logger.dart';
 
 class EnhancedSyncEngine {

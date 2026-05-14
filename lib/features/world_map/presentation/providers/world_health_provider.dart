@@ -33,8 +33,8 @@ final worldHealthStreamProvider = StreamProvider<double>((ref) {
   if (user == null) return Stream.value(0.5);
 
   final repository = ref.watch(userStatsRepositoryProvider);
-  return repository.watchUserStats(user.id).map((profile) {
-    return (profile.momentumScore).clamp(0.0, 1.0);
+  return repository.watchUserStats(user.id).where((p) => p != null).map((profile) {
+    return (profile!.momentumScore).clamp(0.0, 1.0);
   });
 });
 
@@ -45,7 +45,7 @@ final worldEntropyStreamProvider = StreamProvider<double>((ref) {
   if (user == null) return Stream.value(0.0);
 
   final repository = ref.watch(userStatsRepositoryProvider);
-  return repository.watchUserStats(user.id).map((profile) {
-    return (profile.worldState.entropy).clamp(0.0, 1.0);
+  return repository.watchUserStats(user.id).where((p) => p != null).map((profile) {
+    return (profile!.worldState.entropy).clamp(0.0, 1.0);
   });
 });
