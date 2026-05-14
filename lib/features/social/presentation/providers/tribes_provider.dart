@@ -1,17 +1,22 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:emerge_app/core/drift/database.dart';
 import 'package:emerge_app/core/drift_repositories/drift_tribe_repository.dart';
+import 'package:emerge_app/core/firestore_repositories/firestore_tribe_repository.dart';
 import 'package:emerge_app/core/sync/sync_providers.dart';
-import 'package:emerge_app/features/social/data/repositories/tribe_repository.dart';
+import 'package:emerge_app/features/social/data/repositories/tribe_repository.dart' show TribeRepository;
 import 'package:emerge_app/features/social/data/services/tribe_stats_service.dart';
 import 'package:emerge_app/features/social/domain/models/tribe.dart';
 import 'package:emerge_app/features/social/domain/services/club_activity_service.dart';
 import 'package:emerge_app/features/social/presentation/providers/leaderboard_provider.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 final tribeRepositoryProvider = Provider<TribeRepository>((ref) {
-  final db = ref.watch(appDatabaseProvider);
-  final syncEngine = ref.watch(enhancedSyncEngineProvider);
+  if (kIsWeb) {
+    return FirestoreTribeRepository(firestore: FirebaseFirestore.instance);
+  }
+  final db = ref.watch(appDatabaseProvider)!;
+  final syncEngine = ref.watch(enhancedSyncEngineProvider)!;
   return DriftTribeRepository(db, syncEngine);
 });
 
@@ -22,8 +27,8 @@ final tribeStatsServiceProvider = Provider<TribeStatsService>((ref) {
 
 /// Provider for SocialActivityService - logs user activities to archetype clubs and global feed.
 final socialActivityServiceProvider = Provider<SocialActivityService>((ref) {
-  final syncEngine = ref.watch(enhancedSyncEngineProvider);
-  final activityDao = ref.watch(tribeActivityDaoProvider);
+  final syncEngine = ref.watch(enhancedSyncEngineProvider)!;
+  final activityDao = ref.watch(tribeActivityDaoProvider)!;
   final leaderboardRepo = ref.watch(leaderboardRepositoryProvider);
 
   return SocialActivityService(

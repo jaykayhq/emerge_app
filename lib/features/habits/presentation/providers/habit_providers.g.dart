@@ -91,7 +91,7 @@ final class HabitRepositoryProvider
   }
 }
 
-String _$habitRepositoryHash() => r'6197c30beb2c4592744bcba5ee51375ab255c324';
+String _$habitRepositoryHash() => r'a4c6f82b50052b896f7bb876846b95ecd3bc07be';
 
 @ProviderFor(habits)
 final habitsProvider = HabitsProvider._();
