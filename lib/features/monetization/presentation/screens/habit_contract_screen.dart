@@ -160,8 +160,12 @@ class _HabitContractScreenState extends ConsumerState<HabitContractScreen> {
                               0.0,
                         );
 
-                        final AuthUser? authUser = ref.read(authStateChangesProvider).value;
-                        final UserProfile? userProfile = ref.read(userProfileProvider).value;
+                        final AuthUser? authUser = ref
+                            .read(authStateChangesProvider)
+                            .value;
+                        final UserProfile? userProfile = ref
+                            .read(userProfileProvider)
+                            .value;
 
                         ref
                             .read(habitContractRepositoryProvider)

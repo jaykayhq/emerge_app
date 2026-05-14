@@ -46,8 +46,8 @@ class _AdBannerWidgetState extends ConsumerState<AdBannerWidget>
   late final Animation<double> _particleAnimation;
 
   // Using AppConfig to get the correct banner ID
-  String get _adUnitId => AppConfig.getAdUnitId(
-      'banner', Platform.isIOS ? 'ios' : 'android');
+  String get _adUnitId =>
+      AppConfig.getAdUnitId('banner', Platform.isIOS ? 'ios' : 'android');
 
   @override
   void initState() {
@@ -170,7 +170,9 @@ class _AdBannerWidgetState extends ConsumerState<AdBannerWidget>
 
   /// Builds the identity-first ad banner that integrates with archetype theming
   Widget _buildIdentityFirstAdBanner(
-      BuildContext context, UserArchetype archetype) {
+    BuildContext context,
+    UserArchetype archetype,
+  ) {
     final theme = ArchetypeTheme.forArchetype(archetype);
     final colors = Theme.of(context).brightness == Brightness.dark
         ? theme.darkColors
@@ -229,7 +231,9 @@ class _AdBannerWidgetState extends ConsumerState<AdBannerWidget>
 
   /// Builds the identity reinforcement overlay with archetype-aligned content
   Widget _buildIdentityOverlay(
-      BuildContext context, IdentityThemeExtension theme) {
+    BuildContext context,
+    IdentityThemeExtension theme,
+  ) {
     return Positioned.fill(
       child: Container(
         decoration: BoxDecoration(

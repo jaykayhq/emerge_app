@@ -106,12 +106,18 @@ class HabitTemplateCarousel extends StatelessWidget {
 
   String _getArchetypeEmoji(UserArchetype archetype) {
     switch (archetype) {
-      case UserArchetype.athlete: return '🏃‍➡️';
-      case UserArchetype.creator: return '🖌️';
-      case UserArchetype.scholar: return '📖';
-      case UserArchetype.stoic: return '🧘';
-      case UserArchetype.zealot: return '🔥';
-      default: return '🔥';
+      case UserArchetype.athlete:
+        return '🏃‍➡️';
+      case UserArchetype.creator:
+        return '🖌️';
+      case UserArchetype.scholar:
+        return '📖';
+      case UserArchetype.stoic:
+        return '🧘';
+      case UserArchetype.zealot:
+        return '🔥';
+      default:
+        return '🔥';
     }
   }
 
@@ -1104,7 +1110,6 @@ class _HabitTemplateSheetState extends State<HabitTemplateSheet> {
       attribute: HabitAttribute.creativity,
     ),
   ];
-
 
   List<String> get _categories => [
     'All',

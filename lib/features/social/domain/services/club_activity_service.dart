@@ -1,17 +1,24 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:emerge_app/core/drift/database.dart';
+import 'package:emerge_app/core/drift/daos/tribe_activity_dao.dart';
+import 'package:emerge_app/core/sync/sync_engine.dart';
 import 'package:flutter/foundation.dart';
+import 'package:drift/drift.dart';
+
+import 'package:emerge_app/features/social/domain/repositories/leaderboard_repository.dart';
+import 'package:emerge_app/features/auth/domain/entities/user_extension.dart';
 
 /// Service for logging user activities to both their archetype club and a global activity feed.
 ///
-/// This is the foundation for real-time social interaction, using frontend-driven
-/// Firestore updates without requiring Cloud Functions.
+/// This has been refactored for the Offline-First Architecture. All writes are now queued
+/// through the [EnhancedSyncEngine], avoiding direct `FirebaseFirestore` transactions.
 class SocialActivityService {
-  final FirebaseFirestore _firestore;
+  final EnhancedSyncEngine _syncEngine;
+  final TribeActivityDao _activityDao;
+  final LeaderboardRepository _leaderboardRepo;
 
   // Firestore collection and document path constants
   static const String _kTribesCollection = 'tribes';
   static const String _kActivityCollection = 'activity';
-  static const String _kContributorsCollection = 'contributors';
   static const String _kGlobalActivitiesCollection = 'global_activities';
 
   // Activity type constants
@@ -24,8 +31,13 @@ class SocialActivityService {
   static const String _kActivityTypePartnerJoined = 'partner_joined';
   static const String _kActivityTypeContractCommitted = 'contract_committed';
 
-  SocialActivityService({FirebaseFirestore? firestore})
-    : _firestore = firestore ?? FirebaseFirestore.instance;
+  SocialActivityService({
+    required EnhancedSyncEngine syncEngine,
+    required TribeActivityDao activityDao,
+    required LeaderboardRepository leaderboardRepo,
+  }) : _syncEngine = syncEngine,
+       _activityDao = activityDao,
+       _leaderboardRepo = leaderboardRepo;
 
   /// Gets the official club ID for a given archetype.
   String _getClubIdForArchetype(String archetype) {
@@ -62,13 +74,27 @@ class SocialActivityService {
       final clubId = _getClubIdForArchetype(archetype);
       final id =
           '${userId}_${habitId}_${DateTime.now().millisecondsSinceEpoch}';
+      final nowStr = DateTime.now().toUtc().toIso8601String();
 
-      await _firestore.runTransaction((transaction) async {
-        // 1. Write to Global Activity
-        final globalRef = _firestore
-            .collection(_kGlobalActivitiesCollection)
-            .doc(id);
-        transaction.set(globalRef, {
+      // 1. Write to local Drift database (TribeActivityTable)
+      await _activityDao.insertActivity(
+        TribeActivityTableCompanion(
+          id: Value(id),
+          userId: Value(userId),
+          userName: Value(userName),
+          tribeId: Value(clubId),
+          type: Value(_kActivityTypeHabitComplete),
+          description: Value('Completed habit: $habitTitle'),
+          value: Value(xpGained ?? 0),
+          timestamp: Value(nowStr),
+        ),
+      );
+
+      // 2. Write to Global Activity Firestore
+      await _syncEngine.enqueueSet(
+        collectionPath: _kGlobalActivitiesCollection,
+        documentId: id,
+        data: {
           'type': _kActivityTypeHabitComplete,
           'userId': userId,
           'userName': userName,
@@ -80,16 +106,15 @@ class SocialActivityService {
             'streakDay': streakDay,
             'attribute': attribute,
           },
-          'timestamp': FieldValue.serverTimestamp(),
-        });
+          'timestamp': nowStr,
+        },
+      );
 
-        // 2. Write to Club Activity
-        final clubActivityRef = _firestore
-            .collection(_kTribesCollection)
-            .doc(clubId)
-            .collection(_kActivityCollection)
-            .doc(id);
-        transaction.set(clubActivityRef, {
+      // 3. Write to Club Activity Firestore
+      await _syncEngine.enqueueSet(
+        collectionPath: '$_kTribesCollection/$clubId/$_kActivityCollection',
+        documentId: id,
+        data: {
           'type': _kActivityTypeHabitComplete,
           'userId': userId,
           'userName': userName,
@@ -99,55 +124,29 @@ class SocialActivityService {
             'streakDay': streakDay,
             'attribute': attribute,
           },
-          'timestamp': FieldValue.serverTimestamp(),
-        });
+          'timestamp': nowStr,
+        },
+      );
 
-        // 3. Update Tribe Aggregate Counters
-        final tribeRef = _firestore.collection(_kTribesCollection).doc(clubId);
-        transaction.set(tribeRef, {
-          'totalHabitsCompleted': FieldValue.increment(1),
-          if (xpGained != null) 'totalXp': FieldValue.increment(xpGained),
-        }, SetOptions(merge: true));
+      // 4. Update Leaderboard via Repository
+      if (xpGained != null || currentLevel != null) {
+        final clubId = _getClubIdForArchetype(archetype);
+        await _leaderboardRepo.updateUserScore(
+          userId,
+          xp: xpGained ?? 0,
+          level: currentLevel ?? 1,
+          archetype: UserArchetype.values.firstWhere(
+            (e) => e.name.toLowerCase() == archetype.toLowerCase(),
+            orElse: () => UserArchetype.none,
+          ),
+          userName: userName,
+          clubId: clubId,
+          isIncrement: true,
+        );
+      }
 
-        // 4. Update Club Contributor Stats
-        final contributorRef = tribeRef.collection(_kContributorsCollection).doc(userId);
-        transaction.set(contributorRef, {
-          'userId': userId,
-          'userName': userName,
-          'lastActivity': FieldValue.serverTimestamp(),
-          'contributionCount': FieldValue.increment(1),
-          'totalHabitsCompleted': FieldValue.increment(1),
-          if (xpGained != null) 'totalXpContributed': FieldValue.increment(xpGained),
-          'archetype': archetype,
-        }, SetOptions(merge: true));
-
-        // 5. Update Club Leaderboard Entry
-        if (xpGained != null) {
-          final leaderboardRef = _firestore
-              .collection('club_leaderboards')
-              .doc('${userId}_$clubId');
-          transaction.set(leaderboardRef, {
-            'userId': userId,
-            'userName': userName,
-            'clubId': clubId,
-            'xp': FieldValue.increment(xpGained),
-            'level': currentLevel,
-            'archetype': archetype,
-            'lastUpdated': FieldValue.serverTimestamp(),
-          }, SetOptions(merge: true));
-        }
-
-        // 6. Update Core User Stats XP and Counters
-        // Use transaction.update with dot-notation paths for nested field merges
-        final userStatsRef = _firestore.collection('user_stats').doc(userId);
-        transaction.update(userStatsRef, {
-          if (xpGained != null) 'avatarStats.totalXp': FieldValue.increment(xpGained),
-          if (xpGained != null) 'avatarStats.${attribute}Xp': FieldValue.increment(xpGained),
-          if (xpGained != null) 'totalXp': FieldValue.increment(xpGained),
-          if (xpGained != null) '${attribute}Xp': FieldValue.increment(xpGained),
-          'totalHabitsCompleted': FieldValue.increment(1),
-        });
-      });
+      // Note: Tribe Aggregate Counters, Contributor Stats, Leaderboard, and User Stats
+      // are handled by DriftHabitRepository.completeHabit in the offline-first flow.
     } catch (e) {
       debugPrint('Error logging habit completion to social activity: $e');
     }
@@ -164,50 +163,63 @@ class SocialActivityService {
     try {
       final clubId = _getClubIdForArchetype(archetype);
       final id = '${userId}_level_${DateTime.now().millisecondsSinceEpoch}';
+      final nowStr = DateTime.now().toUtc().toIso8601String();
 
-      await _firestore.runTransaction((transaction) async {
-        // Global
-        final globalRef = _firestore
-            .collection(_kGlobalActivitiesCollection)
-            .doc(id);
-        transaction.set(globalRef, {
+      // 1. Write to local Drift
+      await _activityDao.insertActivity(
+        TribeActivityTableCompanion(
+          id: Value(id),
+          userId: Value(userId),
+          userName: Value(userName),
+          tribeId: Value(clubId),
+          type: Value(_kActivityTypeLevelUp),
+          description: Value('Leveled up to Level $newLevel!'),
+          value: Value(totalXp),
+          timestamp: Value(nowStr),
+        ),
+      );
+
+      // 2. Global Firestore
+      await _syncEngine.enqueueSet(
+        collectionPath: _kGlobalActivitiesCollection,
+        documentId: id,
+        data: {
           'type': _kActivityTypeLevelUp,
           'userId': userId,
           'userName': userName,
           'archetypeId': archetype,
           'clubId': clubId,
           'data': {'newLevel': newLevel, 'totalXp': totalXp},
-          'timestamp': FieldValue.serverTimestamp(),
-        });
+          'timestamp': nowStr,
+        },
+      );
 
-        // Club
-        final clubActivityRef = _firestore
-            .collection(_kTribesCollection)
-            .doc(clubId)
-            .collection(_kActivityCollection)
-            .doc(id);
-        transaction.set(clubActivityRef, {
+      // 3. Club Firestore
+      await _syncEngine.enqueueSet(
+        collectionPath: '$_kTribesCollection/$clubId/$_kActivityCollection',
+        documentId: id,
+        data: {
           'type': _kActivityTypeLevelUp,
           'userId': userId,
           'userName': userName,
           'data': {'newLevel': newLevel},
-          'timestamp': FieldValue.serverTimestamp(),
-        });
+          'timestamp': nowStr,
+        },
+      );
 
-        // Update Leaderboard Level
-        final leaderboardRef = _firestore
-            .collection('club_leaderboards')
-            .doc('${userId}_$clubId');
-        transaction.set(leaderboardRef, {
-          'userId': userId,
-          'userName': userName,
-          'clubId': clubId,
-          'level': newLevel,
-          'xp': totalXp,
-          'archetype': archetype,
-          'lastUpdated': FieldValue.serverTimestamp(),
-        }, SetOptions(merge: true));
-      });
+      // 4. Update Leaderboard
+      await _leaderboardRepo.updateUserScore(
+        userId,
+        xp: totalXp,
+        level: newLevel,
+        archetype: UserArchetype.values.firstWhere(
+          (e) => e.name.toLowerCase() == archetype.toLowerCase(),
+          orElse: () => UserArchetype.none,
+        ),
+        userName: userName,
+        clubId: clubId,
+        isIncrement: false, // Level up sets absolute values
+      );
     } catch (e) {
       debugPrint('Error logging level up to social activity: $e');
     }
@@ -226,13 +238,27 @@ class SocialActivityService {
       final clubId = _getClubIdForArchetype(archetype);
       final id =
           '${userId}_challenge_${challengeId}_${DateTime.now().millisecondsSinceEpoch}';
+      final nowStr = DateTime.now().toUtc().toIso8601String();
 
-      await _firestore.runTransaction((transaction) async {
-        // Global
-        final globalRef = _firestore
-            .collection(_kGlobalActivitiesCollection)
-            .doc(id);
-        transaction.set(globalRef, {
+      // 1. Write to local Drift
+      await _activityDao.insertActivity(
+        TribeActivityTableCompanion(
+          id: Value(id),
+          userId: Value(userId),
+          userName: Value(userName),
+          tribeId: Value(clubId),
+          type: Value(_kActivityTypeChallengeComplete),
+          description: Value('Completed challenge: $challengeTitle'),
+          value: Value(xpReward),
+          timestamp: Value(nowStr),
+        ),
+      );
+
+      // 2. Global Firestore
+      await _syncEngine.enqueueSet(
+        collectionPath: _kGlobalActivitiesCollection,
+        documentId: id,
+        data: {
           'type': _kActivityTypeChallengeComplete,
           'userId': userId,
           'userName': userName,
@@ -243,16 +269,15 @@ class SocialActivityService {
             'challengeTitle': challengeTitle,
             'xpReward': xpReward,
           },
-          'timestamp': FieldValue.serverTimestamp(),
-        });
+          'timestamp': nowStr,
+        },
+      );
 
-        // Club
-        final clubActivityRef = _firestore
-            .collection(_kTribesCollection)
-            .doc(clubId)
-            .collection(_kActivityCollection)
-            .doc(id);
-        transaction.set(clubActivityRef, {
+      // 3. Club Firestore
+      await _syncEngine.enqueueSet(
+        collectionPath: '$_kTribesCollection/$clubId/$_kActivityCollection',
+        documentId: id,
+        data: {
           'type': _kActivityTypeChallengeComplete,
           'userId': userId,
           'userName': userName,
@@ -260,49 +285,23 @@ class SocialActivityService {
             'challengeId': challengeId,
             'challengeTitle': challengeTitle,
           },
-          'timestamp': FieldValue.serverTimestamp(),
-        });
+          'timestamp': nowStr,
+        },
+      );
 
-        // 3. Update Leaderboard XP
-        final leaderboardRef = _firestore
-            .collection('club_leaderboards')
-            .doc('${userId}_$clubId');
-        transaction.set(leaderboardRef, {
-          'userId': userId,
-          'userName': userName,
-          'clubId': clubId,
-          'xp': FieldValue.increment(xpReward),
-          'archetype': archetype,
-          'lastUpdated': FieldValue.serverTimestamp(),
-        }, SetOptions(merge: true));
-
-        // 4. Update Tribe Total Stats
-        final tribeRef = _firestore.collection(_kTribesCollection).doc(clubId);
-        transaction.set(tribeRef, {
-          'totalChallengesCompleted': FieldValue.increment(1),
-          'totalXp': FieldValue.increment(xpReward),
-        }, SetOptions(merge: true));
-
-        // 5. Update contributor record
-        final contributorRef = tribeRef
-            .collection(_kContributorsCollection)
-            .doc(userId);
-        
-        transaction.set(contributorRef, {
-          'totalChallengesCompleted': FieldValue.increment(1),
-          'totalXpContributed': FieldValue.increment(xpReward),
-          'lastContributionAt': FieldValue.serverTimestamp(),
-        }, SetOptions(merge: true));
-
-        // 6. Update Core User Stats Challenges
-        final userStatsRef = _firestore.collection('user_stats').doc(userId);
-        transaction.set(userStatsRef, {
-          'totalChallengesCompleted': FieldValue.increment(1),
-          'totalQuestsCompleted': FieldValue.increment(1), // Sync for UI/Rules consistency
-          'avatarStats.challengeXp': FieldValue.increment(xpReward),
-          if (xpReward > 0) 'totalXp': FieldValue.increment(xpReward),
-        }, SetOptions(merge: true));
-      });
+      // 4. Update Leaderboard via Repository
+      await _leaderboardRepo.updateUserScore(
+        userId,
+        xp: xpReward,
+        level: 1, // XP only update, level handled by user stats
+        archetype: UserArchetype.values.firstWhere(
+          (e) => e.name.toLowerCase() == archetype.toLowerCase(),
+          orElse: () => UserArchetype.none,
+        ),
+        userName: userName,
+        clubId: clubId,
+        isIncrement: true,
+      );
     } catch (e) {
       debugPrint('Error logging challenge completion to social activity: $e');
     }
@@ -319,36 +318,35 @@ class SocialActivityService {
       final clubId = _getClubIdForArchetype(archetype);
       final id =
           '${userId}_streak_${streakDays}_${DateTime.now().millisecondsSinceEpoch}';
+      final nowStr = DateTime.now().toUtc().toIso8601String();
 
-      await _firestore.runTransaction((transaction) async {
-        // Global
-        final globalRef = _firestore
-            .collection(_kGlobalActivitiesCollection)
-            .doc(id);
-        transaction.set(globalRef, {
+      // Global
+      await _syncEngine.enqueueSet(
+        collectionPath: _kGlobalActivitiesCollection,
+        documentId: id,
+        data: {
           'type': _kActivityTypeStreakMilestone,
           'userId': userId,
           'userName': userName,
           'archetypeId': archetype,
           'clubId': clubId,
           'data': {'streakDays': streakDays},
-          'timestamp': FieldValue.serverTimestamp(),
-        });
+          'timestamp': nowStr,
+        },
+      );
 
-        // Club
-        final clubActivityRef = _firestore
-            .collection(_kTribesCollection)
-            .doc(clubId)
-            .collection(_kActivityCollection)
-            .doc(id);
-        transaction.set(clubActivityRef, {
+      // Club
+      await _syncEngine.enqueueSet(
+        collectionPath: '$_kTribesCollection/$clubId/$_kActivityCollection',
+        documentId: id,
+        data: {
           'type': _kActivityTypeStreakMilestone,
           'userId': userId,
           'userName': userName,
           'data': {'streakDays': streakDays},
-          'timestamp': FieldValue.serverTimestamp(),
-        });
-      });
+          'timestamp': nowStr,
+        },
+      );
     } catch (e) {
       debugPrint('Error logging streak milestone to social activity: $e');
     }
@@ -366,36 +364,35 @@ class SocialActivityService {
       final clubId = _getClubIdForArchetype(archetype);
       final id =
           '${userId}_node_${nodeId}_${DateTime.now().millisecondsSinceEpoch}';
+      final nowStr = DateTime.now().toUtc().toIso8601String();
 
-      await _firestore.runTransaction((transaction) async {
-        // Global
-        final globalRef = _firestore
-            .collection(_kGlobalActivitiesCollection)
-            .doc(id);
-        transaction.set(globalRef, {
+      // Global
+      await _syncEngine.enqueueSet(
+        collectionPath: _kGlobalActivitiesCollection,
+        documentId: id,
+        data: {
           'type': _kActivityTypeNodeClaim,
           'userId': userId,
           'userName': userName,
           'archetypeId': archetype,
           'clubId': clubId,
           'data': {'nodeId': nodeId, 'nodeName': nodeName},
-          'timestamp': FieldValue.serverTimestamp(),
-        });
+          'timestamp': nowStr,
+        },
+      );
 
-        // Club
-        final clubActivityRef = _firestore
-            .collection(_kTribesCollection)
-            .doc(clubId)
-            .collection(_kActivityCollection)
-            .doc(id);
-        transaction.set(clubActivityRef, {
+      // Club
+      await _syncEngine.enqueueSet(
+        collectionPath: '$_kTribesCollection/$clubId/$_kActivityCollection',
+        documentId: id,
+        data: {
           'type': _kActivityTypeNodeClaim,
           'userId': userId,
           'userName': userName,
           'data': {'nodeId': nodeId, 'nodeName': nodeName},
-          'timestamp': FieldValue.serverTimestamp(),
-        });
-      });
+          'timestamp': nowStr,
+        },
+      );
     } catch (e) {
       debugPrint('Error logging node claim: $e');
     }
@@ -413,36 +410,35 @@ class SocialActivityService {
       final clubId = _getClubIdForArchetype(archetype);
       final id =
           '${userId}_badge_${badgeId}_${DateTime.now().millisecondsSinceEpoch}';
+      final nowStr = DateTime.now().toUtc().toIso8601String();
 
-      await _firestore.runTransaction((transaction) async {
-        // Global
-        final globalRef = _firestore
-            .collection(_kGlobalActivitiesCollection)
-            .doc(id);
-        transaction.set(globalRef, {
+      // Global
+      await _syncEngine.enqueueSet(
+        collectionPath: _kGlobalActivitiesCollection,
+        documentId: id,
+        data: {
           'type': _kActivityTypeBadgeEarned,
           'userId': userId,
           'userName': userName,
           'archetypeId': archetype,
           'clubId': clubId,
           'data': {'badgeId': badgeId, 'badgeName': badgeName},
-          'timestamp': FieldValue.serverTimestamp(),
-        });
+          'timestamp': nowStr,
+        },
+      );
 
-        // Club
-        final clubActivityRef = _firestore
-            .collection(_kTribesCollection)
-            .doc(clubId)
-            .collection(_kActivityCollection)
-            .doc(id);
-        transaction.set(clubActivityRef, {
+      // Club
+      await _syncEngine.enqueueSet(
+        collectionPath: '$_kTribesCollection/$clubId/$_kActivityCollection',
+        documentId: id,
+        data: {
           'type': _kActivityTypeBadgeEarned,
           'userId': userId,
           'userName': userName,
           'data': {'badgeId': badgeId, 'badgeName': badgeName},
-          'timestamp': FieldValue.serverTimestamp(),
-        });
-      });
+          'timestamp': nowStr,
+        },
+      );
     } catch (e) {
       debugPrint('Error logging badge earned to social activity: $e');
     }
@@ -458,32 +454,33 @@ class SocialActivityService {
     try {
       final clubId = _getClubIdForArchetype(archetype);
       final id = '${userId}_partner_${DateTime.now().millisecondsSinceEpoch}';
+      final nowStr = DateTime.now().toUtc().toIso8601String();
 
-      await _firestore.runTransaction((transaction) async {
-        final globalRef = _firestore.collection(_kGlobalActivitiesCollection).doc(id);
-        transaction.set(globalRef, {
+      await _syncEngine.enqueueSet(
+        collectionPath: _kGlobalActivitiesCollection,
+        documentId: id,
+        data: {
           'type': _kActivityTypePartnerJoined,
           'userId': userId,
           'userName': userName,
           'archetypeId': archetype,
           'clubId': clubId,
           'data': {'partnerName': partnerName},
-          'timestamp': FieldValue.serverTimestamp(),
-        });
+          'timestamp': nowStr,
+        },
+      );
 
-        final clubActivityRef = _firestore
-            .collection(_kTribesCollection)
-            .doc(clubId)
-            .collection(_kActivityCollection)
-            .doc(id);
-        transaction.set(clubActivityRef, {
+      await _syncEngine.enqueueSet(
+        collectionPath: '$_kTribesCollection/$clubId/$_kActivityCollection',
+        documentId: id,
+        data: {
           'type': _kActivityTypePartnerJoined,
           'userId': userId,
           'userName': userName,
           'data': {'partnerName': partnerName},
-          'timestamp': FieldValue.serverTimestamp(),
-        });
-      });
+          'timestamp': nowStr,
+        },
+      );
     } catch (e) {
       debugPrint('Error logging partner joined: $e');
     }
@@ -500,32 +497,33 @@ class SocialActivityService {
     try {
       final clubId = _getClubIdForArchetype(archetype);
       final id = '${userId}_contract_${DateTime.now().millisecondsSinceEpoch}';
+      final nowStr = DateTime.now().toUtc().toIso8601String();
 
-      await _firestore.runTransaction((transaction) async {
-        final globalRef = _firestore.collection(_kGlobalActivitiesCollection).doc(id);
-        transaction.set(globalRef, {
+      await _syncEngine.enqueueSet(
+        collectionPath: _kGlobalActivitiesCollection,
+        documentId: id,
+        data: {
           'type': _kActivityTypeContractCommitted,
           'userId': userId,
           'userName': userName,
           'archetypeId': archetype,
           'clubId': clubId,
           'data': {'habitTitle': habitTitle, 'penalty': penalty},
-          'timestamp': FieldValue.serverTimestamp(),
-        });
+          'timestamp': nowStr,
+        },
+      );
 
-        final clubActivityRef = _firestore
-            .collection(_kTribesCollection)
-            .doc(clubId)
-            .collection(_kActivityCollection)
-            .doc(id);
-        transaction.set(clubActivityRef, {
+      await _syncEngine.enqueueSet(
+        collectionPath: '$_kTribesCollection/$clubId/$_kActivityCollection',
+        documentId: id,
+        data: {
           'type': _kActivityTypeContractCommitted,
           'userId': userId,
           'userName': userName,
           'data': {'habitTitle': habitTitle, 'penalty': penalty},
-          'timestamp': FieldValue.serverTimestamp(),
-        });
-      });
+          'timestamp': nowStr,
+        },
+      );
     } catch (e) {
       debugPrint('Error logging contract committed: $e');
     }

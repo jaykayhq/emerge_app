@@ -21,8 +21,9 @@ void main() {
 
   group('SyncTriggerService', () {
     test('onConnectivityChanged triggers sync when online', () async {
-      when(() => mockSyncEngine.processMutationQueue())
-          .thenAnswer((_) async {});
+      when(
+        () => mockSyncEngine.processMutationQueue(),
+      ).thenAnswer((_) async {});
 
       await service.onConnectivityChanged([ConnectivityResult.wifi]);
 
@@ -30,8 +31,9 @@ void main() {
     });
 
     test('onConnectivityChanged does not trigger sync when offline', () async {
-      when(() => mockSyncEngine.processMutationQueue())
-          .thenAnswer((_) async {});
+      when(
+        () => mockSyncEngine.processMutationQueue(),
+      ).thenAnswer((_) async {});
 
       await service.onConnectivityChanged([ConnectivityResult.none]);
 
@@ -39,20 +41,19 @@ void main() {
     });
 
     test('triggerSync does nothing when already in progress', () async {
-      when(() => mockSyncEngine.processMutationQueue())
-          .thenAnswer((_) async {});
+      when(
+        () => mockSyncEngine.processMutationQueue(),
+      ).thenAnswer((_) async {});
 
-      await Future.wait([
-        service.triggerSync(),
-        service.triggerSync(),
-      ]);
+      await Future.wait([service.triggerSync(), service.triggerSync()]);
 
       verify(() => mockSyncEngine.processMutationQueue()).called(1);
     });
 
     test('start registers the connectivity listener', () async {
-      when(() => mockSyncEngine.processMutationQueue())
-          .thenAnswer((_) async {});
+      when(
+        () => mockSyncEngine.processMutationQueue(),
+      ).thenAnswer((_) async {});
 
       service.start();
 

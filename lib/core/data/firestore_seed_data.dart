@@ -308,11 +308,7 @@ class FirestoreSeedData {
         'createdAt': now.toIso8601String(),
         'imageUrl':
             'https://lh3.googleusercontent.com/aida-public/AB6AXuAfCNp1icRBAU8hg03pn5bQWXoBFEuaIz-ZFfUPXOh56xerlnlYitA0if4Yc5mPo2938KAYn8mxC25rkiXWhXcYFz9SfaZXyRbkgQzUjyo5Lbu0wgeu2-f88hbgcI2LmQwu7y8HtduqEUdr1X4wZjJLQ4nTwXeshkcfus-M2KwANVbUrrVVdmH0O96ujwECYbjBx9-QgoR4v3d59g8vui_2fJyHpXZs4iPsgZaO0Ql6gjPS-wyfvwQ_v_T_7Cmulv-_P9IlhJ9Tqp4',
-        'habitTitles': [
-          'Morning Sunlight',
-          'Cold Exposure',
-          'Delay Caffeine',
-        ],
+        'habitTitles': ['Morning Sunlight', 'Cold Exposure', 'Delay Caffeine'],
         'isPremium': true,
       },
       {
@@ -348,11 +344,7 @@ class FirestoreSeedData {
         'createdAt': now.toIso8601String(),
         'imageUrl':
             'https://images.unsplash.com/photo-1517836357463-d25dfeac3438?w=400',
-        'habitTitles': [
-          '30 Min Walk',
-          'Drink 2L Water',
-          'Stretch',
-        ],
+        'habitTitles': ['30 Min Walk', 'Drink 2L Water', 'Stretch'],
       },
       {
         'id': 'blueprint_scholar',
@@ -367,11 +359,7 @@ class FirestoreSeedData {
         'createdAt': now.toIso8601String(),
         'imageUrl':
             'https://images.unsplash.com/photo-1456513080510-7bf3a84b82f8?w=400',
-        'habitTitles': [
-          'Read 20 Pages',
-          'Study Session',
-          'Review Notes',
-        ],
+        'habitTitles': ['Read 20 Pages', 'Study Session', 'Review Notes'],
       },
       {
         'id': 'blueprint_creator',
@@ -464,11 +452,7 @@ class FirestoreSeedData {
         'createdAt': now.toIso8601String(),
         'imageUrl':
             'https://images.unsplash.com/photo-1517836357463-d25dfeac3438?w=400',
-        'habitTitles': [
-          '1km Interval Run',
-          'Sled Push/Pull',
-          'Wall Ball Reps',
-        ],
+        'habitTitles': ['1km Interval Run', 'Sled Push/Pull', 'Wall Ball Reps'],
       },
       {
         'id': 'blueprint_mobility_master',
@@ -562,11 +546,7 @@ class FirestoreSeedData {
         'createdAt': now.toIso8601String(),
         'imageUrl':
             'https://images.unsplash.com/photo-1492724441997-5dc865305da7?w=400',
-        'habitTitles': [
-          'Hook Writing',
-          'Deep Editing',
-          'Community Engagement',
-        ],
+        'habitTitles': ['Hook Writing', 'Deep Editing', 'Community Engagement'],
         'isPremium': true,
       },
       {
@@ -582,11 +562,7 @@ class FirestoreSeedData {
         'createdAt': now.toIso8601String(),
         'imageUrl':
             'https://images.unsplash.com/photo-1498050108023-c5249f4df085?w=400',
-        'habitTitles': [
-          'Shipping Code',
-          'Marketing Activity',
-          'User Outreach',
-        ],
+        'habitTitles': ['Shipping Code', 'Marketing Activity', 'User Outreach'],
         'isPremium': true,
       },
       {
@@ -720,11 +696,7 @@ class FirestoreSeedData {
         'createdAt': now.toIso8601String(),
         'imageUrl':
             'https://images.unsplash.com/photo-1469571486292-0ba58a3f068b?w=400',
-        'habitTitles': [
-          'Kindness Act',
-          'Volunteer Hour',
-          'Mentor Session',
-        ],
+        'habitTitles': ['Kindness Act', 'Volunteer Hour', 'Mentor Session'],
       },
       {
         'id': 'blueprint_monk_mode',
@@ -751,18 +723,13 @@ class FirestoreSeedData {
         'creatorName': 'Emerge Team',
         'creatorArchetype': 'Zealot',
         'blueprintName': 'Energy Alignment',
-        'description':
-            'Raise your vibration through breathwork and intention.',
+        'description': 'Raise your vibration through breathwork and intention.',
         'category': 'Vitality',
         'adoptionCount': 5200,
         'createdAt': now.toIso8601String(),
         'imageUrl':
             'https://images.unsplash.com/photo-1506126613408-eca07ce68773?w=400',
-        'habitTitles': [
-          'Breathwork',
-          'Morning Affirmations',
-          'Sun Gazing',
-        ],
+        'habitTitles': ['Breathwork', 'Morning Affirmations', 'Sun Gazing'],
       },
       {
         'id': 'blueprint_stoic_calm',
@@ -777,11 +744,7 @@ class FirestoreSeedData {
         'createdAt': now.toIso8601String(),
         'imageUrl':
             'https://images.unsplash.com/photo-1507413245164-6160d8298b31?w=400',
-        'habitTitles': [
-          'Morning Journal',
-          'Duty Checklist',
-          'Gratitude Walk',
-        ],
+        'habitTitles': ['Morning Journal', 'Duty Checklist', 'Gratitude Walk'],
         'isPremium': true,
       },
       {
@@ -816,11 +779,7 @@ class FirestoreSeedData {
         'createdAt': now.toIso8601String(),
         'imageUrl':
             'https://images.unsplash.com/photo-1551288049-bbbda5366991?w=400',
-        'habitTitles': [
-          'Coding Practice',
-          'Math Theory',
-          'Project Building',
-        ],
+        'habitTitles': ['Coding Practice', 'Math Theory', 'Project Building'],
       },
       {
         'id': 'blueprint_podcaster_flow',
@@ -848,8 +807,7 @@ class FirestoreSeedData {
         'creatorName': 'Stephen King',
         'creatorArchetype': 'Creator',
         'blueprintName': 'The Novelist Path',
-        'description':
-            'Simple but effective habits to finish your first book.',
+        'description': 'Simple but effective habits to finish your first book.',
         'category': 'Creativity',
         'adoptionCount': 8900,
         'createdAt': now.toIso8601String(),

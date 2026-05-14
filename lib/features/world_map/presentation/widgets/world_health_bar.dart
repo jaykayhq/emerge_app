@@ -81,7 +81,7 @@ class WorldHealthBar extends StatelessWidget {
               // Background track
               Container(
                 decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha:0.08),
+                  color: Colors.white.withValues(alpha: 0.08),
                   borderRadius: BorderRadius.circular(6),
                 ),
               ),
@@ -110,14 +110,14 @@ class WorldHealthBar extends StatelessWidget {
             Text(
               '🌱 Growth',
               style: TextStyle(
-                color: Colors.white.withValues(alpha:0.5),
+                color: Colors.white.withValues(alpha: 0.5),
                 fontSize: 9,
               ),
             ),
             Text(
               'Decay 💀',
               style: TextStyle(
-                color: Colors.white.withValues(alpha:0.5),
+                color: Colors.white.withValues(alpha: 0.5),
                 fontSize: 9,
               ),
             ),

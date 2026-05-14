@@ -9,17 +9,13 @@ class QuestCardStitch extends StatelessWidget {
   final Challenge challenge;
   final VoidCallback? onTap;
 
-  const QuestCardStitch({
-    super.key,
-    required this.challenge,
-    this.onTap,
-  });
+  const QuestCardStitch({super.key, required this.challenge, this.onTap});
 
   @override
   Widget build(BuildContext context) {
     final isProgressVisible = challenge.status == ChallengeStatus.active;
-    final progress = challenge.totalDays > 0 
-        ? (challenge.currentDay / challenge.totalDays).clamp(0.0, 1.0) 
+    final progress = challenge.totalDays > 0
+        ? (challenge.currentDay / challenge.totalDays).clamp(0.0, 1.0)
         : 0.0;
 
     return GestureDetector(
@@ -28,10 +24,7 @@ class QuestCardStitch extends StatelessWidget {
         margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(28),
-          border: Border.all(
-            color: AppTheme.glassBorder,
-            width: 1,
-          ),
+          border: Border.all(color: AppTheme.glassBorder, width: 1),
           boxShadow: [
             BoxShadow(
               color: Colors.black.withValues(alpha: 0.3),
@@ -59,21 +52,27 @@ class QuestCardStitch extends StatelessWidget {
                       children: [
                         Positioned.fill(
                           child: challenge.imageUrl.isNotEmpty
-                              ? (challenge.imageUrl.startsWith('images/') || challenge.imageUrl.startsWith('assets/images/')
-                                  ? Image.asset(
-                                      challenge.imageUrl,
-                                      fit: BoxFit.cover,
-                                    )
-                                  : Image.network(
-                                      challenge.imageUrl,
-                                      fit: BoxFit.cover,
-                                      errorBuilder: (context, error, stackTrace) =>
-                                          _buildImageFallback(),
-                                      loadingBuilder: (context, child, progress) {
-                                        if (progress == null) return child;
-                                        return _buildImagePlaceholder();
-                                      },
-                                    ))
+                              ? (challenge.imageUrl.startsWith('images/') ||
+                                        challenge.imageUrl.startsWith(
+                                          'assets/images/',
+                                        )
+                                    ? Image.asset(
+                                        challenge.imageUrl,
+                                        fit: BoxFit.cover,
+                                      )
+                                    : Image.network(
+                                        challenge.imageUrl,
+                                        fit: BoxFit.cover,
+                                        errorBuilder:
+                                            (context, error, stackTrace) =>
+                                                _buildImageFallback(),
+                                        loadingBuilder:
+                                            (context, child, progress) {
+                                              if (progress == null)
+                                                return child;
+                                              return _buildImagePlaceholder();
+                                            },
+                                      ))
                               : _buildImageFallback(),
                         ),
                         // Dramatic ambient gradient
@@ -85,7 +84,9 @@ class QuestCardStitch extends StatelessWidget {
                                 end: Alignment.bottomCenter,
                                 colors: [
                                   Colors.transparent,
-                                  AppTheme.cosmicVoidDark.withValues(alpha: 0.9),
+                                  AppTheme.cosmicVoidDark.withValues(
+                                    alpha: 0.9,
+                                  ),
                                 ],
                                 stops: const [0.4, 1.0],
                               ),
@@ -106,7 +107,9 @@ class QuestCardStitch extends StatelessWidget {
                               borderRadius: BorderRadius.circular(14),
                               boxShadow: [
                                 BoxShadow(
-                                  color: AppTheme.primary.withValues(alpha: 0.3),
+                                  color: AppTheme.primary.withValues(
+                                    alpha: 0.3,
+                                  ),
                                   blurRadius: 10,
                                   spreadRadius: 2,
                                 ),
@@ -156,11 +159,15 @@ class QuestCardStitch extends StatelessWidget {
                                 vertical: 6,
                               ),
                               decoration: BoxDecoration(
-                                color: const Color(0xFF00E5FF).withValues(alpha: 0.9), // Neon Cyan
+                                color: const Color(
+                                  0xFF00E5FF,
+                                ).withValues(alpha: 0.9), // Neon Cyan
                                 borderRadius: BorderRadius.circular(8),
                                 boxShadow: [
                                   BoxShadow(
-                                    color: const Color(0xFF00E5FF).withValues(alpha: 0.4),
+                                    color: const Color(
+                                      0xFF00E5FF,
+                                    ).withValues(alpha: 0.4),
                                     blurRadius: 12,
                                     spreadRadius: 2,
                                   ),
@@ -199,7 +206,8 @@ class QuestCardStitch extends StatelessWidget {
                       children: [
                         Text(
                           challenge.title,
-                          style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                          style: Theme.of(context).textTheme.titleLarge
+                              ?.copyWith(
                                 color: Colors.white,
                                 fontWeight: FontWeight.w800,
                                 letterSpacing: -0.5,
@@ -210,12 +218,15 @@ class QuestCardStitch extends StatelessWidget {
                           challenge.description,
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
-                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                color: AppTheme.textSecondaryDark.withValues(alpha: 0.8),
+                          style: Theme.of(context).textTheme.bodyMedium
+                              ?.copyWith(
+                                color: AppTheme.textSecondaryDark.withValues(
+                                  alpha: 0.8,
+                                ),
                                 height: 1.4,
                               ),
                         ),
-                        
+
                         if (isProgressVisible) ...[
                           const SizedBox(height: 20),
                           Row(
@@ -253,15 +264,22 @@ class QuestCardStitch extends StatelessWidget {
                               ),
                               Container(
                                 height: 6,
-                                width: (MediaQuery.of(context).size.width - 72) * progress,
+                                width:
+                                    (MediaQuery.of(context).size.width - 72) *
+                                    progress,
                                 decoration: BoxDecoration(
                                   gradient: const LinearGradient(
-                                    colors: [AppTheme.primary, Color(0xFF6366F1)],
+                                    colors: [
+                                      AppTheme.primary,
+                                      Color(0xFF6366F1),
+                                    ],
                                   ),
                                   borderRadius: BorderRadius.circular(3),
                                   boxShadow: [
                                     BoxShadow(
-                                      color: AppTheme.primary.withValues(alpha: 0.3),
+                                      color: AppTheme.primary.withValues(
+                                        alpha: 0.3,
+                                      ),
                                       blurRadius: 6,
                                     ),
                                   ],
@@ -364,9 +382,7 @@ class QuestCardStitch extends StatelessWidget {
 
   Widget _buildImageFallback() {
     return Container(
-      decoration: BoxDecoration(
-        gradient: AppTheme.cosmicGradient,
-      ),
+      decoration: BoxDecoration(gradient: AppTheme.cosmicGradient),
       child: Center(
         child: Icon(
           Icons.auto_awesome,

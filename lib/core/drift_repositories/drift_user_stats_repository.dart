@@ -3,15 +3,21 @@ import 'dart:convert';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:emerge_app/core/drift/database.dart';
 import 'package:emerge_app/features/auth/domain/entities/user_extension.dart';
+import 'package:emerge_app/core/sync/sync_engine.dart';
 
 class DriftUserStatsRepository {
   final AppDatabase _db;
   final FirebaseFirestore _firestore;
+  final EnhancedSyncEngine _syncEngine;
 
-  DriftUserStatsRepository(this._db) : _firestore = FirebaseFirestore.instance;
+  DriftUserStatsRepository(this._db, this._syncEngine)
+    : _firestore = FirebaseFirestore.instance;
 
   Future<void> saveUserStats(UserProfile profile) async {
+    // 1. Update local Drift database
     await _db.userStatsDao.upsertFromFirebase(profile.uid, {
+      'displayName': profile.displayName,
+      'photoUrl': profile.photoUrl,
       'totalXp': profile.avatarStats.totalXp,
       'level': profile.avatarStats.level,
       'streak': profile.avatarStats.streak,
@@ -24,16 +30,63 @@ class DriftUserStatsRepository {
       'challengeXp': profile.avatarStats.challengeXp,
       'worldHealthScore': profile.worldState.worldHealth,
       'archetype': profile.archetype.name,
-      'updatedAt': DateTime.now().toIso8601String(),
-      'avatarJson': profile.avatarStats.toMap().toString(),
-      'worldStateJson': profile.worldState.toMap().toString(),
+      'characterClass': profile.characterClass,
+      'motive': profile.motive,
+      'why': profile.why,
+      'anchorsJson': jsonEncode(profile.anchors),
+      'habitStacksJson': jsonEncode(
+        profile.habitStacks.map((e) => e.toMap()).toList(),
+      ),
+      'skippedOnboardingStepsJson': jsonEncode(profile.skippedOnboardingSteps),
+      'settingsJson': jsonEncode(profile.settings.toMap()),
+      'avatarJson': jsonEncode(profile.avatarStats.toMap()),
+      'worldStateJson': jsonEncode(profile.worldState.toMap()),
       'onboardingProgress': profile.onboardingProgress,
       'onboardingCompletedAt': profile.onboardingCompletedAt?.toIso8601String(),
+      'onboardingStartedAt': profile.onboardingStartedAt?.toIso8601String(),
+      'hasEmerged': profile.hasEmerged,
+      'momentumScore': profile.momentumScore,
+      'updatedAt': DateTime.now().toIso8601String(),
     });
+
+    // 2. Enqueue sync to Firestore
+    final profileMap = profile.toMap();
+
+    // Sync to user_stats (detailed metrics used by game loop)
+    await _syncEngine.enqueueSet(
+      collectionPath: 'user_stats',
+      documentId: profile.uid,
+      data: profileMap,
+    );
+
+    // Sync to users (master profile used by tribe recalculation and social)
+    await _syncEngine.enqueueUpdate(
+      collectionPath: 'users',
+      documentId: profile.uid,
+      data: {
+        'archetype': profile.archetype.name,
+        'level': profile.avatarStats.level,
+        'streak': profile.avatarStats.streak,
+        'updatedAt': DateTime.now().toUtc().toIso8601String(),
+      },
+    );
   }
 
   Future<void> updateWorldHealth(String uid, int score) async {
-    await _db.userStatsDao.updateWorldHealth(uid, score / 100.0);
+    final healthPercent = score / 100.0;
+
+    // 1. Update local Drift database
+    await _db.userStatsDao.updateWorldHealth(uid, healthPercent);
+
+    // 2. Enqueue sync to Firestore
+    await _syncEngine.enqueueUpdate(
+      collectionPath: 'users',
+      documentId: uid,
+      data: {
+        'worldState.entropy': 1.0 - healthPercent,
+        'updatedAt': DateTime.now().toIso8601String(),
+      },
+    );
   }
 
   Future<void> syncUserIdentity(UserProfile profile) async {
@@ -75,7 +128,10 @@ class DriftUserStatsRepository {
     return doc.data();
   }
 
-  Future<List<Map<String, dynamic>>> getRecaps(String userId, {int limit = 10}) async {
+  Future<List<Map<String, dynamic>>> getRecaps(
+    String userId, {
+    int limit = 10,
+  }) async {
     final snapshot = await _firestore
         .collection('user_stats')
         .doc(userId)
@@ -119,18 +175,25 @@ class DriftUserStatsRepository {
     String? attribute,
     int? streakDay,
   }) async {
+    final nowStr = date.toIso8601String();
     final data = <String, dynamic>{
       'userId': userId,
-      'date': Timestamp.fromDate(date),
+      'date': nowStr,
       'type': type,
-      'createdAt': FieldValue.serverTimestamp(),
+      'createdAt': nowStr,
     };
     if (habitId != null) data['habitId'] = habitId;
     if (sourceId != null) data['sourceId'] = sourceId;
     if (difficulty != null) data['difficulty'] = difficulty;
     if (attribute != null) data['attribute'] = attribute;
     if (streakDay != null) data['streakDay'] = streakDay;
-    await _firestore.collection('user_activity').add(data);
+
+    final docId = '${userId}_${type}_${date.millisecondsSinceEpoch}';
+    await _syncEngine.enqueueSet(
+      collectionPath: 'user_activity',
+      documentId: docId,
+      data: data,
+    );
   }
 
   UserWorldState _parseWorldState(UserStatsTableData row) {
@@ -146,12 +209,65 @@ class DriftUserStatsRepository {
   }
 
   UserProfile _rowToProfile(UserStatsTableData row) {
+    List<String> anchors = [];
+    if (row.anchorsJson != null) {
+      try {
+        anchors = List<String>.from(jsonDecode(row.anchorsJson!));
+      } catch (_) {}
+    }
+
+    List<HabitStack> habitStacks = [];
+    if (row.habitStacksJson != null) {
+      try {
+        final list = jsonDecode(row.habitStacksJson!) as List;
+        habitStacks = list
+            .map((e) => HabitStack.fromMap(e as Map<String, dynamic>))
+            .toList();
+      } catch (_) {}
+    }
+
+    List<String> skippedOnboardingSteps = [];
+    if (row.skippedOnboardingStepsJson != null) {
+      try {
+        skippedOnboardingSteps = List<String>.from(
+          jsonDecode(row.skippedOnboardingStepsJson!),
+        );
+      } catch (_) {}
+    }
+
+    UserSettings settings = const UserSettings();
+    if (row.settingsJson != null) {
+      try {
+        settings = UserSettings.fromMap(
+          jsonDecode(row.settingsJson!) as Map<String, dynamic>,
+        );
+      } catch (_) {}
+    }
+
     return UserProfile(
       uid: row.userId,
+      displayName: row.displayName,
+      photoUrl: row.photoUrl,
       archetype: UserArchetype.values.firstWhere(
         (e) => e.name == (row.archetype ?? 'none'),
         orElse: () => UserArchetype.none,
       ),
+      characterClass: row.characterClass,
+      motive: row.motive,
+      why: row.why,
+      anchors: anchors,
+      habitStacks: habitStacks,
+      onboardingProgress: row.onboardingProgress,
+      skippedOnboardingSteps: skippedOnboardingSteps,
+      onboardingStartedAt: row.onboardingStartedAt != null
+          ? DateTime.tryParse(row.onboardingStartedAt!)
+          : null,
+      onboardingCompletedAt: row.onboardingCompletedAt != null
+          ? DateTime.tryParse(row.onboardingCompletedAt!)
+          : null,
+      settings: settings,
+      hasEmerged: row.hasEmerged,
+      momentumScore: row.momentumScore,
       avatarStats: UserAvatarStats(
         strengthXp: row.strengthXp,
         intellectXp: row.intellectXp,
@@ -162,12 +278,9 @@ class DriftUserStatsRepository {
         challengeXp: row.challengeXp,
         level: row.level,
         streak: row.streak,
+        momentumScore: (row.momentumScore * 100).toInt(),
       ),
       worldState: _parseWorldState(row),
-      onboardingProgress: row.onboardingProgress,
-      onboardingCompletedAt: row.onboardingCompletedAt != null
-          ? DateTime.tryParse(row.onboardingCompletedAt!)
-          : null,
     );
   }
 }

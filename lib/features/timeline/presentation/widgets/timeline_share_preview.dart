@@ -103,11 +103,11 @@ class _TimelineSharePreviewDialogState
                   end: Alignment.bottomRight,
                   colors: [
                     EmergeColors.background,
-                    EmergeColors.background.withValues(alpha:0.9),
+                    EmergeColors.background.withValues(alpha: 0.9),
                   ],
                 ),
                 border: Border.all(
-                  color: EmergeColors.teal.withValues(alpha:0.3),
+                  color: EmergeColors.teal.withValues(alpha: 0.3),
                 ),
               ),
               child: ClipRRect(
@@ -146,7 +146,7 @@ class _TimelineSharePreviewDialogState
                                     'Level $level',
                                     style: TextStyle(
                                       color: EmergeEarthyColors.cream
-                                          .withValues(alpha:0.7),
+                                          .withValues(alpha: 0.7),
                                       fontSize: 12,
                                       fontWeight: FontWeight.w600,
                                     ),
@@ -178,7 +178,7 @@ class _TimelineSharePreviewDialogState
                         Text(
                           'Created with Emerge',
                           style: TextStyle(
-                            color: Colors.white.withValues(alpha:0.5),
+                            color: Colors.white.withValues(alpha: 0.5),
                             fontSize: 10,
                             letterSpacing: 1.5,
                           ),
@@ -259,7 +259,7 @@ class _TimelineSharePreviewDialogState
         Text(
           label,
           style: TextStyle(
-            color: color.withValues(alpha:0.8),
+            color: color.withValues(alpha: 0.8),
             fontSize: 12,
             fontWeight: FontWeight.w600,
           ),

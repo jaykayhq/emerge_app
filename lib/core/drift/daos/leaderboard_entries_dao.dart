@@ -5,14 +5,26 @@ import '../tables/leaderboard_entries_table.dart';
 part 'leaderboard_entries_dao.g.dart';
 
 @DriftAccessor(tables: [LeaderboardEntriesTable])
-class LeaderboardEntriesDao extends DatabaseAccessor<AppDatabase> with _$LeaderboardEntriesDaoMixin {
+class LeaderboardEntriesDao extends DatabaseAccessor<AppDatabase>
+    with _$LeaderboardEntriesDaoMixin {
   LeaderboardEntriesDao(super.db);
 
   Stream<List<LeaderboardEntriesTableData>> watchLeaderboard(String tribeId) {
     return (select(leaderboardEntriesTable)
-      ..where((t) => t.tribeId.equals(tribeId))
-      ..orderBy([(t) => OrderingTerm(expression: t.xp, mode: OrderingMode.desc)]))
-      .watch();
+          ..where((t) => t.tribeId.equals(tribeId))
+          ..orderBy([
+            (t) => OrderingTerm(expression: t.xp, mode: OrderingMode.desc),
+          ]))
+        .watch();
+  }
+
+  Future<List<LeaderboardEntriesTableData>> getForTribe(String tribeId) {
+    return (select(leaderboardEntriesTable)
+          ..where((t) => t.tribeId.equals(tribeId))
+          ..orderBy([
+            (t) => OrderingTerm(expression: t.xp, mode: OrderingMode.desc),
+          ]))
+        .get();
   }
 
   Future<void> upsertEntry(Insertable<LeaderboardEntriesTableData> entry) {
@@ -29,20 +41,30 @@ class LeaderboardEntriesDao extends DatabaseAccessor<AppDatabase> with _$Leaderb
     String? archetype,
     required String updatedAt,
   }) {
-    return into(leaderboardEntriesTable).insertOnConflictUpdate(LeaderboardEntriesTableCompanion(
-      id: Value(id),
-      tribeId: Value(tribeId),
-      userId: Value(userId),
-      userName: Value(userName),
-      xp: Value(xp),
-      level: Value(level),
-      archetype: Value(archetype),
-      updatedAt: Value(updatedAt),
-    ));
+    return into(leaderboardEntriesTable).insertOnConflictUpdate(
+      LeaderboardEntriesTableCompanion(
+        id: Value(id),
+        tribeId: Value(tribeId),
+        userId: Value(userId),
+        userName: Value(userName),
+        xp: Value(xp),
+        level: Value(level),
+        archetype: Value(archetype),
+        updatedAt: Value(updatedAt),
+      ),
+    );
   }
 
-  Future<void> updateUserScore(String id, {required int xp, required int level, required String userName, required String archetype}) async {
-    await (update(leaderboardEntriesTable)..where((t) => t.id.equals(id))).write(
+  Future<void> updateUserScore(
+    String id, {
+    required int xp,
+    required int level,
+    required String userName,
+    required String archetype,
+  }) async {
+    await (update(
+      leaderboardEntriesTable,
+    )..where((t) => t.id.equals(id))).write(
       LeaderboardEntriesTableCompanion(
         xp: Value(xp),
         level: Value(level),
@@ -51,5 +73,22 @@ class LeaderboardEntriesDao extends DatabaseAccessor<AppDatabase> with _$Leaderb
         updatedAt: Value(DateTime.now().toIso8601String()),
       ),
     );
+  }
+
+  Future<void> incrementXp(String id, int deltaXp, int newLevel) async {
+    final entry = await (select(
+      leaderboardEntriesTable,
+    )..where((t) => t.id.equals(id))).getSingleOrNull();
+    if (entry != null) {
+      await (update(
+        leaderboardEntriesTable,
+      )..where((t) => t.id.equals(id))).write(
+        LeaderboardEntriesTableCompanion(
+          xp: Value(entry.xp + deltaXp),
+          level: Value(newLevel),
+          updatedAt: Value(DateTime.now().toIso8601String()),
+        ),
+      );
+    }
   }
 }

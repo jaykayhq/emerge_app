@@ -53,38 +53,41 @@ class RevenueCatRepository implements MonetizationRepository {
 
     _initCompleter = Completer<void>();
     try {
+      // Initialize API keys if not already set
+      _googleApiKey ??= AppConfig.getRevenueCatApiKey('android');
+      _appleApiKey ??= AppConfig.getRevenueCatApiKey('ios');
+      final webApiKey = AppConfig.getRevenueCatApiKey('web');
 
-    // Initialize API keys if not already set
-    _googleApiKey ??= AppConfig.getRevenueCatApiKey('android');
-    _appleApiKey ??= AppConfig.getRevenueCatApiKey('ios');
-    final webApiKey = AppConfig.getRevenueCatApiKey('web');
-
-    String currentKey = '';
-    if (kIsWeb) {
-      currentKey = webApiKey;
-      if (kDebugMode) {
-        AppLogger.i('RevenueCat: Initializing for Web with key: ${currentKey.isNotEmpty ? "SET" : "EMPTY"}');
+      String currentKey = '';
+      if (kIsWeb) {
+        currentKey = webApiKey;
+        if (kDebugMode) {
+          AppLogger.i(
+            'RevenueCat: Initializing for Web with key: ${currentKey.isNotEmpty ? "SET" : "EMPTY"}',
+          );
+        }
+      } else {
+        // Use defaultTargetPlatform instead of Platform to be web-safe
+        final isAndroid = defaultTargetPlatform == TargetPlatform.android;
+        currentKey = (isAndroid ? _googleApiKey : _appleApiKey) ?? '';
       }
-    } else {
-      // Use defaultTargetPlatform instead of Platform to be web-safe
-      final isAndroid = defaultTargetPlatform == TargetPlatform.android;
-      currentKey = (isAndroid ? _googleApiKey : _appleApiKey) ?? '';
-    }
 
-    if (currentKey.isEmpty) {
-      AppLogger.w('RevenueCat not configured for ${kIsWeb ? "web" : defaultTargetPlatform.name} - skipping initialization');
-      _isConfigured = false;
-      return;
-    }
+      if (currentKey.isEmpty) {
+        AppLogger.w(
+          'RevenueCat not configured for ${kIsWeb ? "web" : defaultTargetPlatform.name} - skipping initialization',
+        );
+        _isConfigured = false;
+        return;
+      }
 
-    // Validate configuration
-    if (AppConfig.isProduction && !_validateProductionConfig()) {
-      AppLogger.w('RevenueCat: Invalid production config detected');
-    }
+      // Validate configuration
+      if (AppConfig.isProduction && !_validateProductionConfig()) {
+        AppLogger.w('RevenueCat: Invalid production config detected');
+      }
 
-    await Purchases.setLogLevel(
-      AppConfig.isDevelopment ? LogLevel.debug : LogLevel.error,
-    );
+      await Purchases.setLogLevel(
+        AppConfig.isDevelopment ? LogLevel.debug : LogLevel.error,
+      );
 
       PurchasesConfiguration configuration;
       if (kIsWeb) {
@@ -104,7 +107,9 @@ class RevenueCatRepository implements MonetizationRepository {
 
       await Purchases.configure(configuration);
       _isConfigured = true;
-      AppLogger.i('RevenueCat initialized successfully for ${kIsWeb ? "web" : "mobile"}');
+      AppLogger.i(
+        'RevenueCat initialized successfully for ${kIsWeb ? "web" : "mobile"}',
+      );
 
       Purchases.addCustomerInfoUpdateListener((customerInfo) {
         final isPremium =
@@ -132,7 +137,7 @@ class RevenueCatRepository implements MonetizationRepository {
       await initialize(uid: uid);
       return;
     }
-    
+
     if (uid == _currentUid) return;
 
     try {
@@ -172,14 +177,20 @@ class RevenueCatRepository implements MonetizationRepository {
     try {
       final offerings = await Purchases.getOfferings();
       if (kDebugMode) {
-        AppLogger.i('RevenueCat Offerings: ${offerings.all.length} total, current: ${offerings.current != null ? "FOUND" : "NULL"}');
+        AppLogger.i(
+          'RevenueCat Offerings: ${offerings.all.length} total, current: ${offerings.current != null ? "FOUND" : "NULL"}',
+        );
         if (offerings.current != null) {
-          AppLogger.i('RevenueCat Current Offering: ${offerings.current!.identifier}, Packages: ${offerings.current!.availablePackages.length}');
+          AppLogger.i(
+            'RevenueCat Current Offering: ${offerings.current!.identifier}, Packages: ${offerings.current!.availablePackages.length}',
+          );
         }
       }
       return Right(offerings);
     } on PlatformException catch (e) {
-      AppLogger.e('RevenueCat PlatformException fetching offerings: ${e.message} (Code: ${e.code})');
+      AppLogger.e(
+        'RevenueCat PlatformException fetching offerings: ${e.message} (Code: ${e.code})',
+      );
       return Left(e.message ?? 'Failed to fetch offerings');
     } catch (e) {
       AppLogger.e('RevenueCat error fetching offerings', e);
@@ -202,10 +213,12 @@ class RevenueCatRepository implements MonetizationRepository {
       final customerInfo = await Purchases.getCustomerInfo();
       final isPremium =
           customerInfo.entitlements.all[_entitlementId]?.isActive ?? false;
-      
+
       return Right(isPremium);
     } on PlatformException catch (e) {
-      AppLogger.w('RevenueCat: Failed to check premium status offline: ${e.message}');
+      AppLogger.w(
+        'RevenueCat: Failed to check premium status offline: ${e.message}',
+      );
       return Left(e.message ?? 'Failed to check subscription status');
     } catch (e) {
       return Left(e.toString());
@@ -219,10 +232,11 @@ class RevenueCatRepository implements MonetizationRepository {
     }
     try {
       final offerings = await Purchases.getOfferings();
-      
+
       // Fallback logic: Use current offering, or the first one found if current is null
-      final offering = offerings.current ?? 
-                       (offerings.all.isNotEmpty ? offerings.all.values.first : null);
+      final offering =
+          offerings.current ??
+          (offerings.all.isNotEmpty ? offerings.all.values.first : null);
 
       if (offering != null && offering.availablePackages.isNotEmpty) {
         final package = offering.availablePackages.first;

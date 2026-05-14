@@ -56,7 +56,7 @@ class WorldBackground extends ConsumerWidget {
         children: [
           // Layer 1: World background (image or animated nebula)
           _WorldBackgroundLayer(
-            theme: theme ?? AppWorldTheme.nebula, 
+            theme: theme ?? AppWorldTheme.nebula,
             healthState: healthState,
             entropy: entropy,
           ),
@@ -122,26 +122,74 @@ class _WorldBackgroundLayer extends StatelessWidget {
       case WorldHealthState.thriving:
         // Subtle saturation and brightness boost
         return const ColorFilter.matrix([
-          1.1, 0, 0, 0, 5,
-          0, 1.1, 0, 0, 5,
-          0, 0, 1.1, 0, 5,
-          0, 0, 0, 1, 0,
+          1.1,
+          0,
+          0,
+          0,
+          5,
+          0,
+          1.1,
+          0,
+          0,
+          5,
+          0,
+          0,
+          1.1,
+          0,
+          5,
+          0,
+          0,
+          0,
+          1,
+          0,
         ]);
       case WorldHealthState.decaying:
         // Heavy desaturation and reduced contrast (grim/ashy look)
         return const ColorFilter.matrix([
-          0.21, 0.72, 0.07, 0, 0,
-          0.21, 0.72, 0.07, 0, 0,
-          0.21, 0.72, 0.07, 0, 0,
-          0, 0, 0, 1, 0,
+          0.21,
+          0.72,
+          0.07,
+          0,
+          0,
+          0.21,
+          0.72,
+          0.07,
+          0,
+          0,
+          0.21,
+          0.72,
+          0.07,
+          0,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
         ]);
       case WorldHealthState.neutral:
         // Identity filter
         return const ColorFilter.matrix([
-          1, 0, 0, 0, 0,
-          0, 1, 0, 0, 0,
-          0, 0, 1, 0, 0,
-          0, 0, 0, 1, 0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
         ]);
     }
   }

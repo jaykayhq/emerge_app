@@ -115,7 +115,8 @@ class AvatarRenderer extends StatelessWidget {
         width: size,
         height: size * 1.2,
         fit: BoxFit.contain,
-        errorBuilder: (context, error, stackTrace) => _buildSilhouetteFallback(),
+        errorBuilder: (context, error, stackTrace) =>
+            _buildSilhouetteFallback(),
       ),
     );
   }

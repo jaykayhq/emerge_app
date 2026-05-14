@@ -13,44 +13,52 @@ class NotificationTemplates {
   /// Welcome notification when a new habit is created.
   ///
   /// Reinforces the user's identity choice and sets an empowering tone for their journey.
-  static String welcomeMessage(UserArchetype archetype, String habitTitle, {HabitAttribute? attribute}) {
+  static String welcomeMessage(
+    UserArchetype archetype,
+    String habitTitle, {
+    HabitAttribute? attribute,
+  }) {
     final arcEmoji = archetypeEmoji(archetype);
-    final attrEmoji = attribute != null ? attributeEmoji(attribute) : '';
+    final attrPart = attribute != null ? '${attributeEmoji(attribute)} ' : '';
     switch (archetype) {
       case UserArchetype.athlete:
-        return '$arcEmoji Your journey to greatness begins! $attrEmoji "$habitTitle" is now part of your training.';
+        return '$arcEmoji Your journey to greatness begins! $attrPart"$habitTitle" is now part of your training.';
       case UserArchetype.scholar:
-        return '$arcEmoji A new quest for knowledge begins! $attrEmoji Mastering "$habitTitle" starts now.';
+        return '$arcEmoji A new quest for knowledge begins! ${attrPart}Mastering "$habitTitle" starts now.';
       case UserArchetype.creator:
-        return '$arcEmoji Inspiration strikes! $attrEmoji Your creative journey with "$habitTitle" starts today.';
+        return '$arcEmoji Inspiration strikes! ${attrPart}Your creative journey with "$habitTitle" starts today.';
       case UserArchetype.stoic:
-        return '$arcEmoji The path to mastery begins with a single step. $attrEmoji "$habitTitle" is your practice.';
+        return '$arcEmoji The path to mastery begins with a single step. $attrPart"$habitTitle" is your practice.';
       case UserArchetype.zealot:
-        return '$arcEmoji A sacred commitment! $attrEmoji Your devotion to "$habitTitle" has been consecrated.';
+        return '$arcEmoji A sacred commitment! ${attrPart}Your devotion to "$habitTitle" has been consecrated.';
       case UserArchetype.none:
-        return '✨ New habit started! $attrEmoji "$habitTitle" is now part of your journey.';
+        return '✨ New habit started! $attrPart"$habitTitle" is now part of your journey.';
     }
   }
 
   /// Recurring reminder notification for habit completion.
   ///
   /// Provides archetype-specific motivation to take action now.
-  static String reminderMessage(UserArchetype archetype, String habitTitle, {HabitAttribute? attribute}) {
+  static String reminderMessage(
+    UserArchetype archetype,
+    String habitTitle, {
+    HabitAttribute? attribute,
+  }) {
     final arcEmoji = archetypeEmoji(archetype);
-    final attrEmoji = attribute != null ? attributeEmoji(attribute) : '';
+    final attrPart = attribute != null ? '${attributeEmoji(attribute)} ' : '';
     switch (archetype) {
       case UserArchetype.athlete:
-        return '$arcEmoji Time to train! Your $attrEmoji "$habitTitle" session awaits. Make yourself proud!';
+        return '$arcEmoji Time to train! Your $attrPart"$habitTitle" session awaits. Make yourself proud!';
       case UserArchetype.scholar:
-        return '$arcEmoji Knowledge calls! Your $attrEmoji "$habitTitle" study session is ready. Begin the quest.';
+        return '$arcEmoji Knowledge calls! Your $attrPart"$habitTitle" study session is ready. Begin the quest.';
       case UserArchetype.creator:
-        return '$arcEmoji Inspiration strikes! Time for your $attrEmoji "$habitTitle" creative flow. Create today.';
+        return '$arcEmoji Inspiration strikes! Time for your $attrPart"$habitTitle" creative flow. Create today.';
       case UserArchetype.stoic:
-        return '$arcEmoji Master yourself! Your $attrEmoji "$habitTitle" practice awaits. Show your discipline.';
+        return '$arcEmoji Master yourself! Your $attrPart"$habitTitle" practice awaits. Show your discipline.';
       case UserArchetype.zealot:
-        return '$arcEmoji Stay the path! Your sacred $attrEmoji "$habitTitle" devotion calls. Honor your commitment.';
+        return '$arcEmoji Stay the path! Your sacred $attrPart"$habitTitle" devotion calls. Honor your commitment.';
       case UserArchetype.none:
-        return '⏰ Time to focus! Complete $attrEmoji "$habitTitle" to stay on track with your goals.';
+        return '⏰ Time to focus! Complete $attrPart"$habitTitle" to stay on track with your goals.';
     }
   }
 
@@ -161,24 +169,36 @@ class NotificationTemplates {
   /// Identity-first emoji mapping for archetypes.
   static String archetypeEmoji(UserArchetype archetype) {
     switch (archetype) {
-      case UserArchetype.athlete: return '🏃‍➡️';
-      case UserArchetype.creator: return '🖌️';
-      case UserArchetype.scholar: return '📖';
-      case UserArchetype.stoic: return '🧘';
-      case UserArchetype.zealot: return '🔥';
-      case UserArchetype.none: return '✨';
+      case UserArchetype.athlete:
+        return '🏃‍➡️';
+      case UserArchetype.creator:
+        return '🖌️';
+      case UserArchetype.scholar:
+        return '📖';
+      case UserArchetype.stoic:
+        return '🧘';
+      case UserArchetype.zealot:
+        return '🔥';
+      case UserArchetype.none:
+        return '✨';
     }
   }
 
   /// Attribute-based emoji mapping for granular habit identification.
   static String attributeEmoji(HabitAttribute attribute) {
     switch (attribute) {
-      case HabitAttribute.strength: return '💪';
-      case HabitAttribute.intellect: return '📚';
-      case HabitAttribute.vitality: return '⚡';
-      case HabitAttribute.creativity: return '🎨';
-      case HabitAttribute.focus: return '🎯';
-      case HabitAttribute.spirit: return '✨';
+      case HabitAttribute.strength:
+        return '💪';
+      case HabitAttribute.intellect:
+        return '📚';
+      case HabitAttribute.vitality:
+        return '⚡';
+      case HabitAttribute.creativity:
+        return '🎨';
+      case HabitAttribute.focus:
+        return '🎯';
+      case HabitAttribute.spirit:
+        return '✨';
     }
   }
 }

@@ -20,14 +20,14 @@ class BlueprintHabit extends Equatable {
   });
 
   Map<String, dynamic> toMap() => {
-        'title': title,
-        'timeOfDay': timeOfDay,
-        'defaultTime': defaultTime != null
-            ? '${defaultTime!.hour}:${defaultTime!.minute}'
-            : null,
-        'attribute': attribute.name,
-        'frequency': frequency,
-      };
+    'title': title,
+    'timeOfDay': timeOfDay,
+    'defaultTime': defaultTime != null
+        ? '${defaultTime!.hour}:${defaultTime!.minute}'
+        : null,
+    'attribute': attribute.name,
+    'frequency': frequency,
+  };
 
   factory BlueprintHabit.fromMap(Map<String, dynamic> map) {
     TimeOfDay? parseTime(String? timeStr) {
@@ -50,7 +50,13 @@ class BlueprintHabit extends Equatable {
   }
 
   @override
-  List<Object?> get props => [title, timeOfDay, defaultTime, attribute, frequency];
+  List<Object?> get props => [
+    title,
+    timeOfDay,
+    defaultTime,
+    attribute,
+    frequency,
+  ];
 }
 
 class Blueprint extends Equatable {
@@ -85,20 +91,20 @@ class Blueprint extends Equatable {
   });
 
   Map<String, dynamic> toMap() => {
-        'id': id,
-        'creatorUserId': creatorUserId,
-        'creatorName': creatorName,
-        'creatorArchetype': creatorArchetype,
-        'title': title,
-        'description': description,
-        'habits': habits.map((h) => h.toMap()).toList(),
-        'adoptionCount': adoptionCount,
-        'createdAt': createdAt.toIso8601String(),
-        'imageUrl': imageUrl,
-        'category': category,
-        'isPremium': isPremium,
-        'difficulty': difficulty.name,
-      };
+    'id': id,
+    'creatorUserId': creatorUserId,
+    'creatorName': creatorName,
+    'creatorArchetype': creatorArchetype,
+    'title': title,
+    'description': description,
+    'habits': habits.map((h) => h.toMap()).toList(),
+    'adoptionCount': adoptionCount,
+    'createdAt': createdAt.toIso8601String(),
+    'imageUrl': imageUrl,
+    'category': category,
+    'isPremium': isPremium,
+    'difficulty': difficulty.name,
+  };
 
   factory Blueprint.fromMap(String id, Map<String, dynamic> map) {
     DateTime parseCreatedAt(dynamic value) {
@@ -125,7 +131,8 @@ class Blueprint extends Equatable {
       creatorArchetype: map['creatorArchetype'] as String? ?? 'General',
       title: (map['title'] ?? map['blueprintName']) as String? ?? 'Untitled',
       description: map['description'] as String? ?? '',
-      habits: (map['habits'] as List?)
+      habits:
+          (map['habits'] as List?)
               ?.map((h) => BlueprintHabit.fromMap(Map<String, dynamic>.from(h)))
               .toList() ??
           [],
@@ -140,18 +147,18 @@ class Blueprint extends Equatable {
 
   @override
   List<Object?> get props => [
-        id,
-        creatorUserId,
-        creatorName,
-        creatorArchetype,
-        title,
-        description,
-        habits,
-        adoptionCount,
-        createdAt,
-        imageUrl,
-        category,
-        isPremium,
-        difficulty,
-      ];
+    id,
+    creatorUserId,
+    creatorName,
+    creatorArchetype,
+    title,
+    description,
+    habits,
+    adoptionCount,
+    createdAt,
+    imageUrl,
+    category,
+    isPremium,
+    difficulty,
+  ];
 }

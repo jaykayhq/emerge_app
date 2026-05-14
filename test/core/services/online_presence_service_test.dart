@@ -38,9 +38,11 @@ void main() {
     // Setup default collection reference chain
     when(() => mockFirestore.collection(any())).thenReturn(mockUsersCollection);
     when(() => mockUsersCollection.doc(any())).thenReturn(mockUserDoc);
-    when(() => mockUserDoc.collection(any())).thenReturn(mockPresenceCollection);
+    when(
+      () => mockUserDoc.collection(any()),
+    ).thenReturn(mockPresenceCollection);
     when(() => mockPresenceCollection.doc(any())).thenReturn(mockPresenceDoc);
-    
+
     // Default success for set
     when(() => mockPresenceDoc.set(any(), any())).thenAnswer((_) async => {});
   });
@@ -65,7 +67,7 @@ void main() {
     test('stopHeartbeat stops timer', () async {
       await service.startHeartbeat('user123');
       await service.stopHeartbeat();
-      
+
       // Should not call set again after stop
       verify(() => mockPresenceDoc.set(any(), any())).called(1);
     });
@@ -73,15 +75,19 @@ void main() {
     test('setOffline sets offline status', () async {
       await service.setOffline('user123');
 
-      verify(() => mockPresenceDoc.set(
-        any(that: containsPair('online', false)),
-        any(),
-      )).called(1);
+      verify(
+        () => mockPresenceDoc.set(
+          any(that: containsPair('online', false)),
+          any(),
+        ),
+      ).called(1);
     });
 
     test('handles errors gracefully', () async {
-      when(() => mockPresenceDoc.set(any(), any())).thenThrow(Exception('error'));
-      
+      when(
+        () => mockPresenceDoc.set(any(), any()),
+      ).thenThrow(Exception('error'));
+
       expect(() => service.setOffline('user123'), returnsNormally);
     });
 

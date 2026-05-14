@@ -18,15 +18,14 @@ class EmergeAppIcon extends StatelessWidget {
         width: size,
         height: size,
         alignment: Alignment.center,
-        child: Text(
-          theme.emoji,
-          style: TextStyle(fontSize: size * 0.6),
-        ),
+        child: Text(theme.emoji, style: TextStyle(fontSize: size * 0.6)),
       );
     }
 
     return Padding(
-      padding: EdgeInsets.all(size * 0.15), // Make icon smaller within its bounds
+      padding: EdgeInsets.all(
+        size * 0.15,
+      ), // Make icon smaller within its bounds
       child: Image.asset(
         'assets/icons/app_icon.png',
         width: size,

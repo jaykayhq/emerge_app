@@ -70,7 +70,7 @@ class _IdentityStudioScreenState extends ConsumerState<IdentityStudioScreen> {
     }
   }
 
-  void _completeIdentityStudio() async {
+  Future<void> _completeIdentityStudio() async {
     final motiveToSave = _isCustomMotive
         ? _customMotiveController.text.trim()
         : _selectedMotive;
@@ -81,28 +81,37 @@ class _IdentityStudioScreenState extends ConsumerState<IdentityStudioScreen> {
       return;
     }
 
-    // Unify Onboarding State: Set Archetype and Motive in Enhanced Notifier
-    ref
-        .read(enhancedOnboardingProvider.notifier)
-        .selectArchetype(_selectedArchetype!);
-        
-    if (motiveToSave != null) {
-      ref.read(enhancedOnboardingProvider.notifier).setMotive(motiveToSave);
-    }
+    try {
+      final notifier = ref.read(enhancedOnboardingProvider.notifier);
 
-    AppLogger.i(
-      'Identity Studio: Updated enhanced onboarding state: selectedArchetype=$_selectedArchetype, motive=$motiveToSave',
-    );
+      // Set Archetype and Motive
+      await notifier.selectArchetype(_selectedArchetype!);
 
-    // Ensure state is persisted before proceeding
-    await Future.delayed(const Duration(milliseconds: 100));
+      if (motiveToSave != null) {
+        await notifier.setMotive(motiveToSave);
+      }
 
-    // PERSIST PROGRESS: Complete the first milestone (Archetype/Motive)
-    await ref.read(enhancedOnboardingProvider.notifier).completeMilestone(0);
+      AppLogger.i(
+        'Identity Studio: Updated enhanced onboarding state: selectedArchetype=$_selectedArchetype, motive=$motiveToSave',
+      );
 
-    // Navigate directly to first habit screen (skip map attributes)
-    if (mounted) {
-      context.push('/onboarding/first-habit');
+      // PERSIST PROGRESS: Complete the first milestone (Archetype/Motive)
+      await notifier.completeMilestone(0);
+
+      // Navigate directly to first habit screen (skip map attributes)
+      if (mounted) {
+        context.push('/onboarding/first-habit');
+      }
+    } catch (e, s) {
+      AppLogger.e('Identity Studio: Failed to complete', e, s);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to save: $e. Please try again.'),
+            backgroundColor: Colors.redAccent,
+          ),
+        );
+      }
     }
   }
 

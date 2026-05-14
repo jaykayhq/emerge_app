@@ -21,14 +21,20 @@ class HabitContractRepository {
   HabitContractRepository(this._firestore, [this._socialActivityService]);
 
   /// Create a new social contract between user and partner.
-  Future<void> createContract(HabitContract contract, {String? userName, String? archetype}) async {
+  Future<void> createContract(
+    HabitContract contract, {
+    String? userName,
+    String? archetype,
+  }) async {
     await _firestore
         .collection('contracts')
         .doc(contract.id)
         .set(contract.toMap());
 
     // Log social activity
-    if (_socialActivityService != null && userName != null && archetype != null) {
+    if (_socialActivityService != null &&
+        userName != null &&
+        archetype != null) {
       _socialActivityService.logContractCommitted(
         userId: contract.userId,
         userName: userName,

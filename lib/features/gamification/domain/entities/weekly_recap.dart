@@ -82,7 +82,8 @@ class UserWeeklyRecap extends Equatable {
       dominantIdentityThisWeek: map['dominantIdentityThisWeek'] as String?,
       identityHeadline: map['identityHeadline'] as String?,
       aiInsight: map['aiInsight'] as String?,
-      recommendedDifficultyAdjustment: map['recommendedDifficultyAdjustment'] != null
+      recommendedDifficultyAdjustment:
+          map['recommendedDifficultyAdjustment'] != null
           ? HabitDifficulty.values.firstWhere(
               (e) => e.name == map['recommendedDifficultyAdjustment'],
               orElse: () => HabitDifficulty.medium,
@@ -94,7 +95,6 @@ class UserWeeklyRecap extends Equatable {
       isAiGenerated: map['isAiGenerated'] as bool? ?? false,
     );
   }
-
 
   @override
   List<Object?> get props => [

@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:emerge_app/features/auth/presentation/providers/auth_providers.dart';
 import 'package:emerge_app/features/insights/data/repositories/firestore_insights_repository.dart';
+
 abstract class InsightsRepository {
   Future<Recap> getLatestRecap(String userId);
   Future<List<Reflection>> getReflections(String userId);
@@ -13,7 +14,6 @@ abstract class InsightsRepository {
 final insightsRepositoryProvider = Provider<InsightsRepository>((ref) {
   return FirestoreInsightsRepository(FirebaseFirestore.instance);
 });
-
 
 final latestRecapProvider = FutureProvider<Recap>((ref) {
   final userAsync = ref.watch(authStateChangesProvider);

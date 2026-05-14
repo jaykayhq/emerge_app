@@ -117,7 +117,7 @@ class CurrentMissionBanner extends ConsumerWidget {
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
                     color: (isLocked ? Colors.grey : config.primaryColor)
-                        .withValues(alpha:0.2),
+                        .withValues(alpha: 0.2),
                     borderRadius: BorderRadius.circular(16),
                   ),
                   child: Text(node.emoji, style: const TextStyle(fontSize: 32)),
@@ -155,7 +155,7 @@ class CurrentMissionBanner extends ConsumerWidget {
             Text(
               'THE DIRECTIVE',
               style: TextStyle(
-                color: config.primaryColor.withValues(alpha:0.7),
+                color: config.primaryColor.withValues(alpha: 0.7),
                 fontSize: 12,
                 fontWeight: FontWeight.w800,
                 letterSpacing: 1.2,
@@ -178,7 +178,7 @@ class CurrentMissionBanner extends ConsumerWidget {
             Text(
               'TARGETED GROWTH',
               style: TextStyle(
-                color: config.primaryColor.withValues(alpha:0.7),
+                color: config.primaryColor.withValues(alpha: 0.7),
                 fontSize: 12,
                 fontWeight: FontWeight.w800,
                 letterSpacing: 1.2,
@@ -195,7 +195,7 @@ class CurrentMissionBanner extends ConsumerWidget {
                     vertical: 6,
                   ),
                   decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha:0.05),
+                    color: Colors.white.withValues(alpha: 0.05),
                     borderRadius: BorderRadius.circular(20),
                     border: Border.all(color: Colors.white10),
                   ),
@@ -268,7 +268,7 @@ class CurrentMissionBanner extends ConsumerWidget {
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: color.withValues(alpha:0.2),
+              color: color.withValues(alpha: 0.2),
               borderRadius: BorderRadius.circular(12),
             ),
             child: Icon(icon, color: color, size: 24),

@@ -32,13 +32,13 @@ class IdentityVotesCounter extends StatelessWidget {
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
                 colors: [
-                  Colors.white.withValues(alpha:0.15),
-                  Colors.white.withValues(alpha:0.05),
+                  Colors.white.withValues(alpha: 0.15),
+                  Colors.white.withValues(alpha: 0.05),
                 ],
               ),
               borderRadius: BorderRadius.circular(20),
               border: Border.all(
-                color: EmergeColors.teal.withValues(alpha:0.3),
+                color: EmergeColors.teal.withValues(alpha: 0.3),
                 width: 1,
               ),
             ),
@@ -74,10 +74,10 @@ class IdentityVotesCounter extends StatelessWidget {
                               vertical: 4,
                             ),
                             decoration: BoxDecoration(
-                              color: EmergeColors.teal.withValues(alpha:0.2),
+                              color: EmergeColors.teal.withValues(alpha: 0.2),
                               borderRadius: BorderRadius.circular(12),
                               border: Border.all(
-                                color: EmergeColors.teal.withValues(alpha:0.4),
+                                color: EmergeColors.teal.withValues(alpha: 0.4),
                               ),
                             ),
                             child: Text(
@@ -105,7 +105,7 @@ class IdentityVotesCounter extends StatelessWidget {
                 // Decorative icon
                 Icon(
                   Icons.how_to_vote,
-                  color: EmergeColors.teal.withValues(alpha:0.6),
+                  color: EmergeColors.teal.withValues(alpha: 0.6),
                   size: 28,
                 ),
               ],
@@ -127,9 +127,7 @@ class IdentityVotesCounter extends StatelessWidget {
           Container(
             width: 44,
             height: 44,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-            ),
+            decoration: BoxDecoration(shape: BoxShape.circle),
           ),
           // Ring
           SizedBox(
@@ -138,7 +136,7 @@ class IdentityVotesCounter extends StatelessWidget {
             child: CircularProgressIndicator(
               value: progress,
               strokeWidth: 4,
-              backgroundColor: EmergeColors.teal.withValues(alpha:0.2),
+              backgroundColor: EmergeColors.teal.withValues(alpha: 0.2),
               valueColor: AlwaysStoppedAnimation(EmergeColors.teal),
             ),
           ),

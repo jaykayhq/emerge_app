@@ -58,7 +58,7 @@ class TribeAccountabilitySection extends ConsumerWidget {
                 loading: () => const _LoadingCard(),
                 error: (err, stack) => const SizedBox.shrink(),
               ),
-              
+
               const Gap(12),
 
               // Partners List
@@ -80,18 +80,16 @@ class TribeAccountabilitySection extends ConsumerWidget {
                   );
                 },
                 loading: () => const Row(
-                  children: [
-                    _LoadingCircle(),
-                    Gap(12),
-                    _LoadingCircle(),
-                  ],
+                  children: [_LoadingCircle(), Gap(12), _LoadingCircle()],
                 ),
                 error: (err, stack) => const SizedBox.shrink(),
               ),
-              
+
               // Add Partner Button
               const Gap(12),
-              _AddPartnerButton(onTap: () => context.push('/tribes/accountability')),
+              _AddPartnerButton(
+                onTap: () => context.push('/tribes/accountability'),
+              ),
             ],
           ),
         ),
@@ -123,9 +121,9 @@ class _AccountabilityToolCard extends StatelessWidget {
         width: 100,
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
-          color: color.withValues(alpha:0.1),
+          color: color.withValues(alpha: 0.1),
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: color.withValues(alpha:0.2)),
+          border: Border.all(color: color.withValues(alpha: 0.2)),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -141,13 +139,7 @@ class _AccountabilityToolCard extends StatelessWidget {
                 fontWeight: FontWeight.bold,
               ),
             ),
-            Text(
-              title,
-              style: TextStyle(
-                color: Colors.white70,
-                fontSize: 10,
-              ),
-            ),
+            Text(title, style: TextStyle(color: Colors.white70, fontSize: 10)),
           ],
         ),
       ),
@@ -156,7 +148,8 @@ class _AccountabilityToolCard extends StatelessWidget {
 }
 
 class _PartnerAvatarCircle extends StatelessWidget {
-  final dynamic partner; // Using dynamic for now to match whatever entity we have
+  final dynamic
+  partner; // Using dynamic for now to match whatever entity we have
 
   const _PartnerAvatarCircle({required this.partner});
 
@@ -172,13 +165,19 @@ class _PartnerAvatarCircle extends StatelessWidget {
             height: 50,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              border: Border.all(color: EmergeColors.teal.withValues(alpha:0.4), width: 2),
+              border: Border.all(
+                color: EmergeColors.teal.withValues(alpha: 0.4),
+                width: 2,
+              ),
             ),
             child: CircleAvatar(
               backgroundColor: EmergeColors.glassWhite,
               child: Text(
                 partner.name.isNotEmpty ? partner.name[0].toUpperCase() : '?',
-                style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
             ),
           ),
@@ -231,7 +230,11 @@ class _RequestBadge extends StatelessWidget {
       ),
       child: Text(
         '$count Requests',
-        style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
+        style: const TextStyle(
+          color: Colors.white,
+          fontSize: 10,
+          fontWeight: FontWeight.bold,
+        ),
       ),
     );
   }
@@ -244,7 +247,7 @@ class _LoadingCard extends StatelessWidget {
     return Container(
       width: 100,
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha:0.05),
+        color: Colors.white.withValues(alpha: 0.05),
         borderRadius: BorderRadius.circular(16),
       ),
     );
@@ -260,7 +263,7 @@ class _LoadingCircle extends StatelessWidget {
       height: 50,
       decoration: BoxDecoration(
         shape: BoxShape.circle,
-        color: Colors.white.withValues(alpha:0.05),
+        color: Colors.white.withValues(alpha: 0.05),
       ),
     );
   }

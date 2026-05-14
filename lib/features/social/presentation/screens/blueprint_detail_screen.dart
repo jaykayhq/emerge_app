@@ -63,14 +63,8 @@ class BlueprintDetailScreen extends ConsumerWidget {
           children: [
             if (blueprint.imageUrl != null)
               blueprint.imageUrl!.startsWith('images/')
-                  ? Image.asset(
-                      blueprint.imageUrl!,
-                      fit: BoxFit.cover,
-                    )
-                  : Image.network(
-                      blueprint.imageUrl!,
-                      fit: BoxFit.cover,
-                    )
+                  ? Image.asset(blueprint.imageUrl!, fit: BoxFit.cover)
+                  : Image.network(blueprint.imageUrl!, fit: BoxFit.cover)
             else
               Container(
                 decoration: const BoxDecoration(
@@ -84,7 +78,7 @@ class BlueprintDetailScreen extends ConsumerWidget {
                   child: Icon(
                     Icons.auto_awesome_motion_rounded,
                     size: 64,
-                    color: Colors.white.withValues(alpha:0.1),
+                    color: Colors.white.withValues(alpha: 0.1),
                   ),
                 ),
               ),
@@ -94,7 +88,7 @@ class BlueprintDetailScreen extends ConsumerWidget {
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
                   colors: [
-                    Colors.black.withValues(alpha:0.3),
+                    Colors.black.withValues(alpha: 0.3),
                     EmergeColors.background,
                   ],
                 ),
@@ -123,10 +117,13 @@ class BlueprintDetailScreen extends ConsumerWidget {
       children: [
         CircleAvatar(
           radius: 20,
-          backgroundColor: EmergeColors.teal.withValues(alpha:0.2),
+          backgroundColor: EmergeColors.teal.withValues(alpha: 0.2),
           child: Text(
             blueprint.creatorName[0].toUpperCase(),
-            style: const TextStyle(color: EmergeColors.teal, fontWeight: FontWeight.bold),
+            style: const TextStyle(
+              color: EmergeColors.teal,
+              fontWeight: FontWeight.bold,
+            ),
           ),
         ),
         const Gap(12),
@@ -135,11 +132,18 @@ class BlueprintDetailScreen extends ConsumerWidget {
           children: [
             Text(
               'By ${blueprint.creatorName}',
-              style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
+              style: const TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.w600,
+              ),
             ),
             Text(
               blueprint.creatorArchetype,
-              style: const TextStyle(color: EmergeColors.teal, fontSize: 12, fontWeight: FontWeight.bold),
+              style: const TextStyle(
+                color: EmergeColors.teal,
+                fontSize: 12,
+                fontWeight: FontWeight.bold,
+              ),
             ),
           ],
         ),
@@ -203,7 +207,7 @@ class BlueprintDetailScreen extends ConsumerWidget {
                   width: 24,
                   height: 24,
                   decoration: BoxDecoration(
-                    color: EmergeColors.teal.withValues(alpha:0.2),
+                    color: EmergeColors.teal.withValues(alpha: 0.2),
                     shape: BoxShape.circle,
                   ),
                   child: Center(
@@ -230,7 +234,11 @@ class BlueprintDetailScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildAdoptButton(BuildContext context, WidgetRef ref, String? userId) {
+  Widget _buildAdoptButton(
+    BuildContext context,
+    WidgetRef ref,
+    String? userId,
+  ) {
     final isPremiumAsync = ref.watch(isPremiumProvider);
     final isPremium = isPremiumAsync.value ?? false;
 
@@ -292,8 +300,7 @@ class BlueprintDetailScreen extends ConsumerWidget {
                       if (screenContext.mounted) {
                         ScaffoldMessenger.of(screenContext).showSnackBar(
                           const SnackBar(
-                            content: Text(
-                                'Adopted successfully'),
+                            content: Text('Adopted successfully'),
                             backgroundColor: EmergeColors.teal,
                           ),
                         );
@@ -316,11 +323,13 @@ class BlueprintDetailScreen extends ConsumerWidget {
           );
         },
         style: ElevatedButton.styleFrom(
-          backgroundColor:
-              blueprint.isPremium ? EmergeColors.yellow : EmergeColors.teal,
+          backgroundColor: blueprint.isPremium
+              ? EmergeColors.yellow
+              : EmergeColors.teal,
           foregroundColor: Colors.black,
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
           elevation: 0,
         ),
         child: Text(
@@ -345,7 +354,7 @@ class _StatBadge extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha:0.05),
+        color: Colors.white.withValues(alpha: 0.05),
         borderRadius: BorderRadius.circular(20),
       ),
       child: Row(

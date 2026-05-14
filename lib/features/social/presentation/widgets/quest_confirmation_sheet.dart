@@ -22,10 +22,7 @@ class QuestConfirmationSheet extends StatelessWidget {
       decoration: BoxDecoration(
         color: AppTheme.cosmicVoidDark.withValues(alpha: 0.95),
         borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
-        border: Border.all(
-          color: AppTheme.glassBorder,
-          width: 1,
-        ),
+        border: Border.all(color: AppTheme.glassBorder, width: 1),
       ),
       child: ClipRRect(
         borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
@@ -69,20 +66,20 @@ class QuestConfirmationSheet extends StatelessWidget {
               Text(
                 'ACTIVATE QUEST',
                 style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                      color: AppTheme.primary,
-                      fontWeight: FontWeight.w900,
-                      letterSpacing: 2.0,
-                    ),
+                  color: AppTheme.primary,
+                  fontWeight: FontWeight.w900,
+                  letterSpacing: 2.0,
+                ),
               ),
               const SizedBox(height: 12),
               Text(
                 challenge.title,
                 textAlign: TextAlign.center,
                 style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                      color: Colors.white,
-                      fontWeight: FontWeight.w800,
-                      letterSpacing: -0.5,
-                    ),
+                  color: Colors.white,
+                  fontWeight: FontWeight.w800,
+                  letterSpacing: -0.5,
+                ),
               ),
               const SizedBox(height: 16),
               Padding(
@@ -91,9 +88,9 @@ class QuestConfirmationSheet extends StatelessWidget {
                   'Embarking on this quest will align your focus with the Zenith. Complete all steps to claim your ${challenge.xpReward} XP reward.',
                   textAlign: TextAlign.center,
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: AppTheme.textSecondaryDark.withValues(alpha: 0.7),
-                        height: 1.5,
-                      ),
+                    color: AppTheme.textSecondaryDark.withValues(alpha: 0.7),
+                    height: 1.5,
+                  ),
                 ),
               ),
               const SizedBox(height: 32),

@@ -1,4 +1,3 @@
-
 class Tribe {
   final String id;
   final String name;
@@ -14,8 +13,6 @@ class Tribe {
     required this.imageUrl,
   });
 }
-
-
 
 enum FriendArchetype { athlete, creator, scholar, stoic, zealot }
 
@@ -144,4 +141,3 @@ class PartnerRequest {
     };
   }
 }
-

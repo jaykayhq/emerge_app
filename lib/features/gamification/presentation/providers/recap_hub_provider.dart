@@ -15,7 +15,7 @@ Future<List<UserWeeklyRecap>> historicalRecaps(Ref ref) async {
   try {
     final repository = ref.read(userStatsRepositoryProvider);
     final maps = await repository.getRecaps(userId, limit: 20);
-    
+
     final recaps = <UserWeeklyRecap>[];
     for (final m in maps) {
       try {

@@ -6,6 +6,7 @@ import 'package:emerge_app/features/social/data/repositories/tribe_repository.da
 import 'package:emerge_app/features/social/data/services/tribe_stats_service.dart';
 import 'package:emerge_app/features/social/domain/models/tribe.dart';
 import 'package:emerge_app/features/social/domain/services/club_activity_service.dart';
+import 'package:emerge_app/features/social/presentation/providers/leaderboard_provider.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 final tribeRepositoryProvider = Provider<TribeRepository>((ref) {
@@ -21,7 +22,15 @@ final tribeStatsServiceProvider = Provider<TribeStatsService>((ref) {
 
 /// Provider for SocialActivityService - logs user activities to archetype clubs and global feed.
 final socialActivityServiceProvider = Provider<SocialActivityService>((ref) {
-  return SocialActivityService(firestore: FirebaseFirestore.instance);
+  final syncEngine = ref.watch(enhancedSyncEngineProvider);
+  final activityDao = ref.watch(tribeActivityDaoProvider);
+  final leaderboardRepo = ref.watch(leaderboardRepositoryProvider);
+
+  return SocialActivityService(
+    syncEngine: syncEngine,
+    activityDao: activityDao,
+    leaderboardRepo: leaderboardRepo,
+  );
 });
 
 /// The user's archetype club — auto-joined based on their archetype.
@@ -50,16 +59,8 @@ final allArchetypeClubsProvider = StreamProvider<List<Tribe>>((ref) {
 /// ordered by contributionCount descending, limited to 10 items.
 final clubContributorsProvider =
     StreamProvider.family<List<Map<String, dynamic>>, String>((ref, tribeId) {
-      final firestore = FirebaseFirestore.instance;
-
-      return firestore
-          .collection('tribes')
-          .doc(tribeId)
-          .collection('contributors')
-          .orderBy('contributionCount', descending: true)
-          .limit(10)
-          .snapshots()
-          .map((snapshot) => snapshot.docs.map((doc) => doc.data()).toList());
+      final repository = ref.watch(tribeRepositoryProvider);
+      return Stream.fromFuture(repository.getClubContributors(tribeId));
     });
 
 /// Real-time stream of activity feed for a given club.
@@ -68,54 +69,45 @@ final clubContributorsProvider =
 /// ordered by timestamp descending, limited to 20 items.
 final clubActivityProvider =
     StreamProvider.family<List<Map<String, dynamic>>, String>((ref, tribeId) {
-      final firestore = FirebaseFirestore.instance;
-
-      return firestore
-          .collection('tribes')
-          .doc(tribeId)
-          .collection('activity')
-          .snapshots()
-          .map((snapshot) {
-            final activities = snapshot.docs
-                .map((doc) => doc.data())
-                .toList();
-            // Sort by timestamp descending client-side (avoids composite index requirement)
-            activities.sort((a, b) {
-              final aTs = a['timestamp'] as Timestamp?;
-              final bTs = b['timestamp'] as Timestamp?;
-              if (aTs == null && bTs == null) return 0;
-              if (aTs == null) return 1;
-              if (bTs == null) return -1;
-              return bTs.compareTo(aTs);
-            });
-            return activities.take(20).toList();
-          });
+      final repository = ref.watch(tribeRepositoryProvider);
+      return repository.watchClubActivity(tribeId);
     });
 
 /// Real-time stream of the global activity feed.
 final globalActivityProvider = StreamProvider<List<Map<String, dynamic>>>((
   ref,
 ) {
-  final firestore = FirebaseFirestore.instance;
-
-  return firestore
-      .collection('global_activities')
-      .orderBy('timestamp', descending: true)
-      .limit(30)
-      .snapshots()
-      .map((snapshot) => snapshot.docs.map((doc) => doc.data()).toList());
+  final repository = ref.watch(tribeRepositoryProvider);
+  return repository.watchGlobalActivity();
 });
 
 /// Real-time stream of tribe aggregate stats (totalHabitsCompleted, etc.)
 final tribeAggregateProvider =
     StreamProvider.family<Map<String, dynamic>, String>((ref, tribeId) {
-      final firestore = FirebaseFirestore.instance;
-
-      return firestore
-          .collection('tribes')
-          .doc(tribeId)
-          .snapshots()
-          .map((doc) => doc.data() ?? <String, dynamic>{});
+      final repository = ref.watch(tribeRepositoryProvider);
+      return repository.watchArchetypeClubs().map((list) {
+        final tribe = list.firstWhere(
+          (t) => t.id == tribeId,
+          orElse: () => Tribe(
+            id: tribeId,
+            name: '',
+            description: '',
+            imageUrl: '',
+            ownerId: '',
+            tags: [],
+            levelRequirement: 0,
+            rank: 0,
+            memberCount: 0,
+            totalXp: 0,
+          ),
+        );
+        return {
+          'totalXp': tribe.totalXp,
+          'memberCount': tribe.memberCount,
+          'totalHabitsCompleted': tribe.totalHabitsCompleted,
+          'totalChallengesCompleted': tribe.totalChallengesCompleted,
+        };
+      });
     });
 
 /// Real-time stream of calculated tribe stats with actual member count and total XP.
@@ -126,33 +118,31 @@ final realTimeTribeStatsProvider = StreamProvider.family<TribeStats, String>((
   ref,
   tribeId,
 ) {
-  final firestore = FirebaseFirestore.instance;
-
-  return firestore.collection('tribes').doc(tribeId).snapshots().map((
-    tribeDoc,
-  ) {
-    if (!tribeDoc.exists) {
-      return TribeStats(
+  final repository = ref.watch(tribeRepositoryProvider);
+  return repository.watchArchetypeClubs().map((list) {
+    final tribe = list.firstWhere(
+      (t) => t.id == tribeId,
+      orElse: () => Tribe(
+        id: tribeId,
+        name: '',
+        description: '',
+        imageUrl: '',
+        ownerId: '',
+        tags: [],
+        levelRequirement: 0,
+        rank: 0,
         memberCount: 0,
         totalXp: 0,
-        totalHabitsCompleted: 0,
-        totalChallengesCompleted: 0,
-      );
-    }
-
-    final data = tribeDoc.data()!;
-    final members = data['members'] as List<dynamic>?;
-    final memberCount = members?.length ?? 0;
-
+      ),
+    );
     return TribeStats(
-      memberCount: memberCount,
-      totalXp: data['totalXp'] as int? ?? 0,
-      totalHabitsCompleted: data['totalHabitsCompleted'] as int? ?? 0,
-      totalChallengesCompleted: data['totalChallengesCompleted'] as int? ?? 0,
+      memberCount: tribe.memberCount,
+      totalXp: tribe.totalXp,
+      totalHabitsCompleted: tribe.totalHabitsCompleted,
+      totalChallengesCompleted: tribe.totalChallengesCompleted,
     );
   });
 });
-
 
 /// Model for tribe statistics
 class TribeStats {
@@ -180,9 +170,9 @@ class TribeStats {
 
   @override
   int get hashCode => Object.hash(
-        memberCount,
-        totalXp,
-        totalHabitsCompleted,
-        totalChallengesCompleted,
-      );
+    memberCount,
+    totalXp,
+    totalHabitsCompleted,
+    totalChallengesCompleted,
+  );
 }

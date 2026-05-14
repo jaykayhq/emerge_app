@@ -4,19 +4,25 @@ import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flutter/foundation.dart';
 import 'dart:math';
 
+import 'package:emerge_app/core/sync/sync_engine.dart';
+
 /// Service for managing user referral codes and tracking
 /// Implements the referral reward system for user growth
 class ReferralService {
   final FirebaseFirestore _firestore;
   final FirebaseAnalytics _analytics;
+  final EnhancedSyncEngine _syncEngine;
   final Random _random = Random.secure();
 
   static const String _baseUrl = 'https://emerge.app/referral';
   static const int _xpReward = 500; // XP for successful referral
 
-  ReferralService({FirebaseFirestore? firestore, FirebaseAnalytics? analytics})
-    : _firestore = firestore ?? FirebaseFirestore.instance,
-      _analytics = analytics ?? FirebaseAnalytics.instance;
+  ReferralService(
+    this._syncEngine, {
+    FirebaseFirestore? firestore,
+    FirebaseAnalytics? analytics,
+  }) : _firestore = firestore ?? FirebaseFirestore.instance,
+       _analytics = analytics ?? FirebaseAnalytics.instance;
 
   CollectionReference _referralsCollection() =>
       _firestore.collection('referrals');
@@ -56,17 +62,21 @@ class ReferralService {
         }
       } while (!isUnique);
 
-      // Save code to user stats
-      await _userStatsRef(
-        userId,
-      ).set({'referralCode': code}, SetOptions(merge: true));
+      final nowStr = DateTime.now().toIso8601String();
 
-      // Create referral document
-      await _referralsCollection().doc(code).set({
-        'referrerId': userId,
-        'createdAt': FieldValue.serverTimestamp(),
-        'status': 'active',
-      });
+      // Save code to user stats via sync engine
+      await _syncEngine.enqueueSet(
+        collectionPath: 'user_stats',
+        documentId: userId,
+        data: {'referralCode': code},
+      );
+
+      // Create referral document via sync engine
+      await _syncEngine.enqueueSet(
+        collectionPath: 'referrals',
+        documentId: code,
+        data: {'referrerId': userId, 'createdAt': nowStr, 'status': 'active'},
+      );
 
       debugPrint('Generated referral code for $userId: $code');
       return code;
@@ -108,17 +118,26 @@ class ReferralService {
       final referralData = referralDoc.data() as Map<String, dynamic>;
       final referrerId = referralData['referrerId'] as String;
 
-      // Update referral document
-      await referralDoc.reference.update({
-        'status': 'pending',
-        'referredUserId': newUserId,
-        'referredAt': FieldValue.serverTimestamp(),
-      });
+      final nowStr = DateTime.now().toIso8601String();
 
-      // Update new user's stats
-      await _userStatsRef(
-        newUserId,
-      ).set({'referredByCode': referralCode}, SetOptions(merge: true));
+      // Update referral document via sync engine
+      await _syncEngine.enqueueSet(
+        collectionPath: 'referrals',
+        documentId: referralCode,
+        data: {
+          ...referralData,
+          'status': 'pending',
+          'referredUserId': newUserId,
+          'referredAt': nowStr,
+        },
+      );
+
+      // Update new user's stats via sync engine
+      await _syncEngine.enqueueSet(
+        collectionPath: 'user_stats',
+        documentId: newUserId,
+        data: {'referredByCode': referralCode},
+      );
 
       // Log analytics event
       await _analytics.logEvent(
@@ -174,12 +193,19 @@ class ReferralService {
       // Award XP to referrer
       await _awardReferralXp(referrerId, newUserId, referralCode);
 
-      // Update referral document
-      await referralDoc.reference.update({
-        'status': 'completed',
-        'completedAt': FieldValue.serverTimestamp(),
-        'xpAwarded': _xpReward,
-      });
+      final nowStr = DateTime.now().toIso8601String();
+
+      // Update referral document via sync engine
+      await _syncEngine.enqueueSet(
+        collectionPath: 'referrals',
+        documentId: referralCode,
+        data: {
+          ...referralData,
+          'status': 'completed',
+          'completedAt': nowStr,
+          'xpAwarded': _xpReward,
+        },
+      );
 
       // Log analytics event
       await _analytics.logEvent(
@@ -264,25 +290,49 @@ class ReferralService {
     String referralCode,
   ) async {
     try {
-      // Update referrer's stats
-      await _userStatsRef(referrerId).set({
-        'successfulReferrals': FieldValue.increment(1),
-        'totalReferralXpEarned': FieldValue.increment(_xpReward),
-        'referredUserIds': FieldValue.arrayUnion([referredUserId]),
-      }, SetOptions(merge: true));
+      final nowStr = DateTime.now().toIso8601String();
 
-      // Log activity for XP
-      await _firestore
-          .collection('user_activity')
-          .doc('${referrerId}_referral_$referredUserId')
-          .set({
-            'userId': referrerId,
-            'type': 'referred_user',
-            'sourceId': referredUserId,
-            'xpEarned': _xpReward,
-            'date': DateTime.now().toIso8601String(),
-            'timestamp': FieldValue.serverTimestamp(),
-          });
+      // Update referrer's stats via sync engine
+      // Since enqueueSet doesn't support FieldValue increments out of the box natively
+      // without breaking JSON serialization for Hive, we read current values to increment them locally.
+      final userDoc = await _userStatsRef(referrerId).get();
+      int currentReferrals = 0;
+      int currentXp = 0;
+      List<dynamic> referredIds = [];
+      if (userDoc.exists) {
+        final data = userDoc.data() as Map<String, dynamic>;
+        currentReferrals = data['successfulReferrals'] as int? ?? 0;
+        currentXp = data['totalReferralXpEarned'] as int? ?? 0;
+        referredIds = List.from(data['referredUserIds'] ?? []);
+      }
+
+      if (!referredIds.contains(referredUserId)) {
+        referredIds.add(referredUserId);
+      }
+
+      await _syncEngine.enqueueSet(
+        collectionPath: 'user_stats',
+        documentId: referrerId,
+        data: {
+          'successfulReferrals': currentReferrals + 1,
+          'totalReferralXpEarned': currentXp + _xpReward,
+          'referredUserIds': referredIds,
+        },
+      );
+
+      // Log activity for XP via sync engine
+      await _syncEngine.enqueueSet(
+        collectionPath: 'user_activity',
+        documentId: '${referrerId}_referral_$referredUserId',
+        data: {
+          'userId': referrerId,
+          'type': 'referred_user',
+          'sourceId': referredUserId,
+          'xpEarned': _xpReward,
+          'date': nowStr,
+          'timestamp': nowStr,
+        },
+      );
 
       debugPrint('Awarded $_xpReward XP to $referrerId for referral');
     } catch (e) {

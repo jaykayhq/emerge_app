@@ -12,19 +12,21 @@ Stream<List<ConnectivityResult>> connectivityStream(Ref ref) {
 @Riverpod(keepAlive: true)
 bool isConnected(Ref ref) {
   final connectivitySync = ref.watch(connectivityStreamProvider);
-  
+
   return connectivitySync.when(
     data: (results) {
       if (results.isEmpty) return false;
-      return results.any((result) => 
-        result == ConnectivityResult.mobile || 
-        result == ConnectivityResult.wifi || 
-        result == ConnectivityResult.ethernet || 
-        result == ConnectivityResult.vpn ||
-        result == ConnectivityResult.other
+      return results.any(
+        (result) =>
+            result == ConnectivityResult.mobile ||
+            result == ConnectivityResult.wifi ||
+            result == ConnectivityResult.ethernet ||
+            result == ConnectivityResult.vpn ||
+            result == ConnectivityResult.other,
       );
     },
-    loading: () => true, // Assume connected during loading to avoid premature offline banners
+    loading: () =>
+        true, // Assume connected during loading to avoid premature offline banners
     error: (_, _) => false,
   );
 }

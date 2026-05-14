@@ -19,6 +19,8 @@ class HabitsTable extends Table {
   TextColumn get createdAt => text()();
   TextColumn get updatedAt => text()();
   TextColumn get syncedAt => text().nullable()();
+  TextColumn get timeOfDayPreference => text().nullable()();
+  TextColumn get reminderTime => text().nullable()();
 
   @override
   Set<Column> get primaryKey => {id};

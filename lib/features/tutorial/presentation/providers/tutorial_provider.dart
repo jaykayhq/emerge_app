@@ -56,7 +56,9 @@ class TutorialState {
 
 /// Provider for LocalSettingsRepository as a singleton
 /// Shared across the app to prevent multiple Hive box instances
-final localSettingsRepositoryProvider = Provider<LocalSettingsRepository>((ref) {
+final localSettingsRepositoryProvider = Provider<LocalSettingsRepository>((
+  ref,
+) {
   final repo = LocalSettingsRepository();
   // Initialize the repository to ensure Hive is set up
   ref.onDispose(() {

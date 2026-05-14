@@ -1,3 +1,5 @@
+import 'dart:async';
+import 'package:emerge_app/core/drift/database.dart';
 import 'package:emerge_app/features/monetization/presentation/providers/subscription_provider.dart';
 import 'package:emerge_app/core/presentation/widgets/world_background.dart';
 import 'dart:ui';
@@ -104,9 +106,7 @@ class SettingsScreen extends ConsumerWidget {
                         .sendPasswordResetEmail(authUser!.email);
                     if (context.mounted) {
                       result.fold(
-                        (
-                          failure,
-                        ) => ScaffoldMessenger.of(context).showSnackBar(
+                        (failure) => ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(
                             content: Text(
                               'Error sending reset email: ${failure.message}',
@@ -122,9 +122,7 @@ class SettingsScreen extends ConsumerWidget {
                     }
                   } else {
                     ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('No email address found'),
-                      ),
+                      const SnackBar(content: Text('No email address found')),
                     );
                   }
                 },
@@ -162,7 +160,7 @@ class SettingsScreen extends ConsumerWidget {
                 secondary: Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: EmergeColors.teal.withValues(alpha:0.1),
+                    color: EmergeColors.teal.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Icon(
@@ -187,7 +185,7 @@ class SettingsScreen extends ConsumerWidget {
                   );
                 },
                 activeThumbColor: EmergeColors.teal,
-                activeTrackColor: EmergeColors.teal.withValues(alpha:0.5),
+                activeTrackColor: EmergeColors.teal.withValues(alpha: 0.5),
                 tileColor: AppTheme.surfaceDark,
               ),
               _buildListTile(
@@ -228,13 +226,10 @@ class SettingsScreen extends ConsumerWidget {
                 secondary: Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: EmergeColors.teal.withValues(alpha:0.1),
+                    color: EmergeColors.teal.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(8),
                   ),
-                  child: Icon(
-                    Icons.palette_outlined,
-                    color: EmergeColors.teal,
-                  ),
+                  child: Icon(Icons.palette_outlined, color: EmergeColors.teal),
                 ),
                 title: Text(
                   'Dark Mode',
@@ -248,14 +243,14 @@ class SettingsScreen extends ConsumerWidget {
                   ref.read(themeControllerProvider.notifier).toggleTheme();
                 },
                 activeThumbColor: EmergeColors.teal,
-                activeTrackColor: EmergeColors.teal.withValues(alpha:0.5),
+                activeTrackColor: EmergeColors.teal.withValues(alpha: 0.5),
                 tileColor: AppTheme.surfaceDark,
               ),
               SwitchListTile(
                 secondary: Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: EmergeColors.teal.withValues(alpha:0.1),
+                    color: EmergeColors.teal.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Icon(
@@ -280,20 +275,17 @@ class SettingsScreen extends ConsumerWidget {
                   );
                 },
                 activeThumbColor: EmergeColors.teal,
-                activeTrackColor: EmergeColors.teal.withValues(alpha:0.5),
+                activeTrackColor: EmergeColors.teal.withValues(alpha: 0.5),
                 tileColor: AppTheme.surfaceDark,
               ),
               SwitchListTile(
                 secondary: Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: EmergeColors.teal.withValues(alpha:0.1),
+                    color: EmergeColors.teal.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(8),
                   ),
-                  child: Icon(
-                    Icons.school_outlined,
-                    color: EmergeColors.teal,
-                  ),
+                  child: Icon(Icons.school_outlined, color: EmergeColors.teal),
                 ),
                 title: Text(
                   'Enable Tutorials',
@@ -317,13 +309,11 @@ class SettingsScreen extends ConsumerWidget {
                       .setTutorialsEnabled(value);
                   // If enabling tutorials, reset them so they show again
                   if (value) {
-                    await ref
-                        .read(tutorialProvider.notifier)
-                        .resetTutorials();
+                    await ref.read(tutorialProvider.notifier).resetTutorials();
                   }
                 },
                 activeThumbColor: EmergeColors.teal,
-                activeTrackColor: EmergeColors.teal.withValues(alpha:0.5),
+                activeTrackColor: EmergeColors.teal.withValues(alpha: 0.5),
                 tileColor: AppTheme.surfaceDark,
               ),
             ]),
@@ -387,9 +377,8 @@ class SettingsScreen extends ConsumerWidget {
                         showDialog(
                           context: context,
                           barrierDismissible: false,
-                          builder: (context) => const Center(
-                            child: CircularProgressIndicator(),
-                          ),
+                          builder: (context) =>
+                              const Center(child: CircularProgressIndicator()),
                         );
 
                         await ref.read(authRepositoryProvider).signOut();
@@ -402,9 +391,7 @@ class SettingsScreen extends ConsumerWidget {
                         if (context.mounted) {
                           Navigator.of(context).pop(); // Dismiss loading
                           ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text('Error logging out: $e'),
-                            ),
+                            SnackBar(content: Text('Error logging out: $e')),
                           );
                         }
                       }
@@ -418,11 +405,10 @@ class SettingsScreen extends ConsumerWidget {
                     ),
                     child: Text(
                       'Log Out',
-                      style: Theme.of(context).textTheme.titleMedium
-                          ?.copyWith(
-                            fontWeight: FontWeight.bold,
-                            color: EmergeColors.coral,
-                          ),
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: EmergeColors.coral,
+                      ),
                     ),
                   );
                 },
@@ -468,7 +454,7 @@ class SettingsScreen extends ConsumerWidget {
           child: Container(
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              color: EmergeColors.teal.withValues(alpha:0.2),
+              color: EmergeColors.teal.withValues(alpha: 0.2),
             ),
             child: const Icon(Icons.person, size: 40, color: EmergeColors.teal),
           ),
@@ -502,7 +488,7 @@ class SettingsScreen extends ConsumerWidget {
                       vertical: 2,
                     ),
                     decoration: BoxDecoration(
-                      color: EmergeColors.teal.withValues(alpha:0.1),
+                      color: EmergeColors.teal.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Text(
@@ -627,9 +613,9 @@ class SettingsScreen extends ConsumerWidget {
         child: Container(
           clipBehavior: Clip.antiAlias,
           decoration: BoxDecoration(
-            color: Colors.white.withValues(alpha:0.08),
+            color: Colors.white.withValues(alpha: 0.08),
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: Colors.white.withValues(alpha:0.15)),
+            border: Border.all(color: Colors.white.withValues(alpha: 0.15)),
           ),
           child: Column(children: children),
         ),
@@ -650,7 +636,7 @@ class SettingsScreen extends ConsumerWidget {
       leading: Container(
         padding: const EdgeInsets.all(8),
         decoration: BoxDecoration(
-          color: EmergeColors.teal.withValues(alpha:0.1),
+          color: EmergeColors.teal.withValues(alpha: 0.1),
           borderRadius: BorderRadius.circular(8),
         ),
         child: Icon(icon, color: EmergeColors.teal),
@@ -686,7 +672,6 @@ class SettingsScreen extends ConsumerWidget {
       ),
     );
   }
-
 
   Future<void> _updateSettings(
     BuildContext context,
@@ -901,7 +886,7 @@ class SettingsScreen extends ConsumerWidget {
       leading: Container(
         padding: const EdgeInsets.all(8),
         decoration: BoxDecoration(
-          color: Colors.red.withValues(alpha:0.1),
+          color: Colors.red.withValues(alpha: 0.1),
           borderRadius: BorderRadius.circular(8),
         ),
         child: const Icon(Icons.delete_forever, color: Colors.red),
@@ -916,7 +901,7 @@ class SettingsScreen extends ConsumerWidget {
       subtitle: Text(
         'Permanently delete your account and all data',
         style: Theme.of(context).textTheme.bodySmall?.copyWith(
-          color: Colors.red.withValues(alpha:0.6),
+          color: Colors.red.withValues(alpha: 0.6),
           fontSize: 11,
         ),
       ),
@@ -935,7 +920,7 @@ class SettingsScreen extends ConsumerWidget {
             backgroundColor: EmergeColors.background,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(16),
-              side: BorderSide(color: Colors.red.withValues(alpha:0.3)),
+              side: BorderSide(color: Colors.red.withValues(alpha: 0.3)),
             ),
             title: Row(
               children: [
@@ -989,7 +974,7 @@ class SettingsScreen extends ConsumerWidget {
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(8),
                       borderSide: BorderSide(
-                        color: Colors.red.withValues(alpha:0.3),
+                        color: Colors.red.withValues(alpha: 0.3),
                       ),
                     ),
                     focusedBorder: OutlineInputBorder(
@@ -1021,22 +1006,43 @@ class SettingsScreen extends ConsumerWidget {
                           ),
                         );
                         try {
+                          // 1. Wipe local database immediately
+                          final db = ref.read(appDatabaseProvider);
+                          await db.clearAll();
+
+                          // 2. Trigger remote deletion with timeout
                           final result = await ref
                               .read(authRepositoryProvider)
-                              .deleteAccount();
+                              .deleteAccount()
+                              .timeout(
+                                const Duration(seconds: 15),
+                                onTimeout: () => throw TimeoutException(
+                                  'Deletion took too long. Local data cleared.',
+                                ),
+                              );
+
                           if (context.mounted) {
-                            Navigator.of(context).pop(); // Dismiss loading
+                            Navigator.of(
+                              context,
+                              rootNavigator: true,
+                            ).pop(); // Dismiss loading
+                          }
+
+                          if (context.mounted) {
                             result.fold(
                               (failure) {
                                 ScaffoldMessenger.of(context).showSnackBar(
                                   SnackBar(
-                                    content: Text(failure.message),
-                                    backgroundColor: Colors.red,
+                                    content: Text(
+                                      'Remote deletion pending: ${failure.message}',
+                                    ),
+                                    backgroundColor: Colors.orange,
                                   ),
                                 );
+                                context.go('/auth');
                               },
                               (_) {
-                                // Account deleted — router will redirect to login
+                                context.go('/auth');
                                 ScaffoldMessenger.of(context).showSnackBar(
                                   const SnackBar(
                                     content: Text(
@@ -1049,11 +1055,17 @@ class SettingsScreen extends ConsumerWidget {
                           }
                         } catch (e) {
                           if (context.mounted) {
-                            Navigator.of(context).pop(); // Dismiss loading
+                            if (Navigator.canPop(context)) {
+                              Navigator.of(
+                                context,
+                                rootNavigator: true,
+                              ).pop(); // Dismiss loading on error
+                            }
+                            context.go('/auth');
                             ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(
-                                content: Text('Failed to delete account: $e'),
-                                backgroundColor: Colors.red,
+                                content: Text('Local data cleared. Error: $e'),
+                                backgroundColor: Colors.orange,
                               ),
                             );
                           }
@@ -1062,7 +1074,7 @@ class SettingsScreen extends ConsumerWidget {
                     : null,
                 style: FilledButton.styleFrom(
                   backgroundColor: Colors.red,
-                  disabledBackgroundColor: Colors.red.withValues(alpha:0.2),
+                  disabledBackgroundColor: Colors.red.withValues(alpha: 0.2),
                 ),
                 child: const Text(
                   'Delete Forever',
@@ -1102,10 +1114,7 @@ class _WorldThemePicker extends StatelessWidget {
   final AppWorldTheme selected;
   final ValueChanged<AppWorldTheme> onSelect;
 
-  const _WorldThemePicker({
-    required this.selected,
-    required this.onSelect,
-  });
+  const _WorldThemePicker({required this.selected, required this.onSelect});
 
   @override
   Widget build(BuildContext context) {
@@ -1126,29 +1135,27 @@ class _WorldThemePicker extends StatelessWidget {
               width: 80,
               decoration: BoxDecoration(
                 color: isSelected
-                    ? Colors.white.withValues(alpha:0.15)
-                    : Colors.white.withValues(alpha:0.05),
+                    ? Colors.white.withValues(alpha: 0.15)
+                    : Colors.white.withValues(alpha: 0.05),
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(
                   color: isSelected
-                      ? Colors.white.withValues(alpha:0.6)
-                      : Colors.white.withValues(alpha:0.15),
+                      ? Colors.white.withValues(alpha: 0.6)
+                      : Colors.white.withValues(alpha: 0.15),
                   width: isSelected ? 2 : 1,
                 ),
               ),
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Text(
-                    theme.emoji,
-                    style: const TextStyle(fontSize: 26),
-                  ),
+                  Text(theme.emoji, style: const TextStyle(fontSize: 26)),
                   const SizedBox(height: 4),
                   Text(
                     theme.displayName.split(' ').first,
                     style: TextStyle(
-                      color: Colors.white
-                          .withValues(alpha:isSelected ? 0.9 : 0.5),
+                      color: Colors.white.withValues(
+                        alpha: isSelected ? 0.9 : 0.5,
+                      ),
                       fontSize: 10,
                       fontWeight: isSelected
                           ? FontWeight.bold

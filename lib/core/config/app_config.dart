@@ -36,9 +36,13 @@ class AppConfig {
   // RevenueCat Configuration - Now linked directly to Firebase Remote Config
   // Old compile-time env vars are deprecated - all keys come from Firebase
   @Deprecated('Use Firebase Remote Config instead')
-  static const String revenuecatGoogleApiKey = String.fromEnvironment('REVENUECAT_GOOGLE_API_KEY');
+  static const String revenuecatGoogleApiKey = String.fromEnvironment(
+    'REVENUECAT_GOOGLE_API_KEY',
+  );
   @Deprecated('Use Firebase Remote Config instead')
-  static const String revenuecatAppleApiKey = String.fromEnvironment('REVENUECAT_APPLE_API_KEY');
+  static const String revenuecatAppleApiKey = String.fromEnvironment(
+    'REVENUECAT_APPLE_API_KEY',
+  );
 
   // Security Configuration
   static const String recaptchaSiteKey = String.fromEnvironment(
@@ -73,12 +77,14 @@ class AppConfig {
     // Layer 1: Check Firebase Remote Config (Production Standard)
     if (_remoteConfigService != null) {
       final remoteKey = _remoteConfigService!.getRevenueCatApiKey(platform);
-      if (remoteKey.isNotEmpty && 
+      if (remoteKey.isNotEmpty &&
           remoteKey != 'YOUR_REVENUECAT_API_KEY' &&
           !remoteKey.contains('your_production')) {
         key = remoteKey;
         if (kDebugMode) {
-          debugPrint('🔑 Using RevenueCat key from Firebase Remote Config for $platform');
+          debugPrint(
+            '🔑 Using RevenueCat key from Firebase Remote Config for $platform',
+          );
         }
       }
     }
@@ -93,8 +99,8 @@ class AppConfig {
       }
 
       final envKey = dotenv.isInitialized ? dotenv.maybeGet(envVarName) : null;
-      if (envKey != null && 
-          envKey.isNotEmpty && 
+      if (envKey != null &&
+          envKey.isNotEmpty &&
           envKey != 'YOUR_REVENUECAT_API_KEY' &&
           !envKey.contains('your_production')) {
         key = envKey;
@@ -114,11 +120,13 @@ class AppConfig {
       } else if (platform == 'web') {
         defineKey = const String.fromEnvironment('REVENUECAT_WEB_API_KEY');
       }
-      
+
       if (defineKey != null && defineKey.isNotEmpty) {
         key = defineKey;
         if (kDebugMode) {
-          debugPrint('🔑 Using RevenueCat key from --dart-define for $platform');
+          debugPrint(
+            '🔑 Using RevenueCat key from --dart-define for $platform',
+          );
         }
       }
     }
@@ -135,13 +143,13 @@ class AppConfig {
 
     // SECURITY: Fail fast if key is missing (production only)
     if (isProduction) {
-      throw Exception(
-        'RevenueCat API key not configured for $platform.',
-      );
+      throw Exception('RevenueCat API key not configured for $platform.');
     }
 
     // In development, allow app to continue without RevenueCat
-    debugPrint('⚠️ RevenueCat API key not configured for $platform - monetization disabled');
+    debugPrint(
+      '⚠️ RevenueCat API key not configured for $platform - monetization disabled',
+    );
     return '';
   }
 
@@ -154,14 +162,15 @@ class AppConfig {
       final key = _remoteConfigService!.getString('ad_unit_${type}_$platform');
       if (key.isNotEmpty) return key;
     }
-    
+
     // Fallback production IDs if Remote Config fails
     if (platform == 'android') {
       return {
-        'banner': 'ca-app-pub-5049162599848475/3295552257',
-        'interstitial': 'ca-app-pub-5049162599848475/7186785099',
-        'rewarded': 'ca-app-pub-5049162599848475/1076583020',
-      }[type] ?? '';
+            'banner': 'ca-app-pub-5049162599848475/3295552257',
+            'interstitial': 'ca-app-pub-5049162599848475/7186785099',
+            'rewarded': 'ca-app-pub-5049162599848475/1076583020',
+          }[type] ??
+          '';
     }
     return ''; // Add iOS production IDs here when available
   }
@@ -169,16 +178,18 @@ class AppConfig {
   static String _getTestAdUnitId(String type, String platform) {
     if (platform == 'android') {
       return {
-        'banner': 'ca-app-pub-3940256099942544/6300978111',
-        'interstitial': 'ca-app-pub-3940256099942544/1033173712',
-        'rewarded': 'ca-app-pub-3940256099942544/5224354917',
-      }[type] ?? '';
+            'banner': 'ca-app-pub-3940256099942544/6300978111',
+            'interstitial': 'ca-app-pub-3940256099942544/1033173712',
+            'rewarded': 'ca-app-pub-3940256099942544/5224354917',
+          }[type] ??
+          '';
     } else if (platform == 'ios') {
       return {
-        'banner': 'ca-app-pub-3940256099942544/2934735716',
-        'interstitial': 'ca-app-pub-3940256099942544/4411468910',
-        'rewarded': 'ca-app-pub-3940256099942544/1712485313',
-      }[type] ?? '';
+            'banner': 'ca-app-pub-3940256099942544/2934735716',
+            'interstitial': 'ca-app-pub-3940256099942544/4411468910',
+            'rewarded': 'ca-app-pub-3940256099942544/1712485313',
+          }[type] ??
+          '';
     }
     return '';
   }
@@ -195,15 +206,9 @@ class AppConfig {
       final googleKey = getRevenueCatApiKey('android');
       final appleKey = getRevenueCatApiKey('ios');
       final webKey = getRevenueCatApiKey('web');
-      AppLogger.i(
-        '  RevenueCat Google Key resolved: ${googleKey.isNotEmpty}',
-      );
-      AppLogger.i(
-        '  RevenueCat Apple Key resolved: ${appleKey.isNotEmpty}',
-      );
-      AppLogger.i(
-        '  RevenueCat Web Key resolved: ${webKey.isNotEmpty}',
-      );
+      AppLogger.i('  RevenueCat Google Key resolved: ${googleKey.isNotEmpty}');
+      AppLogger.i('  RevenueCat Apple Key resolved: ${appleKey.isNotEmpty}');
+      AppLogger.i('  RevenueCat Web Key resolved: ${webKey.isNotEmpty}');
       AppLogger.i('  Firebase App Check enabled: $enableFirebaseAppCheck');
       AppLogger.i('  SSL Pinning enabled: $enableSslPinning');
       AppLogger.i('  Rate Limiting enabled: $enableRateLimiting');

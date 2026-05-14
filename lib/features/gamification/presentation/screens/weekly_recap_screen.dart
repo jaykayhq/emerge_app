@@ -65,9 +65,16 @@ class _WeeklyRecapScreenState extends ConsumerState<WeeklyRecapScreen> {
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      const Icon(Icons.error_outline, color: AppTheme.error, size: 48),
+                      const Icon(
+                        Icons.error_outline,
+                        color: AppTheme.error,
+                        size: 48,
+                      ),
                       const Gap(16),
-                      Text('Unable to generate recap', style: TextStyle(color: Colors.white)),
+                      Text(
+                        'Unable to generate recap',
+                        style: TextStyle(color: Colors.white),
+                      ),
                       const Gap(16),
                       ElevatedButton(
                         onPressed: () => context.pop(),

@@ -66,8 +66,8 @@ class AscendedPhasePainter extends CustomPainter {
 
       final gradient = RadialGradient(
         colors: [
-          primaryColor.withValues(alpha:alpha),
-          primaryColor.withValues(alpha:alpha * 0.4),
+          primaryColor.withValues(alpha: alpha),
+          primaryColor.withValues(alpha: alpha * 0.4),
           Colors.transparent,
         ],
         stops: const [0.0, 0.5, 1.0],
@@ -98,7 +98,7 @@ class AscendedPhasePainter extends CustomPainter {
 
     final gradient = RadialGradient(
       colors: [
-        primaryColor.withValues(alpha:shadowIntensity),
+        primaryColor.withValues(alpha: shadowIntensity),
         Colors.transparent,
       ],
     );
@@ -179,8 +179,8 @@ class AscendedPhasePainter extends CustomPainter {
           center: Alignment(side * -0.5, -0.3),
           radius: 1.2,
           colors: [
-            primaryColor.withValues(alpha:wingAlpha - tier * 0.04),
-            primaryColor.withValues(alpha:wingAlpha * 0.3 - tier * 0.02),
+            primaryColor.withValues(alpha: wingAlpha - tier * 0.04),
+            primaryColor.withValues(alpha: wingAlpha * 0.3 - tier * 0.02),
             Colors.transparent,
           ],
           stops: const [0.0, 0.6, 1.0],
@@ -213,7 +213,7 @@ class AscendedPhasePainter extends CustomPainter {
     canvas.translate(-center.dx, -center.dy);
 
     final mandalaPaint = Paint()
-      ..color = primaryColor.withValues(alpha:opacity * 0.15)
+      ..color = primaryColor.withValues(alpha: opacity * 0.15)
       ..style = PaintingStyle.stroke
       ..strokeWidth = 0.8
       ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 1);
@@ -259,7 +259,7 @@ class AscendedPhasePainter extends CustomPainter {
 
     // Dotted ring
     final dotPaint = Paint()
-      ..color = primaryColor.withValues(alpha:opacity * 0.2)
+      ..color = primaryColor.withValues(alpha: opacity * 0.2)
       ..style = PaintingStyle.fill;
     for (int i = 0; i < 16; i++) {
       final angle = i * math.pi / 8;
@@ -282,10 +282,10 @@ class AscendedPhasePainter extends CustomPainter {
       begin: Alignment.topCenter,
       end: Alignment.bottomCenter,
       colors: [
-        primaryColor.withValues(alpha:0.85),
-        primaryColor.withValues(alpha:0.65),
-        primaryColor.withValues(alpha:0.30),
-        primaryColor.withValues(alpha:0.08),
+        primaryColor.withValues(alpha: 0.85),
+        primaryColor.withValues(alpha: 0.65),
+        primaryColor.withValues(alpha: 0.30),
+        primaryColor.withValues(alpha: 0.08),
         Colors.transparent,
       ],
       stops: const [0.0, 0.3, 0.55, 0.8, 1.0],
@@ -297,9 +297,9 @@ class AscendedPhasePainter extends CustomPainter {
     // Head with inner white core
     final headGradient = RadialGradient(
       colors: [
-        Colors.white.withValues(alpha:0.85),
-        primaryColor.withValues(alpha:0.75),
-        primaryColor.withValues(alpha:0.35),
+        Colors.white.withValues(alpha: 0.85),
+        primaryColor.withValues(alpha: 0.75),
+        primaryColor.withValues(alpha: 0.35),
       ],
       stops: const [0.0, 0.35, 1.0],
     );
@@ -371,8 +371,8 @@ class AscendedPhasePainter extends CustomPainter {
     final coreCenter = Offset(cx, size.height * 0.26 + floatY);
     final coreGradient = RadialGradient(
       colors: [
-        Colors.white.withValues(alpha:0.65),
-        Colors.white.withValues(alpha:0.2),
+        Colors.white.withValues(alpha: 0.65),
+        Colors.white.withValues(alpha: 0.2),
         Colors.transparent,
       ],
       stops: const [0.0, 0.3, 1.0],
@@ -415,15 +415,15 @@ class AscendedPhasePainter extends CustomPainter {
       );
 
       starPaint.color = i % 5 == 0
-          ? const Color(0xFFFFD700).withValues(alpha:0.6 * twinkle)
-          : Colors.white.withValues(alpha:0.5 * twinkle);
+          ? const Color(0xFFFFD700).withValues(alpha: 0.6 * twinkle)
+          : Colors.white.withValues(alpha: 0.5 * twinkle);
 
       canvas.drawCircle(Offset(x, y), starSize, starPaint);
     }
 
     // Mini nebula swirl inside body
     final nebulaPaint = Paint()
-      ..color = primaryColor.withValues(alpha:0.08)
+      ..color = primaryColor.withValues(alpha: 0.08)
       ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 15);
 
     canvas.drawCircle(
@@ -457,7 +457,8 @@ class AscendedPhasePainter extends CustomPainter {
       final outerR = size.width * (0.18 + math.sin(t * 1.5 + i * 0.9) * 0.06);
 
       final rayPaint = Paint()
-        ..color = primaryColor.withValues(alpha:opacity * 0.22 * (0.6 + math.sin(t + i) * 0.4),
+        ..color = primaryColor.withValues(
+          alpha: opacity * 0.22 * (0.6 + math.sin(t + i) * 0.4),
         )
         ..style = PaintingStyle.stroke
         ..strokeWidth = 1.2
@@ -495,7 +496,7 @@ class AscendedPhasePainter extends CustomPainter {
       final ringAlpha = opacity * (0.15 - i * 0.03);
 
       final ringPaint = Paint()
-        ..color = primaryColor.withValues(alpha:ringAlpha)
+        ..color = primaryColor.withValues(alpha: ringAlpha)
         ..style = PaintingStyle.stroke
         ..strokeWidth = 1.2
         ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 2);
@@ -555,7 +556,7 @@ class AscendedPhasePainter extends CustomPainter {
 
         // Trail effect — stretched vertically
         final trailPaint = Paint()
-          ..color = color.withValues(alpha:alpha * 0.3)
+          ..color = color.withValues(alpha: alpha * 0.3)
           ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 4);
         canvas.drawOval(
           Rect.fromCenter(
@@ -568,7 +569,7 @@ class AscendedPhasePainter extends CustomPainter {
 
         // Core particle
         final particlePaint = Paint()
-          ..color = color.withValues(alpha:alpha)
+          ..color = color.withValues(alpha: alpha)
           ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 1.5);
         canvas.drawCircle(Offset(x, y), pSize * 0.6, particlePaint);
       }
@@ -601,8 +602,8 @@ class AscendedPhasePainter extends CustomPainter {
       // Orb glow
       final orbGradient = RadialGradient(
         colors: [
-          Colors.white.withValues(alpha:orbAlpha * 0.8),
-          primaryColor.withValues(alpha:orbAlpha * 0.4),
+          Colors.white.withValues(alpha: orbAlpha * 0.8),
+          primaryColor.withValues(alpha: orbAlpha * 0.4),
           Colors.transparent,
         ],
         stops: const [0.0, 0.4, 1.0],
@@ -621,7 +622,7 @@ class AscendedPhasePainter extends CustomPainter {
       final trailY = center.dy + math.sin(trailAngle) * orbitR * tilt;
 
       final trailPaint = Paint()
-        ..color = primaryColor.withValues(alpha:orbAlpha * 0.15)
+        ..color = primaryColor.withValues(alpha: orbAlpha * 0.15)
         ..style = PaintingStyle.stroke
         ..strokeWidth = orbSize * 0.6
         ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 3);

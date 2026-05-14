@@ -34,7 +34,9 @@ class EnhancedSyncEngine {
         } else {
           await _mutationQueue.incrementRetry(mutation.id);
           if (mutation.retryCount >= 3) {
-            AppLogger.d('SyncEngine: Dropping mutation ${mutation.id} after 3 retries');
+            AppLogger.d(
+              'SyncEngine: Dropping mutation ${mutation.id} after 3 retries',
+            );
             await _mutationQueue.deleteProcessed(mutation.id);
           }
           break;
@@ -47,7 +49,9 @@ class EnhancedSyncEngine {
 
   Future<bool> _applyMutation(MutationQueueTableData mutation) async {
     try {
-      final ref = _firestore.collection(mutation.collectionPath).doc(mutation.documentId);
+      final ref = _firestore
+          .collection(mutation.collectionPath)
+          .doc(mutation.documentId);
       final data = mutation.dataJson != null
           ? Map<String, dynamic>.from(jsonDecode(mutation.dataJson!) as Map)
           : <String, dynamic>{};
@@ -55,10 +59,12 @@ class EnhancedSyncEngine {
       switch (mutation.operation) {
         case 'set':
           _convertTimestamps(data);
+          _processMarkers(data);
           await ref.set(data, SetOptions(merge: true));
           break;
         case 'update':
           _convertTimestamps(data);
+          _processMarkers(data);
           await ref.update(data);
           break;
         case 'delete':
@@ -91,6 +97,37 @@ class EnhancedSyncEngine {
         }
       }
     });
+  }
+
+  void _processMarkers(Map<String, dynamic> data) {
+    final keysToUpdate = <String, dynamic>{};
+
+    data.forEach((key, value) {
+      if (value is Map<String, dynamic>) {
+        if (value.containsKey('__type__')) {
+          final type = value['__type__'];
+          if (type == 'increment') {
+            keysToUpdate[key] = FieldValue.increment(value['value'] as num);
+          } else if (type == 'serverTimestamp') {
+            keysToUpdate[key] = FieldValue.serverTimestamp();
+          } else if (type == 'arrayUnion') {
+            keysToUpdate[key] = FieldValue.arrayUnion(value['values'] as List);
+          } else if (type == 'arrayRemove') {
+            keysToUpdate[key] = FieldValue.arrayRemove(value['values'] as List);
+          }
+        } else {
+          _processMarkers(value);
+        }
+      } else if (value is List) {
+        for (var i = 0; i < value.length; i++) {
+          if (value[i] is Map<String, dynamic>) {
+            _processMarkers(value[i] as Map<String, dynamic>);
+          }
+        }
+      }
+    });
+
+    data.addAll(keysToUpdate);
   }
 
   Future<void> enqueueMutation({

@@ -4,6 +4,7 @@ import 'package:emerge_app/core/sync/sync_engine.dart';
 import 'package:emerge_app/core/sync/sync_trigger_service.dart';
 
 class MockSyncEngine extends Mock implements EnhancedSyncEngine {}
+
 class MockSyncTriggerService extends Mock implements SyncTriggerService {}
 
 void main() {
@@ -26,10 +27,7 @@ void main() {
 
     test('stop cancels subscription safely', () {
       final engine = MockSyncEngine();
-      final service = SyncTriggerService(
-        engine,
-        (listener) {},
-      );
+      final service = SyncTriggerService(engine, (listener) {});
 
       expect(() => service.stop(), returnsNormally);
     });

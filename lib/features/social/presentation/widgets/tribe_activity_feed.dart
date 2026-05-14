@@ -60,7 +60,15 @@ class TribeActivityTile extends StatelessWidget {
     final userName = activity['userName'] as String? ?? 'Someone';
     final data = activity['data'] as Map<String, dynamic>? ?? {};
     final actionText = _buildActionText(type, data);
-    final timestamp = activity['timestamp'] as Timestamp?;
+    final Timestamp? timestamp;
+    final rawTimestamp = activity['timestamp'];
+    if (rawTimestamp is Timestamp) {
+      timestamp = rawTimestamp;
+    } else if (rawTimestamp is String) {
+      timestamp = Timestamp.fromDate(DateTime.parse(rawTimestamp));
+    } else {
+      timestamp = null;
+    }
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 16),
@@ -84,7 +92,7 @@ class TribeActivityTile extends StatelessWidget {
               _formatTimestamp(timestamp),
               style: TextStyle(
                 fontSize: 11,
-                color: AppTheme.textSecondaryDark.withValues(alpha:0.6),
+                color: AppTheme.textSecondaryDark.withValues(alpha: 0.6),
               ),
             ),
         ],

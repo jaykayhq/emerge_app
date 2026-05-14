@@ -38,10 +38,7 @@ class ArchetypeClubEmblem extends StatelessWidget {
           color: EmergeColors.background,
         ),
         child: Center(
-          child: Text(
-            theme.emoji,
-            style: const TextStyle(fontSize: 42),
-          ),
+          child: Text(theme.emoji, style: const TextStyle(fontSize: 42)),
         ),
       ),
     );
@@ -77,7 +74,8 @@ class RealTimeMemberCount extends ConsumerWidget {
           ],
         );
       },
-      loading: () => const SkeletonShimmer(width: 80, height: 16, borderRadius: 4),
+      loading: () =>
+          const SkeletonShimmer(width: 80, height: 16, borderRadius: 4),
       error: (error, _) => Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
@@ -128,8 +126,8 @@ class RealTimeTribeProgressMetrics extends ConsumerWidget {
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
               colors: [
-                EmergeColors.glassWhite.withValues(alpha:0.1),
-                EmergeColors.glassWhite.withValues(alpha:0.05),
+                EmergeColors.glassWhite.withValues(alpha: 0.1),
+                EmergeColors.glassWhite.withValues(alpha: 0.05),
               ],
             ),
             borderRadius: BorderRadius.circular(16),
@@ -220,8 +218,8 @@ class StatOrb extends StatelessWidget {
           height: 48,
           decoration: BoxDecoration(
             shape: BoxShape.circle,
-            color: color.withValues(alpha:0.1),
-            border: Border.all(color: color.withValues(alpha:0.5)),
+            color: color.withValues(alpha: 0.1),
+            border: Border.all(color: color.withValues(alpha: 0.5)),
           ),
           child: Icon(icon, color: color, size: 24),
         ),
@@ -356,9 +354,9 @@ class ContributorAvatar extends ConsumerWidget {
                   end: Alignment.bottomRight,
                   colors: [
                     isTopThree
-                        ? EmergeColors.yellow.withValues(alpha:0.8)
-                        : EmergeColors.violet.withValues(alpha:0.6),
-                    EmergeColors.teal.withValues(alpha:0.4),
+                        ? EmergeColors.yellow.withValues(alpha: 0.8)
+                        : EmergeColors.violet.withValues(alpha: 0.6),
+                    EmergeColors.teal.withValues(alpha: 0.4),
                   ],
                 ),
                 border: Border.all(color: EmergeColors.background, width: 3),
@@ -457,7 +455,7 @@ class _MetricsLoadingState extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha:0.05),
+        color: Colors.white.withValues(alpha: 0.05),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: Colors.white10),
       ),
@@ -467,15 +465,18 @@ class _MetricsLoadingState extends StatelessWidget {
           const Gap(16),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: List.generate(3, (index) => Column(
-              children: [
-                const SkeletonShimmer.circular(size: 48),
-                const Gap(8),
-                const SkeletonShimmer(width: 40, height: 16),
-                const Gap(4),
-                const SkeletonShimmer(width: 60, height: 10),
-              ],
-            )),
+            children: List.generate(
+              3,
+              (index) => Column(
+                children: [
+                  const SkeletonShimmer.circular(size: 48),
+                  const Gap(8),
+                  const SkeletonShimmer(width: 40, height: 16),
+                  const Gap(4),
+                  const SkeletonShimmer(width: 60, height: 10),
+                ],
+              ),
+            ),
           ),
         ],
       ),
@@ -521,14 +522,12 @@ class _MetricsErrorState extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.red.withValues(alpha:0.05),
+        color: Colors.red.withValues(alpha: 0.05),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.redAccent.withValues(alpha:0.2)),
+        border: Border.all(color: Colors.redAccent.withValues(alpha: 0.2)),
       ),
       child: const Center(
-        child: AppErrorWidget(
-          message: 'Error loading metrics',
-        ),
+        child: AppErrorWidget(message: 'Error loading metrics'),
       ),
     );
   }

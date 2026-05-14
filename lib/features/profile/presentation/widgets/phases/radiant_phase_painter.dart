@@ -54,8 +54,8 @@ class RadiantPhasePainter extends CustomPainter {
 
       final gradient = RadialGradient(
         colors: [
-          primaryColor.withValues(alpha:alpha),
-          primaryColor.withValues(alpha:alpha * 0.3),
+          primaryColor.withValues(alpha: alpha),
+          primaryColor.withValues(alpha: alpha * 0.3),
           Colors.transparent,
         ],
         stops: const [0.0, 0.5, 1.0],
@@ -75,14 +75,14 @@ class RadiantPhasePainter extends CustomPainter {
   void _drawGroundEnergy(Canvas canvas, Size size, double cx, double pulse) {
     final groundY = size.height * 0.88;
     final crackPaint = Paint()
-      ..color = primaryColor.withValues(alpha:0.35 * pulse * phaseProgress)
+      ..color = primaryColor.withValues(alpha: 0.35 * pulse * phaseProgress)
       ..style = PaintingStyle.stroke
       ..strokeWidth = 1.5
       ..strokeCap = StrokeCap.round
       ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 3);
 
     final glowPaint = Paint()
-      ..color = primaryColor.withValues(alpha:0.12 * pulse * phaseProgress)
+      ..color = primaryColor.withValues(alpha: 0.12 * pulse * phaseProgress)
       ..style = PaintingStyle.stroke
       ..strokeWidth = 6
       ..strokeCap = StrokeCap.round
@@ -123,9 +123,9 @@ class RadiantPhasePainter extends CustomPainter {
       begin: Alignment.topCenter,
       end: Alignment.bottomCenter,
       colors: [
-        const Color(0xFF1a1a2e).withValues(alpha:opacity),
-        const Color(0xFF16162a).withValues(alpha:opacity),
-        const Color(0xFF0f0f1e).withValues(alpha:opacity * 0.95),
+        const Color(0xFF1a1a2e).withValues(alpha: opacity),
+        const Color(0xFF16162a).withValues(alpha: opacity),
+        const Color(0xFF0f0f1e).withValues(alpha: opacity * 0.95),
       ],
       stops: const [0.0, 0.5, 1.0],
     );
@@ -140,7 +140,7 @@ class RadiantPhasePainter extends CustomPainter {
 
     // Subtle dark edge
     final edgePaint = Paint()
-      ..color = Colors.black.withValues(alpha:0.4)
+      ..color = Colors.black.withValues(alpha: 0.4)
       ..style = PaintingStyle.stroke
       ..strokeWidth = 1.5;
 
@@ -157,7 +157,7 @@ class RadiantPhasePainter extends CustomPainter {
   ) {
     // Glow under cracks
     final glowPaint = Paint()
-      ..color = primaryColor.withValues(alpha:0.3 * pulse)
+      ..color = primaryColor.withValues(alpha: 0.3 * pulse)
       ..style = PaintingStyle.stroke
       ..strokeWidth = 6
       ..strokeCap = StrokeCap.round
@@ -165,7 +165,7 @@ class RadiantPhasePainter extends CustomPainter {
 
     // Core crack line
     final crackPaint = Paint()
-      ..color = primaryColor.withValues(alpha:0.85 * pulse)
+      ..color = primaryColor.withValues(alpha: 0.85 * pulse)
       ..style = PaintingStyle.stroke
       ..strokeWidth = 2
       ..strokeCap = StrokeCap.round
@@ -173,7 +173,7 @@ class RadiantPhasePainter extends CustomPainter {
 
     // Gold dot paint for intersections
     final dotPaint = Paint()
-      ..color = primaryColor.withValues(alpha:0.95 * pulse)
+      ..color = primaryColor.withValues(alpha: 0.95 * pulse)
       ..style = PaintingStyle.fill;
 
     // Define crack trees (main crack + sub-branches)
@@ -196,14 +196,14 @@ class RadiantPhasePainter extends CustomPainter {
 
       // Draw branch cracks (thinner)
       final branchGlow = Paint()
-        ..color = primaryColor.withValues(alpha:0.2 * pulse)
+        ..color = primaryColor.withValues(alpha: 0.2 * pulse)
         ..style = PaintingStyle.stroke
         ..strokeWidth = 4
         ..strokeCap = StrokeCap.round
         ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 5);
 
       final branchCrack = Paint()
-        ..color = primaryColor.withValues(alpha:0.6 * pulse)
+        ..color = primaryColor.withValues(alpha: 0.6 * pulse)
         ..style = PaintingStyle.stroke
         ..strokeWidth = 1.2
         ..strokeCap = StrokeCap.round;
@@ -229,12 +229,12 @@ class RadiantPhasePainter extends CustomPainter {
       final lightPoint = _pointAlongPath(mainCrack, lightPos);
       if (lightPoint != null) {
         final lightPaint = Paint()
-          ..color = Colors.white.withValues(alpha:0.9 * pulse)
+          ..color = Colors.white.withValues(alpha: 0.9 * pulse)
           ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 5);
         canvas.drawCircle(lightPoint, 3.5, lightPaint);
 
         final lightGlow = Paint()
-          ..color = primaryColor.withValues(alpha:0.45 * pulse)
+          ..color = primaryColor.withValues(alpha: 0.45 * pulse)
           ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 12);
         canvas.drawCircle(lightPoint, 8, lightGlow);
       }
@@ -259,8 +259,8 @@ class RadiantPhasePainter extends CustomPainter {
     // Wide glow
     final outerGlow = RadialGradient(
       colors: [
-        primaryColor.withValues(alpha:0.35 * beatPulse),
-        primaryColor.withValues(alpha:0.10 * beatPulse),
+        primaryColor.withValues(alpha: 0.35 * beatPulse),
+        primaryColor.withValues(alpha: 0.10 * beatPulse),
         Colors.transparent,
       ],
       stops: const [0.0, 0.5, 1.0],
@@ -279,8 +279,8 @@ class RadiantPhasePainter extends CustomPainter {
     // Bright inner core
     final innerGlow = RadialGradient(
       colors: [
-        Colors.white.withValues(alpha:0.5 * beatPulse),
-        primaryColor.withValues(alpha:0.4 * beatPulse),
+        Colors.white.withValues(alpha: 0.5 * beatPulse),
+        primaryColor.withValues(alpha: 0.4 * beatPulse),
         Colors.transparent,
       ],
       stops: const [0.0, 0.4, 1.0],
@@ -310,7 +310,7 @@ class RadiantPhasePainter extends CustomPainter {
 
     // Crown rays
     final rayPaint = Paint()
-      ..color = primaryColor.withValues(alpha:0.4 * pulse * phaseProgress)
+      ..color = primaryColor.withValues(alpha: 0.4 * pulse * phaseProgress)
       ..style = PaintingStyle.stroke
       ..strokeWidth = 1.5
       ..strokeCap = StrokeCap.round
@@ -338,8 +338,8 @@ class RadiantPhasePainter extends CustomPainter {
     // Central crown glow
     final crownGlow = RadialGradient(
       colors: [
-        primaryColor.withValues(alpha:0.25 * pulse * phaseProgress),
-        primaryColor.withValues(alpha:0.08 * pulse * phaseProgress),
+        primaryColor.withValues(alpha: 0.25 * pulse * phaseProgress),
+        primaryColor.withValues(alpha: 0.08 * pulse * phaseProgress),
         Colors.transparent,
       ],
       stops: const [0.0, 0.5, 1.0],
@@ -380,7 +380,7 @@ class RadiantPhasePainter extends CustomPainter {
             : primaryColor;
 
         final emberPaint = Paint()
-          ..color = color.withValues(alpha:alpha)
+          ..color = color.withValues(alpha: alpha)
           ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 2);
 
         canvas.drawCircle(Offset(x, y), pSize, emberPaint);
@@ -388,7 +388,7 @@ class RadiantPhasePainter extends CustomPainter {
         // Bright core for larger embers
         if (pSize > 2) {
           final corePaint = Paint()
-            ..color = Colors.white.withValues(alpha:alpha * 0.6)
+            ..color = Colors.white.withValues(alpha: alpha * 0.6)
             ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 1);
           canvas.drawCircle(Offset(x, y), pSize * 0.4, corePaint);
         }

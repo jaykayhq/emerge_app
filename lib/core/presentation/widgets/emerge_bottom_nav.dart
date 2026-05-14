@@ -24,9 +24,7 @@ class EmergeBottomNav extends StatelessWidget {
     final currentIndex = navigationShell.currentIndex;
 
     return Container(
-      decoration: const BoxDecoration(
-        color: EmergeColors.background,
-      ),
+      decoration: const BoxDecoration(color: EmergeColors.background),
       child: SafeArea(
         top: false,
         child: SizedBox(
@@ -132,7 +130,7 @@ class _NavItem extends StatelessWidget {
               padding: const EdgeInsets.all(6),
               decoration: BoxDecoration(
                 color: isSelected
-                    ? EmergeColors.teal.withValues(alpha:0.1)
+                    ? EmergeColors.teal.withValues(alpha: 0.1)
                     : Colors.transparent,
                 borderRadius: BorderRadius.circular(12),
               ),

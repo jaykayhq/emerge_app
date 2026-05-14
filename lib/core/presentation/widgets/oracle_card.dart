@@ -108,10 +108,7 @@ class OracleCard extends StatelessWidget {
               ),
             ),
           ],
-          if (footer != null) ...[
-            const Gap(16),
-            footer!,
-          ],
+          if (footer != null) ...[const Gap(16), footer!],
         ],
       ),
     );

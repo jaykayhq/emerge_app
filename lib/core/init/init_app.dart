@@ -79,19 +79,20 @@ Future<void> initApp() async {
             params,
             () async {
               if (await ConsentInformation.instance.isConsentFormAvailable()) {
-                    ConsentForm.loadAndShowConsentFormIfRequired((formError) async {
-                                  if (formError == null) {
-                                    await MobileAds.instance.initialize();
-                                    debugPrint('✅ AdMob initialized after consent');
-                                  } else {
-                                    debugPrint('⚠️ Consent form error: $formError');
-                                    await MobileAds.instance.initialize(); // Init anyway if error per AdMob docs
-                                  }
+                ConsentForm.loadAndShowConsentFormIfRequired((formError) async {
+                  if (formError == null) {
+                    await MobileAds.instance.initialize();
+                    debugPrint('✅ AdMob initialized after consent');
+                  } else {
+                    debugPrint('⚠️ Consent form error: $formError');
+                    await MobileAds.instance
+                        .initialize(); // Init anyway if error per AdMob docs
+                  }
                 });
               } else {
-                 // No form available, initialize directly
-                 await MobileAds.instance.initialize();
-                 debugPrint('✅ AdMob initialized (no consent required)');
+                // No form available, initialize directly
+                await MobileAds.instance.initialize();
+                debugPrint('✅ AdMob initialized (no consent required)');
               }
             },
             (error) async {

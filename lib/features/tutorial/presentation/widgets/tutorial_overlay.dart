@@ -167,7 +167,7 @@ class _TutorialOverlayState extends State<TutorialOverlay> {
             Positioned.fill(
               child: BackdropFilter(
                 filter: ImageFilter.blur(sigmaX: 5, sigmaY: 5),
-                child: Container(color: Colors.black.withValues(alpha:0.5)),
+                child: Container(color: Colors.black.withValues(alpha: 0.5)),
               ),
             ),
 
@@ -184,10 +184,10 @@ class _TutorialOverlayState extends State<TutorialOverlay> {
                     child: Container(
                       padding: const EdgeInsets.all(24),
                       decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha:0.1),
+                        color: Colors.white.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(24),
                         border: Border.all(
-                          color: Colors.white.withValues(alpha:0.2),
+                          color: Colors.white.withValues(alpha: 0.2),
                         ),
                       ),
                       child: Column(
@@ -309,7 +309,7 @@ class _TutorialHoleStatic extends StatelessWidget {
         // Dark background with hole
         ColorFiltered(
           colorFilter: ColorFilter.mode(
-            Colors.black.withValues(alpha:0.7),
+            Colors.black.withValues(alpha: 0.7),
             BlendMode.srcOut,
           ),
           child: Stack(
@@ -345,7 +345,7 @@ class _TutorialHoleStatic extends StatelessWidget {
                       ),
                       boxShadow: [
                         BoxShadow(
-                          color: const Color(0xFF2BEE79).withValues(alpha:0.5),
+                          color: const Color(0xFF2BEE79).withValues(alpha: 0.5),
                           blurRadius: 15,
                           spreadRadius: 2,
                         ),

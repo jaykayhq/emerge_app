@@ -56,7 +56,10 @@ class RemoteConfigService {
       _remoteConfig.getDouble('goldilocks_threshold_easy');
   double get hardThreshold =>
       _remoteConfig.getDouble('goldilocks_threshold_hard');
-  int get freeHabitLimit => _remoteConfig.getInt('free_habit_limit');
+  int get freeHabitLimit {
+    final limit = _remoteConfig.getInt('free_habit_limit');
+    return limit > 0 ? limit : 5;
+  }
 
   List<String> getAffirmations(String archetype) {
     final jsonString = _remoteConfig.getString('affirmations_json');

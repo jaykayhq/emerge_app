@@ -125,14 +125,14 @@ class _EvolvingSilhouetteWidgetState extends State<EvolvingSilhouetteWidget>
         boxShadow: [
           // Primary glow
           BoxShadow(
-            color: _primaryColor.withValues(alpha:baseAlpha * glowIntensity),
+            color: _primaryColor.withValues(alpha: baseAlpha * glowIntensity),
             blurRadius: baseBlur * glowIntensity,
             spreadRadius: baseSpread * glowIntensity,
           ),
           // Secondary ambient glow (wider, softer)
           if (phase.index >= 2)
             BoxShadow(
-              color: _primaryColor.withValues(alpha:0.03 * glowIntensity),
+              color: _primaryColor.withValues(alpha: 0.03 * glowIntensity),
               blurRadius: 60 * glowIntensity,
               spreadRadius: 20 * glowIntensity,
             ),
@@ -221,15 +221,15 @@ class _EvolvingSilhouetteWidgetState extends State<EvolvingSilhouetteWidget>
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
       decoration: BoxDecoration(
-        color: Colors.black.withValues(alpha:0.65),
+        color: Colors.black.withValues(alpha: 0.65),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: _primaryColor.withValues(alpha:0.35 + phaseIdx * 0.08),
+          color: _primaryColor.withValues(alpha: 0.35 + phaseIdx * 0.08),
           width: 1,
         ),
         boxShadow: [
           BoxShadow(
-            color: _primaryColor.withValues(alpha:0.12 + phaseIdx * 0.04),
+            color: _primaryColor.withValues(alpha: 0.12 + phaseIdx * 0.04),
             blurRadius: 8,
             spreadRadius: 0,
           ),
@@ -247,7 +247,7 @@ class _EvolvingSilhouetteWidgetState extends State<EvolvingSilhouetteWidget>
               color: _primaryColor,
               boxShadow: [
                 BoxShadow(
-                  color: _primaryColor.withValues(alpha:0.6),
+                  color: _primaryColor.withValues(alpha: 0.6),
                   blurRadius: 4,
                 ),
               ],
@@ -328,8 +328,8 @@ class _AttributeAuraOverlayPainter extends CustomPainter {
 
         final gradient = RadialGradient(
           colors: [
-            color.withValues(alpha:glowOpacity),
-            color.withValues(alpha:glowOpacity * 0.3),
+            color.withValues(alpha: glowOpacity),
+            color.withValues(alpha: glowOpacity * 0.3),
             Colors.transparent,
           ],
           stops: const [0.0, 0.6, 1.0],

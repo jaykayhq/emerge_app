@@ -41,13 +41,15 @@ void main() {
     registerFallbackValue(MockDocumentReference());
     registerFallbackValue(MockQuery());
     registerFallbackValue(MockQuerySnapshot());
-    registerFallbackValue(AppNotification(
-      id: '',
-      type: AppNotificationType.friendRequest,
-      title: '',
-      body: '',
-      createdAt: DateTime(2025),
-    ));
+    registerFallbackValue(
+      AppNotification(
+        id: '',
+        type: AppNotificationType.friendRequest,
+        title: '',
+        body: '',
+        createdAt: DateTime(2025),
+      ),
+    );
     registerFallbackValue('');
   });
 
@@ -60,30 +62,49 @@ void main() {
     service = SocialNotificationService(mockFirestore);
 
     // Setup basic chain
-    when(() => mockFirestore.collection('users')).thenReturn(mockUsersCollection);
+    when(
+      () => mockFirestore.collection('users'),
+    ).thenReturn(mockUsersCollection);
     when(() => mockFirestore.collection(any())).thenReturn(mockUsersCollection);
-    
+
     when(() => mockUsersCollection.doc(any())).thenReturn(mockUserDocRef);
-    
-    when(() => mockUserDocRef.collection('notifications')).thenReturn(mockNotificationsCollection);
-    when(() => mockUserDocRef.collection(any())).thenReturn(mockNotificationsCollection);
-    
-    when(() => mockNotificationsCollection.doc(any())).thenReturn(mockNotificationDocRef);
-    when(() => mockNotificationsCollection.add(any())).thenAnswer((_) async => mockNotificationDocRef);
-    
+
+    when(
+      () => mockUserDocRef.collection('notifications'),
+    ).thenReturn(mockNotificationsCollection);
+    when(
+      () => mockUserDocRef.collection(any()),
+    ).thenReturn(mockNotificationsCollection);
+
+    when(
+      () => mockNotificationsCollection.doc(any()),
+    ).thenReturn(mockNotificationDocRef);
+    when(
+      () => mockNotificationsCollection.add(any()),
+    ).thenAnswer((_) async => mockNotificationDocRef);
+
     // Mutation methods
     when(() => mockUserDocRef.set(any(), any())).thenAnswer((_) async {});
     when(() => mockUserDocRef.update(any())).thenAnswer((_) async {});
-    
-    when(() => mockNotificationDocRef.set(any(), any())).thenAnswer((_) async {});
+
+    when(
+      () => mockNotificationDocRef.set(any(), any()),
+    ).thenAnswer((_) async {});
     when(() => mockNotificationDocRef.update(any())).thenAnswer((_) async {});
     when(() => mockNotificationDocRef.delete()).thenAnswer((_) async {});
-    
+
     // Query methods
     final mockQuery = MockQuery();
     final mockQuerySnapshot = MockQuerySnapshot();
-    when(() => mockNotificationsCollection.get()).thenAnswer((_) async => mockQuerySnapshot);
-    when(() => mockNotificationsCollection.where(any(), isEqualTo: any(named: 'isEqualTo'))).thenReturn(mockQuery);
+    when(
+      () => mockNotificationsCollection.get(),
+    ).thenAnswer((_) async => mockQuerySnapshot);
+    when(
+      () => mockNotificationsCollection.where(
+        any(),
+        isEqualTo: any(named: 'isEqualTo'),
+      ),
+    ).thenReturn(mockQuery);
     when(() => mockQuery.get()).thenAnswer((_) async => mockQuerySnapshot);
     when(() => mockQuerySnapshot.docs).thenReturn([]);
 
@@ -105,9 +126,9 @@ void main() {
         body: 'Test',
         createdAt: DateTime.now(),
       );
-      
+
       await service.sendNotification('user1', notification);
-      
+
       verify(() => mockNotificationsCollection.add(any())).called(1);
       verify(() => mockUserDocRef.set(any(), any())).called(1);
     });

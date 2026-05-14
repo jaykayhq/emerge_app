@@ -35,7 +35,9 @@ class DriftLeaderboardRepository implements LeaderboardRepository {
   }
 
   @override
-  Stream<List<LeaderboardEntry>> watchChallengeLeaderboard([String? challengeId]) {
+  Stream<List<LeaderboardEntry>> watchChallengeLeaderboard([
+    String? challengeId,
+  ]) {
     return const Stream.empty();
   }
 
@@ -48,31 +50,53 @@ class DriftLeaderboardRepository implements LeaderboardRepository {
     String? userName,
     String? clubId,
     String? challengeId,
+    bool isIncrement = false,
   }) async {
     try {
       if (clubId != null && clubId.isNotEmpty) {
         final id = '${userId}_$clubId';
-        await _db.leaderboardEntriesDao.insertFromData(
-          id: id,
-          tribeId: clubId,
-          userId: userId,
-          userName: userName ?? 'Anonymous',
-          xp: xp,
-          level: level,
-          archetype: archetype.name,
-          updatedAt: DateTime.now().toIso8601String(),
-        );
+        final nowStr = DateTime.now().toUtc().toIso8601String();
 
-        await _syncEngine.enqueueSet(
-          collectionPath: 'club_leaderboards',
-          documentId: id,
-          data: {
-            'userId': userId,
-            'xp': xp,
-            'level': level,
-            'archetype': archetype.name,
-          },
-        );
+        if (isIncrement) {
+          await _db.leaderboardEntriesDao.incrementXp(id, xp, level);
+
+          await _syncEngine.enqueueUpdate(
+            collectionPath: 'club_leaderboards',
+            documentId: id,
+            data: {
+              'xp': {'__type__': 'increment', 'value': xp},
+              'level': level,
+              if (userName != null)
+                'userName': userName, // ignore: use_null_aware_elements
+              'lastUpdated': nowStr,
+            },
+          );
+        } else {
+          await _db.leaderboardEntriesDao.insertFromData(
+            id: id,
+            tribeId: clubId,
+            userId: userId,
+            userName: userName ?? 'Anonymous',
+            xp: xp,
+            level: level,
+            archetype: archetype.name,
+            updatedAt: nowStr,
+          );
+
+          await _syncEngine.enqueueSet(
+            collectionPath: 'club_leaderboards',
+            documentId: id,
+            data: {
+              'userId': userId,
+              'userName': userName ?? 'Anonymous',
+              'clubId': clubId,
+              'xp': xp,
+              'level': level,
+              'archetype': archetype.name,
+              'lastUpdated': nowStr,
+            },
+          );
+        }
       }
       return const Right(unit);
     } catch (e) {

@@ -8,10 +8,7 @@ class MomentumService {
   /// Called when a habit is completed today.
   Habit applyCompletion(Habit habit) {
     final newScore = (habit.momentumScore + _completionBoost).clamp(0, 100);
-    return habit.copyWith(
-      momentumScore: newScore,
-      consecutiveMisses: 0,
-    );
+    return habit.copyWith(momentumScore: newScore, consecutiveMisses: 0);
   }
 
   /// Called once per day for each habit NOT completed that day.
@@ -22,16 +19,16 @@ class MomentumService {
   /// Called when multiple days are missed.
   Habit applyMultiDayDecay(Habit habit, int daysMissed) {
     if (daysMissed <= 0) return habit;
-    
+
     int newScore = habit.momentumScore;
     int consecutiveMisses = habit.consecutiveMisses;
-    
+
     for (int i = 0; i < daysMissed; i++) {
       final decayAmount = consecutiveMisses > 0 ? _missDecay : _idleDecay;
       newScore = (newScore - decayAmount).clamp(0, 100);
       consecutiveMisses++;
     }
-    
+
     return habit.copyWith(
       momentumScore: newScore,
       consecutiveMisses: consecutiveMisses,
@@ -49,12 +46,18 @@ class MomentumService {
   /// Human-readable momentum label for UI.
   String momentumLabel(HabitStreakState state) {
     switch (state) {
-      case HabitStreakState.onFire:   return "On Fire 🔥";
-      case HabitStreakState.strong:   return "Strong";
-      case HabitStreakState.building: return "Building";
-      case HabitStreakState.atRisk:   return "At Risk";
-      case HabitStreakState.recovery: return "Recovery";
-      case HabitStreakState.reset:    return "Fresh Start";
+      case HabitStreakState.onFire:
+        return "On Fire 🔥";
+      case HabitStreakState.strong:
+        return "Strong";
+      case HabitStreakState.building:
+        return "Building";
+      case HabitStreakState.atRisk:
+        return "At Risk";
+      case HabitStreakState.recovery:
+        return "Recovery";
+      case HabitStreakState.reset:
+        return "Fresh Start";
     }
   }
 }

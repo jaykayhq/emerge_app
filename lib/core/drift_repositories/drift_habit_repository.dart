@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:emerge_app/core/drift/database.dart';
+import 'package:emerge_app/features/social/domain/services/club_activity_service.dart';
 import 'package:emerge_app/core/error/failure.dart';
 import 'package:emerge_app/core/game_loop/game_loop_engine.dart';
 import 'package:emerge_app/core/sync/sync_engine.dart';
@@ -8,19 +9,23 @@ import 'package:emerge_app/features/habits/domain/models/habit_activity.dart';
 import 'package:emerge_app/features/habits/domain/repositories/habit_repository.dart';
 import 'package:emerge_app/features/blueprints/domain/models/blueprint.dart';
 import 'package:fpdart/fpdart.dart';
+import 'package:flutter/material.dart';
 
 class DriftHabitRepository implements HabitRepository {
   final AppDatabase _db;
   final LocalGameLoopEngine _engine;
   final EnhancedSyncEngine _syncEngine;
+  final SocialActivityService _socialService;
 
   DriftHabitRepository({
     required AppDatabase db,
     required LocalGameLoopEngine gameLoopEngine,
     required EnhancedSyncEngine syncEngine,
-  })  : _db = db,
-        _engine = gameLoopEngine,
-        _syncEngine = syncEngine;
+    required SocialActivityService socialService,
+  }) : _db = db,
+       _engine = gameLoopEngine,
+       _syncEngine = syncEngine,
+       _socialService = socialService;
 
   @override
   Stream<List<Habit>> watchHabits(String userId) {
@@ -49,6 +54,10 @@ class DriftHabitRepository implements HabitRepository {
         isArchived: habit.isArchived ? 1 : 0,
         createdAt: habit.createdAt.toIso8601String(),
         updatedAt: DateTime.now().toIso8601String(),
+        timeOfDayPreference: habit.timeOfDayPreference?.name,
+        reminderTime: habit.reminderTime != null
+            ? '${habit.reminderTime!.hour}:${habit.reminderTime!.minute.toString().padLeft(2, '0')}'
+            : null,
       );
 
       await _syncEngine.enqueueSet(
@@ -83,6 +92,10 @@ class DriftHabitRepository implements HabitRepository {
         isArchived: habit.isArchived ? 1 : 0,
         createdAt: habit.createdAt.toIso8601String(),
         updatedAt: DateTime.now().toIso8601String(),
+        timeOfDayPreference: habit.timeOfDayPreference?.name,
+        reminderTime: habit.reminderTime != null
+            ? '${habit.reminderTime!.hour}:${habit.reminderTime!.minute.toString().padLeft(2, '0')}'
+            : null,
       );
 
       await _syncEngine.enqueueUpdate(
@@ -125,7 +138,10 @@ class DriftHabitRepository implements HabitRepository {
   }
 
   @override
-  Future<Either<Failure, bool>> completeHabit(String habitId, DateTime date) async {
+  Future<Either<Failure, bool>> completeHabit(
+    String habitId,
+    DateTime date,
+  ) async {
     try {
       final habitRow = await _db.habitsDao.getHabit(habitId);
       if (habitRow == null) return Left(ServerFailure('Habit not found'));
@@ -139,16 +155,22 @@ class DriftHabitRepository implements HabitRepository {
 
       final diffMultiplier = _difficultyMultiplier(habitRow.difficulty);
 
-      final challenges = await _db.challengeProgressDao.getActive(habitRow.userId);
+      final challenges = await _db.challengeProgressDao.getActive(
+        habitRow.userId,
+      );
       final challengeInputs = challenges
-          .where((c) => c.attribute == null || c.attribute == habitRow.attribute)
-          .map((c) => ChallengeProgressInput(
-                challengeId: c.challengeId,
-                currentDay: c.currentDay,
-                totalDays: c.totalDays,
-                xpReward: c.xpReward,
-                attribute: c.attribute,
-              ))
+          .where(
+            (c) => c.attribute == null || c.attribute == habitRow.attribute,
+          )
+          .map(
+            (c) => ChallengeProgressInput(
+              challengeId: c.challengeId,
+              currentDay: c.currentDay,
+              totalDays: c.totalDays,
+              xpReward: c.xpReward,
+              attribute: c.attribute,
+            ),
+          )
           .toList();
 
       final result = _engine.processHabitCompletion(
@@ -222,9 +244,9 @@ class DriftHabitRepository implements HabitRepository {
         // Update tribe contribution stats
         if (statsRow.archetype != null && statsRow.archetype != 'none') {
           final tribeRows = await _db.tribeStatsDao.getAll();
-          final userTribe = tribeRows.where(
-            (t) => t.archetypeId == statsRow.archetype,
-          ).firstOrNull;
+          final userTribe = tribeRows
+              .where((t) => t.archetypeId == statsRow.archetype)
+              .firstOrNull;
           if (userTribe != null) {
             tribeId = userTribe.tribeId;
             await _db.tribeStatsDao.incrementContribution(
@@ -237,68 +259,56 @@ class DriftHabitRepository implements HabitRepository {
         }
       });
 
-      // Enqueue user stats sync
-      await _syncEngine.enqueueSet(
+      final nowStr = now.toIso8601String();
+
+      // Delegate all social/global activity logging to the unified service
+      // This handles: user_activity, tribes/activity, global_activities, and leaderboard updates.
+      await _socialService.logHabitCompletion(
+        userId: statsRow.userId,
+        userName: statsRow.displayName ?? 'Anonymous',
+        archetype: statsRow.archetype ?? 'none',
+        habitId: habitId,
+        habitTitle: habitRow.title,
+        streakDay: result.newStreak,
+        attribute: attr,
+        xpGained: result.xpGained,
+        currentLevel: newLevel,
+      );
+
+      // Enqueue user stats sync via update to preserve other fields (markers ensure atomic changes)
+      await _syncEngine.enqueueUpdate(
         collectionPath: 'user_stats',
         documentId: statsRow.userId,
         data: {
-          'totalXp': newTotalXp,
-          'level': newLevel,
-          'streak': result.newStreak,
-          '${attr}Xp': _getAttributeXp(statsRow, attr) + result.xpGained,
-          'archetype': statsRow.archetype,
-          'updatedAt': now.toIso8601String(),
+          'avatarStats.totalXp': {
+            '__type__': 'increment',
+            'value': result.xpGained,
+          },
+          'avatarStats.level': newLevel,
+          'avatarStats.streak': result.newStreak,
+          'avatarStats.${attr}Xp': {
+            '__type__': 'increment',
+            'value': result.xpGained,
+          },
+          'worldState.entropy': {
+            '__type__': 'increment',
+            'value': -result.worldHealthDelta,
+          }, // worldHealthDelta is positive for improvement
+          'updatedAt': nowStr,
         },
       );
 
-      // Enqueue tribe contribution sync
+      // 4. Update Tribe global stats in Firestore
       if (tribeId != null) {
-        final leaderboardId = '${statsRow.userId}_$tribeId';
-        final nowStr = now.toIso8601String();
-
-        await _syncEngine.enqueueSet(
-          collectionPath: 'tribes/$tribeId/contributors',
-          documentId: statsRow.userId,
+        await _syncEngine.enqueueUpdate(
+          collectionPath: 'tribes',
+          documentId: tribeId!,
           data: {
-            'userId': statsRow.userId,
-            'xpContributed': _getAttributeXp(statsRow, 'strength') +
-                _getAttributeXp(statsRow, 'intellect') +
-                _getAttributeXp(statsRow, 'vitality') +
-                _getAttributeXp(statsRow, 'creativity') +
-                _getAttributeXp(statsRow, 'focus') +
-                _getAttributeXp(statsRow, 'spirit'),
-            'habitsCompleted': 1,
-            'lastActivity': nowStr,
+            'totalXp': {'__type__': 'increment', 'value': result.xpGained},
+            'totalHabitsCompleted': {'__type__': 'increment', 'value': 1},
+            'lastStatsSync': {'__type__': 'serverTimestamp'},
           },
         );
-
-        await _syncEngine.enqueueSet(
-          collectionPath: 'club_leaderboards',
-          documentId: leaderboardId,
-          data: {
-            'userId': statsRow.userId,
-            'tribeId': tribeId,
-            'xp': newTotalXp,
-            'level': newLevel,
-            'archetype': statsRow.archetype,
-            'lastUpdated': nowStr,
-          },
-        );
-
-        final tribeStats = await _db.tribeStatsDao.getStats(tribeId!);
-        if (tribeStats != null) {
-          await _syncEngine.enqueueUpdate(
-            collectionPath: 'tribes',
-            documentId: tribeId!,
-            data: {
-              'totalXp': tribeStats.totalXp,
-              'totalHabitsCompleted': tribeStats.totalHabitsCompleted,
-              'totalChallengesCompleted': tribeStats.totalChallengesCompleted,
-              'memberCount': tribeStats.memberCount,
-              'updatedAt': nowStr,
-            },
-          );
-        }
       }
 
       return const Right(true);
@@ -320,20 +330,28 @@ class DriftHabitRepository implements HabitRepository {
   }
 
   @override
-  Future<List<HabitActivity>> getActivity(String userId, DateTime start, DateTime end) async {
+  Future<List<HabitActivity>> getActivity(
+    String userId,
+    DateTime start,
+    DateTime end,
+  ) async {
     final rows = await _db.habitCompletionsDao.getBetweenDates(
       userId,
       start.toIso8601String(),
       end.toIso8601String(),
     );
 
-    return rows.map((r) => HabitActivity(
-      id: r.id,
-      habitId: r.habitId,
-      userId: r.userId,
-      date: DateTime.parse(r.completedAt),
-      type: 'habit_completion',
-    )).toList();
+    return rows
+        .map(
+          (r) => HabitActivity(
+            id: r.id,
+            habitId: r.habitId,
+            userId: r.userId,
+            date: DateTime.parse(r.completedAt),
+            type: 'habit_completion',
+          ),
+        )
+        .toList();
   }
 
   @override
@@ -346,7 +364,8 @@ class DriftHabitRepository implements HabitRepository {
       final habits = blueprint.habits;
       for (int i = 0; i < habits.length; i++) {
         final h = habits[i];
-        final habitId = '${blueprint.id}_${i}_${DateTime.now().millisecondsSinceEpoch}';
+        final habitId =
+            '${blueprint.id}_${i}_${DateTime.now().millisecondsSinceEpoch}';
         await _db.habitsDao.insertFromData(
           id: habitId,
           userId: userId,
@@ -374,6 +393,26 @@ class DriftHabitRepository implements HabitRepository {
   }
 
   Habit _rowToHabit(HabitsTableData row) {
+    TimeOfDayPreference? timePref;
+    if (row.timeOfDayPreference != null) {
+      timePref = TimeOfDayPreference.values.firstWhere(
+        (e) => e.name == row.timeOfDayPreference,
+        orElse: () => TimeOfDayPreference.anytime,
+      );
+    }
+
+    TimeOfDay? remTime;
+    if (row.reminderTime != null) {
+      final parts = row.reminderTime!.split(':');
+      if (parts.length == 2) {
+        final hour = int.tryParse(parts[0]);
+        final minute = int.tryParse(parts[1]);
+        if (hour != null && minute != null) {
+          remTime = TimeOfDay(hour: hour, minute: minute);
+        }
+      }
+    }
+
     return Habit(
       id: row.id,
       userId: row.userId,
@@ -402,6 +441,8 @@ class DriftHabitRepository implements HabitRepository {
       isArchived: row.isArchived == 1,
       momentumScore: row.momentumScore,
       consecutiveMisses: row.consecutiveMisses,
+      timeOfDayPreference: timePref,
+      reminderTime: remTime,
     );
   }
 
@@ -416,27 +457,23 @@ class DriftHabitRepository implements HabitRepository {
       'longestStreak': habit.longestStreak,
       'isArchived': habit.isArchived,
       'createdAt': habit.createdAt.toIso8601String(),
+      'timeOfDayPreference': habit.timeOfDayPreference?.name,
+      'reminderTime': habit.reminderTime != null
+          ? '${habit.reminderTime!.hour}:${habit.reminderTime!.minute.toString().padLeft(2, '0')}'
+          : null,
     };
   }
 
   double _difficultyMultiplier(String? difficulty) {
     switch (difficulty) {
-      case 'easy': return 1.0;
-      case 'medium': return 2.0;
-      case 'hard': return 3.0;
-      default: return 2.0;
-    }
-  }
-
-  int _getAttributeXp(UserStatsTableData stats, String attribute) {
-    switch (attribute) {
-      case 'strength': return stats.strengthXp;
-      case 'intellect': return stats.intellectXp;
-      case 'vitality': return stats.vitalityXp;
-      case 'creativity': return stats.creativityXp;
-      case 'focus': return stats.focusXp;
-      case 'spirit': return stats.spiritXp;
-      default: return 0;
+      case 'easy':
+        return 1.0;
+      case 'medium':
+        return 2.0;
+      case 'hard':
+        return 3.0;
+      default:
+        return 2.0;
     }
   }
 }

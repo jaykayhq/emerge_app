@@ -15,6 +15,7 @@ import 'package:emerge_app/features/habits/domain/services/momentum_service.dart
 import 'package:emerge_app/features/habits/presentation/providers/cue_providers.dart';
 import 'package:emerge_app/features/monetization/presentation/providers/subscription_provider.dart';
 import 'package:emerge_app/features/gamification/presentation/providers/user_stats_providers.dart';
+import 'package:emerge_app/features/social/presentation/providers/tribes_provider.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'habit_providers.g.dart';
@@ -35,7 +36,13 @@ HabitRepository habitRepository(Ref ref) {
   final db = ref.watch(appDatabaseProvider);
   final engine = LocalGameLoopEngine();
   final syncEngine = ref.watch(enhancedSyncEngineProvider);
-  return DriftHabitRepository(db: db, gameLoopEngine: engine, syncEngine: syncEngine);
+  final socialService = ref.watch(socialActivityServiceProvider);
+  return DriftHabitRepository(
+    db: db,
+    gameLoopEngine: engine,
+    syncEngine: syncEngine,
+    socialService: socialService,
+  );
 }
 
 @riverpod
@@ -64,14 +71,23 @@ Stream<List<Habit>> habits(Ref ref) {
 
             // Normalize to midnight for accurate calendar day counting
             final todayMidnight = DateTime(today.year, today.month, today.day);
-            final baseMidnight = DateTime(baseDate.year, baseDate.month, baseDate.day);
-            final calendarDaysDifference = todayMidnight.difference(baseMidnight).inDays;
+            final baseMidnight = DateTime(
+              baseDate.year,
+              baseDate.month,
+              baseDate.day,
+            );
+            final calendarDaysDifference = todayMidnight
+                .difference(baseMidnight)
+                .inDays;
 
             // If difference is 1, they completed/created it yesterday (no miss yet)
             // If difference is 2+, they missed at least yesterday
             if (calendarDaysDifference >= 2) {
               final missedDays = calendarDaysDifference - 1;
-              final decayed = momentumService.applyMultiDayDecay(habit, missedDays);
+              final decayed = momentumService.applyMultiDayDecay(
+                habit,
+                missedDays,
+              );
 
               if (decayed.momentumScore != habit.momentumScore ||
                   decayed.consecutiveMisses != habit.consecutiveMisses) {
@@ -85,10 +101,14 @@ Stream<List<Habit>> habits(Ref ref) {
           if (hasChanges) {
             final updated = await repository.watchHabits(user.id).first;
             if (ref.mounted) {
-              await ref.read(userStatsControllerProvider).recalculateWorldHealth(updated);
+              await ref
+                  .read(userStatsControllerProvider)
+                  .recalculateWorldHealth(updated);
             }
           } else {
-            await ref.read(userStatsControllerProvider).recalculateWorldHealth(habitsList);
+            await ref
+                .read(userStatsControllerProvider)
+                .recalculateWorldHealth(habitsList);
           }
         } catch (e, s) {
           AppLogger.e('Error running daily decay', e, s);
@@ -124,7 +144,9 @@ Future<void> createHabit(Ref ref, Habit habit) async {
           .read(remoteConfigServiceProvider)
           .freeHabitLimit;
 
-      debugPrint('createHabit check: ${filtered.length} active habits, limit=$freeHabitLimit');
+      debugPrint(
+        'createHabit check: ${filtered.length} active habits, limit=$freeHabitLimit',
+      );
 
       if (filtered.length >= freeHabitLimit) {
         // Limit exceeded — check premium (only slow path, rare case)
@@ -216,7 +238,9 @@ Future<HabitCompletionResult> completeHabit(Ref ref, String habitId) async {
 
               // Recalculate world health after completion
               try {
-                final currentHabits = await repository.watchHabits(userId).first;
+                final currentHabits = await repository
+                    .watchHabits(userId)
+                    .first;
                 if (ref.mounted) {
                   await ref
                       .read(userStatsControllerProvider)

@@ -60,12 +60,14 @@ class _SocialDiscoverTabState extends ConsumerState<SocialDiscoverTab> {
         steps: [
           TutorialStepInfo(
             title: 'Creator Blueprints',
-            description: 'Explore complete behavioral systems designed by top performers. Adopt them to fast-track your identity shift.',
+            description:
+                'Explore complete behavioral systems designed by top performers. Adopt them to fast-track your identity shift.',
             targetKey: _blueprintsKey,
           ),
           TutorialStepInfo(
             title: 'Choose Your Path',
-            description: 'Browse through different categories of blueprints to find the one that resonates with your future self.',
+            description:
+                'Browse through different categories of blueprints to find the one that resonates with your future self.',
             targetKey: _blueprintsKey,
           ),
         ],
@@ -106,18 +108,18 @@ class _SocialDiscoverTabState extends ConsumerState<SocialDiscoverTab> {
           },
           color: EmergeColors.teal,
           child: ListView(
-          padding: const EdgeInsets.only(top: 16, bottom: 40),
-          children: categories.asMap().entries.map((entry) {
-            final category = entry.value;
-            final items = grouped[category]!;
-            return _CategoryStrip(
-              key: entry.key == 0 ? _blueprintsKey : null,
-              title: category,
-              items: items,
-            );
-          }).toList(),
-        ),
-      );
+            padding: const EdgeInsets.only(top: 16, bottom: 40),
+            children: categories.asMap().entries.map((entry) {
+              final category = entry.value;
+              final items = grouped[category]!;
+              return _CategoryStrip(
+                key: entry.key == 0 ? _blueprintsKey : null,
+                title: category,
+                items: items,
+              );
+            }).toList(),
+          ),
+        );
       },
       loading: () => _buildShimmerLoading(),
       error: (err, stack) => Center(
@@ -148,7 +150,11 @@ class _SocialDiscoverTabState extends ConsumerState<SocialDiscoverTab> {
               itemCount: 3,
               itemBuilder: (context, i) => Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 8),
-                child: SkeletonShimmer(width: 240, height: 200, borderRadius: 20),
+                child: SkeletonShimmer(
+                  width: 240,
+                  height: 200,
+                  borderRadius: 20,
+                ),
               ),
             ),
           ),
@@ -184,7 +190,11 @@ class _CategoryStrip extends StatelessWidget {
                   letterSpacing: 1.2,
                 ),
               ),
-              const Icon(Icons.arrow_forward_ios_rounded, color: Colors.white24, size: 14),
+              const Icon(
+                Icons.arrow_forward_ios_rounded,
+                color: Colors.white24,
+                size: 14,
+              ),
             ],
           ),
         ),
@@ -236,20 +246,30 @@ class _BlueprintStripCard extends StatelessWidget {
                     // Background Image
                     blueprint.imageUrl != null
                         ? (blueprint.imageUrl!.startsWith('images/')
-                            ? Image.asset(blueprint.imageUrl!, fit: BoxFit.cover)
-                            : Image.network(blueprint.imageUrl!, fit: BoxFit.cover))
+                              ? Image.asset(
+                                  blueprint.imageUrl!,
+                                  fit: BoxFit.cover,
+                                )
+                              : Image.network(
+                                  blueprint.imageUrl!,
+                                  fit: BoxFit.cover,
+                                ))
                         : Container(
                             decoration: BoxDecoration(
                               gradient: LinearGradient(
                                 colors: [
-                                  Colors.white.withValues(alpha:0.1),
-                                  Colors.white.withValues(alpha:0.05),
+                                  Colors.white.withValues(alpha: 0.1),
+                                  Colors.white.withValues(alpha: 0.05),
                                 ],
                               ),
                             ),
-                            child: const Icon(Icons.auto_awesome, color: Colors.white10, size: 40),
+                            child: const Icon(
+                              Icons.auto_awesome,
+                              color: Colors.white10,
+                              size: 40,
+                            ),
                           ),
-                    
+
                     // Shadow Overlay
                     Container(
                       decoration: BoxDecoration(
@@ -258,13 +278,11 @@ class _BlueprintStripCard extends StatelessWidget {
                           end: Alignment.bottomCenter,
                           colors: [
                             Colors.transparent,
-                            Colors.black.withValues(alpha:0.5),
+                            Colors.black.withValues(alpha: 0.5),
                           ],
                         ),
                       ),
                     ),
-
-
                   ],
                 ),
               ),
@@ -304,7 +322,7 @@ class _EmptyState extends StatelessWidget {
           Icon(
             Icons.explore_outlined,
             size: 64,
-            color: Colors.white.withValues(alpha:0.1),
+            color: Colors.white.withValues(alpha: 0.1),
           ),
           const Gap(16),
           const Text(

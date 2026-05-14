@@ -6,6 +6,7 @@ import 'package:emerge_app/features/gamification/presentation/providers/user_sta
 import 'package:emerge_app/features/social/domain/models/challenge.dart';
 import 'package:emerge_app/features/social/domain/models/challenge_catalog.dart';
 import 'package:emerge_app/features/social/domain/repositories/challenge_repository.dart';
+import 'package:emerge_app/core/sync/sync_providers.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
@@ -14,7 +15,8 @@ part 'challenge_provider.g.dart';
 final challengeRepositoryProvider = Provider<ChallengeRepository>((ref) {
   final db = ref.watch(appDatabaseProvider);
   final engine = LocalGameLoopEngine();
-  return DriftChallengeRepository(db, engine);
+  final syncEngine = ref.watch(enhancedSyncEngineProvider);
+  return DriftChallengeRepository(db, engine, syncEngine);
 });
 
 @Riverpod(keepAlive: true)
@@ -69,8 +71,10 @@ final challengeLeaderboardProvider =
       return repository.getLeaderboard(challengeId);
     });
 
-final challengeByIdProvider =
-    FutureProvider.family<Challenge?, String>((ref, id) async {
+final challengeByIdProvider = FutureProvider.family<Challenge?, String>((
+  ref,
+  id,
+) async {
   final repository = ref.read(challengeRepositoryProvider);
   return repository.getChallengeById(id);
 });

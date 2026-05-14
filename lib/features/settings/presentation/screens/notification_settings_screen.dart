@@ -78,9 +78,7 @@ class NotificationSettingsScreen extends ConsumerWidget {
                     settings.copyWith(notificationsEnabled: val),
                   ),
                   activeThumbColor: EmergeColors.teal,
-                  activeTrackColor: EmergeColors.teal.withValues(
-                    alpha: 0.5,
-                  ),
+                  activeTrackColor: EmergeColors.teal.withValues(alpha: 0.5),
                 ),
               ],
             ),
@@ -268,9 +266,9 @@ class NotificationSettingsScreen extends ConsumerWidget {
         value: value,
         onChanged: onChanged,
         activeThumbColor: EmergeColors.teal,
-        activeTrackColor: EmergeColors.teal.withValues(alpha:0.5),
+        activeTrackColor: EmergeColors.teal.withValues(alpha: 0.5),
         inactiveThumbColor: Colors.grey,
-        inactiveTrackColor: Colors.grey.withValues(alpha:0.3),
+        inactiveTrackColor: Colors.grey.withValues(alpha: 0.3),
       ),
     );
   }

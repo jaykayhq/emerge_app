@@ -113,9 +113,13 @@ class _TribeTabContentState extends ConsumerState<TribeTabContent> {
                 : -1;
             final userClub = matchingIndex != -1
                 ? clubs[matchingIndex]
-                : clubs.where(
-                    (club) => club.archetypeId == null || club.archetypeId!.isEmpty,
-                  ).firstOrNull;
+                : clubs
+                      .where(
+                        (club) =>
+                            club.archetypeId == null ||
+                            club.archetypeId!.isEmpty,
+                      )
+                      .firstOrNull;
 
             if (userClub == null) {
               return const _EmptyState(

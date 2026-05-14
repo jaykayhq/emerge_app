@@ -20,6 +20,13 @@
       },
       "description": "RevenueCat Stripe API key for Web",
       "valueType": "STRING"
+    },
+    "free_habit_limit": {
+      "defaultValue": {
+        "value": "5"
+      },
+      "description": "Maximum number of active habits on the free tier",
+      "valueType": "NUMBER"
     }
   }
 }

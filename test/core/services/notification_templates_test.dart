@@ -9,13 +9,13 @@ void main() {
         const habit = 'Test Habit';
         final cases = {
           UserArchetype.athlete:
-              '💪 Your journey to greatness begins! "$habit" is now part of your training.',
+              '🏃‍➡️ Your journey to greatness begins! "$habit" is now part of your training.',
           UserArchetype.scholar:
-              '📚 A new quest for knowledge begins! Mastering "$habit" starts now.',
+              '📖 A new quest for knowledge begins! Mastering "$habit" starts now.',
           UserArchetype.creator:
-              '🎨 Inspiration strikes! Your creative journey with "$habit" starts today.',
+              '🖌️ Inspiration strikes! Your creative journey with "$habit" starts today.',
           UserArchetype.stoic:
-              '🏛️ The path to mastery begins with a single step. "$habit" is your practice.',
+              '🧘 The path to mastery begins with a single step. "$habit" is your practice.',
           UserArchetype.zealot:
               '🔥 A sacred commitment! Your devotion to "$habit" has been consecrated.',
           UserArchetype.none:
@@ -42,13 +42,13 @@ void main() {
         const habit = 'Test Habit';
         final cases = {
           UserArchetype.athlete:
-              '💪 Time to train! Your "$habit" session awaits. Make yourself proud!',
+              '🏃‍➡️ Time to train! Your "$habit" session awaits. Make yourself proud!',
           UserArchetype.scholar:
-              '📚 Knowledge calls! Your "$habit" study session is ready. Begin the quest.',
+              '📖 Knowledge calls! Your "$habit" study session is ready. Begin the quest.',
           UserArchetype.creator:
-              '🎨 Inspiration strikes! Time for your "$habit" creative flow. Create today.',
+              '🖌️ Inspiration strikes! Time for your "$habit" creative flow. Create today.',
           UserArchetype.stoic:
-              '🏛️ Master yourself! Your "$habit" practice awaits. Show your discipline.',
+              '🧘 Master yourself! Your "$habit" practice awaits. Show your discipline.',
           UserArchetype.zealot:
               '🔥 Stay the path! Your sacred "$habit" devotion calls. Honor your commitment.',
           UserArchetype.none:

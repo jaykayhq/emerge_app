@@ -1,7 +1,7 @@
 import 'package:emerge_app/core/theme/archetype_theme.dart';
 import 'package:emerge_app/features/auth/domain/entities/user_extension.dart';
 import 'package:emerge_app/features/habits/domain/entities/habit.dart';
-import 'package:emerge_app/features/onboarding/presentation/providers/onboarding_provider.dart';
+import 'package:emerge_app/features/onboarding/presentation/providers/onboarding_state_notifier.dart';
 import 'package:emerge_app/features/gamification/presentation/providers/user_stats_providers.dart';
 
 import 'package:flutter/material.dart';
@@ -44,31 +44,27 @@ class _FirstHabitScreenState extends ConsumerState<FirstHabitScreen> {
 
     try {
       // Map selected anchor back to preference for the domain model
-      final resolvedPreference = _selectedHabit?.timeOfDayPreference ?? 
+      final resolvedPreference =
+          _selectedHabit?.timeOfDayPreference ??
           _getPreferenceForAnchor(_selectedAnchor!);
 
-      // Store habit info in onboarding state
-      ref.read(onboardingStateControllerProvider.notifier).update(
-            (s) => s.copyWith(
-              habitStacks: [
-                HabitStack(
-                  anchorId: 'onboarding_anchor',
-                  habitId: habitTitle,
-                  defaultTime: _selectedHabit?.defaultTime != null
-                      ? '${_selectedHabit!.defaultTime!.hour}:${_selectedHabit!.defaultTime!.minute}'
-                      : null,
-                  timeOfDayPreference: resolvedPreference.name,
-                ),
-              ],
-              anchors: [_selectedAnchor!],
-            ),
-          );
+      final habitStack = HabitStack(
+        anchorId: 'onboarding_anchor',
+        habitId: habitTitle,
+        defaultTime: _selectedHabit?.defaultTime != null
+            ? '${_selectedHabit!.defaultTime!.hour}:${_selectedHabit!.defaultTime!.minute}'
+            : null,
+        timeOfDayPreference: resolvedPreference.name,
+      );
 
-      // PERSIST IMMEDIATELY: Create the habit in Firestore as requested
-      await ref.read(onboardingControllerProvider.notifier).createOnboardingHabits();
+      // Add habit stack to the enhanced onboarding state
+      ref.read(enhancedOnboardingProvider.notifier).addHabitStack(habitStack);
+
+      // Add selected anchor
+      ref.read(enhancedOnboardingProvider.notifier).addAnchor(_selectedAnchor!);
 
       // PERSIST PROGRESS: Complete the third milestone (First Habit) - Index 2
-      await ref.read(onboardingControllerProvider.notifier).completeMilestone(2);
+      await ref.read(enhancedOnboardingProvider.notifier).completeMilestone(2);
 
       // Navigate to world reveal (which then goes to dashboard)
       if (mounted) {
@@ -77,9 +73,9 @@ class _FirstHabitScreenState extends ConsumerState<FirstHabitScreen> {
     } catch (e) {
       if (mounted) {
         setState(() => _isSaving = false);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to save habit: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Failed to save habit: $e')));
       }
     }
   }
@@ -99,13 +95,18 @@ class _FirstHabitScreenState extends ConsumerState<FirstHabitScreen> {
 
   TimeOfDayPreference _getPreferenceForAnchor(String anchor) {
     final lower = anchor.toLowerCase();
-    if (lower.contains('waking') || lower.contains('breakfast') || lower.contains('morning')) {
+    if (lower.contains('waking') ||
+        lower.contains('breakfast') ||
+        lower.contains('morning')) {
       return TimeOfDayPreference.morning;
     }
     if (lower.contains('lunch') || lower.contains('afternoon')) {
       return TimeOfDayPreference.afternoon;
     }
-    if (lower.contains('bed') || lower.contains('evening') || lower.contains('dinner') || lower.contains('night')) {
+    if (lower.contains('bed') ||
+        lower.contains('evening') ||
+        lower.contains('dinner') ||
+        lower.contains('night')) {
       return TimeOfDayPreference.evening;
     }
     if (lower.contains('work')) {
@@ -117,7 +118,7 @@ class _FirstHabitScreenState extends ConsumerState<FirstHabitScreen> {
 
   void _skipForNow() {
     // PERSIST PROGRESS: Complete the third milestone (First Habit) even if skipped - Index 2
-    ref.read(onboardingControllerProvider.notifier).completeMilestone(2);
+    ref.read(enhancedOnboardingProvider.notifier).completeMilestone(2);
 
     // Skip creating a habit, go to world reveal, then to dashboard
     context.push('/onboarding/world-reveal');
@@ -164,7 +165,7 @@ class _FirstHabitScreenState extends ConsumerState<FirstHabitScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final state = ref.watch(onboardingStateControllerProvider);
+    final state = ref.watch(enhancedOnboardingProvider);
     final statsAsync = ref.watch(userStatsStreamProvider);
 
     return statsAsync.when(

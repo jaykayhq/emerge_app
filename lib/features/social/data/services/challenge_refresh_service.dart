@@ -74,7 +74,9 @@ class ChallengeRefreshService {
 
 /// Provider for the challenge refresh service
 /// Automatically starts the refresh timer when first accessed
-final challengeRefreshServiceProvider = Provider<ChallengeRefreshService>((ref) {
+final challengeRefreshServiceProvider = Provider<ChallengeRefreshService>((
+  ref,
+) {
   final service = ChallengeRefreshService();
   // Auto-start the refresh service when provider is first read
   service.startAutoRefresh(ref);

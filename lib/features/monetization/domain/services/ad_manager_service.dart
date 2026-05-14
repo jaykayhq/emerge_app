@@ -80,7 +80,10 @@ class AdManagerService {
     );
   }
 
-  Future<void> showRewardedAd({required Function onRewarded, required Function onFailed}) async {
+  Future<void> showRewardedAd({
+    required Function onRewarded,
+    required Function onFailed,
+  }) async {
     if (_isPremium) {
       onRewarded();
       return;
@@ -109,9 +112,11 @@ class AdManagerService {
       },
     );
 
-    await _rewardedAd!.show(onUserEarnedReward: (AdWithoutView ad, RewardItem reward) {
-      onRewarded();
-    });
+    await _rewardedAd!.show(
+      onUserEarnedReward: (AdWithoutView ad, RewardItem reward) {
+        onRewarded();
+      },
+    );
     _rewardedAd = null;
   }
 

@@ -46,7 +46,10 @@ class _GoldilocksScreenState extends ConsumerState<GoldilocksScreen> {
                           .read(aiPersonalizationServiceProvider)
                           .analyzeHabitPerformance(
                             habits,
-                            dominantMotive: ref.read(userStatsStreamProvider).value?.dominantMotive,
+                            dominantMotive: ref
+                                .read(userStatsStreamProvider)
+                                .value
+                                ?.dominantMotive,
                           ),
                       builder: (context, snapshot) {
                         if (snapshot.connectionState ==
@@ -59,7 +62,9 @@ class _GoldilocksScreenState extends ConsumerState<GoldilocksScreen> {
                             itemBuilder: (context, index) => Container(
                               padding: const EdgeInsets.all(16),
                               decoration: BoxDecoration(
-                                color: AppTheme.surfaceDark.withValues(alpha: 0.5),
+                                color: AppTheme.surfaceDark.withValues(
+                                  alpha: 0.5,
+                                ),
                                 borderRadius: BorderRadius.circular(16),
                                 border: Border.all(color: Colors.white10),
                               ),
@@ -72,18 +77,29 @@ class _GoldilocksScreenState extends ConsumerState<GoldilocksScreen> {
                                       SizedBox(width: 16),
                                       Expanded(
                                         child: Column(
-                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
                                           children: [
-                                            SkeletonShimmer(width: 200, height: 16),
+                                            SkeletonShimmer(
+                                              width: 200,
+                                              height: 16,
+                                            ),
                                             SizedBox(height: 8),
-                                            SkeletonShimmer(width: 150, height: 14),
+                                            SkeletonShimmer(
+                                              width: 150,
+                                              height: 14,
+                                            ),
                                           ],
                                         ),
                                       ),
                                     ],
                                   ),
                                   SizedBox(height: 16),
-                                  SkeletonShimmer(width: double.infinity, height: 48, borderRadius: 12),
+                                  SkeletonShimmer(
+                                    width: double.infinity,
+                                    height: 48,
+                                    borderRadius: 12,
+                                  ),
                                 ],
                               ),
                             ),
@@ -155,7 +171,11 @@ class _GoldilocksScreenState extends ConsumerState<GoldilocksScreen> {
                             ],
                           ),
                           SizedBox(height: 16),
-                          SkeletonShimmer(width: double.infinity, height: 48, borderRadius: 12),
+                          SkeletonShimmer(
+                            width: double.infinity,
+                            height: 48,
+                            borderRadius: 12,
+                          ),
                         ],
                       ),
                     ),

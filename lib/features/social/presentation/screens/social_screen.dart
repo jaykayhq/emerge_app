@@ -77,14 +77,16 @@ class _SocialScreenState extends ConsumerState<SocialScreen>
     return WorldBackground(
       useSafeArea: false,
       themeOverride: AppWorldTheme.nebula,
-      floatingActionButton: _currentIndex == 1 // CHALLENGES tab gets the create challenge FAB
+      floatingActionButton:
+          _currentIndex ==
+              1 // CHALLENGES tab gets the create challenge FAB
           ? FloatingActionButton(
               heroTag: 'create_challenge_fab',
               onPressed: () {
                 showDialog(
                   context: context,
                   barrierDismissible: true,
-                  barrierColor: Colors.black.withValues(alpha:0.6),
+                  barrierColor: Colors.black.withValues(alpha: 0.6),
                   builder: (context) => const CreateSoloChallengeDialog(),
                 );
               },
@@ -100,12 +102,18 @@ class _SocialScreenState extends ConsumerState<SocialScreen>
               title: 'TRIBES',
               actions: [
                 IconButton(
-                  icon: const Icon(Icons.handshake_outlined, color: Colors.white),
+                  icon: const Icon(
+                    Icons.handshake_outlined,
+                    color: Colors.white,
+                  ),
                   onPressed: () => context.push('/tribes/contracts'),
                   tooltip: 'Habit Contracts',
                 ),
                 IconButton(
-                  icon: const Icon(Icons.person_add_outlined, color: Colors.white),
+                  icon: const Icon(
+                    Icons.person_add_outlined,
+                    color: Colors.white,
+                  ),
                   onPressed: () => context.push('/tribes/accountability'),
                   tooltip: 'Accountability Partners',
                 ),
@@ -133,9 +141,7 @@ class _SocialScreenState extends ConsumerState<SocialScreen>
                 ),
               ),
             ),
-            SliverFillRemaining(
-              child: _buildCurrentTabContent(),
-            ),
+            SliverFillRemaining(child: _buildCurrentTabContent()),
           ],
         ),
       ),
@@ -155,16 +161,19 @@ class _SliverAppBarDelegate extends SliverPersistentHeaderDelegate {
 
   @override
   Widget build(
-      BuildContext context, double shrinkOffset, bool overlapsContent) {
+    BuildContext context,
+    double shrinkOffset,
+    bool overlapsContent,
+  ) {
     return ClipRRect(
       child: BackdropFilter(
         filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
         child: Container(
           decoration: BoxDecoration(
-            color: Colors.black.withValues(alpha:0.4),
+            color: Colors.black.withValues(alpha: 0.4),
             border: Border(
               bottom: BorderSide(
-                color: Colors.white.withValues(alpha:0.08),
+                color: Colors.white.withValues(alpha: 0.08),
                 width: 1,
               ),
             ),

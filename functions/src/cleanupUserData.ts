@@ -87,22 +87,22 @@ export const deleteMyAccount = onCall(async (request) => {
   }
 
   // ── Step 9: club_leaderboards ──
-  const clubLbSnap = await db.collection("club_leaderboards").get();
+  const clubLbSnap = await db.collection("club_leaderboards")
+    .where("userId", "==", uid)
+    .get();
   if (!clubLbSnap.empty) {
     const batch = db.batch();
-    clubLbSnap.docs.forEach((doc: admin.firestore.QueryDocumentSnapshot) => {
-      if (doc.data().userId === uid) batch.delete(doc.ref);
-    });
+    clubLbSnap.docs.forEach((doc: admin.firestore.QueryDocumentSnapshot) => batch.delete(doc.ref));
     await batch.commit();
   }
 
   // ── Step 10: challenge_leaderboards ──
-  const chalLbSnap = await db.collection("challenge_leaderboards").get();
+  const chalLbSnap = await db.collection("challenge_leaderboards")
+    .where("userId", "==", uid)
+    .get();
   if (!chalLbSnap.empty) {
     const batch = db.batch();
-    chalLbSnap.docs.forEach((doc: admin.firestore.QueryDocumentSnapshot) => {
-      if (doc.data().userId === uid) batch.delete(doc.ref);
-    });
+    chalLbSnap.docs.forEach((doc: admin.firestore.QueryDocumentSnapshot) => batch.delete(doc.ref));
     await batch.commit();
   }
 

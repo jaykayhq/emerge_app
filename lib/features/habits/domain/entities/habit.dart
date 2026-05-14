@@ -15,12 +15,12 @@ enum TimeOfDayPreference { morning, afternoon, evening, anytime }
 enum HabitIntegrationType { none, healthSteps, screenTimeLimit }
 
 enum HabitStreakState {
-  onFire,    // 90-100
-  strong,    // 70-89
-  building,  // 50-69
-  atRisk,    // 30-49
-  recovery,  // 10-29
-  reset,     // 0-9
+  onFire, // 90-100
+  strong, // 70-89
+  building, // 50-69
+  atRisk, // 30-49
+  recovery, // 10-29
+  reset, // 0-9
 }
 
 class Habit extends Equatable {
@@ -53,8 +53,8 @@ class Habit extends Equatable {
   final List<String> environmentPriming; // Environment priming tasks
   final HabitIntegrationType integrationType;
   final int? integrationTarget;
-  final int momentumScore;      // 0-100
-  final int consecutiveMisses;  // Days in a row missed
+  final int momentumScore; // 0-100
+  final int consecutiveMisses; // Days in a row missed
 
   // Derived — never stored separately
   HabitStreakState get streakState {
@@ -211,7 +211,14 @@ class Habit extends Equatable {
   }
 
   static Habit empty() {
-    return Habit(id: '', userId: '', title: '', createdAt: DateTime.now(), momentumScore: 0, consecutiveMisses: 0);
+    return Habit(
+      id: '',
+      userId: '',
+      title: '',
+      createdAt: DateTime.now(),
+      momentumScore: 0,
+      consecutiveMisses: 0,
+    );
   }
 
   Habit copyWith({

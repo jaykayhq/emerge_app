@@ -89,9 +89,9 @@ class _ShimmerCardState extends State<_ShimmerCard>
                   begin: Alignment(_animation.value, 0),
                   end: Alignment(_animation.value + 0.5, 0),
                   colors: [
-                    EmergeColors.glassWhite.withValues(alpha:0.5),
-                    EmergeColors.glassWhite.withValues(alpha:0.8),
-                    EmergeColors.glassWhite.withValues(alpha:0.5),
+                    EmergeColors.glassWhite.withValues(alpha: 0.5),
+                    EmergeColors.glassWhite.withValues(alpha: 0.8),
+                    EmergeColors.glassWhite.withValues(alpha: 0.5),
                   ],
                   stops: const [0.0, 0.5, 1.0],
                 ),

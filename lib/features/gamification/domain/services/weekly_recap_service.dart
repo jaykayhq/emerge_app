@@ -38,16 +38,18 @@ class WeeklyRecapService {
     final now = DateTime.now();
     final end = endDate ?? now;
     final start = startDate ?? end.subtract(const Duration(days: 7));
-    
+
     final isPremium = _ref.read(isPremiumProvider).value ?? false;
 
     if (!forceRefresh) {
-      final existingRecapData = await userStatsRepository.getLatestRecap(userId);
-      // For a better experience, we should ideally search by rangeId, 
+      final existingRecapData = await userStatsRepository.getLatestRecap(
+        userId,
+      );
+      // For a better experience, we should ideally search by rangeId,
       // but for now, we'll check if the latest matches roughly.
       if (existingRecapData != null) {
         final existing = UserWeeklyRecap.fromMap(existingRecapData);
-        if (existing.startDate.isAtSameMomentAs(start) && 
+        if (existing.startDate.isAtSameMomentAs(start) &&
             existing.endDate.isAtSameMomentAs(end) &&
             existing.isComplete) {
           return existing;
@@ -64,11 +66,11 @@ class WeeklyRecapService {
 
     final userProfile = await userStatsRepository.getUserStats(userId);
     final diff = end.difference(start).inDays;
-    final isComplete = diff >= 6; 
+    final isComplete = diff >= 6;
 
     // 3. Generate and Save
     UserWeeklyRecap? recap;
-    
+
     // GATED INSIGHTS LOGIC
     if (isPremium) {
       try {
@@ -77,9 +79,15 @@ class WeeklyRecapService {
           'startDate': start.toIso8601String(),
           'endDate': end.toIso8601String(),
         });
-        
+
         if (result.data['success'] == true) {
-          final localRecap = await _calculateRecap(userId, activities, start, end, userProfile);
+          final localRecap = await _calculateRecap(
+            userId,
+            activities,
+            start,
+            end,
+            userProfile,
+          );
           recap = UserWeeklyRecap(
             id: result.data['recapId'] ?? localRecap.id,
             userId: userId,
@@ -94,7 +102,9 @@ class WeeklyRecapService {
             dominantIdentityThisWeek: localRecap.dominantIdentityThisWeek,
             identityHeadline: localRecap.identityHeadline,
             aiInsight: result.data['insight'],
-            velocityInsights: List<String>.from(result.data['adjustments'] ?? []),
+            velocityInsights: List<String>.from(
+              result.data['adjustments'] ?? [],
+            ),
             isComplete: isComplete,
             isAiGenerated: true,
             isLocked: false,
@@ -108,7 +118,13 @@ class WeeklyRecapService {
 
     // If still null (not premium, AI failed, or skipped), generate local-only
     if (recap == null) {
-      final local = await _calculateRecap(userId, activities, start, end, userProfile);
+      final local = await _calculateRecap(
+        userId,
+        activities,
+        start,
+        end,
+        userProfile,
+      );
       recap = UserWeeklyRecap(
         id: local.id,
         userId: userId,
@@ -130,7 +146,7 @@ class WeeklyRecapService {
 
     // Save to Firestore
     await userStatsRepository.saveRecap(userId, recap.toMap());
-    
+
     return recap;
   }
 
@@ -175,10 +191,12 @@ class WeeklyRecapService {
         ..sort((a, b) => b.value.compareTo(a.value));
       final top = sorted.first;
       dominantIdentity = top.key;
-      identityHeadline = 'You cast ${top.value} votes for your $dominantIdentity identity.';
+      identityHeadline =
+          'You cast ${top.value} votes for your $dominantIdentity identity.';
     } else {
       dominantIdentity = 'Pioneer';
-      identityHeadline = 'You are beginning your journey of identity transformation.';
+      identityHeadline =
+          'You are beginning your journey of identity transformation.';
     }
 
     // Determine Top Habit
@@ -195,7 +213,8 @@ class WeeklyRecapService {
     // Calculate World Growth
     double worldGrowthPercentage = 0.0;
     try {
-      worldGrowthPercentage = (1.0 - (userProfile.worldState?.entropy ?? 0.5)).clamp(0.0, 1.0);
+      worldGrowthPercentage = (1.0 - (userProfile.worldState?.entropy ?? 0.5))
+          .clamp(0.0, 1.0);
     } catch (_) {}
 
     return UserWeeklyRecap(

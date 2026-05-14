@@ -316,7 +316,7 @@ class _ProgressRecapSectionState extends State<ProgressRecapSection> {
             Container(
               padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
-                color: EmergeColors.teal.withValues(alpha:0.1),
+                color: EmergeColors.teal.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(10),
               ),
               child: Icon(icon, color: EmergeColors.teal, size: 24),
@@ -364,7 +364,7 @@ class _ProgressRecapSectionState extends State<ProgressRecapSection> {
         children: [
           Icon(
             Icons.how_to_vote,
-            color: AppTheme.textSecondaryDark.withValues(alpha:0.5),
+            color: AppTheme.textSecondaryDark.withValues(alpha: 0.5),
             size: 48,
           ),
           const SizedBox(height: 16),
@@ -423,7 +423,7 @@ class _TabButton extends StatelessWidget {
         decoration: BoxDecoration(
           color: isSelected
               ? EmergeColors.teal
-              : EmergeColors.teal.withValues(alpha:0.1),
+              : EmergeColors.teal.withValues(alpha: 0.1),
           borderRadius: BorderRadius.circular(20),
         ),
         child: Text(

@@ -65,18 +65,18 @@ class _SynergyCardState extends State<SynergyCard>
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
                 colors: [
-                  Colors.white.withValues(alpha:0.08),
-                  Colors.white.withValues(alpha:0.03),
+                  Colors.white.withValues(alpha: 0.08),
+                  Colors.white.withValues(alpha: 0.03),
                 ],
               ),
               borderRadius: BorderRadius.circular(20),
               border: Border.all(
-                color: Colors.white.withValues(alpha:0.15),
+                color: Colors.white.withValues(alpha: 0.15),
                 width: 1.5,
               ),
               boxShadow: [
                 BoxShadow(
-                  color: accentColor.withValues(alpha:0.1),
+                  color: accentColor.withValues(alpha: 0.1),
                   blurRadius: 20,
                   offset: const Offset(0, 8),
                 ),
@@ -172,9 +172,9 @@ class _GlassStatBox extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha:0.04),
+        color: Colors.white.withValues(alpha: 0.04),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: color.withValues(alpha:0.2), width: 1),
+        border: Border.all(color: color.withValues(alpha: 0.2), width: 1),
       ),
       child: Column(
         children: [
@@ -194,7 +194,7 @@ class _GlassStatBox extends StatelessWidget {
               return LinearGradient(
                 colors: [
                   color,
-                  color.withValues(alpha:shimmerOpacity),
+                  color.withValues(alpha: shimmerOpacity),
                   color,
                 ],
                 stops: [

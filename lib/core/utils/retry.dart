@@ -18,7 +18,9 @@ Future<T> retry<T>(
       if (attempt >= maxRetries) rethrow;
       if (retryIf != null && !retryIf(e)) rethrow;
       final delay = baseDelay * (1 << (attempt - 1));
-      debugPrint('Retry: attempt $attempt/$maxRetries failed, retrying in ${delay.inMilliseconds}ms...');
+      debugPrint(
+        'Retry: attempt $attempt/$maxRetries failed, retrying in ${delay.inMilliseconds}ms...',
+      );
       await Future.delayed(delay);
     }
   }

@@ -35,15 +35,15 @@ class NodeQuestDialog extends StatelessWidget {
           child: Container(
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
-              color: const Color(0xFF1A1A2E).withValues(alpha:0.92),
+              color: const Color(0xFF1A1A2E).withValues(alpha: 0.92),
               borderRadius: BorderRadius.circular(20),
               border: Border.all(
-                color: primaryColor.withValues(alpha:0.4),
+                color: primaryColor.withValues(alpha: 0.4),
                 width: 1.5,
               ),
               boxShadow: [
                 BoxShadow(
-                  color: primaryColor.withValues(alpha:0.15),
+                  color: primaryColor.withValues(alpha: 0.15),
                   blurRadius: 24,
                   spreadRadius: 2,
                 ),
@@ -82,9 +82,9 @@ class NodeQuestDialog extends StatelessWidget {
           width: 48,
           height: 48,
           decoration: BoxDecoration(
-            color: primaryColor.withValues(alpha:0.15),
+            color: primaryColor.withValues(alpha: 0.15),
             borderRadius: BorderRadius.circular(14),
-            border: Border.all(color: primaryColor.withValues(alpha:0.4)),
+            border: Border.all(color: primaryColor.withValues(alpha: 0.4)),
           ),
           alignment: Alignment.center,
           child: Text(node.emoji, style: const TextStyle(fontSize: 24)),
@@ -109,7 +109,7 @@ class NodeQuestDialog extends StatelessWidget {
                   const SizedBox(width: 6),
                   _buildBadge(
                     'STAGE ${node.stage}',
-                    Colors.white.withValues(alpha:0.5),
+                    Colors.white.withValues(alpha: 0.5),
                   ),
                 ],
               ),
@@ -126,7 +126,7 @@ class NodeQuestDialog extends StatelessWidget {
     return Text(
       node.description,
       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-        color: Colors.white.withValues(alpha:0.7),
+        color: Colors.white.withValues(alpha: 0.7),
         height: 1.4,
       ),
     );
@@ -136,7 +136,7 @@ class NodeQuestDialog extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: primaryColor.withValues(alpha:0.08),
+        color: primaryColor.withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(12),
         border: Border(left: BorderSide(color: primaryColor, width: 3)),
       ),
@@ -156,7 +156,7 @@ class NodeQuestDialog extends StatelessWidget {
           Text(
             node.directive,
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
-              color: Colors.white.withValues(alpha:0.85),
+              color: Colors.white.withValues(alpha: 0.85),
               fontStyle: FontStyle.italic,
               height: 1.4,
             ),
@@ -175,10 +175,10 @@ class NodeQuestDialog extends StatelessWidget {
         return Container(
           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
           decoration: BoxDecoration(
-            color: _getAttributeColor(attr).withValues(alpha:0.15),
+            color: _getAttributeColor(attr).withValues(alpha: 0.15),
             borderRadius: BorderRadius.circular(20),
             border: Border.all(
-              color: _getAttributeColor(attr).withValues(alpha:0.5),
+              color: _getAttributeColor(attr).withValues(alpha: 0.5),
             ),
           ),
           child: Row(
@@ -214,7 +214,7 @@ class NodeQuestDialog extends StatelessWidget {
             Text(
               'CURRENT PROGRESS',
               style: TextStyle(
-                color: Colors.white.withValues(alpha:0.5),
+                color: Colors.white.withValues(alpha: 0.5),
                 fontSize: 10,
                 fontWeight: FontWeight.bold,
                 letterSpacing: 1,
@@ -235,7 +235,7 @@ class NodeQuestDialog extends StatelessWidget {
           borderRadius: BorderRadius.circular(4),
           child: LinearProgressIndicator(
             value: node.progress / 100,
-            backgroundColor: primaryColor.withValues(alpha:0.15),
+            backgroundColor: primaryColor.withValues(alpha: 0.15),
             valueColor: AlwaysStoppedAnimation(primaryColor),
             minHeight: 6,
           ),
@@ -257,7 +257,7 @@ class NodeQuestDialog extends StatelessWidget {
           child: Text(
             '✕ CLOSE',
             style: TextStyle(
-              color: Colors.white.withValues(alpha:0.5),
+              color: Colors.white.withValues(alpha: 0.5),
               fontSize: 12,
               fontWeight: FontWeight.bold,
             ),
@@ -294,11 +294,11 @@ class NodeQuestDialog extends StatelessWidget {
           ),
           style: ElevatedButton.styleFrom(
             backgroundColor: isCompleted
-                ? primaryColor.withValues(alpha:0.6)
+                ? primaryColor.withValues(alpha: 0.6)
                 : primaryColor,
             foregroundColor: Colors.white,
             disabledBackgroundColor: Colors.grey.shade800,
-            disabledForegroundColor: Colors.white.withValues(alpha:0.4),
+            disabledForegroundColor: Colors.white.withValues(alpha: 0.4),
             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(12),
@@ -313,9 +313,9 @@ class NodeQuestDialog extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
       decoration: BoxDecoration(
-        color: color.withValues(alpha:0.2),
+        color: color.withValues(alpha: 0.2),
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: color.withValues(alpha:0.5)),
+        border: Border.all(color: color.withValues(alpha: 0.5)),
       ),
       child: Text(
         text,

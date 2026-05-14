@@ -13,6 +13,7 @@ import 'tables/tribe_stats_table.dart';
 import 'tables/leaderboard_entries_table.dart';
 import 'tables/blueprints_table.dart';
 import 'tables/mutation_queue_table.dart';
+import 'tables/tribe_activity_table.dart';
 
 import 'daos/user_stats_dao.dart';
 import 'daos/habits_dao.dart';
@@ -22,6 +23,7 @@ import 'daos/tribe_stats_dao.dart';
 import 'daos/leaderboard_entries_dao.dart';
 import 'daos/blueprints_dao.dart';
 import 'daos/mutation_queue_dao.dart';
+import 'daos/tribe_activity_dao.dart';
 
 part 'database.g.dart';
 
@@ -70,6 +72,11 @@ MutationQueueDao mutationQueueDao(Ref ref) {
   return ref.watch(appDatabaseProvider).mutationQueueDao;
 }
 
+@Riverpod(keepAlive: true)
+TribeActivityDao tribeActivityDao(Ref ref) {
+  return ref.watch(appDatabaseProvider).tribeActivityDao;
+}
+
 @DriftDatabase(
   tables: [
     UserStatsTable,
@@ -80,6 +87,7 @@ MutationQueueDao mutationQueueDao(Ref ref) {
     LeaderboardEntriesTable,
     BlueprintsTable,
     MutationQueueTable,
+    TribeActivityTable,
   ],
   daos: [
     UserStatsDao,
@@ -90,13 +98,31 @@ MutationQueueDao mutationQueueDao(Ref ref) {
     LeaderboardEntriesDao,
     BlueprintsDao,
     MutationQueueDao,
+    TribeActivityDao,
   ],
 )
 class AppDatabase extends _$AppDatabase {
   AppDatabase._() : super(_openConnection());
 
   @override
-  int get schemaVersion => 1;
+  int get schemaVersion => 2;
+
+  @override
+  MigrationStrategy get migration => MigrationStrategy(
+    onUpgrade: (m, from, to) async {
+      if (from < 2) {
+        // Drop and recreate UserStatsTable to handle new columns easily in dev
+        // For production, we'd use m.addColumn or m.alterTable
+        await m.deleteTable(userStatsTable.actualTableName);
+        await m.createTable(userStatsTable);
+      }
+    },
+    beforeOpen: (details) async {
+      if (details.wasCreated) {
+        // Initial data seeding if needed
+      }
+    },
+  );
 
   static AppDatabase? _instance;
   static AppDatabase get instance {
@@ -109,6 +135,15 @@ class AppDatabase extends _$AppDatabase {
       final dir = await getApplicationDocumentsDirectory();
       final file = File(p.join(dir.path, 'emerge_app.sqlite'));
       return NativeDatabase(file);
+    });
+  }
+
+  /// Clears all data from all tables in the database.
+  Future<void> clearAll() async {
+    await transaction(() async {
+      for (final table in allTables) {
+        await delete(table).go();
+      }
     });
   }
 }

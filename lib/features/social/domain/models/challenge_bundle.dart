@@ -40,11 +40,12 @@ class ChallengeBundleData {
   }
 
   /// Whether the user has already joined the daily quest
-  bool get isDailyQuestJoined => dailyQuest != null &&
-      userChallenges.any((c) => c.id == dailyQuest!.id);
+  bool get isDailyQuestJoined =>
+      dailyQuest != null && userChallenges.any((c) => c.id == dailyQuest!.id);
 
   /// Whether the user has already joined the weekly spotlight
-  bool get isWeeklySpotlightJoined => weeklySpotlight != null &&
+  bool get isWeeklySpotlightJoined =>
+      weeklySpotlight != null &&
       userChallenges.any((c) => c.id == weeklySpotlight!.id);
 
   /// The active daily quest from user's joined challenges (if joined)

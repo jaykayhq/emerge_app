@@ -40,7 +40,6 @@ import 'package:emerge_app/features/social/presentation/screens/friends_screen.d
 import 'package:emerge_app/features/social/presentation/screens/all_tribes_screen.dart';
 import 'package:emerge_app/features/monetization/presentation/screens/habit_contract_screen.dart';
 
-
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
@@ -54,7 +53,7 @@ final _rootNavigatorKey = GlobalKey<NavigatorState>(debugLabel: 'root');
 GoRouter router(Ref ref) {
   // Watch auth state to rebuild router only on login/logout
   final authState = ref.watch(authStateChangesProvider);
-  
+
   // Create a refresh notifier for onboarding completion only
   final refreshNotifier = ValueNotifier<int>(0);
   ref.listen(onboardingControllerProvider, (_, _) => refreshNotifier.value++);
@@ -89,10 +88,10 @@ GoRouter router(Ref ref) {
       }
 
       // 4. Handle Authenticated Users
-      
+
       // Use ref.read for stats to avoid redundant rebuilds
       final statsAsync = ref.read(userStatsStreamProvider);
-      
+
       // If stats are loading, allow current path to continue (prevents loops)
       if (statsAsync.isLoading) return null;
 
@@ -102,7 +101,8 @@ GoRouter router(Ref ref) {
       final onboardingProgress = userStats.onboardingProgress;
       // Onboarding is complete if progress >= 3 OR we have a completion timestamp
       // Threshold is 3 because the final step (World Reveal) marks the start of the app
-      final isOnboardingComplete = onboardingProgress >= 3 || userStats.onboardingCompletedAt != null;
+      final isOnboardingComplete =
+          onboardingProgress >= 3 || userStats.onboardingCompletedAt != null;
 
       // If onboarding is incomplete, restrict to onboarding flow
       if (!isOnboardingComplete) {
@@ -113,7 +113,7 @@ GoRouter router(Ref ref) {
       // Onboarding is complete:
       // Redirect auth screens to home, otherwise allow all paths (unblocks bottom nav)
       if (isAuthScreen) return '/';
-      
+
       return null;
     },
     routes: [
@@ -183,13 +183,13 @@ GoRouter router(Ref ref) {
                       final id = state.uri.queryParameters['id'];
                       final startStr = state.uri.queryParameters['start'];
                       final endStr = state.uri.queryParameters['end'];
-                      
+
                       DateTime? start;
                       DateTime? end;
-                      
+
                       if (startStr != null) start = DateTime.tryParse(startStr);
                       if (endStr != null) end = DateTime.tryParse(endStr);
-                      
+
                       return WeeklyRecapScreen(
                         recapId: id,
                         startDate: start,
@@ -202,9 +202,16 @@ GoRouter router(Ref ref) {
                     parentNavigatorKey: _rootNavigatorKey,
                     builder: (context, state) {
                       final id = state.pathParameters['nodeId']!;
-                      final archetype = ref.read(userStatsStreamProvider).value?.archetype ?? UserArchetype.scholar;
-                      final config = ArchetypeMapsCatalog.getMapForArchetype(archetype);
-                      final node = config.nodes.firstWhere((n) => n.id == id, orElse: () => config.nodes.first);
+                      final archetype =
+                          ref.read(userStatsStreamProvider).value?.archetype ??
+                          UserArchetype.scholar;
+                      final config = ArchetypeMapsCatalog.getMapForArchetype(
+                        archetype,
+                      );
+                      final node = config.nodes.firstWhere(
+                        (n) => n.id == id,
+                        orElse: () => config.nodes.first,
+                      );
                       return LevelImmersiveScreen(node: node, config: config);
                     },
                   ),
@@ -240,7 +247,8 @@ GoRouter router(Ref ref) {
             routes: [
               GoRoute(
                 path: '/tribes',
-                builder: (context, state) => const SocialScreen(initialIndex: 0),
+                builder: (context, state) =>
+                    const SocialScreen(initialIndex: 0),
                 routes: [
                   GoRoute(
                     path: 'challenges',
