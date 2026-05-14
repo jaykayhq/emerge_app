@@ -1,10 +1,12 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:emerge_app/core/drift/database.dart';
 import 'package:emerge_app/core/drift_repositories/drift_habit_repository.dart';
+import 'package:emerge_app/core/firestore_repositories/firestore_habit_repository.dart';
 import 'package:emerge_app/core/game_loop/game_loop_engine.dart';
 import 'package:emerge_app/core/services/remote_config_service.dart';
 import 'package:emerge_app/core/sync/sync_providers.dart';
 import 'package:emerge_app/core/utils/app_logger.dart';
-import 'package:flutter/foundation.dart' show debugPrint;
+import 'package:flutter/foundation.dart' show debugPrint, kIsWeb;
 import 'package:emerge_app/features/auth/presentation/providers/auth_providers.dart';
 
 import 'package:emerge_app/features/habits/domain/entities/habit.dart';
@@ -33,9 +35,12 @@ MomentumService momentumService(Ref ref) => MomentumService();
 
 @Riverpod(keepAlive: true)
 HabitRepository habitRepository(Ref ref) {
-  final db = ref.watch(appDatabaseProvider);
+  if (kIsWeb) {
+    return FirestoreHabitRepository(firestore: FirebaseFirestore.instance);
+  }
+  final db = ref.watch(appDatabaseProvider)!;
   final engine = LocalGameLoopEngine();
-  final syncEngine = ref.watch(enhancedSyncEngineProvider);
+  final syncEngine = ref.watch(enhancedSyncEngineProvider)!;
   final socialService = ref.watch(socialActivityServiceProvider);
   return DriftHabitRepository(
     db: db,
