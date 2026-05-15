@@ -1,7 +1,5 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:emerge_app/core/drift/database.dart';
 import 'package:emerge_app/core/drift_repositories/repositories_barrel.dart';
-import 'package:emerge_app/core/firestore_repositories/firestore_challenge_repository.dart';
 import 'package:emerge_app/core/game_loop/game_loop_engine.dart';
 import 'package:emerge_app/features/auth/presentation/providers/auth_providers.dart';
 import 'package:emerge_app/features/gamification/presentation/providers/user_stats_providers.dart';
@@ -9,19 +7,15 @@ import 'package:emerge_app/features/social/domain/models/challenge.dart';
 import 'package:emerge_app/features/social/domain/models/challenge_catalog.dart';
 import 'package:emerge_app/features/social/domain/repositories/challenge_repository.dart';
 import 'package:emerge_app/core/sync/sync_providers.dart';
-import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'challenge_provider.g.dart';
 
 final challengeRepositoryProvider = Provider<ChallengeRepository>((ref) {
-  if (kIsWeb) {
-    return FirestoreChallengeRepository(firestore: FirebaseFirestore.instance);
-  }
-  final db = ref.watch(appDatabaseProvider)!;
+  final db = ref.watch(appDatabaseProvider);
   final engine = LocalGameLoopEngine();
-  final syncEngine = ref.watch(enhancedSyncEngineProvider)!;
+  final syncEngine = ref.watch(enhancedSyncEngineProvider);
   return DriftChallengeRepository(db, engine, syncEngine);
 });
 

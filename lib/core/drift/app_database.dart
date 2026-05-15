@@ -1,8 +1,6 @@
-import 'dart:io';
 import 'package:drift/drift.dart';
-import 'package:drift/native.dart';
-import 'package:path_provider/path_provider.dart';
-import 'package:path/path.dart' as p;
+
+import 'app_database_connection.dart';
 
 import 'tables/user_stats_table.dart';
 import 'tables/habits_table.dart';
@@ -51,7 +49,7 @@ part 'app_database.g.dart';
   ],
 )
 class AppDatabase extends _$AppDatabase {
-  AppDatabase._() : super(_openConnection());
+  AppDatabase._() : super(createDriftConnection());
 
   @override
   int get schemaVersion => 2;
@@ -77,14 +75,6 @@ class AppDatabase extends _$AppDatabase {
   static AppDatabase get instance {
     _instance ??= AppDatabase._();
     return _instance!;
-  }
-
-  static LazyDatabase _openConnection() {
-    return LazyDatabase(() async {
-      final dir = await getApplicationDocumentsDirectory();
-      final file = File(p.join(dir.path, 'emerge_app.sqlite'));
-      return NativeDatabase(file);
-    });
   }
 
   /// Clears all data from all tables in the database.

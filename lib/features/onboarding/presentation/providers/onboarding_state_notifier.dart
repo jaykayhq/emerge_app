@@ -548,7 +548,7 @@ class EnhancedOnboardingNotifier extends _$EnhancedOnboardingNotifier {
   /// Reset onboarding (for testing or re-onboarding)
   Future<void> resetOnboarding() async {
     // Purge local database to ensure a clean slate
-    await ref.read(appDatabaseProvider)!.clearAll();
+    await ref.read(appDatabaseProvider).clearAll();
 
     final localSettings = ref.read(localSettingsRepositoryProvider);
     await localSettings.resetOnboarding();

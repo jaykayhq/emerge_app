@@ -1,7 +1,8 @@
-// Native barrel — re‑exports all drift types needed by providers outside the
-// drift module.  Only compiled when `dart.library.io` is available.
+// Web barrel — re‑exports all drift types needed by providers outside the
+// drift module.  Only compiled when `dart.library.io` is NOT available (web).
+// Uses `drift/wasm.dart` for WASM-backed SQLite instead of `drift/native.dart`.
 export 'package:drift/drift.dart';
-export 'package:drift/native.dart';
+export 'package:drift/wasm.dart';
 export 'app_database.dart';
 export 'daos/user_stats_dao.dart';
 export 'daos/habits_dao.dart';

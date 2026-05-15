@@ -1,5 +1,5 @@
 import 'dart:async';
-import 'package:emerge_app/core/drift/database.dart';
+import 'package:emerge_app/core/drift/database.dart' hide Column;
 import 'package:emerge_app/features/monetization/presentation/providers/subscription_provider.dart';
 import 'package:emerge_app/core/presentation/widgets/world_background.dart';
 import 'dart:ui';
@@ -1007,7 +1007,7 @@ class SettingsScreen extends ConsumerWidget {
                         );
                         try {
                           // 1. Wipe local database immediately
-                          final db = ref.read(appDatabaseProvider)!;
+                          final db = ref.read(appDatabaseProvider);
                           await db.clearAll();
 
                           // 2. Trigger remote deletion with timeout

@@ -1,4 +1,6 @@
-// Native barrel — re‑exports all Drift*Repository classes.
+// Web barrel — re‑exports all Drift*Repository classes.
+// The drift repositories work with any QueryExecutor (Native or WASM), so
+// the same implementations are used on both platforms.
 export 'drift_habit_repository.dart';
 export 'drift_tribe_repository.dart';
 export 'drift_challenge_repository.dart';

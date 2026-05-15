@@ -4,7 +4,7 @@ import 'package:emerge_app/features/onboarding/presentation/providers/onboarding
 import 'package:emerge_app/features/gamification/domain/repositories/user_profile_repository.dart';
 import 'package:emerge_app/features/gamification/data/repositories/user_stats_repository.dart';
 import 'package:emerge_app/features/onboarding/data/repositories/local_settings_repository.dart';
-import 'package:emerge_app/core/drift_repositories/drift_user_stats_repository.dart';
+import 'package:emerge_app/core/drift_repositories/repositories_barrel.dart';
 import 'package:emerge_app/core/drift/database.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';

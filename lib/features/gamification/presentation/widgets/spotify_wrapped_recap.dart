@@ -82,25 +82,33 @@ class _SpotifyWrappedRecapState extends ConsumerState<SpotifyWrappedRecap>
 
   List<Color> _getCurrentGradient() {
     final slides = _getSlides();
-    if (_currentPage >= slides.length)
+    if (_currentPage >= slides.length) {
       return [const Color(0xFF0D1B2A), const Color(0xFF1B263B)];
+    }
 
     final currentSlide = slides[_currentPage];
 
-    if (currentSlide is _ProgressSlide)
+    if (currentSlide is _ProgressSlide) {
       return [const Color(0xFF0D1B2A), const Color(0xFF1B263B)];
-    if (currentSlide is _WrappedIntro)
+    }
+    if (currentSlide is _WrappedIntro) {
       return [const Color(0xFF1A0A2A), const Color(0xFF2A1B4E)];
-    if (currentSlide is _IdentitySlide)
+    }
+    if (currentSlide is _IdentitySlide) {
       return [const Color(0xFF0A0A0A), const Color(0xFF1A1A1A)];
-    if (currentSlide is _WrappedStats)
+    }
+    if (currentSlide is _WrappedStats) {
       return [const Color(0xFF112218), const Color(0xFF1DB954)];
-    if (currentSlide is _WrappedTopHabit)
+    }
+    if (currentSlide is _WrappedTopHabit) {
       return [const Color(0xFF2A1A3A), const Color(0xFFFFD700)];
-    if (currentSlide is _AiInsightSlide)
+    }
+    if (currentSlide is _AiInsightSlide) {
       return [const Color(0xFF2C0735), const Color(0xFF4B296B)];
-    if (currentSlide is _WrappedOutro)
+    }
+    if (currentSlide is _WrappedOutro) {
       return [const Color(0xFF0A1A3A), const Color(0xFF9C27B0)];
+    }
 
     return [const Color(0xFF0D1B2A), const Color(0xFF1B263B)];
   }

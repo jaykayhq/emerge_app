@@ -17,7 +17,7 @@ import 'package:emerge_app/features/gamification/presentation/providers/gamifica
 import 'package:emerge_app/features/onboarding/presentation/providers/onboarding_provider.dart';
 import 'package:fpdart/fpdart.dart';
 
-import 'package:emerge_app/core/drift_repositories/drift_user_stats_repository.dart';
+import 'package:emerge_app/core/drift_repositories/repositories_barrel.dart';
 import 'package:emerge_app/features/social/data/repositories/tribe_repository.dart';
 
 class MockUserProfileRepository extends Mock implements UserProfileRepository {}

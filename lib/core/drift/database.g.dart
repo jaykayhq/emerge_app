@@ -13,8 +13,8 @@ part of 'database.dart';
 final appDatabaseProvider = AppDatabaseProvider._();
 
 final class AppDatabaseProvider
-    extends $FunctionalProvider<AppDatabase?, AppDatabase?, AppDatabase?>
-    with $Provider<AppDatabase?> {
+    extends $FunctionalProvider<AppDatabase, AppDatabase, AppDatabase>
+    with $Provider<AppDatabase> {
   AppDatabaseProvider._()
     : super(
         from: null,
@@ -31,31 +31,31 @@ final class AppDatabaseProvider
 
   @$internal
   @override
-  $ProviderElement<AppDatabase?> $createElement($ProviderPointer pointer) =>
+  $ProviderElement<AppDatabase> $createElement($ProviderPointer pointer) =>
       $ProviderElement(pointer);
 
   @override
-  AppDatabase? create(Ref ref) {
+  AppDatabase create(Ref ref) {
     return appDatabase(ref);
   }
 
   /// {@macro riverpod.override_with_value}
-  Override overrideWithValue(AppDatabase? value) {
+  Override overrideWithValue(AppDatabase value) {
     return $ProviderOverride(
       origin: this,
-      providerOverride: $SyncValueProvider<AppDatabase?>(value),
+      providerOverride: $SyncValueProvider<AppDatabase>(value),
     );
   }
 }
 
-String _$appDatabaseHash() => r'c2e6efbf9a346984023daa65533362d6e28b830f';
+String _$appDatabaseHash() => r'c9b315997d4620b75f971a029620ab310c5b3296';
 
 @ProviderFor(userStatsDao)
 final userStatsDaoProvider = UserStatsDaoProvider._();
 
 final class UserStatsDaoProvider
-    extends $FunctionalProvider<UserStatsDao?, UserStatsDao?, UserStatsDao?>
-    with $Provider<UserStatsDao?> {
+    extends $FunctionalProvider<UserStatsDao, UserStatsDao, UserStatsDao>
+    with $Provider<UserStatsDao> {
   UserStatsDaoProvider._()
     : super(
         from: null,
@@ -72,31 +72,31 @@ final class UserStatsDaoProvider
 
   @$internal
   @override
-  $ProviderElement<UserStatsDao?> $createElement($ProviderPointer pointer) =>
+  $ProviderElement<UserStatsDao> $createElement($ProviderPointer pointer) =>
       $ProviderElement(pointer);
 
   @override
-  UserStatsDao? create(Ref ref) {
+  UserStatsDao create(Ref ref) {
     return userStatsDao(ref);
   }
 
   /// {@macro riverpod.override_with_value}
-  Override overrideWithValue(UserStatsDao? value) {
+  Override overrideWithValue(UserStatsDao value) {
     return $ProviderOverride(
       origin: this,
-      providerOverride: $SyncValueProvider<UserStatsDao?>(value),
+      providerOverride: $SyncValueProvider<UserStatsDao>(value),
     );
   }
 }
 
-String _$userStatsDaoHash() => r'f5d9d1ae8b751517d61276509680a2e3454a426b';
+String _$userStatsDaoHash() => r'4266e0c4f2a46d1511d5205cf266a5de8bcb03fa';
 
 @ProviderFor(habitsDao)
 final habitsDaoProvider = HabitsDaoProvider._();
 
 final class HabitsDaoProvider
-    extends $FunctionalProvider<HabitsDao?, HabitsDao?, HabitsDao?>
-    with $Provider<HabitsDao?> {
+    extends $FunctionalProvider<HabitsDao, HabitsDao, HabitsDao>
+    with $Provider<HabitsDao> {
   HabitsDaoProvider._()
     : super(
         from: null,
@@ -113,24 +113,24 @@ final class HabitsDaoProvider
 
   @$internal
   @override
-  $ProviderElement<HabitsDao?> $createElement($ProviderPointer pointer) =>
+  $ProviderElement<HabitsDao> $createElement($ProviderPointer pointer) =>
       $ProviderElement(pointer);
 
   @override
-  HabitsDao? create(Ref ref) {
+  HabitsDao create(Ref ref) {
     return habitsDao(ref);
   }
 
   /// {@macro riverpod.override_with_value}
-  Override overrideWithValue(HabitsDao? value) {
+  Override overrideWithValue(HabitsDao value) {
     return $ProviderOverride(
       origin: this,
-      providerOverride: $SyncValueProvider<HabitsDao?>(value),
+      providerOverride: $SyncValueProvider<HabitsDao>(value),
     );
   }
 }
 
-String _$habitsDaoHash() => r'5b7a8a28a5aea9f74df9ec26f92c87173be9b524';
+String _$habitsDaoHash() => r'3b4543458058b682a91ca62c33f12482458761f6';
 
 @ProviderFor(habitCompletionsDao)
 final habitCompletionsDaoProvider = HabitCompletionsDaoProvider._();
@@ -138,11 +138,11 @@ final habitCompletionsDaoProvider = HabitCompletionsDaoProvider._();
 final class HabitCompletionsDaoProvider
     extends
         $FunctionalProvider<
-          HabitCompletionsDao?,
-          HabitCompletionsDao?,
-          HabitCompletionsDao?
+          HabitCompletionsDao,
+          HabitCompletionsDao,
+          HabitCompletionsDao
         >
-    with $Provider<HabitCompletionsDao?> {
+    with $Provider<HabitCompletionsDao> {
   HabitCompletionsDaoProvider._()
     : super(
         from: null,
@@ -159,26 +159,26 @@ final class HabitCompletionsDaoProvider
 
   @$internal
   @override
-  $ProviderElement<HabitCompletionsDao?> $createElement(
+  $ProviderElement<HabitCompletionsDao> $createElement(
     $ProviderPointer pointer,
   ) => $ProviderElement(pointer);
 
   @override
-  HabitCompletionsDao? create(Ref ref) {
+  HabitCompletionsDao create(Ref ref) {
     return habitCompletionsDao(ref);
   }
 
   /// {@macro riverpod.override_with_value}
-  Override overrideWithValue(HabitCompletionsDao? value) {
+  Override overrideWithValue(HabitCompletionsDao value) {
     return $ProviderOverride(
       origin: this,
-      providerOverride: $SyncValueProvider<HabitCompletionsDao?>(value),
+      providerOverride: $SyncValueProvider<HabitCompletionsDao>(value),
     );
   }
 }
 
 String _$habitCompletionsDaoHash() =>
-    r'bc49e9c21bb9e901537c0638f23c8904f19a754a';
+    r'15811473fbe8456f88614df38e45b3b7ea3578d6';
 
 @ProviderFor(challengeProgressDao)
 final challengeProgressDaoProvider = ChallengeProgressDaoProvider._();
@@ -186,11 +186,11 @@ final challengeProgressDaoProvider = ChallengeProgressDaoProvider._();
 final class ChallengeProgressDaoProvider
     extends
         $FunctionalProvider<
-          ChallengeProgressDao?,
-          ChallengeProgressDao?,
-          ChallengeProgressDao?
+          ChallengeProgressDao,
+          ChallengeProgressDao,
+          ChallengeProgressDao
         >
-    with $Provider<ChallengeProgressDao?> {
+    with $Provider<ChallengeProgressDao> {
   ChallengeProgressDaoProvider._()
     : super(
         from: null,
@@ -207,33 +207,33 @@ final class ChallengeProgressDaoProvider
 
   @$internal
   @override
-  $ProviderElement<ChallengeProgressDao?> $createElement(
+  $ProviderElement<ChallengeProgressDao> $createElement(
     $ProviderPointer pointer,
   ) => $ProviderElement(pointer);
 
   @override
-  ChallengeProgressDao? create(Ref ref) {
+  ChallengeProgressDao create(Ref ref) {
     return challengeProgressDao(ref);
   }
 
   /// {@macro riverpod.override_with_value}
-  Override overrideWithValue(ChallengeProgressDao? value) {
+  Override overrideWithValue(ChallengeProgressDao value) {
     return $ProviderOverride(
       origin: this,
-      providerOverride: $SyncValueProvider<ChallengeProgressDao?>(value),
+      providerOverride: $SyncValueProvider<ChallengeProgressDao>(value),
     );
   }
 }
 
 String _$challengeProgressDaoHash() =>
-    r'f81a759b299f25cac35ce5b4a61c9195581b9e4a';
+    r'95f784919164c4964c9659d8f12acc8947f29e73';
 
 @ProviderFor(tribeStatsDao)
 final tribeStatsDaoProvider = TribeStatsDaoProvider._();
 
 final class TribeStatsDaoProvider
-    extends $FunctionalProvider<TribeStatsDao?, TribeStatsDao?, TribeStatsDao?>
-    with $Provider<TribeStatsDao?> {
+    extends $FunctionalProvider<TribeStatsDao, TribeStatsDao, TribeStatsDao>
+    with $Provider<TribeStatsDao> {
   TribeStatsDaoProvider._()
     : super(
         from: null,
@@ -250,24 +250,24 @@ final class TribeStatsDaoProvider
 
   @$internal
   @override
-  $ProviderElement<TribeStatsDao?> $createElement($ProviderPointer pointer) =>
+  $ProviderElement<TribeStatsDao> $createElement($ProviderPointer pointer) =>
       $ProviderElement(pointer);
 
   @override
-  TribeStatsDao? create(Ref ref) {
+  TribeStatsDao create(Ref ref) {
     return tribeStatsDao(ref);
   }
 
   /// {@macro riverpod.override_with_value}
-  Override overrideWithValue(TribeStatsDao? value) {
+  Override overrideWithValue(TribeStatsDao value) {
     return $ProviderOverride(
       origin: this,
-      providerOverride: $SyncValueProvider<TribeStatsDao?>(value),
+      providerOverride: $SyncValueProvider<TribeStatsDao>(value),
     );
   }
 }
 
-String _$tribeStatsDaoHash() => r'1c520e6a687f5df1be943e20e0327fc1780c8a52';
+String _$tribeStatsDaoHash() => r'9b037be7882a8e95397b1d54445b98f1fbcc870f';
 
 @ProviderFor(leaderboardEntriesDao)
 final leaderboardEntriesDaoProvider = LeaderboardEntriesDaoProvider._();
@@ -275,11 +275,11 @@ final leaderboardEntriesDaoProvider = LeaderboardEntriesDaoProvider._();
 final class LeaderboardEntriesDaoProvider
     extends
         $FunctionalProvider<
-          LeaderboardEntriesDao?,
-          LeaderboardEntriesDao?,
-          LeaderboardEntriesDao?
+          LeaderboardEntriesDao,
+          LeaderboardEntriesDao,
+          LeaderboardEntriesDao
         >
-    with $Provider<LeaderboardEntriesDao?> {
+    with $Provider<LeaderboardEntriesDao> {
   LeaderboardEntriesDaoProvider._()
     : super(
         from: null,
@@ -296,33 +296,33 @@ final class LeaderboardEntriesDaoProvider
 
   @$internal
   @override
-  $ProviderElement<LeaderboardEntriesDao?> $createElement(
+  $ProviderElement<LeaderboardEntriesDao> $createElement(
     $ProviderPointer pointer,
   ) => $ProviderElement(pointer);
 
   @override
-  LeaderboardEntriesDao? create(Ref ref) {
+  LeaderboardEntriesDao create(Ref ref) {
     return leaderboardEntriesDao(ref);
   }
 
   /// {@macro riverpod.override_with_value}
-  Override overrideWithValue(LeaderboardEntriesDao? value) {
+  Override overrideWithValue(LeaderboardEntriesDao value) {
     return $ProviderOverride(
       origin: this,
-      providerOverride: $SyncValueProvider<LeaderboardEntriesDao?>(value),
+      providerOverride: $SyncValueProvider<LeaderboardEntriesDao>(value),
     );
   }
 }
 
 String _$leaderboardEntriesDaoHash() =>
-    r'569b62f41a44fff65d76e1993b24dda9aeb95c83';
+    r'749b485219bc1d452d30f40c595e0852fe37717c';
 
 @ProviderFor(blueprintsDao)
 final blueprintsDaoProvider = BlueprintsDaoProvider._();
 
 final class BlueprintsDaoProvider
-    extends $FunctionalProvider<BlueprintsDao?, BlueprintsDao?, BlueprintsDao?>
-    with $Provider<BlueprintsDao?> {
+    extends $FunctionalProvider<BlueprintsDao, BlueprintsDao, BlueprintsDao>
+    with $Provider<BlueprintsDao> {
   BlueprintsDaoProvider._()
     : super(
         from: null,
@@ -339,24 +339,24 @@ final class BlueprintsDaoProvider
 
   @$internal
   @override
-  $ProviderElement<BlueprintsDao?> $createElement($ProviderPointer pointer) =>
+  $ProviderElement<BlueprintsDao> $createElement($ProviderPointer pointer) =>
       $ProviderElement(pointer);
 
   @override
-  BlueprintsDao? create(Ref ref) {
+  BlueprintsDao create(Ref ref) {
     return blueprintsDao(ref);
   }
 
   /// {@macro riverpod.override_with_value}
-  Override overrideWithValue(BlueprintsDao? value) {
+  Override overrideWithValue(BlueprintsDao value) {
     return $ProviderOverride(
       origin: this,
-      providerOverride: $SyncValueProvider<BlueprintsDao?>(value),
+      providerOverride: $SyncValueProvider<BlueprintsDao>(value),
     );
   }
 }
 
-String _$blueprintsDaoHash() => r'cee1fe0d2ea099c185c810abd0b45cbca7b2c24e';
+String _$blueprintsDaoHash() => r'2e59c3ee060534b6e13c9e37b996af967d97e2e4';
 
 @ProviderFor(mutationQueueDao)
 final mutationQueueDaoProvider = MutationQueueDaoProvider._();
@@ -364,11 +364,11 @@ final mutationQueueDaoProvider = MutationQueueDaoProvider._();
 final class MutationQueueDaoProvider
     extends
         $FunctionalProvider<
-          MutationQueueDao?,
-          MutationQueueDao?,
-          MutationQueueDao?
+          MutationQueueDao,
+          MutationQueueDao,
+          MutationQueueDao
         >
-    with $Provider<MutationQueueDao?> {
+    with $Provider<MutationQueueDao> {
   MutationQueueDaoProvider._()
     : super(
         from: null,
@@ -385,25 +385,24 @@ final class MutationQueueDaoProvider
 
   @$internal
   @override
-  $ProviderElement<MutationQueueDao?> $createElement(
-    $ProviderPointer pointer,
-  ) => $ProviderElement(pointer);
+  $ProviderElement<MutationQueueDao> $createElement($ProviderPointer pointer) =>
+      $ProviderElement(pointer);
 
   @override
-  MutationQueueDao? create(Ref ref) {
+  MutationQueueDao create(Ref ref) {
     return mutationQueueDao(ref);
   }
 
   /// {@macro riverpod.override_with_value}
-  Override overrideWithValue(MutationQueueDao? value) {
+  Override overrideWithValue(MutationQueueDao value) {
     return $ProviderOverride(
       origin: this,
-      providerOverride: $SyncValueProvider<MutationQueueDao?>(value),
+      providerOverride: $SyncValueProvider<MutationQueueDao>(value),
     );
   }
 }
 
-String _$mutationQueueDaoHash() => r'4567ca4119e7538e8a20bb49fd2c47b1628f5511';
+String _$mutationQueueDaoHash() => r'd874d48f2ee5a6d9f55b7af4d7ff3d79dc246d81';
 
 @ProviderFor(tribeActivityDao)
 final tribeActivityDaoProvider = TribeActivityDaoProvider._();
@@ -411,11 +410,11 @@ final tribeActivityDaoProvider = TribeActivityDaoProvider._();
 final class TribeActivityDaoProvider
     extends
         $FunctionalProvider<
-          TribeActivityDao?,
-          TribeActivityDao?,
-          TribeActivityDao?
+          TribeActivityDao,
+          TribeActivityDao,
+          TribeActivityDao
         >
-    with $Provider<TribeActivityDao?> {
+    with $Provider<TribeActivityDao> {
   TribeActivityDaoProvider._()
     : super(
         from: null,
@@ -432,22 +431,21 @@ final class TribeActivityDaoProvider
 
   @$internal
   @override
-  $ProviderElement<TribeActivityDao?> $createElement(
-    $ProviderPointer pointer,
-  ) => $ProviderElement(pointer);
+  $ProviderElement<TribeActivityDao> $createElement($ProviderPointer pointer) =>
+      $ProviderElement(pointer);
 
   @override
-  TribeActivityDao? create(Ref ref) {
+  TribeActivityDao create(Ref ref) {
     return tribeActivityDao(ref);
   }
 
   /// {@macro riverpod.override_with_value}
-  Override overrideWithValue(TribeActivityDao? value) {
+  Override overrideWithValue(TribeActivityDao value) {
     return $ProviderOverride(
       origin: this,
-      providerOverride: $SyncValueProvider<TribeActivityDao?>(value),
+      providerOverride: $SyncValueProvider<TribeActivityDao>(value),
     );
   }
 }
 
-String _$tribeActivityDaoHash() => r'712a053b5ad7cb659ad2e86bdebf38fd3b4d9e81';
+String _$tribeActivityDaoHash() => r'de601102a250401a43f7f6d392941bf457d5c6ce';

@@ -66,8 +66,7 @@ class DriftLeaderboardRepository implements LeaderboardRepository {
             data: {
               'xp': {'__type__': 'increment', 'value': xp},
               'level': level,
-              if (userName != null)
-                'userName': userName, // ignore: use_null_aware_elements
+              'userName': ?userName,
               'lastUpdated': nowStr,
             },
           );

@@ -66,12 +66,13 @@ class QuestCardStitch extends StatelessWidget {
                                         errorBuilder:
                                             (context, error, stackTrace) =>
                                                 _buildImageFallback(),
-                                        loadingBuilder:
-                                            (context, child, progress) {
-                                              if (progress == null)
-                                                return child;
-                                              return _buildImagePlaceholder();
-                                            },
+                                            loadingBuilder:
+                                                (context, child, progress) {
+                                                  if (progress == null) {
+                                                    return child;
+                                                  }
+                                                  return _buildImagePlaceholder();
+                                                },
                                       ))
                               : _buildImageFallback(),
                         ),
