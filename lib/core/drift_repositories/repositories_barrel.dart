@@ -1,6 +1,5 @@
-/// Conditional import barrier for Drift*Repository classes.
-///
-/// On native the real implementations are used; on web the stubs in
-/// [repositories_stub] are compiled instead (never instantiated because all
-/// providers return Firestore-based repos when `kIsWeb` is true).
-export 'repositories_stub.dart' if (dart.library.io) 'repositories_native.dart';
+// Conditional import barrier for Drift*Repository classes.
+//
+// With WASM SQLite on web, all Drift types are real, so the drift
+// repositories compile and work on both platforms.
+export 'repositories_web.dart' if (dart.library.io) 'repositories_native.dart';

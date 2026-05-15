@@ -220,7 +220,6 @@ class WorldHealthService {
       'Cache miss or stale, calculating fresh world health for user $userId',
     );
     final profile = await _repository.getUserStats(userId);
-    if (profile == null) return 1.0;
     final health = await calculateWorldHealth(profile);
 
     // Update cache

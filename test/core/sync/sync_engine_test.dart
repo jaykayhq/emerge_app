@@ -2,7 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:emerge_app/core/sync/sync_engine.dart';
-import 'package:emerge_app/core/drift/daos/mutation_queue_dao.dart';
+import 'package:emerge_app/core/drift/database.dart';
 
 class MockMutationQueueDao extends Mock implements MutationQueueDao {}
 

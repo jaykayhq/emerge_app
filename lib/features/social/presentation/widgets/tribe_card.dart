@@ -7,7 +7,7 @@ import 'package:emerge_app/features/social/domain/models/tribe.dart';
 import 'package:emerge_app/features/auth/domain/entities/user_extension.dart';
 import 'package:emerge_app/features/social/presentation/providers/cached_tribe_stats_provider.dart';
 import 'package:emerge_app/features/social/domain/services/tribe_membership_service.dart';
-import 'package:emerge_app/features/social/presentation/providers/tribes_provider.dart';
+import 'package:emerge_app/features/social/data/services/tribe_stats_service.dart';
 import 'package:emerge_app/features/auth/presentation/providers/auth_providers.dart';
 
 class TribeCard extends ConsumerWidget {

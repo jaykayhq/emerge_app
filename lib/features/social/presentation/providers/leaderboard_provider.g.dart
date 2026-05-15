@@ -55,7 +55,7 @@ final class LeaderboardRepositoryProvider
 }
 
 String _$leaderboardRepositoryHash() =>
-    r'a5f2f30391ecbc4703584b16f3029b672db88ede';
+    r'4c7453db12a2d228b59a8c63b8f9fa39c0206231';
 
 @ProviderFor(clubLeaderboard)
 final clubLeaderboardProvider = ClubLeaderboardFamily._();

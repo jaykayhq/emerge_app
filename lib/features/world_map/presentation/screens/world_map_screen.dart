@@ -448,8 +448,9 @@ class _GlassmorphismTopBar extends StatelessWidget {
                                   final isPremium =
                                       ref.watch(isPremiumProvider).value ??
                                       false;
-                                  if (!isPremium)
+                                  if (!isPremium) {
                                     return const SizedBox.shrink();
+                                  }
                                   return Container(
                                     padding: const EdgeInsets.symmetric(
                                       horizontal: 6,

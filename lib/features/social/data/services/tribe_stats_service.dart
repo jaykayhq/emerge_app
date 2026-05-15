@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 /// Service for calculating real-time tribe statistics from actual user data.
 ///
@@ -246,3 +247,7 @@ class TribeStatsService {
     }
   }
 }
+
+final tribeStatsServiceProvider = Provider<TribeStatsService>((ref) {
+  return TribeStatsService();
+});

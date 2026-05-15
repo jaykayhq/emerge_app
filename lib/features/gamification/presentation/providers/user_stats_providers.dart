@@ -22,7 +22,7 @@ final userStatsStreamProvider = StreamProvider<UserProfile>((ref) {
   if (user == null) return Stream.value(const UserProfile(uid: ''));
 
   final repository = ref.watch(userStatsRepositoryProvider);
-  return repository.watchUserStats(user.id).where((p) => p != null).cast<UserProfile>();
+  return repository.watchUserStats(user.id);
 });
 
 /// Provider that only emits when the user's archetype changes.
@@ -168,10 +168,6 @@ class UserStatsController {
     try {
       // Get current profile
       final currentProfile = await repository.getUserStats(userId);
-      if (currentProfile == null) {
-        AppLogger.w('No current profile found for user $userId');
-        return;
-      }
 
       // Update with new world state
       final updatedProfile = currentProfile.copyWith(worldState: newWorldState);
@@ -192,10 +188,6 @@ class UserStatsController {
 
     try {
       final currentProfile = await repository.getUserStats(userId);
-      if (currentProfile == null) {
-        AppLogger.w('No current profile found');
-        return;
-      }
       final gamificationService = GamificationService();
 
       final newWorldState = gamificationService.unlockBuilding(
@@ -219,10 +211,6 @@ class UserStatsController {
 
     try {
       final currentProfile = await repository.getUserStats(userId);
-      if (currentProfile == null) {
-        AppLogger.w('No current profile found');
-        return;
-      }
       final currentWorldState = currentProfile.worldState;
 
       // Prevent duplicate starts
@@ -256,10 +244,6 @@ class UserStatsController {
 
     try {
       final currentProfile = await repository.getUserStats(userId);
-      if (currentProfile == null) {
-        AppLogger.w('No current profile found');
-        return;
-      }
       final currentWorldState = currentProfile.worldState;
       final gamificationService = GamificationService();
 
@@ -366,10 +350,6 @@ class UserStatsController {
 
     try {
       final currentProfile = await repository.getUserStats(userId);
-      if (currentProfile == null) {
-        AppLogger.w('No current profile found');
-        return;
-      }
       if (currentProfile.hasEmerged) return; // Already emerged
 
       final updatedProfile = currentProfile.copyWith(hasEmerged: true);

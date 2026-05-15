@@ -26,7 +26,7 @@ final cachedTribeStatsProvider = FutureProvider.family<TribeStats, String>((
   ref,
   tribeId,
 ) async {
-  final dao = ref.watch(tribeStatsDaoProvider)!;
+  final dao = ref.watch(tribeStatsDaoProvider);
   final row = await dao.getStats(tribeId);
   if (row == null) {
     return TribeStats(

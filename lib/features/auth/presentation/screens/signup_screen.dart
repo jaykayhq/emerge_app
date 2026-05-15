@@ -6,7 +6,6 @@ import 'package:emerge_app/core/utils/validators.dart';
 import 'package:emerge_app/features/auth/presentation/providers/auth_providers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:gap/gap.dart';
 import 'package:emerge_app/features/auth/domain/entities/user_extension.dart';
 import 'package:emerge_app/features/gamification/presentation/providers/gamification_providers.dart';
@@ -478,9 +477,23 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
                             borderRadius: BorderRadius.circular(12),
                           ),
                         ),
-                        icon: const FaIcon(
-                          FontAwesomeIcons.google,
-                          color: EmergeColors.teal,
+                        icon: Container(
+                          width: 20,
+                          height: 20,
+                          decoration: const BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: Colors.white,
+                          ),
+                          child: const Center(
+                            child: Text(
+                              'G',
+                              style: TextStyle(
+                                color: Color(0xFF4285F4),
+                                fontSize: 13,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
                         ),
                         label: const Text('Sign up with Google'),
                       ),
@@ -845,10 +858,23 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
                                         borderRadius: BorderRadius.circular(12),
                                       ),
                                     ),
-                                    icon: const FaIcon(
-                                      FontAwesomeIcons.google,
-                                      color: EmergeColors.teal,
-                                      size: 20,
+                                    icon: Container(
+                                      width: 20,
+                                      height: 20,
+                                      decoration: const BoxDecoration(
+                                        shape: BoxShape.circle,
+                                        color: Colors.white,
+                                      ),
+                                      child: const Center(
+                                        child: Text(
+                                          'G',
+                                          style: TextStyle(
+                                            color: Color(0xFF4285F4),
+                                            fontSize: 13,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                      ),
                                     ),
                                     label: const Text('Sign up with Google'),
                                   ),

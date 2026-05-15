@@ -1,10 +1,9 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:emerge_app/core/sync/sync_engine.dart';
+import 'package:emerge_app/core/sync/sync_engine_barrel.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:emerge_app/features/auth/domain/entities/user_extension.dart';
 import 'package:emerge_app/features/social/domain/services/club_activity_service.dart';
-import 'package:emerge_app/core/drift/daos/tribe_activity_dao.dart';
 import 'package:emerge_app/features/social/domain/repositories/leaderboard_repository.dart';
 import 'package:emerge_app/core/drift/database.dart';
 import 'package:fpdart/fpdart.dart';
@@ -62,7 +61,7 @@ void main() {
 
   setUpAll(() {
     registerFallbackValue(const Duration(seconds: 1));
-    registerFallbackValue(const TribeActivityTableCompanion());
+    registerFallbackValue(TribeActivityTableCompanion());
     registerFallbackValue(UserArchetype.none);
   });
 
@@ -82,7 +81,7 @@ void main() {
 
     when(
       () => mockActivityDao.insertActivity(any()),
-    ).thenAnswer((_) async => 1);
+    ).thenAnswer((_) async {});
     when(
       () => mockLeaderboardRepo.updateUserScore(
         any(),

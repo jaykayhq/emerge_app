@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
-import 'package:emerge_app/core/sync/sync_engine.dart';
+import 'package:emerge_app/core/sync/sync_engine_barrel.dart';
 import 'package:emerge_app/core/sync/sync_trigger_service.dart';
 
 class MockSyncEngine extends Mock implements EnhancedSyncEngine {}
