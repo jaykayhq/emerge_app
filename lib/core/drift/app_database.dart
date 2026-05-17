@@ -51,7 +51,7 @@ part 'app_database.g.dart';
 class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(createDriftConnection());
 
-  AppDatabase.withExecutor(QueryExecutor executor) : super(executor);
+  AppDatabase.withExecutor(super.executor);
 
   @override
   int get schemaVersion => 2;
