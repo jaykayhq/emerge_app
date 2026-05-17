@@ -20,34 +20,41 @@ class DriftChallengeRepository implements ChallengeRepository {
     String challengeId,
   ) async {
     try {
-      final challenge = ChallengeCatalog.getChallengeById(challengeId);
-      if (challenge == null) return Left(ServerFailure('Challenge not found'));
+      final template = ChallengeCatalog.getChallengeById(challengeId);
+      if (template == null) return Left(ServerFailure('Challenge not found'));
 
       await _db.challengeProgressDao.insertFromData(
         challengeId: challengeId,
         userId: userId,
-        title: challenge.title,
-        attribute: challenge.xpReward > 0 ? 'vitality' : null,
-        totalDays: challenge.totalDays,
-        xpReward: challenge.xpReward,
+        title: template.title,
+        attribute: template.xpReward > 0 ? 'vitality' : null,
+        totalDays: template.totalDays,
+        xpReward: template.xpReward,
         joinedAt: DateTime.now().toIso8601String(),
         updatedAt: DateTime.now().toIso8601String(),
       );
 
-      // Sync to Firestore
+      // Read back to ensure sync payload matches local state
+      final progress = (await _db.challengeProgressDao.getActive(userId))
+          .firstWhere(
+            (p) => p.challengeId == challengeId,
+            orElse: () => throw StateError('Challenge progress not found'),
+          );
+
+      // Sync to Firestore with values from local DB
       await _syncEngine.enqueueSet(
         collectionPath: 'users/$userId/challenges',
         documentId: challengeId,
         data: {
-          'challengeId': challengeId,
-          'userId': userId,
-          'title': challenge.title,
-          'totalDays': challenge.totalDays,
-          'xpReward': challenge.xpReward,
-          'joinedAt': DateTime.now().toIso8601String(),
+          'challengeId': progress.challengeId,
+          'userId': progress.userId,
+          'title': progress.title,
+          'totalDays': progress.totalDays,
+          'xpReward': progress.xpReward,
+          'joinedAt': progress.joinedAt,
           'updatedAt': DateTime.now().toIso8601String(),
-          'status': 'active',
-          'currentDay': 0,
+          'status': progress.status,
+          'currentDay': progress.currentDay,
         },
       );
 
@@ -145,7 +152,7 @@ class DriftChallengeRepository implements ChallengeRepository {
 
   @override
   Future<List<Challenge>> getUserChallenges(String userId) async {
-    final all = await _db.challengeProgressDao.getActive(userId);
+    final all = await _db.challengeProgressDao.getAll(userId);
     return all.map((r) {
       // Look up the original template from catalog to get metadata
       // (imageUrl, description, reward, steps) not stored in the DB

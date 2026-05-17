@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:emerge_app/core/theme/emerge_colors.dart';
@@ -144,23 +145,10 @@ class WelcomeScreen extends ConsumerWidget {
                           ),
                           foregroundColor: Colors.white,
                         ),
-                        icon: Container(
+                        icon: SvgPicture.asset(
+                          'assets/images/google_logo.svg',
                           width: 20,
                           height: 20,
-                          decoration: const BoxDecoration(
-                            shape: BoxShape.circle,
-                            color: Colors.white,
-                          ),
-                          child: const Center(
-                            child: Text(
-                              'G',
-                              style: TextStyle(
-                                color: Color(0xFF4285F4),
-                                fontSize: 13,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ),
                         ),
                         label: const Text(
                           'Continue with Google',

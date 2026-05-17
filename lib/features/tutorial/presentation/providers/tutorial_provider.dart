@@ -1,6 +1,6 @@
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:emerge_app/features/onboarding/data/repositories/local_settings_repository.dart';
+import 'package:emerge_app/features/onboarding/presentation/providers/onboarding_provider.dart';
 
 part 'tutorial_provider.g.dart';
 
@@ -53,19 +53,6 @@ class TutorialState {
     );
   }
 }
-
-/// Provider for LocalSettingsRepository as a singleton
-/// Shared across the app to prevent multiple Hive box instances
-final localSettingsRepositoryProvider = Provider<LocalSettingsRepository>((
-  ref,
-) {
-  final repo = LocalSettingsRepository();
-  // Initialize the repository to ensure Hive is set up
-  ref.onDispose(() {
-    // Cleanup if needed (Hive boxes are automatically managed)
-  });
-  return repo;
-});
 
 /// Provider for managing tutorial state
 @Riverpod(keepAlive: true)

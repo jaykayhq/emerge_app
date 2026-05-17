@@ -14,6 +14,7 @@ import 'package:emerge_app/features/gamification/domain/services/gamification_se
 import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:emerge_app/core/theme/emerge_colors.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 
 class SignUpScreen extends ConsumerStatefulWidget {
   const SignUpScreen({super.key});
@@ -477,23 +478,10 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
                             borderRadius: BorderRadius.circular(12),
                           ),
                         ),
-                        icon: Container(
+                        icon: SvgPicture.asset(
+                          'assets/images/google_logo.svg',
                           width: 20,
                           height: 20,
-                          decoration: const BoxDecoration(
-                            shape: BoxShape.circle,
-                            color: Colors.white,
-                          ),
-                          child: const Center(
-                            child: Text(
-                              'G',
-                              style: TextStyle(
-                                color: Color(0xFF4285F4),
-                                fontSize: 13,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ),
                         ),
                         label: const Text('Sign up with Google'),
                       ),
@@ -858,23 +846,10 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
                                         borderRadius: BorderRadius.circular(12),
                                       ),
                                     ),
-                                    icon: Container(
+                                    icon: SvgPicture.asset(
+                                      'assets/images/google_logo.svg',
                                       width: 20,
                                       height: 20,
-                                      decoration: const BoxDecoration(
-                                        shape: BoxShape.circle,
-                                        color: Colors.white,
-                                      ),
-                                      child: const Center(
-                                        child: Text(
-                                          'G',
-                                          style: TextStyle(
-                                            color: Color(0xFF4285F4),
-                                            fontSize: 13,
-                                            fontWeight: FontWeight.bold,
-                                          ),
-                                        ),
-                                      ),
                                     ),
                                     label: const Text('Sign up with Google'),
                                   ),

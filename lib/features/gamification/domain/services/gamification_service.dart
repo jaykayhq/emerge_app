@@ -12,6 +12,8 @@ class GamificationService {
   static const int milestonesPerLevelBase = 10;
 
   /// Calculates XP gain based on habit difficulty and streak.
+  /// Uses post-completion streak (currentStreak + 1) to match
+  /// LocalGameLoopEngine.computeXpGain, which is the source of truth.
   int calculateXpGain(Habit habit) {
     double multiplier = GamificationConstants.difficultyEasyMultiplier;
     switch (habit.difficulty) {
@@ -27,8 +29,9 @@ class GamificationService {
     }
 
     // Streak bonus: +10% per 7 days, capped at 50%
+    final postCompletionStreak = habit.currentStreak + 1;
     double streakBonus =
-        (habit.currentStreak / GamificationConstants.daysPerStreakBonusStep) *
+        (postCompletionStreak / GamificationConstants.daysPerStreakBonusStep) *
         GamificationConstants.streakBonusPerStep;
     if (streakBonus > GamificationConstants.maxStreakBonus) {
       streakBonus = GamificationConstants.maxStreakBonus;

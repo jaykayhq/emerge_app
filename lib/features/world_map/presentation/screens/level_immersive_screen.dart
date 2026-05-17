@@ -7,11 +7,13 @@ import 'package:emerge_app/features/auth/presentation/providers/auth_providers.d
 import 'package:emerge_app/features/habits/domain/entities/habit.dart';
 import 'package:emerge_app/features/social/domain/models/challenge.dart';
 import 'package:emerge_app/features/social/presentation/providers/challenge_provider.dart';
+import 'package:emerge_app/features/social/presentation/providers/challenge_bundle_provider.dart';
 import 'package:emerge_app/features/world_map/domain/models/archetype_map_config.dart';
 import 'package:emerge_app/features/world_map/domain/models/world_node.dart';
 import 'package:emerge_app/features/world_map/presentation/providers/world_health_provider.dart';
 import 'package:emerge_app/features/world_map/presentation/widgets/world_health_bar.dart';
 import 'package:emerge_app/features/gamification/presentation/providers/user_stats_providers.dart';
+import 'package:emerge_app/features/gamification/presentation/providers/recap_hub_provider.dart';
 import 'package:emerge_app/features/tutorial/presentation/providers/tutorial_provider.dart';
 import 'package:emerge_app/features/tutorial/presentation/widgets/tutorial_overlay.dart';
 import 'package:flutter/material.dart';
@@ -585,7 +587,9 @@ class _LevelImmersiveScreenState extends ConsumerState<LevelImmersiveScreen> {
               children: filteredQuests.asMap().entries.map((entry) {
                 final idx = entry.key;
                 final challenge = entry.value;
-                final progress = challenge.currentDay / challenge.totalDays;
+                final progress = challenge.totalDays > 0
+                    ? (challenge.currentDay / challenge.totalDays).clamp(0.0, 1.0)
+                    : 0.0;
 
                 return Padding(
                   padding: EdgeInsets.only(
@@ -628,6 +632,12 @@ class _LevelImmersiveScreenState extends ConsumerState<LevelImmersiveScreen> {
   }
 
   Widget _buildProgressSection(BuildContext context) {
+    final effectiveState = _overriddenNodeState ?? widget.node.state;
+    final isCompleted = effectiveState == NodeState.completed || effectiveState == NodeState.mastered;
+    final isInProgress = effectiveState == NodeState.inProgress;
+    
+    final progressPercent = isCompleted ? 100.0 : widget.node.progress.toDouble();
+
     return Column(
       children: [
         Row(
@@ -643,9 +653,9 @@ class _LevelImmersiveScreenState extends ConsumerState<LevelImmersiveScreen> {
               ),
             ),
             Text(
-              '${widget.node.progress}%',
+              '${progressPercent.toInt()}%',
               style: TextStyle(
-                color: widget.config.primaryColor,
+                color: isCompleted ? Colors.green : widget.config.primaryColor,
                 fontSize: 13,
                 fontWeight: FontWeight.bold,
               ),
@@ -656,12 +666,43 @@ class _LevelImmersiveScreenState extends ConsumerState<LevelImmersiveScreen> {
         ClipRRect(
           borderRadius: BorderRadius.circular(6),
           child: LinearProgressIndicator(
-            value: widget.node.progress / 100,
+            value: progressPercent / 100,
             backgroundColor: widget.config.primaryColor.withValues(alpha: 0.15),
-            valueColor: AlwaysStoppedAnimation(widget.config.primaryColor),
+            valueColor: AlwaysStoppedAnimation(
+              isCompleted ? Colors.green : widget.config.primaryColor,
+            ),
             minHeight: 8,
           ),
         ),
+        if (isInProgress) ...[
+          const SizedBox(height: 8),
+          Text(
+            'Mission in progress — complete quests to advance',
+            style: TextStyle(
+              color: Colors.white.withValues(alpha: 0.4),
+              fontSize: 11,
+              fontStyle: FontStyle.italic,
+            ),
+          ),
+        ],
+        if (isCompleted) ...[
+          const SizedBox(height: 8),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(Icons.check_circle, color: Colors.green.withValues(alpha: 0.8), size: 14),
+              const SizedBox(width: 4),
+              Text(
+                'Node conquered!',
+                style: TextStyle(
+                  color: Colors.green.withValues(alpha: 0.8),
+                  fontSize: 11,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ],
+          ),
+        ],
       ],
     );
   }
@@ -732,21 +773,7 @@ class _LevelImmersiveScreenState extends ConsumerState<LevelImmersiveScreen> {
   Future<void> _handleAction(BuildContext context, WidgetRef ref) async {
     try {
       if ((_overriddenNodeState ?? widget.node.state) == NodeState.available) {
-        await ref
-            .read(userStatsControllerProvider)
-            .startMission(widget.node.id);
-        if (context.mounted) {
-          setState(() {
-            _overriddenNodeState = NodeState.inProgress;
-          });
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Mission started: ${widget.node.name}'),
-              backgroundColor: widget.config.primaryColor,
-              behavior: SnackBarBehavior.floating,
-            ),
-          );
-        }
+        _showMissionObjectiveDialog(context, ref);
       } else if ((_overriddenNodeState ?? widget.node.state) ==
           NodeState.inProgress) {
         final xpBoosts = widget.node.xpBoosts.map(
@@ -759,14 +786,23 @@ class _LevelImmersiveScreenState extends ConsumerState<LevelImmersiveScreen> {
               xpBoosts,
               widget.node.requiredLevel,
             );
+        ref.invalidate(userChallengesProvider);
+        ref.invalidate(challengeBundleProvider);
+        ref.invalidate(userStatsStreamProvider);
+        ref.invalidate(worldHealthStreamProvider);
+        ref.invalidate(recapRefreshCounterProvider);
+        if (!context.mounted) return;
+        setState(() {
+          _overriddenNodeState = NodeState.completed;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Mission complete: ${widget.node.name}! 🎉'),
+            backgroundColor: widget.config.primaryColor,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
         if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Mission complete: ${widget.node.name}! 🎉'),
-              backgroundColor: widget.config.primaryColor,
-              behavior: SnackBarBehavior.floating,
-            ),
-          );
           Navigator.pop(context);
         }
       }
@@ -781,6 +817,279 @@ class _LevelImmersiveScreenState extends ConsumerState<LevelImmersiveScreen> {
         );
       }
     }
+  }
+
+  void _showMissionObjectiveDialog(BuildContext context, WidgetRef ref) {
+    showDialog(
+      context: context,
+      builder: (dialogContext) => Dialog(
+        backgroundColor: Colors.transparent,
+        child: Container(
+          constraints: const BoxConstraints(maxWidth: 340),
+          decoration: BoxDecoration(
+            color: const Color(0xFF1A1A2E),
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(
+              color: widget.config.primaryColor.withValues(alpha: 0.3),
+              width: 1.5,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: widget.config.primaryColor.withValues(alpha: 0.2),
+                blurRadius: 20,
+                spreadRadius: 2,
+              ),
+            ],
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Header with node emoji and name
+              Container(
+                padding: const EdgeInsets.all(24),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [
+                      widget.config.primaryColor.withValues(alpha: 0.2),
+                      Colors.transparent,
+                    ],
+                  ),
+                  borderRadius: const BorderRadius.only(
+                    topLeft: Radius.circular(20),
+                    topRight: Radius.circular(20),
+                  ),
+                ),
+                child: Column(
+                  children: [
+                    Text(
+                      widget.node.emoji,
+                      style: const TextStyle(fontSize: 48),
+                    ),
+                    const SizedBox(height: 12),
+                    Text(
+                      widget.node.name,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        letterSpacing: 0.5,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 8),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 6,
+                      ),
+                      decoration: BoxDecoration(
+                        color: widget.config.primaryColor.withValues(alpha: 0.15),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: widget.config.primaryColor.withValues(alpha: 0.3),
+                        ),
+                      ),
+                      child: Text(
+                        'STAGE ${widget.node.stage} • LVL ${widget.node.requiredLevel}',
+                        style: TextStyle(
+                          color: widget.config.primaryColor,
+                          fontSize: 11,
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: 1,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              // Objective section
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.flag_outlined,
+                          color: widget.config.primaryColor,
+                          size: 18,
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          'MISSION OBJECTIVE',
+                          style: TextStyle(
+                            color: widget.config.primaryColor,
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                            letterSpacing: 1.2,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    Text(
+                      widget.node.directive.isNotEmpty
+                          ? widget.node.directive
+                          : 'Complete all assigned quests to restore vitality to this node and advance your archetype\'s dominion.',
+                      style: TextStyle(
+                        color: Colors.white.withValues(alpha: 0.8),
+                        fontSize: 14,
+                        height: 1.6,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              // Rewards section
+              if (widget.node.xpBoosts.isNotEmpty)
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Icon(
+                            Icons.workspace_premium,
+                            color: widget.config.primaryColor,
+                            size: 18,
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            'REWARDS',
+                            style: TextStyle(
+                              color: widget.config.primaryColor,
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                              letterSpacing: 1.2,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 12),
+                      Wrap(
+                        spacing: 8,
+                        runSpacing: 8,
+                        children: widget.node.xpBoosts.entries.map((entry) {
+                          return Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 6,
+                            ),
+                            decoration: BoxDecoration(
+                              color: _getAttributeColor(entry.key).withValues(alpha: 0.1),
+                              borderRadius: BorderRadius.circular(8),
+                              border: Border.all(
+                                color: _getAttributeColor(entry.key).withValues(alpha: 0.3),
+                              ),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(
+                                  _getAttributeIcon(entry.key),
+                                  color: _getAttributeColor(entry.key),
+                                  size: 14,
+                                ),
+                                const SizedBox(width: 4),
+                                Text(
+                                  '+${entry.value} ${entry.key.name}',
+                                  style: TextStyle(
+                                    color: _getAttributeColor(entry.key),
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          );
+                        }).toList(),
+                      ),
+                    ],
+                  ),
+                ),
+              const SizedBox(height: 8),
+              // Action buttons
+              Padding(
+                padding: const EdgeInsets.all(20),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton(
+                        onPressed: () => Navigator.pop(dialogContext),
+                        style: OutlinedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          side: BorderSide(
+                            color: Colors.white.withValues(alpha: 0.2),
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                        child: const Text(
+                          'NOT YET',
+                          style: TextStyle(
+                            color: Colors.white70,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 13,
+                            letterSpacing: 1,
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: ElevatedButton(
+                        onPressed: () async {
+                          Navigator.pop(dialogContext);
+                          await ref
+                              .read(userStatsControllerProvider)
+                              .startMission(widget.node.id);
+                          if (mounted) {
+                            setState(() {
+                              _overriddenNodeState = NodeState.inProgress;
+                            });
+                            if (context.mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text('Mission started: ${widget.node.name}'),
+                                  backgroundColor: widget.config.primaryColor,
+                                  behavior: SnackBarBehavior.floating,
+                                ),
+                              );
+                            }
+                          }
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: widget.config.primaryColor,
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          elevation: 0,
+                        ),
+                        child: const Text(
+                          'BEGIN MISSION',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 13,
+                            letterSpacing: 1,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 
   // ─── Helpers ─────────────────────────────────────────
@@ -913,9 +1222,12 @@ class _LevelImmersiveScreenState extends ConsumerState<LevelImmersiveScreen> {
     final nodeArchetype = widget.node.archetype?.toLowerCase();
     final profileArchetype = profile.archetype.name.toLowerCase();
 
-    // 1. Get active user challenges for this archetype/node
-    final activeUserChallenges = userChallenges.where((challenge) {
-      if (challenge.status != ChallengeStatus.active) return false;
+    // Get all user challenges (active + completed) for this archetype/node
+    final filteredChallenges = userChallenges.where((challenge) {
+      if (challenge.status != ChallengeStatus.active &&
+          challenge.status != ChallengeStatus.completed) {
+        return false;
+      }
 
       // Match by node archetype if specified
       if (nodeArchetype != null && challenge.archetypeId != null) {
@@ -925,7 +1237,7 @@ class _LevelImmersiveScreenState extends ConsumerState<LevelImmersiveScreen> {
       return challenge.archetypeId?.toLowerCase() == profileArchetype;
     }).toList();
 
-    // 2. Add Daily Quest if it's not already in userChallenges and matches archetype
+    // Add Daily Quest if it's not already in userChallenges and matches archetype
     if (dailyQuest != null) {
       final isAlreadyJoined = userChallenges.any((c) => c.id == dailyQuest.id);
       final matchesArchetype =
@@ -934,11 +1246,11 @@ class _LevelImmersiveScreenState extends ConsumerState<LevelImmersiveScreen> {
               dailyQuest.archetypeId?.toLowerCase() == profileArchetype);
 
       if (!isAlreadyJoined && matchesArchetype) {
-        activeUserChallenges.add(dailyQuest);
+        filteredChallenges.add(dailyQuest);
       }
     }
 
-    return activeUserChallenges;
+    return filteredChallenges;
   }
 
   /// Check in to a challenge, updating progress
@@ -964,13 +1276,9 @@ class _LevelImmersiveScreenState extends ConsumerState<LevelImmersiveScreen> {
 
       final repository = ref.read(challengeRepositoryProvider);
 
-      // Check if user has joined this challenge yet
-      final userChallengesAsync = ref.read(userChallengesProvider);
-      final isJoined = userChallengesAsync.when(
-        data: (list) => list.any((c) => c.id == challenge.id),
-        loading: () => false,
-        error: (err, stack) => false,
-      );
+      // Check if user has joined this challenge yet (await to avoid race condition)
+      final userChallenges = await ref.read(userChallengesProvider.future);
+      final isJoined = userChallenges.any((c) => c.id == challenge.id);
 
       // 1. If not joined, join first
       if (!isJoined) {
@@ -1016,8 +1324,18 @@ class _LevelImmersiveScreenState extends ConsumerState<LevelImmersiveScreen> {
           }
         },
         (_) {
+          ref.invalidate(userChallengesProvider);
+          ref.invalidate(challengeBundleProvider);
+          ref.invalidate(userStatsStreamProvider);
+          ref.invalidate(worldHealthStreamProvider);
+          ref.invalidate(recapRefreshCounterProvider);
           if (context.mounted) {
             final isComplete = newProgress >= challenge.totalDays;
+            if (isComplete) {
+              setState(() {
+                _overriddenNodeState = NodeState.completed;
+              });
+            }
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
                 content: Text(
@@ -1183,6 +1501,8 @@ class _ChallengeQuestCard extends StatelessWidget {
                             color: Colors.white.withValues(alpha: 0.5),
                             fontSize: 11,
                           ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                         ),
                       ],
                     ),

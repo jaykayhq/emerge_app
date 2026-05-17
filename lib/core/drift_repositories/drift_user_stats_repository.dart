@@ -10,8 +10,8 @@ class DriftUserStatsRepository {
   final FirebaseFirestore _firestore;
   final EnhancedSyncEngine _syncEngine;
 
-  DriftUserStatsRepository(this._db, this._syncEngine)
-    : _firestore = FirebaseFirestore.instance;
+  DriftUserStatsRepository(this._db, this._syncEngine, [FirebaseFirestore? firestore])
+    : _firestore = firestore ?? FirebaseFirestore.instance;
 
   Future<void> saveUserStats(UserProfile profile) async {
     // 1. Update local Drift database
@@ -143,12 +143,12 @@ class DriftUserStatsRepository {
   }
 
   Future<void> saveRecap(String userId, Map<String, dynamic> recapData) async {
-    await _firestore
-        .collection('user_stats')
-        .doc(userId)
-        .collection('recaps')
-        .doc(recapData['id'] as String)
-        .set(recapData);
+    // Use sync engine for offline-first recap persistence
+    await _syncEngine.enqueueSet(
+      collectionPath: 'user_stats',
+      documentId: '$userId/recaps/${recapData['id']}',
+      data: recapData,
+    );
   }
 
   Future<List<Map<String, dynamic>>> getWeeklyActivity(

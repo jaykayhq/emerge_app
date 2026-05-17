@@ -1,13 +1,12 @@
-import 'dart:math';
+import 'package:emerge_app/core/constants/gamification_constants.dart';
 import 'package:emerge_app/features/habits/domain/entities/habit.dart';
 
 class VariableRewardService {
   static const double streakBonusMax = 0.5;
-  static const double randomBonusChance = 0.15;
-  static const double randomBonusMax = 0.3;
 
   static const List<int> streakMilestones = [7, 14, 30, 60, 90, 180, 365];
 
+  /// Matches LocalGameLoopEngine.computeXpGain exactly.
   static int calculateFinalXp({
     required Habit habit,
     required int baseXp,
@@ -16,8 +15,6 @@ class VariableRewardService {
     double xp = baseXp.toDouble();
 
     xp = _applyStreakBonus(xp, currentStreak);
-    xp = _applyRandomBonus(xp);
-    xp = _applyMilestoneBonus(xp, currentStreak);
 
     return xp.toInt();
   }
@@ -25,24 +22,10 @@ class VariableRewardService {
   static double _applyStreakBonus(double xp, int currentStreak) {
     if (currentStreak <= 0) return xp;
 
-    final streakBonus = (currentStreak * 0.1).clamp(0.0, streakBonusMax);
-    return xp * (1 + streakBonus);
-  }
-
-  static double _applyRandomBonus(double xp) {
-    final random = Random();
-    if (random.nextDouble() < randomBonusChance) {
-      final bonusMultiplier = 1 + (random.nextDouble() * randomBonusMax);
-      return xp * bonusMultiplier;
-    }
-    return xp;
-  }
-
-  static double _applyMilestoneBonus(double xp, int currentStreak) {
-    if (streakMilestones.contains(currentStreak)) {
-      return xp * 2;
-    }
-    return xp;
+    final streakBonus = (currentStreak /
+            GamificationConstants.daysPerStreakBonusStep) *
+        GamificationConstants.streakBonusPerStep;
+    return xp * (1 + streakBonus.clamp(0.0, streakBonusMax));
   }
 
   static bool isStreakMilestone(int streak) {
@@ -111,6 +94,8 @@ class XpRewardBreakdown {
   }
 }
 
+/// Matches LocalGameLoopEngine.computeXpGain exactly.
+/// No random or milestone bonuses — those are notifications, not XP.
 XpRewardBreakdown calculateXpBreakdown({
   required Habit habit,
   required int baseXp,
@@ -118,34 +103,20 @@ XpRewardBreakdown calculateXpBreakdown({
 }) {
   double xp = baseXp.toDouble();
   double streakBonus = 0;
-  double randomBonus = 0;
-  double milestoneBonus = 0;
 
   if (currentStreak > 0) {
-    streakBonus = (currentStreak * 0.1).clamp(
-      0.0,
-      VariableRewardService.streakBonusMax,
-    );
+    streakBonus = (currentStreak /
+            GamificationConstants.daysPerStreakBonusStep) *
+        GamificationConstants.streakBonusPerStep;
+    streakBonus = streakBonus.clamp(0.0, VariableRewardService.streakBonusMax);
     xp *= (1 + streakBonus);
-  }
-
-  final random = Random();
-  if (random.nextDouble() < VariableRewardService.randomBonusChance) {
-    randomBonus =
-        xp * (random.nextDouble() * VariableRewardService.randomBonusMax);
-    xp += randomBonus;
-  }
-
-  if (VariableRewardService.isStreakMilestone(currentStreak)) {
-    milestoneBonus = baseXp.toDouble();
-    xp *= 2;
   }
 
   return XpRewardBreakdown(
     baseXp: baseXp,
     streakBonus: streakBonus * baseXp,
-    randomBonus: randomBonus,
-    milestoneBonus: milestoneBonus,
+    randomBonus: 0,
+    milestoneBonus: 0,
     totalXp: xp.toInt(),
   );
 }

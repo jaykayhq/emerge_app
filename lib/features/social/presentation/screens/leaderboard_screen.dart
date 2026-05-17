@@ -2,7 +2,6 @@ import 'package:emerge_app/core/presentation/widgets/app_error_widget.dart';
 import 'package:emerge_app/core/presentation/widgets/emerge_loading_skeleton.dart';
 import 'package:emerge_app/core/theme/app_theme.dart';
 import 'package:emerge_app/features/gamification/presentation/providers/user_stats_providers.dart';
-import 'package:emerge_app/features/social/domain/models/tribe.dart';
 import 'package:emerge_app/features/social/presentation/providers/friends_leaderboard_provider.dart';
 import 'package:emerge_app/features/social/presentation/providers/leaderboard_provider.dart';
 import 'package:emerge_app/features/social/presentation/providers/tribes_provider.dart';
@@ -268,61 +267,29 @@ class _TribeLeaderboardTab extends ConsumerWidget {
 class _WorldLeaderboardTab extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final tribesAsync = ref.watch(allArchetypeClubsProvider);
+    final worldAsync = ref.watch(worldLeaderboardProvider);
 
-    return tribesAsync.when(
-      data: (tribes) {
-        // Sort tribes by their own totalXp field (stored on the Tribe model)
-        final sorted = List<Tribe>.from(tribes.whereType<Tribe>())
-          ..sort((a, b) => b.totalXp.compareTo(a.totalXp));
-
-        return ListView.builder(
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          itemCount: sorted.length,
-          itemBuilder: (context, index) {
-            final tribe = sorted[index];
-            final statsAsync = ref.watch(realTimeTribeStatsProvider(tribe.id));
-
-            return Padding(
-              padding: const EdgeInsets.only(bottom: 12),
-              child: statsAsync.when(
-                data: (stats) => _TribeLeaderboardItem(
-                  tribe: tribe,
-                  stats: stats,
-                  rank: index + 1,
-                ),
-                loading: () => _TribeLeaderboardItem(
-                  tribe: tribe,
-                  stats: TribeStats(
-                    memberCount: 0,
-                    totalXp: 0,
-                    totalHabitsCompleted: 0,
-                    totalChallengesCompleted: 0,
-                  ),
-                  rank: index + 1,
-                  isLoading: true,
-                ),
-                error: (_, _) => _TribeLeaderboardItem(
-                  tribe: tribe,
-                  stats: TribeStats(
-                    memberCount: 0,
-                    totalXp: 0,
-                    totalHabitsCompleted: 0,
-                    totalChallengesCompleted: 0,
-                  ),
-                  rank: index + 1,
-                  isError: true,
-                ),
-              ),
-            );
-          },
-        );
-      },
+    return worldAsync.when(
+      data: (entries) => ListView.builder(
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        itemCount: entries.length,
+        itemBuilder: (context, index) {
+          final entry = entries[index];
+          return Padding(
+            padding: const EdgeInsets.only(bottom: 12),
+            child: _TribeLeaderboardItem(
+              tribe: entry.tribe,
+              stats: entry.stats,
+              rank: index + 1,
+            ),
+          );
+        },
+      ),
       loading: () =>
           const EmergeLoadingSkeleton(itemCount: 5, showAvatar: true),
       error: (err, _) => AppErrorWidget(
         message: 'Could not load world rankings',
-        onRetry: () => ref.invalidate(allArchetypeClubsProvider),
+        onRetry: () => ref.invalidate(worldLeaderboardProvider),
       ),
     );
   }
@@ -332,29 +299,17 @@ class _TribeLeaderboardItem extends StatelessWidget {
   final dynamic tribe;
   final TribeStats stats;
   final int rank;
-  final bool isLoading;
-  final bool isError;
 
   const _TribeLeaderboardItem({
     required this.tribe,
     required this.stats,
     required this.rank,
-    this.isLoading = false,
-    this.isError = false,
   });
 
   @override
   Widget build(BuildContext context) {
-    final displayXp = isLoading
-        ? '...'
-        : isError
-        ? 'Error'
-        : '${stats.totalXp} XP';
-    final displayMembers = isLoading
-        ? '...'
-        : isError
-        ? 'Error'
-        : '${stats.memberCount} members';
+    final displayXp = '${stats.totalXp} XP';
+    final displayMembers = '${stats.memberCount} members';
 
     return Container(
       padding: const EdgeInsets.all(16),

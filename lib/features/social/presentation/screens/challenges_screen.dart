@@ -44,33 +44,19 @@ class _ChallengesScreenState extends ConsumerState<ChallengesScreen> {
   }
 
   void _checkTutorial() {
-    // 1. Check current state in case it's already loaded (e.g. from cache)
-    final currentState = ref.read(challengeBundleProvider);
-    if (currentState is AsyncData && currentState.value != null) {
-      _showTutorialAfterFrame();
-    }
-
-    // 2. Listen for future state changes
-    ref.listenManual(challengeBundleProvider, (previous, next) {
-      if (next is AsyncData && next.value != null) {
-        _showTutorialAfterFrame();
-      }
-    });
-  }
-
-  void _showTutorialAfterFrame() {
-    WidgetsBinding.instance.addPostFrameCallback((_) {
+    Future.delayed(const Duration(milliseconds: 500), () {
       if (!mounted) return;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        final tutorialNotifier = ref.read(tutorialProvider.notifier);
+        final tutorialState = ref.read(tutorialProvider);
+        tutorialNotifier.enableTutorialAutoShow();
 
-      final tutorialNotifier = ref.read(tutorialProvider.notifier);
-      final tutorialState = ref.read(tutorialProvider);
-
-      tutorialNotifier.enableTutorialAutoShow();
-
-      if (!tutorialState.isCompleted(TutorialStep.challenges) &&
-          tutorialNotifier.shouldShowTutorial()) {
-        _showTutorial();
-      }
+        if (!tutorialState.isCompleted(TutorialStep.challenges) &&
+            tutorialNotifier.shouldShowTutorial()) {
+          _showTutorial();
+        }
+      });
     });
   }
 

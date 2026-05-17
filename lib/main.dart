@@ -20,6 +20,8 @@ import 'package:emerge_app/features/auth/presentation/providers/auth_providers.d
 import 'package:emerge_app/features/gamification/presentation/providers/user_stats_providers.dart';
 import 'package:emerge_app/features/monetization/presentation/providers/subscription_provider.dart';
 import 'package:emerge_app/core/sync/sync_providers.dart';
+import 'package:emerge_app/features/social/presentation/providers/tribes_provider.dart';
+import 'package:emerge_app/core/drift_repositories/drift_tribe_repository.dart';
 
 @pragma('vm:entry-point')
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
@@ -36,6 +38,13 @@ void main() async {
 
   // Start the sync trigger service (listens for connectivity changes)
   container.read(syncTriggerServiceProvider);
+
+  // Seed local Drift tribe stats table so habit completions
+  // before first tribe tab visit still update tribe stats
+  final tribeRepo = container.read(tribeRepositoryProvider);
+  if (tribeRepo is DriftTribeRepository) {
+    unawaited(tribeRepo.seedTribesIfEmpty());
+  }
 
   // Remote Config and Notifications are now initialized in parallel within initApp()
   // We only schedule the weekly recap here (which is fast)
@@ -57,12 +66,14 @@ void main() async {
     //   "Use RequestConfiguration.Builder().setTestDeviceIds(
     //     Arrays.asList("YOUR_DEVICE_HASH")) to get test ads"
     // in the terminal output. Add the hash below.
-    final testDeviceIds = kDebugMode
-        ? ['31E09946B646AE0846AFCAB3B270684F']
-        : const <String>[];
-    await MobileAds.instance.updateRequestConfiguration(
-      RequestConfiguration(testDeviceIds: testDeviceIds),
-    );
+    if (!kIsWeb) {
+      final testDeviceIds = kDebugMode
+          ? ['31E09946B646AE0846AFCAB3B270684F']
+          : const <String>[];
+      await MobileAds.instance.updateRequestConfiguration(
+        RequestConfiguration(testDeviceIds: testDeviceIds),
+      );
+    }
   }
 
   if (!kIsWeb) {

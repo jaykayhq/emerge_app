@@ -7,10 +7,10 @@ class LocalSettingsRepository {
   static const _keyTutorialAutoShow = 'tutorialAutoShow';
   static const _keyLastChallengeRefreshDate = 'lastChallengeRefreshDate';
 
-  SharedPreferences? _prefs;
+  static SharedPreferences? _prefs;
 
   Future<void> init() async {
-    _prefs = await SharedPreferences.getInstance();
+    _prefs ??= await SharedPreferences.getInstance();
   }
 
   SharedPreferences get _p {

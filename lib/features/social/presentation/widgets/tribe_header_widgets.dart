@@ -111,7 +111,9 @@ class RealTimeTribeProgressMetrics extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final statsAsync = ref.watch(cachedTribeStatsProvider(tribeId));
+    final statsAsync = isGlobal
+        ? ref.watch(globalAggregateStatsProvider)
+        : ref.watch(cachedTribeStatsProvider(tribeId));
 
     return statsAsync.when(
       data: (stats) {

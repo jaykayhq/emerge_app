@@ -1,3 +1,5 @@
+import 'dart:async';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:emerge_app/core/drift/database.dart';
 import 'package:emerge_app/core/sync/sync_engine.dart';
 import 'package:emerge_app/features/social/data/repositories/tribe_repository.dart';
@@ -7,8 +9,10 @@ import 'package:emerge_app/features/social/domain/models/tribe.dart';
 class DriftTribeRepository implements TribeRepository {
   final AppDatabase _db;
   final EnhancedSyncEngine _syncEngine;
+  final FirebaseFirestore _firestore;
 
-  DriftTribeRepository(this._db, this._syncEngine);
+  DriftTribeRepository(this._db, this._syncEngine, [FirebaseFirestore? firestore])
+    : _firestore = firestore ?? FirebaseFirestore.instance;
 
   @override
   Future<Tribe?> getArchetypeClub(String archetypeId) async {
@@ -34,16 +38,102 @@ class DriftTribeRepository implements TribeRepository {
   }
 
   @override
-  Stream<List<Tribe>> watchArchetypeClubs() async* {
-    var rows = await _db.tribeStatsDao.getAll();
-    if (rows.isEmpty) {
-      await _seedLocalClubs();
-      rows = await _db.tribeStatsDao.getAll();
+  Stream<List<Tribe>> watchArchetypeClubs() {
+    final controller = StreamController<List<Tribe>>();
+
+    StreamSubscription<List<TribeStatsTableData>>? localSub;
+    StreamSubscription<QuerySnapshot>? remoteSub;
+
+    var localRows = <TribeStatsTableData>[];
+    var remoteDocs = <String, Map<String, dynamic>>{};
+    var localReady = false;
+    var remoteReady = false;
+
+    void emitMerged() {
+      if (!localReady || !remoteReady) return;
+
+      final tribes = localRows.map((row) {
+        final remote = remoteDocs[row.tribeId];
+        // Remote is authoritative for cross-user stats; fall back to local
+        final memberCount =
+            (remote?['memberCount'] as num?)?.toInt() ?? row.memberCount;
+        final totalXp = (remote?['totalXp'] as num?)?.toInt() ?? row.totalXp;
+        final totalHabits =
+            (remote?['totalHabitsCompleted'] as num?)?.toInt() ??
+            row.totalHabitsCompleted;
+        final totalChallenges =
+            (remote?['totalChallengesCompleted'] as num?)?.toInt() ??
+            row.totalChallengesCompleted;
+        final tribeName =
+            (remote?['name'] as String?)?.isNotEmpty == true
+                ? remote!['name'] as String
+                : row.tribeName ?? '';
+        final description = remote?['description'] as String? ?? '';
+        final imageUrl = remote?['imageUrl'] as String? ?? '';
+
+        return Tribe(
+          id: row.tribeId,
+          name: tribeName,
+          description: description,
+          imageUrl: imageUrl,
+          ownerId: remote?['ownerId'] as String? ?? '',
+          tags: List<String>.from(remote?['tags'] ?? const []),
+          levelRequirement: 0,
+          rank: 0,
+          totalXp: totalXp,
+          memberCount: memberCount,
+          archetypeId: row.archetypeId,
+          isVerified: remote?['isVerified'] as bool? ?? false,
+          totalHabitsCompleted: totalHabits,
+          totalChallengesCompleted: totalChallenges,
+        );
+      }).toList();
+
+      if (!controller.isClosed) controller.add(tribes);
     }
-    yield rows.map(_rowToTribe).toList();
-    await for (final updatedRows in _db.tribeStatsDao.watchAll()) {
-      yield updatedRows.map(_rowToTribe).toList();
-    }
+
+    // Bootstrap: seed local if empty, then start subscriptions
+    _db.tribeStatsDao.getAll().then((rows) async {
+      if (rows.isEmpty) await _seedLocalClubs();
+
+      localSub = _db.tribeStatsDao.watchAll().listen(
+        (updatedRows) {
+          localRows = updatedRows;
+          localReady = true;
+          emitMerged();
+        },
+        onError: controller.addError,
+      );
+
+      remoteSub = _firestore
+          .collection('tribes')
+          .where('type', isEqualTo: TribeType.official.name)
+          .snapshots()
+          .listen(
+        (snapshot) {
+          remoteDocs = {
+            for (final doc in snapshot.docs) doc.id: doc.data(),
+          };
+          remoteReady = true;
+          emitMerged();
+        },
+        onError: (Object err) {
+          // Remote failure: emit local-only so the UI still works
+          remoteReady = true;
+          emitMerged();
+        },
+      );
+    }).catchError((Object e) {
+      controller.addError(e);
+      return null;
+    });
+
+    controller.onCancel = () {
+      localSub?.cancel();
+      remoteSub?.cancel();
+    };
+
+    return controller.stream;
   }
 
   Future<void> _seedLocalClubs() async {
@@ -111,45 +201,179 @@ class DriftTribeRepository implements TribeRepository {
         .toList();
   }
 
+  int _timestampToMs(dynamic ts) {
+    if (ts == null) return 0;
+    if (ts is Timestamp) return ts.millisecondsSinceEpoch;
+    if (ts is String) {
+      final parsed = DateTime.tryParse(ts);
+      return parsed?.millisecondsSinceEpoch ?? 0;
+    }
+    return 0;
+  }
+
+  String _timestampToString(dynamic ts) {
+    if (ts is Timestamp) return ts.toDate().toIso8601String();
+    if (ts is String) return ts;
+    return DateTime.now().toIso8601String();
+  }
+
   @override
   Stream<List<Map<String, dynamic>>> watchClubActivity(
     String tribeId, {
     int limit = 20,
   }) {
-    return _db.tribeActivityDao
-        .watchTribeActivity(tribeId)
-        .map(
-          (rows) => rows
-              .map(
-                (r) => {
-                  'id': r.id,
-                  'userId': r.userId,
-                  'userName': r.userName,
-                  'type': r.type,
-                  'description': r.description,
-                  'timestamp': r.timestamp,
-                },
-              )
-              .toList(),
-        );
+    final controller = StreamController<List<Map<String, dynamic>>>();
+
+    StreamSubscription? localSub;
+    StreamSubscription<QuerySnapshot>? remoteSub;
+
+    void emitMerged(List<Map<String, dynamic>> localList, List<Map<String, dynamic>> remoteList) {
+      final seen = <String>{};
+      final merged = <Map<String, dynamic>>[];
+      for (final entry in [...remoteList, ...localList]) {
+        final id = entry['id'] as String? ?? '';
+        if (id.isNotEmpty && seen.add(id)) {
+          final normalized = Map<String, dynamic>.from(entry);
+          normalized['timestamp'] = _timestampToString(normalized['timestamp']);
+          merged.add(normalized);
+        }
+      }
+      merged.sort((a, b) {
+        return _timestampToMs(b['timestamp']).compareTo(_timestampToMs(a['timestamp']));
+      });
+      if (!controller.isClosed) {
+        controller.add(merged.take(limit).toList());
+      }
+    }
+
+    var localData = <Map<String, dynamic>>[];
+    var remoteData = <Map<String, dynamic>>[];
+    var localReady = false;
+    var remoteReady = false;
+
+    localSub = _db.tribeActivityDao.watchTribeActivity(tribeId).listen(
+      (rows) {
+        localData = rows
+            .map(
+              (r) => <String, dynamic>{
+                'id': r.id,
+                'userId': r.userId,
+                'userName': r.userName,
+                'type': r.type,
+                'description': r.description,
+                'timestamp': r.timestamp,
+              },
+            )
+            .toList();
+        localReady = true;
+        if (remoteReady) emitMerged(localData, remoteData);
+      },
+      onError: controller.addError,
+    );
+
+    remoteSub = _firestore
+        .collection('tribes')
+        .doc(tribeId)
+        .collection('activity')
+        .orderBy('timestamp', descending: true)
+        .limit(limit)
+        .snapshots()
+        .listen(
+      (snapshot) {
+        remoteData = snapshot.docs.map((doc) {
+          final data = doc.data();
+          data['id'] = doc.id;
+          return data;
+        }).toList();
+        remoteReady = true;
+        if (localReady) emitMerged(localData, remoteData);
+      },
+      onError: controller.addError,
+    );
+
+    controller.onCancel = () {
+      localSub?.cancel();
+      remoteSub?.cancel();
+    };
+
+    return controller.stream;
   }
 
   @override
   Stream<List<Map<String, dynamic>>> watchGlobalActivity({int limit = 30}) {
-    return _db.tribeActivityDao.watchGlobalActivity().map(
-      (rows) => rows
-          .map(
-            (r) => {
-              'id': r.id,
-              'userId': r.userId,
-              'userName': r.userName,
-              'type': r.type,
-              'description': r.description,
-              'timestamp': r.timestamp,
-            },
-          )
-          .toList(),
+    final controller = StreamController<List<Map<String, dynamic>>>();
+
+    StreamSubscription? localSub;
+    StreamSubscription<QuerySnapshot>? remoteSub;
+
+    void emitMerged(List<Map<String, dynamic>> localList, List<Map<String, dynamic>> remoteList) {
+      final seen = <String>{};
+      final merged = <Map<String, dynamic>>[];
+      for (final entry in [...remoteList, ...localList]) {
+        final id = entry['id'] as String? ?? '';
+        if (id.isNotEmpty && seen.add(id)) {
+          final normalized = Map<String, dynamic>.from(entry);
+          normalized['timestamp'] = _timestampToString(normalized['timestamp']);
+          merged.add(normalized);
+        }
+      }
+      merged.sort((a, b) {
+        return _timestampToMs(b['timestamp']).compareTo(_timestampToMs(a['timestamp']));
+      });
+      if (!controller.isClosed) {
+        controller.add(merged.take(limit).toList());
+      }
+    }
+
+    var localData = <Map<String, dynamic>>[];
+    var remoteData = <Map<String, dynamic>>[];
+    var localReady = false;
+    var remoteReady = false;
+
+    localSub = _db.tribeActivityDao.watchGlobalActivity().listen(
+      (rows) {
+        localData = rows
+            .map(
+              (r) => <String, dynamic>{
+                'id': r.id,
+                'userId': r.userId,
+                'userName': r.userName,
+                'type': r.type,
+                'description': r.description,
+                'timestamp': r.timestamp,
+              },
+            )
+            .toList();
+        localReady = true;
+        if (remoteReady) emitMerged(localData, remoteData);
+      },
+      onError: controller.addError,
     );
+
+    remoteSub = _firestore
+        .collection('global_activities')
+        .orderBy('timestamp', descending: true)
+        .limit(limit)
+        .snapshots()
+        .listen(
+      (snapshot) {
+        remoteData = snapshot.docs.map((doc) {
+          final data = doc.data();
+          data['id'] = doc.id;
+          return data;
+        }).toList();
+        remoteReady = true;
+        if (localReady) emitMerged(localData, remoteData);
+      },
+      onError: controller.addError,
+    );
+
+    controller.onCancel = () {
+      localSub?.cancel();
+      remoteSub?.cancel();
+    };
+
+    return controller.stream;
   }
 
   @override

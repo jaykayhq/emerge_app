@@ -7,10 +7,21 @@ import 'package:emerge_app/core/utils/app_logger.dart';
 part 'recap_hub_provider.g.dart';
 
 @riverpod
+class RecapRefreshCounter extends _$RecapRefreshCounter {
+  @override
+  int build() => 0;
+
+  void increment() => state++;
+}
+
+@riverpod
 Future<List<UserWeeklyRecap>> historicalRecaps(Ref ref) async {
   final user = ref.watch(authStateChangesProvider).value;
   if (user == null) return [];
   final userId = user.id;
+
+  // Watch refresh counter to invalidate cache when habits change
+  ref.watch(recapRefreshCounterProvider);
 
   try {
     final repository = ref.read(userStatsRepositoryProvider);
