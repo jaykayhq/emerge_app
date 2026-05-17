@@ -121,18 +121,22 @@ class WelcomeScreen extends ConsumerWidget {
 
                       // Google Continue
                       OutlinedButton.icon(
-                        onPressed: () async {
-                          final navigator = GoRouter.of(context);
+                      onPressed: () async {
                           final messenger = ScaffoldMessenger.of(context);
 
                           final result = await ref
                               .read(authRepositoryProvider)
                               .signInWithGoogle();
                           result.fold(
-                            (error) => messenger.showSnackBar(
-                              SnackBar(content: Text(error.toString())),
-                            ),
-                            (_) => navigator.go('/'),
+                            (error) {
+                              // 'redirect_initiated' is not an error — the page
+                              // navigates away to Google OAuth on web. Ignore.
+                              if (error.message == 'redirect_initiated') return;
+                              messenger.showSnackBar(
+                                SnackBar(content: Text(error.message)),
+                              );
+                            },
+                            (_) => GoRouter.of(context).go('/'),
                           );
                         },
                         style: OutlinedButton.styleFrom(
