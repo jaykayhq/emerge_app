@@ -62,8 +62,17 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     try {
       final result = await ref.read(authRepositoryProvider).signInWithGoogle();
       result.fold(
-        (error) => throw Exception(error),
-        (_) => null, // Navigation handled by router
+        (error) {
+          // 'redirect_initiated' is not a real error — on web the page
+          // navigates away to Google OAuth. Keep loading; do not show snackbar.
+          if (error.message == 'redirect_initiated') return;
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text(error.message)),
+            );
+          }
+        },
+        (_) => null, // Navigation handled by router via auth stream
       );
     } catch (e) {
       if (mounted) {
@@ -72,6 +81,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         );
       }
     } finally {
+      // Don't reset loading on web redirect — the page will navigate away.
+      // Only reset if still mounted and not mid-redirect.
       if (mounted) setState(() => _isLoading = false);
     }
   }
