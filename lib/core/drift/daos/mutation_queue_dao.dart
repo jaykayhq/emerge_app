@@ -39,8 +39,9 @@ class MutationQueueDao extends DatabaseAccessor<AppDatabase>
   }
 
   Future<void> incrementRetry(int id) async {
-    await (update(mutationQueueTable)..where((t) => t.id.equals(id))).write(
-      MutationQueueTableCompanion(retryCount: const Value(1)),
+    await customStatement(
+      'UPDATE mutation_queue_table SET retry_count = retry_count + 1 WHERE id = ?',
+      [id],
     );
   }
 }

@@ -1,4 +1,5 @@
 import 'package:drift/drift.dart';
+import 'package:drift/native.dart';
 
 import 'app_database_connection.dart';
 
@@ -51,6 +52,9 @@ part 'app_database.g.dart';
 class AppDatabase extends _$AppDatabase {
   AppDatabase._() : super(createDriftConnection());
 
+  /// Creates an in-memory database for testing.
+  AppDatabase._test() : super(NativeDatabase.memory());
+
   @override
   int get schemaVersion => 2;
 
@@ -58,8 +62,6 @@ class AppDatabase extends _$AppDatabase {
   MigrationStrategy get migration => MigrationStrategy(
     onUpgrade: (m, from, to) async {
       if (from < 2) {
-        // Drop and recreate UserStatsTable to handle new columns easily in dev
-        // For production, we'd use m.addColumn or m.alterTable
         await m.deleteTable(userStatsTable.actualTableName);
         await m.createTable(userStatsTable);
       }
@@ -75,6 +77,12 @@ class AppDatabase extends _$AppDatabase {
   static AppDatabase get instance {
     _instance ??= AppDatabase._();
     return _instance!;
+  }
+
+  /// Creates a new in-memory database instance for testing.
+  /// Each call returns a fresh database with no shared state.
+  static AppDatabase forTesting() {
+    return AppDatabase._test();
   }
 
   /// Clears all data from all tables in the database.

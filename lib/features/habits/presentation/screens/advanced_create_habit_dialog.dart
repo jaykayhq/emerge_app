@@ -276,14 +276,11 @@ class _AdvancedCreateHabitDialogState
           }
         }
 
-        if (context.mounted) {
-          final contextRef = context;
-          if (contextRef.mounted) {
-            ScaffoldMessenger.of(contextRef).showSnackBar(
-              const SnackBar(content: Text('Habit created successfully!')),
-            );
-          }
-          contextRef.pop();
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Habit created successfully!')),
+          );
+          context.pop();
         }
       } on SubscriptionLimitReachedException catch (e) {
         if (mounted) {
@@ -300,11 +297,10 @@ class _AdvancedCreateHabitDialogState
         }
       } catch (e, s) {
         AppLogger.e('Error creating habit from Advanced Create', e, s);
-        if (context.mounted) {
-          final contextRef = context;
-          ScaffoldMessenger.of(
-            contextRef,
-          ).showSnackBar(SnackBar(content: Text('Error creating habit: $e')));
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Error creating habit: $e')),
+          );
         }
       }
     }

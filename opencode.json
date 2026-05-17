@@ -10,6 +10,16 @@
         "X-Goog-Api-Key": "AQ.Ab8RN6L3dW1ivAfP22nREptYK05IBR2yLMs9aiOlTnYTSMGU9g"
       }
     },
+    "sequential-thinking": {
+      "type": "local",
+      "command": ["npx", "-y", "@modelcontextprotocol/server-sequential-thinking"],
+      "enabled": true
+    },
+    "fetch": {
+      "type": "local",
+      "command": ["npx", "mcp-fetch-server"],
+      "enabled": true
+    },
     "dart-mcp-server": {
       "type": "local",
       "command": [

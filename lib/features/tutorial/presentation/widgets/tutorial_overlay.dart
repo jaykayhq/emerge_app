@@ -38,6 +38,8 @@ class _TutorialOverlayState extends State<TutorialOverlay> {
   int _currentStepIndex = 0;
   bool _isScrolling = false;
   Rect? _targetRect;
+  int _scrollRetryCount = 0;
+  static const int _maxScrollRetries = 5;
 
   void _nextStep() {
     if (_currentStepIndex < widget.steps.length - 1) {
@@ -45,8 +47,8 @@ class _TutorialOverlayState extends State<TutorialOverlay> {
         _currentStepIndex++;
         _isScrolling = true;
         _targetRect = null;
+        _scrollRetryCount = 0;
       });
-      // Scroll to target after a brief delay to let the state update
       Future.delayed(const Duration(milliseconds: 100), () {
         _scrollToTarget();
       });
@@ -65,21 +67,25 @@ class _TutorialOverlayState extends State<TutorialOverlay> {
 
     final context = step.targetKey!.currentContext;
     if (context == null) {
-      // Widget not built yet, retry after a delay
+      _scrollRetryCount++;
+      if (_scrollRetryCount >= _maxScrollRetries) {
+        setState(() => _isScrolling = false);
+        return;
+      }
       Future.delayed(const Duration(milliseconds: 200), () {
         if (mounted) _scrollToTarget();
       });
       return;
     }
 
+    _scrollRetryCount = 0;
     try {
       Scrollable.ensureVisible(
         context,
-        alignment: 0.5, // Center the target
+        alignment: 0.5,
         duration: const Duration(milliseconds: 400),
         curve: Curves.easeInOut,
       );
-      // Mark scrolling complete after animation finishes
       Future.delayed(const Duration(milliseconds: 500), () {
         if (mounted) {
           setState(() => _isScrolling = false);
@@ -87,7 +93,6 @@ class _TutorialOverlayState extends State<TutorialOverlay> {
         }
       });
     } catch (e) {
-      // If ensureVisible fails (e.g., not in a Scrollable), just show the highlight
       if (mounted) {
         setState(() => _isScrolling = false);
         _calculateTargetRect();

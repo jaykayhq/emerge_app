@@ -1,3 +1,4 @@
+import 'package:emerge_app/core/constants/gamification_constants.dart';
 import 'package:emerge_app/core/drift/database.dart';
 import 'package:emerge_app/core/drift_repositories/repositories_barrel.dart';
 import 'package:emerge_app/core/game_loop/game_loop_engine.dart';
@@ -15,6 +16,7 @@ import 'package:emerge_app/features/habits/domain/services/momentum_service.dart
 import 'package:emerge_app/features/habits/presentation/providers/cue_providers.dart';
 import 'package:emerge_app/features/monetization/presentation/providers/subscription_provider.dart';
 import 'package:emerge_app/features/gamification/presentation/providers/user_stats_providers.dart';
+import 'package:emerge_app/features/gamification/presentation/providers/recap_hub_provider.dart';
 import 'package:emerge_app/features/social/presentation/providers/tribes_provider.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
@@ -207,15 +209,19 @@ Future<HabitCompletionResult> completeHabit(Ref ref, String habitId) async {
           if (userId != null) {
             final habit = await repository.getHabit(habitId);
             if (habit != null) {
-              final baseXp = _calculateBaseXp(habit);
-              final currentStreak = habit.currentStreak;
-              final newStreak = currentStreak + 1;
+              final newStreak = habit.currentStreak + 1;
 
-              final xpResult = calculateXpBreakdown(
-                habit: habit,
-                baseXp: baseXp,
-                currentStreak: newStreak,
+              final difficultyMultiplier = switch (habit.difficulty) {
+                HabitDifficulty.easy => GamificationConstants.difficultyEasyMultiplier,
+                HabitDifficulty.medium => GamificationConstants.difficultyMediumMultiplier,
+                HabitDifficulty.hard => GamificationConstants.difficultyHardMultiplier,
+              };
+              final engine = LocalGameLoopEngine();
+              final xpGained = engine.computeXpGain(
+                difficultyMultiplier: difficultyMultiplier,
+                streak: newStreak,
               );
+              final baseXp = (GamificationConstants.baseXpPerHabit * difficultyMultiplier).toInt();
 
               final isMilestone = VariableRewardService.isStreakMilestone(
                 newStreak,
@@ -233,8 +239,11 @@ Future<HabitCompletionResult> completeHabit(Ref ref, String habitId) async {
               }
 
               AppLogger.i(
-                'Habit completed: $habitId. XP: ${xpResult.totalXp}, Streak: $newStreak, Milestone: $isMilestone',
+                'Habit completed: $habitId. XP: $xpGained, Streak: $newStreak, Milestone: $isMilestone',
               );
+
+              // Invalidate recap cache to refresh stats
+              ref.read(recapRefreshCounterProvider.notifier).increment();
 
               // Recalculate world health after completion
               try {
@@ -251,10 +260,16 @@ Future<HabitCompletionResult> completeHabit(Ref ref, String habitId) async {
               }
 
               return HabitCompletionResult(
-                xpEarned: xpResult.totalXp,
+                xpEarned: xpGained,
                 newStreak: newStreak,
                 isStreakMilestone: isMilestone,
-                breakdown: xpResult,
+                breakdown: XpRewardBreakdown(
+                  baseXp: baseXp,
+                  streakBonus: (xpGained - baseXp).toDouble(),
+                  randomBonus: 0,
+                  milestoneBonus: 0,
+                  totalXp: xpGained,
+                ),
               );
             }
           }
@@ -285,17 +300,6 @@ Future<HabitCompletionResult> completeHabit(Ref ref, String habitId) async {
     );
   } finally {
     keepAliveLink.close();
-  }
-}
-
-int _calculateBaseXp(Habit habit) {
-  switch (habit.difficulty) {
-    case HabitDifficulty.easy:
-      return 10;
-    case HabitDifficulty.medium:
-      return 20;
-    case HabitDifficulty.hard:
-      return 30;
   }
 }
 

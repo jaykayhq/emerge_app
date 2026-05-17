@@ -141,7 +141,7 @@ class AppTheme {
           bodyColor: textMainLight,
           displayColor: textMainLight,
         ),
-      ).apply(fontFamilyFallback: ['Noto Sans', 'Noto Color Emoji']),
+      ),
       appBarTheme: const AppBarTheme(
         backgroundColor: Colors.transparent,
         elevation: 0,
@@ -201,7 +201,7 @@ class AppTheme {
           bodyColor: textMainDark,
           displayColor: textMainDark,
         ),
-      ).apply(fontFamilyFallback: ['Noto Sans', 'Noto Color Emoji']),
+      ),
       appBarTheme: const AppBarTheme(
         backgroundColor: Colors.transparent,
         elevation: 0,

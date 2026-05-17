@@ -3,6 +3,9 @@ import 'package:emerge_app/features/auth/domain/entities/user_extension.dart';
 import 'package:emerge_app/features/habits/domain/entities/habit.dart';
 import 'package:emerge_app/features/onboarding/presentation/providers/onboarding_state_notifier.dart';
 import 'package:emerge_app/features/gamification/presentation/providers/user_stats_providers.dart';
+import 'package:uuid/uuid.dart';
+import 'package:emerge_app/features/habits/presentation/providers/habit_providers.dart';
+import 'package:emerge_app/features/auth/presentation/providers/auth_providers.dart';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -63,6 +66,32 @@ class _FirstHabitScreenState extends ConsumerState<FirstHabitScreen> {
       // Add selected anchor
       ref.read(enhancedOnboardingProvider.notifier).addAnchor(_selectedAnchor!);
 
+      // Persist habit via Drift repository (local-first pattern)
+      final user = ref.read(authStateChangesProvider).value;
+      if (user != null) {
+        final archetype = ref.read(enhancedOnboardingProvider).selectedArchetype;
+        final habitEntity = Habit(
+          id: const Uuid().v4(),
+          userId: user.id,
+          title: habitTitle,
+          cue: _selectedAnchor!,
+          createdAt: DateTime.now(),
+          difficulty: HabitDifficulty.easy,
+          attribute: _archetypeToAttribute(archetype),
+          timeOfDayPreference: resolvedPreference,
+          identityTags: ['onboarding', archetype?.name ?? ''],
+        );
+
+        final repository = ref.read(habitRepositoryProvider);
+        final result = await repository.createHabit(habitEntity);
+        result.fold(
+          (failure) => throw Exception(failure.message),
+          (_) {
+            ref.read(enhancedOnboardingProvider.notifier).removeHabitStack('onboarding_anchor');
+          },
+        );
+      }
+
       // PERSIST PROGRESS: Complete the third milestone (First Habit) - Index 2
       await ref.read(enhancedOnboardingProvider.notifier).completeMilestone(2);
 
@@ -114,6 +143,23 @@ class _FirstHabitScreenState extends ConsumerState<FirstHabitScreen> {
       return TimeOfDayPreference.evening;
     }
     return TimeOfDayPreference.anytime;
+  }
+
+  HabitAttribute _archetypeToAttribute(UserArchetype? archetype) {
+    switch (archetype) {
+      case UserArchetype.athlete:
+        return HabitAttribute.vitality;
+      case UserArchetype.scholar:
+        return HabitAttribute.intellect;
+      case UserArchetype.creator:
+        return HabitAttribute.creativity;
+      case UserArchetype.stoic:
+        return HabitAttribute.focus;
+      case UserArchetype.zealot:
+        return HabitAttribute.spirit;
+      default:
+        return HabitAttribute.vitality;
+    }
   }
 
   void _skipForNow() {

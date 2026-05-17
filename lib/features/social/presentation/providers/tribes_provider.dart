@@ -1,3 +1,5 @@
+import 'dart:async';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:emerge_app/core/drift/database.dart';
 import 'package:emerge_app/core/drift_repositories/repositories_barrel.dart';
 import 'package:emerge_app/core/sync/sync_providers.dart';
@@ -52,8 +54,17 @@ final allArchetypeClubsProvider = StreamProvider<List<Tribe>>((ref) {
 /// ordered by contributionCount descending, limited to 10 items.
 final clubContributorsProvider =
     StreamProvider.family<List<Map<String, dynamic>>, String>((ref, tribeId) {
-      final repository = ref.watch(tribeRepositoryProvider);
-      return Stream.fromFuture(repository.getClubContributors(tribeId));
+      final dao = ref.watch(leaderboardEntriesDaoProvider);
+      return dao.watchLeaderboard(tribeId).map((rows) {
+        return rows.take(10).map((r) => {
+          'userId': r.userId,
+          'id': r.userId,
+          'userName': r.userName,
+          'xp': r.xp,
+          'contributionCount': r.xp,
+          'level': r.level,
+        }).toList();
+      });
     });
 
 /// Real-time stream of activity feed for a given club.
@@ -135,6 +146,142 @@ final realTimeTribeStatsProvider = StreamProvider.family<TribeStats, String>((
       totalChallengesCompleted: tribe.totalChallengesCompleted,
     );
   });
+});
+
+/// Global aggregate stats across all archetype tribes
+final globalAggregateStatsProvider = StreamProvider<TribeStats>((ref) {
+  final repository = ref.watch(tribeRepositoryProvider);
+  return repository.watchArchetypeClubs().map((list) {
+    int totalXp = 0;
+    int totalHabits = 0;
+    int totalChallenges = 0;
+    int totalMembers = 0;
+    for (final tribe in list) {
+      totalXp += tribe.totalXp;
+      totalHabits += tribe.totalHabitsCompleted;
+      totalChallenges += tribe.totalChallengesCompleted;
+      totalMembers += tribe.memberCount;
+    }
+    return TribeStats(
+      memberCount: totalMembers,
+      totalXp: totalXp,
+      totalHabitsCompleted: totalHabits,
+      totalChallengesCompleted: totalChallenges,
+    );
+  });
+});
+
+/// World leaderboard — merges local Drift tribe list with Firestore
+/// tribe doc data so cross-user stats (XP, member count, habits) are
+/// visible to all users. Emitted sorted by merged totalXp descending.
+final worldLeaderboardProvider =
+    StreamProvider<List<({Tribe tribe, TribeStats stats})>>((ref) {
+  final dao = ref.watch(tribeStatsDaoProvider);
+  final firestore = FirebaseFirestore.instance;
+  final controller = StreamController<List<({Tribe tribe, TribeStats stats})>>();
+
+  StreamSubscription<List<TribeStatsTableData>>? localSub;
+  StreamSubscription<QuerySnapshot>? remoteSub;
+
+  // Index local rows by tribeId for O(1) merge
+  var localIndex = <String, TribeStatsTableData>{};
+  var remoteDocs = <String, Map<String, dynamic>>{};
+  var remoteReady = false;
+
+  void emitMerged() {
+    // Emit as soon as remote is ready so world leaderboard works on fresh installs
+    if (!remoteReady) return;
+
+    // Build entries from Firestore (source of truth for cross-user data).
+    // Merge local increments for the current user's own tribe.
+    final entries = remoteDocs.entries
+        .where((e) => e.value['type'] == TribeType.official.name)
+        .map((e) {
+      final tid = e.key;
+      final remote = e.value;
+      final local = localIndex[tid];
+
+      final remoteXp = (remote['totalXp'] as num?)?.toInt() ?? 0;
+      final remoteHabits = (remote['totalHabitsCompleted'] as num?)?.toInt() ?? 0;
+      final remoteChallenges = (remote['totalChallengesCompleted'] as num?)?.toInt() ?? 0;
+      final remoteMemberCount = (remote['memberCount'] as num?)?.toInt() ?? 0;
+
+      // Local may have higher XP if offline habit was completed but not yet synced
+      final localXp = local?.totalXp ?? 0;
+      final localHabits = local?.totalHabitsCompleted ?? 0;
+      final localChallenges = local?.totalChallengesCompleted ?? 0;
+
+      final totalXp = localXp > remoteXp ? localXp : remoteXp;
+      final totalHabitsCompleted = localHabits > remoteHabits ? localHabits : remoteHabits;
+      final totalChallengesCompleted =
+          localChallenges > remoteChallenges ? localChallenges : remoteChallenges;
+      // memberCount always comes from Firestore (authoritative)
+      final memberCount = remoteMemberCount;
+
+      return (
+        tribe: Tribe(
+          id: tid,
+          name: remote['name'] as String? ?? local?.tribeName ?? '',
+          description: remote['description'] as String? ?? '',
+          imageUrl: remote['imageUrl'] as String? ?? '',
+          ownerId: remote['ownerId'] as String? ?? '',
+          tags: List<String>.from(remote['tags'] ?? const []),
+          levelRequirement: 0,
+          rank: 0,
+          totalXp: totalXp,
+          memberCount: memberCount,
+          archetypeId: remote['archetypeId'] as String? ?? local?.archetypeId,
+          isVerified: remote['isVerified'] as bool? ?? false,
+          totalHabitsCompleted: totalHabitsCompleted,
+          totalChallengesCompleted: totalChallengesCompleted,
+        ),
+        stats: TribeStats(
+          memberCount: memberCount,
+          totalXp: totalXp,
+          totalHabitsCompleted: totalHabitsCompleted,
+          totalChallengesCompleted: totalChallengesCompleted,
+        ),
+      );
+    }).toList();
+
+    entries.sort((a, b) => b.stats.totalXp.compareTo(a.stats.totalXp));
+
+    if (!controller.isClosed) controller.add(entries);
+  }
+
+  localSub = dao.watchAll().listen(
+    (rows) {
+      localIndex = {for (final r in rows) r.tribeId: r};
+      emitMerged();
+    },
+    onError: controller.addError,
+  );
+
+  remoteSub = firestore
+      .collection('tribes')
+      .where('type', isEqualTo: TribeType.official.name)
+      .snapshots()
+      .listen(
+    (snap) {
+      remoteDocs = {
+        for (final doc in snap.docs) doc.id: doc.data(),
+      };
+      remoteReady = true;
+      emitMerged();
+    },
+    onError: (Object err) {
+      // If Firestore fails, fall back to local-only
+      remoteReady = true;
+      emitMerged();
+    },
+  );
+
+  controller.onCancel = () {
+    localSub?.cancel();
+    remoteSub?.cancel();
+  };
+
+  return controller.stream;
 });
 
 /// Model for tribe statistics

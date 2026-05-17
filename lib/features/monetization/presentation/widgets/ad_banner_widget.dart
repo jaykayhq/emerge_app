@@ -1,5 +1,6 @@
-import 'dart:io';
 import 'package:emerge_app/core/config/app_config.dart';
+import 'package:flutter/foundation.dart'
+    show defaultTargetPlatform, TargetPlatform, kIsWeb;
 import 'package:emerge_app/core/theme/archetype_theme.dart';
 import 'package:emerge_app/features/auth/domain/entities/user_extension.dart';
 import 'package:emerge_app/features/gamification/presentation/providers/user_stats_providers.dart';
@@ -46,8 +47,10 @@ class _AdBannerWidgetState extends ConsumerState<AdBannerWidget>
   late final Animation<double> _particleAnimation;
 
   // Using AppConfig to get the correct banner ID
-  String get _adUnitId =>
-      AppConfig.getAdUnitId('banner', Platform.isIOS ? 'ios' : 'android');
+  String get _adUnitId => AppConfig.getAdUnitId(
+    'banner',
+    defaultTargetPlatform == TargetPlatform.iOS ? 'ios' : 'android',
+  );
 
   @override
   void initState() {
@@ -147,6 +150,9 @@ class _AdBannerWidgetState extends ConsumerState<AdBannerWidget>
   @override
   Widget build(BuildContext context) {
     super.build(context); // Required for AutomaticKeepAliveClientMixin
+
+    if (kIsWeb) return const SizedBox.shrink();
+
     final isPremiumAsync = ref.watch(isPremiumProvider);
     final isConnected = ref.watch(isConnectedProvider);
     final userArchetype = ref.watch(currentArchetypeProvider);

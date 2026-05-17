@@ -30,6 +30,10 @@ class NotificationService {
 
   Future<void> initialize() async {
     if (_isInitialized) return;
+    if (kIsWeb) {
+      _isInitialized = true;
+      return;
+    }
     // Initialize Timezone
     tz.initializeTimeZones();
     // Fallback to UTC since flutter_timezone plugin is causing build issues
@@ -155,6 +159,7 @@ class NotificationService {
   }
 
   Future<void> scheduleWeeklyRecap() async {
+    if (kIsWeb) return;
     try {
       // Schedule for next Monday at 9:00 AM
 
@@ -213,6 +218,7 @@ class NotificationService {
     String challengeId,
     String challengeName,
   ) async {
+    if (kIsWeb) return;
     try {
       await _localNotifications.show(
         id: challengeId.hashCode,
@@ -238,6 +244,7 @@ class NotificationService {
 
   /// Sends notification when challenge is ending soon
   Future<void> notifyChallengeEnding(String challengeId, int hoursLeft) async {
+    if (kIsWeb) return;
     try {
       final timeText = hoursLeft == 24
           ? '1 day'
@@ -272,6 +279,7 @@ class NotificationService {
     String challengeId,
     String rewardDescription,
   ) async {
+    if (kIsWeb) return;
     try {
       await _localNotifications.show(
         id: challengeId.hashCode,
@@ -327,6 +335,7 @@ class NotificationService {
     UserArchetype archetype, {
     bool archetypeNudges = true,
   }) async {
+    if (kIsWeb) return;
     try {
       final channelId = NotificationChannels.channelForArchetype(archetype);
       final message = archetypeNudges
@@ -364,6 +373,7 @@ class NotificationService {
     HabitAttribute? attribute,
     bool archetypeNudges = true,
   }) async {
+    if (kIsWeb) return;
     try {
       final channelId = NotificationChannels.channelForArchetype(archetype);
       final message = archetypeNudges
@@ -470,6 +480,7 @@ class NotificationService {
 
   /// Cancels all notifications for a specific habit
   Future<void> cancelHabitNotifications(String habitId) async {
+    if (kIsWeb) return;
     try {
       await _localNotifications.cancel(id: habitId.hashCode);
       debugPrint('Cancelled notifications for habit: $habitId');
@@ -489,6 +500,7 @@ class NotificationService {
     HabitAttribute? attribute,
     bool archetypeNudges = true,
   }) async {
+    if (kIsWeb) return;
     try {
       // Cancel existing notification
       await cancelHabitNotifications(habitId);
@@ -517,6 +529,7 @@ class NotificationService {
     String reminderTime,
     int currentStreak,
   ) async {
+    if (kIsWeb) return;
     try {
       final channelId = NotificationChannels.channelForArchetype(archetype);
       final message = NotificationTemplates.streakWarning(
@@ -573,6 +586,7 @@ class NotificationService {
     String insight,
     UserArchetype archetype,
   ) async {
+    if (kIsWeb) return;
     try {
       final greeting = NotificationTemplates.aiInsightGreeting(archetype);
 
@@ -605,6 +619,7 @@ class NotificationService {
     int newLevel,
     UserArchetype archetype,
   ) async {
+    if (kIsWeb) return;
     try {
       final message = NotificationTemplates.levelUp(archetype, newLevel);
 
@@ -637,6 +652,7 @@ class NotificationService {
     String achievementName,
     UserArchetype archetype,
   ) async {
+    if (kIsWeb) return;
     try {
       final message = NotificationTemplates.achievement(
         archetype,

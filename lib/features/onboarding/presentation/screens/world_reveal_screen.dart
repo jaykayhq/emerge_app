@@ -1,6 +1,7 @@
 import 'package:emerge_app/core/presentation/providers/social_preload_provider.dart';
 import 'package:emerge_app/core/utils/app_logger.dart';
 import 'package:emerge_app/features/onboarding/presentation/providers/onboarding_provider.dart';
+import 'package:emerge_app/features/onboarding/presentation/providers/onboarding_state_notifier.dart';
 import 'package:emerge_app/core/presentation/widgets/animated_flame_logo.dart';
 import 'package:emerge_app/features/tutorial/presentation/providers/tutorial_provider.dart';
 
@@ -98,11 +99,12 @@ class _WorldRevealScreenState extends ConsumerState<WorldRevealScreen>
 
     try {
       // Complete the fourth milestone (World Reveal) - Index 3
-      await ref
-          .read(onboardingControllerProvider.notifier)
-          .completeMilestone(3);
+      await ref.read(enhancedOnboardingProvider.notifier).completeMilestone(3);
 
-      // Complete onboarding
+      // Complete onboarding via enhanced provider - creates habits from stacks
+      await ref.read(enhancedOnboardingProvider.notifier).completeOnboarding();
+
+      // Ensure legacy bool provider is updated for router
       await ref
           .read(onboardingControllerProvider.notifier)
           .completeOnboarding();

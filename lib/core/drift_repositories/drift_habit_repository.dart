@@ -233,6 +233,22 @@ class DriftHabitRepository implements HabitRepository {
           wasRecovery: result.isRecovery ? 1 : 0,
         );
 
+        // Sync habit completion to Firestore for cross-device history
+        await _syncEngine.enqueueSet(
+          collectionPath: 'users/${statsRow.userId}/habit_completions',
+          documentId: '${habitId}_${now.millisecondsSinceEpoch}',
+          data: {
+            'habitId': habitId,
+            'userId': statsRow.userId,
+            'completedAt': date.toIso8601String(),
+            'xpGained': result.xpGained,
+            'attribute': attr,
+            'momentumAtCompletion': result.newMomentumScore,
+            'streakDay': result.newStreak,
+            'wasRecovery': result.isRecovery,
+          },
+        );
+
         for (final update in result.challengeUpdates.values) {
           await _db.challengeProgressDao.updateDay(
             update.challengeId,
@@ -307,6 +323,29 @@ class DriftHabitRepository implements HabitRepository {
             'totalXp': {'__type__': 'increment', 'value': result.xpGained},
             'totalHabitsCompleted': {'__type__': 'increment', 'value': 1},
             'lastStatsSync': {'__type__': 'serverTimestamp'},
+          },
+        );
+
+        // Update per-member contributor subcollection so other users
+        // can see each other's contribution stats in the tribe
+        await _syncEngine.enqueueSet(
+          collectionPath: 'tribes/$tribeId/contributors',
+          documentId: statsRow.userId,
+          data: {
+            'totalXpContributed': {
+              '__type__': 'increment',
+              'value': result.xpGained,
+            },
+            'totalHabitsCompleted': {
+              '__type__': 'increment',
+              'value': 1,
+            },
+            'contributionCount': {
+              '__type__': 'increment',
+              'value': 1,
+            },
+            'lastContributionAt': {'__type__': 'serverTimestamp'},
+            'lastActivity': nowStr,
           },
         );
       }

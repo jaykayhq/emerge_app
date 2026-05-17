@@ -10,6 +10,7 @@ import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:emerge_app/core/theme/emerge_colors.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
@@ -318,48 +319,34 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                             borderRadius: BorderRadius.circular(12),
                           ),
                         ),
-                        icon: Container(
+                        icon: SvgPicture.asset(
+                          'assets/images/google_logo.svg',
                           width: 20,
                           height: 20,
-                          decoration: const BoxDecoration(
-                            shape: BoxShape.circle,
-                            color: Colors.white,
-                          ),
-                          child: const Center(
-                            child: Text(
-                              'G',
-                              style: TextStyle(
-                                color: Color(0xFF4285F4),
-                                fontSize: 13,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ),
                         ),
                         label: const Text('Sign in with Google'),
                       ),
                       const Gap(24),
 
                       // Sign Up Link
-                      TextButton(
-                        onPressed: () {
-                          context.push('/signup');
-                        },
-                        child: RichText(
-                          text: const TextSpan(
-                            text: "Don't have an account? ",
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Text(
+                            "Don't have an account? ",
                             style: TextStyle(color: Colors.white70),
-                            children: [
-                              TextSpan(
-                                text: 'Sign Up',
-                                style: TextStyle(
-                                  color: EmergeColors.teal,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ],
                           ),
-                        ),
+                          TextButton(
+                            onPressed: () => context.push('/signup'),
+                            child: const Text(
+                              'Sign Up',
+                              style: TextStyle(
+                                color: EmergeColors.teal,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
                       const Gap(16),
                       // Legal Links
@@ -643,23 +630,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                         borderRadius: BorderRadius.circular(12),
                                       ),
                                     ),
-                                    icon: Container(
+                                    icon: SvgPicture.asset(
+                                      'assets/images/google_logo.svg',
                                       width: 20,
                                       height: 20,
-                                      decoration: const BoxDecoration(
-                                        shape: BoxShape.circle,
-                                        color: Colors.white,
-                                      ),
-                                      child: const Center(
-                                        child: Text(
-                                          'G',
-                                          style: TextStyle(
-                                            color: Color(0xFF4285F4),
-                                            fontSize: 13,
-                                            fontWeight: FontWeight.bold,
-                                          ),
-                                        ),
-                                      ),
                                     ),
                                     label: const Text(
                                       'Sign in with Google',
@@ -669,25 +643,27 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                   const Gap(16),
 
                                   // Sign Up Link
-                                  TextButton(
-                                    onPressed: () {
-                                      context.push('/signup');
-                                    },
-                                    child: RichText(
-                                      text: const TextSpan(
-                                        text: "Don't have an account? ",
-                                        style: TextStyle(color: Colors.white70),
-                                        children: [
-                                          TextSpan(
-                                            text: 'Sign Up',
-                                            style: TextStyle(
-                                              color: EmergeColors.teal,
-                                              fontWeight: FontWeight.bold,
-                                            ),
-                                          ),
-                                        ],
+                                  Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      const Text(
+                                        "Don't have an account? ",
+                                        style: TextStyle(
+                                          color: Colors.white70,
+                                        ),
                                       ),
-                                    ),
+                                      TextButton(
+                                        onPressed: () =>
+                                            context.push('/signup'),
+                                        child: const Text(
+                                          'Sign Up',
+                                          style: TextStyle(
+                                            color: EmergeColors.teal,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
                                   ),
                                 ],
                               ),

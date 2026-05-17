@@ -10,9 +10,11 @@ import 'package:emerge_app/core/presentation/widgets/app_error_widget.dart';
 import 'package:emerge_app/core/presentation/widgets/emerge_loading_skeleton.dart';
 import 'package:emerge_app/core/theme/archetype_theme.dart';
 import 'package:emerge_app/core/theme/emerge_colors.dart';
+import 'package:emerge_app/features/social/domain/models/tribe.dart';
 import 'package:emerge_app/features/social/presentation/providers/tribes_provider.dart';
+import 'package:emerge_app/features/social/presentation/providers/leaderboard_provider.dart';
+import 'package:emerge_app/features/social/domain/entities/leaderboard_entry.dart';
 import 'package:emerge_app/features/gamification/presentation/providers/user_stats_providers.dart';
-
 import '../widgets/tribe_header_widgets.dart';
 import '../widgets/tribe_quests_section.dart';
 import '../widgets/tribe_activity_feed.dart';
@@ -194,6 +196,15 @@ class _TribeTabContentState extends ConsumerState<TribeTabContent> {
 
                     const Gap(32),
 
+                    // ===== LEADERBOARD =====
+                    _TribeLeaderboardSection(
+                      clubId: userClub.id,
+                      archetypeName: profile.archetype.name,
+                      isGlobal: _showGlobalActivity,
+                    ).animate().fadeIn(delay: 370.ms),
+
+                    const Gap(32),
+
                     TribeAccountabilitySection(
                       key: _bondsKey,
                     ).animate().fadeIn(delay: 400.ms),
@@ -354,6 +365,312 @@ class _ToggleItem extends StatelessWidget {
             color: isSelected ? Colors.white : Colors.white60,
           ),
         ),
+      ),
+    );
+  }
+}
+
+// ============ LEADERBOARD SECTION ============
+
+class _TribeLeaderboardSection extends ConsumerWidget {
+  final String clubId;
+  final String archetypeName;
+  final bool isGlobal;
+
+  const _TribeLeaderboardSection({
+    required this.clubId,
+    required this.archetypeName,
+    this.isGlobal = false,
+  });
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    if (isGlobal) {
+      return _WorldLeaderboardSection();
+    }
+
+    final leaderboardAsync = ref.watch(clubLeaderboardProvider(clubId));
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Row(
+              children: [
+                const Icon(
+                  Icons.leaderboard,
+                  size: 18,
+                  color: EmergeColors.yellow,
+                ),
+                const Gap(8),
+                Text(
+                  '${archetypeName.toUpperCase()} TRIBE',
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                    letterSpacing: 1,
+                  ),
+                ),
+              ],
+            ),
+            GestureDetector(
+              onTap: () => context.push('/tribes/leaderboard?tab=tribe'),
+              child: const Text(
+                'View All >',
+                style: TextStyle(fontSize: 12, color: EmergeColors.teal),
+              ),
+            ),
+          ],
+        ),
+        const Gap(16),
+        leaderboardAsync.when(
+          data: (entries) {
+            if (entries.isEmpty) {
+              return Container(
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: EmergeColors.glassWhite,
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: EmergeColors.glassBorder),
+                ),
+                child: const Center(
+                  child: Text(
+                    'No rankings yet. Complete habits to earn XP!',
+                    style: TextStyle(color: Colors.white54, fontSize: 13),
+                  ),
+                ),
+              );
+            }
+            final top = entries.length > 5 ? entries.sublist(0, 5) : entries;
+            return Column(
+              children: top.map((entry) => _LeaderboardRow(entry: entry, rank: top.indexOf(entry) + 1)).toList(),
+            );
+          },
+          loading: () => const EmergeLoadingSkeleton(itemCount: 3),
+          error: (_, _) => const SizedBox.shrink(),
+        ),
+      ],
+    );
+  }
+}
+
+class _WorldLeaderboardSection extends ConsumerWidget {
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final worldAsync = ref.watch(worldLeaderboardProvider);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            const Row(
+              children: [
+                Icon(
+                  Icons.public,
+                  size: 18,
+                  color: EmergeColors.teal,
+                ),
+                Gap(8),
+                Text(
+                  'WORLD RANKINGS',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                    letterSpacing: 1,
+                  ),
+                ),
+              ],
+            ),
+            GestureDetector(
+              onTap: () => context.push('/tribes/leaderboard?tab=world'),
+              child: const Text(
+                'View All >',
+                style: TextStyle(fontSize: 12, color: EmergeColors.teal),
+              ),
+            ),
+          ],
+        ),
+        const Gap(16),
+        worldAsync.when(
+          data: (entries) {
+            if (entries.isEmpty) return const SizedBox.shrink();
+            final top = entries.length > 5 ? entries.sublist(0, 5) : entries;
+            return Column(
+              children: top
+                  .asMap()
+                  .entries
+                  .map(
+                    (e) => _WorldRankingRow(
+                      club: e.value.tribe,
+                      rank: e.key + 1,
+                    ),
+                  )
+                  .toList(),
+            );
+          },
+          loading: () => const EmergeLoadingSkeleton(itemCount: 3),
+          error: (err, st) => const SizedBox.shrink(),
+        ),
+      ],
+    );
+  }
+}
+
+
+class _WorldRankingRow extends StatelessWidget {
+  final Tribe club;
+  final int rank;
+
+  const _WorldRankingRow({required this.club, required this.rank});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      decoration: BoxDecoration(
+        color: EmergeColors.glassWhite,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: EmergeColors.glassBorder),
+      ),
+      child: Row(
+        children: [
+          SizedBox(
+            width: 28,
+            child: Text(
+              '$rank',
+              style: TextStyle(
+                color: rank <= 3 ? EmergeColors.yellow : Colors.white38,
+                fontWeight: FontWeight.bold,
+                fontSize: 14,
+              ),
+            ),
+          ),
+          const Gap(8),
+          CircleAvatar(
+            radius: 16,
+            backgroundColor: EmergeColors.violet.withValues(alpha: 0.2),
+            child: Icon(Icons.shield, size: 16, color: EmergeColors.violet),
+          ),
+          const Gap(12),
+          Expanded(
+            child: Text(
+              club.name,
+              style: const TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.w600,
+                fontSize: 14,
+              ),
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Text(
+                '${club.totalXp} XP',
+                style: const TextStyle(
+                  color: EmergeColors.yellow,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 13,
+                ),
+              ),
+              Text(
+                '${club.memberCount} members',
+                style: const TextStyle(
+                  color: Colors.white38,
+                  fontSize: 10,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _LeaderboardRow extends StatelessWidget {
+  final LeaderboardEntry entry;
+  final int rank;
+
+  const _LeaderboardRow({required this.entry, required this.rank});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      decoration: BoxDecoration(
+        color: EmergeColors.glassWhite,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: EmergeColors.glassBorder),
+      ),
+      child: Row(
+        children: [
+          SizedBox(
+            width: 28,
+            child: Text(
+              '$rank',
+              style: TextStyle(
+                color: rank <= 3 ? EmergeColors.yellow : Colors.white38,
+                fontWeight: FontWeight.bold,
+                fontSize: 14,
+              ),
+            ),
+          ),
+          const Gap(8),
+          CircleAvatar(
+            radius: 16,
+            backgroundColor: EmergeColors.teal.withValues(alpha: 0.2),
+            child: Text(
+              entry.userName.isNotEmpty ? entry.userName[0].toUpperCase() : '?',
+              style: TextStyle(
+                color: EmergeColors.teal,
+                fontSize: 12,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+          const Gap(12),
+          Expanded(
+            child: Text(
+              entry.userName,
+              style: const TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.w600,
+                fontSize: 14,
+              ),
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Text(
+                '${entry.xp} XP',
+                style: const TextStyle(
+                  color: EmergeColors.yellow,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 13,
+                ),
+              ),
+              Text(
+                'Level ${entry.level}',
+                style: const TextStyle(
+                  color: Colors.white38,
+                  fontSize: 10,
+                ),
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }

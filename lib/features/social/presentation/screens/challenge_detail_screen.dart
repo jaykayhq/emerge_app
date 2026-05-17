@@ -3,6 +3,8 @@ import 'package:emerge_app/core/theme/emerge_colors.dart';
 import 'package:emerge_app/core/presentation/widgets/world_background.dart';
 import 'package:emerge_app/core/domain/models/app_world_theme.dart';
 import 'package:emerge_app/features/auth/presentation/providers/auth_providers.dart';
+import 'package:emerge_app/features/gamification/presentation/providers/user_stats_providers.dart';
+import 'package:emerge_app/features/gamification/presentation/providers/recap_hub_provider.dart';
 import 'package:emerge_app/features/social/domain/models/challenge.dart';
 import 'package:emerge_app/features/social/presentation/providers/challenge_provider.dart';
 import 'package:emerge_app/features/social/presentation/providers/challenge_bundle_provider.dart';
@@ -587,6 +589,10 @@ class ChallengeDetailScreen extends ConsumerWidget {
             result.fold(
               (failure) => _showError(screenContext, failure.message),
               (_) {
+                ref.invalidate(userChallengesProvider);
+                ref.invalidate(challengeBundleProvider);
+                ref.invalidate(userStatsStreamProvider);
+                ref.invalidate(recapRefreshCounterProvider);
                 final isCompleted = newProgress >= challenge.totalDays;
                 _showSuccess(
                   screenContext,

@@ -1,4 +1,5 @@
 import 'package:emerge_app/core/services/notification_service.dart';
+import 'package:emerge_app/core/sync/sync_engine_barrel.dart';
 import 'package:emerge_app/features/auth/domain/entities/auth_user.dart';
 import 'package:emerge_app/features/auth/domain/entities/user_extension.dart';
 import 'package:emerge_app/features/auth/presentation/providers/auth_providers.dart';
@@ -69,11 +70,15 @@ void main() {
       // Setup mock notification service
       mockNotificationService = MockNotificationService();
 
+      // Create mock sync engine
+      final mockSyncEngine = MockEnhancedSyncEngine();
+
       // Create notification repository with mocks
       notificationRepository = HabitNotificationRepository(
         notificationService: mockNotificationService,
         firestore: mockFirestore,
         auth: mockAuth,
+        syncEngine: mockSyncEngine,
       );
 
       // Mock the notification service methods
@@ -589,3 +594,5 @@ class MockFirebaseFirestore extends Mock implements FirebaseFirestore {}
 class MockUser extends Mock implements User {}
 
 class MockNotificationService extends Mock implements NotificationService {}
+
+class MockEnhancedSyncEngine extends Mock implements EnhancedSyncEngine {}

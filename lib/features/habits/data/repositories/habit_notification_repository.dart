@@ -4,27 +4,34 @@ import 'package:emerge_app/features/habits/domain/entities/habit.dart';
 import 'package:emerge_app/features/habits/domain/entities/habit_notification_schedule.dart';
 import 'package:emerge_app/features/auth/domain/entities/user_extension.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:emerge_app/core/sync/sync_engine_barrel.dart';
 
 class HabitNotificationRepository {
   final NotificationService _notificationService;
   final FirebaseFirestore _firestore;
   final FirebaseAuth _auth;
+  final EnhancedSyncEngine _syncEngine;
 
   HabitNotificationRepository({
     required NotificationService notificationService,
     required FirebaseFirestore firestore,
     required FirebaseAuth auth,
+    required EnhancedSyncEngine syncEngine,
   }) : _notificationService = notificationService,
        _firestore = firestore,
-       _auth = FirebaseAuth.instance;
+       _auth = auth,
+       _syncEngine = syncEngine;
 
   /// Create notification schedule for a new habit
   Future<void> scheduleHabitNotifications(
     Habit habit,
     UserArchetype archetype,
   ) async {
+    if (kIsWeb) return;
+
     final userId = _auth.currentUser?.uid;
     if (userId == null) return;
 
@@ -62,7 +69,7 @@ class HabitNotificationRepository {
       archetypeNudges: archetypeNudges,
     );
 
-    // 3. Create notification schedule document
+    // 3. Create notification schedule document via local-first sync engine
     final schedule = HabitNotificationSchedule(
       habitId: habit.id,
       userId: userId,
@@ -74,12 +81,11 @@ class HabitNotificationRepository {
       createdAt: DateTime.now(),
     );
 
-    await _firestore
-        .collection('users')
-        .doc(userId)
-        .collection('notificationSchedules')
-        .doc(habit.id)
-        .set(schedule.toMap());
+    await _syncEngine.enqueueSet(
+      collectionPath: 'users/$userId/notificationSchedules',
+      documentId: habit.id,
+      data: schedule.toMap(),
+    );
   }
 
   /// Update notification schedule when habit is edited
@@ -116,16 +122,15 @@ class HabitNotificationRepository {
       archetypeNudges: archetypeNudges,
     );
 
-    await _firestore
-        .collection('users')
-        .doc(userId)
-        .collection('notificationSchedules')
-        .doc(habit.id)
-        .update({
-          'reminderTime': timeString,
-          'frequency': habit.frequency.name,
-          'specificDays': habit.specificDays,
-        });
+    await _syncEngine.enqueueUpdate(
+      collectionPath: 'users/$userId/notificationSchedules',
+      documentId: habit.id,
+      data: {
+        'reminderTime': timeString,
+        'frequency': habit.frequency.name,
+        'specificDays': habit.specificDays,
+      },
+    );
   }
 
   /// Cancel all notifications for a habit
@@ -135,12 +140,11 @@ class HabitNotificationRepository {
 
     await _notificationService.cancelHabitNotifications(habitId);
 
-    await _firestore
-        .collection('users')
-        .doc(userId)
-        .collection('notificationSchedules')
-        .doc(habitId)
-        .delete();
+    await _syncEngine.enqueueMutation(
+      collectionPath: 'users/$userId/notificationSchedules',
+      documentId: habitId,
+      operation: 'delete',
+    );
   }
 
   /// Schedule streak warning for a habit

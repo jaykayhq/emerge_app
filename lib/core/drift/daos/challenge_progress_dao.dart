@@ -21,6 +21,18 @@ class ChallengeProgressDao extends DatabaseAccessor<AppDatabase>
         .watch();
   }
 
+  Future<List<ChallengeProgressTableData>> getAll(String userId) {
+    return (select(challengeProgressTable)
+          ..where((t) => t.userId.equals(userId)))
+        .get();
+  }
+
+  Stream<List<ChallengeProgressTableData>> watchAll(String userId) {
+    return (select(challengeProgressTable)
+          ..where((t) => t.userId.equals(userId)))
+        .watch();
+  }
+
   Future<void> upsertProgress(Insertable<ChallengeProgressTableData> entry) {
     return into(challengeProgressTable).insertOnConflictUpdate(entry);
   }
