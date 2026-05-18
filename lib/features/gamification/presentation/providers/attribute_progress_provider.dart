@@ -46,11 +46,8 @@ Map<String, AttributeProgress> attributeProgressFromHabits(Ref ref) {
   final userAsync = ref.watch(userStatsStreamProvider);
 
   // Return empty map if loading or error
-  if (!userAsync.hasValue || userAsync.value == null) {
-    return {};
-  }
-
-  final profile = userAsync.value!;
+  final profile = userAsync.value;
+  if (profile == null) return {};
   final stats = profile.avatarStats;
 
   // Debug: Log the stats to see what we're getting

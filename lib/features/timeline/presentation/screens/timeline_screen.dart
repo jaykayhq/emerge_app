@@ -188,11 +188,11 @@ class _TimelineScreenState extends ConsumerState<TimelineScreen> {
     final statsAsync = ref.watch(userStatsStreamProvider);
 
     ref.listen<AsyncValue<List<Habit>>>(habitsProvider, (previous, next) {
-      if (next is AsyncData<List<Habit>> && !_hasCheckedMisses) {
+      if (next.hasValue && !_hasCheckedMisses) {
         final missed = next.value
-            .where((h) => h.consecutiveMisses > 0)
+            ?.where((h) => h.consecutiveMisses > 0)
             .toList();
-        if (missed.isNotEmpty) {
+        if (missed != null && missed.isNotEmpty) {
           _hasCheckedMisses = true;
           WidgetsBinding.instance.addPostFrameCallback((_) {
             _showMissRecoverySheet(missed);
