@@ -127,7 +127,31 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
     setState(() => _isLoading = true);
     try {
       final result = await ref.read(authRepositoryProvider).signInWithGoogle();
-      await result.fold((error) => throw Exception(error), (user) async {
+      await result.fold((error) async {
+        // 'redirect_initiated' is not a real error — on web the page navigates
+        // away to Google OAuth. Profile creation will occur after the redirect
+        // returns, handled by the auth-state-change listener. Do nothing here.
+        if (error.message == 'redirect_initiated') return;
+        if (mounted) {
+          final msg = error.message;
+          if (msg.contains('email-already-in-use') ||
+              msg.contains('account-exists-with-different-credential')) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: const Text('Account already exists. Please login.'),
+                action: SnackBarAction(
+                  label: 'Login',
+                  onPressed: () => context.go('/login'),
+                ),
+              ),
+            );
+          } else {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text(msg)),
+            );
+          }
+        }
+      }, (user) async {
         // Create User Profile with initial onboarding state
         final onboardingState = ref.read(onboardingStateControllerProvider);
 
@@ -152,7 +176,7 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
           why: onboardingState.why,
           anchors: onboardingState.anchors,
           habitStacks: onboardingState.habitStacks,
-          onboardingProgress: 0, // Start at step 0
+          onboardingProgress: 0,
           onboardingStartedAt: DateTime.now(),
         );
 
@@ -160,7 +184,6 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
         await profileRepo.createProfile(profile);
 
         if (mounted) {
-          // Navigate to onboarding - user will complete all steps before dashboard
           context.go('/onboarding/identity-studio');
         }
       });
@@ -188,6 +211,7 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
       if (mounted) setState(() => _isLoading = false);
     }
   }
+
 
   @override
   Widget build(BuildContext context) {
