@@ -151,11 +151,20 @@ class FirebaseAuthRepository implements AuthRepository {
       UserCredential userCredential;
 
       if (kIsWeb) {
-        // On web, use Firebase Auth popup directly
+        // On web, use redirect flow — signInWithPopup is incompatible with
+        // Cross-Origin-Opener-Policy: same-origin (COOP severs window.opener
+        // so the popup can never post its credential back, causing minified:JC).
+        // signInWithRedirect navigates the current tab to the OAuth provider
+        // and back; no cross-origin window messaging required.
         final googleProvider = GoogleAuthProvider();
         googleProvider.addScope('email');
         googleProvider.addScope('profile');
-        userCredential = await _firebaseAuth.signInWithPopup(googleProvider);
+        await _firebaseAuth.signInWithRedirect(googleProvider);
+        // signInWithRedirect never returns a credential synchronously.
+        // The result is captured via getRedirectResult() on page reload, which
+        // fires idTokenChanges() in the auth stream. Return empty here;
+        // the router will react to the idTokenChanges() stream and navigate.
+        return const Left(AuthFailure('redirect_initiated'));
       } else {
         // On mobile, use the GoogleSignIn package
         final googleSignIn = GoogleSignIn();

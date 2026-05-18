@@ -1,8 +1,10 @@
 import 'package:emerge_app/core/config/app_config.dart';
+import 'package:emerge_app/core/drift/database.dart';
 import 'package:emerge_app/core/security/app_check_service.dart';
 import 'package:emerge_app/core/services/notification_service.dart';
 import 'package:emerge_app/features/onboarding/data/repositories/local_settings_repository.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart' as firebase_auth;
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -36,6 +38,36 @@ Future<void> initApp() async {
 
   // Initialize Firebase (Required before all others)
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+
+  // On web, call getRedirectResult() to consume any pending Google OAuth
+  // credential after signInWithRedirect() completes. Firebase stores the
+  // credential in IndexedDB across the page navigation; without this call
+  // the auth state won't update after the OAuth redirect returns.
+  if (kIsWeb) {
+    try {
+      final redirectResult = await firebase_auth.FirebaseAuth.instance.getRedirectResult();
+      if (redirectResult.user != null) {
+        debugPrint('✅ Google redirect result captured: ${redirectResult.user?.email}');
+      }
+    } catch (e) {
+      debugPrint('⚠️ getRedirectResult error (non-fatal): $e');
+    }
+  }
+
+  // On web, eagerly open the Drift WASM database so the LazyDatabase connection
+  // is fully established before any Riverpod provider issues a synchronous DAO
+  // access. Without this, the first provider to touch a DAO hits a null executor
+  // inside the Drift internals (dart2js minified as '.a') and crashes.
+  if (kIsWeb) {
+    try {
+      // A lightweight custom query forces the LazyDatabase to open the WASM
+      // SQLite connection and makes the executor non-null for all future callers.
+      await AppDatabase.instance.customSelect('SELECT 1').get();
+      debugPrint('✅ Drift WASM database warmed up');
+    } catch (e) {
+      debugPrint('⚠️ Drift WASM warm-up failed: $e');
+    }
+  }
 
   // Enable Firestore Offline Persistence
   FirebaseFirestore.instance.settings = const Settings(
