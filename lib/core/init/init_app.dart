@@ -2,6 +2,7 @@ import 'package:emerge_app/core/config/app_config.dart';
 import 'package:emerge_app/core/drift/database.dart';
 import 'package:emerge_app/core/security/app_check_service.dart';
 import 'package:emerge_app/core/services/notification_service.dart';
+import 'package:emerge_app/features/auth/domain/entities/user_extension.dart';
 import 'package:emerge_app/features/onboarding/data/repositories/local_settings_repository.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart' as firebase_auth;
@@ -43,11 +44,36 @@ Future<void> initApp() async {
   // credential after signInWithRedirect() completes. Firebase stores the
   // credential in IndexedDB across the page navigation; without this call
   // the auth state won't update after the OAuth redirect returns.
+  // Also creates a Firestore user profile for first-time Google sign-ins,
+  // since the signInWithGoogle() method cannot do this synchronously after
+  // a redirect (the page navigates away before profile creation code runs).
   if (kIsWeb) {
     try {
-      final redirectResult = await firebase_auth.FirebaseAuth.instance.getRedirectResult();
-      if (redirectResult.user != null) {
-        debugPrint('✅ Google redirect result captured: ${redirectResult.user?.email}');
+      final redirectResult =
+          await firebase_auth.FirebaseAuth.instance.getRedirectResult();
+      final user = redirectResult.user;
+      if (user != null) {
+        debugPrint(
+          '✅ Google redirect result captured: ${user.email}',
+        );
+        // Create Firestore profile if this is a first-time sign-in
+        final firestore = FirebaseFirestore.instance;
+        final userDoc = await firestore.collection('users').doc(user.uid).get();
+        if (!userDoc.exists) {
+          final displayName = user.displayName?.isNotEmpty == true
+              ? user.displayName!
+              : user.email?.split('@').first ?? 'User';
+          final profile = UserProfile(uid: user.uid, displayName: displayName);
+          final profileMap = profile.toMap();
+          profileMap['email'] = user.email ?? '';
+          profileMap['createdAt'] = FieldValue.serverTimestamp();
+          await firestore.collection('users').doc(user.uid).set(profileMap);
+          await firestore
+              .collection('user_stats')
+              .doc(user.uid)
+              .set(profileMap);
+          debugPrint('✅ Firestore profile created for Google sign-in user');
+        }
       }
     } catch (e) {
       debugPrint('⚠️ getRedirectResult error (non-fatal): $e');

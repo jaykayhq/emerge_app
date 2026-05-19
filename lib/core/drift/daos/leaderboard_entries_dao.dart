@@ -75,7 +75,15 @@ class LeaderboardEntriesDao extends DatabaseAccessor<AppDatabase>
     );
   }
 
-  Future<void> incrementXp(String id, int deltaXp, int newLevel) async {
+  Future<void> incrementXp(
+    String id,
+    int deltaXp,
+    int newLevel, {
+    required String userId,
+    required String tribeId,
+    String userName = 'Anonymous',
+    String? archetype,
+  }) async {
     final entry = await (select(
       leaderboardEntriesTable,
     )..where((t) => t.id.equals(id))).getSingleOrNull();
@@ -88,6 +96,17 @@ class LeaderboardEntriesDao extends DatabaseAccessor<AppDatabase>
           level: Value(newLevel),
           updatedAt: Value(DateTime.now().toIso8601String()),
         ),
+      );
+    } else {
+      await insertFromData(
+        id: id,
+        tribeId: tribeId,
+        userId: userId,
+        userName: userName,
+        xp: deltaXp,
+        level: newLevel,
+        archetype: archetype,
+        updatedAt: DateTime.now().toIso8601String(),
       );
     }
   }

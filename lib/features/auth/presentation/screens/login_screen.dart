@@ -63,6 +63,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       final result = await ref.read(authRepositoryProvider).signInWithGoogle();
       result.fold(
         (error) {
+          // 'redirect_initiated' is not a real error — on web the page
+          // navigates away to Google OAuth. Keep loading; do not show snackbar.
+          if (error.message == 'redirect_initiated') return;
           if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(content: Text(error.message)),
