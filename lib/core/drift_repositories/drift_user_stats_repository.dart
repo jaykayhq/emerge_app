@@ -198,13 +198,13 @@ class DriftUserStatsRepository {
 
   UserWorldState _parseWorldState(UserStatsTableData row) {
     if (row.worldStateJson == null || row.worldStateJson!.isEmpty) {
-      return UserWorldState(entropy: 1.0 - row.worldHealthScore);
+      return UserWorldState(entropy: 1.0 - ((row.worldHealthScore as double?) ?? 1.0));
     }
     try {
       final map = jsonDecode(row.worldStateJson!) as Map<String, dynamic>;
       return UserWorldState.fromMap(map);
     } catch (_) {
-      return UserWorldState(entropy: 1.0 - row.worldHealthScore);
+      return UserWorldState(entropy: 1.0 - ((row.worldHealthScore as double?) ?? 1.0));
     }
   }
 
@@ -257,7 +257,7 @@ class DriftUserStatsRepository {
       why: row.why,
       anchors: anchors,
       habitStacks: habitStacks,
-      onboardingProgress: row.onboardingProgress,
+      onboardingProgress: (row.onboardingProgress as int?) ?? 0,
       skippedOnboardingSteps: skippedOnboardingSteps,
       onboardingStartedAt: row.onboardingStartedAt != null
           ? DateTime.tryParse(row.onboardingStartedAt!)
@@ -266,21 +266,23 @@ class DriftUserStatsRepository {
           ? DateTime.tryParse(row.onboardingCompletedAt!)
           : null,
       settings: settings,
-      hasEmerged: row.hasEmerged,
-      momentumScore: row.momentumScore,
+      hasEmerged: (row.hasEmerged as bool?) ?? false,
+      momentumScore: (row.momentumScore as double?) ?? 0.5,
       avatarStats: UserAvatarStats(
-        strengthXp: row.strengthXp,
-        intellectXp: row.intellectXp,
-        vitalityXp: row.vitalityXp,
-        creativityXp: row.creativityXp,
-        focusXp: row.focusXp,
-        spiritXp: row.spiritXp,
-        challengeXp: row.challengeXp,
-        level: row.level,
-        streak: row.streak,
-        momentumScore: (row.momentumScore * 100).toInt(),
+        strengthXp: (row.strengthXp as int?) ?? 0,
+        intellectXp: (row.intellectXp as int?) ?? 0,
+        vitalityXp: (row.vitalityXp as int?) ?? 0,
+        creativityXp: (row.creativityXp as int?) ?? 0,
+        focusXp: (row.focusXp as int?) ?? 0,
+        spiritXp: (row.spiritXp as int?) ?? 0,
+        challengeXp: (row.challengeXp as int?) ?? 0,
+        level: (row.level as int?) ?? 1,
+        streak: (row.streak as int?) ?? 0,
+        momentumScore: (((row.momentumScore as double?) ?? 0.5) * 100).toInt(),
       ),
       worldState: _parseWorldState(row),
     );
   }
+
+  UserProfile rowToProfileForTest(UserStatsTableData row) => _rowToProfile(row);
 }

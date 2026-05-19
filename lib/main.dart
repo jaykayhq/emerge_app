@@ -1,5 +1,7 @@
 import 'package:emerge_app/core/init/init_app.dart';
 import 'package:emerge_app/core/data/seed_runner.dart';
+import 'package:emerge_app/core/config/app_config.dart';
+import 'package:sentry/sentry.dart';
 import 'package:emerge_app/core/router/router.dart';
 import 'package:emerge_app/core/theme/app_theme.dart';
 import 'package:emerge_app/core/theme/theme_provider.dart';
@@ -84,6 +86,30 @@ void main() async {
       FirebaseCrashlytics.instance.recordError(error, stack, fatal: true);
       return true;
     };
+  } else {
+    // Initialize Sentry for Web if a DSN is provided
+    final sentryDsn = AppConfig.sentryDsn;
+    if (sentryDsn.isNotEmpty) {
+      await Sentry.init((options) {
+        options.dsn = sentryDsn;
+        options.tracesSampleRate = 1.0;
+      });
+
+      // Pass framework errors to Sentry
+      final originalOnError = FlutterError.onError;
+      FlutterError.onError = (details) {
+        Sentry.captureException(details.exception, stackTrace: details.stack);
+        if (originalOnError != null) {
+          originalOnError(details);
+        }
+      };
+
+      // Pass unhandled asynchronous errors to Sentry
+      PlatformDispatcher.instance.onError = (error, stack) {
+        Sentry.captureException(error, stackTrace: stack);
+        return true;
+      };
+    }
   }
 
   // Anonymous sign-in code removed to prevent uncontrolled sign-in

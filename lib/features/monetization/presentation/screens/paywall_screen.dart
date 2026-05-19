@@ -1,6 +1,7 @@
 import 'dart:ui';
 import 'package:emerge_app/core/presentation/widgets/world_background.dart';
 import 'package:emerge_app/features/monetization/presentation/providers/paywall_provider.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
@@ -149,10 +150,16 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
                             ),
                           ),
                         ] else
-                          const Center(
+                          Center(
                             child: Text(
-                              "No subscription packages available currently.",
-                              style: TextStyle(color: Colors.white),
+                              kIsWeb
+                                  ? "Subscriptions are currently unavailable on web.\nPlease upgrade via the mobile app or check back later!"
+                                  : "No subscription packages available currently.",
+                              textAlign: TextAlign.center,
+                              style: const TextStyle(
+                                color: Colors.white70,
+                                fontSize: 16,
+                              ),
                             ),
                           ),
 
