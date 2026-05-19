@@ -13,8 +13,11 @@ class DriftLeaderboardRepository implements LeaderboardRepository {
   final EnhancedSyncEngine _syncEngine;
   final FirebaseFirestore _firestore;
 
-  DriftLeaderboardRepository(this._db, this._syncEngine, [FirebaseFirestore? firestore])
-    : _firestore = firestore ?? FirebaseFirestore.instance;
+  DriftLeaderboardRepository(
+    this._db,
+    this._syncEngine, [
+    FirebaseFirestore? firestore,
+  ]) : _firestore = firestore ?? FirebaseFirestore.instance;
 
   @override
   Stream<List<LeaderboardEntry>> watchClubLeaderboard([String? clubId]) {
@@ -25,41 +28,48 @@ class DriftLeaderboardRepository implements LeaderboardRepository {
     StreamSubscription<List<LeaderboardEntriesTableData>>? localSub;
     StreamSubscription<QuerySnapshot>? remoteSub;
 
-    void emitMerged(List<LeaderboardEntriesTableData> localRows, List<Map<String, dynamic>> remoteDocs) {
+    void emitMerged(
+      List<LeaderboardEntriesTableData> localRows,
+      List<Map<String, dynamic>> remoteDocs,
+    ) {
       final seen = <String>{};
       final merged = <LeaderboardEntry>[];
 
       for (final doc in remoteDocs) {
         final id = '${doc['userId']}_$clubId';
         if (seen.add(id)) {
-          merged.add(LeaderboardEntry(
-            userId: doc['userId'] as String? ?? '',
-            userName: doc['userName'] as String? ?? 'Anonymous',
-            xp: (doc['xp'] as num?)?.toInt() ?? 0,
-            level: (doc['level'] as num?)?.toInt() ?? 1,
-            archetype: UserArchetype.values.firstWhere(
-              (e) => e.name == (doc['archetype'] as String? ?? 'none'),
-              orElse: () => UserArchetype.none,
+          merged.add(
+            LeaderboardEntry(
+              userId: doc['userId'] as String? ?? '',
+              userName: doc['userName'] as String? ?? 'Anonymous',
+              xp: (doc['xp'] as num?)?.toInt() ?? 0,
+              level: (doc['level'] as num?)?.toInt() ?? 1,
+              archetype: UserArchetype.values.firstWhere(
+                (e) => e.name == (doc['archetype'] as String? ?? 'none'),
+                orElse: () => UserArchetype.none,
+              ),
+              rank: 0,
             ),
-            rank: 0,
-          ));
+          );
         }
       }
 
       for (final row in localRows) {
         final id = '${row.userId}_$clubId';
         if (seen.add(id)) {
-          merged.add(LeaderboardEntry(
-            userId: row.userId,
-            userName: row.userName,
-            xp: row.xp,
-            level: row.level,
-            archetype: UserArchetype.values.firstWhere(
-              (e) => e.name == (row.archetype ?? 'none'),
-              orElse: () => UserArchetype.none,
+          merged.add(
+            LeaderboardEntry(
+              userId: row.userId,
+              userName: row.userName,
+              xp: row.xp,
+              level: row.level,
+              archetype: UserArchetype.values.firstWhere(
+                (e) => e.name == (row.archetype ?? 'none'),
+                orElse: () => UserArchetype.none,
+              ),
+              rank: 0,
             ),
-            rank: 0,
-          ));
+          );
         }
       }
 
@@ -76,14 +86,13 @@ class DriftLeaderboardRepository implements LeaderboardRepository {
     var localReady = false;
     var remoteReady = false;
 
-    localSub = _db.leaderboardEntriesDao.watchLeaderboard(clubId).listen(
-      (rows) {
-        localRows = rows;
-        localReady = true;
-        if (remoteReady) emitMerged(localRows, remoteDocs);
-      },
-      onError: controller.addError,
-    );
+    localSub = _db.leaderboardEntriesDao.watchLeaderboard(clubId).listen((
+      rows,
+    ) {
+      localRows = rows;
+      localReady = true;
+      if (remoteReady) emitMerged(localRows, remoteDocs);
+    }, onError: controller.addError);
 
     remoteSub = _firestore
         .collection('club_leaderboards')
@@ -91,18 +100,15 @@ class DriftLeaderboardRepository implements LeaderboardRepository {
         .orderBy('xp', descending: true)
         .limit(50)
         .snapshots()
-        .listen(
-      (snapshot) {
-        remoteDocs = snapshot.docs.map((doc) {
-          final data = doc.data();
-          data['id'] = doc.id;
-          return data;
-        }).toList();
-        remoteReady = true;
-        if (localReady) emitMerged(localRows, remoteDocs);
-      },
-      onError: controller.addError,
-    );
+        .listen((snapshot) {
+          remoteDocs = snapshot.docs.map((doc) {
+            final data = doc.data();
+            data['id'] = doc.id;
+            return data;
+          }).toList();
+          remoteReady = true;
+          if (localReady) emitMerged(localRows, remoteDocs);
+        }, onError: controller.addError);
 
     controller.onCancel = () {
       localSub?.cancel();
@@ -136,7 +142,15 @@ class DriftLeaderboardRepository implements LeaderboardRepository {
         final nowStr = DateTime.now().toUtc().toIso8601String();
 
         if (isIncrement) {
-          await _db.leaderboardEntriesDao.incrementXp(id, xp, level);
+          await _db.leaderboardEntriesDao.incrementXp(
+            id,
+            xp,
+            level,
+            userId: userId,
+            tribeId: clubId,
+            userName: userName ?? 'Anonymous',
+            archetype: archetype.name,
+          );
 
           // Use enqueueSet with merge so the entry is created on first
           // habit completion (not just on level-up), avoiding permission

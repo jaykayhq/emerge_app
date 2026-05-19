@@ -128,6 +128,10 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
     try {
       final result = await ref.read(authRepositoryProvider).signInWithGoogle();
       await result.fold((error) async {
+        // 'redirect_initiated' is not a real error — on web the page navigates
+        // away to Google OAuth. Profile creation will occur after the redirect
+        // returns, handled by initApp(). Do nothing here.
+        if (error.message == 'redirect_initiated') return;
         if (mounted) {
           final msg = error.message;
           if (msg.contains('email-already-in-use') ||

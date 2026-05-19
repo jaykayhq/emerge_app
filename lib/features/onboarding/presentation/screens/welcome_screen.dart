@@ -129,6 +129,9 @@ class WelcomeScreen extends ConsumerWidget {
                               .signInWithGoogle();
                           result.fold(
                             (error) {
+                              // 'redirect_initiated' is not an error — the page
+                              // navigates away to Google OAuth on web. Ignore.
+                              if (error.message == 'redirect_initiated') return;
                               messenger.showSnackBar(
                                 SnackBar(content: Text(error.message)),
                               );

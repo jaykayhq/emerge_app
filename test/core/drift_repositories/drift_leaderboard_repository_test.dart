@@ -40,57 +40,119 @@ void main() {
   });
 
   group('DriftLeaderboardRepository', () {
+    test(
+      'updateUserScore() increment mode calls enqueueSet with increment marker',
+      () async {
+        final result = await repository.updateUserScore(
+          userId,
+          xp: 50,
+          level: 2,
+          archetype: UserArchetype.athlete,
+          clubId: clubId,
+          isIncrement: true,
+        );
 
-    test('updateUserScore() increment mode calls enqueueSet with increment marker', () async {
-      final result = await repository.updateUserScore(
-        userId,
-        xp: 50,
-        level: 2,
-        archetype: UserArchetype.athlete,
-        clubId: clubId,
-        isIncrement: true,
-      );
+        expect(result.isRight(), true);
 
-      expect(result.isRight(), true);
+        final captured =
+            verify(
+                  () => mockSyncEngine.enqueueSet(
+                    collectionPath: 'club_leaderboards',
+                    documentId: '${userId}_$clubId',
+                    data: captureAny(named: 'data'),
+                  ),
+                ).captured.first
+                as Map<String, dynamic>;
 
-      final captured = verify(
-        () => mockSyncEngine.enqueueSet(
-          collectionPath: 'club_leaderboards',
-          documentId: '${userId}_$clubId',
-          data: captureAny(named: 'data'),
-        ),
-      ).captured.first as Map<String, dynamic>;
+        expect(captured['xp'], isA<Map<String, dynamic>>());
+        expect(captured['xp']['__type__'], 'increment');
+        expect(captured['xp']['value'], 50);
+      },
+    );
 
-      expect(captured['xp'], isA<Map<String, dynamic>>());
-      expect(captured['xp']['__type__'], 'increment');
-      expect(captured['xp']['value'], 50);
-    });
+    test(
+      'updateUserScore() increment mode when entry does not exist inserts new entry',
+      () async {
+        final result = await repository.updateUserScore(
+          userId,
+          xp: 50,
+          level: 2,
+          archetype: UserArchetype.athlete,
+          clubId: clubId,
+          isIncrement: true,
+        );
 
-    test('updateUserScore() absolute mode calls enqueueSet with absolute value', () async {
-      final result = await repository.updateUserScore(
-        userId,
-        xp: 500,
-        level: 5,
-        archetype: UserArchetype.creator,
-        userName: 'Test User',
-        clubId: clubId,
-        isIncrement: false,
-      );
+        expect(result.isRight(), true);
 
-      expect(result.isRight(), true);
+        final entries = await db.leaderboardEntriesDao.getForTribe(clubId);
+        expect(entries, isNotEmpty);
+        expect(entries.first.userId, userId);
+        expect(entries.first.xp, 50);
+        expect(entries.first.level, 2);
+      },
+    );
 
-      final captured = verify(
-        () => mockSyncEngine.enqueueSet(
-          collectionPath: 'club_leaderboards',
-          documentId: '${userId}_$clubId',
-          data: captureAny(named: 'data'),
-        ),
-      ).captured.first as Map<String, dynamic>;
+    test(
+      'updateUserScore() increment mode when entry exists increments xp',
+      () async {
+        await repository.updateUserScore(
+          userId,
+          xp: 50,
+          level: 2,
+          archetype: UserArchetype.athlete,
+          clubId: clubId,
+          isIncrement: true,
+        );
 
-      expect(captured['xp'], 500);
-      expect(captured['level'], 5);
-      expect(captured['archetype'], 'creator');
-    });
+        final result = await repository.updateUserScore(
+          userId,
+          xp: 25,
+          level: 3,
+          archetype: UserArchetype.athlete,
+          clubId: clubId,
+          isIncrement: true,
+        );
+
+        expect(result.isRight(), true);
+
+        final entries = await db.leaderboardEntriesDao.getForTribe(clubId);
+        expect(entries, isNotEmpty);
+        expect(entries.first.userId, userId);
+        expect(entries.first.xp, 75);
+        expect(entries.first.level, 3);
+      },
+    );
+
+    test(
+      'updateUserScore() absolute mode calls enqueueSet with absolute value',
+      () async {
+        final result = await repository.updateUserScore(
+          userId,
+          xp: 500,
+          level: 5,
+          archetype: UserArchetype.creator,
+          userName: 'Test User',
+          clubId: clubId,
+          isIncrement: false,
+        );
+
+        expect(result.isRight(), true);
+
+        final captured =
+            verify(
+                  () => mockSyncEngine.enqueueSet(
+                    collectionPath: 'club_leaderboards',
+                    documentId: '${userId}_$clubId',
+                    data: captureAny(named: 'data'),
+                  ),
+                ).captured.first
+                as Map<String, dynamic>;
+
+        expect(captured['xp'], 500);
+        expect(captured['level'], 5);
+        expect(captured['archetype'], 'creator');
+      },
+    );
 
     test('updateUserScore() inserts new entry if not exists', () async {
       await repository.updateUserScore(
@@ -185,34 +247,31 @@ void main() {
       await expectLater(
         stream,
         emits(
-          isA<List<LeaderboardEntry>>().having(
-            (entries) => entries.length,
-            'length',
-            3,
-          ).having(
-            (entries) => entries.first.xp,
-            'first entry xp',
-            500,
-          ).having(
-            (entries) => entries.last.xp,
-            'last entry xp',
-            100,
-          ),
+          isA<List<LeaderboardEntry>>()
+              .having((entries) => entries.length, 'length', 3)
+              .having((entries) => entries.first.xp, 'first entry xp', 500)
+              .having((entries) => entries.last.xp, 'last entry xp', 100),
         ),
       );
     });
 
-    test('watchClubLeaderboard() returns empty stream for null clubId', () async {
-      final stream = repository.watchClubLeaderboard(null);
+    test(
+      'watchClubLeaderboard() returns empty stream for null clubId',
+      () async {
+        final stream = repository.watchClubLeaderboard(null);
 
-      expect(stream, isA<Stream<List<LeaderboardEntry>>>());
-    });
+        expect(stream, isA<Stream<List<LeaderboardEntry>>>());
+      },
+    );
 
-    test('watchClubLeaderboard() returns empty stream for empty clubId', () async {
-      final stream = repository.watchClubLeaderboard('');
+    test(
+      'watchClubLeaderboard() returns empty stream for empty clubId',
+      () async {
+        final stream = repository.watchClubLeaderboard('');
 
-      expect(stream, isA<Stream<List<LeaderboardEntry>>>());
-    });
+        expect(stream, isA<Stream<List<LeaderboardEntry>>>());
+      },
+    );
 
     test('getUserRank() returns user rank', () async {
       final now = DateTime.now().toIso8601String();
