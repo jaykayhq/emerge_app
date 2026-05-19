@@ -92,8 +92,8 @@ GoRouter router(Ref ref) {
       // Use ref.read for stats to avoid redundant rebuilds
       final statsAsync = ref.read(userStatsStreamProvider);
 
-      // If stats are loading, allow current path to continue (prevents loops)
-      if (statsAsync.isLoading) return null;
+      // If stats are loading or in error state, allow current path to continue
+      if (statsAsync.isLoading || statsAsync.hasError) return null;
 
       final userStats = statsAsync.value;
       if (userStats == null) return null;
