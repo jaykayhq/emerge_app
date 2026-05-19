@@ -22,7 +22,10 @@ final userStatsStreamProvider = StreamProvider<UserProfile>((ref) {
   if (user == null) return Stream.value(const UserProfile(uid: ''));
 
   final repository = ref.watch(userStatsRepositoryProvider);
-  return repository.watchUserStats(user.id);
+  return repository.watchUserStats(user.id).handleError((error, stackTrace) {
+    AppLogger.e('userStatsStreamProvider error', error, stackTrace);
+    return const UserProfile(uid: '');
+  });
 });
 
 /// Provider that only emits when the user's archetype changes.
