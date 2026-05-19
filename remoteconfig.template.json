@@ -14,13 +14,6 @@
       "description": "RevenueCat Public API key for iOS",
       "valueType": "STRING"
     },
-    "revenuecat_web_api_key": {
-      "defaultValue": {
-        "value": "strp_sb_gzYXaxhwmWkadNWZMaAsAOXY"
-      },
-      "description": "RevenueCat Stripe API key for Web",
-      "valueType": "STRING"
-    },
     "free_habit_limit": {
       "defaultValue": {
         "value": "5"
