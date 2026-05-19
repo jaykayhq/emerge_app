@@ -266,5 +266,42 @@ void main() {
         ),
       );
     });
+
+    test('rowToProfileForTest() handles null database values safely', () {
+      final fakeRow = FakeUserStatsTableData();
+      final profile = repository.rowToProfileForTest(fakeRow);
+
+      expect(profile.uid, 'test_user_123');
+      expect(profile.displayName, isNull);
+      expect(profile.onboardingProgress, 0);
+      expect(profile.hasEmerged, false);
+      expect(profile.momentumScore, 0.5);
+      expect(profile.avatarStats.strengthXp, 0);
+      expect(profile.avatarStats.level, 1);
+      expect(profile.avatarStats.streak, 0);
+      expect(profile.avatarStats.momentumScore, 50);
+      expect(profile.worldState.entropy, 0.0); // 1.0 - worldHealthScore fallback (1.0) = 0.0
+    });
   });
+}
+
+class FakeUserStatsTableData implements UserStatsTableData {
+  @override
+  dynamic noSuchMethod(Invocation invocation) {
+    if (invocation.memberName == #userId) return 'test_user_123';
+    if (invocation.memberName == #onboardingProgress) return 0;
+    if (invocation.memberName == #hasEmerged) return false;
+    if (invocation.memberName == #momentumScore) return 0.5;
+    if (invocation.memberName == #worldHealthScore) return 1.0;
+    if (invocation.memberName == #strengthXp) return 0;
+    if (invocation.memberName == #intellectXp) return 0;
+    if (invocation.memberName == #vitalityXp) return 0;
+    if (invocation.memberName == #creativityXp) return 0;
+    if (invocation.memberName == #focusXp) return 0;
+    if (invocation.memberName == #spiritXp) return 0;
+    if (invocation.memberName == #challengeXp) return 0;
+    if (invocation.memberName == #level) return 1;
+    if (invocation.memberName == #streak) return 0;
+    return null;
+  }
 }

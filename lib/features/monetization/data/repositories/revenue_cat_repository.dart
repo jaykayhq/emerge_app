@@ -27,6 +27,11 @@ class RevenueCatRepository implements MonetizationRepository {
 
   @override
   Future<void> initialize({String? uid}) async {
+    if (kIsWeb) {
+      _isConfigured = false;
+      AppLogger.i('RevenueCat: Disabled on Web.');
+      return;
+    }
     // If already configured and no new UID is provided, we are done
     if (_isConfigured && uid == null) return;
 

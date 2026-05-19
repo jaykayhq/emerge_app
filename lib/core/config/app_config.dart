@@ -62,6 +62,26 @@ class AppConfig {
     defaultValue: true,
   );
 
+  // Sentry Configuration
+  static const String _sentryDsnDefine = String.fromEnvironment('SENTRY_DSN');
+
+  static String get sentryDsn {
+    // Layer 1: Check Firebase Remote Config
+    if (_remoteConfigService != null) {
+      final remoteKey = _remoteConfigService!.getString('sentry_dsn');
+      if (remoteKey.isNotEmpty) return remoteKey;
+    }
+
+    // Layer 2: Fallback to .env file
+    if (dotenv.isInitialized) {
+      final envKey = dotenv.maybeGet('SENTRY_DSN');
+      if (envKey != null && envKey.isNotEmpty) return envKey;
+    }
+
+    // Layer 3: Fallback to compile-time variable
+    return _sentryDsnDefine;
+  }
+
   // Validate required configuration
   static bool get isValidConfig {
     if (isProduction) {
@@ -72,6 +92,9 @@ class AppConfig {
 
   // Get API key from multiple sources with fallback logic
   static String getRevenueCatApiKey(String platform) {
+    if (platform == 'web') {
+      return '';
+    }
     String? key;
 
     // Layer 1: Check Firebase Remote Config (Production Standard)
@@ -212,6 +235,7 @@ class AppConfig {
       AppLogger.i('  Firebase App Check enabled: $enableFirebaseAppCheck');
       AppLogger.i('  SSL Pinning enabled: $enableSslPinning');
       AppLogger.i('  Rate Limiting enabled: $enableRateLimiting');
+      AppLogger.i('  Sentry DSN configured: ${sentryDsn.isNotEmpty}');
     }
   }
 }

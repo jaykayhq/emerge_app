@@ -71,6 +71,7 @@ dependencies:
   path: ^1.9.1
   sqlite3_web: ^0.4.1
   flutter_svg: ^2.3.0
+  sentry: 9.20.0
 
 dev_dependencies:
   integration_test:
