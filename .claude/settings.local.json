@@ -76,7 +76,16 @@
       "Bash(cmd.exe /c \"dir C:\\\\Users\\\\HP\\\\Downloads\\\\emerge_app 2>&1\")",
       "Bash(cmd.exe /c \"flutter build web --release --dart-define=RECAPTCHA_SITE_KEY=\"\"\"\" 2>&1 | findstr /C:\"\"Error\"\" /C:\"\"Failed\"\" /C:\"\"Building\"\"\")",
       "Bash(cmd.exe /c \"cd /d C:\\\\Users\\\\HP\\\\Downloads\\\\emerge_app && flutter build web --release 2>&1\")",
-      "Bash(cmd.exe /c \"cd /d C:\\\\Users\\\\HP\\\\Downloads\\\\emerge_app && flutter --version\")"
+      "Bash(cmd.exe /c \"cd /d C:\\\\Users\\\\HP\\\\Downloads\\\\emerge_app && flutter --version\")",
+      "WebFetch(domain:www.techradar.com)",
+      "WebFetch(domain:buffer.com)",
+      "WebFetch(domain:later.com)",
+      "WebFetch(domain:publer.io)",
+      "WebFetch(domain:www.socialpilot.co)",
+      "WebFetch(domain:www.websiteplanet.com)",
+      "WebFetch(domain:publer.com)",
+      "WebFetch(domain:blog.hootsuite.com)",
+      "WebFetch(domain:www.vista-social.com)"
     ],
     "deny": [],
     "ask": []
