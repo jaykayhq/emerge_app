@@ -58,3 +58,8 @@ firebase-debug.log
 
 # OS specific
 nul
+
+# Git worktrees
+.worktrees/
+worktrees/
+
