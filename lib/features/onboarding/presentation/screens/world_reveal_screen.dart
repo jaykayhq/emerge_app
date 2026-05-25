@@ -3,7 +3,6 @@ import 'package:emerge_app/core/utils/app_logger.dart';
 import 'package:emerge_app/features/onboarding/presentation/providers/onboarding_provider.dart';
 import 'package:emerge_app/features/onboarding/presentation/providers/onboarding_state_notifier.dart';
 import 'package:emerge_app/core/presentation/widgets/animated_flame_logo.dart';
-import 'package:emerge_app/features/tutorial/presentation/providers/tutorial_provider.dart';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -109,11 +108,8 @@ class _WorldRevealScreenState extends ConsumerState<WorldRevealScreen>
           .read(onboardingControllerProvider.notifier)
           .completeOnboarding();
 
-      // Enable tutorials for first-time users after onboarding
-      // This ensures users see helpful tutorials when they first explore the app
-      await ref.read(tutorialProvider.notifier).setTutorialsEnabled(true);
-      await ref.read(tutorialProvider.notifier).enableTutorialAutoShow();
-      AppLogger.i('Tutorials enabled after onboarding completion');
+      // Enable companion for first-time users after onboarding
+      AppLogger.i('Companion enabled after onboarding completion');
 
       // Navigate to world with a fade transition (handled by router or page transition)
       if (mounted) {

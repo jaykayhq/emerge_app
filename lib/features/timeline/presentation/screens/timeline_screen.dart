@@ -21,8 +21,8 @@ import 'package:emerge_app/features/timeline/presentation/widgets/completion_cel
 import 'package:emerge_app/features/auth/domain/entities/user_extension.dart';
 import 'package:emerge_app/features/gamification/presentation/providers/user_stats_providers.dart';
 import 'package:emerge_app/features/timeline/presentation/widgets/reflection_card.dart';
-import 'package:emerge_app/features/tutorial/presentation/providers/tutorial_provider.dart';
-import 'package:emerge_app/features/tutorial/presentation/widgets/tutorial_overlay.dart';
+import 'package:emerge_app/features/companion/presentation/providers/companion_providers.dart';
+import 'package:emerge_app/features/companion/domain/enums/companion_enums.dart';
 import 'package:emerge_app/core/presentation/widgets/world_background.dart';
 import 'package:emerge_app/core/domain/models/app_world_theme.dart';
 import 'package:emerge_app/core/presentation/widgets/archetype_sliver_app_bar.dart';
@@ -57,65 +57,17 @@ class _TimelineScreenState extends ConsumerState<TimelineScreen> {
   void initState() {
     super.initState();
     _loadAiInsight();
-    _checkTutorial();
-  }
-
-  void _checkTutorial() {
     Future.delayed(const Duration(milliseconds: 500), () {
       if (!mounted) return;
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (!mounted) return;
-        final tutorialNotifier = ref.read(tutorialProvider.notifier);
-        final tutorialState = ref.watch(tutorialProvider);
-        tutorialNotifier.enableTutorialAutoShow();
-
-        if (!tutorialState.isCompleted(TutorialStep.timeline) &&
-            tutorialNotifier.shouldShowTutorial()) {
-          _showTutorial();
-        }
-      });
+      final repo = ref.read(companionRepositoryProvider);
+      if (!repo.hasVisited('/timeline')) {
+        repo.markVisited('/timeline');
+        ref.read(companionEngineProvider.notifier).triggerEvent(
+          eventType: CompanionEventType.firstFeatureVisit,
+          userContext: {'route': '/timeline'},
+        );
+      }
     });
-  }
-
-  void _showTutorial() {
-    late OverlayEntry entry;
-    entry = OverlayEntry(
-      builder: (context) => TutorialOverlay(
-        steps: [
-          const TutorialStepInfo(
-            title: 'Your Command Center',
-            description:
-                'This is your daily protocol. Everything you do here is a vote for who you want to become.',
-          ),
-          TutorialStepInfo(
-            title: 'Identity Momentum',
-            description:
-                'Track your consistency across the week. Green dots represent days you kept your promises.',
-            targetKey: _calendarKey,
-          ),
-          TutorialStepInfo(
-            title: 'Current Mission',
-            description:
-                'Your progress in the World Map. Complete your focus habits to unlock new lands.',
-            targetKey: _missionKey,
-          ),
-          TutorialStepInfo(
-            title: 'AI Architect',
-            description:
-                'Our AI analyzes your behavior to provide hyper-personalized insights and habit suggestions.',
-            targetKey: _aiCoachKey,
-            alignment: Alignment.topCenter,
-          ),
-        ],
-        onCompleted: () {
-          ref
-              .read(tutorialProvider.notifier)
-              .completeStep(TutorialStep.timeline);
-          entry.remove();
-        },
-      ),
-    );
-    Overlay.of(context).insert(entry);
   }
 
   Future<void> _loadAiInsight() async {

@@ -16,8 +16,8 @@ import 'package:emerge_app/features/profile/presentation/widgets/trajectory_time
 import 'package:emerge_app/features/profile/presentation/widgets/synergy_status_card.dart';
 import 'package:emerge_app/features/profile/presentation/widgets/synergy_card.dart';
 import 'package:emerge_app/features/profile/presentation/widgets/emerge_splash_reveal.dart';
-import 'package:emerge_app/features/tutorial/presentation/providers/tutorial_provider.dart';
-import 'package:emerge_app/features/tutorial/presentation/widgets/tutorial_overlay.dart';
+import 'package:emerge_app/features/companion/presentation/providers/companion_providers.dart';
+import 'package:emerge_app/features/companion/domain/enums/companion_enums.dart';
 import 'package:emerge_app/features/monetization/presentation/providers/subscription_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -61,101 +61,21 @@ class FutureSelfStudioScreen extends ConsumerStatefulWidget {
 class _FutureSelfStudioScreenState
     extends ConsumerState<FutureSelfStudioScreen> {
   int? _previousStreak;
-  final GlobalKey _identityKey = GlobalKey();
-  final GlobalKey _avatarKey = GlobalKey();
-  final GlobalKey _xpKey = GlobalKey();
-  final GlobalKey _timelineKey = GlobalKey();
-  final GlobalKey _synergyKey = GlobalKey();
 
   @override
   void initState() {
     super.initState();
-    _checkTutorial();
-  }
-
-  void _checkTutorial() {
-    // Add delay to ensure screen has fully settled and navigation is complete
     Future.delayed(const Duration(milliseconds: 500), () {
       if (!mounted) return;
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (!mounted) return;
-        final tutorialNotifier = ref.read(tutorialProvider.notifier);
-        final tutorialState = ref.watch(tutorialProvider);
-        // Re-enable auto-show when entering this screen (for one-time show per visit)
-        tutorialNotifier.enableTutorialAutoShow();
-
-        // Only show tutorial if not completed AND tutorials are enabled AND auto-show is active
-        if (!tutorialState.isCompleted(TutorialStep.profile) &&
-            tutorialNotifier.shouldShowTutorial()) {
-          _showTutorial();
-        }
-      });
+      final repo = ref.read(companionRepositoryProvider);
+      if (!repo.hasVisited('/profile/future-self')) {
+        repo.markVisited('/profile/future-self');
+        ref.read(companionEngineProvider.notifier).triggerEvent(
+          eventType: CompanionEventType.firstFeatureVisit,
+          userContext: {'route': '/profile/future-self'},
+        );
+      }
     });
-  }
-
-  void _showTutorial() {
-    late OverlayEntry entry;
-    entry = OverlayEntry(
-      builder: (context) => TutorialOverlay(
-        steps: [
-          const TutorialStepInfo(
-            title: 'Your Future Self',
-            description:
-                'This is the projection of who you are becoming. Every habit you complete shapes this form.',
-          ),
-          TutorialStepInfo(
-            title: 'Archetype Alignment',
-            description:
-                'Your chosen archetype defines your unique growth path and visual evolution.',
-            targetKey: _identityKey,
-          ),
-          TutorialStepInfo(
-            title: 'The Avatar',
-            description:
-                'As you level up, your avatar evolves through five distinct phases of emergence.',
-            targetKey: _avatarKey,
-          ),
-          TutorialStepInfo(
-            title: 'Evolution XP',
-            description:
-                'Track your overall level progress. Each level up unlocks new world nodes and avatar features.',
-            targetKey: _xpKey,
-          ),
-          TutorialStepInfo(
-            title: 'Trajectory',
-            description:
-                'See your projected growth over time based on your current consistency.',
-            targetKey: _timelineKey,
-            alignment: Alignment.topCenter,
-          ),
-          TutorialStepInfo(
-            title: 'Identity Synergy',
-            description:
-                'Discover how your different habits combine to create unique identity strengths.',
-            targetKey: _synergyKey,
-            alignment: Alignment.topCenter,
-          ),
-          TutorialStepInfo(
-            title: 'Archetype Evolution',
-            description:
-                'Your physical form reflects your internal state. Missed habits cause decay, while consistency brings radiance.',
-            targetKey: _avatarKey,
-          ),
-          const TutorialStepInfo(
-            title: 'Archetype Resonance',
-            description:
-                'Your current growth is compared against your archetype\'s peak potential. Every action brings you closer to that resonance.',
-          ),
-        ],
-        onCompleted: () {
-          ref
-              .read(tutorialProvider.notifier)
-              .completeStep(TutorialStep.profile);
-          entry.remove();
-        },
-      ),
-    );
-    Overlay.of(context).insert(entry);
   }
 
   @override
@@ -287,7 +207,6 @@ class _FutureSelfStudioScreenState
               // Identity header (archetype + level)
               SliverToBoxAdapter(
                 child: Container(
-                  key: _identityKey,
                   padding: const EdgeInsets.symmetric(
                     horizontal: 16,
                     vertical: 8,
@@ -351,7 +270,6 @@ class _FutureSelfStudioScreenState
               SliverToBoxAdapter(
                 child: RepaintBoundary(
                   child: Center(
-                    key: _avatarKey,
                     child: ref.watch(useNewAvatarRendererProvider)
                         ? _buildAvatarRenderer(
                             context,
@@ -404,7 +322,6 @@ class _FutureSelfStudioScreenState
               // XP Progress bar
               SliverToBoxAdapter(
                 child: Padding(
-                  key: _xpKey,
                   padding: const EdgeInsets.symmetric(horizontal: 24),
                   child: Column(
                     children: [
@@ -485,7 +402,6 @@ class _FutureSelfStudioScreenState
               SliverToBoxAdapter(
                 child: RepaintBoundary(
                   child: TrajectoryTimeline(
-                    key: _timelineKey,
                     archetype: profile.archetype,
                     currentLevel: effectiveLevel,
                     currentXp:
@@ -508,7 +424,6 @@ class _FutureSelfStudioScreenState
               // Synergy Card with glassmorphism
               SliverToBoxAdapter(
                 child: SynergyCard(
-                  key: _synergyKey,
                   primaryAttribute: primaryAttribute,
                   secondaryAttribute: secondaryAttribute,
                   growthMultiplier: growthMultiplier,

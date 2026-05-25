@@ -2,9 +2,9 @@ import 'package:emerge_app/core/presentation/widgets/emerge_branding.dart';
 import 'package:emerge_app/core/theme/app_theme.dart';
 import 'package:emerge_app/features/ai/domain/services/ai_personalization_service.dart';
 import 'package:emerge_app/features/habits/presentation/providers/habit_providers.dart';
-import 'package:emerge_app/features/tutorial/presentation/providers/tutorial_provider.dart';
-import 'package:emerge_app/features/tutorial/presentation/widgets/tutorial_overlay.dart';
 import 'package:emerge_app/features/gamification/presentation/providers/user_stats_providers.dart';
+import 'package:emerge_app/features/companion/presentation/providers/companion_providers.dart';
+import 'package:emerge_app/features/companion/domain/enums/companion_enums.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -24,56 +24,20 @@ class AiReflectionsScreen extends ConsumerStatefulWidget {
 }
 
 class _AiReflectionsScreenState extends ConsumerState<AiReflectionsScreen> {
-  final GlobalKey _sageKey = GlobalKey();
-  final GlobalKey _wisdomKey = GlobalKey();
-
   @override
   void initState() {
     super.initState();
-    _checkTutorial();
-  }
-
-  void _checkTutorial() {
     Future.delayed(const Duration(milliseconds: 500), () {
       if (!mounted) return;
-      final tutorialNotifier = ref.read(tutorialProvider.notifier);
-      final tutorialState = ref.watch(tutorialProvider);
-      tutorialNotifier.enableTutorialAutoShow();
-
-      if (!tutorialState.isCompleted(TutorialStep.aiCoach) &&
-          tutorialNotifier.shouldShowTutorial()) {
-        _showTutorial();
+      final repo = ref.read(companionRepositoryProvider);
+      if (!repo.hasVisited('/profile/reflections')) {
+        repo.markVisited('/profile/reflections');
+        ref.read(companionEngineProvider.notifier).triggerEvent(
+          eventType: CompanionEventType.firstFeatureVisit,
+          userContext: {'route': '/profile/reflections'},
+        );
       }
     });
-  }
-
-  void _showTutorial() {
-    late OverlayEntry entry;
-    entry = OverlayEntry(
-      builder: (context) => TutorialOverlay(
-        steps: [
-          TutorialStepInfo(
-            title: "The Sage's Council",
-            description:
-                "Our AI core analyzes your habit patterns to provide guidance on your identity evolution.",
-            targetKey: _sageKey,
-          ),
-          TutorialStepInfo(
-            title: "Actionable Wisdom",
-            description:
-                "Beyond mere observations, the Coach suggests specific recalibrations for your schedule.",
-            targetKey: _wisdomKey,
-          ),
-        ],
-        onCompleted: () {
-          ref
-              .read(tutorialProvider.notifier)
-              .completeStep(TutorialStep.aiCoach);
-          entry.remove();
-        },
-      ),
-    );
-    Overlay.of(context).insert(entry);
   }
 
   @override
@@ -192,7 +156,6 @@ class _AiReflectionsScreenState extends ConsumerState<AiReflectionsScreen> {
                           }
 
                           return ListView.separated(
-                            key: _wisdomKey,
                             padding: const EdgeInsets.symmetric(
                               horizontal: 20,
                               vertical: 24,
@@ -362,7 +325,6 @@ class _AiReflectionsScreenState extends ConsumerState<AiReflectionsScreen> {
 
   Widget _buildHeader(BuildContext context) {
     return Padding(
-      key: _sageKey,
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
       child: Row(
         children: [

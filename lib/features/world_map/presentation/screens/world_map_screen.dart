@@ -10,8 +10,8 @@ import 'package:emerge_app/core/presentation/widgets/world_background.dart';
 import 'package:emerge_app/features/world_map/presentation/widgets/node_quest_dialog.dart';
 import 'package:emerge_app/features/world_map/presentation/screens/level_immersive_screen.dart';
 import 'package:emerge_app/features/world_map/presentation/widgets/curved_map_layout.dart';
-import 'package:emerge_app/features/tutorial/presentation/providers/tutorial_provider.dart';
-import 'package:emerge_app/features/tutorial/presentation/widgets/tutorial_overlay.dart';
+import 'package:emerge_app/features/companion/presentation/providers/companion_providers.dart';
+import 'package:emerge_app/features/companion/domain/enums/companion_enums.dart';
 import 'package:emerge_app/features/monetization/presentation/providers/subscription_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -36,84 +36,17 @@ class _WorldMapScreenState extends ConsumerState<WorldMapScreen> {
   @override
   void initState() {
     super.initState();
-    _checkTutorial();
-  }
-
-  void _checkTutorial() {
-    // Add delay to ensure screen has fully settled and navigation is complete
     Future.delayed(const Duration(milliseconds: 500), () {
       if (!mounted) return;
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (!mounted) return;
-        final tutorialNotifier = ref.read(tutorialProvider.notifier);
-        final tutorialState = ref.watch(tutorialProvider);
-        // Re-enable auto-show when entering this screen (for one-time show per visit)
-        tutorialNotifier.enableTutorialAutoShow();
-
-        // Only show tutorial if not completed AND tutorials are enabled AND auto-show is active
-        if (!tutorialState.isCompleted(TutorialStep.worldMap) &&
-            tutorialNotifier.shouldShowTutorial()) {
-          _showTutorial();
-        }
-      });
+      final repo = ref.read(companionRepositoryProvider);
+      if (!repo.hasVisited('/world-map')) {
+        repo.markVisited('/world-map');
+        ref.read(companionEngineProvider.notifier).triggerEvent(
+          eventType: CompanionEventType.firstFeatureVisit,
+          userContext: {'route': '/world-map'},
+        );
+      }
     });
-  }
-
-  void _showTutorial() {
-    late OverlayEntry entry;
-    entry = OverlayEntry(
-      builder: (context) => TutorialOverlay(
-        steps: [
-          const TutorialStepInfo(
-            title: 'Welcome to Your Inner World',
-            description:
-                'This map represents your psyche. As you build habits, this landscape will flourish and evolve.',
-          ),
-          TutorialStepInfo(
-            title: 'Archetype Journey',
-            description:
-                'This is your specific path. You are currently exploring the Valley of New Beginnings.',
-            targetKey: _topBarKey,
-          ),
-          TutorialStepInfo(
-            title: 'Growth Nodes',
-            description:
-                'Each node marks a significant milestone in your development. Unlock them by reaching level requirements.',
-            targetKey: _firstNodeKey,
-          ),
-          TutorialStepInfo(
-            title: 'Map Navigation',
-            description:
-                'Scroll vertically to explore different biomes. Each section represents a new phase of your evolution.',
-            targetKey: _scrollController.hasClients
-                ? null
-                : null, // General tip
-            alignment: Alignment.center,
-          ),
-          TutorialStepInfo(
-            title: 'Identity Progress',
-            description:
-                'Monitor your XP, streak, and world status here. Level up to expand your domain.',
-            targetKey: _statsBarKey,
-            alignment: Alignment.topCenter,
-          ),
-          TutorialStepInfo(
-            title: 'World Health',
-            description:
-                'Your World Orb shows the state of your inner ecosystem. Thriving means your habits are strong; Decaying means it\'s time for a vote.',
-            targetKey: _statsBarKey,
-            alignment: Alignment.topCenter,
-          ),
-        ],
-        onCompleted: () {
-          ref
-              .read(tutorialProvider.notifier)
-              .completeStep(TutorialStep.worldMap);
-          entry.remove();
-        },
-      ),
-    );
-    Overlay.of(context).insert(entry);
   }
 
   @override
