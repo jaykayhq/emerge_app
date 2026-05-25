@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
-import 'package:emerge_app/features/tutorial/presentation/providers/tutorial_provider.dart';
-import 'package:emerge_app/features/tutorial/presentation/widgets/tutorial_overlay.dart';
+import 'package:emerge_app/features/companion/presentation/providers/companion_providers.dart';
+import 'package:emerge_app/features/companion/domain/enums/companion_enums.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:emerge_app/core/presentation/widgets/app_error_widget.dart';
@@ -37,62 +37,17 @@ class _TribeTabContentState extends ConsumerState<TribeTabContent> {
   @override
   void initState() {
     super.initState();
-    _checkTutorial();
-  }
-
-  void _checkTutorial() {
-    Future.delayed(const Duration(milliseconds: 1000), () {
+    Future.delayed(const Duration(milliseconds: 500), () {
       if (!mounted) return;
-      final tutorialNotifier = ref.read(tutorialProvider.notifier);
-      final tutorialState = ref.read(tutorialProvider);
-
-      tutorialNotifier.enableTutorialAutoShow();
-
-      if (!tutorialState.isCompleted(TutorialStep.tribes) &&
-          tutorialNotifier.shouldShowTutorial()) {
-        _showTutorial();
+      final repo = ref.read(companionRepositoryProvider);
+      if (!repo.hasVisited('/tribes')) {
+        repo.markVisited('/tribes');
+        ref.read(companionEngineProvider.notifier).triggerEvent(
+          eventType: CompanionEventType.firstFeatureVisit,
+          userContext: {'route': '/tribes'},
+        );
       }
     });
-  }
-
-  void _showTutorial() {
-    late OverlayEntry entry;
-    entry = OverlayEntry(
-      builder: (context) => TutorialOverlay(
-        steps: [
-          TutorialStepInfo(
-            title: 'Your Archetype Tribe',
-            description:
-                'You\'ve been grouped with others who share your primary archetype. Together, you build collective momentum.',
-            targetKey: _emblemKey,
-          ),
-          TutorialStepInfo(
-            title: 'Collective Momentum',
-            description:
-                'Toggle between your Tribe\'s focused activity and Global progress. Seeing the world grow together fuels your identity.',
-            targetKey: _feedKey,
-          ),
-          TutorialStepInfo(
-            title: 'Social Witnessing',
-            description:
-                'See how your tribe members are progressing. Witnessing others\' wins strengthens your own commitment.',
-            targetKey: _feedKey,
-            alignment: Alignment.topCenter,
-          ),
-          TutorialStepInfo(
-            title: 'Accountability Bonds',
-            description:
-                'Form deep contracts with partners. High-stakes accountability is the ultimate "skin in the game".',
-            targetKey: _bondsKey,
-          ),
-        ],
-        onCompleted: () {
-          ref.read(tutorialProvider.notifier).completeStep(TutorialStep.tribes);
-          entry.remove();
-        },
-      ),
-    );
-    Overlay.of(context).insert(entry);
   }
 
   @override

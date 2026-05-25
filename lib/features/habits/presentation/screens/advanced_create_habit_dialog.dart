@@ -8,8 +8,8 @@ import 'package:emerge_app/features/habits/domain/entities/habit.dart';
 import 'package:emerge_app/features/habits/presentation/providers/habit_providers.dart';
 import 'package:emerge_app/features/habits/presentation/widgets/habit_template_picker.dart';
 import 'package:emerge_app/features/timeline/presentation/widgets/habit_timeline_section.dart';
-import 'package:emerge_app/features/tutorial/presentation/providers/tutorial_provider.dart';
-import 'package:emerge_app/features/tutorial/presentation/widgets/tutorial_overlay.dart';
+import 'package:emerge_app/features/companion/presentation/providers/companion_providers.dart';
+import 'package:emerge_app/features/companion/domain/enums/companion_enums.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -34,13 +34,6 @@ class _AdvancedCreateHabitDialogState
   final _titleController = TextEditingController();
   final _locationController = TextEditingController();
 
-  final GlobalKey _templatesKey = GlobalKey();
-  final GlobalKey _nameInputKey = GlobalKey();
-  final GlobalKey _frequencyKey = GlobalKey();
-  final GlobalKey _timeLocationKey = GlobalKey();
-  final GlobalKey _attributeKey = GlobalKey();
-  final GlobalKey _createButtonKey = GlobalKey();
-
   // New state variables for advanced features
   bool _isAdvancedExpanded = false;
   String _emoji = '🔥';
@@ -60,86 +53,17 @@ class _AdvancedCreateHabitDialogState
     super.initState();
     _titleController.addListener(_updateIdentityStatement);
     _locationController.addListener(_updateIdentityStatement);
-    _checkTutorial();
-  }
-
-  void _checkTutorial() {
-    // Add delay to ensure dialog has fully settled and animations are complete
     Future.delayed(const Duration(milliseconds: 500), () {
       if (!mounted) return;
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (!mounted) return;
-        final tutorialNotifier = ref.read(tutorialProvider.notifier);
-        final tutorialState = ref.watch(tutorialProvider);
-        // Re-enable auto-show when entering this screen (for one-time show per visit)
-        tutorialNotifier.enableTutorialAutoShow();
-
-        // Only show tutorial if not completed AND tutorials are enabled AND auto-show is active
-        if (!tutorialState.isCompleted(TutorialStep.createHabit) &&
-            tutorialNotifier.shouldShowTutorial()) {
-          _showTutorial();
-        }
-      });
+      final repo = ref.read(companionRepositoryProvider);
+      if (!repo.hasVisited('/habits/create')) {
+        repo.markVisited('/habits/create');
+        ref.read(companionEngineProvider.notifier).triggerEvent(
+          eventType: CompanionEventType.firstFeatureVisit,
+          userContext: {'route': '/habits/create'},
+        );
+      }
     });
-  }
-
-  void _showTutorial() {
-    late OverlayEntry entry;
-    entry = OverlayEntry(
-      builder: (context) => TutorialOverlay(
-        steps: [
-          const TutorialStepInfo(
-            title: 'Craft Your Identity',
-            description:
-                'Every habit is a vote for the person you want to become. This statement reinforces your identity.',
-          ),
-          TutorialStepInfo(
-            title: 'Quick Start Templates',
-            description:
-                'Swipe through these proven habit templates based on your archetype. Tap one to fill in the form instantly.',
-            targetKey: _templatesKey,
-            alignment: Alignment.center,
-          ),
-          TutorialStepInfo(
-            title: 'Name Your Habit',
-            description:
-                'Choose a clear, specific name. "Read 10 pages" is better than "Read more."',
-            targetKey: _nameInputKey,
-          ),
-          TutorialStepInfo(
-            title: 'Set Your Frequency',
-            description:
-                'How often will you do this? Daily habits build momentum faster than weekly ones.',
-            targetKey: _frequencyKey,
-          ),
-          TutorialStepInfo(
-            title: 'Time & Location',
-            description:
-                'Attach your habit to a specific time and place. This uses implementation intentions to trigger action.',
-            targetKey: _timeLocationKey,
-          ),
-          TutorialStepInfo(
-            title: 'Choose Your Attribute',
-            description:
-                'Which aspect of yourself does this habit strengthen? Each habit levels up different parts of your identity.',
-            targetKey: _attributeKey,
-          ),
-          TutorialStepInfo(
-            title: 'Make It Official',
-            description:
-                'When you\'re ready, tap CREATE to forge your new identity vote. You can always edit it later.',
-            targetKey: _createButtonKey,
-          ),
-        ],
-        onCompleted: () {
-          ref
-              .read(tutorialProvider.notifier)
-              .completeStep(TutorialStep.createHabit);
-          entry.remove();
-        },
-      ),
-    );
-    Overlay.of(context).insert(entry);
   }
 
   @override
@@ -532,7 +456,6 @@ class _AdvancedCreateHabitDialogState
                     ),
                     alignment: Alignment.centerLeft,
                     child: TextFormField(
-                      key: _nameInputKey,
                       controller: _titleController,
                       style: const TextStyle(
                         color: Colors.white,
@@ -568,7 +491,6 @@ class _AdvancedCreateHabitDialogState
                 _attribute.name.toUpperCase(),
                 _getAttributeColor(_attribute),
                 icon: _getAttributeIcon(_attribute),
-                key: _attributeKey,
               ),
             ),
             const SizedBox(width: 12),
@@ -578,7 +500,6 @@ class _AdvancedCreateHabitDialogState
                 _frequency.name.toUpperCase(),
                 EmergeColors.teal,
                 icon: Icons.calendar_today,
-                key: _frequencyKey,
               ),
             ),
           ],
@@ -726,7 +647,6 @@ class _AdvancedCreateHabitDialogState
 
   Widget _buildCoreSettings(BuildContext context) {
     return Row(
-      key: _timeLocationKey,
       children: [
         Expanded(
           child: Column(
@@ -864,7 +784,6 @@ class _AdvancedCreateHabitDialogState
         ),
         const SizedBox(height: 12),
         HabitTemplateCarousel(
-          key: _templatesKey,
           archetype: userProfile?.archetype ?? UserArchetype.none,
           onTemplateSelected: _applyTemplate,
         ),
@@ -1237,7 +1156,6 @@ class _AdvancedCreateHabitDialogState
 
   Widget _buildForgeButton(BuildContext context) {
     return ElevatedButton.icon(
-      key: _createButtonKey,
       onPressed: _saveHabit,
       icon: const Icon(Icons.bolt, color: Colors.white),
       label: const Text(

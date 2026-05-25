@@ -14,8 +14,8 @@ import 'package:emerge_app/features/world_map/presentation/providers/world_healt
 import 'package:emerge_app/features/world_map/presentation/widgets/world_health_bar.dart';
 import 'package:emerge_app/features/gamification/presentation/providers/user_stats_providers.dart';
 import 'package:emerge_app/features/gamification/presentation/providers/recap_hub_provider.dart';
-import 'package:emerge_app/features/tutorial/presentation/providers/tutorial_provider.dart';
-import 'package:emerge_app/features/tutorial/presentation/widgets/tutorial_overlay.dart';
+import 'package:emerge_app/features/companion/presentation/providers/companion_providers.dart';
+import 'package:emerge_app/features/companion/domain/enums/companion_enums.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -50,65 +50,17 @@ class _LevelImmersiveScreenState extends ConsumerState<LevelImmersiveScreen> {
   @override
   void initState() {
     super.initState();
-    _checkTutorial();
-  }
-
-  void _checkTutorial() {
     Future.delayed(const Duration(milliseconds: 500), () {
       if (!mounted) return;
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (!mounted) return;
-        final tutorialNotifier = ref.read(tutorialProvider.notifier);
-        final tutorialState = ref.read(tutorialProvider);
-        tutorialNotifier.enableTutorialAutoShow();
-
-        if (!tutorialState.isCompleted(TutorialStep.worldMapImmersive) &&
-            tutorialNotifier.shouldShowTutorial()) {
-          _showTutorial();
-        }
-      });
+      final repo = ref.read(companionRepositoryProvider);
+      if (!repo.hasVisited('/world-map/immersive')) {
+        repo.markVisited('/world-map/immersive');
+        ref.read(companionEngineProvider.notifier).triggerEvent(
+          eventType: CompanionEventType.firstFeatureVisit,
+          userContext: {'route': '/world-map/immersive'},
+        );
+      }
     });
-  }
-
-  void _showTutorial() {
-    late OverlayEntry entry;
-    entry = OverlayEntry(
-      builder: (context) => TutorialOverlay(
-        steps: [
-          const TutorialStepInfo(
-            title: 'Immersive Exploration',
-            description:
-                'You are now inside a psychic landmark. The atmosphere reflects the health of your archetype.',
-          ),
-          TutorialStepInfo(
-            title: 'Your Directive',
-            description:
-                'Every node has a specific purpose. This directive guides your growth for this mission.',
-            targetKey: _directiveKey,
-          ),
-          TutorialStepInfo(
-            title: 'Environmental Health',
-            description:
-                'This bar shows how much vitality you\'ve brought to this specific land. Complete quests to clear the fog.',
-            targetKey: _healthBarKey,
-          ),
-          TutorialStepInfo(
-            title: 'Accept the Mission',
-            description:
-                'Ready to commit? Begin the mission to bind your habits to this node and earn unique XP boosts.',
-            targetKey: _actionButtonKey,
-            alignment: Alignment.topCenter,
-          ),
-        ],
-        onCompleted: () {
-          ref
-              .read(tutorialProvider.notifier)
-              .completeStep(TutorialStep.worldMapImmersive);
-          entry.remove();
-        },
-      ),
-    );
-    Overlay.of(context).insert(entry);
   }
 
   @override

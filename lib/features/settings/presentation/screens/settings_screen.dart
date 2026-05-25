@@ -14,7 +14,7 @@ import 'package:emerge_app/features/gamification/presentation/providers/user_sta
 import 'package:emerge_app/features/settings/presentation/screens/notification_settings_screen.dart';
 import 'package:emerge_app/core/domain/models/app_world_theme.dart';
 import 'package:emerge_app/core/presentation/providers/world_theme_provider.dart';
-import 'package:emerge_app/features/tutorial/presentation/providers/tutorial_provider.dart';
+import 'package:emerge_app/features/companion/presentation/providers/companion_providers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -32,7 +32,9 @@ class SettingsScreen extends ConsumerWidget {
     final authUserAsync = ref.watch(authStateChangesProvider);
     final userProfile = userProfileAsync.value;
     final authUser = authUserAsync.value;
-    final tutorialState = ref.watch(tutorialProvider);
+    final companionEnabled = ref.watch(
+      companionEngineProvider.select((s) => s.companionEnabled),
+    );
 
     final userSettings = userProfile?.settings ?? const UserSettings();
     final selectedAppTheme = ref.watch(worldThemeProvider);
@@ -288,29 +290,25 @@ class SettingsScreen extends ConsumerWidget {
                   child: Icon(Icons.school_outlined, color: EmergeColors.teal),
                 ),
                 title: Text(
-                  'Enable Tutorials',
+                  'Show Companion',
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                     fontWeight: FontWeight.w500,
                     color: AppTheme.textMainDark,
                   ),
                 ),
                 subtitle: Text(
-                  tutorialState.enabled
-                      ? 'Tutorials show once per screen visit'
-                      : 'Disabled until you complete onboarding',
+                  companionEnabled
+                      ? 'Companion tips enabled'
+                      : 'Companion tips disabled',
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
                     color: AppTheme.textSecondaryDark,
                   ),
                 ),
-                value: tutorialState.enabled,
+                value: companionEnabled,
                 onChanged: (value) async {
                   await ref
-                      .read(tutorialProvider.notifier)
-                      .setTutorialsEnabled(value);
-                  // If enabling tutorials, reset them so they show again
-                  if (value) {
-                    await ref.read(tutorialProvider.notifier).resetTutorials();
-                  }
+                      .read(companionEngineProvider.notifier)
+                      .setCompanionEnabled(value);
                 },
                 activeThumbColor: EmergeColors.teal,
                 activeTrackColor: EmergeColors.teal.withValues(alpha: 0.5),
@@ -325,9 +323,9 @@ class SettingsScreen extends ConsumerWidget {
               _buildListTile(
                 context,
                 Icons.replay_outlined,
-                'Redo Tutorials',
+                'Reset Companion Tips',
                 onTap: () {
-                  _showRedoTutorialsDialog(context, ref);
+                  _showResetCompanionDialog(context, ref);
                 },
               ),
               _buildListTile(
@@ -746,17 +744,17 @@ class SettingsScreen extends ConsumerWidget {
     );
   }
 
-  void _showRedoTutorialsDialog(BuildContext context, WidgetRef ref) {
+  void _showResetCompanionDialog(BuildContext context, WidgetRef ref) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: AppTheme.surfaceDark,
         title: const Text(
-          'Reset Tutorials?',
+          'Reset Companion Tips?',
           style: TextStyle(color: Colors.white),
         ),
         content: const Text(
-          'This will reset all tutorials. They will show once the next time you visit each screen.',
+          'This will reset all companion tips. They will show once the next time you visit each screen.',
           style: TextStyle(color: Colors.white70),
         ),
         actions: [
@@ -768,11 +766,18 @@ class SettingsScreen extends ConsumerWidget {
             ),
           ),
           ElevatedButton(
-            onPressed: () {
-              ref.read(tutorialProvider.notifier).resetTutorials();
+            onPressed: () async {
+              await ref
+                  .read(companionEngineProvider.notifier)
+                  .setCompanionEnabled(false);
+              await ref
+                  .read(companionEngineProvider.notifier)
+                  .setCompanionEnabled(true);
               Navigator.pop(context);
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Tutorials reset successfully!')),
+                const SnackBar(
+                  content: Text('Companion tips reset successfully!'),
+                ),
               );
             },
             style: ElevatedButton.styleFrom(backgroundColor: EmergeColors.teal),

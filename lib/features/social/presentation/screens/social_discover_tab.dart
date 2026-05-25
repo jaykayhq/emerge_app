@@ -4,8 +4,8 @@ import 'package:emerge_app/core/presentation/widgets/app_error_widget.dart';
 import 'package:emerge_app/features/blueprints/domain/models/blueprint.dart';
 import 'package:emerge_app/features/blueprints/data/repositories/blueprint_repository.dart';
 import 'package:emerge_app/features/social/presentation/screens/blueprint_detail_screen.dart';
-import 'package:emerge_app/features/tutorial/presentation/providers/tutorial_provider.dart';
-import 'package:emerge_app/features/tutorial/presentation/widgets/tutorial_overlay.dart';
+import 'package:emerge_app/features/companion/presentation/providers/companion_providers.dart';
+import 'package:emerge_app/features/companion/domain/enums/companion_enums.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
@@ -30,56 +30,20 @@ const _displayedBlueprintCategories = {
 };
 
 class _SocialDiscoverTabState extends ConsumerState<SocialDiscoverTab> {
-  final GlobalKey _blueprintsKey = GlobalKey();
-
   @override
   void initState() {
     super.initState();
-    _checkTutorial();
-  }
-
-  void _checkTutorial() {
-    Future.delayed(const Duration(milliseconds: 1000), () {
+    Future.delayed(const Duration(milliseconds: 500), () {
       if (!mounted) return;
-      final tutorialNotifier = ref.read(tutorialProvider.notifier);
-      final tutorialState = ref.read(tutorialProvider);
-
-      tutorialNotifier.enableTutorialAutoShow();
-
-      if (!tutorialState.isCompleted(TutorialStep.discover) &&
-          tutorialNotifier.shouldShowTutorial()) {
-        _showTutorial();
+      final repo = ref.read(companionRepositoryProvider);
+      if (!repo.hasVisited('/discover')) {
+        repo.markVisited('/discover');
+        ref.read(companionEngineProvider.notifier).triggerEvent(
+          eventType: CompanionEventType.firstFeatureVisit,
+          userContext: {'route': '/discover'},
+        );
       }
     });
-  }
-
-  void _showTutorial() {
-    late OverlayEntry entry;
-    entry = OverlayEntry(
-      builder: (context) => TutorialOverlay(
-        steps: [
-          TutorialStepInfo(
-            title: 'Creator Blueprints',
-            description:
-                'Explore complete behavioral systems designed by top performers. Adopt them to fast-track your identity shift.',
-            targetKey: _blueprintsKey,
-          ),
-          TutorialStepInfo(
-            title: 'Choose Your Path',
-            description:
-                'Browse through different categories of blueprints to find the one that resonates with your future self.',
-            targetKey: _blueprintsKey,
-          ),
-        ],
-        onCompleted: () {
-          ref
-              .read(tutorialProvider.notifier)
-              .completeStep(TutorialStep.discover);
-          entry.remove();
-        },
-      ),
-    );
-    Overlay.of(context).insert(entry);
   }
 
   @override
@@ -113,7 +77,6 @@ class _SocialDiscoverTabState extends ConsumerState<SocialDiscoverTab> {
               final category = entry.value;
               final items = grouped[category]!;
               return _CategoryStrip(
-                key: entry.key == 0 ? _blueprintsKey : null,
                 title: category,
                 items: items,
               );

@@ -3,16 +3,12 @@ import 'package:shared_preferences/shared_preferences.dart';
 class LocalSettingsRepository {
   static const _keyIsFirstLaunch = 'isFirstLaunch';
   static const _keyThemeMode = 'themeMode';
-  static const _keyTutorialsEnabled = 'tutorialsEnabled';
-  static const _keyTutorialAutoShow = 'tutorialAutoShow';
   static const _keyLastChallengeRefreshDate = 'lastChallengeRefreshDate';
 
   static SharedPreferences? _prefs;
   static final Map<String, Object> _fallback = {
     _keyIsFirstLaunch: true,
     _keyThemeMode: 'system',
-    _keyTutorialsEnabled: false,
-    _keyTutorialAutoShow: false,
   };
 
   Future<void> init() async {
@@ -67,8 +63,6 @@ class LocalSettingsRepository {
 
   Future<void> completeOnboarding() async {
     await _setBool(_keyIsFirstLaunch, false);
-    await _setBool(_keyTutorialsEnabled, true);
-    await _setBool(_keyTutorialAutoShow, true);
   }
 
   Future<void> resetOnboarding() async {
@@ -79,41 +73,6 @@ class LocalSettingsRepository {
 
   Future<void> setThemeMode(String mode) async {
     await _setString(_keyThemeMode, mode);
-  }
-
-  bool get tutorialsEnabled => _getBool(_keyTutorialsEnabled);
-
-  Future<void> setTutorialsEnabled(bool enabled) async {
-    await _setBool(_keyTutorialsEnabled, enabled);
-    if (enabled) {
-      await _setBool(_keyTutorialAutoShow, true);
-    }
-  }
-
-  bool get tutorialAutoShow => _getBool(_keyTutorialAutoShow);
-
-  Future<void> disableTutorialAutoShow() async {
-    await _setBool(_keyTutorialAutoShow, false);
-  }
-
-  Future<void> enableTutorialAutoShow() async {
-    await _setBool(_keyTutorialAutoShow, true);
-  }
-
-  bool isTutorialCompleted(String tutorialId) {
-    return _getBool('tutorial_$tutorialId');
-  }
-
-  Future<void> completeTutorial(String tutorialId) async {
-    await _setBool('tutorial_$tutorialId', true);
-  }
-
-  Future<void> resetTutorials() async {
-    final keys = _getKeys().where((k) => k.startsWith('tutorial_'));
-    for (final key in keys) {
-      await _remove(key);
-    }
-    await _setBool(_keyTutorialAutoShow, true);
   }
 
   String getLastChallengeRefreshDate() {

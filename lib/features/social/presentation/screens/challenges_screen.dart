@@ -7,8 +7,8 @@ import 'package:emerge_app/features/social/presentation/screens/challenge_detail
 import 'package:emerge_app/features/social/presentation/screens/create_solo_challenge_dialog.dart';
 import 'package:emerge_app/features/social/presentation/widgets/challenges_skeleton.dart';
 import 'package:emerge_app/features/social/presentation/widgets/quest_card_stitch.dart';
-import 'package:emerge_app/features/tutorial/presentation/providers/tutorial_provider.dart';
-import 'package:emerge_app/features/tutorial/presentation/widgets/tutorial_overlay.dart';
+import 'package:emerge_app/features/companion/presentation/providers/companion_providers.dart';
+import 'package:emerge_app/features/companion/domain/enums/companion_enums.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
@@ -40,60 +40,17 @@ class _ChallengesScreenState extends ConsumerState<ChallengesScreen> {
   @override
   void initState() {
     super.initState();
-    _checkTutorial();
-  }
-
-  void _checkTutorial() {
     Future.delayed(const Duration(milliseconds: 500), () {
       if (!mounted) return;
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (!mounted) return;
-        final tutorialNotifier = ref.read(tutorialProvider.notifier);
-        final tutorialState = ref.read(tutorialProvider);
-        tutorialNotifier.enableTutorialAutoShow();
-
-        if (!tutorialState.isCompleted(TutorialStep.challenges) &&
-            tutorialNotifier.shouldShowTutorial()) {
-          _showTutorial();
-        }
-      });
+      final repo = ref.read(companionRepositoryProvider);
+      if (!repo.hasVisited('/challenges')) {
+        repo.markVisited('/challenges');
+        ref.read(companionEngineProvider.notifier).triggerEvent(
+          eventType: CompanionEventType.firstFeatureVisit,
+          userContext: {'route': '/challenges'},
+        );
+      }
     });
-  }
-
-  void _showTutorial() {
-    late OverlayEntry entry;
-    entry = OverlayEntry(
-      builder: (context) => TutorialOverlay(
-        steps: [
-          TutorialStepInfo(
-            title: 'Active Challenges',
-            description:
-                'This is your arena. Track your Solo Quests, Daily Quests, and Weekly Spotlights here.',
-            targetKey: _filterKey,
-          ),
-          TutorialStepInfo(
-            title: 'Filter Your Path',
-            description:
-                'Quickly switch between your active quests or view your past victories.',
-            targetKey: _filterKey,
-          ),
-          TutorialStepInfo(
-            title: 'Create Your Own',
-            description:
-                'Need a specific habit anchored? Create a custom Solo Quest to challenge yourself.',
-            targetKey: _createKey,
-            alignment: Alignment.topCenter,
-          ),
-        ],
-        onCompleted: () {
-          ref
-              .read(tutorialProvider.notifier)
-              .completeStep(TutorialStep.challenges);
-          entry.remove();
-        },
-      ),
-    );
-    Overlay.of(context).insert(entry);
   }
 
   @override
