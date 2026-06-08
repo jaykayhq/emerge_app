@@ -167,6 +167,7 @@ class DriftChallengeRepository implements ChallengeRepository {
         daysLeft: r.totalDays - r.currentDay,
         totalDays: r.totalDays,
         currentDay: r.currentDay,
+        joinedAt: r.joinedAt != null ? DateTime.tryParse(r.joinedAt!) : null,
         status: ChallengeStatus.values.firstWhere(
           (e) => e.name == r.status,
           orElse: () => ChallengeStatus.featured,
@@ -219,6 +220,7 @@ class DriftChallengeRepository implements ChallengeRepository {
       title: challenge.title,
       totalDays: challenge.totalDays,
       xpReward: challenge.xpReward,
+      joinedAt: nowStr,
       updatedAt: nowStr,
     );
 
