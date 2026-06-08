@@ -18,6 +18,7 @@ import 'package:emerge_app/features/gamification/presentation/providers/recap_hu
 import 'package:emerge_app/features/companion/presentation/providers/companion_providers.dart';
 import 'package:emerge_app/features/companion/domain/enums/companion_enums.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:emerge_app/core/theme/emerge_colors.dart';
@@ -220,38 +221,54 @@ class _LevelImmersiveScreenState extends ConsumerState<LevelImmersiveScreen> {
                 const SizedBox(height: 8),
 
                 // Top Bar: Back + Stage/Level badges
-                _buildTopBar(context),
+                _buildTopBar(context).animate().fadeIn(delay: 0.ms),
 
                 const SizedBox(height: 24),
 
                 // Hero Section: Emoji + Name + Badges
-                _buildHeroSection(context),
+                _buildHeroSection(context)
+                    .animate()
+                    .fadeIn(delay: 100.ms)
+                    .slideY(begin: 0.08, curve: Curves.easeOutCubic),
 
                 const SizedBox(height: 20),
 
                 // Directive Card (floating glassmorphism)
                 if (widget.node.directive.isNotEmpty)
-                  _buildDirectiveCard(context, key: _directiveKey),
+                  _buildDirectiveCard(context, key: _directiveKey)
+                      .animate()
+                      .fadeIn(delay: 200.ms)
+                      .slideY(begin: 0.08),
 
                 const SizedBox(height: 20),
 
                 // Attribute XP chips (spread)
-                _buildAttributeChips(context, profile),
+                _buildAttributeChips(context, profile)
+                    .animate()
+                    .fadeIn(delay: 300.ms)
+                    .scale(begin: const Offset(0.97, 0.97), curve: Curves.easeOutCubic),
 
                 const SizedBox(height: 20),
 
                 // World Health Bar
-                _buildHealthSection(context, healthPercent, key: _healthBarKey),
+                _buildHealthSection(context, healthPercent, key: _healthBarKey)
+                    .animate()
+                    .fadeIn(delay: 350.ms),
 
                 const SizedBox(height: 24),
 
-                // Habit Cards (staggered)
-                _buildHabitSection(context, ref, profile),
+                // Habit Cards (staggered inside _buildHabitSection)
+                _buildHabitSection(context, ref, profile)
+                    .animate()
+                    .fadeIn(delay: 400.ms),
 
                 const SizedBox(height: 24),
 
                 // Progress bar
-                _buildProgressSection(context),
+                _buildProgressSection(context)
+                    .animate()
+                    .fadeIn(delay: 500.ms)
+                    .slideY(begin: 0.05),
 
                 const SizedBox(height: 16),
 
@@ -261,7 +278,10 @@ class _LevelImmersiveScreenState extends ConsumerState<LevelImmersiveScreen> {
                   ref,
                   profile,
                   key: _actionButtonKey,
-                ),
+                )
+                    .animate()
+                    .fadeIn(delay: 600.ms)
+                    .slideY(begin: 0.08),
 
                 const SizedBox(height: 32),
               ],
@@ -658,7 +678,7 @@ class _LevelImmersiveScreenState extends ConsumerState<LevelImmersiveScreen> {
                     progress: progress,
                     accentColor: widget.config.primaryColor,
                     onCheckIn: () => _checkInChallenge(context, ref, challenge),
-                  ),
+                  ).animate(delay: (idx * 80).ms).fadeIn().slideX(begin: 0.03),
                 );
               }).toList(),
             );
