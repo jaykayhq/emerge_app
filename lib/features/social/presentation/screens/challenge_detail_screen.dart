@@ -90,8 +90,7 @@ class ChallengeDetailScreen extends ConsumerWidget {
                           children: [
                             Hero(
                               tag: 'challenge_image_${challenge.id}',
-                              child:
-                                  challenge.imageUrl.startsWith('images/') ||
+                              child: (challenge.imageUrl.startsWith('images/') ||
                                       challenge.imageUrl.startsWith(
                                         'assets/images/',
                                       )
@@ -118,7 +117,9 @@ class ChallengeDetailScreen extends ConsumerWidget {
                                               ),
                                             ),
                                           ),
-                                    ),
+                                    ))
+                                .animate()
+                                .fadeIn(duration: 600.ms),
                             ),
                             // Cinematic Gradient Overlay
                             Container(
@@ -477,7 +478,7 @@ class ChallengeDetailScreen extends ConsumerWidget {
                                 ),
                               ],
                             ),
-                          );
+                          ).animate(delay: (800 + index * 80).ms).fadeIn().slideX(begin: 0.03);
                         }, childCount: challenge.steps.length),
                       ),
                     ),
@@ -490,7 +491,10 @@ class ChallengeDetailScreen extends ConsumerWidget {
                   bottom: 32,
                   left: 24,
                   right: 24,
-                  child: _buildActionButton(context, ref, challenge),
+                  child: _buildActionButton(context, ref, challenge)
+                      .animate(delay: 1000.ms)
+                      .fadeIn()
+                      .slideY(begin: 0.08),
                 ),
               ],
             ),
