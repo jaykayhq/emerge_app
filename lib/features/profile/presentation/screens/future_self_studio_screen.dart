@@ -270,49 +270,101 @@ class _FutureSelfStudioScreenState
               SliverToBoxAdapter(
                 child: RepaintBoundary(
                   child: Center(
-                    child: ref.watch(useNewAvatarRendererProvider)
-                        ? _buildAvatarRenderer(
-                            context,
-                            profile.archetype,
-                            effectiveLevel,
-                            stats.streak,
-                            accentColor,
-                            ref,
-                            isRecovering,
-                          )
-                        : DecayRecoveryOverlay(
-                            entropyLevel: stats.streak > 0 ? 0.0 : 0.5,
-                            daysMissed: stats.streak > 0 ? 0 : 1,
-                            primaryColor: accentColor,
-                            isRecovering: isRecovering,
-                            onRecoveryComplete: () {
-                              // Reset recovery state after animation
-                              ref
-                                  .read(recoveryAnimatingProvider.notifier)
-                                  .setAnimating(false);
-                            },
-                            child: EvolvingSilhouetteWidget(
-                              evolutionState:
-                                  SilhouetteEvolutionState.fromUserStats(
-                                    level: effectiveLevel,
-                                    currentStreak: stats.streak,
-                                    // Days missed = 0 if active streak, else estimate based on streak reset
-                                    daysMissed: stats.streak > 0 ? 0 : 1,
-                                    habitVotes: _calculateHabitVotes(stats),
-                                  ),
-                              archetype: profile.archetype,
-                              attributes: attributes,
-                              size: 280,
-                              onEvolutionTap: () {
-                                HapticFeedback.lightImpact();
-                                _showEvolutionInfo(
-                                  context,
-                                  effectiveLevel,
-                                  accentColor,
-                                );
-                              },
-                            ),
+                    child: Column(
+                      children: [
+                        ref.watch(useNewAvatarRendererProvider)
+                            ? _buildAvatarRenderer(
+                                context,
+                                profile.archetype,
+                                effectiveLevel,
+                                stats.streak,
+                                accentColor,
+                                ref,
+                                isRecovering,
+                              )
+                            : DecayRecoveryOverlay(
+                                entropyLevel: stats.streak > 0 ? 0.0 : 0.5,
+                                daysMissed: stats.streak > 0 ? 0 : 1,
+                                primaryColor: accentColor,
+                                isRecovering: isRecovering,
+                                onRecoveryComplete: () {
+                                  // Reset recovery state after animation
+                                  ref
+                                      .read(recoveryAnimatingProvider.notifier)
+                                      .setAnimating(false);
+                                },
+                                child: EvolvingSilhouetteWidget(
+                                  evolutionState:
+                                      SilhouetteEvolutionState.fromUserStats(
+                                        level: effectiveLevel,
+                                        currentStreak: stats.streak,
+                                        // Days missed = 0 if active streak, else estimate based on streak reset
+                                        daysMissed: stats.streak > 0 ? 0 : 1,
+                                        habitVotes: _calculateHabitVotes(stats),
+                                      ),
+                                  archetype: profile.archetype,
+                                  attributes: attributes,
+                                  size: 280,
+                                  onEvolutionTap: () {
+                                    HapticFeedback.lightImpact();
+                                    _showEvolutionInfo(
+                                      context,
+                                      effectiveLevel,
+                                      accentColor,
+                                    );
+                                  },
+                                ),
+                              ),
+
+                        // Phase label — visible at all times so users know
+                        // what "The Phantom" is without needing to tap.
+                        const SizedBox(height: 12),
+                        GestureDetector(
+                          onTap: () {
+                            HapticFeedback.lightImpact();
+                            _showEvolutionInfo(context, effectiveLevel, accentColor);
+                          },
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(
+                                SilhouetteEvolutionState
+                                    .phaseFromLevel(effectiveLevel)
+                                    .name
+                                    .toUpperCase(),
+                                style: TextStyle(
+                                  color: accentColor,
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.bold,
+                                  letterSpacing: 3,
+                                ),
+                              ),
+                              const SizedBox(width: 6),
+                              Icon(
+                                Icons.info_outline_rounded,
+                                color: accentColor.withValues(alpha: 0.7),
+                                size: 14,
+                              ),
+                            ],
                           ),
+                        ),
+                        const SizedBox(height: 4),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 40),
+                          child: Text(
+                            effectiveLevel < 5
+                                ? 'Your avatar — complete habits to evolve it'
+                                : 'Tap your avatar to see evolution details',
+                            style: const TextStyle(
+                              color: Colors.white54,
+                              fontSize: 12,
+                              height: 1.3,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ),
@@ -623,15 +675,20 @@ class _FutureSelfStudioScreenState
   String _getPhaseDescription(EvolutionPhase phase) {
     switch (phase) {
       case EvolutionPhase.phantom:
-        return 'You are forming from the void...';
+        return 'Your avatar is just forming. Each habit you complete casts '
+            'an identity vote — cast enough to evolve into a Construct.';
       case EvolutionPhase.construct:
-        return 'Your structure is taking shape.';
+        return 'Your identity is taking solid shape. Keep the streak alive '
+            'to progress into the Incarnate phase.';
       case EvolutionPhase.incarnate:
-        return 'You have manifested your form.';
+        return 'You have fully manifested your form. Push deeper into '
+            'advanced habits to reach Radiant.';
       case EvolutionPhase.radiant:
-        return 'Your cracks glow with earned wisdom.';
+        return 'Your consistent discipline is visible. Rare achievements '
+            'ahead — keep earning XP to reach Ascended.';
       case EvolutionPhase.ascended:
-        return 'You have transcended into pure energy.';
+        return 'You have transcended ordinary limits. You are now a '
+            'living proof of identity-driven habit mastery.';
     }
   }
 

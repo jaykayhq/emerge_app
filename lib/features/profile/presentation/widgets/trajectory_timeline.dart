@@ -32,20 +32,34 @@ class TrajectoryTimeline extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Header
+        // Section header with plain-language subtitle
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 20),
-          child: Row(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Icon(Icons.timeline, color: primaryColor, size: 18),
-              const SizedBox(width: 8),
-              Text(
-                'TRAJECTORY TIMELINE',
+              Row(
+                children: [
+                  Icon(Icons.timeline, color: primaryColor, size: 18),
+                  const SizedBox(width: 8),
+                  Text(
+                    'YOUR JOURNEY',
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      letterSpacing: 1.5,
+                      color: primaryColor,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 4),
+              const Text(
+                'Every habit you complete builds your identity. Track your evolution here.',
                 style: TextStyle(
                   fontSize: 12,
-                  fontWeight: FontWeight.w600,
-                  letterSpacing: 1.5,
-                  color: primaryColor,
+                  color: Colors.white54,
+                  height: 1.3,
                 ),
               ),
             ],

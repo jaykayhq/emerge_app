@@ -773,6 +773,7 @@ class SettingsScreen extends ConsumerWidget {
               await ref
                   .read(companionEngineProvider.notifier)
                   .setCompanionEnabled(true);
+              if (!context.mounted) return;
               Navigator.pop(context);
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(

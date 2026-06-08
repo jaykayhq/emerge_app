@@ -210,6 +210,7 @@ Future<HabitCompletionResult> completeHabit(Ref ref, String habitId) async {
             final habit = await repository.getHabit(habitId);
             if (habit != null) {
               final newStreak = habit.currentStreak + 1;
+              final wasRecovery = habit.consecutiveMisses > 0;
 
               final difficultyMultiplier = switch (habit.difficulty) {
                 HabitDifficulty.easy => GamificationConstants.difficultyEasyMultiplier,
@@ -270,6 +271,7 @@ Future<HabitCompletionResult> completeHabit(Ref ref, String habitId) async {
                   milestoneBonus: 0,
                   totalXp: xpGained,
                 ),
+                wasRecovery: wasRecovery,
               );
             }
           }
@@ -323,6 +325,7 @@ class HabitCompletionResult {
   final bool isStreakMilestone;
   final XpRewardBreakdown? breakdown;
   final bool isUndo;
+  final bool wasRecovery;
 
   const HabitCompletionResult({
     required this.xpEarned,
@@ -330,5 +333,6 @@ class HabitCompletionResult {
     this.isStreakMilestone = false,
     this.breakdown,
     this.isUndo = false,
+    this.wasRecovery = false,
   });
 }

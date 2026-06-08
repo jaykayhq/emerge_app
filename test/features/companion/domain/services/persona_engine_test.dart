@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:emerge_app/features/companion/domain/entities/persona_config.dart';
+
 import 'package:emerge_app/features/companion/domain/services/persona_engine.dart';
 
 void main() {

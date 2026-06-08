@@ -5,6 +5,7 @@ import 'package:emerge_app/features/auth/presentation/providers/auth_providers.d
 import 'package:emerge_app/features/habits/domain/entities/habit.dart';
 import 'package:emerge_app/features/habits/presentation/providers/dashboard_state_provider.dart';
 import 'package:emerge_app/features/habits/presentation/providers/habit_providers.dart';
+import 'package:emerge_app/features/habits/presentation/screens/streak_recovery_screen.dart';
 import 'package:emerge_app/features/habits/presentation/widgets/miss_recovery_sheet.dart';
 import 'package:emerge_app/features/insights/data/repositories/insights_repository.dart';
 import 'package:emerge_app/features/insights/domain/entities/insights_entities.dart';
@@ -653,7 +654,18 @@ class _TimelineScreenState extends ConsumerState<TimelineScreen> {
     try {
       final result = await ref.read(completeHabitProvider(habit.id).future);
 
-      if (!result.isUndo && result.xpEarned > 0) {
+      if (!result.isUndo && result.wasRecovery) {
+        if (mounted) {
+          Navigator.of(context).push(
+            MaterialPageRoute(
+              builder: (_) => StreakRecoveryScreen(
+                habit: habit,
+                xpEarned: result.xpEarned,
+              ),
+            ),
+          );
+        }
+      } else if (!result.isUndo && result.xpEarned > 0) {
         _showCompletionCelebration(
           xpEarned: result.xpEarned,
           newStreak: result.newStreak,

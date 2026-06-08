@@ -14,6 +14,7 @@ import 'package:emerge_app/core/presentation/widgets/skeleton_shimmer.dart';
 import 'package:emerge_app/features/monetization/presentation/providers/subscription_provider.dart';
 import 'package:emerge_app/core/presentation/widgets/oracle_card.dart';
 import 'package:emerge_app/features/habits/domain/entities/habit.dart';
+import 'package:emerge_app/features/gamification/domain/services/identity_engine.dart';
 
 class AiReflectionsScreen extends ConsumerStatefulWidget {
   const AiReflectionsScreen({super.key});
@@ -68,6 +69,9 @@ class _AiReflectionsScreenState extends ConsumerState<AiReflectionsScreen> {
                                     .read(userStatsStreamProvider)
                                     .value
                                     ?.dominantMotive,
+                                archetype: IdentityEngine.calculateDominantArchetype(
+                                        ref.read(userStatsStreamProvider).value?.identityVotes ?? {},
+                                      ).name,
                               ),
                           ref
                               .read(aiPersonalizationServiceProvider)
@@ -77,6 +81,9 @@ class _AiReflectionsScreenState extends ConsumerState<AiReflectionsScreen> {
                                     .read(userStatsStreamProvider)
                                     .value
                                     ?.dominantMotive,
+                                archetype: IdentityEngine.calculateDominantArchetype(
+                                        ref.read(userStatsStreamProvider).value?.identityVotes ?? {},
+                                      ).name,
                               ),
                         ]),
                         builder: (context, snapshot) {
@@ -520,6 +527,9 @@ class _InsightCard extends ConsumerWidget {
                     .read(userStatsStreamProvider)
                     .value
                     ?.dominantMotive,
+                archetype: IdentityEngine.calculateDominantArchetype(
+                  ref.read(userStatsStreamProvider).value?.identityVotes ?? {},
+                ).name,
               ),
           builder: (context, snapshot) {
             if (snapshot.connectionState == ConnectionState.waiting) {
