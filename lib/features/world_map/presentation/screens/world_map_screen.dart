@@ -3,6 +3,7 @@ import 'dart:ui';
 import 'package:emerge_app/core/theme/app_theme.dart';
 import 'package:emerge_app/features/auth/domain/entities/user_extension.dart';
 import 'package:emerge_app/features/gamification/presentation/providers/user_stats_providers.dart';
+import 'package:emerge_app/features/gamification/presentation/providers/world_entropy_provider.dart';
 import 'package:emerge_app/features/world_map/domain/models/archetype_map_config.dart';
 import 'package:emerge_app/features/world_map/domain/models/archetype_maps_catalog.dart';
 import 'package:emerge_app/features/world_map/domain/models/world_node.dart';
@@ -33,10 +34,14 @@ class _WorldMapScreenState extends ConsumerState<WorldMapScreen> {
   final GlobalKey _statsBarKey = GlobalKey();
   final GlobalKey _firstNodeKey = GlobalKey();
 
+  /// Whether the first-visit coach-mark overlay is visible.
+  /// Set to true on first visit, dismissed by tapping anywhere.
+  bool _showFirstVisitGuide = false;
+
   @override
   void initState() {
     super.initState();
-    Future.delayed(const Duration(milliseconds: 500), () {
+    Future.delayed(const Duration(milliseconds: 800), () {
       if (!mounted) return;
       final repo = ref.read(companionRepositoryProvider);
       if (!repo.hasVisited('/world-map')) {
@@ -45,6 +50,8 @@ class _WorldMapScreenState extends ConsumerState<WorldMapScreen> {
           eventType: CompanionEventType.firstFeatureVisit,
           userContext: {'route': '/world-map'},
         );
+        // Show the first-visit coach-mark to explain the World Map
+        setState(() => _showFirstVisitGuide = true);
       }
     });
   }
@@ -96,6 +103,52 @@ class _WorldMapScreenState extends ConsumerState<WorldMapScreen> {
                 ),
               ),
 
+              // Layer 2.5: Dynamic World Entropy Effects
+              Consumer(
+                builder: (context, ref, _) {
+                  // Import the worldEntropyProvider at the top of the file
+                  final effects = ref.watch(worldEntropyProvider);
+                  if (effects.isEmpty) return const SizedBox.shrink();
+
+                  return Positioned.fill(
+                    child: IgnorePointer(
+                      child: Stack(
+                        children: [
+                          if (effects.contains('dark_sky'))
+                            Container(
+                              color: Colors.black.withValues(alpha: 0.6),
+                            ),
+                          if (effects.contains('fog'))
+                            BackdropFilter(
+                              filter: ImageFilter.blur(sigmaX: 4, sigmaY: 4),
+                              child: Container(
+                                color: Colors.grey.withValues(alpha: 0.3),
+                              ),
+                            ),
+                          if (effects.contains('weeds'))
+                            Align(
+                              alignment: Alignment.bottomCenter,
+                              child: Container(
+                                height: 200,
+                                decoration: BoxDecoration(
+                                  gradient: LinearGradient(
+                                    begin: Alignment.bottomCenter,
+                                    end: Alignment.topCenter,
+                                    colors: [
+                                      Colors.brown.withValues(alpha: 0.8),
+                                      Colors.transparent,
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ),
+                        ],
+                      ),
+                    ),
+                  );
+                },
+              ),
+
               // Layer 3: Top Bar
               Positioned(
                 top: 0,
@@ -123,6 +176,13 @@ class _WorldMapScreenState extends ConsumerState<WorldMapScreen> {
                   hydratedNodes: hydratedNodes,
                 ),
               ),
+
+              // Layer 5: First-Visit Coach-Mark Overlay
+              if (_showFirstVisitGuide)
+                _WorldMapCoachMark(
+                  primaryColor: mapConfig.primaryColor,
+                  onDismiss: () => setState(() => _showFirstVisitGuide = false),
+                ),
             ],
           );
         },
@@ -216,80 +276,29 @@ class _WorldMapScreenState extends ConsumerState<WorldMapScreen> {
     }).toList();
   }
 
-  Future<void> _handleNodeAction(WorldNode node, Color primaryColor) async {
-    try {
-      Navigator.pop(context);
-
-      if (node.state == NodeState.available) {
-        // Start the mission
-        await ref.read(userStatsControllerProvider).startMission(node.id);
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Mission started: ${node.name}'),
-              backgroundColor: primaryColor,
-              behavior: SnackBarBehavior.floating,
-            ),
-          );
-        }
-      } else if (node.state == NodeState.inProgress) {
-        // Complete the mission — distribute XP
-        final xpBoosts = node.xpBoosts.map((k, v) => MapEntry(k.name, v));
-        await ref
-            .read(userStatsControllerProvider)
-            .completeMission(node.id, xpBoosts, node.requiredLevel);
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Mission complete: ${node.name}! XP earned! 🎉'),
-              backgroundColor: primaryColor,
-              behavior: SnackBarBehavior.floating,
-            ),
-          );
-        }
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Failed: $e'),
-            backgroundColor: Colors.red,
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
-      }
-    }
-  }
-
   void _showNodeDetail(
     BuildContext context,
     WorldNode node,
     ArchetypeMapConfig config,
   ) {
-    showDialog(
-      context: context,
-      barrierColor: Colors.black.withValues(alpha: 0.7),
-      builder: (dialogContext) => NodeQuestDialog(
-        node: node,
-        primaryColor: config.primaryColor,
-        userLevel: ref.read(userStatsStreamProvider).value?.effectiveLevel ?? 1,
-        onEnterLevel: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (_) => LevelImmersiveScreen(node: node, config: config),
-            ),
-          );
-        },
-        onAction: () {
-          if (node.state == NodeState.available ||
-              node.state == NodeState.inProgress) {
-            Navigator.pop(dialogContext);
-            _handleNodeAction(node, config.primaryColor);
-          }
-        },
-      ),
-    );
+    if (node.state == NodeState.locked) {
+      showDialog(
+        context: context,
+        barrierColor: Colors.black.withValues(alpha: 0.7),
+        builder: (dialogContext) => NodeQuestDialog(
+          node: node,
+          primaryColor: config.primaryColor,
+          userLevel: ref.read(userStatsStreamProvider).value?.effectiveLevel ?? 1,
+        ),
+      );
+    } else {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => LevelImmersiveScreen(node: node, config: config),
+        ),
+      );
+    }
   }
 }
 
@@ -545,12 +554,21 @@ class _GlassmorphismStatsBar extends StatelessWidget {
                     icon: Icons.local_fire_department,
                     color: const Color(0xFFFF7F50), // Coral
                   ),
-                  _StatItem(
-                    label: 'Nodes',
-                    value: '$completedNodes/$totalNodes',
-                    icon: Icons.check_circle_outline,
-                    color: config.primaryColor,
-                  ),
+                  // When no nodes are completed yet, show a contextual nudge
+                  // instead of the raw '0/X' number so new users know what to do.
+                  completedNodes == 0
+                      ? _NudgeStatItem(
+                          label: 'Tap any node',
+                          nudge: 'to begin',
+                          icon: Icons.touch_app_rounded,
+                          color: config.primaryColor,
+                        )
+                      : _StatItem(
+                          label: 'Nodes',
+                          value: '$completedNodes/$totalNodes',
+                          icon: Icons.check_circle_outline,
+                          color: config.primaryColor,
+                        ),
                   _StatItem(
                     label: 'Challenges',
                     value: '${stats.challengeXp}',
@@ -815,6 +833,273 @@ class _WorldStateSheet extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+/// Nudge variant of _StatItem — shown when completedNodes == 0
+class _NudgeStatItem extends StatelessWidget {
+  final String label;
+  final String nudge;
+  final IconData icon;
+  final Color color;
+
+  const _NudgeStatItem({
+    required this.label,
+    required this.nudge,
+    required this.icon,
+    required this.color,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(icon, color: color, size: 20),
+        const SizedBox(height: 4),
+        Text(
+          label,
+          style: TextStyle(
+            color: color,
+            fontWeight: FontWeight.bold,
+            fontSize: 11,
+          ),
+        ),
+        Text(
+          nudge,
+          style: const TextStyle(
+            color: Colors.white54,
+            fontSize: 10,
+            letterSpacing: 0.5,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+/// Dismissable coach-mark shown on the user's first visit to the World Map.
+/// Explains the three key concepts (Journey, Nodes, Path) in plain language.
+class _WorldMapCoachMark extends StatefulWidget {
+  final Color primaryColor;
+  final VoidCallback onDismiss;
+
+  const _WorldMapCoachMark({
+    required this.primaryColor,
+    required this.onDismiss,
+  });
+
+  @override
+  State<_WorldMapCoachMark> createState() => _WorldMapCoachMarkState();
+}
+
+class _WorldMapCoachMarkState extends State<_WorldMapCoachMark>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller;
+  late final Animation<double> _fadeAnim;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 400),
+    );
+    _fadeAnim = CurvedAnimation(parent: _controller, curve: Curves.easeOut);
+    _controller.forward();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  void _dismiss() {
+    _controller.reverse().then((_) => widget.onDismiss());
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return FadeTransition(
+      opacity: _fadeAnim,
+      child: GestureDetector(
+        onTap: _dismiss,
+        behavior: HitTestBehavior.opaque,
+        child: Container(
+          color: Colors.black.withValues(alpha: 0.55),
+          child: SafeArea(
+            child: Align(
+              alignment: Alignment.bottomCenter,
+              child: GestureDetector(
+                // Prevent taps on the card itself from dismissing
+                onTap: () {},
+                child: Container(
+                  margin: const EdgeInsets.fromLTRB(16, 0, 16, 100),
+                  padding: const EdgeInsets.all(20),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF12122A),
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(
+                      color: widget.primaryColor.withValues(alpha: 0.4),
+                      width: 1.5,
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: widget.primaryColor.withValues(alpha: 0.2),
+                        blurRadius: 24,
+                        spreadRadius: 2,
+                      ),
+                    ],
+                  ),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Title row
+                      Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: widget.primaryColor.withValues(alpha: 0.15),
+                              shape: BoxShape.circle,
+                            ),
+                            child: Icon(
+                              Icons.map_outlined,
+                              color: widget.primaryColor,
+                              size: 20,
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Text(
+                            'Your Journey Map',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              letterSpacing: 0.5,
+                            ),
+                          ),
+                          const Spacer(),
+                          // Dismiss hint
+                          Text(
+                            'Tap anywhere to close',
+                            style: TextStyle(
+                              color: Colors.white30,
+                              fontSize: 10,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 16),
+                      // The three plain-language explanations
+                      _CoachItem(
+                        icon: Icons.route_outlined,
+                        color: widget.primaryColor,
+                        title: 'This is your Journey',
+                        body:
+                            'A progression map built around your identity archetype. The path grows as you level up.',
+                      ),
+                      const SizedBox(height: 12),
+                      _CoachItem(
+                        icon: Icons.radio_button_unchecked,
+                        color: widget.primaryColor,
+                        title: 'Nodes are habit missions',
+                        body:
+                            'Each circle on the path is a Node — a mission tied to your archetype. Tap one to start it and earn XP.',
+                      ),
+                      const SizedBox(height: 12),
+                      _CoachItem(
+                        icon: Icons.lock_open_outlined,
+                        color: widget.primaryColor,
+                        title: 'Complete to unlock more',
+                        body:
+                            'Finish the Nodes in each section to unlock the next area. Complete habits daily to keep levelling up.',
+                      ),
+                      const SizedBox(height: 20),
+                      SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton(
+                          onPressed: _dismiss,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: widget.primaryColor,
+                            foregroundColor: Colors.black,
+                            padding: const EdgeInsets.symmetric(vertical: 14),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            elevation: 0,
+                          ),
+                          child: const Text(
+                            "GOT IT \u2014 LET'S GO",
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 13,
+                              letterSpacing: 1,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// A single explanatory row inside the coach-mark card
+class _CoachItem extends StatelessWidget {
+  final IconData icon;
+  final Color color;
+  final String title;
+  final String body;
+
+  const _CoachItem({
+    required this.icon,
+    required this.color,
+    required this.title,
+    required this.body,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Icon(icon, color: color, size: 18),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                title,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w600,
+                  fontSize: 13,
+                ),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                body,
+                style: const TextStyle(
+                  color: Colors.white54,
+                  fontSize: 12,
+                  height: 1.4,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
     );
   }
 }
