@@ -35,6 +35,7 @@ class _StructureNodeState extends State<StructureNode>
     with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _pulseAnimation;
+  double _tapScale = 1.0;
 
   @override
   void initState() {
@@ -176,9 +177,16 @@ class _StructureNodeState extends State<StructureNode>
       button: true,
       enabled: true,
       onTap: () => _handleTap(context),
-      child: GestureDetector(
-        onTap: () => _handleTap(context),
-        child: AnimatedBuilder(
+      child: AnimatedScale(
+        scale: _tapScale,
+        duration: const Duration(milliseconds: 150),
+        curve: Curves.easeOut,
+        child: GestureDetector(
+          onTapDown: (_) => setState(() => _tapScale = 0.92),
+          onTapUp: (_) => setState(() => _tapScale = 1.0),
+          onTapCancel: () => setState(() => _tapScale = 1.0),
+          onTap: () => _handleTap(context),
+          child: AnimatedBuilder(
           animation: _controller,
           builder: (context, child) {
             final scale = isAvailable
@@ -265,6 +273,7 @@ class _StructureNodeState extends State<StructureNode>
             );
           },
         ),
+      ),
       ),
     );
   }
