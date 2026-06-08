@@ -57,6 +57,10 @@ class ChallengeDetailScreen extends ConsumerWidget {
           );
         }
 
+        final availableDay = challenge.joinedAt != null
+            ? DateTime.now().difference(challenge.joinedAt!).inDays.clamp(0, challenge.totalDays - 1)
+            : challenge.currentDay;
+
         final progress = challenge.totalDays > 0
             ? (challenge.currentDay / challenge.totalDays).clamp(0.0, 1.0)
             : 0.0;
@@ -360,6 +364,7 @@ class ChallengeDetailScreen extends ConsumerWidget {
                           final isCurrent =
                               step.day == challenge.currentDay + 1 &&
                               challenge.status == ChallengeStatus.active;
+                          final isAccessible = step.day <= availableDay;
 
                           return IntrinsicHeight(
                             child: Row(
@@ -443,9 +448,13 @@ class ChallengeDetailScreen extends ConsumerWidget {
                                         style: TextStyle(
                                           color: isCompleted
                                               ? Colors.white
-                                              : Colors.white.withValues(
-                                                  alpha: 0.4,
-                                                ),
+                                              : isAccessible
+                                                  ? Colors.white.withValues(
+                                                      alpha: 0.6,
+                                                    )
+                                                  : Colors.white.withValues(
+                                                      alpha: 0.2,
+                                                    ),
                                           fontSize: 16,
                                           fontWeight: isCurrent || isCompleted
                                               ? FontWeight.bold
@@ -554,6 +563,10 @@ class ChallengeDetailScreen extends ConsumerWidget {
     WidgetRef ref,
     Challenge challenge,
   ) {
+    if (challenge.status == ChallengeStatus.active) {
+      _executeDayCompletion(screenContext, ref, challenge);
+      return;
+    }
     showModalBottomSheet(
       context: screenContext,
       backgroundColor: Colors.transparent,
@@ -565,47 +578,54 @@ class ChallengeDetailScreen extends ConsumerWidget {
           if (user == null) return;
 
           final repo = ref.read(challengeRepositoryProvider);
-          if (challenge.status == ChallengeStatus.featured) {
-            final result = await repo.joinChallenge(user.id, challenge.id);
-            result.fold(
-              (failure) => _showError(screenContext, failure.message),
-              (_) async {
-                ref.invalidate(userChallengesProvider);
-                ref.invalidate(archetypeChallengesProvider);
-                ref.invalidate(challengeBundleProvider);
-                if (screenContext.mounted) {
-                  _showSuccess(screenContext, 'QUEST STARTED! (+25 XP)');
-                  screenContext.go('/tribes/challenges');
-                }
-              },
-            );
-          } else {
-            final newProgress = challenge.currentDay + 1;
-            final result = await repo.updateProgress(
-              user.id,
-              challenge.id,
-              newProgress,
-            );
-            result.fold(
-              (failure) => _showError(screenContext, failure.message),
-              (_) {
-                ref.invalidate(userChallengesProvider);
-                ref.invalidate(challengeBundleProvider);
-                ref.invalidate(userStatsStreamProvider);
-                ref.invalidate(recapRefreshCounterProvider);
-                final isCompleted = newProgress >= challenge.totalDays;
-                _showSuccess(
-                  screenContext,
-                  isCompleted
-                      ? 'QUEST COMPLETE! (+${challenge.xpReward} XP)'
-                      : 'PROGRESS SAVED!',
-                );
-                screenContext.pop();
-              },
-            );
-          }
+          final result = await repo.joinChallenge(user.id, challenge.id);
+          result.fold(
+            (failure) => _showError(screenContext, failure.message),
+            (_) async {
+              ref.invalidate(userChallengesProvider);
+              ref.invalidate(archetypeChallengesProvider);
+              ref.invalidate(challengeBundleProvider);
+              if (screenContext.mounted) {
+                _showSuccess(screenContext, 'QUEST STARTED! (+25 XP)');
+                screenContext.go('/tribes/challenges');
+              }
+            },
+          );
         },
       ),
+    );
+  }
+
+  void _executeDayCompletion(
+    BuildContext screenContext,
+    WidgetRef ref,
+    Challenge challenge,
+  ) async {
+    final user = ref.read(authStateChangesProvider).value;
+    if (user == null) return;
+    final repo = ref.read(challengeRepositoryProvider);
+    final newProgress = challenge.currentDay + 1;
+    final result = await repo.updateProgress(
+      user.id,
+      challenge.id,
+      newProgress,
+    );
+    result.fold(
+      (failure) => _showError(screenContext, failure.message),
+      (_) {
+        ref.invalidate(userChallengesProvider);
+        ref.invalidate(challengeBundleProvider);
+        ref.invalidate(userStatsStreamProvider);
+        ref.invalidate(recapRefreshCounterProvider);
+        final isCompleted = newProgress >= challenge.totalDays;
+        _showSuccess(
+          screenContext,
+          isCompleted
+              ? 'QUEST COMPLETE! (+${challenge.xpReward} XP)'
+              : 'PROGRESS SAVED!',
+        );
+        screenContext.pop();
+      },
     );
   }
 
