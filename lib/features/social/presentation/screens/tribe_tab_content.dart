@@ -401,7 +401,10 @@ class _TribeLeaderboardSection extends ConsumerWidget {
             }
             final top = entries.length > 5 ? entries.sublist(0, 5) : entries;
             return Column(
-              children: top.map((entry) => _LeaderboardRow(entry: entry, rank: top.indexOf(entry) + 1)).toList(),
+              children: top.asMap().entries.map((e) => _LeaderboardRow(
+                entry: e.value,
+                rank: e.key + 1,
+              ).animate(delay: (e.key * 50).ms).fadeIn().slideX(begin: 0.03)).toList(),
             );
           },
           loading: () => const EmergeLoadingSkeleton(itemCount: 3),
@@ -464,7 +467,7 @@ class _WorldLeaderboardSection extends ConsumerWidget {
                     (e) => _WorldRankingRow(
                       club: e.value.tribe,
                       rank: e.key + 1,
-                    ),
+                    ).animate(delay: (e.key * 50).ms).fadeIn().slideX(begin: 0.03),
                   )
                   .toList(),
             );
