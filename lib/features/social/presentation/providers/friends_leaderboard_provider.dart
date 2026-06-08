@@ -222,9 +222,21 @@ final friendsLeaderboardProvider =
               );
             }
 
+            // Deduplicate: keep only the highest-XP entry per unique id.
+            // Prevents the same user appearing twice (e.g. self-referential
+            // friends subcollection created during testing).
+            final deduped = <String, FriendRankEntry>{};
+            for (final entry in entries) {
+              final existing = deduped[entry.id];
+              if (existing == null || entry.xp > existing.xp) {
+                deduped[entry.id] = entry;
+              }
+            }
+            final uniqueEntries = deduped.values.toList();
+
             // Sort by XP descending
-            entries.sort((a, b) => b.xp.compareTo(a.xp));
-            return entries;
+            uniqueEntries.sort((a, b) => b.xp.compareTo(a.xp));
+            return uniqueEntries;
           });
     });
 

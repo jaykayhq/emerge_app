@@ -48,6 +48,13 @@ class FirestoreFriendRepository implements FriendRepository {
 
   @override
   Future<void> addFriend(String userId, String friendId) async {
+    // Guard: prevent a user from adding themselves as a friend.
+    // This prevents the self-referential friends subcollection document that
+    // causes duplicate leaderboard entries.
+    if (userId == friendId) {
+      throw Exception('You cannot add yourself as a friend.');
+    }
+
     // Get the friend's user data
     final friendDoc = await _firestore.collection('users').doc(friendId).get();
     if (!friendDoc.exists) {

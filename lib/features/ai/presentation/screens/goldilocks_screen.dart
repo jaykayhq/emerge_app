@@ -3,6 +3,7 @@ import 'package:emerge_app/core/theme/app_theme.dart';
 import 'package:emerge_app/features/ai/domain/services/ai_personalization_service.dart';
 import 'package:emerge_app/features/habits/presentation/providers/habit_providers.dart';
 import 'package:emerge_app/features/gamification/presentation/providers/user_stats_providers.dart';
+import 'package:emerge_app/features/gamification/domain/services/identity_engine.dart';
 import 'package:emerge_app/core/presentation/widgets/skeleton_shimmer.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -50,6 +51,9 @@ class _GoldilocksScreenState extends ConsumerState<GoldilocksScreen> {
                                 .read(userStatsStreamProvider)
                                 .value
                                 ?.dominantMotive,
+                            archetype: IdentityEngine.calculateDominantArchetype(
+                              ref.read(userStatsStreamProvider).value?.identityVotes ?? {},
+                            ).name,
                           ),
                       builder: (context, snapshot) {
                         if (snapshot.connectionState ==

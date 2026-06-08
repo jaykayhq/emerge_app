@@ -31,7 +31,7 @@ class LocalSettingsRepository {
     return _prefs?.getString(key) ?? (_fallback[key] as String? ?? defaultValue);
   }
 
-  Set<String> _getKeys() => _prefs?.getKeys() ?? _fallback.keys.toSet();
+
 
   Future<void> _setBool(String key, bool value) async {
     if (_prefs != null) {
@@ -49,13 +49,7 @@ class LocalSettingsRepository {
     }
   }
 
-  Future<void> _remove(String key) async {
-    if (_prefs != null) {
-      await _prefs!.remove(key);
-    } else {
-      _fallback.remove(key);
-    }
-  }
+
 
   // --- public API ---------------------------------------------------------
 
@@ -81,5 +75,13 @@ class LocalSettingsRepository {
 
   Future<void> saveLastChallengeRefreshDate(String date) async {
     await _setString(_keyLastChallengeRefreshDate, date);
+  }
+
+  Future<bool> getHasSeenNodeGuide(String nodeId) async {
+    return _getBool('hasSeenNodeGuide_$nodeId');
+  }
+
+  Future<void> setHasSeenNodeGuide(String nodeId) async {
+    await _setBool('hasSeenNodeGuide_$nodeId', true);
   }
 }

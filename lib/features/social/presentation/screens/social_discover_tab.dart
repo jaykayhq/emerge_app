@@ -132,7 +132,7 @@ class _CategoryStrip extends StatelessWidget {
   final String title;
   final List<Blueprint> items;
 
-  const _CategoryStrip({super.key, required this.title, required this.items});
+  const _CategoryStrip({required this.title, required this.items});
 
   @override
   Widget build(BuildContext context) {

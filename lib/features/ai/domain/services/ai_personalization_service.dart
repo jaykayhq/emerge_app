@@ -50,6 +50,7 @@ class AiPersonalizationService {
   Future<List<GoldilocksAdjustment>> analyzeHabitPerformance(
     List<Habit> habits, {
     String? dominantMotive,
+    String? archetype,
   }) async {
     // Filter for active habits
     final activeHabits = habits.where((h) => !h.isArchived).toList();
@@ -71,8 +72,11 @@ class AiPersonalizationService {
     final motiveContext = dominantMotive != null
         ? ' The user is driven by: $dominantMotive.'
         : '';
+    final identityContext = archetype != null
+        ? ' Their dominant archetype is: $archetype.'
+        : '';
     final systemPrompt =
-        'You are the Goldilocks Engine. Your job is to analyze habit performance and suggest difficulty adjustments.$motiveContext '
+        'You are the Goldilocks Engine. Your job is to analyze habit performance and suggest difficulty adjustments.$motiveContext$identityContext '
         'Rules:'
         '1. If streak > 5, suggest increasing difficulty (Level Up).'
         '2. If missed > 2 times recently or streak is 0 for a while, suggest decreasing difficulty (Recalibrate).'
@@ -110,6 +114,7 @@ class AiPersonalizationService {
   Future<List<AiInsight>> generateIdentityInsights(
     List<Habit> habits, {
     String? dominantMotive,
+    String? archetype,
   }) async {
     final activeHabits = habits.where((h) => !h.isArchived).toList();
     if (activeHabits.isEmpty) return [];
@@ -127,10 +132,13 @@ class AiPersonalizationService {
     final motiveContext = dominantMotive != null
         ? ' Consider their dominant motive ($dominantMotive) in your analysis.'
         : '';
+    final identityContext = archetype != null
+        ? ' Their dominant archetype is: $archetype.'
+        : '';
     final systemPrompt =
         'You are an Insight Engine. Analyze the user'
         "'"
-        's habits and streaks to identify their growing identity.$motiveContext '
+        's habits and streaks to identify their growing identity.$motiveContext$identityContext '
         'Output ONLY valid JSON array of objects: {"type": "identity"|"pattern", "title": "...", "description": "...", "action": "..."}';
 
     try {
