@@ -51,6 +51,7 @@ class Challenge extends Equatable {
   final int daysLeft;
   final int totalDays;
   final int currentDay;
+  final DateTime? joinedAt;
   final ChallengeStatus status;
   final String? affiliateUrl;
   final int xpReward;
@@ -85,6 +86,7 @@ class Challenge extends Equatable {
     required this.daysLeft,
     required this.totalDays,
     required this.currentDay,
+    this.joinedAt,
     required this.status,
     this.affiliateUrl,
     required this.xpReward,
@@ -119,6 +121,7 @@ class Challenge extends Equatable {
     int? daysLeft,
     int? totalDays,
     int? currentDay,
+    DateTime? joinedAt,
     ChallengeStatus? status,
     String? affiliateUrl,
     int? xpReward,
@@ -151,6 +154,7 @@ class Challenge extends Equatable {
       daysLeft: daysLeft ?? this.daysLeft,
       totalDays: totalDays ?? this.totalDays,
       currentDay: currentDay ?? this.currentDay,
+      joinedAt: joinedAt ?? this.joinedAt,
       status: status ?? this.status,
       affiliateUrl: affiliateUrl ?? this.affiliateUrl,
       xpReward: xpReward ?? this.xpReward,
@@ -187,6 +191,7 @@ class Challenge extends Equatable {
       'daysLeft': daysLeft,
       'totalDays': totalDays,
       'currentDay': currentDay,
+      'joinedAt': joinedAt?.toIso8601String(),
       'status': status.name,
       'affiliateUrl': affiliateUrl,
       'xpReward': xpReward,
@@ -262,6 +267,11 @@ class Challenge extends Equatable {
       endDate = DateTime.tryParse(map['sponsorshipEndDate'] as String);
     }
 
+    DateTime? joinedAt;
+    if (map['joinedAt'] != null) {
+      joinedAt = DateTime.tryParse(map['joinedAt'] as String);
+    }
+
     return Challenge(
       id: id ?? map['id'] ?? '',
       title: map['title'] ?? '',
@@ -272,6 +282,7 @@ class Challenge extends Equatable {
       daysLeft: map['daysLeft']?.toInt() ?? 0,
       totalDays: map['totalDays']?.toInt() ?? 0,
       currentDay: map['currentDay']?.toInt() ?? 0,
+      joinedAt: joinedAt,
       status: ChallengeStatus.values.firstWhere(
         (e) => e.name == map['status'],
         orElse: () => ChallengeStatus.featured,
@@ -322,6 +333,7 @@ class Challenge extends Equatable {
     daysLeft,
     totalDays,
     currentDay,
+    joinedAt,
     status,
     affiliateUrl,
     xpReward,
