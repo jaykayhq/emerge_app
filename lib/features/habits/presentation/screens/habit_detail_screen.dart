@@ -587,6 +587,123 @@ class _HabitDetailScreenState extends ConsumerState<HabitDetailScreen> {
 
                 const Gap(24),
 
+                // Health Integration Section
+                GlassmorphismCard(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      SectionHeader(title: 'Health Integration'),
+                      const Gap(16),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 12),
+                        decoration: BoxDecoration(
+                          color: Colors.black.withValues(alpha: 0.2),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: AppTheme.textSecondaryDark.withValues(alpha: 0.3),
+                          ),
+                        ),
+                        child: DropdownButtonFormField<HabitIntegrationType>(
+                          initialValue: _integrationType,
+                          dropdownColor: AppTheme.surfaceDark,
+                          style: const TextStyle(color: AppTheme.textMainDark),
+                          decoration: const InputDecoration(
+                            border: InputBorder.none,
+                            hintText: 'Select integration type',
+                            hintStyle: TextStyle(color: Colors.white54),
+                          ),
+                          items: [
+                            DropdownMenuItem(
+                              value: HabitIntegrationType.none,
+                              child: Text(
+                                'None',
+                                style: TextStyle(color: AppTheme.textSecondaryDark),
+                              ),
+                            ),
+                            DropdownMenuItem(
+                              value: HabitIntegrationType.healthSteps,
+                              child: const Row(
+                                children: [
+                                  Icon(Icons.directions_walk, size: 16, color: EmergeColors.teal),
+                                  SizedBox(width: 8),
+                                  Text('Health Steps'),
+                                ],
+                              ),
+                            ),
+                            DropdownMenuItem(
+                              value: HabitIntegrationType.screenTimeLimit,
+                              child: const Row(
+                                children: [
+                                  Icon(Icons.phone_android, size: 16, color: EmergeColors.teal),
+                                  SizedBox(width: 8),
+                                  Text('Screen Time Limit'),
+                                ],
+                              ),
+                            ),
+                          ],
+                          onChanged: (value) {
+                            setState(() {
+                              _integrationType = value ?? HabitIntegrationType.none;
+                              _hasChanges = true;
+                            });
+                          },
+                        ),
+                      ),
+                      if (_integrationType != HabitIntegrationType.none) ...[
+                        const Gap(16),
+                        TextFormField(
+                          initialValue: _integrationTarget?.toString() ?? '',
+                          style: const TextStyle(color: AppTheme.textMainDark),
+                          keyboardType: TextInputType.number,
+                          onChanged: (value) {
+                            setState(() {
+                              _integrationTarget = int.tryParse(value);
+                              _hasChanges = true;
+                            });
+                          },
+                          decoration: InputDecoration(
+                            helperText: _integrationType == HabitIntegrationType.healthSteps
+                                ? 'Daily step goal (e.g., 8000)'
+                                : 'Daily screen time limit in minutes (e.g., 120)',
+                            helperStyle: TextStyle(
+                              color: AppTheme.textSecondaryDark.withValues(alpha: 0.5),
+                            ),
+                            prefixIcon: Icon(
+                              _integrationType == HabitIntegrationType.healthSteps
+                                  ? Icons.flag_outlined
+                                  : Icons.timer_outlined,
+                              color: EmergeColors.teal,
+                              size: 20,
+                            ),
+                            hintText: _integrationType == HabitIntegrationType.healthSteps
+                                ? 'e.g., 8000 steps'
+                                : 'e.g., 120 minutes',
+                            hintStyle: TextStyle(
+                              color: AppTheme.textSecondaryDark.withValues(alpha: 0.5),
+                            ),
+                            border: InputBorder.none,
+                            enabledBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: BorderSide(
+                                color: AppTheme.textSecondaryDark.withValues(alpha: 0.3),
+                              ),
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: const BorderSide(color: EmergeColors.teal),
+                            ),
+                            filled: true,
+                            fillColor: Colors.black.withValues(alpha: 0.2),
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+
+                const Gap(24),
+
                 // Anchor Habit Section (Optional)
                 if (availableAnchors.isNotEmpty)
                   GlassmorphismCard(

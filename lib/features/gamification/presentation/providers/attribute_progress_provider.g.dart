@@ -71,7 +71,7 @@ final class AttributeProgressFromHabitsProvider
 }
 
 String _$attributeProgressFromHabitsHash() =>
-    r'b174224e856299b1aeace7ae97cfb333b55a904a';
+    r'1ca7d969e24ad1d5e9023e7b6024df93e6042419';
 
 /// Provider for a specific attribute's progress
 

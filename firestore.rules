@@ -41,7 +41,7 @@ service cloud.firestore {
              (!user.keys().hasAny(['displayName']) || (sanitizeString(user.displayName) && user.displayName.size() <= 50)) &&
              (!user.keys().hasAny(['createdAt']) || user.createdAt is timestamp) &&
              // Prevent privilege escalation
-             !user.keys().hasAny(['isAdmin', 'role', 'permissions']) &&
+             !user.keys().hasAny(['isAdmin', 'role', 'permissions', 'isPremium', 'premium_since']) &&
              // Ensure nested structures are valid if present
              (!user.keys().hasAny(['avatarStats']) || (
                user.avatarStats is map &&
