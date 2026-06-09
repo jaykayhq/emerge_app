@@ -20,6 +20,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:emerge_app/core/theme/emerge_colors.dart';
+import 'package:emerge_app/features/health/presentation/widgets/health_connect_tile.dart';
+import 'package:emerge_app/features/health/presentation/widgets/screen_time_tile.dart';
+import 'package:emerge_app/features/health/presentation/providers/health_connection_provider.dart';
 
 class SettingsScreen extends ConsumerWidget {
   const SettingsScreen({super.key});
@@ -218,6 +221,48 @@ class SettingsScreen extends ConsumerWidget {
                   );
                 },
               ),
+              const Divider(height: 1, color: AppTheme.textSecondaryDark),
+              HealthConnectTile(
+                isConnected: userSettings.healthKitConnected,
+                onTap: () => _connectHealthData(context, ref, userProfile, userSettings),
+              ),
+              const Divider(height: 1, color: AppTheme.textSecondaryDark),
+              ScreenTimeTile(
+                isConnected: userSettings.screenTimeConnected,
+                onTap: () => _connectScreenTime(context, ref, userProfile, userSettings),
+              ),
+              if (userSettings.healthKitConnected || userSettings.screenTimeConnected) ...[
+                const Divider(height: 1, color: AppTheme.textSecondaryDark),
+                SwitchListTile(
+                  secondary: Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: EmergeColors.teal.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Icon(Icons.sync_outlined, color: EmergeColors.teal),
+                  ),
+                  title: Text(
+                    'Auto-Complete Habits',
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      fontWeight: FontWeight.w500,
+                      color: AppTheme.textMainDark,
+                    ),
+                  ),
+                  subtitle: Text(
+                    'Health data automatically completes linked habits',
+                    style: TextStyle(
+                      color: AppTheme.textSecondaryDark,
+                      fontSize: 12,
+                    ),
+                  ),
+                  value: false,
+                  onChanged: (value) {},
+                  activeThumbColor: EmergeColors.teal,
+                  activeTrackColor: EmergeColors.teal.withValues(alpha: 0.5),
+                  tileColor: AppTheme.surfaceDark,
+                ),
+              ],
             ]),
             const SizedBox(height: 24),
 
@@ -669,6 +714,74 @@ class SettingsScreen extends ConsumerWidget {
         ],
       ),
     );
+  }
+
+  Future<void> _connectHealthData(
+    BuildContext context,
+    WidgetRef ref,
+    UserProfile? profile,
+    UserSettings settings,
+  ) async {
+    if (profile == null || profile.uid.isEmpty) return;
+    try {
+      final healthService = ref.read(healthServiceProvider);
+      final result = await healthService.requestHealthPermissions();
+      result.fold(
+        (failure) {
+          if (context.mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text(failure.message), backgroundColor: Colors.red),
+            );
+          }
+        },
+        (_) {
+          _updateSettings(context, ref, profile, settings.copyWith(healthKitConnected: true));
+          if (context.mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Health data connected successfully!'),
+                backgroundColor: EmergeColors.teal,
+              ),
+            );
+          }
+        },
+      );
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to connect health data: $e'), backgroundColor: Colors.red),
+        );
+      }
+    }
+  }
+
+  Future<void> _connectScreenTime(
+    BuildContext context,
+    WidgetRef ref,
+    UserProfile? profile,
+    UserSettings settings,
+  ) async {
+    if (profile == null || profile.uid.isEmpty) return;
+    try {
+      final screenTimeService = ref.read(screenTimeServiceProvider);
+      await screenTimeService.requestScreenTimePermissions();
+      if (!context.mounted) return;
+      _updateSettings(context, ref, profile, settings.copyWith(screenTimeConnected: true));
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Screen time connected! Grant permission in Settings.'),
+            backgroundColor: EmergeColors.teal,
+          ),
+        );
+      }
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to connect screen time: $e'), backgroundColor: Colors.red),
+        );
+      }
+    }
   }
 
   Future<void> _updateSettings(
