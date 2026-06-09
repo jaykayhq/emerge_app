@@ -77,7 +77,11 @@ class TribeQuestsSection extends ConsumerWidget {
             if (completed.isNotEmpty) ...[
               Row(
                 children: [
-                  const Icon(Icons.verified, size: 14, color: EmergeColors.yellow),
+                  const Icon(
+                    Icons.verified,
+                    size: 14,
+                    color: EmergeColors.yellow,
+                  ),
                   const Gap(4),
                   Text(
                     'Completed (${completed.length})',
@@ -96,7 +100,10 @@ class TribeQuestsSection extends ConsumerWidget {
                   scrollDirection: Axis.horizontal,
                   itemCount: completed.length,
                   itemBuilder: (context, index) {
-                    return TribeChallengeMiniCard(challenge: completed[index], isCompleted: true);
+                    return TribeChallengeMiniCard(
+                      challenge: completed[index],
+                      isCompleted: true,
+                    );
                   },
                 ),
               ),
@@ -114,7 +121,11 @@ class TribeChallengeMiniCard extends StatelessWidget {
   final Challenge challenge;
   final bool isCompleted;
 
-  const TribeChallengeMiniCard({super.key, required this.challenge, this.isCompleted = false});
+  const TribeChallengeMiniCard({
+    super.key,
+    required this.challenge,
+    this.isCompleted = false,
+  });
 
   @override
   Widget build(BuildContext context) {

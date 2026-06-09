@@ -128,66 +128,70 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
     setState(() => _isLoading = true);
     try {
       final result = await ref.read(authRepositoryProvider).signInWithGoogle();
-      await result.fold((error) async {
-        // 'redirect_initiated' is not a real error — on web the page navigates
-        // away to Google OAuth. Profile creation will occur after the redirect
-        // returns, handled by initApp(). Do nothing here.
-        if (error.message == 'redirect_initiated') return;
-        if (mounted) {
-          final msg = error.message;
-          if (msg.contains('email-already-in-use') ||
-              msg.contains('account-exists-with-different-credential')) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: const Text('Account already exists. Please login.'),
-                action: SnackBarAction(
-                  label: 'Login',
-                  onPressed: () => context.go('/login'),
+      await result.fold(
+        (error) async {
+          // 'redirect_initiated' is not a real error — on web the page navigates
+          // away to Google OAuth. Profile creation will occur after the redirect
+          // returns, handled by initApp(). Do nothing here.
+          if (error.message == 'redirect_initiated') return;
+          if (mounted) {
+            final msg = error.message;
+            if (msg.contains('email-already-in-use') ||
+                msg.contains('account-exists-with-different-credential')) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: const Text('Account already exists. Please login.'),
+                  action: SnackBarAction(
+                    label: 'Login',
+                    onPressed: () => context.go('/login'),
+                  ),
                 ),
-              ),
-            );
-          } else {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text(msg)),
-            );
+              );
+            } else {
+              ScaffoldMessenger.of(
+                context,
+              ).showSnackBar(SnackBar(content: Text(msg)));
+            }
           }
-        }
-      }, (user) async {
-        // Create User Profile with initial onboarding state
-        final onboardingState = ref.read(onboardingStateControllerProvider);
+        },
+        (user) async {
+          // Create User Profile with initial onboarding state
+          final onboardingState = ref.read(onboardingStateControllerProvider);
 
-        final profile = UserProfile(
-          uid: user.id,
-          archetype: onboardingState.selectedArchetype ?? UserArchetype.none,
-          avatarStats: UserAvatarStats(
-            strengthXp: (onboardingState.attributes['Strength'] ?? 0) * 50,
-            intellectXp: (onboardingState.attributes['Intellect'] ?? 0) * 50,
-            vitalityXp: (onboardingState.attributes['Vitality'] ?? 0) * 50,
-            creativityXp: (onboardingState.attributes['Creativity'] ?? 0) * 50,
-            focusXp: (onboardingState.attributes['Focus'] ?? 0) * 50,
-            spiritXp: (onboardingState.attributes['Spirit'] ?? 0) * 50,
-            level: GamificationService.calculateLevel(
-              onboardingState.attributes.values.fold(
-                    0,
-                    (sum, val) => sum + val,
-                  ) *
-                  50,
+          final profile = UserProfile(
+            uid: user.id,
+            archetype: onboardingState.selectedArchetype ?? UserArchetype.none,
+            avatarStats: UserAvatarStats(
+              strengthXp: (onboardingState.attributes['Strength'] ?? 0) * 50,
+              intellectXp: (onboardingState.attributes['Intellect'] ?? 0) * 50,
+              vitalityXp: (onboardingState.attributes['Vitality'] ?? 0) * 50,
+              creativityXp:
+                  (onboardingState.attributes['Creativity'] ?? 0) * 50,
+              focusXp: (onboardingState.attributes['Focus'] ?? 0) * 50,
+              spiritXp: (onboardingState.attributes['Spirit'] ?? 0) * 50,
+              level: GamificationService.calculateLevel(
+                onboardingState.attributes.values.fold(
+                      0,
+                      (sum, val) => sum + val,
+                    ) *
+                    50,
+              ),
             ),
-          ),
-          why: onboardingState.why,
-          anchors: onboardingState.anchors,
-          habitStacks: onboardingState.habitStacks,
-          onboardingProgress: 0,
-          onboardingStartedAt: DateTime.now(),
-        );
+            why: onboardingState.why,
+            anchors: onboardingState.anchors,
+            habitStacks: onboardingState.habitStacks,
+            onboardingProgress: 0,
+            onboardingStartedAt: DateTime.now(),
+          );
 
-        final profileRepo = ref.read(userProfileRepositoryProvider);
-        await profileRepo.createProfile(profile);
+          final profileRepo = ref.read(userProfileRepositoryProvider);
+          await profileRepo.createProfile(profile);
 
-        if (mounted) {
-          context.go('/onboarding/identity-studio');
-        }
-      });
+          if (mounted) {
+            context.go('/onboarding/identity-studio');
+          }
+        },
+      );
     } catch (e) {
       if (mounted) {
         final errorMessage = e.toString();
@@ -212,7 +216,6 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
       if (mounted) setState(() => _isLoading = false);
     }
   }
-
 
   @override
   Widget build(BuildContext context) {
@@ -276,9 +279,8 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
                           const Gap(8),
                           Text(
                             'Create your character and start your journey.',
-                            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                              color: AppTheme.textSecondaryDark,
-                            ),
+                            style: Theme.of(context).textTheme.bodyMedium
+                                ?.copyWith(color: AppTheme.textSecondaryDark),
                             textAlign: TextAlign.center,
                           ),
                         ],
@@ -448,49 +450,56 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
 
                       // Sign Up Button
                       Container(
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(12),
-                          gradient: LinearGradient(
-                            colors: [EmergeColors.teal, EmergeColors.teal],
-                          ),
-                          boxShadow: [
-                            BoxShadow(
-                              color: EmergeColors.teal.withValues(alpha: 0.3),
-                              blurRadius: 12,
-                              offset: const Offset(0, 4),
-                            ),
-                          ],
-                        ),
-                        child: FilledButton(
-                          onPressed: _isLoading ? null : _signUp,
-                          style: FilledButton.styleFrom(
-                            backgroundColor: Colors.transparent,
-                            shadowColor: Colors.transparent,
-                            padding: const EdgeInsets.symmetric(vertical: 16),
-                            shape: RoundedRectangleBorder(
+                            decoration: BoxDecoration(
                               borderRadius: BorderRadius.circular(12),
-                            ),
-                          ),
-                          child: _isLoading
-                              ? const SizedBox(
-                                  height: 20,
-                                  width: 20,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                    color: Colors.white,
+                              gradient: LinearGradient(
+                                colors: [EmergeColors.teal, EmergeColors.teal],
+                              ),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: EmergeColors.teal.withValues(
+                                    alpha: 0.3,
                                   ),
-                                )
-                              : const Text(
-                                  'Sign Up',
-                                  style: TextStyle(
-                                    fontWeight: FontWeight.bold,
-                              color: Colors
-                                  .black, // Dark text on bright gradient
-                                  fontSize: 16,
+                                  blurRadius: 12,
+                                  offset: const Offset(0, 4),
+                                ),
+                              ],
+                            ),
+                            child: FilledButton(
+                              onPressed: _isLoading ? null : _signUp,
+                              style: FilledButton.styleFrom(
+                                backgroundColor: Colors.transparent,
+                                shadowColor: Colors.transparent,
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 16,
+                                ),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
                                 ),
                               ),
-                        ),
-                      ).animate(delay: 550.ms).fadeIn().scale(begin: const Offset(0.97, 0.97)),
+                              child: _isLoading
+                                  ? const SizedBox(
+                                      height: 20,
+                                      width: 20,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                        color: Colors.white,
+                                      ),
+                                    )
+                                  : const Text(
+                                      'Sign Up',
+                                      style: TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors
+                                            .black, // Dark text on bright gradient
+                                        fontSize: 16,
+                                      ),
+                                    ),
+                            ),
+                          )
+                          .animate(delay: 550.ms)
+                          .fadeIn()
+                          .scale(begin: const Offset(0.97, 0.97)),
                       const Gap(16),
 
                       // Google Sign Up
@@ -635,12 +644,12 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
                                     ?.copyWith(
                                       color: AppTheme.textSecondaryDark,
                                     ),
-                              textAlign: TextAlign.center,
-                            ),
-                          ],
-                        ).animate(delay: 0.ms).fadeIn().slideY(begin: -0.05),
-                      ),
-                      VerticalDivider(width: 64, color: EmergeColors.hexLine),
+                                textAlign: TextAlign.center,
+                              ),
+                            ],
+                          ).animate(delay: 0.ms).fadeIn().slideY(begin: -0.05),
+                        ),
+                        VerticalDivider(width: 64, color: EmergeColors.hexLine),
                         // ... (Repeat form logic for tablet if needed, or refactor to reuse widget.
                         // For brevity, I'll direct user to the mobile form widget or just duplicate standard fields)
                         // Note: To keep this clean, I'll copy the fields logic but usually I'd extract a widget.
@@ -671,189 +680,234 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
                                   const Gap(32),
                                   // Username Field
                                   TextFormField(
-                                    // Note: reusing controllers in two places simultaneously is bad if both exist,
-                                    // but ResponsiveLayout only shows one.
-                                    controller: _usernameController,
-                                    style: const TextStyle(
-                                      color: AppTheme.textMainDark,
-                                    ),
-                                    decoration: InputDecoration(
-                                      labelText: 'Username',
-                                      labelStyle: TextStyle(
-                                        color: AppTheme.textSecondaryDark,
-                                      ),
-                                      prefixIcon: Icon(
-                                        Icons.person_outline,
-                                        color: EmergeColors.teal,
-                                      ),
-                                      filled: true,
-                                      fillColor: AppTheme.surfaceDark,
-                                      border: OutlineInputBorder(
-                                        borderRadius: BorderRadius.circular(12),
-                                      ),
-                                      enabledBorder: OutlineInputBorder(
-                                        borderRadius: BorderRadius.circular(12),
-                                        borderSide: BorderSide(
-                                          color: EmergeColors.hexLine,
+                                        // Note: reusing controllers in two places simultaneously is bad if both exist,
+                                        // but ResponsiveLayout only shows one.
+                                        controller: _usernameController,
+                                        style: const TextStyle(
+                                          color: AppTheme.textMainDark,
                                         ),
-                                      ),
-                                      focusedBorder: OutlineInputBorder(
-                                        borderRadius: BorderRadius.circular(12),
-                                        borderSide: BorderSide(
-                                          color: EmergeColors.teal,
+                                        decoration: InputDecoration(
+                                          labelText: 'Username',
+                                          labelStyle: TextStyle(
+                                            color: AppTheme.textSecondaryDark,
+                                          ),
+                                          prefixIcon: Icon(
+                                            Icons.person_outline,
+                                            color: EmergeColors.teal,
+                                          ),
+                                          filled: true,
+                                          fillColor: AppTheme.surfaceDark,
+                                          border: OutlineInputBorder(
+                                            borderRadius: BorderRadius.circular(
+                                              12,
+                                            ),
+                                          ),
+                                          enabledBorder: OutlineInputBorder(
+                                            borderRadius: BorderRadius.circular(
+                                              12,
+                                            ),
+                                            borderSide: BorderSide(
+                                              color: EmergeColors.hexLine,
+                                            ),
+                                          ),
+                                          focusedBorder: OutlineInputBorder(
+                                            borderRadius: BorderRadius.circular(
+                                              12,
+                                            ),
+                                            borderSide: BorderSide(
+                                              color: EmergeColors.teal,
+                                            ),
+                                          ),
                                         ),
-                                      ),
-                                    ),
-                                    validator: AppValidators.validateUsername,
-                                  ).animate(delay: 150.ms).fadeIn().slideX(begin: 0.02),
+                                        validator:
+                                            AppValidators.validateUsername,
+                                      )
+                                      .animate(delay: 150.ms)
+                                      .fadeIn()
+                                      .slideX(begin: 0.02),
                                   const Gap(16),
                                   // Email
                                   TextFormField(
-                                    controller: _emailController,
-                                    style: const TextStyle(
-                                      color: AppTheme.textMainDark,
-                                    ),
-                                    decoration: InputDecoration(
-                                      labelText: 'Email',
-                                      labelStyle: TextStyle(
-                                        color: AppTheme.textSecondaryDark,
-                                      ),
-                                      prefixIcon: Icon(
-                                        Icons.email_outlined,
-                                        color: EmergeColors.teal,
-                                      ),
-                                      filled: true,
-                                      fillColor: AppTheme.surfaceDark,
-                                      border: OutlineInputBorder(
-                                        borderRadius: BorderRadius.circular(12),
-                                      ),
-                                      enabledBorder: OutlineInputBorder(
-                                        borderRadius: BorderRadius.circular(12),
-                                        borderSide: BorderSide(
-                                          color: EmergeColors.hexLine,
+                                        controller: _emailController,
+                                        style: const TextStyle(
+                                          color: AppTheme.textMainDark,
                                         ),
-                                      ),
-                                      focusedBorder: OutlineInputBorder(
-                                        borderRadius: BorderRadius.circular(12),
-                                        borderSide: BorderSide(
-                                          color: EmergeColors.teal,
+                                        decoration: InputDecoration(
+                                          labelText: 'Email',
+                                          labelStyle: TextStyle(
+                                            color: AppTheme.textSecondaryDark,
+                                          ),
+                                          prefixIcon: Icon(
+                                            Icons.email_outlined,
+                                            color: EmergeColors.teal,
+                                          ),
+                                          filled: true,
+                                          fillColor: AppTheme.surfaceDark,
+                                          border: OutlineInputBorder(
+                                            borderRadius: BorderRadius.circular(
+                                              12,
+                                            ),
+                                          ),
+                                          enabledBorder: OutlineInputBorder(
+                                            borderRadius: BorderRadius.circular(
+                                              12,
+                                            ),
+                                            borderSide: BorderSide(
+                                              color: EmergeColors.hexLine,
+                                            ),
+                                          ),
+                                          focusedBorder: OutlineInputBorder(
+                                            borderRadius: BorderRadius.circular(
+                                              12,
+                                            ),
+                                            borderSide: BorderSide(
+                                              color: EmergeColors.teal,
+                                            ),
+                                          ),
                                         ),
-                                      ),
-                                    ),
-                                    validator: AppValidators.validateEmail,
-                                  ).animate(delay: 250.ms).fadeIn().slideX(begin: 0.02),
+                                        validator: AppValidators.validateEmail,
+                                      )
+                                      .animate(delay: 250.ms)
+                                      .fadeIn()
+                                      .slideX(begin: 0.02),
                                   const Gap(16),
                                   // Password
                                   TextFormField(
-                                    controller: _passwordController,
-                                    obscureText: _obscurePassword,
-                                    style: const TextStyle(
-                                      color: AppTheme.textMainDark,
-                                    ),
-                                    decoration: InputDecoration(
-                                      labelText: 'Password',
-                                      labelStyle: TextStyle(
-                                        color: AppTheme.textSecondaryDark,
-                                      ),
-                                      prefixIcon: Icon(
-                                        Icons.lock_outline,
-                                        color: EmergeColors.teal,
-                                      ),
-                                      filled: true,
-                                      fillColor: AppTheme.surfaceDark,
-                                      border: OutlineInputBorder(
-                                        borderRadius: BorderRadius.circular(12),
-                                      ),
-                                      enabledBorder: OutlineInputBorder(
-                                        borderRadius: BorderRadius.circular(12),
-                                        borderSide: BorderSide(
-                                          color: EmergeColors.hexLine,
+                                        controller: _passwordController,
+                                        obscureText: _obscurePassword,
+                                        style: const TextStyle(
+                                          color: AppTheme.textMainDark,
                                         ),
-                                      ),
-                                      focusedBorder: OutlineInputBorder(
-                                        borderRadius: BorderRadius.circular(12),
-                                        borderSide: BorderSide(
-                                          color: EmergeColors.teal,
+                                        decoration: InputDecoration(
+                                          labelText: 'Password',
+                                          labelStyle: TextStyle(
+                                            color: AppTheme.textSecondaryDark,
+                                          ),
+                                          prefixIcon: Icon(
+                                            Icons.lock_outline,
+                                            color: EmergeColors.teal,
+                                          ),
+                                          filled: true,
+                                          fillColor: AppTheme.surfaceDark,
+                                          border: OutlineInputBorder(
+                                            borderRadius: BorderRadius.circular(
+                                              12,
+                                            ),
+                                          ),
+                                          enabledBorder: OutlineInputBorder(
+                                            borderRadius: BorderRadius.circular(
+                                              12,
+                                            ),
+                                            borderSide: BorderSide(
+                                              color: EmergeColors.hexLine,
+                                            ),
+                                          ),
+                                          focusedBorder: OutlineInputBorder(
+                                            borderRadius: BorderRadius.circular(
+                                              12,
+                                            ),
+                                            borderSide: BorderSide(
+                                              color: EmergeColors.teal,
+                                            ),
+                                          ),
                                         ),
-                                      ),
-                                    ),
-                                    validator: AppValidators.validatePassword,
-                                  ).animate(delay: 350.ms).fadeIn().slideX(begin: 0.02),
+                                        validator:
+                                            AppValidators.validatePassword,
+                                      )
+                                      .animate(delay: 350.ms)
+                                      .fadeIn()
+                                      .slideX(begin: 0.02),
                                   const Gap(16),
                                   // Confirm
                                   TextFormField(
-                                    controller: _confirmPasswordController,
-                                    obscureText: _obscureConfirmPassword,
-                                    style: const TextStyle(
-                                      color: AppTheme.textMainDark,
-                                    ),
-                                    decoration: InputDecoration(
-                                      labelText: 'Confirm Password',
-                                      labelStyle: TextStyle(
-                                        color: AppTheme.textSecondaryDark,
-                                      ),
-                                      prefixIcon: Icon(
-                                        Icons.lock_outline,
-                                        color: EmergeColors.teal,
-                                      ),
-                                      filled: true,
-                                      fillColor: AppTheme.surfaceDark,
-                                      border: OutlineInputBorder(
-                                        borderRadius: BorderRadius.circular(12),
-                                      ),
-                                      enabledBorder: OutlineInputBorder(
-                                        borderRadius: BorderRadius.circular(12),
-                                        borderSide: BorderSide(
-                                          color: EmergeColors.hexLine,
+                                        controller: _confirmPasswordController,
+                                        obscureText: _obscureConfirmPassword,
+                                        style: const TextStyle(
+                                          color: AppTheme.textMainDark,
                                         ),
-                                      ),
-                                      focusedBorder: OutlineInputBorder(
-                                        borderRadius: BorderRadius.circular(12),
-                                        borderSide: BorderSide(
-                                          color: EmergeColors.teal,
+                                        decoration: InputDecoration(
+                                          labelText: 'Confirm Password',
+                                          labelStyle: TextStyle(
+                                            color: AppTheme.textSecondaryDark,
+                                          ),
+                                          prefixIcon: Icon(
+                                            Icons.lock_outline,
+                                            color: EmergeColors.teal,
+                                          ),
+                                          filled: true,
+                                          fillColor: AppTheme.surfaceDark,
+                                          border: OutlineInputBorder(
+                                            borderRadius: BorderRadius.circular(
+                                              12,
+                                            ),
+                                          ),
+                                          enabledBorder: OutlineInputBorder(
+                                            borderRadius: BorderRadius.circular(
+                                              12,
+                                            ),
+                                            borderSide: BorderSide(
+                                              color: EmergeColors.hexLine,
+                                            ),
+                                          ),
+                                          focusedBorder: OutlineInputBorder(
+                                            borderRadius: BorderRadius.circular(
+                                              12,
+                                            ),
+                                            borderSide: BorderSide(
+                                              color: EmergeColors.teal,
+                                            ),
+                                          ),
                                         ),
-                                      ),
-                                    ),
-                                    validator: (value) =>
-                                        AppValidators.validateConfirmPassword(
-                                          value,
-                                          _passwordController.text,
-                                        ),
-                                  ).animate(delay: 450.ms).fadeIn().slideX(begin: 0.02),
+                                        validator: (value) =>
+                                            AppValidators.validateConfirmPassword(
+                                              value,
+                                              _passwordController.text,
+                                            ),
+                                      )
+                                      .animate(delay: 450.ms)
+                                      .fadeIn()
+                                      .slideX(begin: 0.02),
                                   const Gap(24),
                                   // Button
                                   Container(
-                                    decoration: BoxDecoration(
-                                      borderRadius: BorderRadius.circular(12),
-                                      gradient: LinearGradient(
-                                        colors: [
-                                          EmergeColors.teal,
-                                          EmergeColors.teal,
-                                        ],
-                                      ),
-                                    ),
-                                    child: FilledButton(
-                                      onPressed: _isLoading ? null : _signUp,
-                                      style: FilledButton.styleFrom(
-                                        backgroundColor: Colors.transparent,
-                                        shadowColor: Colors.transparent,
-                                        padding: const EdgeInsets.symmetric(
-                                          vertical: 16,
+                                        decoration: BoxDecoration(
+                                          borderRadius: BorderRadius.circular(
+                                            12,
+                                          ),
+                                          gradient: LinearGradient(
+                                            colors: [
+                                              EmergeColors.teal,
+                                              EmergeColors.teal,
+                                            ],
+                                          ),
                                         ),
-                                      ),
-                                      child: _isLoading
-                                          ? const CircularProgressIndicator(
-                                              color: Colors.white,
-                                            )
-                                          : const Text(
-                                              'Sign Up',
-                                              style: TextStyle(
-                                                color: Colors.black,
-                                                fontWeight: FontWeight.bold,
-                                              ),
+                                        child: FilledButton(
+                                          onPressed: _isLoading
+                                              ? null
+                                              : _signUp,
+                                          style: FilledButton.styleFrom(
+                                            backgroundColor: Colors.transparent,
+                                            shadowColor: Colors.transparent,
+                                            padding: const EdgeInsets.symmetric(
+                                              vertical: 16,
                                             ),
-                                    ),
-                                  ).animate(delay: 550.ms).fadeIn().scale(begin: const Offset(0.97, 0.97)),
+                                          ),
+                                          child: _isLoading
+                                              ? const CircularProgressIndicator(
+                                                  color: Colors.white,
+                                                )
+                                              : const Text(
+                                                  'Sign Up',
+                                                  style: TextStyle(
+                                                    color: Colors.black,
+                                                    fontWeight: FontWeight.bold,
+                                                  ),
+                                                ),
+                                        ),
+                                      )
+                                      .animate(delay: 550.ms)
+                                      .fadeIn()
+                                      .scale(begin: const Offset(0.97, 0.97)),
                                   const Gap(16),
                                   // Google Sign Up
                                   OutlinedButton.icon(

@@ -37,9 +37,13 @@ void main() {
     });
 
     test('all personas have unique names', () {
-      final names = ['athlete', 'scholar', 'creator', 'stoic', 'zealot']
-          .map((a) => PersonaEngine.getPersona(a).name)
-          .toSet();
+      final names = [
+        'athlete',
+        'scholar',
+        'creator',
+        'stoic',
+        'zealot',
+      ].map((a) => PersonaEngine.getPersona(a).name).toSet();
       expect(names.length, 5);
     });
   });

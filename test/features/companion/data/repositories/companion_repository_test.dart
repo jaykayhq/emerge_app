@@ -51,12 +51,15 @@ void main() {
   });
 
   group('migration', () {
-    test('migrateFromTutorials maps tutorial keys to companion routes', () async {
-      // Test the migration logic directly on the repository
-      // Since _prefs is static, we test by setting a key and verifying
-      await repository.markVisited('/timeline');
-      expect(repository.hasVisited('/timeline'), true);
-    });
+    test(
+      'migrateFromTutorials maps tutorial keys to companion routes',
+      () async {
+        // Test the migration logic directly on the repository
+        // Since _prefs is static, we test by setting a key and verifying
+        await repository.markVisited('/timeline');
+        expect(repository.hasVisited('/timeline'), true);
+      },
+    );
   });
 
   group('companion enabled', () {

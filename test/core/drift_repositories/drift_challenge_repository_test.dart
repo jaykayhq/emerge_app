@@ -87,48 +87,53 @@ void main() {
       ).called(1);
     });
 
-    test('joinChallenge() returns failure for non-existent challenge', () async {
-      final result = await repository.joinChallenge(
-        userId,
-        'non_existent_challenge',
-      );
+    test(
+      'joinChallenge() returns failure for non-existent challenge',
+      () async {
+        final result = await repository.joinChallenge(
+          userId,
+          'non_existent_challenge',
+        );
 
-      expect(result.isLeft(), true);
-    });
+        expect(result.isLeft(), true);
+      },
+    );
 
-    test('updateProgress() updates day in Drift and calls enqueueSet', () async {
-      final template = ChallengeCatalog.getFeatured().first;
-      await repository.joinChallenge(userId, template.id);
+    test(
+      'updateProgress() updates day in Drift and calls enqueueSet',
+      () async {
+        final template = ChallengeCatalog.getFeatured().first;
+        await repository.joinChallenge(userId, template.id);
 
-      final result = await repository.updateProgress(
-        userId,
-        template.id,
-        1,
-      );
+        final result = await repository.updateProgress(userId, template.id, 1);
 
-      expect(result.isRight(), true);
+        expect(result.isRight(), true);
 
-      final challenges = await repository.getUserChallenges(userId);
-      expect(challenges, isNotEmpty);
+        final challenges = await repository.getUserChallenges(userId);
+        expect(challenges, isNotEmpty);
 
-      verify(
-        () => mockSyncEngine.enqueueSet(
-          collectionPath: 'users/$userId/challenges',
-          documentId: template.id,
-          data: any(named: 'data'),
-        ),
-      ).called(greaterThanOrEqualTo(1));
-    });
+        verify(
+          () => mockSyncEngine.enqueueSet(
+            collectionPath: 'users/$userId/challenges',
+            documentId: template.id,
+            data: any(named: 'data'),
+          ),
+        ).called(greaterThanOrEqualTo(1));
+      },
+    );
 
-    test('updateProgress() returns failure for non-existent challenge', () async {
-      final result = await repository.updateProgress(
-        userId,
-        'non_existent',
-        1,
-      );
+    test(
+      'updateProgress() returns failure for non-existent challenge',
+      () async {
+        final result = await repository.updateProgress(
+          userId,
+          'non_existent',
+          1,
+        );
 
-      expect(result.isLeft(), true);
-    });
+        expect(result.isLeft(), true);
+      },
+    );
 
     test('updateProgress() - final day marks challenge as completed', () async {
       final template = Challenge(
@@ -169,11 +174,7 @@ void main() {
         ),
       );
 
-      final result = await repository.updateProgress(
-        userId,
-        template.id,
-        1,
-      );
+      final result = await repository.updateProgress(userId, template.id, 1);
 
       expect(result.isRight(), true);
 
@@ -244,39 +245,41 @@ void main() {
       ).called(1);
     });
 
-    test('getUserChallenges() returns all challenges (active + completed)',
-        () async {
-      final templates = ChallengeCatalog.getFeatured().take(2).toList();
+    test(
+      'getUserChallenges() returns all challenges (active + completed)',
+      () async {
+        final templates = ChallengeCatalog.getFeatured().take(2).toList();
 
-      for (final template in templates) {
-        await repository.joinChallenge(userId, template.id);
-      }
+        for (final template in templates) {
+          await repository.joinChallenge(userId, template.id);
+        }
 
-      reset(mockSyncEngine);
-      when(
-        () => mockSyncEngine.enqueueSet(
-          collectionPath: any(named: 'collectionPath'),
-          documentId: any(named: 'documentId'),
-          data: any(named: 'data'),
-        ),
-      ).thenAnswer((_) async {});
+        reset(mockSyncEngine);
+        when(
+          () => mockSyncEngine.enqueueSet(
+            collectionPath: any(named: 'collectionPath'),
+            documentId: any(named: 'documentId'),
+            data: any(named: 'data'),
+          ),
+        ).thenAnswer((_) async {});
 
-      final completedTemplate = templates.first;
-      await repository.completeChallenge(userId, completedTemplate.id);
+        final completedTemplate = templates.first;
+        await repository.completeChallenge(userId, completedTemplate.id);
 
-      final challenges = await repository.getUserChallenges(userId);
-      expect(challenges.length, 2);
+        final challenges = await repository.getUserChallenges(userId);
+        expect(challenges.length, 2);
 
-      final completed = challenges
-          .where((c) => c.id == completedTemplate.id)
-          .first;
-      expect(completed.status, ChallengeStatus.completed);
+        final completed = challenges
+            .where((c) => c.id == completedTemplate.id)
+            .first;
+        expect(completed.status, ChallengeStatus.completed);
 
-      final active = challenges
-          .where((c) => c.id != completedTemplate.id)
-          .first;
-      expect(active.status, ChallengeStatus.active);
-    });
+        final active = challenges
+            .where((c) => c.id != completedTemplate.id)
+            .first;
+        expect(active.status, ChallengeStatus.active);
+      },
+    );
 
     test('getChallenges() returns featured challenges from catalog', () async {
       final challenges = await repository.getChallenges(featuredOnly: true);
@@ -288,12 +291,14 @@ void main() {
       );
     });
 
-    test('getChallengesByArchetype() returns archetype-specific challenges',
-        () async {
-      final challenges = await repository.getChallengesByArchetype('athlete');
+    test(
+      'getChallengesByArchetype() returns archetype-specific challenges',
+      () async {
+        final challenges = await repository.getChallengesByArchetype('athlete');
 
-      expect(challenges, isNotEmpty);
-    });
+        expect(challenges, isNotEmpty);
+      },
+    );
 
     test('createSoloChallenge() inserts and syncs', () async {
       final soloChallenge = const Challenge(

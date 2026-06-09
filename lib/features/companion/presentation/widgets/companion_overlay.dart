@@ -61,7 +61,9 @@ class CompanionOverlay extends StatelessWidget {
                                 width: 40,
                                 height: 40,
                                 decoration: BoxDecoration(
-                                  color: persona.accentColor.withValues(alpha: 0.2),
+                                  color: persona.accentColor.withValues(
+                                    alpha: 0.2,
+                                  ),
                                   borderRadius: BorderRadius.circular(20),
                                 ),
                                 child: Center(
@@ -95,20 +97,33 @@ class CompanionOverlay extends StatelessWidget {
                               height: 1.5,
                             ),
                           ),
-                          if (message.suggestions != null && message.suggestions!.isNotEmpty) ...[
+                          if (message.suggestions != null &&
+                              message.suggestions!.isNotEmpty) ...[
                             const Gap(12),
-                            ...message.suggestions!.map((s) => Padding(
-                              padding: const EdgeInsets.only(bottom: 4),
-                              child: Row(
-                                children: [
-                                  Icon(Icons.lightbulb_outline, size: 14, color: persona.accentColor),
-                                  const Gap(8),
-                                  Expanded(
-                                    child: Text(s, style: const TextStyle(color: Colors.white54, fontSize: 13)),
-                                  ),
-                                ],
+                            ...message.suggestions!.map(
+                              (s) => Padding(
+                                padding: const EdgeInsets.only(bottom: 4),
+                                child: Row(
+                                  children: [
+                                    Icon(
+                                      Icons.lightbulb_outline,
+                                      size: 14,
+                                      color: persona.accentColor,
+                                    ),
+                                    const Gap(8),
+                                    Expanded(
+                                      child: Text(
+                                        s,
+                                        style: const TextStyle(
+                                          color: Colors.white54,
+                                          fontSize: 13,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
                               ),
-                            )),
+                            ),
                           ],
                           const Gap(24),
                           Row(
@@ -116,7 +131,9 @@ class CompanionOverlay extends StatelessWidget {
                             children: [
                               TextButton(
                                 onPressed: onSkip,
-                                style: TextButton.styleFrom(foregroundColor: Colors.white54),
+                                style: TextButton.styleFrom(
+                                  foregroundColor: Colors.white54,
+                                ),
                                 child: Text(
                                   'SKIP',
                                   style: GoogleFonts.splineSans(

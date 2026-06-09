@@ -13,7 +13,7 @@ class PaystackPaymentRepository {
   PaystackPaymentRepository(this._functions) : _logger = Logger();
 
   /// Initializes a Paystack transaction and returns the authorization URL.
-  /// 
+  ///
   /// The cloud function handles the secret key and specifying the channels
   /// (apple_pay, google_pay, card) to ensure it's identity-first and secure.
   Future<String> initializeTransaction({
@@ -22,13 +22,13 @@ class PaystackPaymentRepository {
     required String identityType,
   }) async {
     try {
-      final callable = _functions.httpsCallable('initializePaystackTransaction');
+      final callable = _functions.httpsCallable(
+        'initializePaystackTransaction',
+      );
       final result = await callable.call<Map<String, dynamic>>({
         'amount': amount * 100, // Paystack uses kobo/cents
         'email': email,
-        'metadata': {
-          'identity_type': identityType,
-        },
+        'metadata': {'identity_type': identityType},
       });
 
       final data = result.data;
@@ -38,13 +38,19 @@ class PaystackPaymentRepository {
         throw Exception('Authorization URL not found in response');
       }
     } catch (e, stackTrace) {
-      _logger.e('Failed to initialize Paystack transaction', error: e, stackTrace: stackTrace);
+      _logger.e(
+        'Failed to initialize Paystack transaction',
+        error: e,
+        stackTrace: stackTrace,
+      );
       rethrow;
     }
   }
 }
 
 @riverpod
-PaystackPaymentRepository paystackPaymentRepository(PaystackPaymentRepositoryRef ref) {
+PaystackPaymentRepository paystackPaymentRepository(
+  PaystackPaymentRepositoryRef ref,
+) {
   return PaystackPaymentRepository(FirebaseFunctions.instance);
 }

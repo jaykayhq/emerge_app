@@ -14,7 +14,8 @@ class CompanionPanel extends StatelessWidget {
     required this.persona,
   });
 
-  static Future<void> show(BuildContext context, {
+  static Future<void> show(
+    BuildContext context, {
     required CompanionMessage message,
     required PersonaConfig persona,
   }) {
@@ -36,10 +37,7 @@ class CompanionPanel extends StatelessWidget {
         gradient: LinearGradient(
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
-          colors: [
-            persona.accentColor.withValues(alpha: 0.05),
-            Colors.black,
-          ],
+          colors: [persona.accentColor.withValues(alpha: 0.05), Colors.black],
         ),
         borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
       ),
@@ -108,31 +106,47 @@ class CompanionPanel extends StatelessWidget {
                   ),
                 ),
               ),
-              if (message.suggestions != null && message.suggestions!.isNotEmpty) ...[
+              if (message.suggestions != null &&
+                  message.suggestions!.isNotEmpty) ...[
                 const Gap(12),
-                ...message.suggestions!.map((s) => Padding(
-                  padding: const EdgeInsets.only(bottom: 8),
-                  child: InkWell(
-                    onTap: () {},
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                      decoration: BoxDecoration(
-                        color: persona.accentColor.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(
-                          color: persona.accentColor.withValues(alpha: 0.2),
+                ...message.suggestions!.map(
+                  (s) => Padding(
+                    padding: const EdgeInsets.only(bottom: 8),
+                    child: InkWell(
+                      onTap: () {},
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 12,
                         ),
-                      ),
-                      child: Row(
-                        children: [
-                          Icon(Icons.arrow_forward_ios, size: 12, color: persona.accentColor),
-                          const Gap(8),
-                          Text(s, style: TextStyle(color: persona.accentColor, fontSize: 13)),
-                        ],
+                        decoration: BoxDecoration(
+                          color: persona.accentColor.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: persona.accentColor.withValues(alpha: 0.2),
+                          ),
+                        ),
+                        child: Row(
+                          children: [
+                            Icon(
+                              Icons.arrow_forward_ios,
+                              size: 12,
+                              color: persona.accentColor,
+                            ),
+                            const Gap(8),
+                            Text(
+                              s,
+                              style: TextStyle(
+                                color: persona.accentColor,
+                                fontSize: 13,
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                   ),
-                )),
+                ),
               ],
               const Gap(12),
               SizedBox(
@@ -147,7 +161,10 @@ class CompanionPanel extends StatelessWidget {
                       borderRadius: BorderRadius.circular(16),
                       borderSide: BorderSide.none,
                     ),
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 14,
+                    ),
                     suffixIcon: IconButton(
                       icon: Icon(Icons.send, color: persona.accentColor),
                       onPressed: () {},

@@ -46,10 +46,12 @@ class _WorldMapScreenState extends ConsumerState<WorldMapScreen> {
       final repo = ref.read(companionRepositoryProvider);
       if (!repo.hasVisited('/world-map')) {
         repo.markVisited('/world-map');
-        ref.read(companionEngineProvider.notifier).triggerEvent(
-          eventType: CompanionEventType.firstFeatureVisit,
-          userContext: {'route': '/world-map'},
-        );
+        ref
+            .read(companionEngineProvider.notifier)
+            .triggerEvent(
+              eventType: CompanionEventType.firstFeatureVisit,
+              userContext: {'route': '/world-map'},
+            );
         // Show the first-visit coach-mark to explain the World Map
         setState(() => _showFirstVisitGuide = true);
       }
@@ -288,7 +290,8 @@ class _WorldMapScreenState extends ConsumerState<WorldMapScreen> {
         builder: (dialogContext) => NodeQuestDialog(
           node: node,
           primaryColor: config.primaryColor,
-          userLevel: ref.read(userStatsStreamProvider).value?.effectiveLevel ?? 1,
+          userLevel:
+              ref.read(userStatsStreamProvider).value?.effectiveLevel ?? 1,
         ),
       );
     } else {
@@ -963,7 +966,9 @@ class _WorldMapCoachMarkState extends State<_WorldMapCoachMark>
                           Container(
                             padding: const EdgeInsets.all(8),
                             decoration: BoxDecoration(
-                              color: widget.primaryColor.withValues(alpha: 0.15),
+                              color: widget.primaryColor.withValues(
+                                alpha: 0.15,
+                              ),
                               shape: BoxShape.circle,
                             ),
                             child: Icon(

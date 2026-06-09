@@ -45,10 +45,12 @@ class _ChallengesScreenState extends ConsumerState<ChallengesScreen> {
       final repo = ref.read(companionRepositoryProvider);
       if (!repo.hasVisited('/challenges')) {
         repo.markVisited('/challenges');
-        ref.read(companionEngineProvider.notifier).triggerEvent(
-          eventType: CompanionEventType.firstFeatureVisit,
-          userContext: {'route': '/challenges'},
-        );
+        ref
+            .read(companionEngineProvider.notifier)
+            .triggerEvent(
+              eventType: CompanionEventType.firstFeatureVisit,
+              userContext: {'route': '/challenges'},
+            );
       }
     });
   }

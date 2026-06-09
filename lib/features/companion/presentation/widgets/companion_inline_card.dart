@@ -105,7 +105,11 @@ class _CompanionInlineCardState extends State<CompanionInlineCard> {
                 ],
               ),
             ),
-            Icon(Icons.chevron_right, color: widget.persona.accentColor, size: 20),
+            Icon(
+              Icons.chevron_right,
+              color: widget.persona.accentColor,
+              size: 20,
+            ),
           ],
         ),
       ),

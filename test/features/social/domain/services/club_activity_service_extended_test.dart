@@ -41,9 +41,7 @@ void main() {
       ),
     ).thenAnswer((_) async {});
 
-    when(
-      () => mockActivityDao.insertActivity(any()),
-    ).thenAnswer((_) async {});
+    when(() => mockActivityDao.insertActivity(any())).thenAnswer((_) async {});
     when(
       () => mockLeaderboardRepo.updateUserScore(
         any(),

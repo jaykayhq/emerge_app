@@ -70,10 +70,12 @@ class _FutureSelfStudioScreenState
       final repo = ref.read(companionRepositoryProvider);
       if (!repo.hasVisited('/profile/future-self')) {
         repo.markVisited('/profile/future-self');
-        ref.read(companionEngineProvider.notifier).triggerEvent(
-          eventType: CompanionEventType.firstFeatureVisit,
-          userContext: {'route': '/profile/future-self'},
-        );
+        ref
+            .read(companionEngineProvider.notifier)
+            .triggerEvent(
+              eventType: CompanionEventType.firstFeatureVisit,
+              userContext: {'route': '/profile/future-self'},
+            );
       }
     });
   }
@@ -322,16 +324,19 @@ class _FutureSelfStudioScreenState
                         GestureDetector(
                           onTap: () {
                             HapticFeedback.lightImpact();
-                            _showEvolutionInfo(context, effectiveLevel, accentColor);
+                            _showEvolutionInfo(
+                              context,
+                              effectiveLevel,
+                              accentColor,
+                            );
                           },
                           child: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
                               Text(
-                                SilhouetteEvolutionState
-                                    .phaseFromLevel(effectiveLevel)
-                                    .name
-                                    .toUpperCase(),
+                                SilhouetteEvolutionState.phaseFromLevel(
+                                  effectiveLevel,
+                                ).name.toUpperCase(),
                                 style: TextStyle(
                                   color: accentColor,
                                   fontSize: 12,

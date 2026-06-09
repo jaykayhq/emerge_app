@@ -22,8 +22,8 @@ class VariableRewardService {
   static double _applyStreakBonus(double xp, int currentStreak) {
     if (currentStreak <= 0) return xp;
 
-    final streakBonus = (currentStreak /
-            GamificationConstants.daysPerStreakBonusStep) *
+    final streakBonus =
+        (currentStreak / GamificationConstants.daysPerStreakBonusStep) *
         GamificationConstants.streakBonusPerStep;
     return xp * (1 + streakBonus.clamp(0.0, streakBonusMax));
   }
@@ -105,8 +105,8 @@ XpRewardBreakdown calculateXpBreakdown({
   double streakBonus = 0;
 
   if (currentStreak > 0) {
-    streakBonus = (currentStreak /
-            GamificationConstants.daysPerStreakBonusStep) *
+    streakBonus =
+        (currentStreak / GamificationConstants.daysPerStreakBonusStep) *
         GamificationConstants.streakBonusPerStep;
     streakBonus = streakBonus.clamp(0.0, VariableRewardService.streakBonusMax);
     xp *= (1 + streakBonus);

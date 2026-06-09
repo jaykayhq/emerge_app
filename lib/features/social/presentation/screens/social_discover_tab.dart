@@ -38,10 +38,12 @@ class _SocialDiscoverTabState extends ConsumerState<SocialDiscoverTab> {
       final repo = ref.read(companionRepositoryProvider);
       if (!repo.hasVisited('/discover')) {
         repo.markVisited('/discover');
-        ref.read(companionEngineProvider.notifier).triggerEvent(
-          eventType: CompanionEventType.firstFeatureVisit,
-          userContext: {'route': '/discover'},
-        );
+        ref
+            .read(companionEngineProvider.notifier)
+            .triggerEvent(
+              eventType: CompanionEventType.firstFeatureVisit,
+              userContext: {'route': '/discover'},
+            );
       }
     });
   }
@@ -76,10 +78,7 @@ class _SocialDiscoverTabState extends ConsumerState<SocialDiscoverTab> {
             children: categories.asMap().entries.map((entry) {
               final category = entry.value;
               final items = grouped[category]!;
-              return _CategoryStrip(
-                title: category,
-                items: items,
-              );
+              return _CategoryStrip(title: category, items: items);
             }).toList(),
           ),
         );

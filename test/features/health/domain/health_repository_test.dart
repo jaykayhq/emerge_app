@@ -15,8 +15,9 @@ void main() {
 
   group('HealthRepository', () {
     test('requestHealthPermissions returns Either', () async {
-      when(() => repository.requestHealthPermissions())
-          .thenAnswer((_) async => const Right(true));
+      when(
+        () => repository.requestHealthPermissions(),
+      ).thenAnswer((_) async => const Right(true));
 
       final result = await repository.requestHealthPermissions();
       expect(result.isRight(), isTrue);
@@ -24,24 +25,25 @@ void main() {
     });
 
     test('requestScreenTimePermissions returns Either', () async {
-      when(() => repository.requestScreenTimePermissions())
-          .thenAnswer((_) async => const Right(true));
+      when(
+        () => repository.requestScreenTimePermissions(),
+      ).thenAnswer((_) async => const Right(true));
 
       final result = await repository.requestScreenTimePermissions();
       expect(result.isRight(), isTrue);
     });
 
     test('requestHealthPermissions can return failure', () async {
-      when(() => repository.requestHealthPermissions())
-          .thenAnswer((_) async => Left(HealthFailure('Permission denied')));
+      when(
+        () => repository.requestHealthPermissions(),
+      ).thenAnswer((_) async => Left(HealthFailure('Permission denied')));
 
       final result = await repository.requestHealthPermissions();
       expect(result.isLeft(), isTrue);
     });
 
     test('getTodaySteps returns 5000', () async {
-      when(() => repository.getTodaySteps())
-          .thenAnswer((_) async => 5000);
+      when(() => repository.getTodaySteps()).thenAnswer((_) async => 5000);
 
       final result = await repository.getTodaySteps();
 
@@ -49,8 +51,7 @@ void main() {
     });
 
     test('getTodayScreenTime returns 120', () async {
-      when(() => repository.getTodayScreenTime())
-          .thenAnswer((_) async => 120);
+      when(() => repository.getTodayScreenTime()).thenAnswer((_) async => 120);
 
       final result = await repository.getTodayScreenTime();
 
@@ -58,8 +59,7 @@ void main() {
     });
 
     test('isHealthConnected returns true', () async {
-      when(() => repository.isHealthConnected())
-          .thenAnswer((_) async => true);
+      when(() => repository.isHealthConnected()).thenAnswer((_) async => true);
 
       final result = await repository.isHealthConnected();
 
@@ -67,8 +67,9 @@ void main() {
     });
 
     test('isScreenTimeConnected returns false', () async {
-      when(() => repository.isScreenTimeConnected())
-          .thenAnswer((_) async => false);
+      when(
+        () => repository.isScreenTimeConnected(),
+      ).thenAnswer((_) async => false);
 
       final result = await repository.isScreenTimeConnected();
 

@@ -54,9 +54,7 @@ Future<void> _testAuthConnectivity() async {
   print('\n2️⃣ Testing Auth emulator...');
   try {
     final startTime = DateTime.now();
-    final response = await http.get(
-      Uri.parse('$authHost/'),
-    );
+    final response = await http.get(Uri.parse('$authHost/'));
 
     if (response.statusCode == 200) {
       final duration = DateTime.now().difference(startTime);
@@ -85,9 +83,13 @@ Future<void> _testFunctionsConnectivity() async {
     if (response.statusCode == 200) {
       final data = jsonDecode(response.body) as Map<String, dynamic>;
       final result = data['result'] as Map<String, dynamic>;
-      print('   ✅ getAuraInsight responded: "${result['insight']}" (${duration.inMilliseconds}ms)');
+      print(
+        '   ✅ getAuraInsight responded: "${result['insight']}" (${duration.inMilliseconds}ms)',
+      );
     } else if (response.statusCode == 401 || response.statusCode == 403) {
-      print('   ✅ getAuraInsight reachable (correctly rejected unauthenticated request) (${duration.inMilliseconds}ms)');
+      print(
+        '   ✅ getAuraInsight reachable (correctly rejected unauthenticated request) (${duration.inMilliseconds}ms)',
+      );
     } else {
       throw Exception('Status ${response.statusCode}: ${response.body}');
     }

@@ -8,10 +8,13 @@ void main() {
       expect(effects, isEmpty);
     });
 
-    test('returns mild effects for neutral state (entropy between 0.1 and 0.3)', () {
-      final effects = calculateWorldEntropyEffects(0.2);
-      expect(effects, contains('fog'));
-    });
+    test(
+      'returns mild effects for neutral state (entropy between 0.1 and 0.3)',
+      () {
+        final effects = calculateWorldEntropyEffects(0.2);
+        expect(effects, contains('fog'));
+      },
+    );
 
     test('returns severe effects for decaying state (entropy > 0.3)', () {
       final effects = calculateWorldEntropyEffects(0.4);

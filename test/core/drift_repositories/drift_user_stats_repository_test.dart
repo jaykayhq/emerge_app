@@ -74,31 +74,34 @@ void main() {
   }
 
   group('DriftUserStatsRepository', () {
-    test('saveUserStats() inserts into Drift and calls enqueueSet and enqueueUpdate', () async {
-      final profile = createTestProfile(displayName: 'Test User');
+    test(
+      'saveUserStats() inserts into Drift and calls enqueueSet and enqueueUpdate',
+      () async {
+        final profile = createTestProfile(displayName: 'Test User');
 
-      await repository.saveUserStats(profile);
+        await repository.saveUserStats(profile);
 
-      final retrieved = await db.userStatsDao.getStats(userId);
-      expect(retrieved, isNotNull);
-      expect(retrieved!.userId, userId);
+        final retrieved = await db.userStatsDao.getStats(userId);
+        expect(retrieved, isNotNull);
+        expect(retrieved!.userId, userId);
 
-      verify(
-        () => mockSyncEngine.enqueueSet(
-          collectionPath: 'user_stats',
-          documentId: userId,
-          data: any(named: 'data'),
-        ),
-      ).called(1);
+        verify(
+          () => mockSyncEngine.enqueueSet(
+            collectionPath: 'user_stats',
+            documentId: userId,
+            data: any(named: 'data'),
+          ),
+        ).called(1);
 
-      verify(
-        () => mockSyncEngine.enqueueUpdate(
-          collectionPath: 'users',
-          documentId: userId,
-          data: any(named: 'data'),
-        ),
-      ).called(1);
-    });
+        verify(
+          () => mockSyncEngine.enqueueUpdate(
+            collectionPath: 'users',
+            documentId: userId,
+            data: any(named: 'data'),
+          ),
+        ).called(1);
+      },
+    );
 
     test('saveUserStats() includes all fields', () async {
       final profile = createTestProfile(
@@ -125,13 +128,15 @@ void main() {
       expect(retrieved.spiritXp, 20);
       expect(retrieved.worldHealthScore, closeTo(0.8, 0.01));
 
-      final captured = verify(
-        () => mockSyncEngine.enqueueSet(
-          collectionPath: 'user_stats',
-          documentId: userId,
-          data: captureAny(named: 'data'),
-        ),
-      ).captured.first as Map<String, dynamic>;
+      final captured =
+          verify(
+                () => mockSyncEngine.enqueueSet(
+                  collectionPath: 'user_stats',
+                  documentId: userId,
+                  data: captureAny(named: 'data'),
+                ),
+              ).captured.first
+              as Map<String, dynamic>;
 
       expect(captured['uid'], userId);
       expect(captured['displayName'], 'Full Profile');
@@ -140,31 +145,36 @@ void main() {
       expect(captured['avatarStats']['streak'], 10);
     });
 
-    test('updateWorldHealth() updates in Drift and calls enqueueUpdate', () async {
-      await db.userStatsDao.upsertStats(
-        UserStatsTableCompanion(
-          userId: Value(userId),
-          displayName: Value('Test User'),
-          worldHealthScore: Value(1.0),
-        ),
-      );
+    test(
+      'updateWorldHealth() updates in Drift and calls enqueueUpdate',
+      () async {
+        await db.userStatsDao.upsertStats(
+          UserStatsTableCompanion(
+            userId: Value(userId),
+            displayName: Value('Test User'),
+            worldHealthScore: Value(1.0),
+          ),
+        );
 
-      await repository.updateWorldHealth(userId, 60);
+        await repository.updateWorldHealth(userId, 60);
 
-      final retrieved = await db.userStatsDao.getStats(userId);
-      expect(retrieved, isNotNull);
-      expect(retrieved!.worldHealthScore, closeTo(0.6, 0.01));
+        final retrieved = await db.userStatsDao.getStats(userId);
+        expect(retrieved, isNotNull);
+        expect(retrieved!.worldHealthScore, closeTo(0.6, 0.01));
 
-      final captured = verify(
-        () => mockSyncEngine.enqueueUpdate(
-          collectionPath: 'users',
-          documentId: userId,
-          data: captureAny(named: 'data'),
-        ),
-      ).captured.first as Map<String, dynamic>;
+        final captured =
+            verify(
+                  () => mockSyncEngine.enqueueUpdate(
+                    collectionPath: 'users',
+                    documentId: userId,
+                    data: captureAny(named: 'data'),
+                  ),
+                ).captured.first
+                as Map<String, dynamic>;
 
-      expect(captured['worldState.entropy'], closeTo(0.4, 0.01));
-    });
+        expect(captured['worldState.entropy'], closeTo(0.4, 0.01));
+      },
+    );
 
     test('updateAttributeXp() updates attribute XP via DAO', () async {
       await db.userStatsDao.upsertStats(
@@ -219,14 +229,17 @@ void main() {
       expect(result.avatarStats.streak, 7);
     });
 
-    test('getUserStats() returns empty profile for non-existent user', () async {
-      final result = await repository.getUserStats('non_existent_user');
+    test(
+      'getUserStats() returns empty profile for non-existent user',
+      () async {
+        final result = await repository.getUserStats('non_existent_user');
 
-      expect(result.uid, 'non_existent_user');
-      expect(result.displayName, isNull);
-      expect(result.archetype, UserArchetype.none);
-      expect(result.avatarStats.level, 1);
-    });
+        expect(result.uid, 'non_existent_user');
+        expect(result.displayName, isNull);
+        expect(result.archetype, UserArchetype.none);
+        expect(result.avatarStats.level, 1);
+      },
+    );
 
     test('watchUserStats() returns stream of stats', () async {
       await db.userStatsDao.upsertStats(
@@ -252,20 +265,17 @@ void main() {
       );
     });
 
-    test('watchUserStats() emits empty profile for non-existent user', () async {
-      final stream = repository.watchUserStats('non_existent');
+    test(
+      'watchUserStats() emits empty profile for non-existent user',
+      () async {
+        final stream = repository.watchUserStats('non_existent');
 
-      await expectLater(
-        stream,
-        emits(
-          isA<UserProfile>().having(
-            (p) => p.uid,
-            'uid',
-            'non_existent',
-          ),
-        ),
-      );
-    });
+        await expectLater(
+          stream,
+          emits(isA<UserProfile>().having((p) => p.uid, 'uid', 'non_existent')),
+        );
+      },
+    );
 
     test('rowToProfileForTest() handles null database values safely', () {
       final fakeRow = FakeUserStatsTableData();
@@ -280,7 +290,10 @@ void main() {
       expect(profile.avatarStats.level, 1);
       expect(profile.avatarStats.streak, 0);
       expect(profile.avatarStats.momentumScore, 50);
-      expect(profile.worldState.entropy, 0.0); // 1.0 - worldHealthScore fallback (1.0) = 0.0
+      expect(
+        profile.worldState.entropy,
+        0.0,
+      ); // 1.0 - worldHealthScore fallback (1.0) = 0.0
     });
   });
 }

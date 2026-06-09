@@ -28,10 +28,9 @@ class LocalSettingsRepository {
   }
 
   String _getString(String key, {String defaultValue = ''}) {
-    return _prefs?.getString(key) ?? (_fallback[key] as String? ?? defaultValue);
+    return _prefs?.getString(key) ??
+        (_fallback[key] as String? ?? defaultValue);
   }
-
-
 
   Future<void> _setBool(String key, bool value) async {
     if (_prefs != null) {
@@ -48,8 +47,6 @@ class LocalSettingsRepository {
       _fallback[key] = value;
     }
   }
-
-
 
   // --- public API ---------------------------------------------------------
 

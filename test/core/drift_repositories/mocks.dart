@@ -21,19 +21,24 @@ class FakeFirebaseFirestore extends Fake implements FirebaseFirestore {
   }
 }
 
-class FakeCollectionReference extends Fake implements CollectionReference<Map<String, dynamic>> {
+class FakeCollectionReference extends Fake
+    implements CollectionReference<Map<String, dynamic>> {
   @override
   DocumentReference<Map<String, dynamic>> doc([String? path]) {
     return FakeDocumentReference();
   }
 
   @override
-  Query<Map<String, dynamic>> orderBy(dynamic field, {bool descending = false}) {
+  Query<Map<String, dynamic>> orderBy(
+    dynamic field, {
+    bool descending = false,
+  }) {
     return FakeQuery();
   }
 
   @override
-  Query<Map<String, dynamic>> where(dynamic field, {
+  Query<Map<String, dynamic>> where(
+    dynamic field, {
     Object? isEqualTo,
     Object? isNotEqualTo,
     Object? isLessThan,
@@ -60,7 +65,10 @@ class FakeCollectionReference extends Fake implements CollectionReference<Map<St
 
 class FakeQuery extends Fake implements Query<Map<String, dynamic>> {
   @override
-  Query<Map<String, dynamic>> orderBy(dynamic field, {bool descending = false}) {
+  Query<Map<String, dynamic>> orderBy(
+    dynamic field, {
+    bool descending = false,
+  }) {
     return this;
   }
 
@@ -78,7 +86,8 @@ class FakeQuery extends Fake implements Query<Map<String, dynamic>> {
   }
 }
 
-class FakeDocumentReference extends Fake implements DocumentReference<Map<String, dynamic>> {
+class FakeDocumentReference extends Fake
+    implements DocumentReference<Map<String, dynamic>> {
   @override
   String get id => 'fake_doc_id';
 
@@ -105,12 +114,15 @@ class FakeDocumentReference extends Fake implements DocumentReference<Map<String
   }
 
   @override
-  Future<DocumentSnapshot<Map<String, dynamic>>> get([GetOptions? options]) async {
+  Future<DocumentSnapshot<Map<String, dynamic>>> get([
+    GetOptions? options,
+  ]) async {
     return FakeDocumentSnapshot();
   }
 }
 
-class FakeDocumentSnapshot extends Fake implements DocumentSnapshot<Map<String, dynamic>> {
+class FakeDocumentSnapshot extends Fake
+    implements DocumentSnapshot<Map<String, dynamic>> {
   @override
   String get id => 'fake_doc_id';
 
@@ -121,7 +133,8 @@ class FakeDocumentSnapshot extends Fake implements DocumentSnapshot<Map<String, 
   bool get exists => false;
 }
 
-class FakeQuerySnapshot extends Fake implements QuerySnapshot<Map<String, dynamic>> {
+class FakeQuerySnapshot extends Fake
+    implements QuerySnapshot<Map<String, dynamic>> {
   @override
   List<QueryDocumentSnapshot<Map<String, dynamic>>> get docs => [];
 

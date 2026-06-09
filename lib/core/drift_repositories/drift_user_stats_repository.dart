@@ -10,8 +10,11 @@ class DriftUserStatsRepository {
   final FirebaseFirestore _firestore;
   final EnhancedSyncEngine _syncEngine;
 
-  DriftUserStatsRepository(this._db, this._syncEngine, [FirebaseFirestore? firestore])
-    : _firestore = firestore ?? FirebaseFirestore.instance;
+  DriftUserStatsRepository(
+    this._db,
+    this._syncEngine, [
+    FirebaseFirestore? firestore,
+  ]) : _firestore = firestore ?? FirebaseFirestore.instance;
 
   Future<void> saveUserStats(UserProfile profile) async {
     // 1. Update local Drift database
@@ -198,13 +201,17 @@ class DriftUserStatsRepository {
 
   UserWorldState _parseWorldState(UserStatsTableData row) {
     if (row.worldStateJson == null || row.worldStateJson!.isEmpty) {
-      return UserWorldState(entropy: 1.0 - ((row.worldHealthScore as double?) ?? 1.0));
+      return UserWorldState(
+        entropy: 1.0 - ((row.worldHealthScore as double?) ?? 1.0),
+      );
     }
     try {
       final map = jsonDecode(row.worldStateJson!) as Map<String, dynamic>;
       return UserWorldState.fromMap(map);
     } catch (_) {
-      return UserWorldState(entropy: 1.0 - ((row.worldHealthScore as double?) ?? 1.0));
+      return UserWorldState(
+        entropy: 1.0 - ((row.worldHealthScore as double?) ?? 1.0),
+      );
     }
   }
 

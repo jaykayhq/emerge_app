@@ -224,14 +224,17 @@ class SettingsScreen extends ConsumerWidget {
               const Divider(height: 1, color: AppTheme.textSecondaryDark),
               HealthConnectTile(
                 isConnected: userSettings.healthKitConnected,
-                onTap: () => _connectHealthData(context, ref, userProfile, userSettings),
+                onTap: () =>
+                    _connectHealthData(context, ref, userProfile, userSettings),
               ),
               const Divider(height: 1, color: AppTheme.textSecondaryDark),
               ScreenTimeTile(
                 isConnected: userSettings.screenTimeConnected,
-                onTap: () => _connectScreenTime(context, ref, userProfile, userSettings),
+                onTap: () =>
+                    _connectScreenTime(context, ref, userProfile, userSettings),
               ),
-              if (userSettings.healthKitConnected || userSettings.screenTimeConnected) ...[
+              if (userSettings.healthKitConnected ||
+                  userSettings.screenTimeConnected) ...[
                 const Divider(height: 1, color: AppTheme.textSecondaryDark),
                 SwitchListTile(
                   secondary: Container(
@@ -730,12 +733,20 @@ class SettingsScreen extends ConsumerWidget {
         (failure) {
           if (context.mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text(failure.message), backgroundColor: Colors.red),
+              SnackBar(
+                content: Text(failure.message),
+                backgroundColor: Colors.red,
+              ),
             );
           }
         },
         (_) {
-          _updateSettings(context, ref, profile, settings.copyWith(healthKitConnected: true));
+          _updateSettings(
+            context,
+            ref,
+            profile,
+            settings.copyWith(healthKitConnected: true),
+          );
           if (context.mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(
@@ -749,7 +760,10 @@ class SettingsScreen extends ConsumerWidget {
     } catch (e) {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to connect health data: $e'), backgroundColor: Colors.red),
+          SnackBar(
+            content: Text('Failed to connect health data: $e'),
+            backgroundColor: Colors.red,
+          ),
         );
       }
     }
@@ -766,11 +780,18 @@ class SettingsScreen extends ConsumerWidget {
       final screenTimeService = ref.read(screenTimeServiceProvider);
       await screenTimeService.requestScreenTimePermissions();
       if (!context.mounted) return;
-      _updateSettings(context, ref, profile, settings.copyWith(screenTimeConnected: true));
+      _updateSettings(
+        context,
+        ref,
+        profile,
+        settings.copyWith(screenTimeConnected: true),
+      );
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Screen time connected! Grant permission in Settings.'),
+            content: Text(
+              'Screen time connected! Grant permission in Settings.',
+            ),
             backgroundColor: EmergeColors.teal,
           ),
         );
@@ -778,7 +799,10 @@ class SettingsScreen extends ConsumerWidget {
     } catch (e) {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to connect screen time: $e'), backgroundColor: Colors.red),
+          SnackBar(
+            content: Text('Failed to connect screen time: $e'),
+            backgroundColor: Colors.red,
+          ),
         );
       }
     }

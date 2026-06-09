@@ -56,7 +56,8 @@ class StreakRecoveryScreen extends ConsumerWidget {
                     Text(
                       'You\'re human.\nNever miss twice.',
                       textAlign: TextAlign.center,
-                      style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                      style: Theme.of(context).textTheme.headlineMedium
+                          ?.copyWith(
                             color: Colors.white,
                             fontWeight: FontWeight.bold,
                             height: 1.2,
@@ -68,9 +69,9 @@ class StreakRecoveryScreen extends ConsumerWidget {
                       'Identity isn\'t about perfection, it\'s about resilience.',
                       textAlign: TextAlign.center,
                       style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                            color: Colors.white70,
-                            height: 1.5,
-                          ),
+                        color: Colors.white70,
+                        height: 1.5,
+                      ),
                     ),
                     const SizedBox(height: 48),
                     Container(

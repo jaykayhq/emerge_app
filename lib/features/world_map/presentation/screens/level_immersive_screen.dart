@@ -58,10 +58,12 @@ class _LevelImmersiveScreenState extends ConsumerState<LevelImmersiveScreen> {
       final repo = ref.read(companionRepositoryProvider);
       if (!repo.hasVisited('/world-map/immersive')) {
         repo.markVisited('/world-map/immersive');
-        ref.read(companionEngineProvider.notifier).triggerEvent(
-          eventType: CompanionEventType.firstFeatureVisit,
-          userContext: {'route': '/world-map/immersive'},
-        );
+        ref
+            .read(companionEngineProvider.notifier)
+            .triggerEvent(
+              eventType: CompanionEventType.firstFeatureVisit,
+              userContext: {'route': '/world-map/immersive'},
+            );
       }
     });
   }
@@ -235,10 +237,10 @@ class _LevelImmersiveScreenState extends ConsumerState<LevelImmersiveScreen> {
 
                 // Directive Card (floating glassmorphism)
                 if (widget.node.directive.isNotEmpty)
-                  _buildDirectiveCard(context, key: _directiveKey)
-                      .animate()
-                      .fadeIn(delay: 200.ms)
-                      .slideY(begin: 0.08),
+                  _buildDirectiveCard(
+                    context,
+                    key: _directiveKey,
+                  ).animate().fadeIn(delay: 200.ms).slideY(begin: 0.08),
 
                 const SizedBox(height: 20),
 
@@ -246,29 +248,35 @@ class _LevelImmersiveScreenState extends ConsumerState<LevelImmersiveScreen> {
                 _buildAttributeChips(context, profile)
                     .animate()
                     .fadeIn(delay: 300.ms)
-                    .scale(begin: const Offset(0.97, 0.97), curve: Curves.easeOutCubic),
+                    .scale(
+                      begin: const Offset(0.97, 0.97),
+                      curve: Curves.easeOutCubic,
+                    ),
 
                 const SizedBox(height: 20),
 
                 // World Health Bar
-                _buildHealthSection(context, healthPercent, key: _healthBarKey)
-                    .animate()
-                    .fadeIn(delay: 350.ms),
+                _buildHealthSection(
+                  context,
+                  healthPercent,
+                  key: _healthBarKey,
+                ).animate().fadeIn(delay: 350.ms),
 
                 const SizedBox(height: 24),
 
                 // Habit Cards (staggered inside _buildHabitSection)
-                _buildHabitSection(context, ref, profile)
-                    .animate()
-                    .fadeIn(delay: 400.ms),
+                _buildHabitSection(
+                  context,
+                  ref,
+                  profile,
+                ).animate().fadeIn(delay: 400.ms),
 
                 const SizedBox(height: 24),
 
                 // Progress bar
-                _buildProgressSection(context)
-                    .animate()
-                    .fadeIn(delay: 500.ms)
-                    .slideY(begin: 0.05),
+                _buildProgressSection(
+                  context,
+                ).animate().fadeIn(delay: 500.ms).slideY(begin: 0.05),
 
                 const SizedBox(height: 16),
 
@@ -278,10 +286,7 @@ class _LevelImmersiveScreenState extends ConsumerState<LevelImmersiveScreen> {
                   ref,
                   profile,
                   key: _actionButtonKey,
-                )
-                    .animate()
-                    .fadeIn(delay: 600.ms)
-                    .slideY(begin: 0.08),
+                ).animate().fadeIn(delay: 600.ms).slideY(begin: 0.08),
 
                 const SizedBox(height: 32),
               ],
@@ -665,7 +670,10 @@ class _LevelImmersiveScreenState extends ConsumerState<LevelImmersiveScreen> {
                 final idx = entry.key;
                 final challenge = entry.value;
                 final progress = challenge.totalDays > 0
-                    ? (challenge.currentDay / challenge.totalDays).clamp(0.0, 1.0)
+                    ? (challenge.currentDay / challenge.totalDays).clamp(
+                        0.0,
+                        1.0,
+                      )
                     : 0.0;
 
                 return Padding(
@@ -710,10 +718,14 @@ class _LevelImmersiveScreenState extends ConsumerState<LevelImmersiveScreen> {
 
   Widget _buildProgressSection(BuildContext context) {
     final effectiveState = _overriddenNodeState ?? widget.node.state;
-    final isCompleted = effectiveState == NodeState.completed || effectiveState == NodeState.mastered;
+    final isCompleted =
+        effectiveState == NodeState.completed ||
+        effectiveState == NodeState.mastered;
     final isInProgress = effectiveState == NodeState.inProgress;
-    
-    final progressPercent = isCompleted ? 100.0 : widget.node.progress.toDouble();
+
+    final progressPercent = isCompleted
+        ? 100.0
+        : widget.node.progress.toDouble();
 
     return Column(
       children: [
@@ -767,7 +779,11 @@ class _LevelImmersiveScreenState extends ConsumerState<LevelImmersiveScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(Icons.check_circle, color: Colors.green.withValues(alpha: 0.8), size: 14),
+              Icon(
+                Icons.check_circle,
+                color: Colors.green.withValues(alpha: 0.8),
+                size: 14,
+              ),
               const SizedBox(width: 4),
               Text(
                 'Node conquered!',
@@ -962,10 +978,14 @@ class _LevelImmersiveScreenState extends ConsumerState<LevelImmersiveScreen> {
                         vertical: 6,
                       ),
                       decoration: BoxDecoration(
-                        color: widget.config.primaryColor.withValues(alpha: 0.15),
+                        color: widget.config.primaryColor.withValues(
+                          alpha: 0.15,
+                        ),
                         borderRadius: BorderRadius.circular(12),
                         border: Border.all(
-                          color: widget.config.primaryColor.withValues(alpha: 0.3),
+                          color: widget.config.primaryColor.withValues(
+                            alpha: 0.3,
+                          ),
                         ),
                       ),
                       child: Text(
@@ -983,7 +1003,10 @@ class _LevelImmersiveScreenState extends ConsumerState<LevelImmersiveScreen> {
               ),
               // Objective section
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 20,
+                  vertical: 16,
+                ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -1023,7 +1046,10 @@ class _LevelImmersiveScreenState extends ConsumerState<LevelImmersiveScreen> {
               // Rewards section
               if (widget.node.xpBoosts.isNotEmpty)
                 Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 20,
+                    vertical: 8,
+                  ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -1057,10 +1083,14 @@ class _LevelImmersiveScreenState extends ConsumerState<LevelImmersiveScreen> {
                               vertical: 6,
                             ),
                             decoration: BoxDecoration(
-                              color: _getAttributeColor(entry.key).withValues(alpha: 0.1),
+                              color: _getAttributeColor(
+                                entry.key,
+                              ).withValues(alpha: 0.1),
                               borderRadius: BorderRadius.circular(8),
                               border: Border.all(
-                                color: _getAttributeColor(entry.key).withValues(alpha: 0.3),
+                                color: _getAttributeColor(
+                                  entry.key,
+                                ).withValues(alpha: 0.3),
                               ),
                             ),
                             child: Row(
@@ -1132,7 +1162,9 @@ class _LevelImmersiveScreenState extends ConsumerState<LevelImmersiveScreen> {
                             if (context.mounted) {
                               ScaffoldMessenger.of(context).showSnackBar(
                                 SnackBar(
-                                  content: Text('Mission started: ${widget.node.name}'),
+                                  content: Text(
+                                    'Mission started: ${widget.node.name}',
+                                  ),
                                   backgroundColor: widget.config.primaryColor,
                                   behavior: SnackBarBehavior.floating,
                                 ),

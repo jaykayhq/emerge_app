@@ -63,10 +63,12 @@ class _TimelineScreenState extends ConsumerState<TimelineScreen> {
       final repo = ref.read(companionRepositoryProvider);
       if (!repo.hasVisited('/timeline')) {
         repo.markVisited('/timeline');
-        ref.read(companionEngineProvider.notifier).triggerEvent(
-          eventType: CompanionEventType.firstFeatureVisit,
-          userContext: {'route': '/timeline'},
-        );
+        ref
+            .read(companionEngineProvider.notifier)
+            .triggerEvent(
+              eventType: CompanionEventType.firstFeatureVisit,
+              userContext: {'route': '/timeline'},
+            );
       }
     });
   }
@@ -658,10 +660,8 @@ class _TimelineScreenState extends ConsumerState<TimelineScreen> {
         if (mounted) {
           Navigator.of(context).push(
             MaterialPageRoute(
-              builder: (_) => StreakRecoveryScreen(
-                habit: habit,
-                xpEarned: result.xpEarned,
-              ),
+              builder: (_) =>
+                  StreakRecoveryScreen(habit: habit, xpEarned: result.xpEarned),
             ),
           );
         }

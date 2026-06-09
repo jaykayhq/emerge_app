@@ -68,9 +68,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           // navigates away to Google OAuth. Keep loading; do not show snackbar.
           if (error.message == 'redirect_initiated') return;
           if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text(error.message)),
-            );
+            ScaffoldMessenger.of(
+              context,
+            ).showSnackBar(SnackBar(content: Text(error.message)));
           }
         },
         (_) => null, // Navigation handled by router via auth stream
@@ -154,7 +154,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
+                    children: [
                       // Logo / Branding
                       Column(
                         children: [
@@ -285,41 +285,47 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
                       // Login Button
                       Container(
-                        height: 50,
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(25),
-                          gradient: const LinearGradient(
-                            colors: [EmergeColors.violet, EmergeColors.coral],
-                          ),
-                        ),
-                        child: ElevatedButton(
-                          onPressed: _isLoading ? null : _login,
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.transparent,
-                            shadowColor: Colors.transparent,
-                            shape: RoundedRectangleBorder(
+                            height: 50,
+                            decoration: BoxDecoration(
                               borderRadius: BorderRadius.circular(25),
+                              gradient: const LinearGradient(
+                                colors: [
+                                  EmergeColors.violet,
+                                  EmergeColors.coral,
+                                ],
+                              ),
                             ),
-                          ),
-                          child: _isLoading
-                              ? const SizedBox(
-                                  height: 20,
-                                  width: 20,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                    color: Colors.white,
-                                  ),
-                                )
-                              : const Text(
-                                  'Login',
-                                  style: TextStyle(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.white,
-                                  ),
+                            child: ElevatedButton(
+                              onPressed: _isLoading ? null : _login,
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.transparent,
+                                shadowColor: Colors.transparent,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(25),
                                 ),
-                        ),
-                      ).animate(delay: 350.ms).fadeIn().scale(begin: const Offset(0.97, 0.97)),
+                              ),
+                              child: _isLoading
+                                  ? const SizedBox(
+                                      height: 20,
+                                      width: 20,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                        color: Colors.white,
+                                      ),
+                                    )
+                                  : const Text(
+                                      'Login',
+                                      style: TextStyle(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                            ),
+                          )
+                          .animate(delay: 350.ms)
+                          .fadeIn()
+                          .scale(begin: const Offset(0.97, 0.97)),
                       const Gap(16),
                       OutlinedButton.icon(
                         onPressed: _isLoading ? null : _loginWithGoogle,
@@ -483,94 +489,113 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                   const Gap(32),
                                   // Email Field
                                   TextFormField(
-                                    controller: _emailController,
-                                    style: const TextStyle(color: Colors.white),
-                                    decoration: InputDecoration(
-                                      labelText: 'Email',
-                                      labelStyle: const TextStyle(
-                                        color: Colors.white70,
-                                      ),
-                                      filled: true,
-                                      fillColor: EmergeColors.background,
-                                      enabledBorder: OutlineInputBorder(
-                                        borderSide: const BorderSide(
-                                          color: EmergeColors.hexLine,
+                                        controller: _emailController,
+                                        style: const TextStyle(
+                                          color: Colors.white,
                                         ),
-                                        borderRadius: BorderRadius.circular(12),
-                                      ),
-                                      focusedBorder: OutlineInputBorder(
-                                        borderSide: const BorderSide(
-                                          color: EmergeColors.teal,
+                                        decoration: InputDecoration(
+                                          labelText: 'Email',
+                                          labelStyle: const TextStyle(
+                                            color: Colors.white70,
+                                          ),
+                                          filled: true,
+                                          fillColor: EmergeColors.background,
+                                          enabledBorder: OutlineInputBorder(
+                                            borderSide: const BorderSide(
+                                              color: EmergeColors.hexLine,
+                                            ),
+                                            borderRadius: BorderRadius.circular(
+                                              12,
+                                            ),
+                                          ),
+                                          focusedBorder: OutlineInputBorder(
+                                            borderSide: const BorderSide(
+                                              color: EmergeColors.teal,
+                                            ),
+                                            borderRadius: BorderRadius.circular(
+                                              12,
+                                            ),
+                                          ),
+                                          prefixIcon: const Icon(
+                                            Icons.email_outlined,
+                                            color: Colors.white70,
+                                          ),
                                         ),
-                                        borderRadius: BorderRadius.circular(12),
-                                  ),
-                                  prefixIcon: const Icon(
-                                    Icons.email_outlined,
-                                    color: Colors.white70,
-                                  ),
-                                ),
-                                validator: (value) {
-                                  if (value == null || value.isEmpty) {
-                                    return 'Please enter your email';
-                                  }
-                                  return null;
-                                },
-                              ).animate(delay: 150.ms).fadeIn().slideX(begin: 0.02),
-                              const Gap(16),
-
-                              // Password Field
-                              TextFormField(
-                                controller: _passwordController,
-                                    obscureText: _obscurePassword,
-                                    style: const TextStyle(color: Colors.white),
-                                    decoration: InputDecoration(
-                                      labelText: 'Password',
-                                      labelStyle: const TextStyle(
-                                        color: Colors.white70,
-                                      ),
-                                      filled: true,
-                                      fillColor: EmergeColors.background,
-                                      enabledBorder: OutlineInputBorder(
-                                        borderSide: const BorderSide(
-                                          color: EmergeColors.hexLine,
-                                        ),
-                                        borderRadius: BorderRadius.circular(12),
-                                      ),
-                                      focusedBorder: OutlineInputBorder(
-                                        borderSide: const BorderSide(
-                                          color: EmergeColors.teal,
-                                        ),
-                                        borderRadius: BorderRadius.circular(12),
-                                      ),
-                                      prefixIcon: const Icon(
-                                        Icons.lock_outline,
-                                        color: Colors.white70,
-                                      ),
-                                      suffixIcon: IconButton(
-                                        icon: Icon(
-                                          _obscurePassword
-                                              ? Icons.visibility_outlined
-                                              : Icons.visibility_off_outlined,
-                                          color: Colors.white70,
-                                        ),
-                                        onPressed: () {
-                                          setState(() {
-                                            _obscurePassword =
-                                                !_obscurePassword;
-                                          });
+                                        validator: (value) {
+                                          if (value == null || value.isEmpty) {
+                                            return 'Please enter your email';
+                                          }
+                                          return null;
                                         },
-                                        tooltip: _obscurePassword
-                                            ? 'Show password'
-                                            : 'Hide password',
-                                      ),
-                                    ),
-                                    validator: (value) {
-                                      if (value == null || value.isEmpty) {
-                                        return 'Please enter your password';
-                                      }
-                                      return null;
-                                    },
-                                  ).animate(delay: 250.ms).fadeIn().slideX(begin: 0.02),
+                                      )
+                                      .animate(delay: 150.ms)
+                                      .fadeIn()
+                                      .slideX(begin: 0.02),
+                                  const Gap(16),
+
+                                  // Password Field
+                                  TextFormField(
+                                        controller: _passwordController,
+                                        obscureText: _obscurePassword,
+                                        style: const TextStyle(
+                                          color: Colors.white,
+                                        ),
+                                        decoration: InputDecoration(
+                                          labelText: 'Password',
+                                          labelStyle: const TextStyle(
+                                            color: Colors.white70,
+                                          ),
+                                          filled: true,
+                                          fillColor: EmergeColors.background,
+                                          enabledBorder: OutlineInputBorder(
+                                            borderSide: const BorderSide(
+                                              color: EmergeColors.hexLine,
+                                            ),
+                                            borderRadius: BorderRadius.circular(
+                                              12,
+                                            ),
+                                          ),
+                                          focusedBorder: OutlineInputBorder(
+                                            borderSide: const BorderSide(
+                                              color: EmergeColors.teal,
+                                            ),
+                                            borderRadius: BorderRadius.circular(
+                                              12,
+                                            ),
+                                          ),
+                                          prefixIcon: const Icon(
+                                            Icons.lock_outline,
+                                            color: Colors.white70,
+                                          ),
+                                          suffixIcon: IconButton(
+                                            icon: Icon(
+                                              _obscurePassword
+                                                  ? Icons.visibility_outlined
+                                                  : Icons
+                                                        .visibility_off_outlined,
+                                              color: Colors.white70,
+                                            ),
+                                            onPressed: () {
+                                              setState(() {
+                                                _obscurePassword =
+                                                    !_obscurePassword;
+                                              });
+                                            },
+                                            tooltip: _obscurePassword
+                                                ? 'Show password'
+                                                : 'Hide password',
+                                          ),
+                                        ),
+                                        validator: (value) {
+                                          if (value == null || value.isEmpty) {
+                                            return 'Please enter your password';
+                                          }
+                                          return null;
+                                        },
+                                      )
+                                      .animate(delay: 250.ms)
+                                      .fadeIn()
+                                      .slideX(begin: 0.02),
                                   Align(
                                     alignment: Alignment.centerRight,
                                     child: TextButton(
@@ -589,48 +614,53 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
                                   // Login Button
                                   Container(
-                                    height: 50,
-                                    decoration: BoxDecoration(
-                                      borderRadius: BorderRadius.circular(25),
-                                      gradient: const LinearGradient(
-                                        colors: [
-                                          EmergeColors.violet,
-                                          EmergeColors.coral,
-                                        ],
-                                      ),
-                                    ),
-                                    child: ElevatedButton(
-                                      onPressed: _isLoading ? null : _login,
-                                      style: ElevatedButton.styleFrom(
-                                        backgroundColor: Colors.transparent,
-                                        shadowColor: Colors.transparent,
-                                        shape: RoundedRectangleBorder(
+                                        height: 50,
+                                        decoration: BoxDecoration(
                                           borderRadius: BorderRadius.circular(
                                             25,
                                           ),
+                                          gradient: const LinearGradient(
+                                            colors: [
+                                              EmergeColors.violet,
+                                              EmergeColors.coral,
+                                            ],
+                                          ),
                                         ),
-                                      ),
-                                      child: _isLoading
-                                          ? const SizedBox(
-                                              height: 20,
-                                              width: 20,
-                                              child: CircularProgressIndicator(
-                                                strokeWidth: 2,
-                                                color: Colors.white,
-                                              ),
-                                            )
-                                          : const Text(
-                                              'Login',
-                                              style: TextStyle(
-                                                fontSize: 16,
-                                                fontWeight: FontWeight.bold,
-                                                  color: Colors.white,
+                                        child: ElevatedButton(
+                                          onPressed: _isLoading ? null : _login,
+                                          style: ElevatedButton.styleFrom(
+                                            backgroundColor: Colors.transparent,
+                                            shadowColor: Colors.transparent,
+                                            shape: RoundedRectangleBorder(
+                                              borderRadius:
+                                                  BorderRadius.circular(25),
+                                            ),
+                                          ),
+                                          child: _isLoading
+                                              ? const SizedBox(
+                                                  height: 20,
+                                                  width: 20,
+                                                  child:
+                                                      CircularProgressIndicator(
+                                                        strokeWidth: 2,
+                                                        color: Colors.white,
+                                                      ),
+                                                )
+                                              : const Text(
+                                                  'Login',
+                                                  style: TextStyle(
+                                                    fontSize: 16,
+                                                    fontWeight: FontWeight.bold,
+                                                    color: Colors.white,
+                                                  ),
                                                 ),
-                                              ),
-                                      ),
-                                    ).animate(delay: 350.ms).fadeIn().scale(begin: const Offset(0.97, 0.97)),
-                                    const Gap(16),
-                                    OutlinedButton.icon(
+                                        ),
+                                      )
+                                      .animate(delay: 350.ms)
+                                      .fadeIn()
+                                      .scale(begin: const Offset(0.97, 0.97)),
+                                  const Gap(16),
+                                  OutlinedButton.icon(
                                     onPressed: _isLoading
                                         ? null
                                         : _loginWithGoogle,
@@ -664,9 +694,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                     children: [
                                       const Text(
                                         "Don't have an account? ",
-                                        style: TextStyle(
-                                          color: Colors.white70,
-                                        ),
+                                        style: TextStyle(color: Colors.white70),
                                       ),
                                       TextButton(
                                         onPressed: () =>

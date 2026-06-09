@@ -36,29 +36,40 @@ final cachedTribeStatsProvider = StreamProvider.family<TribeStats, String>((
   StreamSubscription<TribeStatsTableData?>? localSub;
   StreamSubscription<DocumentSnapshot>? remoteSub;
 
-  void emitMerged(TribeStatsTableData? localRow, Map<String, dynamic>? remoteData) {
+  void emitMerged(
+    TribeStatsTableData? localRow,
+    Map<String, dynamic>? remoteData,
+  ) {
     final localTotalXp = localRow?.totalXp ?? 0;
     final remoteTotalXp = remoteData?['totalXp'] as int? ?? 0;
     final localHabits = localRow?.totalHabitsCompleted ?? 0;
     final remoteHabits = remoteData?['totalHabitsCompleted'] as int? ?? 0;
     final localChallenges = localRow?.totalChallengesCompleted ?? 0;
-    final remoteChallenges = remoteData?['totalChallengesCompleted'] as int? ?? 0;
+    final remoteChallenges =
+        remoteData?['totalChallengesCompleted'] as int? ?? 0;
     // memberCount can decrease (leave tribe) so use remote if available
-    final memberCount = remoteData?['memberCount'] as int? ?? localRow?.memberCount ?? 0;
+    final memberCount =
+        remoteData?['memberCount'] as int? ?? localRow?.memberCount ?? 0;
     // XP/habits/challenges are monotonic — take the higher value so
     // locally-completed habits are shown immediately, not overridden by
     // stale Firestore data during the async sync window.
     final totalXp = localTotalXp > remoteTotalXp ? localTotalXp : remoteTotalXp;
-    final totalHabitsCompleted = localHabits > remoteHabits ? localHabits : remoteHabits;
-    final totalChallengesCompleted = localChallenges > remoteChallenges ? localChallenges : remoteChallenges;
+    final totalHabitsCompleted = localHabits > remoteHabits
+        ? localHabits
+        : remoteHabits;
+    final totalChallengesCompleted = localChallenges > remoteChallenges
+        ? localChallenges
+        : remoteChallenges;
 
     if (!controller.isClosed) {
-      controller.add(TribeStats(
-        memberCount: memberCount,
-        totalXp: totalXp,
-        totalHabitsCompleted: totalHabitsCompleted,
-        totalChallengesCompleted: totalChallengesCompleted,
-      ));
+      controller.add(
+        TribeStats(
+          memberCount: memberCount,
+          totalXp: totalXp,
+          totalHabitsCompleted: totalHabitsCompleted,
+          totalChallengesCompleted: totalChallengesCompleted,
+        ),
+      );
     }
   }
 
@@ -67,23 +78,19 @@ final cachedTribeStatsProvider = StreamProvider.family<TribeStats, String>((
   var localReady = false;
   var remoteReady = false;
 
-  localSub = dao.watchStats(tribeId).listen(
-    (row) {
-      localRow = row;
-      localReady = true;
-      if (remoteReady) emitMerged(localRow, remoteData);
-    },
-    onError: controller.addError,
-  );
+  localSub = dao.watchStats(tribeId).listen((row) {
+    localRow = row;
+    localReady = true;
+    if (remoteReady) emitMerged(localRow, remoteData);
+  }, onError: controller.addError);
 
-  remoteSub = firestore.collection('tribes').doc(tribeId).snapshots().listen(
-    (snapshot) {
-      remoteData = snapshot.data();
-      remoteReady = true;
-      if (localReady) emitMerged(localRow, remoteData);
-    },
-    onError: controller.addError,
-  );
+  remoteSub = firestore.collection('tribes').doc(tribeId).snapshots().listen((
+    snapshot,
+  ) {
+    remoteData = snapshot.data();
+    remoteReady = true;
+    if (localReady) emitMerged(localRow, remoteData);
+  }, onError: controller.addError);
 
   controller.onCancel = () {
     localSub?.cancel();

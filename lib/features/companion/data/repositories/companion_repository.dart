@@ -5,9 +5,7 @@ class CompanionRepository {
   static const _keyLastCheckin = 'companion_last_checkin';
 
   static SharedPreferences? _prefs;
-  static final Map<String, Object> _fallback = {
-    _keyCompanionEnabled: true,
-  };
+  static final Map<String, Object> _fallback = {_keyCompanionEnabled: true};
 
   Future<void> init() async {
     if (_prefs != null) return;
@@ -21,7 +19,8 @@ class CompanionRepository {
   }
 
   String _getString(String key, {String defaultValue = ''}) {
-    return _prefs?.getString(key) ?? (_fallback[key] as String? ?? defaultValue);
+    return _prefs?.getString(key) ??
+        (_fallback[key] as String? ?? defaultValue);
   }
 
   Set<String> _getKeys() => _prefs?.getKeys() ?? _fallback.keys.toSet();
@@ -89,7 +88,8 @@ class CompanionRepository {
 
   // --- Companion enabled ---
 
-  bool isCompanionEnabled() => _getBool(_keyCompanionEnabled, defaultValue: true);
+  bool isCompanionEnabled() =>
+      _getBool(_keyCompanionEnabled, defaultValue: true);
 
   Future<void> setCompanionEnabled(bool enabled) async {
     await _setBool(_keyCompanionEnabled, enabled);

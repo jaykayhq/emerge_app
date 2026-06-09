@@ -22,13 +22,17 @@ void main() {
 
       final habits = [
         Habit(
-          id: 'h1', userId: 'u1', title: 'Walk 8000 steps',
+          id: 'h1',
+          userId: 'u1',
+          title: 'Walk 8000 steps',
           createdAt: DateTime.now(),
           integrationType: HabitIntegrationType.healthSteps,
           integrationTarget: 8000,
         ),
         Habit(
-          id: 'h2', userId: 'u1', title: 'Walk 20000 steps',
+          id: 'h2',
+          userId: 'u1',
+          title: 'Walk 20000 steps',
           createdAt: DateTime.now(),
           integrationType: HabitIntegrationType.healthSteps,
           integrationTarget: 20000,
@@ -45,7 +49,9 @@ void main() {
 
       final habits = [
         Habit(
-          id: 'h3', userId: 'u1', title: 'Limit screen to 60 min',
+          id: 'h3',
+          userId: 'u1',
+          title: 'Limit screen to 60 min',
           createdAt: DateTime.now(),
           integrationType: HabitIntegrationType.screenTimeLimit,
           integrationTarget: 60,
@@ -62,7 +68,9 @@ void main() {
 
       final habits = [
         Habit(
-          id: 'h4', userId: 'u1', title: 'Walk 8000 steps',
+          id: 'h4',
+          userId: 'u1',
+          title: 'Walk 8000 steps',
           createdAt: DateTime.now(),
           lastCompletedDate: DateTime.now(),
           integrationType: HabitIntegrationType.healthSteps,
@@ -80,7 +88,9 @@ void main() {
 
       final habits = [
         Habit(
-          id: 'h5', userId: 'u1', title: 'Read a book',
+          id: 'h5',
+          userId: 'u1',
+          title: 'Read a book',
           createdAt: DateTime.now(),
           integrationType: HabitIntegrationType.none,
         ),

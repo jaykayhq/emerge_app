@@ -69,10 +69,9 @@ class CompanionEngine extends Notifier<CompanionState> {
   CompanionRepository get _repository => ref.read(companionRepositoryProvider);
 
   PersonaConfig? _loadPersona() {
-    final profile = ref.read(userStatsStreamProvider).maybeWhen(
-      data: (p) => p,
-      orElse: () => null,
-    );
+    final profile = ref
+        .read(userStatsStreamProvider)
+        .maybeWhen(data: (p) => p, orElse: () => null);
     final archetype = profile?.archetype.name.toLowerCase() ?? '';
     if (archetype.isEmpty) return null;
     return PersonaEngine.getPersona(archetype);
@@ -105,12 +104,12 @@ class CompanionEngine extends Notifier<CompanionState> {
     final archetype = persona.name.toLowerCase().contains('coach')
         ? 'athlete'
         : persona.name.toLowerCase().contains('sage')
-            ? 'scholar'
-            : persona.name.toLowerCase().contains('muse')
-                ? 'creator'
-                : persona.name.toLowerCase().contains('philosopher')
-                    ? 'stoic'
-                    : 'zealot';
+        ? 'scholar'
+        : persona.name.toLowerCase().contains('muse')
+        ? 'creator'
+        : persona.name.toLowerCase().contains('philosopher')
+        ? 'stoic'
+        : 'zealot';
 
     final result = await _groqService.getCompanionMessage(
       archetype: archetype,
@@ -167,9 +166,7 @@ final companionRepositoryProvider = Provider<CompanionRepository>((ref) {
 });
 
 final companionEngineProvider =
-    NotifierProvider<CompanionEngine, CompanionState>(
-      CompanionEngine.new,
-    );
+    NotifierProvider<CompanionEngine, CompanionState>(CompanionEngine.new);
 
 final companionPersonaProvider = Provider<PersonaConfig?>((ref) {
   return ref.watch(companionEngineProvider.select((s) => s.persona));

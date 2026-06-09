@@ -56,50 +56,52 @@ void main() {
   });
 
   group('DriftTribeRepository', () {
+    test(
+      'joinClub() calls enqueueSet for user tribes and tribe contributors',
+      () async {
+        await db.tribeStatsDao.upsertStats(
+          TribeStatsTableCompanion(
+            tribeId: Value(tribeId),
+            tribeName: Value('Athletes'),
+            archetypeId: Value('athlete'),
+            memberCount: Value(0),
+            totalXp: Value(0),
+            totalHabitsCompleted: Value(0),
+            totalChallengesCompleted: Value(0),
+            userContributionXp: Value(0),
+            userHabitsCompleted: Value(0),
+            userChallengesCompleted: Value(0),
+            updatedAt: Value(DateTime.now().toIso8601String()),
+          ),
+        );
 
-    test('joinClub() calls enqueueSet for user tribes and tribe contributors', () async {
-      await db.tribeStatsDao.upsertStats(
-        TribeStatsTableCompanion(
-          tribeId: Value(tribeId),
-          tribeName: Value('Athletes'),
-          archetypeId: Value('athlete'),
-          memberCount: Value(0),
-          totalXp: Value(0),
-          totalHabitsCompleted: Value(0),
-          totalChallengesCompleted: Value(0),
-          userContributionXp: Value(0),
-          userHabitsCompleted: Value(0),
-          userChallengesCompleted: Value(0),
-          updatedAt: Value(DateTime.now().toIso8601String()),
-        ),
-      );
+        await repository.joinClub(userId, tribeId);
 
-      await repository.joinClub(userId, tribeId);
+        verify(
+          () => mockSyncEngine.enqueueSet(
+            collectionPath: 'users/$userId/tribes',
+            documentId: tribeId,
+            data: any(named: 'data'),
+          ),
+        ).called(1);
 
-      verify(
-        () => mockSyncEngine.enqueueSet(
-          collectionPath: 'users/$userId/tribes',
-          documentId: tribeId,
-          data: any(named: 'data'),
-        ),
-      ).called(1);
+        verify(
+          () => mockSyncEngine.enqueueSet(
+            collectionPath: 'tribes/$tribeId/contributors',
+            documentId: userId,
+            data: any(named: 'data'),
+          ),
+        ).called(1);
 
-      verify(
-        () => mockSyncEngine.enqueueSet(
-          collectionPath: 'tribes/$tribeId/contributors',
-          documentId: userId,
-          data: any(named: 'data'),
-        ),
-      ).called(1);
-
-      verify(
-        () => mockSyncEngine.enqueueUpdate(
-          collectionPath: 'tribes',
-          documentId: tribeId,
-          data: any(named: 'data'),
-        ),
-      ).called(1);
-    });
+        verify(
+          () => mockSyncEngine.enqueueUpdate(
+            collectionPath: 'tribes',
+            documentId: tribeId,
+            data: any(named: 'data'),
+          ),
+        ).called(1);
+      },
+    );
 
     test('joinClub() increments member count in tribe stats', () async {
       await db.tribeStatsDao.upsertStats(

@@ -601,7 +601,9 @@ class _HabitDetailScreenState extends ConsumerState<HabitDetailScreen> {
                           color: Colors.black.withValues(alpha: 0.2),
                           borderRadius: BorderRadius.circular(12),
                           border: Border.all(
-                            color: AppTheme.textSecondaryDark.withValues(alpha: 0.3),
+                            color: AppTheme.textSecondaryDark.withValues(
+                              alpha: 0.3,
+                            ),
                           ),
                         ),
                         child: DropdownButtonFormField<HabitIntegrationType>(
@@ -618,14 +620,20 @@ class _HabitDetailScreenState extends ConsumerState<HabitDetailScreen> {
                               value: HabitIntegrationType.none,
                               child: Text(
                                 'None',
-                                style: TextStyle(color: AppTheme.textSecondaryDark),
+                                style: TextStyle(
+                                  color: AppTheme.textSecondaryDark,
+                                ),
                               ),
                             ),
                             DropdownMenuItem(
                               value: HabitIntegrationType.healthSteps,
                               child: const Row(
                                 children: [
-                                  Icon(Icons.directions_walk, size: 16, color: EmergeColors.teal),
+                                  Icon(
+                                    Icons.directions_walk,
+                                    size: 16,
+                                    color: EmergeColors.teal,
+                                  ),
                                   SizedBox(width: 8),
                                   Text('Health Steps'),
                                 ],
@@ -635,7 +643,11 @@ class _HabitDetailScreenState extends ConsumerState<HabitDetailScreen> {
                               value: HabitIntegrationType.screenTimeLimit,
                               child: const Row(
                                 children: [
-                                  Icon(Icons.phone_android, size: 16, color: EmergeColors.teal),
+                                  Icon(
+                                    Icons.phone_android,
+                                    size: 16,
+                                    color: EmergeColors.teal,
+                                  ),
                                   SizedBox(width: 8),
                                   Text('Screen Time Limit'),
                                 ],
@@ -644,7 +656,8 @@ class _HabitDetailScreenState extends ConsumerState<HabitDetailScreen> {
                           ],
                           onChanged: (value) {
                             setState(() {
-                              _integrationType = value ?? HabitIntegrationType.none;
+                              _integrationType =
+                                  value ?? HabitIntegrationType.none;
                               _hasChanges = true;
                             });
                           },
@@ -663,35 +676,48 @@ class _HabitDetailScreenState extends ConsumerState<HabitDetailScreen> {
                             });
                           },
                           decoration: InputDecoration(
-                            helperText: _integrationType == HabitIntegrationType.healthSteps
+                            helperText:
+                                _integrationType ==
+                                    HabitIntegrationType.healthSteps
                                 ? 'Daily step goal (e.g., 8000)'
                                 : 'Daily screen time limit in minutes (e.g., 120)',
                             helperStyle: TextStyle(
-                              color: AppTheme.textSecondaryDark.withValues(alpha: 0.5),
+                              color: AppTheme.textSecondaryDark.withValues(
+                                alpha: 0.5,
+                              ),
                             ),
                             prefixIcon: Icon(
-                              _integrationType == HabitIntegrationType.healthSteps
+                              _integrationType ==
+                                      HabitIntegrationType.healthSteps
                                   ? Icons.flag_outlined
                                   : Icons.timer_outlined,
                               color: EmergeColors.teal,
                               size: 20,
                             ),
-                            hintText: _integrationType == HabitIntegrationType.healthSteps
+                            hintText:
+                                _integrationType ==
+                                    HabitIntegrationType.healthSteps
                                 ? 'e.g., 8000 steps'
                                 : 'e.g., 120 minutes',
                             hintStyle: TextStyle(
-                              color: AppTheme.textSecondaryDark.withValues(alpha: 0.5),
+                              color: AppTheme.textSecondaryDark.withValues(
+                                alpha: 0.5,
+                              ),
                             ),
                             border: InputBorder.none,
                             enabledBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(12),
                               borderSide: BorderSide(
-                                color: AppTheme.textSecondaryDark.withValues(alpha: 0.3),
+                                color: AppTheme.textSecondaryDark.withValues(
+                                  alpha: 0.3,
+                                ),
                               ),
                             ),
                             focusedBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(12),
-                              borderSide: const BorderSide(color: EmergeColors.teal),
+                              borderSide: const BorderSide(
+                                color: EmergeColors.teal,
+                              ),
                             ),
                             filled: true,
                             fillColor: Colors.black.withValues(alpha: 0.2),

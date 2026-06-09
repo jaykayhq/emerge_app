@@ -29,10 +29,10 @@ class PatternRecognitionService {
 
     completionsByHabit.forEach((habitId, dates) {
       dates.sort(); // Oldest to newest
-      
+
       int last7DaysCount = 0;
       int previous7DaysCount = 0;
-      
+
       for (final date in dates) {
         final diff = now.difference(date).inDays;
         // Looking at past 14 days
@@ -42,11 +42,12 @@ class PatternRecognitionService {
           previous7DaysCount++;
         }
       }
-      
+
       String velocity = 'steady';
       if (last7DaysCount > previous7DaysCount) {
         velocity = 'accelerating';
-      } else if (last7DaysCount < previous7DaysCount && previous7DaysCount > 0) {
+      } else if (last7DaysCount < previous7DaysCount &&
+          previous7DaysCount > 0) {
         velocity = 'dropping off';
       }
 

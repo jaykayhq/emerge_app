@@ -33,10 +33,12 @@ class _AiReflectionsScreenState extends ConsumerState<AiReflectionsScreen> {
       final repo = ref.read(companionRepositoryProvider);
       if (!repo.hasVisited('/profile/reflections')) {
         repo.markVisited('/profile/reflections');
-        ref.read(companionEngineProvider.notifier).triggerEvent(
-          eventType: CompanionEventType.firstFeatureVisit,
-          userContext: {'route': '/profile/reflections'},
-        );
+        ref
+            .read(companionEngineProvider.notifier)
+            .triggerEvent(
+              eventType: CompanionEventType.firstFeatureVisit,
+              userContext: {'route': '/profile/reflections'},
+            );
       }
     });
   }
@@ -69,9 +71,14 @@ class _AiReflectionsScreenState extends ConsumerState<AiReflectionsScreen> {
                                     .read(userStatsStreamProvider)
                                     .value
                                     ?.dominantMotive,
-                                archetype: IdentityEngine.calculateDominantArchetype(
-                                        ref.read(userStatsStreamProvider).value?.identityVotes ?? {},
-                                      ).name,
+                                archetype:
+                                    IdentityEngine.calculateDominantArchetype(
+                                      ref
+                                              .read(userStatsStreamProvider)
+                                              .value
+                                              ?.identityVotes ??
+                                          {},
+                                    ).name,
                               ),
                           ref
                               .read(aiPersonalizationServiceProvider)
@@ -81,9 +88,14 @@ class _AiReflectionsScreenState extends ConsumerState<AiReflectionsScreen> {
                                     .read(userStatsStreamProvider)
                                     .value
                                     ?.dominantMotive,
-                                archetype: IdentityEngine.calculateDominantArchetype(
-                                        ref.read(userStatsStreamProvider).value?.identityVotes ?? {},
-                                      ).name,
+                                archetype:
+                                    IdentityEngine.calculateDominantArchetype(
+                                      ref
+                                              .read(userStatsStreamProvider)
+                                              .value
+                                              ?.identityVotes ??
+                                          {},
+                                    ).name,
                               ),
                         ]),
                         builder: (context, snapshot) {

@@ -183,7 +183,11 @@ class NodeQuestDialog extends StatelessWidget {
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(Icons.lock_outline, size: 16, color: Colors.white.withValues(alpha: 0.5)),
+              Icon(
+                Icons.lock_outline,
+                size: 16,
+                color: Colors.white.withValues(alpha: 0.5),
+              ),
               const SizedBox(width: 6),
               Text(
                 'LOCKED (LVL ${node.requiredLevel})',
@@ -250,5 +254,4 @@ class NodeQuestDialog extends StatelessWidget {
         return Colors.amber;
     }
   }
-
 }

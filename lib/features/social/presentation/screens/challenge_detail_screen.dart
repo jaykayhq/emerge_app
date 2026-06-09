@@ -58,7 +58,10 @@ class ChallengeDetailScreen extends ConsumerWidget {
         }
 
         final availableDay = challenge.joinedAt != null
-            ? DateTime.now().difference(challenge.joinedAt!).inDays.clamp(0, challenge.totalDays - 1)
+            ? DateTime.now()
+                  .difference(challenge.joinedAt!)
+                  .inDays
+                  .clamp(0, challenge.totalDays - 1)
             : challenge.currentDay;
 
         final progress = challenge.totalDays > 0
@@ -90,36 +93,37 @@ class ChallengeDetailScreen extends ConsumerWidget {
                           children: [
                             Hero(
                               tag: 'challenge_image_${challenge.id}',
-                              child: (challenge.imageUrl.startsWith('images/') ||
-                                      challenge.imageUrl.startsWith(
-                                        'assets/images/',
-                                      )
-                                  ? Image.asset(
-                                      challenge.imageUrl,
-                                      fit: BoxFit.cover,
-                                    )
-                                  : Image.network(
-                                      challenge.imageUrl,
-                                      fit: BoxFit.cover,
-                                      errorBuilder:
-                                          (
-                                            context,
-                                            error,
-                                            stackTrace,
-                                          ) => Container(
-                                            color: AppTheme.surfaceDark,
-                                            child: const Center(
-                                              child: Icon(
-                                                Icons
-                                                    .image_not_supported_outlined,
-                                                size: 48,
-                                                color: Colors.white24,
-                                              ),
-                                            ),
-                                          ),
-                                    ))
-                                .animate()
-                                .fadeIn(duration: 600.ms),
+                              child:
+                                  (challenge.imageUrl.startsWith('images/') ||
+                                              challenge.imageUrl.startsWith(
+                                                'assets/images/',
+                                              )
+                                          ? Image.asset(
+                                              challenge.imageUrl,
+                                              fit: BoxFit.cover,
+                                            )
+                                          : Image.network(
+                                              challenge.imageUrl,
+                                              fit: BoxFit.cover,
+                                              errorBuilder:
+                                                  (
+                                                    context,
+                                                    error,
+                                                    stackTrace,
+                                                  ) => Container(
+                                                    color: AppTheme.surfaceDark,
+                                                    child: const Center(
+                                                      child: Icon(
+                                                        Icons
+                                                            .image_not_supported_outlined,
+                                                        size: 48,
+                                                        color: Colors.white24,
+                                                      ),
+                                                    ),
+                                                  ),
+                                            ))
+                                      .animate()
+                                      .fadeIn(duration: 600.ms),
                             ),
                             // Cinematic Gradient Overlay
                             Container(
@@ -368,117 +372,125 @@ class ChallengeDetailScreen extends ConsumerWidget {
                           final isAccessible = step.day <= availableDay;
 
                           return IntrinsicHeight(
-                            child: Row(
-                              crossAxisAlignment: CrossAxisAlignment.stretch,
-                              children: [
-                                // Progress Line
-                                Column(
+                                child: Row(
+                                  crossAxisAlignment:
+                                      CrossAxisAlignment.stretch,
                                   children: [
-                                    Container(
-                                      width: 24,
-                                      height: 24,
-                                      decoration: BoxDecoration(
-                                        shape: BoxShape.circle,
-                                        color: isCompleted
-                                            ? AppTheme.primary
-                                            : isCurrent
-                                            ? AppTheme.primary.withValues(
-                                                alpha: 0.2,
-                                              )
-                                            : Colors.white.withValues(
-                                                alpha: 0.1,
-                                              ),
-                                        border: isCurrent
-                                            ? Border.all(
-                                                color: AppTheme.primary,
-                                                width: 2,
-                                              )
-                                            : null,
-                                        boxShadow: isCompleted
-                                            ? [
-                                                BoxShadow(
-                                                  color: AppTheme.primary
-                                                      .withValues(alpha: 0.3),
-                                                  blurRadius: 8,
-                                                ),
-                                              ]
-                                            : [],
-                                      ),
-                                      child: isCompleted
-                                          ? const Icon(
-                                              Icons.check,
-                                              size: 14,
-                                              color: Colors.black,
-                                            )
-                                          : Center(
-                                              child: Text(
-                                                '${step.day}',
-                                                style: TextStyle(
-                                                  fontSize: 10,
-                                                  fontWeight: FontWeight.bold,
-                                                  color: isCurrent
-                                                      ? AppTheme.primary
-                                                      : Colors.white24,
-                                                ),
-                                              ),
-                                            ),
-                                    ),
-                                    if (index < challenge.steps.length - 1)
-                                      Expanded(
-                                        child: Container(
-                                          width: 2,
-                                          color: isCompleted
-                                              ? AppTheme.primary.withValues(
-                                                  alpha: 0.5,
+                                    // Progress Line
+                                    Column(
+                                      children: [
+                                        Container(
+                                          width: 24,
+                                          height: 24,
+                                          decoration: BoxDecoration(
+                                            shape: BoxShape.circle,
+                                            color: isCompleted
+                                                ? AppTheme.primary
+                                                : isCurrent
+                                                ? AppTheme.primary.withValues(
+                                                    alpha: 0.2,
+                                                  )
+                                                : Colors.white.withValues(
+                                                    alpha: 0.1,
+                                                  ),
+                                            border: isCurrent
+                                                ? Border.all(
+                                                    color: AppTheme.primary,
+                                                    width: 2,
+                                                  )
+                                                : null,
+                                            boxShadow: isCompleted
+                                                ? [
+                                                    BoxShadow(
+                                                      color: AppTheme.primary
+                                                          .withValues(
+                                                            alpha: 0.3,
+                                                          ),
+                                                      blurRadius: 8,
+                                                    ),
+                                                  ]
+                                                : [],
+                                          ),
+                                          child: isCompleted
+                                              ? const Icon(
+                                                  Icons.check,
+                                                  size: 14,
+                                                  color: Colors.black,
                                                 )
-                                              : Colors.white.withValues(
-                                                  alpha: 0.05,
+                                              : Center(
+                                                  child: Text(
+                                                    '${step.day}',
+                                                    style: TextStyle(
+                                                      fontSize: 10,
+                                                      fontWeight:
+                                                          FontWeight.bold,
+                                                      color: isCurrent
+                                                          ? AppTheme.primary
+                                                          : Colors.white24,
+                                                    ),
+                                                  ),
                                                 ),
                                         ),
-                                      ),
-                                  ],
-                                ),
-                                const Gap(20),
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        step.title,
-                                        style: TextStyle(
-                                          color: isCompleted
-                                              ? Colors.white
-                                              : isAccessible
+                                        if (index < challenge.steps.length - 1)
+                                          Expanded(
+                                            child: Container(
+                                              width: 2,
+                                              color: isCompleted
+                                                  ? AppTheme.primary.withValues(
+                                                      alpha: 0.5,
+                                                    )
+                                                  : Colors.white.withValues(
+                                                      alpha: 0.05,
+                                                    ),
+                                            ),
+                                          ),
+                                      ],
+                                    ),
+                                    const Gap(20),
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            step.title,
+                                            style: TextStyle(
+                                              color: isCompleted
+                                                  ? Colors.white
+                                                  : isAccessible
                                                   ? Colors.white.withValues(
                                                       alpha: 0.6,
                                                     )
                                                   : Colors.white.withValues(
                                                       alpha: 0.2,
                                                     ),
-                                          fontSize: 16,
-                                          fontWeight: isCurrent || isCompleted
-                                              ? FontWeight.bold
-                                              : FontWeight.normal,
-                                        ),
-                                      ),
-                                      const Gap(4),
-                                      Text(
-                                        step.description,
-                                        style: TextStyle(
-                                          color: Colors.white.withValues(
-                                            alpha: 0.3,
+                                              fontSize: 16,
+                                              fontWeight:
+                                                  isCurrent || isCompleted
+                                                  ? FontWeight.bold
+                                                  : FontWeight.normal,
+                                            ),
                                           ),
-                                          fontSize: 13,
-                                        ),
+                                          const Gap(4),
+                                          Text(
+                                            step.description,
+                                            style: TextStyle(
+                                              color: Colors.white.withValues(
+                                                alpha: 0.3,
+                                              ),
+                                              fontSize: 13,
+                                            ),
+                                          ),
+                                          const Gap(24),
+                                        ],
                                       ),
-                                      const Gap(24),
-                                    ],
-                                  ),
+                                    ),
+                                  ],
                                 ),
-                              ],
-                            ),
-                          ).animate(delay: (800 + index * 80).ms).fadeIn().slideX(begin: 0.03);
+                              )
+                              .animate(delay: (800 + index * 80).ms)
+                              .fadeIn()
+                              .slideX(begin: 0.03);
                         }, childCount: challenge.steps.length),
                       ),
                     ),
@@ -491,10 +503,11 @@ class ChallengeDetailScreen extends ConsumerWidget {
                   bottom: 32,
                   left: 24,
                   right: 24,
-                  child: _buildActionButton(context, ref, challenge)
-                      .animate(delay: 1000.ms)
-                      .fadeIn()
-                      .slideY(begin: 0.08),
+                  child: _buildActionButton(
+                    context,
+                    ref,
+                    challenge,
+                  ).animate(delay: 1000.ms).fadeIn().slideY(begin: 0.08),
                 ),
               ],
             ),
@@ -583,18 +596,17 @@ class ChallengeDetailScreen extends ConsumerWidget {
 
           final repo = ref.read(challengeRepositoryProvider);
           final result = await repo.joinChallenge(user.id, challenge.id);
-          result.fold(
-            (failure) => _showError(screenContext, failure.message),
-            (_) async {
-              ref.invalidate(userChallengesProvider);
-              ref.invalidate(archetypeChallengesProvider);
-              ref.invalidate(challengeBundleProvider);
-              if (screenContext.mounted) {
-                _showSuccess(screenContext, 'QUEST STARTED! (+25 XP)');
-                screenContext.go('/tribes/challenges');
-              }
-            },
-          );
+          result.fold((failure) => _showError(screenContext, failure.message), (
+            _,
+          ) async {
+            ref.invalidate(userChallengesProvider);
+            ref.invalidate(archetypeChallengesProvider);
+            ref.invalidate(challengeBundleProvider);
+            if (screenContext.mounted) {
+              _showSuccess(screenContext, 'QUEST STARTED! (+25 XP)');
+              screenContext.go('/tribes/challenges');
+            }
+          });
         },
       ),
     );
@@ -614,23 +626,20 @@ class ChallengeDetailScreen extends ConsumerWidget {
       challenge.id,
       newProgress,
     );
-    result.fold(
-      (failure) => _showError(screenContext, failure.message),
-      (_) {
-        ref.invalidate(userChallengesProvider);
-        ref.invalidate(challengeBundleProvider);
-        ref.invalidate(userStatsStreamProvider);
-        ref.invalidate(recapRefreshCounterProvider);
-        final isCompleted = newProgress >= challenge.totalDays;
-        _showSuccess(
-          screenContext,
-          isCompleted
-              ? 'QUEST COMPLETE! (+${challenge.xpReward} XP)'
-              : 'PROGRESS SAVED!',
-        );
-        screenContext.pop();
-      },
-    );
+    result.fold((failure) => _showError(screenContext, failure.message), (_) {
+      ref.invalidate(userChallengesProvider);
+      ref.invalidate(challengeBundleProvider);
+      ref.invalidate(userStatsStreamProvider);
+      ref.invalidate(recapRefreshCounterProvider);
+      final isCompleted = newProgress >= challenge.totalDays;
+      _showSuccess(
+        screenContext,
+        isCompleted
+            ? 'QUEST COMPLETE! (+${challenge.xpReward} XP)'
+            : 'PROGRESS SAVED!',
+      );
+      screenContext.pop();
+    });
   }
 
   void _showError(BuildContext context, String message) {
