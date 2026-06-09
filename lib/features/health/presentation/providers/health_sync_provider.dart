@@ -1,5 +1,10 @@
 import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:emerge_app/features/health/data/services/health_auto_complete_service.dart';
+import 'package:emerge_app/features/health/data/repositories/health_repository_impl.dart';
+import 'package:emerge_app/features/health/data/services/health_connect_service.dart';
+import 'package:emerge_app/features/health/data/services/screen_time_service.dart';
+import 'package:emerge_app/features/habits/presentation/providers/habit_providers.dart';
 
 final healthSyncProvider = NotifierProvider<HealthSyncNotifier, bool>(
   HealthSyncNotifier.new,
@@ -30,6 +35,25 @@ class HealthSyncNotifier extends Notifier<bool> {
   }
 
   Future<void> _syncHealthData() async {
-    // Will be wired to auto-complete in Task 10
+    try {
+      final healthService = HealthConnectService();
+      final screenTimeService = ScreenTimeService();
+      final repository = HealthRepositoryImpl(
+        healthService: healthService,
+        screenTimeService: screenTimeService,
+      );
+      final autoComplete = HealthAutoCompleteService(
+        healthRepository: repository,
+      );
+
+      final habits = await ref.read(habitsProvider.future);
+      final ids = await autoComplete.getHabitIdsToAutoComplete(habits);
+
+      for (final id in ids) {
+        await ref.read(completeHabitProvider(id).future);
+      }
+    } catch (_) {
+      // Health sync is best-effort — silently handle errors
+    }
   }
 }
