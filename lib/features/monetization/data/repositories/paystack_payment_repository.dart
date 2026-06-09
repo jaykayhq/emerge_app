@@ -1,4 +1,5 @@
 import 'package:cloud_functions/cloud_functions.dart';
+
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:logger/logger.dart';
 
@@ -49,8 +50,6 @@ class PaystackPaymentRepository {
 }
 
 @riverpod
-PaystackPaymentRepository paystackPaymentRepository(
-  PaystackPaymentRepositoryRef ref,
-) {
+PaystackPaymentRepository paystackPaymentRepository(Ref ref) {
   return PaystackPaymentRepository(FirebaseFunctions.instance);
 }
