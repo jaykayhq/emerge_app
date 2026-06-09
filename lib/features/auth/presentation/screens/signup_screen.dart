@@ -15,6 +15,7 @@ import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:emerge_app/core/theme/emerge_colors.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 
 class SignUpScreen extends ConsumerStatefulWidget {
   const SignUpScreen({super.key});
@@ -258,27 +259,30 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
                     mainAxisAlignment: MainAxisAlignment.center,
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      // Logo
-                      const Center(child: EmergeAppIcon(size: 64)),
-                      const Gap(24),
-
-                      Text(
-                        'Begin Your Quest',
-                        style: Theme.of(context).textTheme.headlineMedium
-                            ?.copyWith(
-                              color: AppTheme.textMainDark,
-                              fontWeight: FontWeight.bold,
+                      // Logo / Branding
+                      Column(
+                        children: [
+                          const Center(child: EmergeAppIcon(size: 64)),
+                          const Gap(24),
+                          Text(
+                            'Begin Your Quest',
+                            style: Theme.of(context).textTheme.headlineMedium
+                                ?.copyWith(
+                                  color: AppTheme.textMainDark,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                            textAlign: TextAlign.center,
+                          ),
+                          const Gap(8),
+                          Text(
+                            'Create your character and start your journey.',
+                            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                              color: AppTheme.textSecondaryDark,
                             ),
-                        textAlign: TextAlign.center,
-                      ),
-                      const Gap(8),
-                      Text(
-                        'Create your character and start your journey.',
-                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: AppTheme.textSecondaryDark,
-                        ),
-                        textAlign: TextAlign.center,
-                      ),
+                            textAlign: TextAlign.center,
+                          ),
+                        ],
+                      ).animate(delay: 0.ms).fadeIn().slideY(begin: -0.05),
                       const Gap(32),
 
                       // Username Field
@@ -310,7 +314,7 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
                           ),
                         ),
                         validator: AppValidators.validateUsername,
-                      ),
+                      ).animate(delay: 150.ms).fadeIn().slideX(begin: 0.02),
                       const Gap(16),
 
                       // Email Field
@@ -342,7 +346,7 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
                           ),
                         ),
                         validator: AppValidators.validateEmail,
-                      ),
+                      ).animate(delay: 250.ms).fadeIn().slideX(begin: 0.02),
                       const Gap(16),
 
                       // Password Field
@@ -388,7 +392,7 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
                           ),
                         ),
                         validator: AppValidators.validatePassword,
-                      ),
+                      ).animate(delay: 350.ms).fadeIn().slideX(begin: 0.02),
                       const Gap(16),
 
                       // Confirm Password Field
@@ -439,7 +443,7 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
                               value,
                               _passwordController.text,
                             ),
-                      ),
+                      ).animate(delay: 450.ms).fadeIn().slideX(begin: 0.02),
                       const Gap(24),
 
                       // Sign Up Button
@@ -480,13 +484,13 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
                                   'Sign Up',
                                   style: TextStyle(
                                     fontWeight: FontWeight.bold,
-                                    color: Colors
-                                        .black, // Dark text on bright gradient
-                                    fontSize: 16,
-                                  ),
+                              color: Colors
+                                  .black, // Dark text on bright gradient
+                                  fontSize: 16,
                                 ),
+                              ),
                         ),
-                      ),
+                      ).animate(delay: 550.ms).fadeIn().scale(begin: const Offset(0.97, 0.97)),
                       const Gap(16),
 
                       // Google Sign Up
@@ -631,12 +635,12 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
                                     ?.copyWith(
                                       color: AppTheme.textSecondaryDark,
                                     ),
-                                textAlign: TextAlign.center,
-                              ),
-                            ],
-                          ),
-                        ),
-                        VerticalDivider(width: 64, color: EmergeColors.hexLine),
+                              textAlign: TextAlign.center,
+                            ),
+                          ],
+                        ).animate(delay: 0.ms).fadeIn().slideY(begin: -0.05),
+                      ),
+                      VerticalDivider(width: 64, color: EmergeColors.hexLine),
                         // ... (Repeat form logic for tablet if needed, or refactor to reuse widget.
                         // For brevity, I'll direct user to the mobile form widget or just duplicate standard fields)
                         // Note: To keep this clean, I'll copy the fields logic but usually I'd extract a widget.
@@ -701,7 +705,7 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
                                       ),
                                     ),
                                     validator: AppValidators.validateUsername,
-                                  ),
+                                  ).animate(delay: 150.ms).fadeIn().slideX(begin: 0.02),
                                   const Gap(16),
                                   // Email
                                   TextFormField(
@@ -737,7 +741,7 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
                                       ),
                                     ),
                                     validator: AppValidators.validateEmail,
-                                  ),
+                                  ).animate(delay: 250.ms).fadeIn().slideX(begin: 0.02),
                                   const Gap(16),
                                   // Password
                                   TextFormField(
@@ -774,7 +778,7 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
                                       ),
                                     ),
                                     validator: AppValidators.validatePassword,
-                                  ),
+                                  ).animate(delay: 350.ms).fadeIn().slideX(begin: 0.02),
                                   const Gap(16),
                                   // Confirm
                                   TextFormField(
@@ -815,7 +819,7 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
                                           value,
                                           _passwordController.text,
                                         ),
-                                  ),
+                                  ).animate(delay: 450.ms).fadeIn().slideX(begin: 0.02),
                                   const Gap(24),
                                   // Button
                                   Container(
@@ -849,7 +853,7 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
                                               ),
                                             ),
                                     ),
-                                  ),
+                                  ).animate(delay: 550.ms).fadeIn().scale(begin: const Offset(0.97, 0.97)),
                                   const Gap(16),
                                   // Google Sign Up
                                   OutlinedButton.icon(

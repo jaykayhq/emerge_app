@@ -11,6 +11,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:emerge_app/core/theme/emerge_colors.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
@@ -153,26 +154,30 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
+                      children: [
                       // Logo / Branding
-                      Center(child: EmergeAppIcon(size: 80)),
-                      const Gap(16),
-                      Text(
-                        'Emerge',
-                        style: GoogleFonts.poppins(
-                          textStyle: theme.textTheme.displayMedium,
-                          color: Colors.white,
-                        ),
-                        textAlign: TextAlign.center,
-                      ),
-                      Text(
-                        'Become who you are.',
-                        style: theme.textTheme.bodyLarge?.copyWith(
-                          color: Colors.white70,
-                          fontFamily: 'Poppins',
-                        ),
-                        textAlign: TextAlign.center,
-                      ),
+                      Column(
+                        children: [
+                          Center(child: EmergeAppIcon(size: 80)),
+                          const Gap(16),
+                          Text(
+                            'Emerge',
+                            style: GoogleFonts.poppins(
+                              textStyle: theme.textTheme.displayMedium,
+                              color: Colors.white,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                          Text(
+                            'Become who you are.',
+                            style: theme.textTheme.bodyLarge?.copyWith(
+                              color: Colors.white70,
+                              fontFamily: 'Poppins',
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                        ],
+                      ).animate(delay: 0.ms).fadeIn().slideY(begin: -0.05),
                       const Gap(48),
 
                       // Email Field
@@ -211,7 +216,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           }
                           return null;
                         },
-                      ),
+                      ).animate(delay: 150.ms).fadeIn().slideX(begin: 0.02),
                       const Gap(16),
 
                       // Password Field
@@ -265,7 +270,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           }
                           return null;
                         },
-                      ),
+                      ).animate(delay: 250.ms).fadeIn().slideX(begin: 0.02),
                       Align(
                         alignment: Alignment.centerRight,
                         child: TextButton(
@@ -314,7 +319,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                   ),
                                 ),
                         ),
-                      ),
+                      ).animate(delay: 350.ms).fadeIn().scale(begin: const Offset(0.97, 0.97)),
                       const Gap(16),
                       OutlinedButton.icon(
                         onPressed: _isLoading ? null : _loginWithGoogle,
@@ -455,7 +460,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                 textAlign: TextAlign.center,
                               ),
                             ],
-                          ),
+                          ).animate(delay: 0.ms).fadeIn().slideY(begin: -0.05),
                         ),
                         const VerticalDivider(
                           width: 64,
@@ -498,24 +503,24 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                           color: EmergeColors.teal,
                                         ),
                                         borderRadius: BorderRadius.circular(12),
-                                      ),
-                                      prefixIcon: const Icon(
-                                        Icons.email_outlined,
-                                        color: Colors.white70,
-                                      ),
-                                    ),
-                                    validator: (value) {
-                                      if (value == null || value.isEmpty) {
-                                        return 'Please enter your email';
-                                      }
-                                      return null;
-                                    },
                                   ),
-                                  const Gap(16),
+                                  prefixIcon: const Icon(
+                                    Icons.email_outlined,
+                                    color: Colors.white70,
+                                  ),
+                                ),
+                                validator: (value) {
+                                  if (value == null || value.isEmpty) {
+                                    return 'Please enter your email';
+                                  }
+                                  return null;
+                                },
+                              ).animate(delay: 150.ms).fadeIn().slideX(begin: 0.02),
+                              const Gap(16),
 
-                                  // Password Field
-                                  TextFormField(
-                                    controller: _passwordController,
+                              // Password Field
+                              TextFormField(
+                                controller: _passwordController,
                                     obscureText: _obscurePassword,
                                     style: const TextStyle(color: Colors.white),
                                     decoration: InputDecoration(
@@ -565,7 +570,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                       }
                                       return null;
                                     },
-                                  ),
+                                  ).animate(delay: 250.ms).fadeIn().slideX(begin: 0.02),
                                   Align(
                                     alignment: Alignment.centerRight,
                                     child: TextButton(
@@ -619,13 +624,13 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                               style: TextStyle(
                                                 fontSize: 16,
                                                 fontWeight: FontWeight.bold,
-                                                color: Colors.white,
+                                                  color: Colors.white,
+                                                ),
                                               ),
-                                            ),
-                                    ),
-                                  ),
-                                  const Gap(16),
-                                  OutlinedButton.icon(
+                                      ),
+                                    ).animate(delay: 350.ms).fadeIn().scale(begin: const Offset(0.97, 0.97)),
+                                    const Gap(16),
+                                    OutlinedButton.icon(
                                     onPressed: _isLoading
                                         ? null
                                         : _loginWithGoogle,
