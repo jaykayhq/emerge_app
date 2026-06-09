@@ -5,7 +5,7 @@ import 'package:emerge_app/core/theme/emerge_colors.dart';
 
 /// Hexagonal radar chart displaying 6 attributes:
 /// Creativity, Focus, Output, Resilience, Vitality, Discipline
-class AttributeRadarChart extends StatelessWidget {
+class AttributeRadarChart extends StatefulWidget {
   final Map<String, double> attributes; // Values 0.0-1.0
   final double size;
   final ValueChanged<String>? onAttributeTap;
@@ -45,47 +45,89 @@ class AttributeRadarChart extends StatelessWidget {
   ];
 
   @override
+  State<AttributeRadarChart> createState() => _AttributeRadarChartState();
+}
+
+class _AttributeRadarChartState extends State<AttributeRadarChart>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _fillAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      duration: const Duration(milliseconds: 1200),
+      vsync: this,
+    );
+    _fillAnimation = CurvedAnimation(
+      parent: _controller,
+      curve: Curves.easeOutCubic,
+    );
+    WidgetsBinding.instance.addPostFrameCallback((_) => _controller.forward());
+  }
+
+  @override
+  void didUpdateWidget(AttributeRadarChart oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.attributes != widget.attributes) {
+      _controller.reset();
+      _controller.forward();
+    }
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return SizedBox(
-      width: size,
-      height: size,
+      width: widget.size,
+      height: widget.size,
       child: Stack(
         alignment: Alignment.center,
         children: [
           // Background hexagon grid
-          CustomPaint(size: Size(size, size), painter: _HexagonGridPainter()),
+          CustomPaint(
+            size: Size(widget.size, widget.size),
+            painter: _HexagonGridPainter(),
+          ),
 
           // Filled attributes area
           CustomPaint(
-            size: Size(size, size),
+            size: Size(widget.size, widget.size),
             painter: _AttributeAreaPainter(
-              attributes: attributes,
-              attributeNames: attributeNames,
+              attributes: widget.attributes,
+              attributeNames: AttributeRadarChart.attributeNames,
+              fillProgress: _fillAnimation.value,
             ),
           ),
 
           // Attribute labels around the hexagon
           ...List.generate(6, (index) {
             final angle = (index * 60 - 90) * (math.pi / 180);
-            final labelOffset = size * 0.58;
+            final labelOffset = widget.size * 0.58;
             final x = math.cos(angle) * labelOffset;
             final y = math.sin(angle) * labelOffset;
-            final name = attributeNames[index];
-            final value = attributes[name] ?? 0.0;
+            final name = AttributeRadarChart.attributeNames[index];
+            final value = widget.attributes[name] ?? 0.0;
 
             return Positioned(
-              left: size / 2 + x - 30,
-              top: size / 2 + y - 20,
+              left: widget.size / 2 + x - 30,
+              top: widget.size / 2 + y - 20,
               child: GestureDetector(
-                onTap: () => onAttributeTap?.call(name),
+                onTap: () => widget.onAttributeTap?.call(name),
                 child: SizedBox(
                   width: 60,
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Icon(
-                        attributeIcons[index],
-                        color: attributeColors[index],
+                        AttributeRadarChart.attributeIcons[index],
+                        color: AttributeRadarChart.attributeColors[index],
                         size: 16,
                       ),
                       const SizedBox(height: 2),
@@ -100,7 +142,7 @@ class AttributeRadarChart extends StatelessWidget {
                       Text(
                         '${(value * 100).toInt()}',
                         style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                          color: attributeColors[index],
+                          color: AttributeRadarChart.attributeColors[index],
                           fontWeight: FontWeight.bold,
                           fontSize: 11,
                         ),
@@ -167,10 +209,12 @@ class _HexagonGridPainter extends CustomPainter {
 class _AttributeAreaPainter extends CustomPainter {
   final Map<String, double> attributes;
   final List<String> attributeNames;
+  final double fillProgress;
 
   _AttributeAreaPainter({
     required this.attributes,
     required this.attributeNames,
+    this.fillProgress = 1.0,
   });
 
   @override
@@ -192,7 +236,7 @@ class _AttributeAreaPainter extends CustomPainter {
       final name = attributeNames[i];
       final value = (attributes[name] ?? 0.0).clamp(0.0, 1.0);
       final angle = (i * 60 - 90) * (math.pi / 180);
-      final radius = maxRadius * value;
+      final radius = maxRadius * value * fillProgress;
       final x = center.dx + math.cos(angle) * radius;
       final y = center.dy + math.sin(angle) * radius;
 
@@ -216,7 +260,7 @@ class _AttributeAreaPainter extends CustomPainter {
       final name = attributeNames[i];
       final value = (attributes[name] ?? 0.0).clamp(0.0, 1.0);
       final angle = (i * 60 - 90) * (math.pi / 180);
-      final radius = maxRadius * value;
+      final radius = maxRadius * value * fillProgress;
       final x = center.dx + math.cos(angle) * radius;
       final y = center.dy + math.sin(angle) * radius;
 
@@ -225,5 +269,8 @@ class _AttributeAreaPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => true;
+  bool shouldRepaint(covariant _AttributeAreaPainter oldDelegate) {
+    return oldDelegate.fillProgress != fillProgress ||
+        oldDelegate.attributes != attributes;
+  }
 }
