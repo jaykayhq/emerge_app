@@ -30,6 +30,10 @@ class UnknownFailure extends Failure {
   const UnknownFailure([super.message = 'An unknown error occurred']);
 }
 
+class HealthFailure extends Failure {
+  const HealthFailure([super.message = 'Health data error occurred']);
+}
+
 /// Comprehensive error handling service for the Emerge app
 class ErrorHandler {
   /// Handle errors that occur in UI operations and show appropriate messages to the user

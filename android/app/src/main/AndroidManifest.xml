@@ -9,6 +9,8 @@
     <!-- Notification permissions for Android 13+ -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
+    <uses-permission android:name="android.permission.health.CONNECT_HEALTH_DATA" />
+    <uses-permission android:name="android.permission.PACKAGE_USAGE_STATS" />
     <uses-permission android:name="com.android.vending.BILLING" />
 
     <application
@@ -40,6 +42,9 @@
         <meta-data
             android:name="com.google.android.gms.ads.APPLICATION_ID"
             android:value="ca-app-pub-5049162599848475~2869117515"/>
+        <meta-data
+            android:name="com.google.android.gms.health.CONNECT_HEALTH_DATA"
+            android:value="true" />
 
         <!-- Firebase App Check -->
         <meta-data
