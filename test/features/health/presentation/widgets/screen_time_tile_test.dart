@@ -6,9 +6,7 @@ void main() {
   testWidgets('ScreenTimeTile renders disconnected state', (tester) async {
     await tester.pumpWidget(
       MaterialApp(
-        home: Scaffold(
-          body: ScreenTimeTile(isConnected: false, onTap: () {}),
-        ),
+        home: Scaffold(body: ScreenTimeTile(isConnected: false, onTap: () {})),
       ),
     );
 
@@ -19,9 +17,7 @@ void main() {
   testWidgets('ScreenTimeTile renders connected state', (tester) async {
     await tester.pumpWidget(
       MaterialApp(
-        home: Scaffold(
-          body: ScreenTimeTile(isConnected: true, onTap: () {}),
-        ),
+        home: Scaffold(body: ScreenTimeTile(isConnected: true, onTap: () {})),
       ),
     );
 
@@ -33,10 +29,7 @@ void main() {
     await tester.pumpWidget(
       MaterialApp(
         home: Scaffold(
-          body: ScreenTimeTile(
-            isConnected: false,
-            onTap: () => tapped = true,
-          ),
+          body: ScreenTimeTile(isConnected: false, onTap: () => tapped = true),
         ),
       ),
     );

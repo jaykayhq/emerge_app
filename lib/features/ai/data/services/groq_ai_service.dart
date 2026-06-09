@@ -119,34 +119,53 @@ class GroqAiService {
   String getFallbackMessage(String archetype, String eventType) {
     final fallbacks = <String, Map<String, String>>{
       'athlete': {
-        'milestoneReached': 'Solid work. That streak is proof of your discipline. Keep stacking.',
-        'firstFeatureVisit': 'This is where the work happens. Every action here shapes your future self.',
-        'struggleDetected': 'A stumble isn\'t a fall. Reset and lock in. Your future self is counting on you.',
+        'milestoneReached':
+            'Solid work. That streak is proof of your discipline. Keep stacking.',
+        'firstFeatureVisit':
+            'This is where the work happens. Every action here shapes your future self.',
+        'struggleDetected':
+            'A stumble isn\'t a fall. Reset and lock in. Your future self is counting on you.',
         'dailyCheckIn': 'Another day to earn your identity. Let\'s move.',
       },
       'scholar': {
-        'milestoneReached': 'Fascinating. The data shows a clear pattern of growth. What do you observe about yourself?',
-        'firstFeatureVisit': 'A new area to explore. Knowledge awaits — let\'s see what patterns emerge.',
-        'struggleDetected': 'Inconsistency is data, not failure. What variable changed? Let\'s investigate.',
-        'dailyCheckIn': 'Good morning. I\'ve been tracking the correlations. Today is another data point.',
+        'milestoneReached':
+            'Fascinating. The data shows a clear pattern of growth. What do you observe about yourself?',
+        'firstFeatureVisit':
+            'A new area to explore. Knowledge awaits — let\'s see what patterns emerge.',
+        'struggleDetected':
+            'Inconsistency is data, not failure. What variable changed? Let\'s investigate.',
+        'dailyCheckIn':
+            'Good morning. I\'ve been tracking the correlations. Today is another data point.',
       },
       'creator': {
-        'milestoneReached': 'Beautiful. Each completed habit is a brushstroke on the canvas of your identity.',
-        'firstFeatureVisit': 'A fresh canvas! This space is yours to shape. What will you create here?',
-        'struggleDetected': 'Every creator faces blocks. The muse returns when you simply begin again.',
-        'dailyCheckIn': 'The world awaits your unique contribution. What will you bring to life today?',
+        'milestoneReached':
+            'Beautiful. Each completed habit is a brushstroke on the canvas of your identity.',
+        'firstFeatureVisit':
+            'A fresh canvas! This space is yours to shape. What will you create here?',
+        'struggleDetected':
+            'Every creator faces blocks. The muse returns when you simply begin again.',
+        'dailyCheckIn':
+            'The world awaits your unique contribution. What will you bring to life today?',
       },
       'stoic': {
-        'milestoneReached': 'Well done. Not because of the achievement, but because you showed up when it mattered.',
-        'firstFeatureVisit': 'A new practice ground. Approach it with focus and equanimity.',
-        'struggleDetected': 'This is the training ground of virtue. What does this obstacle reveal about your character?',
-        'dailyCheckIn': 'You woke up. That\'s enough. Everything else is practice.',
+        'milestoneReached':
+            'Well done. Not because of the achievement, but because you showed up when it mattered.',
+        'firstFeatureVisit':
+            'A new practice ground. Approach it with focus and equanimity.',
+        'struggleDetected':
+            'This is the training ground of virtue. What does this obstacle reveal about your character?',
+        'dailyCheckIn':
+            'You woke up. That\'s enough. Everything else is practice.',
       },
       'zealot': {
-        'milestoneReached': 'Your vision is crystallizing. Every completed habit is a declaration of your destiny.',
-        'firstFeatureVisit': 'A new arena for your mission. Explore it with the intensity it deserves.',
-        'struggleDetected': 'The path demands everything. This is where most turn back. Will you?',
-        'dailyCheckIn': 'Your purpose doesn\'t rest. Neither should you. The mission continues today.',
+        'milestoneReached':
+            'Your vision is crystallizing. Every completed habit is a declaration of your destiny.',
+        'firstFeatureVisit':
+            'A new arena for your mission. Explore it with the intensity it deserves.',
+        'struggleDetected':
+            'The path demands everything. This is where most turn back. Will you?',
+        'dailyCheckIn':
+            'Your purpose doesn\'t rest. Neither should you. The mission continues today.',
       },
     };
 

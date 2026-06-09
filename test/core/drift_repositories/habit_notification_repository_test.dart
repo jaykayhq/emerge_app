@@ -204,10 +204,7 @@ void main() {
           ),
         ).thenAnswer((_) async {});
 
-        await repository.updateHabitNotifications(
-          habit,
-          UserArchetype.scholar,
-        );
+        await repository.updateHabitNotifications(habit, UserArchetype.scholar);
 
         verify(
           () => mockSyncEngine.enqueueUpdate(
@@ -343,11 +340,7 @@ void main() {
     group('notifyLevelUp', () {
       test('calls notification service with correct parameters', () async {
         when(
-          () => mockNotificationService.notifyLevelUp(
-            any(),
-            any(),
-            any(),
-          ),
+          () => mockNotificationService.notifyLevelUp(any(), any(), any()),
         ).thenAnswer((_) async {});
 
         await repository.notifyLevelUp(5, UserArchetype.creator);
@@ -367,11 +360,7 @@ void main() {
         await repository.notifyLevelUp(5, UserArchetype.creator);
 
         verifyNever(
-          () => mockNotificationService.notifyLevelUp(
-            any(),
-            any(),
-            any(),
-          ),
+          () => mockNotificationService.notifyLevelUp(any(), any(), any()),
         );
       });
     });
@@ -379,11 +368,7 @@ void main() {
     group('notifyAchievement', () {
       test('calls notification service with correct parameters', () async {
         when(
-          () => mockNotificationService.notifyAchievement(
-            any(),
-            any(),
-            any(),
-          ),
+          () => mockNotificationService.notifyAchievement(any(), any(), any()),
         ).thenAnswer((_) async {});
 
         await repository.notifyAchievement(
@@ -409,11 +394,7 @@ void main() {
         );
 
         verifyNever(
-          () => mockNotificationService.notifyAchievement(
-            any(),
-            any(),
-            any(),
-          ),
+          () => mockNotificationService.notifyAchievement(any(), any(), any()),
         );
       });
     });

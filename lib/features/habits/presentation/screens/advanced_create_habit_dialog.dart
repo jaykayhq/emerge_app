@@ -58,10 +58,12 @@ class _AdvancedCreateHabitDialogState
       final repo = ref.read(companionRepositoryProvider);
       if (!repo.hasVisited('/habits/create')) {
         repo.markVisited('/habits/create');
-        ref.read(companionEngineProvider.notifier).triggerEvent(
-          eventType: CompanionEventType.firstFeatureVisit,
-          userContext: {'route': '/habits/create'},
-        );
+        ref
+            .read(companionEngineProvider.notifier)
+            .triggerEvent(
+              eventType: CompanionEventType.firstFeatureVisit,
+              userContext: {'route': '/habits/create'},
+            );
       }
     });
   }
@@ -222,9 +224,9 @@ class _AdvancedCreateHabitDialogState
       } catch (e, s) {
         AppLogger.e('Error creating habit from Advanced Create', e, s);
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Error creating habit: $e')),
-          );
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text('Error creating habit: $e')));
         }
       }
     }

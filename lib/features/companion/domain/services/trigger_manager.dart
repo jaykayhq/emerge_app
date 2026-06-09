@@ -23,11 +23,11 @@ class TriggerManager {
   static CompanionMode resolveMode(CompanionEventType event) {
     return switch (event) {
       CompanionEventType.firstFeatureVisit => CompanionMode.overlay,
-      CompanionEventType.featureUnlocked   => CompanionMode.overlay,
-      CompanionEventType.userInitiated     => CompanionMode.panel,
-      CompanionEventType.milestoneReached  => CompanionMode.inlineCard,
-      CompanionEventType.struggleDetected  => CompanionMode.inlineCard,
-      CompanionEventType.dailyCheckIn     => CompanionMode.inlineCard,
+      CompanionEventType.featureUnlocked => CompanionMode.overlay,
+      CompanionEventType.userInitiated => CompanionMode.panel,
+      CompanionEventType.milestoneReached => CompanionMode.inlineCard,
+      CompanionEventType.struggleDetected => CompanionMode.inlineCard,
+      CompanionEventType.dailyCheckIn => CompanionMode.inlineCard,
     };
   }
 }

@@ -31,5 +31,6 @@ class HealthRepositoryImpl extends HealthRepository {
   Future<bool> isHealthConnected() => healthService.isHealthConnected();
 
   @override
-  Future<bool> isScreenTimeConnected() => screenTimeService.isScreenTimeConnected();
+  Future<bool> isScreenTimeConnected() =>
+      screenTimeService.isScreenTimeConnected();
 }

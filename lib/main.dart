@@ -39,14 +39,11 @@ void main() async {
   final container = ProviderContainer();
 
   // Start the sync trigger service (listens for connectivity changes)
-  container.read(syncTriggerServiceProvider);
+  // Moved to _EmergeAppState.initState to avoid blocking startup
 
   // Seed local Drift tribe stats table so habit completions
   // before first tribe tab visit still update tribe stats
-  final tribeRepo = container.read(tribeRepositoryProvider);
-  if (tribeRepo is DriftTribeRepository) {
-    unawaited(tribeRepo.seedTribesIfEmpty());
-  }
+  // Moved to _EmergeAppState.initState to avoid blocking startup
 
   // Remote Config and Notifications are now initialized in parallel within initApp()
   // We only schedule the weekly recap here (which is fast)
@@ -135,6 +132,22 @@ class _EmergeAppState extends ConsumerState<EmergeApp> {
   @override
   void initState() {
     super.initState();
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _heavyInitialization();
+    });
+  }
+
+  void _heavyInitialization() {
+    // Start the sync trigger service (listens for connectivity changes)
+    ref.read(syncTriggerServiceProvider);
+
+    // Seed local Drift tribe stats table so habit completions
+    // before first tribe tab visit still update tribe stats
+    final tribeRepo = ref.read(tribeRepositoryProvider);
+    if (tribeRepo is DriftTribeRepository) {
+      unawaited(tribeRepo.seedTribesIfEmpty());
+    }
   }
 
   @override

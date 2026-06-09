@@ -43,9 +43,8 @@ void main() {
           home: Scaffold(
             body: ValueListenableBuilder<Map<String, double>>(
               valueListenable: attributes,
-              builder: (context, attrs, _) => AttributeRadarChart(
-                attributes: attrs,
-              ),
+              builder: (context, attrs, _) =>
+                  AttributeRadarChart(attributes: attrs),
             ),
           ),
         ),

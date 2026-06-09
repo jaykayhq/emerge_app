@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import '../data/repositories/paystack_payment_repository.dart';
+import '../../data/repositories/paystack_payment_repository.dart';
 
 /// Identity-First Paystack Checkout Screen
 ///
@@ -21,10 +21,12 @@ class PaystackCheckoutScreen extends ConsumerStatefulWidget {
   });
 
   @override
-  ConsumerState<PaystackCheckoutScreen> createState() => _PaystackCheckoutScreenState();
+  ConsumerState<PaystackCheckoutScreen> createState() =>
+      _PaystackCheckoutScreenState();
 }
 
-class _PaystackCheckoutScreenState extends ConsumerState<PaystackCheckoutScreen> {
+class _PaystackCheckoutScreenState
+    extends ConsumerState<PaystackCheckoutScreen> {
   String? _authorizationUrl;
   bool _isLoading = true;
   String? _errorMessage;
@@ -43,7 +45,7 @@ class _PaystackCheckoutScreenState extends ConsumerState<PaystackCheckoutScreen>
         email: widget.email,
         identityType: widget.identityType,
       );
-      
+
       if (mounted) {
         setState(() {
           _authorizationUrl = url;
@@ -91,10 +93,7 @@ class _PaystackCheckoutScreenState extends ConsumerState<PaystackCheckoutScreen>
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Text(
-              _errorMessage!,
-              style: const TextStyle(color: Colors.white),
-            ),
+            Text(_errorMessage!, style: const TextStyle(color: Colors.white)),
             const SizedBox(height: 16),
             ElevatedButton(
               onPressed: () {
@@ -117,8 +116,9 @@ class _PaystackCheckoutScreenState extends ConsumerState<PaystackCheckoutScreen>
         onLoadStart: (controller, url) {
           // You can handle success redirects here if you configure a callback URL in Paystack
           // Alternatively, rely entirely on webhooks in Firebase Functions.
-          if (url != null && url.toString().contains('your-success-callback-url')) {
-             context.pop(true);
+          if (url != null &&
+              url.toString().contains('your-success-callback-url')) {
+            context.pop(true);
           }
         },
       );

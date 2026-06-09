@@ -336,14 +336,8 @@ class DriftHabitRepository implements HabitRepository {
               '__type__': 'increment',
               'value': result.xpGained,
             },
-            'totalHabitsCompleted': {
-              '__type__': 'increment',
-              'value': 1,
-            },
-            'contributionCount': {
-              '__type__': 'increment',
-              'value': 1,
-            },
+            'totalHabitsCompleted': {'__type__': 'increment', 'value': 1},
+            'contributionCount': {'__type__': 'increment', 'value': 1},
             'lastContributionAt': {'__type__': 'serverTimestamp'},
             'lastActivity': nowStr,
           },

@@ -27,7 +27,9 @@ void main() {
   group('HealthRepositoryImpl', () {
     group('getTodaySteps', () {
       test('delegates to healthService', () async {
-        when(() => mockHealthService.getTodaySteps()).thenAnswer((_) async => 7500);
+        when(
+          () => mockHealthService.getTodaySteps(),
+        ).thenAnswer((_) async => 7500);
 
         final result = await repository.getTodaySteps();
 
@@ -36,7 +38,9 @@ void main() {
       });
 
       test('returns 0 when no steps recorded', () async {
-        when(() => mockHealthService.getTodaySteps()).thenAnswer((_) async => 0);
+        when(
+          () => mockHealthService.getTodaySteps(),
+        ).thenAnswer((_) async => 0);
 
         final result = await repository.getTodaySteps();
 
@@ -46,7 +50,9 @@ void main() {
 
     group('getTodayScreenTime', () {
       test('delegates to screenTimeService', () async {
-        when(() => mockScreenTimeService.getTodayScreenTime()).thenAnswer((_) async => 120);
+        when(
+          () => mockScreenTimeService.getTodayScreenTime(),
+        ).thenAnswer((_) async => 120);
 
         final result = await repository.getTodayScreenTime();
 
@@ -55,7 +61,9 @@ void main() {
       });
 
       test('returns 0 when no screen time recorded', () async {
-        when(() => mockScreenTimeService.getTodayScreenTime()).thenAnswer((_) async => 0);
+        when(
+          () => mockScreenTimeService.getTodayScreenTime(),
+        ).thenAnswer((_) async => 0);
 
         final result = await repository.getTodayScreenTime();
 
@@ -65,8 +73,9 @@ void main() {
 
     group('requestHealthPermissions', () {
       test('delegates to healthService and returns Right(true)', () async {
-        when(() => mockHealthService.requestHealthPermissions())
-            .thenAnswer((_) async => const Right(true));
+        when(
+          () => mockHealthService.requestHealthPermissions(),
+        ).thenAnswer((_) async => const Right(true));
 
         final result = await repository.requestHealthPermissions();
 
@@ -76,8 +85,9 @@ void main() {
       });
 
       test('delegates to healthService and returns Left on failure', () async {
-        when(() => mockHealthService.requestHealthPermissions())
-            .thenAnswer((_) async => Left(HealthFailure('Permission denied')));
+        when(
+          () => mockHealthService.requestHealthPermissions(),
+        ).thenAnswer((_) async => Left(HealthFailure('Permission denied')));
 
         final result = await repository.requestHealthPermissions();
 
@@ -88,29 +98,40 @@ void main() {
 
     group('requestScreenTimePermissions', () {
       test('delegates to screenTimeService and returns Right(true)', () async {
-        when(() => mockScreenTimeService.requestScreenTimePermissions())
-            .thenAnswer((_) async => const Right(true));
+        when(
+          () => mockScreenTimeService.requestScreenTimePermissions(),
+        ).thenAnswer((_) async => const Right(true));
 
         final result = await repository.requestScreenTimePermissions();
 
         expect(result.isRight(), isTrue);
-        verify(() => mockScreenTimeService.requestScreenTimePermissions()).called(1);
+        verify(
+          () => mockScreenTimeService.requestScreenTimePermissions(),
+        ).called(1);
       });
 
-      test('delegates to screenTimeService and returns Left on failure', () async {
-        when(() => mockScreenTimeService.requestScreenTimePermissions())
-            .thenAnswer((_) async => Left(HealthFailure('Permission denied')));
+      test(
+        'delegates to screenTimeService and returns Left on failure',
+        () async {
+          when(
+            () => mockScreenTimeService.requestScreenTimePermissions(),
+          ).thenAnswer((_) async => Left(HealthFailure('Permission denied')));
 
-        final result = await repository.requestScreenTimePermissions();
+          final result = await repository.requestScreenTimePermissions();
 
-        expect(result.isLeft(), isTrue);
-        verify(() => mockScreenTimeService.requestScreenTimePermissions()).called(1);
-      });
+          expect(result.isLeft(), isTrue);
+          verify(
+            () => mockScreenTimeService.requestScreenTimePermissions(),
+          ).called(1);
+        },
+      );
     });
 
     group('isHealthConnected', () {
       test('delegates to healthService', () async {
-        when(() => mockHealthService.isHealthConnected()).thenAnswer((_) async => true);
+        when(
+          () => mockHealthService.isHealthConnected(),
+        ).thenAnswer((_) async => true);
 
         final result = await repository.isHealthConnected();
 
@@ -121,7 +142,9 @@ void main() {
 
     group('isScreenTimeConnected', () {
       test('delegates to screenTimeService', () async {
-        when(() => mockScreenTimeService.isScreenTimeConnected()).thenAnswer((_) async => false);
+        when(
+          () => mockScreenTimeService.isScreenTimeConnected(),
+        ).thenAnswer((_) async => false);
 
         final result = await repository.isScreenTimeConnected();
 

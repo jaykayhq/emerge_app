@@ -25,10 +25,12 @@ class _LevelingScreenState extends ConsumerState<LevelingScreen> {
       final repo = ref.read(companionRepositoryProvider);
       if (!repo.hasVisited('/gamification')) {
         repo.markVisited('/gamification');
-        ref.read(companionEngineProvider.notifier).triggerEvent(
-          eventType: CompanionEventType.firstFeatureVisit,
-          userContext: {'route': '/gamification'},
-        );
+        ref
+            .read(companionEngineProvider.notifier)
+            .triggerEvent(
+              eventType: CompanionEventType.firstFeatureVisit,
+              userContext: {'route': '/gamification'},
+            );
       }
     });
   }

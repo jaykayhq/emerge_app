@@ -11,7 +11,9 @@ class HealthConnectService implements HealthRepository {
   @override
   Future<Either<Failure, bool>> requestHealthPermissions() async {
     try {
-      final granted = await _health.requestAuthorization([HealthDataType.STEPS]);
+      final granted = await _health.requestAuthorization([
+        HealthDataType.STEPS,
+      ]);
       return Right(granted);
     } catch (e) {
       return Left(HealthFailure('Failed to request health permissions: $e'));

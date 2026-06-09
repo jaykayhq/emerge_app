@@ -7,8 +7,4 @@ enum CompanionEventType {
   userInitiated,
 }
 
-enum CompanionMode {
-  overlay,
-  panel,
-  inlineCard,
-}
+enum CompanionMode { overlay, panel, inlineCard }

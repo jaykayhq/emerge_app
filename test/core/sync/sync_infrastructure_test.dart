@@ -47,27 +47,33 @@ void main() {
       required String operation,
       String? dataJson,
     }) {
-      return db.into(db.mutationQueueTable).insert(
+      return db
+          .into(db.mutationQueueTable)
+          .insert(
             MutationQueueTableCompanion.insert(
               collectionPath: collectionPath,
               documentId: documentId,
               operation: operation,
-              dataJson: dataJson != null ? Value(dataJson) : const Value.absent(),
+              dataJson: dataJson != null
+                  ? Value(dataJson)
+                  : const Value.absent(),
               createdAt: DateTime.now().toIso8601String(),
             ),
           );
     }
 
     Future<List<dynamic>> getAllPending() {
-      return (db.select(db.mutationQueueTable)
-            ..orderBy([
-              (t) => OrderingTerm(expression: t.createdAt, mode: OrderingMode.asc),
-            ]))
+      return (db.select(db.mutationQueueTable)..orderBy([
+            (t) =>
+                OrderingTerm(expression: t.createdAt, mode: OrderingMode.asc),
+          ]))
           .get();
     }
 
     Future<void> deleteProcessed(int id) async {
-      await (db.delete(db.mutationQueueTable)..where((t) => t.id.equals(id))).go();
+      await (db.delete(
+        db.mutationQueueTable,
+      )..where((t) => t.id.equals(id))).go();
     }
 
     Future<void> incrementRetry(int id) async {
@@ -117,39 +123,41 @@ void main() {
       expect(pending.first.dataJson, equals(null));
     });
 
-    test('getAllPending() returns mutations ordered by createdAt ascending',
-        () async {
-      await enqueue(
-        collectionPath: 'test',
-        documentId: 'first',
-        operation: 'set',
-        dataJson: '{"order":1}',
-      );
+    test(
+      'getAllPending() returns mutations ordered by createdAt ascending',
+      () async {
+        await enqueue(
+          collectionPath: 'test',
+          documentId: 'first',
+          operation: 'set',
+          dataJson: '{"order":1}',
+        );
 
-      await Future.delayed(const Duration(milliseconds: 10));
+        await Future.delayed(const Duration(milliseconds: 10));
 
-      await enqueue(
-        collectionPath: 'test',
-        documentId: 'second',
-        operation: 'set',
-        dataJson: '{"order":2}',
-      );
+        await enqueue(
+          collectionPath: 'test',
+          documentId: 'second',
+          operation: 'set',
+          dataJson: '{"order":2}',
+        );
 
-      await Future.delayed(const Duration(milliseconds: 10));
+        await Future.delayed(const Duration(milliseconds: 10));
 
-      await enqueue(
-        collectionPath: 'test',
-        documentId: 'third',
-        operation: 'set',
-        dataJson: '{"order":3}',
-      );
+        await enqueue(
+          collectionPath: 'test',
+          documentId: 'third',
+          operation: 'set',
+          dataJson: '{"order":3}',
+        );
 
-      final pending = await getAllPending();
-      expect(pending, hasLength(3));
-      expect(pending[0].documentId, 'first');
-      expect(pending[1].documentId, 'second');
-      expect(pending[2].documentId, 'third');
-    });
+        final pending = await getAllPending();
+        expect(pending, hasLength(3));
+        expect(pending[0].documentId, 'first');
+        expect(pending[1].documentId, 'second');
+        expect(pending[2].documentId, 'third');
+      },
+    );
 
     test('getAllPending() returns empty list when no mutations', () async {
       final pending = await getAllPending();
@@ -216,28 +224,31 @@ void main() {
       expect(after.first.retryCount, 1);
     });
 
-    test('incrementRetry() can increment multiple times (1, 2, 3...)', () async {
-      await enqueue(
-        collectionPath: 'test',
-        documentId: 'doc1',
-        operation: 'set',
-      );
+    test(
+      'incrementRetry() can increment multiple times (1, 2, 3...)',
+      () async {
+        await enqueue(
+          collectionPath: 'test',
+          documentId: 'doc1',
+          operation: 'set',
+        );
 
-      final pending = await getAllPending();
-      final id = pending.first.id;
+        final pending = await getAllPending();
+        final id = pending.first.id;
 
-      await incrementRetry(id);
-      expect((await getAllPending()).first.retryCount, 1);
+        await incrementRetry(id);
+        expect((await getAllPending()).first.retryCount, 1);
 
-      await incrementRetry(id);
-      expect((await getAllPending()).first.retryCount, 2);
+        await incrementRetry(id);
+        expect((await getAllPending()).first.retryCount, 2);
 
-      await incrementRetry(id);
-      expect((await getAllPending()).first.retryCount, 3);
+        await incrementRetry(id);
+        expect((await getAllPending()).first.retryCount, 3);
 
-      await incrementRetry(id);
-      expect((await getAllPending()).first.retryCount, 4);
-    });
+        await incrementRetry(id);
+        expect((await getAllPending()).first.retryCount, 4);
+      },
+    );
 
     test('incrementRetry() only affects the specified mutation', () async {
       await enqueue(
@@ -277,10 +288,7 @@ void main() {
 
     test('increment marker is processed in set operation', () async {
       final dataJson = jsonEncode({
-        'score': <String, dynamic>{
-          '__type__': 'increment',
-          'value': 5,
-        },
+        'score': <String, dynamic>{'__type__': 'increment', 'value': 5},
       });
       final mutation = MutationQueueTableData(
         id: 1,
@@ -297,10 +305,10 @@ void main() {
 
       final mockDocRef = MockDocumentReference();
       final mockCollectionRef = MockCollectionReference();
-      when(() => mockFirestore.collection(any<String>()))
-          .thenReturn(mockCollectionRef);
-      when(() => mockCollectionRef.doc(any<String>()))
-          .thenReturn(mockDocRef);
+      when(
+        () => mockFirestore.collection(any<String>()),
+      ).thenReturn(mockCollectionRef);
+      when(() => mockCollectionRef.doc(any<String>())).thenReturn(mockDocRef);
       when(() => mockDocRef.set(any(), any())).thenAnswer((_) async => {});
 
       await engine.processMutationQueue();
@@ -311,9 +319,7 @@ void main() {
 
     test('serverTimestamp marker is processed in update operation', () async {
       final dataJson = jsonEncode({
-        'updatedAt': <String, dynamic>{
-          '__type__': 'serverTimestamp',
-        },
+        'updatedAt': <String, dynamic>{'__type__': 'serverTimestamp'},
       });
       final mutation = MutationQueueTableData(
         id: 2,
@@ -330,10 +336,10 @@ void main() {
 
       final mockDocRef = MockDocumentReference();
       final mockCollectionRef = MockCollectionReference();
-      when(() => mockFirestore.collection(any<String>()))
-          .thenReturn(mockCollectionRef);
-      when(() => mockCollectionRef.doc(any<String>()))
-          .thenReturn(mockDocRef);
+      when(
+        () => mockFirestore.collection(any<String>()),
+      ).thenReturn(mockCollectionRef);
+      when(() => mockCollectionRef.doc(any<String>())).thenReturn(mockDocRef);
       when(() => mockDocRef.update(any())).thenAnswer((_) async => {});
 
       await engine.processMutationQueue();
@@ -363,10 +369,10 @@ void main() {
 
       final mockDocRef = MockDocumentReference();
       final mockCollectionRef = MockCollectionReference();
-      when(() => mockFirestore.collection(any<String>()))
-          .thenReturn(mockCollectionRef);
-      when(() => mockCollectionRef.doc(any<String>()))
-          .thenReturn(mockDocRef);
+      when(
+        () => mockFirestore.collection(any<String>()),
+      ).thenReturn(mockCollectionRef);
+      when(() => mockCollectionRef.doc(any<String>())).thenReturn(mockDocRef);
       when(() => mockDocRef.set(any(), any())).thenAnswer((_) async => {});
 
       await engine.processMutationQueue();
@@ -396,10 +402,10 @@ void main() {
 
       final mockDocRef = MockDocumentReference();
       final mockCollectionRef = MockCollectionReference();
-      when(() => mockFirestore.collection(any<String>()))
-          .thenReturn(mockCollectionRef);
-      when(() => mockCollectionRef.doc(any<String>()))
-          .thenReturn(mockDocRef);
+      when(
+        () => mockFirestore.collection(any<String>()),
+      ).thenReturn(mockCollectionRef);
+      when(() => mockCollectionRef.doc(any<String>())).thenReturn(mockDocRef);
       when(() => mockDocRef.update(any())).thenAnswer((_) async => {});
 
       await engine.processMutationQueue();
@@ -410,10 +416,7 @@ void main() {
     test('nested map markers are processed recursively', () async {
       final dataJson = jsonEncode({
         'stats': <String, dynamic>{
-          'nested': <String, dynamic>{
-            '__type__': 'increment',
-            'value': 10,
-          },
+          'nested': <String, dynamic>{'__type__': 'increment', 'value': 10},
         },
       });
       final mutation = MutationQueueTableData(
@@ -431,10 +434,10 @@ void main() {
 
       final mockDocRef = MockDocumentReference();
       final mockCollectionRef = MockCollectionReference();
-      when(() => mockFirestore.collection(any<String>()))
-          .thenReturn(mockCollectionRef);
-      when(() => mockCollectionRef.doc(any<String>()))
-          .thenReturn(mockDocRef);
+      when(
+        () => mockFirestore.collection(any<String>()),
+      ).thenReturn(mockCollectionRef);
+      when(() => mockCollectionRef.doc(any<String>())).thenReturn(mockDocRef);
       when(() => mockDocRef.set(any(), any())).thenAnswer((_) async => {});
 
       await engine.processMutationQueue();
@@ -445,13 +448,8 @@ void main() {
     test('list items with markers are processed', () async {
       final dataJson = jsonEncode({
         'items': [
-          <String, dynamic>{
-            '__type__': 'increment',
-            'value': 1,
-          },
-          <String, dynamic>{
-            '__type__': 'serverTimestamp',
-          },
+          <String, dynamic>{'__type__': 'increment', 'value': 1},
+          <String, dynamic>{'__type__': 'serverTimestamp'},
         ],
       });
       final mutation = MutationQueueTableData(
@@ -469,10 +467,10 @@ void main() {
 
       final mockDocRef = MockDocumentReference();
       final mockCollectionRef = MockCollectionReference();
-      when(() => mockFirestore.collection(any<String>()))
-          .thenReturn(mockCollectionRef);
-      when(() => mockCollectionRef.doc(any<String>()))
-          .thenReturn(mockDocRef);
+      when(
+        () => mockFirestore.collection(any<String>()),
+      ).thenReturn(mockCollectionRef);
+      when(() => mockCollectionRef.doc(any<String>())).thenReturn(mockDocRef);
       when(() => mockDocRef.set(any(), any())).thenAnswer((_) async => {});
 
       await engine.processMutationQueue();
@@ -482,10 +480,7 @@ void main() {
 
     test('non-marker maps are left unchanged', () async {
       final dataJson = jsonEncode({
-        'profile': <String, dynamic>{
-          'name': 'John',
-          'age': 30,
-        },
+        'profile': <String, dynamic>{'name': 'John', 'age': 30},
       });
       final mutation = MutationQueueTableData(
         id: 7,
@@ -502,10 +497,10 @@ void main() {
 
       final mockDocRef = MockDocumentReference();
       final mockCollectionRef = MockCollectionReference();
-      when(() => mockFirestore.collection(any<String>()))
-          .thenReturn(mockCollectionRef);
-      when(() => mockCollectionRef.doc(any<String>()))
-          .thenReturn(mockDocRef);
+      when(
+        () => mockFirestore.collection(any<String>()),
+      ).thenReturn(mockCollectionRef);
+      when(() => mockCollectionRef.doc(any<String>())).thenReturn(mockDocRef);
       when(() => mockDocRef.set(any(), any())).thenAnswer((_) async => {});
 
       await engine.processMutationQueue();
@@ -528,9 +523,7 @@ void main() {
     });
 
     test('ISO string at top level is converted to Timestamp', () async {
-      final dataJson = jsonEncode({
-        'createdAt': '2024-01-15T10:30:00Z',
-      });
+      final dataJson = jsonEncode({'createdAt': '2024-01-15T10:30:00Z'});
       final mutation = MutationQueueTableData(
         id: 1,
         collectionPath: 'users/user1/habits',
@@ -546,10 +539,10 @@ void main() {
 
       final mockDocRef = MockDocumentReference();
       final mockCollectionRef = MockCollectionReference();
-      when(() => mockFirestore.collection(any<String>()))
-          .thenReturn(mockCollectionRef);
-      when(() => mockCollectionRef.doc(any<String>()))
-          .thenReturn(mockDocRef);
+      when(
+        () => mockFirestore.collection(any<String>()),
+      ).thenReturn(mockCollectionRef);
+      when(() => mockCollectionRef.doc(any<String>())).thenReturn(mockDocRef);
       when(() => mockDocRef.set(any(), any())).thenAnswer((_) async => {});
 
       await engine.processMutationQueue();
@@ -559,9 +552,7 @@ void main() {
 
     test('ISO string in nested map is converted', () async {
       final dataJson = jsonEncode({
-        'metadata': <String, dynamic>{
-          'updatedAt': '2024-06-20T14:00:00Z',
-        },
+        'metadata': <String, dynamic>{'updatedAt': '2024-06-20T14:00:00Z'},
       });
       final mutation = MutationQueueTableData(
         id: 2,
@@ -578,10 +569,10 @@ void main() {
 
       final mockDocRef = MockDocumentReference();
       final mockCollectionRef = MockCollectionReference();
-      when(() => mockFirestore.collection(any<String>()))
-          .thenReturn(mockCollectionRef);
-      when(() => mockCollectionRef.doc(any<String>()))
-          .thenReturn(mockDocRef);
+      when(
+        () => mockFirestore.collection(any<String>()),
+      ).thenReturn(mockCollectionRef);
+      when(() => mockCollectionRef.doc(any<String>())).thenReturn(mockDocRef);
       when(() => mockDocRef.set(any(), any())).thenAnswer((_) async => {});
 
       await engine.processMutationQueue();
@@ -610,10 +601,10 @@ void main() {
 
       final mockDocRef = MockDocumentReference();
       final mockCollectionRef = MockCollectionReference();
-      when(() => mockFirestore.collection(any<String>()))
-          .thenReturn(mockCollectionRef);
-      when(() => mockCollectionRef.doc(any<String>()))
-          .thenReturn(mockDocRef);
+      when(
+        () => mockFirestore.collection(any<String>()),
+      ).thenReturn(mockCollectionRef);
+      when(() => mockCollectionRef.doc(any<String>())).thenReturn(mockDocRef);
       when(() => mockDocRef.set(any(), any())).thenAnswer((_) async => {});
 
       await engine.processMutationQueue();
@@ -622,10 +613,7 @@ void main() {
     });
 
     test('numbers left unchanged', () async {
-      final dataJson = jsonEncode({
-        'count': 42,
-        'score': 3.14,
-      });
+      final dataJson = jsonEncode({'count': 42, 'score': 3.14});
       final mutation = MutationQueueTableData(
         id: 4,
         collectionPath: 'users/user1/habits',
@@ -641,10 +629,10 @@ void main() {
 
       final mockDocRef = MockDocumentReference();
       final mockCollectionRef = MockCollectionReference();
-      when(() => mockFirestore.collection(any<String>()))
-          .thenReturn(mockCollectionRef);
-      when(() => mockCollectionRef.doc(any<String>()))
-          .thenReturn(mockDocRef);
+      when(
+        () => mockFirestore.collection(any<String>()),
+      ).thenReturn(mockCollectionRef);
+      when(() => mockCollectionRef.doc(any<String>())).thenReturn(mockDocRef);
       when(() => mockDocRef.set(any(), any())).thenAnswer((_) async => {});
 
       await engine.processMutationQueue();
@@ -653,10 +641,7 @@ void main() {
     });
 
     test('boolean values left unchanged', () async {
-      final dataJson = jsonEncode({
-        'isActive': true,
-        'isDeleted': false,
-      });
+      final dataJson = jsonEncode({'isActive': true, 'isDeleted': false});
       final mutation = MutationQueueTableData(
         id: 5,
         collectionPath: 'users/user1/habits',
@@ -672,10 +657,10 @@ void main() {
 
       final mockDocRef = MockDocumentReference();
       final mockCollectionRef = MockCollectionReference();
-      when(() => mockFirestore.collection(any<String>()))
-          .thenReturn(mockCollectionRef);
-      when(() => mockCollectionRef.doc(any<String>()))
-          .thenReturn(mockDocRef);
+      when(
+        () => mockFirestore.collection(any<String>()),
+      ).thenReturn(mockCollectionRef);
+      when(() => mockCollectionRef.doc(any<String>())).thenReturn(mockDocRef);
       when(() => mockDocRef.set(any(), any())).thenAnswer((_) async => {});
 
       await engine.processMutationQueue();
@@ -701,33 +686,36 @@ void main() {
       registerFallbackValue(<String, dynamic>{});
       registerFallbackValue(SetOptions(merge: true));
 
-      when(() => mockFirestore.collection(any<String>()))
-          .thenReturn(mockCollectionRef);
-      when(() => mockCollectionRef.doc(any<String>()))
-          .thenReturn(mockDocRef);
+      when(
+        () => mockFirestore.collection(any<String>()),
+      ).thenReturn(mockCollectionRef);
+      when(() => mockCollectionRef.doc(any<String>())).thenReturn(mockDocRef);
     });
 
-    test('set operation calls ref.set(data, SetOptions(merge: true))', () async {
-      final dataJson = jsonEncode({'name': 'Habit', 'count': 5});
-      final mutation = MutationQueueTableData(
-        id: 1,
-        collectionPath: 'users/user1/habits',
-        documentId: 'habit_1',
-        operation: 'set',
-        dataJson: dataJson,
-        createdAt: DateTime.now().toIso8601String(),
-        retryCount: 0,
-      );
+    test(
+      'set operation calls ref.set(data, SetOptions(merge: true))',
+      () async {
+        final dataJson = jsonEncode({'name': 'Habit', 'count': 5});
+        final mutation = MutationQueueTableData(
+          id: 1,
+          collectionPath: 'users/user1/habits',
+          documentId: 'habit_1',
+          operation: 'set',
+          dataJson: dataJson,
+          createdAt: DateTime.now().toIso8601String(),
+          retryCount: 0,
+        );
 
-      when(() => mockDao.getAllPending()).thenAnswer((_) async => [mutation]);
-      when(() => mockDao.deleteProcessed(any())).thenAnswer((_) async {});
-      when(() => mockDocRef.set(any(), any())).thenAnswer((_) async => {});
+        when(() => mockDao.getAllPending()).thenAnswer((_) async => [mutation]);
+        when(() => mockDao.deleteProcessed(any())).thenAnswer((_) async {});
+        when(() => mockDocRef.set(any(), any())).thenAnswer((_) async => {});
 
-      await engine.processMutationQueue();
+        await engine.processMutationQueue();
 
-      verify(() => mockDocRef.set(any(), any())).called(1);
-      verify(() => mockDao.deleteProcessed(1)).called(1);
-    });
+        verify(() => mockDocRef.set(any(), any())).called(1);
+        verify(() => mockDao.deleteProcessed(1)).called(1);
+      },
+    );
 
     test('update operation calls ref.update(data)', () async {
       final dataJson = jsonEncode({'count': 10});
@@ -772,28 +760,30 @@ void main() {
       verify(() => mockDao.deleteProcessed(3)).called(1);
     });
 
-    test('invalid operation increments retry and does not call firestore',
-        () async {
-      final mutation = MutationQueueTableData(
-        id: 4,
-        collectionPath: 'users/user1/habits',
-        documentId: 'habit_1',
-        operation: 'invalid_op',
-        dataJson: null,
-        createdAt: DateTime.now().toIso8601String(),
-        retryCount: 0,
-      );
+    test(
+      'invalid operation increments retry and does not call firestore',
+      () async {
+        final mutation = MutationQueueTableData(
+          id: 4,
+          collectionPath: 'users/user1/habits',
+          documentId: 'habit_1',
+          operation: 'invalid_op',
+          dataJson: null,
+          createdAt: DateTime.now().toIso8601String(),
+          retryCount: 0,
+        );
 
-      when(() => mockDao.getAllPending()).thenAnswer((_) async => [mutation]);
-      when(() => mockDao.incrementRetry(any())).thenAnswer((_) async {});
+        when(() => mockDao.getAllPending()).thenAnswer((_) async => [mutation]);
+        when(() => mockDao.incrementRetry(any())).thenAnswer((_) async {});
 
-      await engine.processMutationQueue();
+        await engine.processMutationQueue();
 
-      verifyNever(() => mockDocRef.set(any(), any()));
-      verifyNever(() => mockDocRef.update(any()));
-      verifyNever(() => mockDocRef.delete());
-      verify(() => mockDao.incrementRetry(4)).called(1);
-    });
+        verifyNever(() => mockDocRef.set(any(), any()));
+        verifyNever(() => mockDocRef.update(any()));
+        verifyNever(() => mockDocRef.delete());
+        verify(() => mockDao.incrementRetry(4)).called(1);
+      },
+    );
 
     test('error during set mutation increments retry', () async {
       final dataJson = jsonEncode({'name': 'Habit'});
@@ -809,8 +799,9 @@ void main() {
 
       when(() => mockDao.getAllPending()).thenAnswer((_) async => [mutation]);
       when(() => mockDao.incrementRetry(any())).thenAnswer((_) async {});
-      when(() => mockDocRef.set(any(), any()))
-          .thenThrow(FirebaseException(plugin: 'firestore'));
+      when(
+        () => mockDocRef.set(any(), any()),
+      ).thenThrow(FirebaseException(plugin: 'firestore'));
 
       await engine.processMutationQueue();
 
@@ -831,8 +822,9 @@ void main() {
 
       when(() => mockDao.getAllPending()).thenAnswer((_) async => [mutation]);
       when(() => mockDao.incrementRetry(any())).thenAnswer((_) async {});
-      when(() => mockDocRef.update(any()))
-          .thenThrow(FirebaseException(plugin: 'firestore'));
+      when(
+        () => mockDocRef.update(any()),
+      ).thenThrow(FirebaseException(plugin: 'firestore'));
 
       await engine.processMutationQueue();
 
@@ -852,8 +844,9 @@ void main() {
 
       when(() => mockDao.getAllPending()).thenAnswer((_) async => [mutation]);
       when(() => mockDao.incrementRetry(any())).thenAnswer((_) async {});
-      when(() => mockDocRef.delete())
-          .thenThrow(FirebaseException(plugin: 'firestore'));
+      when(
+        () => mockDocRef.delete(),
+      ).thenThrow(FirebaseException(plugin: 'firestore'));
 
       await engine.processMutationQueue();
 
@@ -874,8 +867,9 @@ void main() {
       when(() => mockDao.getAllPending()).thenAnswer((_) async => [mutation]);
       when(() => mockDao.incrementRetry(any())).thenAnswer((_) async {});
       when(() => mockDao.deleteProcessed(any())).thenAnswer((_) async {});
-      when(() => mockDocRef.set(any(), any()))
-          .thenThrow(FirebaseException(plugin: 'firestore'));
+      when(
+        () => mockDocRef.set(any(), any()),
+      ).thenThrow(FirebaseException(plugin: 'firestore'));
 
       await engine.processMutationQueue();
 

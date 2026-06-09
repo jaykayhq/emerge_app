@@ -49,13 +49,11 @@ Future<void> initApp() async {
   // a redirect (the page navigates away before profile creation code runs).
   if (kIsWeb) {
     try {
-      final redirectResult =
-          await firebase_auth.FirebaseAuth.instance.getRedirectResult();
+      final redirectResult = await firebase_auth.FirebaseAuth.instance
+          .getRedirectResult();
       final user = redirectResult.user;
       if (user != null) {
-        debugPrint(
-          '✅ Google redirect result captured: ${user.email}',
-        );
+        debugPrint('✅ Google redirect result captured: ${user.email}');
         // Create Firestore profile if this is a first-time sign-in
         final firestore = FirebaseFirestore.instance;
         final userDoc = await firestore.collection('users').doc(user.uid).get();
@@ -118,12 +116,13 @@ Future<void> initApp() async {
   // Seeding calls removed from here to prevent permission errors before authentication.
 
   // 1. Initialize Remote Config first (as other services may depend on its values)
-  try {
-    await AppConfig.initializeRemoteConfig();
-    debugPrint('✅ Remote Config initialized');
-  } catch (e) {
-    debugPrint('⚠️ Remote Config initialization failed: $e');
-  }
+  AppConfig.initializeRemoteConfig()
+      .then((_) {
+        debugPrint('✅ Remote Config initialized (async)');
+      })
+      .catchError((e) {
+        debugPrint('⚠️ Remote Config initialization failed: $e');
+      });
 
   // 2. Parallelize the remaining initializations to reduce startup time
   // Each task is wrapped in its own try-catch to ensure one failure doesn't block the others

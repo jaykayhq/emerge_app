@@ -6,7 +6,9 @@ class IdentityEngine {
   /// Analyzes the user's accumulated identity votes and returns the dominant archetype.
   /// If there is a tie, it resolves it deterministically (alphabetical order).
   /// If there are no votes, it returns [UserArchetype.none].
-  static UserArchetype calculateDominantArchetype(Map<String, int> identityVotes) {
+  static UserArchetype calculateDominantArchetype(
+    Map<String, int> identityVotes,
+  ) {
     if (identityVotes.isEmpty) {
       return UserArchetype.none;
     }
@@ -28,7 +30,7 @@ class IdentityEngine {
     // Map the string key back to the enum.
     // Handles cases where keys might be capitalized (e.g., 'Athlete').
     final normalizedKey = dominantKey.toLowerCase();
-    
+
     return UserArchetype.values.firstWhere(
       (a) => a.name == normalizedKey,
       orElse: () => UserArchetype.none,

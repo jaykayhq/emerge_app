@@ -51,9 +51,14 @@ class _GoldilocksScreenState extends ConsumerState<GoldilocksScreen> {
                                 .read(userStatsStreamProvider)
                                 .value
                                 ?.dominantMotive,
-                            archetype: IdentityEngine.calculateDominantArchetype(
-                              ref.read(userStatsStreamProvider).value?.identityVotes ?? {},
-                            ).name,
+                            archetype:
+                                IdentityEngine.calculateDominantArchetype(
+                                  ref
+                                          .read(userStatsStreamProvider)
+                                          .value
+                                          ?.identityVotes ??
+                                      {},
+                                ).name,
                           ),
                       builder: (context, snapshot) {
                         if (snapshot.connectionState ==

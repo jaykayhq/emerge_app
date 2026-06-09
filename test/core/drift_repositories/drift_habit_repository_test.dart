@@ -19,12 +19,14 @@ void main() {
   const userId = 'test_user_123';
 
   setUpAll(() {
-    registerFallbackValue(Habit(
-      id: 'fallback',
-      userId: 'fallback',
-      title: 'fallback',
-      createdAt: DateTime.now(),
-    ));
+    registerFallbackValue(
+      Habit(
+        id: 'fallback',
+        userId: 'fallback',
+        title: 'fallback',
+        createdAt: DateTime.now(),
+      ),
+    );
   });
 
   setUp(() {
@@ -182,10 +184,7 @@ void main() {
         ),
       );
 
-      final result = await repository.completeHabit(
-        habit.id,
-        DateTime.now(),
-      );
+      final result = await repository.completeHabit(habit.id, DateTime.now());
 
       expect(result.isRight(), true);
       expect(result.fold((l) => false, (r) => r), true);
@@ -203,62 +202,68 @@ void main() {
       ).called(1);
     });
 
-    test('completeHabit() - consecutive completion increments streak', () async {
-      final habit = createTestHabit();
-      await repository.createHabit(habit);
+    test(
+      'completeHabit() - consecutive completion increments streak',
+      () async {
+        final habit = createTestHabit();
+        await repository.createHabit(habit);
 
-      await db.userStatsDao.upsertStats(
-        UserStatsTableCompanion(
-          userId: Value(userId),
-          displayName: Value('Test User'),
-          archetype: Value('athlete'),
-          totalXp: Value(0),
-          level: Value(1),
-          vitalityXp: Value(0),
-        ),
-      );
+        await db.userStatsDao.upsertStats(
+          UserStatsTableCompanion(
+            userId: Value(userId),
+            displayName: Value('Test User'),
+            archetype: Value('athlete'),
+            totalXp: Value(0),
+            level: Value(1),
+            vitalityXp: Value(0),
+          ),
+        );
 
-      final yesterday = DateTime.now().subtract(const Duration(days: 1));
-      final today = DateTime.now();
+        final yesterday = DateTime.now().subtract(const Duration(days: 1));
+        final today = DateTime.now();
 
-      await repository.completeHabit(habit.id, yesterday);
-      final result = await repository.completeHabit(habit.id, today);
+        await repository.completeHabit(habit.id, yesterday);
+        final result = await repository.completeHabit(habit.id, today);
 
-      expect(result.isRight(), true);
-      expect(result.fold((l) => false, (r) => r), true);
+        expect(result.isRight(), true);
+        expect(result.fold((l) => false, (r) => r), true);
 
-      final retrieved = await repository.getHabit(habit.id);
-      expect(retrieved?.currentStreak, 2);
-    });
+        final retrieved = await repository.getHabit(habit.id);
+        expect(retrieved?.currentStreak, 2);
+      },
+    );
 
-    test('completeHabit() - same day completion returns false (undo)', () async {
-      final habit = createTestHabit();
-      await repository.createHabit(habit);
+    test(
+      'completeHabit() - same day completion returns false (undo)',
+      () async {
+        final habit = createTestHabit();
+        await repository.createHabit(habit);
 
-      await db.userStatsDao.upsertStats(
-        UserStatsTableCompanion(
-          userId: Value(userId),
-          displayName: Value('Test User'),
-          archetype: Value('athlete'),
-          totalXp: Value(0),
-          level: Value(1),
-          vitalityXp: Value(0),
-        ),
-      );
+        await db.userStatsDao.upsertStats(
+          UserStatsTableCompanion(
+            userId: Value(userId),
+            displayName: Value('Test User'),
+            archetype: Value('athlete'),
+            totalXp: Value(0),
+            level: Value(1),
+            vitalityXp: Value(0),
+          ),
+        );
 
-      final today = DateTime.now();
+        final today = DateTime.now();
 
-      final result1 = await repository.completeHabit(habit.id, today);
-      expect(result1.isRight(), true);
-      expect(result1.fold((l) => false, (r) => r), true);
+        final result1 = await repository.completeHabit(habit.id, today);
+        expect(result1.isRight(), true);
+        expect(result1.fold((l) => false, (r) => r), true);
 
-      final result2 = await repository.completeHabit(habit.id, today);
-      expect(result2.isRight(), true);
-      expect(result2.fold((l) => false, (r) => r), false);
+        final result2 = await repository.completeHabit(habit.id, today);
+        expect(result2.isRight(), true);
+        expect(result2.fold((l) => false, (r) => r), false);
 
-      final retrieved = await repository.getHabit(habit.id);
-      expect(retrieved?.currentStreak, 1);
-    });
+        final retrieved = await repository.getHabit(habit.id);
+        expect(retrieved?.currentStreak, 1);
+      },
+    );
 
     test('completeHabit() - returns failure if habit not found', () async {
       final result = await repository.completeHabit(
@@ -273,10 +278,7 @@ void main() {
       final habit = createTestHabit();
       await repository.createHabit(habit);
 
-      final result = await repository.completeHabit(
-        habit.id,
-        DateTime.now(),
-      );
+      final result = await repository.completeHabit(habit.id, DateTime.now());
 
       expect(result.isLeft(), true);
     });
@@ -292,11 +294,7 @@ void main() {
       await expectLater(
         stream,
         emits(
-          isA<List<Habit>>().having(
-            (habits) => habits.length,
-            'length',
-            2,
-          ),
+          isA<List<Habit>>().having((habits) => habits.length, 'length', 2),
         ),
       );
     });
@@ -313,11 +311,7 @@ void main() {
       await expectLater(
         stream,
         emits(
-          isA<List<Habit>>().having(
-            (habits) => habits.length,
-            'length',
-            1,
-          ),
+          isA<List<Habit>>().having((habits) => habits.length, 'length', 1),
         ),
       );
     });
@@ -400,10 +394,7 @@ void main() {
         ),
       );
 
-      await repository.completeHabit(
-        easyHabit.id,
-        DateTime.now(),
-      );
+      await repository.completeHabit(easyHabit.id, DateTime.now());
       final easyStats = await db.userStatsDao.getStats(userId);
       final easyXp = easyStats?.totalXp ?? 0;
 
@@ -415,10 +406,7 @@ void main() {
         0,
       );
 
-      await repository.completeHabit(
-        hardHabit.id,
-        DateTime.now(),
-      );
+      await repository.completeHabit(hardHabit.id, DateTime.now());
       final hardStats = await db.userStatsDao.getStats(userId);
 
       expect(hardStats?.totalXp, greaterThan(easyXp));

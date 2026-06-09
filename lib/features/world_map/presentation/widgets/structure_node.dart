@@ -187,93 +187,93 @@ class _StructureNodeState extends State<StructureNode>
           onTapCancel: () => setState(() => _tapScale = 1.0),
           onTap: () => _handleTap(context),
           child: AnimatedBuilder(
-          animation: _controller,
-          builder: (context, child) {
-            final scale = isAvailable
-                ? 1.0 + 0.05 * _pulseAnimation.value
-                : 1.0;
+            animation: _controller,
+            builder: (context, child) {
+              final scale = isAvailable
+                  ? 1.0 + 0.05 * _pulseAnimation.value
+                  : 1.0;
 
-            return Transform.scale(
-              scale: scale,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  // "ACTIVE NODE" pill for available nodes
-                  if (isAvailable)
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 8,
-                        vertical: 2,
-                      ),
-                      margin: const EdgeInsets.only(bottom: 4),
-                      decoration: BoxDecoration(
-                        color: widget.primaryColor,
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: Text(
-                        'ACTIVE',
-                        style: TextStyle(
-                          color: const Color(0xFF112218),
-                          fontSize: widget.size * 0.13,
-                          fontWeight: FontWeight.bold,
-                          letterSpacing: 0.8,
+              return Transform.scale(
+                scale: scale,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // "ACTIVE NODE" pill for available nodes
+                    if (isAvailable)
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 2,
+                        ),
+                        margin: const EdgeInsets.only(bottom: 4),
+                        decoration: BoxDecoration(
+                          color: widget.primaryColor,
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: Text(
+                          'ACTIVE',
+                          style: TextStyle(
+                            color: const Color(0xFF112218),
+                            fontSize: widget.size * 0.13,
+                            fontWeight: FontWeight.bold,
+                            letterSpacing: 0.8,
+                          ),
                         ),
                       ),
-                    ),
 
-                  // Node circle
-                  Container(
-                    width: nodeSize,
-                    height: nodeSize,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: _getNodeColor(),
-                      border: Border.all(
-                        color: _getBorderColor(),
-                        width: isAvailable ? 0 : 2,
-                      ),
-                    ),
-                    child: Icon(
-                      _getIcon(),
-                      color: _getIconColor(),
-                      size: isAvailable ? nodeSize * 0.5 : nodeSize * 0.45,
-                    ),
-                  ),
-
-                  // Level tag for locked nodes
-                  if (isLocked)
+                    // Node circle
                     Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 5,
-                        vertical: 1,
-                      ),
-                      margin: const EdgeInsets.only(top: 3),
+                      width: nodeSize,
+                      height: nodeSize,
                       decoration: BoxDecoration(
-                        color: const Color(0xFF193324),
-                        borderRadius: BorderRadius.circular(6),
+                        shape: BoxShape.circle,
+                        color: _getNodeColor(),
                         border: Border.all(
-                          color: const Color(0xFF326747),
-                          width: 1,
+                          color: _getBorderColor(),
+                          width: isAvailable ? 0 : 2,
                         ),
                       ),
-                      child: Text(
-                        'Lv.${widget.node.requiredLevel}',
-                        style: TextStyle(
-                          color: EmergeColors.tealMuted,
-                          fontSize: widget.size * 0.14,
-                          fontWeight: FontWeight.bold,
-                        ),
+                      child: Icon(
+                        _getIcon(),
+                        color: _getIconColor(),
+                        size: isAvailable ? nodeSize * 0.5 : nodeSize * 0.45,
                       ),
                     ),
 
-                  // XP Display for unlocked nodes
-                  if (!isLocked) _buildXPDisplay(),
-                ],
-              ),
-            );
-          },
+                    // Level tag for locked nodes
+                    if (isLocked)
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 5,
+                          vertical: 1,
+                        ),
+                        margin: const EdgeInsets.only(top: 3),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF193324),
+                          borderRadius: BorderRadius.circular(6),
+                          border: Border.all(
+                            color: const Color(0xFF326747),
+                            width: 1,
+                          ),
+                        ),
+                        child: Text(
+                          'Lv.${widget.node.requiredLevel}',
+                          style: TextStyle(
+                            color: EmergeColors.tealMuted,
+                            fontSize: widget.size * 0.14,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+
+                    // XP Display for unlocked nodes
+                    if (!isLocked) _buildXPDisplay(),
+                  ],
+                ),
+              );
+            },
+          ),
         ),
-      ),
       ),
     );
   }

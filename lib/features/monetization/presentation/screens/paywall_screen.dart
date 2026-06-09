@@ -8,6 +8,8 @@ import 'package:gap/gap.dart';
 import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:purchases_flutter/purchases_flutter.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:emerge_app/features/monetization/presentation/screens/paystack_checkout_screen.dart';
 
 class PaywallScreen extends ConsumerStatefulWidget {
   const PaywallScreen({super.key});
@@ -127,7 +129,86 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
                               'Multi-month identity evolution graphs & analytics.',
                         ),
                         const Gap(40),
-                        if (paywallState.isLoading && offerings == null)
+                        if (kIsWeb)
+                          Padding(
+                            padding: const EdgeInsets.only(bottom: 16.0),
+                            child: InkWell(
+                              onTap: () {
+                                final email =
+                                    FirebaseAuth.instance.currentUser?.email ??
+                                    'anonymous@emerge.com';
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (_) => PaystackCheckoutScreen(
+                                      amount: 10.0, // Standard Monthly Price
+                                      email: email,
+                                      identityType: "premium",
+                                    ),
+                                  ),
+                                ).then((success) {
+                                  if (success == true &&
+                                      context.mounted &&
+                                      context.canPop()) {
+                                    context.pop();
+                                  }
+                                });
+                              },
+                              borderRadius: BorderRadius.circular(16),
+                              child: Container(
+                                width: double.infinity,
+                                padding: const EdgeInsets.all(20),
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(16),
+                                  gradient: LinearGradient(
+                                    colors: [
+                                      Colors.purpleAccent.withValues(
+                                        alpha: 0.2,
+                                      ),
+                                      Colors.cyanAccent.withValues(alpha: 0.2),
+                                    ],
+                                    begin: Alignment.topLeft,
+                                    end: Alignment.bottomRight,
+                                  ),
+                                  border: Border.all(
+                                    color: Colors.cyanAccent.withValues(
+                                      alpha: 0.5,
+                                    ),
+                                    width: 2,
+                                  ),
+                                ),
+                                child: const Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          "Web Premium",
+                                          style: TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 18,
+                                            color: Colors.white,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                    Text(
+                                      "\$10.00 / mo",
+                                      style: TextStyle(
+                                        fontWeight: FontWeight.w900,
+                                        fontSize: 18,
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          )
+                        else if (paywallState.isLoading && offerings == null)
                           const Center(
                             child: CircularProgressIndicator(
                               color: Colors.cyanAccent,
@@ -150,13 +231,11 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
                             ),
                           ),
                         ] else
-                          Center(
+                          const Center(
                             child: Text(
-                              kIsWeb
-                                  ? "Subscriptions are currently unavailable on web.\nPlease upgrade via the mobile app or check back later!"
-                                  : "No subscription packages available currently.",
+                              "No subscription packages available currently.",
                               textAlign: TextAlign.center,
-                              style: const TextStyle(
+                              style: TextStyle(
                                 color: Colors.white70,
                                 fontSize: 16,
                               ),

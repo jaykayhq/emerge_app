@@ -14,10 +14,14 @@ class ScreenTimeService implements HealthRepository {
   @override
   Future<Either<Failure, bool>> requestScreenTimePermissions() async {
     try {
-      final result = await _channel.invokeMethod<bool>('requestUsageStatsPermission');
+      final result = await _channel.invokeMethod<bool>(
+        'requestUsageStatsPermission',
+      );
       return Right(result ?? false);
     } catch (e) {
-      return Left(HealthFailure('Failed to request screen time permission: $e'));
+      return Left(
+        HealthFailure('Failed to request screen time permission: $e'),
+      );
     }
   }
 
@@ -40,7 +44,9 @@ class ScreenTimeService implements HealthRepository {
   @override
   Future<bool> isScreenTimeConnected() async {
     try {
-      final result = await _channel.invokeMethod<bool>('isUsageStatsPermissionGranted');
+      final result = await _channel.invokeMethod<bool>(
+        'isUsageStatsPermissionGranted',
+      );
       return result ?? false;
     } on MissingPluginException {
       return false;

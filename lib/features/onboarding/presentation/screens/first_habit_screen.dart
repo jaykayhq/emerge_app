@@ -69,7 +69,9 @@ class _FirstHabitScreenState extends ConsumerState<FirstHabitScreen> {
       // Persist habit via Drift repository (local-first pattern)
       final user = ref.read(authStateChangesProvider).value;
       if (user != null) {
-        final archetype = ref.read(enhancedOnboardingProvider).selectedArchetype;
+        final archetype = ref
+            .read(enhancedOnboardingProvider)
+            .selectedArchetype;
         final habitEntity = Habit(
           id: const Uuid().v4(),
           userId: user.id,
@@ -84,12 +86,11 @@ class _FirstHabitScreenState extends ConsumerState<FirstHabitScreen> {
 
         final repository = ref.read(habitRepositoryProvider);
         final result = await repository.createHabit(habitEntity);
-        result.fold(
-          (failure) => throw Exception(failure.message),
-          (_) {
-            ref.read(enhancedOnboardingProvider.notifier).removeHabitStack('onboarding_anchor');
-          },
-        );
+        result.fold((failure) => throw Exception(failure.message), (_) {
+          ref
+              .read(enhancedOnboardingProvider.notifier)
+              .removeHabitStack('onboarding_anchor');
+        });
       }
 
       // PERSIST PROGRESS: Complete the third milestone (First Habit) - Index 2

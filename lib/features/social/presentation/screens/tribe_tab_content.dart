@@ -42,10 +42,12 @@ class _TribeTabContentState extends ConsumerState<TribeTabContent> {
       final repo = ref.read(companionRepositoryProvider);
       if (!repo.hasVisited('/tribes')) {
         repo.markVisited('/tribes');
-        ref.read(companionEngineProvider.notifier).triggerEvent(
-          eventType: CompanionEventType.firstFeatureVisit,
-          userContext: {'route': '/tribes'},
-        );
+        ref
+            .read(companionEngineProvider.notifier)
+            .triggerEvent(
+              eventType: CompanionEventType.firstFeatureVisit,
+              userContext: {'route': '/tribes'},
+            );
       }
     });
   }
@@ -401,10 +403,16 @@ class _TribeLeaderboardSection extends ConsumerWidget {
             }
             final top = entries.length > 5 ? entries.sublist(0, 5) : entries;
             return Column(
-              children: top.asMap().entries.map((e) => _LeaderboardRow(
-                entry: e.value,
-                rank: e.key + 1,
-              ).animate(delay: (e.key * 50).ms).fadeIn().slideX(begin: 0.03)).toList(),
+              children: top
+                  .asMap()
+                  .entries
+                  .map(
+                    (e) => _LeaderboardRow(entry: e.value, rank: e.key + 1)
+                        .animate(delay: (e.key * 50).ms)
+                        .fadeIn()
+                        .slideX(begin: 0.03),
+                  )
+                  .toList(),
             );
           },
           loading: () => const EmergeLoadingSkeleton(itemCount: 3),
@@ -428,11 +436,7 @@ class _WorldLeaderboardSection extends ConsumerWidget {
           children: [
             const Row(
               children: [
-                Icon(
-                  Icons.public,
-                  size: 18,
-                  color: EmergeColors.teal,
-                ),
+                Icon(Icons.public, size: 18, color: EmergeColors.teal),
                 Gap(8),
                 Text(
                   'WORLD RANKINGS',
@@ -464,10 +468,11 @@ class _WorldLeaderboardSection extends ConsumerWidget {
                   .asMap()
                   .entries
                   .map(
-                    (e) => _WorldRankingRow(
-                      club: e.value.tribe,
-                      rank: e.key + 1,
-                    ).animate(delay: (e.key * 50).ms).fadeIn().slideX(begin: 0.03),
+                    (e) =>
+                        _WorldRankingRow(club: e.value.tribe, rank: e.key + 1)
+                            .animate(delay: (e.key * 50).ms)
+                            .fadeIn()
+                            .slideX(begin: 0.03),
                   )
                   .toList(),
             );
@@ -479,7 +484,6 @@ class _WorldLeaderboardSection extends ConsumerWidget {
     );
   }
 }
-
 
 class _WorldRankingRow extends StatelessWidget {
   final Tribe club;
@@ -541,10 +545,7 @@ class _WorldRankingRow extends StatelessWidget {
               ),
               Text(
                 '${club.memberCount} members',
-                style: const TextStyle(
-                  color: Colors.white38,
-                  fontSize: 10,
-                ),
+                style: const TextStyle(color: Colors.white38, fontSize: 10),
               ),
             ],
           ),
@@ -621,10 +622,7 @@ class _LeaderboardRow extends StatelessWidget {
               ),
               Text(
                 'Level ${entry.level}',
-                style: const TextStyle(
-                  color: Colors.white38,
-                  fontSize: 10,
-                ),
+                style: const TextStyle(color: Colors.white38, fontSize: 10),
               ),
             ],
           ),

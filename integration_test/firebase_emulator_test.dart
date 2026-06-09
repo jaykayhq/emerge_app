@@ -87,10 +87,7 @@ void main() {
       const password = 'TestPassword123!';
 
       final userCredential = await FirebaseAuth.instance
-          .createUserWithEmailAndPassword(
-        email: email,
-        password: password,
-      );
+          .createUserWithEmailAndPassword(email: email, password: password);
 
       expect(userCredential.user, isNotNull);
       expect(userCredential.user!.email, equals(email));

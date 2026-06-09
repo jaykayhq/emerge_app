@@ -213,16 +213,21 @@ Future<HabitCompletionResult> completeHabit(Ref ref, String habitId) async {
               final wasRecovery = habit.consecutiveMisses > 0;
 
               final difficultyMultiplier = switch (habit.difficulty) {
-                HabitDifficulty.easy => GamificationConstants.difficultyEasyMultiplier,
-                HabitDifficulty.medium => GamificationConstants.difficultyMediumMultiplier,
-                HabitDifficulty.hard => GamificationConstants.difficultyHardMultiplier,
+                HabitDifficulty.easy =>
+                  GamificationConstants.difficultyEasyMultiplier,
+                HabitDifficulty.medium =>
+                  GamificationConstants.difficultyMediumMultiplier,
+                HabitDifficulty.hard =>
+                  GamificationConstants.difficultyHardMultiplier,
               };
               final engine = LocalGameLoopEngine();
               final xpGained = engine.computeXpGain(
                 difficultyMultiplier: difficultyMultiplier,
                 streak: newStreak,
               );
-              final baseXp = (GamificationConstants.baseXpPerHabit * difficultyMultiplier).toInt();
+              final baseXp =
+                  (GamificationConstants.baseXpPerHabit * difficultyMultiplier)
+                      .toInt();
 
               final isMilestone = VariableRewardService.isStreakMilestone(
                 newStreak,
