@@ -18,6 +18,7 @@ import 'package:go_router/go_router.dart';
 import 'package:uuid/uuid.dart';
 import 'package:emerge_app/core/theme/emerge_colors.dart';
 import 'package:emerge_app/features/monetization/presentation/widgets/premium_limit_dialog.dart';
+import 'package:emerge_app/core/presentation/widgets/feature_coach_mark.dart';
 
 /// Redesigned Create Habit Dialog with Stitch-inspired cosmic glassmorphism
 class AdvancedCreateHabitDialog extends ConsumerStatefulWidget {
@@ -48,6 +49,8 @@ class _AdvancedCreateHabitDialogState
   String? _anchorHabitId;
   HabitAttribute _attribute = HabitAttribute.vitality;
 
+  bool _showFirstVisitGuide = false;
+
   @override
   void initState() {
     super.initState();
@@ -64,6 +67,7 @@ class _AdvancedCreateHabitDialogState
               eventType: CompanionEventType.firstFeatureVisit,
               userContext: {'route': '/habits/create'},
             );
+        setState(() => _showFirstVisitGuide = true);
       }
     });
   }
@@ -287,57 +291,79 @@ class _AdvancedCreateHabitDialogState
     final habitsAsync = ref.watch(habitsProvider);
     final userProfile = ref.watch(userStatsStreamProvider).value;
 
-    return Dialog(
-      backgroundColor: Colors.transparent,
-      insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 40),
-      child: Stack(
-        clipBehavior: Clip.none,
-        children: [
-          Form(
-            key: _formKey,
-            child: SingleChildScrollView(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  _buildMainDialog(context, userProfile, habitsAsync),
-                  const SizedBox(height: 24),
-                  _buildForgeButton(context),
-                ],
-              ),
-            ),
-          ),
-          // Close button at top right — kept inside Stack bounds for reliable hit testing
-          Positioned(
-            top: 8,
-            right: 8,
-            child: GestureDetector(
-              behavior: HitTestBehavior.opaque,
-              onTap: () => context.pop(),
-              child: Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: const Color(0xFF1A1A2E),
-                  shape: BoxShape.circle,
-                  border: Border.all(
-                    color: _getAttributeColor(
-                      _attribute,
-                    ).withValues(alpha: 0.5),
+    return Stack(
+      children: [
+        Dialog(
+          backgroundColor: Colors.transparent,
+          insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 40),
+          child: Stack(
+            clipBehavior: Clip.none,
+            children: [
+              Form(
+                key: _formKey,
+                child: SingleChildScrollView(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      _buildMainDialog(context, userProfile, habitsAsync),
+                      const SizedBox(height: 24),
+                      _buildForgeButton(context),
+                    ],
                   ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: _getAttributeColor(
-                        _attribute,
-                      ).withValues(alpha: 0.3),
-                      blurRadius: 8,
-                    ),
-                  ],
                 ),
-                child: const Icon(Icons.close, color: Colors.white, size: 18),
               ),
-            ),
+              // Close button at top right — kept inside Stack bounds for reliable hit testing
+              Positioned(
+                top: 8,
+                right: 8,
+                child: GestureDetector(
+                  behavior: HitTestBehavior.opaque,
+                  onTap: () => context.pop(),
+                  child: Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF1A1A2E),
+                      shape: BoxShape.circle,
+                      border: Border.all(
+                        color: _getAttributeColor(
+                          _attribute,
+                        ).withValues(alpha: 0.5),
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: _getAttributeColor(
+                            _attribute,
+                          ).withValues(alpha: 0.3),
+                          blurRadius: 8,
+                        ),
+                      ],
+                    ),
+                    child: const Icon(Icons.close, color: Colors.white, size: 18),
+                  ),
+                ),
+              ),
+            ],
           ),
-        ],
-      ),
+        ),
+        if (_showFirstVisitGuide)
+          FeatureCoachMark(
+            title: "Forge Your Character Habit",
+            primaryColor: EmergeColors.teal,
+            items: const [
+              CoachItemData(
+                icon: Icons.title_outlined,
+                title: "Identity Statements",
+                body: "Type your habit title and watch it automatically formulate into an identity-reinforcing belief statement.",
+              ),
+              CoachItemData(
+                icon: Icons.tune_outlined,
+                title: "Advanced Behavioral Hooks",
+                body: "Expand the advanced section below to configure Two-Minute Versions, Environment Priming, and custom rewards.",
+              ),
+            ],
+            onDismiss: () => setState(() => _showFirstVisitGuide = false),
+          ),
+      ],
     );
   }
 

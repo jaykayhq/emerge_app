@@ -20,6 +20,7 @@ import 'package:emerge_app/features/companion/presentation/providers/companion_p
 import 'package:emerge_app/features/companion/domain/enums/companion_enums.dart';
 import 'package:emerge_app/features/monetization/presentation/providers/subscription_provider.dart';
 import 'package:flutter/material.dart';
+import 'package:emerge_app/core/presentation/widgets/feature_coach_mark.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -61,6 +62,7 @@ class FutureSelfStudioScreen extends ConsumerStatefulWidget {
 class _FutureSelfStudioScreenState
     extends ConsumerState<FutureSelfStudioScreen> {
   int? _previousStreak;
+  bool _showFirstVisitGuide = false;
 
   @override
   void initState() {
@@ -76,6 +78,7 @@ class _FutureSelfStudioScreenState
               eventType: CompanionEventType.firstFeatureVisit,
               userContext: {'route': '/profile/future-self'},
             );
+        setState(() => _showFirstVisitGuide = true);
       }
     });
   }
@@ -126,10 +129,12 @@ class _FutureSelfStudioScreenState
         final accentColor = archetypeTheme.primaryColor;
 
         return WorldBackground(
-          child: CustomScrollView(
-            slivers: [
-              // App Bar
-              SliverAppBar(
+          child: Stack(
+            children: [
+              CustomScrollView(
+                slivers: [
+                  // App Bar
+                  SliverAppBar(
                 backgroundColor: Colors.transparent,
                 floating: true,
                 actions: [
@@ -523,7 +528,27 @@ class _FutureSelfStudioScreenState
                 ),
               ),
 
-              const SliverToBoxAdapter(child: SizedBox(height: 40)),
+                  const SliverToBoxAdapter(child: SizedBox(height: 40)),
+                ],
+              ),
+              if (_showFirstVisitGuide)
+                FeatureCoachMark(
+                  title: "Future Self Studio",
+                  primaryColor: accentColor,
+                  items: const [
+                    CoachItemData(
+                      icon: Icons.person_outline,
+                      title: "Archetype Silhouette",
+                      body: "Cast identity votes by completing daily habits to evolve your silhouette through the 5 evolution phases.",
+                    ),
+                    CoachItemData(
+                      icon: Icons.bubble_chart_outlined,
+                      title: "Synergy & Multipliers",
+                      body: "Boost specific attributes to unlock special status synergies, increasing daily momentum growth.",
+                    ),
+                  ],
+                  onDismiss: () => setState(() => _showFirstVisitGuide = false),
+                ),
             ],
           ),
         );

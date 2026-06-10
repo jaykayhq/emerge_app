@@ -22,6 +22,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:emerge_app/core/theme/emerge_colors.dart';
+import 'package:emerge_app/core/presentation/widgets/feature_coach_mark.dart';
 
 /// Full-screen immersive level view with AI-generated background
 /// Shows habits, stats, health bar, and mission controls
@@ -49,6 +50,8 @@ class _LevelImmersiveScreenState extends ConsumerState<LevelImmersiveScreen> {
   // starting a mission without waiting for the database stream.
   NodeState? _overriddenNodeState;
 
+  bool _showFirstVisitGuide = false;
+
   @override
   void initState() {
     super.initState();
@@ -64,6 +67,7 @@ class _LevelImmersiveScreenState extends ConsumerState<LevelImmersiveScreen> {
               eventType: CompanionEventType.firstFeatureVisit,
               userContext: {'route': '/world-map/immersive'},
             );
+        setState(() => _showFirstVisitGuide = true);
       }
     });
   }
@@ -293,6 +297,24 @@ class _LevelImmersiveScreenState extends ConsumerState<LevelImmersiveScreen> {
             ),
           ),
         ),
+        if (_showFirstVisitGuide)
+          FeatureCoachMark(
+            title: "Biome & Node Exploration",
+            primaryColor: EmergeColors.emeraldPrimary,
+            items: const [
+              CoachItemData(
+                icon: Icons.map_outlined,
+                title: "Traversing the Biomes",
+                body: "Explore different parts of the map matching specific archetypes and difficulty levels.",
+              ),
+              CoachItemData(
+                icon: Icons.ads_click,
+                title: "Node Conquests",
+                body: "Tap active nodes to review directives, verify targeted attributes, and launch missions to rebuild the world.",
+              ),
+            ],
+            onDismiss: () => setState(() => _showFirstVisitGuide = false),
+          ),
       ],
     );
   }
