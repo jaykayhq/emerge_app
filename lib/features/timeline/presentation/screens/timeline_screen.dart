@@ -33,6 +33,7 @@ import 'package:go_router/go_router.dart';
 import 'package:uuid/uuid.dart';
 import 'package:emerge_app/core/services/notification_service.dart';
 import 'package:emerge_app/core/theme/emerge_colors.dart';
+import 'package:emerge_app/core/presentation/widgets/feature_coach_mark.dart';
 
 /// Main Timeline screen - the daily command center
 /// Shows calendar, daily summary, habit timeline grouped by time-of-day,
@@ -53,6 +54,7 @@ class _TimelineScreenState extends ConsumerState<TimelineScreen> {
   final GlobalKey _missionKey = GlobalKey();
   final GlobalKey _aiCoachKey = GlobalKey();
   bool _hasCheckedMisses = false;
+  bool _showFirstVisitGuide = false;
 
   @override
   void initState() {
@@ -69,6 +71,7 @@ class _TimelineScreenState extends ConsumerState<TimelineScreen> {
               eventType: CompanionEventType.firstFeatureVisit,
               userContext: {'route': '/timeline'},
             );
+        setState(() => _showFirstVisitGuide = true);
       }
     });
   }
@@ -159,16 +162,38 @@ class _TimelineScreenState extends ConsumerState<TimelineScreen> {
     return WorldBackground(
       useSafeArea: false,
       themeOverride: AppWorldTheme.nebula,
-      child: SafeArea(
-        child: habits.isNotEmpty
-            ? _buildTimelineList(context, habits, statsAsync)
-            : habitsAsync.when(
-                data: (_) => _buildTimelineList(context, habits, statsAsync),
-                loading: () => const Center(
-                  child: CircularProgressIndicator(color: Color(0xFF2BEE79)),
+      child: Stack(
+        children: [
+          SafeArea(
+            child: habits.isNotEmpty
+                ? _buildTimelineList(context, habits, statsAsync)
+                : habitsAsync.when(
+                    data: (_) => _buildTimelineList(context, habits, statsAsync),
+                    loading: () => const Center(
+                      child: CircularProgressIndicator(color: Color(0xFF2BEE79)),
+                    ),
+                    error: (e, s) => _buildErrorView(context, e),
+                  ),
+          ),
+          if (_showFirstVisitGuide)
+            FeatureCoachMark(
+              title: "Your Timeline Command Center",
+              primaryColor: EmergeColors.teal,
+              items: const [
+                CoachItemData(
+                  icon: Icons.calendar_today_outlined,
+                  title: "Daily Consistency Calendar",
+                  body: "Traverse your complete habit history and log daily reflections.",
                 ),
-                error: (e, s) => _buildErrorView(context, e),
-              ),
+                CoachItemData(
+                  icon: Icons.offline_bolt_outlined,
+                  title: "Awaken Modifications",
+                  body: "Look for the small pulsing Rune next to the badge on your cards. Tap the card to forge a 2-minute limit or rewards.",
+                ),
+              ],
+              onDismiss: () => setState(() => _showFirstVisitGuide = false),
+            ),
+        ],
       ),
     );
   }
