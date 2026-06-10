@@ -3,6 +3,7 @@ import 'dart:ui';
 import 'package:emerge_app/features/habits/domain/entities/habit.dart';
 import 'package:flutter/material.dart';
 import 'package:emerge_app/core/theme/emerge_colors.dart';
+import 'package:emerge_app/features/timeline/presentation/widgets/habit_rune_indicator.dart';
 
 /// Maps a [HabitAttribute] to its identity color.
 /// Each attribute gets a distinct, vibrant accent color for visual identity.
@@ -779,21 +780,27 @@ class _IndentedHabitItemState extends State<_IndentedHabitItem> {
               ),
             ),
           ),
-        // Attribute indicator
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-          decoration: BoxDecoration(
-            color: color.withValues(alpha: 0.15),
-            borderRadius: BorderRadius.circular(4),
-          ),
-          child: Text(
-            label,
-            style: TextStyle(
-              color: color,
-              fontSize: 9,
-              fontWeight: FontWeight.bold,
+        // Attribute indicator & Rune
+        Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            HabitRuneIndicator(habit: widget.habit),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+              decoration: BoxDecoration(
+                color: color.withValues(alpha: 0.15),
+                borderRadius: BorderRadius.circular(4),
+              ),
+              child: Text(
+                label,
+                style: TextStyle(
+                  color: color,
+                  fontSize: 9,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
             ),
-          ),
+          ],
         ),
       ],
     );
