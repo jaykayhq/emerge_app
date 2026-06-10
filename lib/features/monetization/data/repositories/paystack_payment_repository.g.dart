@@ -55,4 +55,4 @@ final class PaystackPaymentRepositoryProvider
 }
 
 String _$paystackPaymentRepositoryHash() =>
-    r'2dde3b9a78ddc9e94678d2c2f7cf5cf69a13c9fb';
+    r'cb48f883fe1fdf853d7a7913d8099414c1e34259';
