@@ -191,7 +191,6 @@ class SettingsScreen extends ConsumerWidget {
                 },
                 activeThumbColor: EmergeColors.teal,
                 activeTrackColor: EmergeColors.teal.withValues(alpha: 0.5),
-                tileColor: AppTheme.surfaceDark,
               ),
               _buildListTile(
                 context,
@@ -221,13 +220,11 @@ class SettingsScreen extends ConsumerWidget {
                   );
                 },
               ),
-              const Divider(height: 1, color: AppTheme.textSecondaryDark),
               HealthConnectTile(
                 isConnected: userSettings.healthKitConnected,
                 onTap: () =>
                     _connectHealthData(context, ref, userProfile, userSettings),
               ),
-              const Divider(height: 1, color: AppTheme.textSecondaryDark),
               ScreenTimeTile(
                 isConnected: userSettings.screenTimeConnected,
                 onTap: () =>
@@ -235,7 +232,6 @@ class SettingsScreen extends ConsumerWidget {
               ),
               if (userSettings.healthKitConnected ||
                   userSettings.screenTimeConnected) ...[
-                const Divider(height: 1, color: AppTheme.textSecondaryDark),
                 SwitchListTile(
                   secondary: Container(
                     padding: const EdgeInsets.all(8),
@@ -263,7 +259,6 @@ class SettingsScreen extends ConsumerWidget {
                   onChanged: (value) {},
                   activeThumbColor: EmergeColors.teal,
                   activeTrackColor: EmergeColors.teal.withValues(alpha: 0.5),
-                  tileColor: AppTheme.surfaceDark,
                 ),
               ],
             ]),
@@ -294,7 +289,6 @@ class SettingsScreen extends ConsumerWidget {
                 },
                 activeThumbColor: EmergeColors.teal,
                 activeTrackColor: EmergeColors.teal.withValues(alpha: 0.5),
-                tileColor: AppTheme.surfaceDark,
               ),
               SwitchListTile(
                 secondary: Container(
@@ -326,7 +320,6 @@ class SettingsScreen extends ConsumerWidget {
                 },
                 activeThumbColor: EmergeColors.teal,
                 activeTrackColor: EmergeColors.teal.withValues(alpha: 0.5),
-                tileColor: AppTheme.surfaceDark,
               ),
               SwitchListTile(
                 secondary: Container(
@@ -360,7 +353,6 @@ class SettingsScreen extends ConsumerWidget {
                 },
                 activeThumbColor: EmergeColors.teal,
                 activeTrackColor: EmergeColors.teal.withValues(alpha: 0.5),
-                tileColor: AppTheme.surfaceDark,
               ),
             ]),
             const SizedBox(height: 24),
@@ -1049,7 +1041,6 @@ class SettingsScreen extends ConsumerWidget {
         ),
       ),
       trailing: const Icon(Icons.chevron_right, color: Colors.red),
-      tileColor: AppTheme.surfaceDark,
     );
   }
 

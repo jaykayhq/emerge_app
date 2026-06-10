@@ -78,7 +78,7 @@ class ChallengeDetailScreen extends ConsumerWidget {
                   physics: const BouncingScrollPhysics(),
                   slivers: [
                     SliverAppBar(
-                      expandedHeight: 320,
+                      expandedHeight: 240,
                       pinned: true,
                       stretch: true,
                       backgroundColor: Colors.transparent,
@@ -139,7 +139,7 @@ class ChallengeDetailScreen extends ConsumerWidget {
                                     ),
                                     EmergeColors.background,
                                   ],
-                                  stops: const [0.0, 0.4, 0.8, 1.0],
+                                  stops: const [0.0, 0.6, 0.9, 1.0],
                                 ),
                               ),
                             ),

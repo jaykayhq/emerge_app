@@ -1,0 +1,315 @@
+<h2>Emerge Habit Architecture & Coach Marks Spec</h2>
+<p class="subtitle">Explore the proposed user experiences and code patterns. Select your preference or provide feedback in the terminal.</p>
+
+<style>
+  /* Premium Dark Mode Styling inside the content area */
+  .dark-preview-container {
+    background: #0D0D1E;
+    color: #F5F5F7;
+    border-radius: 16px;
+    padding: 24px;
+    margin-bottom: 24px;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.4);
+    font-family: system-ui, -apple-system, sans-serif;
+  }
+
+  /* Coach Mark Overlay Mockup */
+  .coach-mark-wrapper {
+    position: relative;
+    border-radius: 12px;
+    overflow: hidden;
+    background: rgba(18, 18, 42, 0.85);
+    border: 1.5px solid rgba(43, 238, 121, 0.4);
+    box-shadow: 0 0 24px rgba(43, 238, 121, 0.2);
+    padding: 20px;
+    margin-top: 16px;
+  }
+
+  .coach-title-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+
+  .coach-icon-container {
+    background: rgba(43, 238, 121, 0.15);
+    border-radius: 50%;
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #2BEE79;
+    font-weight: bold;
+    font-size: 18px;
+  }
+
+  .coach-title {
+    font-size: 16px;
+    font-weight: bold;
+    color: #FFFFFF;
+    letter-spacing: 0.5px;
+  }
+
+  .coach-close-hint {
+    margin-left: auto;
+    font-size: 10px;
+    color: rgba(255, 255, 255, 0.3);
+  }
+
+  .coach-items-list {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  .coach-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .coach-item-bullet {
+    color: #2BEE79;
+    font-size: 16px;
+    margin-top: -2px;
+  }
+
+  .coach-item-content h4 {
+    font-size: 13px;
+    font-weight: 600;
+    color: #FFFFFF;
+    margin-bottom: 2px;
+  }
+
+  .coach-item-content p {
+    font-size: 12px;
+    color: rgba(255, 255, 255, 0.65);
+    line-height: 1.4;
+  }
+
+  .coach-btn {
+    background: #2BEE79;
+    color: #000000;
+    font-weight: bold;
+    font-size: 13px;
+    letter-spacing: 1px;
+    text-align: center;
+    padding: 12px;
+    border-radius: 8px;
+    margin-top: 16px;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+
+  .coach-btn:hover {
+    background: #4ef08f;
+  }
+
+  /* Habit Cards with Rune & Socket */
+  .habit-cards-row {
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+    margin-top: 16px;
+  }
+
+  .habit-card-mockup {
+    flex: 1;
+    min-width: 250px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    padding: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    transition: all 0.3s;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .habit-card-mockup:hover {
+    border-color: rgba(255, 255, 255, 0.25);
+    transform: translateY(-2px);
+  }
+
+  .habit-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .habit-checkbox {
+    width: 20px;
+    height: 20px;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-radius: 50%;
+  }
+
+  .habit-title-text {
+    font-size: 14px;
+    font-weight: 500;
+    color: #FFFFFF;
+  }
+
+  .habit-right {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  /* Pulsing animation */
+  @keyframes rune-breathe {
+    0% { transform: scale(1); opacity: 0.4; box-shadow: 0 0 2px rgba(43, 238, 121, 0.2); }
+    50% { transform: scale(1.15); opacity: 0.85; box-shadow: 0 0 10px rgba(43, 238, 121, 0.6); }
+    100% { transform: scale(1); opacity: 0.4; box-shadow: 0 0 2px rgba(43, 238, 121, 0.2); }
+  }
+
+  @keyframes active-rune-glow {
+    0% { transform: scale(1); opacity: 0.7; box-shadow: 0 0 4px #2BEE79, inset 0 0 4px #2BEE79; }
+    50% { transform: scale(1.12); opacity: 1.0; box-shadow: 0 0 14px #2BEE79, inset 0 0 6px #2BEE79; }
+    100% { transform: scale(1); opacity: 0.7; box-shadow: 0 0 4px #2BEE79, inset 0 0 4px #2BEE79; }
+  }
+
+  .rune-socket-dormant {
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    border: 1.5px dashed rgba(43, 238, 121, 0.5);
+    background: transparent;
+    animation: rune-breathe 2.5s infinite ease-in-out;
+  }
+
+  .rune-socket-active {
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    border: 1.5px solid #2BEE79;
+    background: #2BEE79;
+    animation: active-rune-glow 2.0s infinite ease-in-out;
+  }
+
+  .attribute-badge {
+    padding: 3px 6px;
+    border-radius: 4px;
+    font-size: 9px;
+    font-weight: bold;
+    text-transform: uppercase;
+  }
+
+  .badge-mind {
+    background: rgba(126, 87, 194, 0.15);
+    color: #7E57C2;
+    border: 1px solid rgba(126, 87, 194, 0.3);
+  }
+</style>
+
+<div class="section">
+  <h3>1. Feature Coach Mark Overlay Preview</h3>
+  <p class="subtitle">A full-screen dismissible modal that pops up on first visit to orient the user using plain-language cards.</p>
+  
+  <div class="dark-preview-container">
+    <span class="label">Interactive Simulation (Overlay state)</span>
+    <div class="coach-mark-wrapper">
+      <div class="coach-title-row">
+        <div class="coach-icon-container">ⓘ</div>
+        <div class="coach-title">Daily Reflections Guide</div>
+        <div class="coach-close-hint">Tap anywhere to close</div>
+      </div>
+      
+      <div class="coach-items-list">
+        <div class="coach-item">
+          <div class="coach-item-bullet">⚡</div>
+          <div class="coach-item-content">
+            <h4>Understand Your Patterns</h4>
+            <p>Your weekly trends are decoded by AI to pinpoint cognitive boosts and emotional blockages.</p>
+          </div>
+        </div>
+        <div class="coach-item">
+          <div class="coach-item-bullet">⚓</div>
+          <div class="coach-item-content">
+            <h4>Log Daily Reflections</h4>
+            <p>Reflect on how your mood correlates with habits to strengthen your identity alignment.</p>
+          </div>
+        </div>
+        <div class="coach-item">
+          <div class="coach-item-bullet">✨</div>
+          <div class="coach-item-content">
+            <h4>Receive Custom Advice</h4>
+            <p>Your virtual coach checks in daily with actionable adjustments tailored just for you.</p>
+          </div>
+        </div>
+      </div>
+      
+      <div class="coach-btn">GOT IT — LET'S GO</div>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>2. "Rune & Socket" Habit Card Details</h3>
+  <p class="subtitle">A subtle, dynamic visual cue on the habit card pointing to the detailed settings and integration options.</p>
+  
+  <div class="dark-preview-container">
+    <span class="label">Side-by-Side Comparison</span>
+    <div class="habit-cards-row">
+      
+      <!-- Dormant Shard -->
+      <div class="habit-card-mockup" style="border-color: rgba(43, 238, 121, 0.15)">
+        <div class="habit-left">
+          <div class="habit-checkbox"></div>
+          <div>
+            <div class="habit-title-text">Meditate for 10 minutes</div>
+            <div style="font-size: 10px; color: rgba(255,255,255,0.4); margin-top: 2px;">Dormant Shard (Unconfigured modifiers)</div>
+          </div>
+        </div>
+        <div class="habit-right">
+          <div class="rune-socket-dormant" title="Tap to awaken detailed modifiers"></div>
+          <div class="attribute-badge badge-mind">Mind</div>
+        </div>
+      </div>
+
+      <!-- Awakened Shard -->
+      <div class="habit-card-mockup" style="border-color: rgba(43, 238, 121, 0.4); background: rgba(43, 238, 121, 0.02)">
+        <div class="habit-left">
+          <div class="habit-checkbox" style="border-color: rgba(43,238,121,0.5)"></div>
+          <div>
+            <div class="habit-title-text">Meditate for 10 minutes</div>
+            <div style="font-size: 10px; color: #2BEE79; margin-top: 2px;">Awakened Shard (Active 2m timer & reward)</div>
+          </div>
+        </div>
+        <div class="habit-right">
+          <div class="rune-socket-active" title="Details active!"></div>
+          <div class="attribute-badge badge-mind" style="border-color: #2BEE79; color: #2BEE79">Mind</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>3. Architectural & Implementation Options</h3>
+  <p class="subtitle">Select the implementation approach you want to take.</p>
+  
+  <div class="options">
+    <div class="option selected" data-choice="a" onclick="toggleSelect(this)">
+      <div class="letter">A</div>
+      <div class="content">
+        <h3>Shared Widget Architecture (Recommended)</h3>
+        <p>Build a generic <code>FeatureCoachMark</code> widget in <code>lib/core/presentation/widgets/</code> and wrap screens in a stack. The "Rune & Socket" is dynamic based on checking if <code>habit.twoMinuteVersion</code> or <code>habit.reward</code> etc is set.</p>
+      </div>
+    </div>
+    
+    <div class="option" data-choice="b" onclick="toggleSelect(this)">
+      <div class="letter">B</div>
+      <div class="content">
+        <h3>Screen-by-Screen Implementation</h3>
+        <p>Create separate overlay classes for each screen. This allows screen-specific custom shapes but has more boilerplate. The card indicator is a simple static edit button.</p>
+      </div>
+    </div>
+  </div>
+</div>

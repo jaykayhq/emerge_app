@@ -3,7 +3,8 @@ import 'package:emerge_app/core/services/notification_service.dart';
 import 'package:emerge_app/core/theme/app_theme.dart';
 import 'package:emerge_app/features/habits/domain/entities/habit.dart';
 import 'package:emerge_app/features/habits/presentation/providers/habit_providers.dart';
-import 'package:emerge_app/features/habits/presentation/widgets/habit_form_widgets.dart';
+import 'package:emerge_app/features/habits/presentation/widgets/habit_form_widgets.dart' hide GlassmorphismCard;
+import 'package:emerge_app/core/presentation/widgets/glassmorphism_card.dart';
 import 'package:emerge_app/features/habits/presentation/widgets/habit_timer_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -246,6 +247,7 @@ class _HabitDetailScreenState extends ConsumerState<HabitDetailScreen> {
                 // Two-Minute Rule Section
                 GlassmorphismCard(
                   padding: const EdgeInsets.all(16),
+                  margin: EdgeInsets.zero,
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -390,6 +392,7 @@ class _HabitDetailScreenState extends ConsumerState<HabitDetailScreen> {
                 // Temptation Bundling Section
                 GlassmorphismCard(
                   padding: const EdgeInsets.all(16),
+                  margin: EdgeInsets.zero,
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -465,10 +468,12 @@ class _HabitDetailScreenState extends ConsumerState<HabitDetailScreen> {
                     ],
                   ),
                 ),
+                const Gap(24),
 
                 // Environment Priming Section
                 GlassmorphismCard(
                   padding: const EdgeInsets.all(16),
+                  margin: EdgeInsets.zero,
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -584,12 +589,12 @@ class _HabitDetailScreenState extends ConsumerState<HabitDetailScreen> {
                     ],
                   ),
                 ),
-
                 const Gap(24),
 
                 // Health Integration Section
                 GlassmorphismCard(
                   padding: const EdgeInsets.all(16),
+                  margin: EdgeInsets.zero,
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -731,9 +736,11 @@ class _HabitDetailScreenState extends ConsumerState<HabitDetailScreen> {
                 const Gap(24),
 
                 // Anchor Habit Section (Optional)
-                if (availableAnchors.isNotEmpty)
+                if (availableAnchors.isNotEmpty) ...[
+                  const Gap(24),
                   GlassmorphismCard(
                     padding: const EdgeInsets.all(16),
+                    margin: EdgeInsets.zero,
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -787,12 +794,13 @@ class _HabitDetailScreenState extends ConsumerState<HabitDetailScreen> {
                       ],
                     ),
                   ),
-
-                const Gap(32),
+                ],
+                const Gap(24),
 
                 // Delete Habit Section
                 GlassmorphismCard(
                   padding: const EdgeInsets.all(20),
+                  margin: EdgeInsets.zero,
                   child: Column(
                     children: [
                       Icon(
