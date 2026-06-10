@@ -5,6 +5,7 @@ import 'package:gap/gap.dart';
 import 'package:emerge_app/features/companion/presentation/providers/companion_providers.dart';
 import 'package:emerge_app/features/companion/domain/enums/companion_enums.dart';
 import 'package:go_router/go_router.dart';
+import 'package:emerge_app/core/presentation/widgets/feature_coach_mark.dart';
 
 import 'package:emerge_app/core/presentation/widgets/app_error_widget.dart';
 import 'package:emerge_app/core/presentation/widgets/emerge_loading_skeleton.dart';
@@ -34,6 +35,8 @@ class _TribeTabContentState extends ConsumerState<TribeTabContent> {
   final GlobalKey _bondsKey = GlobalKey();
   final GlobalKey _feedKey = GlobalKey();
 
+  bool _showFirstVisitGuide = false;
+
   @override
   void initState() {
     super.initState();
@@ -48,6 +51,7 @@ class _TribeTabContentState extends ConsumerState<TribeTabContent> {
               eventType: CompanionEventType.firstFeatureVisit,
               userContext: {'route': '/tribes'},
             );
+        setState(() => _showFirstVisitGuide = true);
       }
     });
   }
@@ -57,210 +61,232 @@ class _TribeTabContentState extends ConsumerState<TribeTabContent> {
     final profileAsync = ref.watch(userStatsStreamProvider);
     final clubsAsync = ref.watch(allArchetypeClubsProvider);
 
-    return clubsAsync.when(
-      data: (clubs) {
-        return profileAsync.when(
-          data: (profile) {
-            final theme = ArchetypeTheme.forArchetype(profile.archetype);
+    return Stack(
+      children: [
+        clubsAsync.when(
+          data: (clubs) {
+            return profileAsync.when(
+              data: (profile) {
+                final theme = ArchetypeTheme.forArchetype(profile.archetype);
 
-            // Find the club that matches the user's archetype
-            // First try exact archetype match, then fall back to multi-archetype clubs
-            final matchingIndex = clubs.isNotEmpty
-                ? clubs.indexWhere(
-                    (club) => club.archetypeId == profile.archetype.name,
-                  )
-                : -1;
-            final userClub = matchingIndex != -1
-                ? clubs[matchingIndex]
-                : clubs
-                      .where(
-                        (club) =>
-                            club.archetypeId == null ||
-                            club.archetypeId!.isEmpty,
+                // Find the club that matches the user's archetype
+                // First try exact archetype match, then fall back to multi-archetype clubs
+                final matchingIndex = clubs.isNotEmpty
+                    ? clubs.indexWhere(
+                        (club) => club.archetypeId == profile.archetype.name,
                       )
-                      .firstOrNull;
+                    : -1;
+                final userClub = matchingIndex != -1
+                    ? clubs[matchingIndex]
+                    : clubs
+                          .where(
+                            (club) =>
+                                club.archetypeId == null ||
+                                club.archetypeId!.isEmpty,
+                          )
+                          .firstOrNull;
 
-            if (userClub == null) {
-              return const _EmptyState(
-                message: 'No clubs available for your archetype yet.',
-                icon: Icons.groups,
-              );
-            }
+                if (userClub == null) {
+                  return const _EmptyState(
+                    message: 'No clubs available for your archetype yet.',
+                    icon: Icons.groups,
+                  );
+                }
 
-            return RefreshIndicator(
-              onRefresh: () async {
-                ref.invalidate(allArchetypeClubsProvider);
-                ref.invalidate(userStatsStreamProvider);
-              },
-              color: EmergeColors.teal,
-              child: SingleChildScrollView(
-                physics: const AlwaysScrollableScrollPhysics(),
-                padding: const EdgeInsets.symmetric(horizontal: 20),
-                child: Column(
-                  children: [
-                    const Gap(16),
-
-                    // ===== CLUB EMBLEM (Archetype-colored) =====
-                    ArchetypeClubEmblem(
-                      key: _emblemKey,
-                      theme: theme,
-                    ).animate().fadeIn().scale(begin: const Offset(0.9, 0.9)),
-
-                    const Gap(16),
-
-                    // ===== CLUB NAME & SUBTITLE =====
-                    Text(
-                      userClub.name.toUpperCase(),
-                      style: Theme.of(context).textTheme.headlineSmall
-                          ?.copyWith(
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white,
-                            letterSpacing: 1.5,
-                          ),
-                    ).animate().fadeIn(delay: 100.ms),
-                    const Gap(4),
-                    Text(
-                      userClub.description,
-                      textAlign: TextAlign.center,
-                      style: const TextStyle(
-                        fontSize: 14,
-                        color: Colors.white70,
-                      ),
-                    ).animate().fadeIn(delay: 150.ms),
-
-                    const Gap(16),
-
-                    // ===== MEMBER COUNT (Real-time from members array) =====
-                    RealTimeMemberCount(
-                      tribeId: userClub.id,
-                    ).animate().fadeIn(delay: 200.ms),
-
-                    const Gap(32),
-
-                    // ===== TOP CONTRIBUTORS =====
-                    ContributorsSection(
-                      clubId: userClub.id,
-                    ).animate().fadeIn(delay: 300.ms),
-
-                    const Gap(32),
-
-                    // ===== PROGRESS METRICS (Real-time stats) =====
-                    RealTimeTribeProgressMetrics(
-                      isGlobal: _showGlobalActivity,
-                      tribeId: userClub.id,
-                      theme: theme,
-                    ).animate().fadeIn(delay: 350.ms),
-
-                    const Gap(32),
-
-                    // ===== LEADERBOARD =====
-                    _TribeLeaderboardSection(
-                      clubId: userClub.id,
-                      archetypeName: profile.archetype.name,
-                      isGlobal: _showGlobalActivity,
-                    ).animate().fadeIn(delay: 370.ms),
-
-                    const Gap(32),
-
-                    TribeAccountabilitySection(
-                      key: _bondsKey,
-                    ).animate().fadeIn(delay: 400.ms),
-
-                    const Gap(32),
-
-                    // ===== ACTIVE QUESTS =====
-                    const TribeQuestsSection().animate().fadeIn(delay: 450.ms),
-
-                    const Gap(32),
-
-                    // ===== ACTIVITY FEED HEADER CON toggle =====
-                    Row(
-                      key: _feedKey,
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                return RefreshIndicator(
+                  onRefresh: () async {
+                    ref.invalidate(allArchetypeClubsProvider);
+                    ref.invalidate(userStatsStreamProvider);
+                  },
+                  color: EmergeColors.teal,
+                  child: SingleChildScrollView(
+                    physics: const AlwaysScrollableScrollPhysics(),
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    child: Column(
                       children: [
+                        const Gap(16),
+
+                        // ===== CLUB EMBLEM (Archetype-colored) =====
+                        ArchetypeClubEmblem(
+                          key: _emblemKey,
+                          theme: theme,
+                        ).animate().fadeIn().scale(begin: const Offset(0.9, 0.9)),
+
+                        const Gap(16),
+
+                        // ===== CLUB NAME & SUBTITLE =====
                         Text(
-                          _showGlobalActivity
-                              ? 'Global Activity'
-                              : 'Recent Activity',
+                          userClub.name.toUpperCase(),
+                          style: Theme.of(context).textTheme.headlineSmall
+                              ?.copyWith(
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                                letterSpacing: 1.5,
+                              ),
+                        ).animate().fadeIn(delay: 100.ms),
+                        const Gap(4),
+                        Text(
+                          userClub.description,
+                          textAlign: TextAlign.center,
                           style: const TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white,
+                            fontSize: 14,
+                            color: Colors.white70,
                           ),
-                        ),
-                        Container(
-                          padding: const EdgeInsets.all(4),
-                          decoration: BoxDecoration(
-                            color: EmergeColors.glassWhite,
-                            borderRadius: BorderRadius.circular(12),
-                            border: Border.all(color: EmergeColors.glassBorder),
-                          ),
-                          child: Row(
-                            children: [
-                              _ToggleItem(
-                                label: 'Tribe',
-                                isSelected: !_showGlobalActivity,
-                                onTap: () =>
-                                    setState(() => _showGlobalActivity = false),
+                        ).animate().fadeIn(delay: 150.ms),
+
+                        const Gap(16),
+
+                        // ===== MEMBER COUNT (Real-time from members array) =====
+                        RealTimeMemberCount(
+                          tribeId: userClub.id,
+                        ).animate().fadeIn(delay: 200.ms),
+
+                        const Gap(32),
+
+                        // ===== TOP CONTRIBUTORS =====
+                        ContributorsSection(
+                          clubId: userClub.id,
+                        ).animate().fadeIn(delay: 300.ms),
+
+                        const Gap(32),
+
+                        // ===== PROGRESS METRICS (Real-time stats) =====
+                        RealTimeTribeProgressMetrics(
+                          isGlobal: _showGlobalActivity,
+                          tribeId: userClub.id,
+                          theme: theme,
+                        ).animate().fadeIn(delay: 350.ms),
+
+                        const Gap(32),
+
+                        // ===== LEADERBOARD =====
+                        _TribeLeaderboardSection(
+                          clubId: userClub.id,
+                          archetypeName: profile.archetype.name,
+                          isGlobal: _showGlobalActivity,
+                        ).animate().fadeIn(delay: 370.ms),
+
+                        const Gap(32),
+
+                        TribeAccountabilitySection(
+                          key: _bondsKey,
+                        ).animate().fadeIn(delay: 400.ms),
+
+                        const Gap(32),
+
+                        // ===== ACTIVE QUESTS =====
+                        const TribeQuestsSection().animate().fadeIn(delay: 450.ms),
+
+                        const Gap(32),
+
+                        // ===== ACTIVITY FEED HEADER CON toggle =====
+                        Row(
+                          key: _feedKey,
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              _showGlobalActivity
+                                  ? 'Global Activity'
+                                  : 'Recent Activity',
+                              style: const TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
                               ),
-                              _ToggleItem(
-                                label: 'Global',
-                                isSelected: _showGlobalActivity,
-                                onTap: () =>
-                                    setState(() => _showGlobalActivity = true),
+                            ),
+                            Container(
+                              padding: const EdgeInsets.all(4),
+                              decoration: BoxDecoration(
+                                color: EmergeColors.glassWhite,
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(color: EmergeColors.glassBorder),
                               ),
-                            ],
+                              child: Row(
+                                children: [
+                                  _ToggleItem(
+                                    label: 'Tribe',
+                                    isSelected: !_showGlobalActivity,
+                                    onTap: () =>
+                                        setState(() => _showGlobalActivity = false),
+                                  ),
+                                  _ToggleItem(
+                                    label: 'Global',
+                                    isSelected: _showGlobalActivity,
+                                    onTap: () =>
+                                        setState(() => _showGlobalActivity = true),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ).animate().fadeIn(delay: 500.ms),
+
+                        const Gap(16),
+
+                        // ===== ACTIVITY FEED =====
+                        TribeActivitySection(
+                          clubId: _showGlobalActivity ? null : userClub.id,
+                          isGlobal: _showGlobalActivity,
+                        ).animate().fadeIn(delay: 550.ms),
+
+                        const Gap(32),
+
+                        // ===== SEE ALL TRIBES =====
+                        SizedBox(
+                          width: double.infinity,
+                          child: OutlinedButton.icon(
+                            onPressed: () => context.push('/tribes/all'),
+                            icon: const Icon(Icons.explore_outlined, size: 20),
+                            label: const Text('SEE ALL'),
+                            style: OutlinedButton.styleFrom(
+                              foregroundColor: Colors.white,
+                              side: const BorderSide(color: Colors.white24),
+                              padding: const EdgeInsets.symmetric(vertical: 16),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                            ),
                           ),
-                        ),
+                        ).animate().fadeIn(delay: 600.ms),
+
+                        const Gap(48),
                       ],
-                    ).animate().fadeIn(delay: 500.ms),
-
-                    const Gap(16),
-
-                    // ===== ACTIVITY FEED =====
-                    TribeActivitySection(
-                      clubId: _showGlobalActivity ? null : userClub.id,
-                      isGlobal: _showGlobalActivity,
-                    ).animate().fadeIn(delay: 550.ms),
-
-                    const Gap(32),
-
-                    // ===== SEE ALL TRIBES =====
-                    SizedBox(
-                      width: double.infinity,
-                      child: OutlinedButton.icon(
-                        onPressed: () => context.push('/tribes/all'),
-                        icon: const Icon(Icons.explore_outlined, size: 20),
-                        label: const Text('SEE ALL'),
-                        style: OutlinedButton.styleFrom(
-                          foregroundColor: Colors.white,
-                          side: const BorderSide(color: Colors.white24),
-                          padding: const EdgeInsets.symmetric(vertical: 16),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                        ),
-                      ),
-                    ).animate().fadeIn(delay: 600.ms),
-
-                    const Gap(48),
-                  ],
-                ),
+                    ),
+                  ),
+                );
+              },
+              loading: () => const EmergeLoadingSkeleton(itemCount: 1),
+              error: (error, stack) => AppErrorWidget(
+                message: 'Could not load your profile',
+                onRetry: () => ref.invalidate(userStatsStreamProvider),
               ),
             );
           },
-          loading: () => const EmergeLoadingSkeleton(itemCount: 1),
-          error: (error, stack) => AppErrorWidget(
-            message: 'Could not load your profile',
-            onRetry: () => ref.invalidate(userStatsStreamProvider),
+          loading: () => const EmergeLoadingSkeleton(itemCount: 5),
+          error: (error, _) => AppErrorWidget(
+            message: 'Could not load tribes',
+            onRetry: () => ref.invalidate(allArchetypeClubsProvider),
           ),
-        );
-      },
-      loading: () => const EmergeLoadingSkeleton(itemCount: 5),
-      error: (error, _) => AppErrorWidget(
-        message: 'Could not load tribes',
-        onRetry: () => ref.invalidate(allArchetypeClubsProvider),
-      ),
+        ),
+        if (_showFirstVisitGuide)
+          FeatureCoachMark(
+            title: "Tribe Sanctum",
+            primaryColor: EmergeColors.green,
+            items: const [
+              CoachItemData(
+                icon: Icons.shield_outlined,
+                title: "Tribe Momentum Score",
+                body: "Check your team's current weekly momentum, active members, and territory tier.",
+              ),
+              CoachItemData(
+                icon: Icons.people_outline,
+                title: "Tribe Accountability",
+                body: "Track who completed which habits today and maintain your collective streak.",
+              ),
+            ],
+            onDismiss: () => setState(() => _showFirstVisitGuide = false),
+          ),
+      ],
     );
   }
 }

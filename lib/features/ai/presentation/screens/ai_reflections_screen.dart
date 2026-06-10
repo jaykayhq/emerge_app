@@ -15,6 +15,7 @@ import 'package:emerge_app/features/monetization/presentation/providers/subscrip
 import 'package:emerge_app/core/presentation/widgets/oracle_card.dart';
 import 'package:emerge_app/features/habits/domain/entities/habit.dart';
 import 'package:emerge_app/features/gamification/domain/services/identity_engine.dart';
+import 'package:emerge_app/core/presentation/widgets/feature_coach_mark.dart';
 
 class AiReflectionsScreen extends ConsumerStatefulWidget {
   const AiReflectionsScreen({super.key});
@@ -25,6 +26,8 @@ class AiReflectionsScreen extends ConsumerStatefulWidget {
 }
 
 class _AiReflectionsScreenState extends ConsumerState<AiReflectionsScreen> {
+  bool _showFirstVisitGuide = false;
+
   @override
   void initState() {
     super.initState();
@@ -39,6 +42,7 @@ class _AiReflectionsScreenState extends ConsumerState<AiReflectionsScreen> {
               eventType: CompanionEventType.firstFeatureVisit,
               userContext: {'route': '/profile/reflections'},
             );
+        setState(() => _showFirstVisitGuide = true);
       }
     });
   }
@@ -215,6 +219,24 @@ class _AiReflectionsScreenState extends ConsumerState<AiReflectionsScreen> {
               ],
             ),
           ),
+          if (_showFirstVisitGuide)
+            FeatureCoachMark(
+              title: "AI Reflections & Insights",
+              primaryColor: EmergeColors.violet,
+              items: const [
+                CoachItemData(
+                  icon: Icons.auto_awesome,
+                  title: "Identity Recalibrations",
+                  body: "The Oracle periodically analyzes your habit compliance and voting behaviors to output tailored guidance.",
+                ),
+                CoachItemData(
+                  icon: Icons.lightbulb_outline,
+                  title: "Actionable Prompts",
+                  body: "Discover scheduling advice and custom schedules recommended directly by the companion engine.",
+                ),
+              ],
+              onDismiss: () => setState(() => _showFirstVisitGuide = false),
+            ),
         ],
       ),
     );

@@ -12,6 +12,7 @@ import 'package:emerge_app/features/companion/domain/enums/companion_enums.dart'
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
+import 'package:emerge_app/core/presentation/widgets/feature_coach_mark.dart';
 
 /// Challenges Screen - Optimized with bundle provider to prevent double refresh
 /// Uses single consolidated data fetch instead of multiple independent providers
@@ -37,6 +38,8 @@ class _ChallengesScreenState extends ConsumerState<ChallengesScreen> {
   final GlobalKey _filterKey = GlobalKey();
   final GlobalKey _createKey = GlobalKey();
 
+  bool _showFirstVisitGuide = false;
+
   @override
   void initState() {
     super.initState();
@@ -51,6 +54,7 @@ class _ChallengesScreenState extends ConsumerState<ChallengesScreen> {
               eventType: CompanionEventType.firstFeatureVisit,
               userContext: {'route': '/challenges'},
             );
+        setState(() => _showFirstVisitGuide = true);
       }
     });
   }
@@ -78,6 +82,24 @@ class _ChallengesScreenState extends ConsumerState<ChallengesScreen> {
             ),
             // Unified skeleton loader during initial load
             if (bundleAsync.isLoading) const ChallengesSkeletonLoader(),
+            if (_showFirstVisitGuide)
+              FeatureCoachMark(
+                title: "Active Quests & Challenges",
+                primaryColor: EmergeColors.teal,
+                items: const [
+                  CoachItemData(
+                    icon: Icons.emoji_events,
+                    title: "Spotlight & Daily Quests",
+                    body: "Embark on community-wide spotlight challenges and quick daily quests to boost consistency.",
+                  ),
+                  CoachItemData(
+                    icon: Icons.person_add_alt_outlined,
+                    title: "Solo Quests",
+                    body: "Tap the floating action button to construct custom, personal challenges aligned with your values.",
+                  ),
+                ],
+                onDismiss: () => setState(() => _showFirstVisitGuide = false),
+              ),
           ],
         ),
       ),

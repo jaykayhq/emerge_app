@@ -10,6 +10,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:emerge_app/core/presentation/widgets/feature_coach_mark.dart';
 
 class SocialDiscoverTab extends ConsumerStatefulWidget {
   const SocialDiscoverTab({super.key});
@@ -30,6 +31,8 @@ const _displayedBlueprintCategories = {
 };
 
 class _SocialDiscoverTabState extends ConsumerState<SocialDiscoverTab> {
+  bool _showFirstVisitGuide = false;
+
   @override
   void initState() {
     super.initState();
@@ -44,6 +47,7 @@ class _SocialDiscoverTabState extends ConsumerState<SocialDiscoverTab> {
               eventType: CompanionEventType.firstFeatureVisit,
               userContext: {'route': '/discover'},
             );
+        setState(() => _showFirstVisitGuide = true);
       }
     });
   }
@@ -52,44 +56,66 @@ class _SocialDiscoverTabState extends ConsumerState<SocialDiscoverTab> {
   Widget build(BuildContext context) {
     final blueprintsAsync = ref.watch(allBlueprintsStreamProvider);
 
-    return blueprintsAsync.when(
-      data: (blueprints) {
-        // Group blueprints by category (filter out old archetype categories)
-        final grouped = <String, List<Blueprint>>{};
-        for (final bp in blueprints) {
-          final cat = bp.category;
-          if (!_displayedBlueprintCategories.contains(cat)) continue;
-          grouped.putIfAbsent(cat, () => []).add(bp);
-        }
-
-        final categories = grouped.keys.toList()..sort();
-
-        if (categories.isEmpty) {
-          return const _EmptyState();
-        }
-
-        return RefreshIndicator(
-          onRefresh: () async {
-            ref.invalidate(allBlueprintsStreamProvider);
+    return Stack(
+      children: [
+        blueprintsAsync.when(
+          data: (blueprints) {
+            // Group blueprints by category (filter out old archetype categories)
+            final grouped = <String, List<Blueprint>>{};
+            for (final bp in blueprints) {
+              final cat = bp.category;
+              if (!_displayedBlueprintCategories.contains(cat)) continue;
+              grouped.putIfAbsent(cat, () => []).add(bp);
+            }
+     
+            final categories = grouped.keys.toList()..sort();
+     
+            if (categories.isEmpty) {
+              return const _EmptyState();
+            }
+     
+            return RefreshIndicator(
+              onRefresh: () async {
+                ref.invalidate(allBlueprintsStreamProvider);
+              },
+              color: EmergeColors.teal,
+              child: ListView(
+                padding: const EdgeInsets.only(top: 16, bottom: 40),
+                children: categories.asMap().entries.map((entry) {
+                  final category = entry.value;
+                  final items = grouped[category]!;
+                  return _CategoryStrip(title: category, items: items);
+                }).toList(),
+              ),
+            );
           },
-          color: EmergeColors.teal,
-          child: ListView(
-            padding: const EdgeInsets.only(top: 16, bottom: 40),
-            children: categories.asMap().entries.map((entry) {
-              final category = entry.value;
-              final items = grouped[category]!;
-              return _CategoryStrip(title: category, items: items);
-            }).toList(),
+          loading: () => _buildShimmerLoading(),
+          error: (err, stack) => Center(
+            child: AppErrorWidget(
+              message: 'Could not load blueprints',
+              onRetry: () => ref.refresh(allBlueprintsStreamProvider),
+            ),
           ),
-        );
-      },
-      loading: () => _buildShimmerLoading(),
-      error: (err, stack) => Center(
-        child: AppErrorWidget(
-          message: 'Could not load blueprints',
-          onRetry: () => ref.refresh(allBlueprintsStreamProvider),
         ),
-      ),
+        if (_showFirstVisitGuide)
+          FeatureCoachMark(
+            title: "Discover Blueprints",
+            primaryColor: EmergeColors.teal,
+            items: const [
+              CoachItemData(
+                icon: Icons.explore_outlined,
+                title: "Curated Habit Packs",
+                body: "Explore habit templates and blueprints created by the community and optimized for specific archetypes.",
+              ),
+              CoachItemData(
+                icon: Icons.category_outlined,
+                title: "Structured Categories",
+                body: "Filter blueprints by focus areas such as Fitness, Productivity, Mindfulness, and Learning.",
+              ),
+            ],
+            onDismiss: () => setState(() => _showFirstVisitGuide = false),
+          ),
+      ],
     );
   }
 
