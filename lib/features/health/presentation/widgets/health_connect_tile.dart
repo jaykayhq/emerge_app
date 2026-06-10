@@ -45,7 +45,6 @@ class HealthConnectTile extends StatelessWidget {
         color: isConnected ? EmergeColors.teal : AppTheme.textSecondaryDark,
       ),
       onTap: onTap,
-      tileColor: AppTheme.surfaceDark,
     );
   }
 }
