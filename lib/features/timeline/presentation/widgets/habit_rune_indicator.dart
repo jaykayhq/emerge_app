@@ -14,7 +14,7 @@ class DashedCirclePainter extends CustomPainter {
       ..strokeWidth = 1.5
       ..style = PaintingStyle.stroke;
 
-    final double radius = size.width / 2;
+    final double radius = (size.width - paint.strokeWidth) / 2;
     final center = Offset(size.width / 2, size.height / 2);
 
     const int dashCount = 8;
@@ -61,11 +61,29 @@ class _HabitRuneIndicatorState extends State<HabitRuneIndicator>
     _controller = AnimationController(
       duration: const Duration(milliseconds: 1500),
       vsync: this,
-    )..repeat(reverse: true);
+    );
 
     _animation = Tween<double>(begin: 0.4, end: 1.0).animate(
       CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
     );
+
+    if (!_isForged) {
+      _controller.repeat(reverse: true);
+    }
+  }
+
+  @override
+  void didUpdateWidget(covariant HabitRuneIndicator oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (_isForged) {
+      if (_controller.isAnimating) {
+        _controller.stop();
+      }
+    } else {
+      if (!_controller.isAnimating) {
+        _controller.repeat(reverse: true);
+      }
+    }
   }
 
   @override

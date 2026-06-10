@@ -61,4 +61,26 @@ void main() {
       findsNothing,
     );
   });
+
+  testWidgets('HabitRuneIndicator pulses opacity over time when dormant', (tester) async {
+    final habit = makeHabit();
+    await tester.pumpWidget(MaterialApp(
+      home: Scaffold(
+        body: HabitRuneIndicator(habit: habit),
+      ),
+    ));
+
+    final opacityFinder = find.descendant(
+      of: find.byType(HabitRuneIndicator),
+      matching: find.byType(Opacity),
+    );
+    final opacityWidget1 = tester.widget<Opacity>(opacityFinder);
+    final initialOpacity = opacityWidget1.opacity;
+
+    // Advance animation
+    await tester.pump(const Duration(milliseconds: 750));
+
+    final opacityWidget2 = tester.widget<Opacity>(opacityFinder);
+    expect(opacityWidget2.opacity, isNot(equals(initialOpacity)));
+  });
 }
