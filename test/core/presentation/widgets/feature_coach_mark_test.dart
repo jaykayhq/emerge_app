@@ -26,4 +26,46 @@ void main() {
     await tester.pumpAndSettle();
     expect(dismissed, isTrue);
   });
+
+  testWidgets('FeatureCoachMark triggers onDismiss when tapping background', (tester) async {
+    bool dismissed = false;
+    await tester.pumpWidget(MaterialApp(
+      home: Scaffold(
+        body: FeatureCoachMark(
+          title: 'Test Coach Mark',
+          primaryColor: Colors.blue,
+          items: const [
+            CoachItemData(icon: Icons.star, title: 'Item 1', body: 'Body 1'),
+          ],
+          onDismiss: () => dismissed = true,
+        ),
+      ),
+    ));
+
+    // Tap background (top left corner of the screen)
+    await tester.tapAt(const Offset(10, 10));
+    await tester.pumpAndSettle();
+    expect(dismissed, isTrue);
+  });
+
+  testWidgets('FeatureCoachMark does not trigger onDismiss when tapping card content', (tester) async {
+    bool dismissed = false;
+    await tester.pumpWidget(MaterialApp(
+      home: Scaffold(
+        body: FeatureCoachMark(
+          title: 'Test Coach Mark',
+          primaryColor: Colors.blue,
+          items: const [
+            CoachItemData(icon: Icons.star, title: 'Item 1', body: 'Body 1'),
+          ],
+          onDismiss: () => dismissed = true,
+        ),
+      ),
+    ));
+
+    // Tap on the text of the card (e.g. 'Item 1')
+    await tester.tap(find.text('Item 1'));
+    await tester.pumpAndSettle();
+    expect(dismissed, isFalse);
+  });
 }

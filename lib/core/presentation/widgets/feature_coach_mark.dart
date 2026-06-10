@@ -61,7 +61,14 @@ class _FeatureCoachMarkState extends State<FeatureCoachMark>
   }
 
   void _dismiss() {
-    _controller.reverse().then((_) => widget.onDismiss());
+    if (!mounted) return;
+    _controller.reverse().then((_) {
+      if (mounted) {
+        widget.onDismiss();
+      }
+    }).catchError((_) {
+      // TickerCanceled exception occurs when widget is disposed during the reverse animation
+    });
   }
 
   @override
@@ -101,7 +108,6 @@ class _FeatureCoachMarkState extends State<FeatureCoachMark>
                     mainAxisSize: MainAxisSize.min,
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // Title row
                       Row(
                         children: [
                           Container(
@@ -120,23 +126,27 @@ class _FeatureCoachMarkState extends State<FeatureCoachMark>
                           ),
                           const SizedBox(width: 12),
                           Expanded(
-                            child: Text(
-                              widget.title,
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
-                                letterSpacing: 0.5,
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          // Dismiss hint
-                          const Text(
-                            'Tap anywhere to close',
-                            style: TextStyle(
-                              color: Colors.white30,
-                              fontSize: 10,
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  widget.title,
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold,
+                                    letterSpacing: 0.5,
+                                  ),
+                                ),
+                                const SizedBox(height: 2),
+                                const Text(
+                                  'Tap anywhere to close',
+                                  style: TextStyle(
+                                    color: Colors.white30,
+                                    fontSize: 10,
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
                         ],
