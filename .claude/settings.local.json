@@ -85,7 +85,8 @@
       "WebFetch(domain:www.websiteplanet.com)",
       "WebFetch(domain:publer.com)",
       "WebFetch(domain:blog.hootsuite.com)",
-      "WebFetch(domain:www.vista-social.com)"
+      "WebFetch(domain:www.vista-social.com)",
+      "PowerShell(Get-Command flutter, dart -ErrorAction SilentlyContinue)"
     ],
     "deny": [],
     "ask": []

@@ -12,9 +12,9 @@ import io.flutter.plugin.common.MethodChannel
 class ScreenTimePlugin(private val context: Context) : MethodChannel.MethodCallHandler {
     companion object {
         private const val CHANNEL = "com.emerge.emerge_app/screen_time"
-        fun registerWith(engine: FlutterEngine) {
+        fun registerWith(engine: FlutterEngine, context: Context) {
             val channel = MethodChannel(engine.dartExecutor.binaryMessenger, CHANNEL)
-            channel.setMethodCallHandler(ScreenTimePlugin(engine.applicationContext))
+            channel.setMethodCallHandler(ScreenTimePlugin(context))
         }
     }
 

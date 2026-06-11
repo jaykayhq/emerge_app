@@ -58,20 +58,20 @@ class EmergeBottomNav extends StatelessWidget {
                   ),
                   // Center spacer for FAB
                   const SizedBox(width: 80),
-                  // Right side: Tribe + Profile
+                  // Right side: Forge + Tribe
                   Expanded(
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                       children: [
                         _NavItem(
-                          icon: Icons.groups,
-                          label: 'Tribe',
+                          icon: Icons.explore_outlined,
+                          label: 'Forge',
                           isSelected: currentIndex == 2,
                           onTap: () => _onItemTapped(2),
                         ),
                         _NavItem(
-                          icon: Icons.person,
-                          label: 'Identity',
+                          icon: Icons.groups,
+                          label: 'Tribe',
                           isSelected: currentIndex == 3,
                           onTap: () => _onItemTapped(3),
                         ),

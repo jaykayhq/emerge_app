@@ -220,14 +220,16 @@ Future<HabitCompletionResult> completeHabit(Ref ref, String habitId) async {
                 HabitDifficulty.hard =>
                   GamificationConstants.difficultyHardMultiplier,
               };
-              final engine = LocalGameLoopEngine();
-              final xpGained = engine.computeXpGain(
-                difficultyMultiplier: difficultyMultiplier,
-                streak: newStreak,
-              );
               final baseXp =
                   (GamificationConstants.baseXpPerHabit * difficultyMultiplier)
                       .toInt();
+
+              final breakdown = calculateXpBreakdown(
+                habit: habit,
+                baseXp: baseXp,
+                currentStreak: newStreak,
+              );
+              final xpGained = breakdown.totalXp;
 
               final isMilestone = VariableRewardService.isStreakMilestone(
                 newStreak,
@@ -237,6 +239,9 @@ Future<HabitCompletionResult> completeHabit(Ref ref, String habitId) async {
                 AppLogger.i(
                   'Streak milestone reached: $newStreak days for habit $habitId',
                 );
+                final milestoneMessage =
+                    VariableRewardService.getMilestoneMessage(newStreak);
+                AppLogger.i('Milestone message: $milestoneMessage');
                 if (ref.mounted) {
                   ref
                       .read(cueNotifierProvider.notifier)

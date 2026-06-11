@@ -1,0 +1,81 @@
+<h2>Bottom Navigation Reorganization</h2>
+<p class="subtitle">Replacing "Identity" (Profile) with "Discover" (Habit & Blueprint Library) in the primary application navigation.</p>
+
+<div class="options">
+  <div class="option" data-choice="nav-order-1" onclick="toggleSelect(this)">
+    <div class="letter">A</div>
+    <div class="content">
+      <h3>Option A: World | Habits | [FAB] | Discover | Tribe</h3>
+      <p>Places "Discover" immediately to the right of the center FAB, and "Tribe" as the rightmost item. This maps the natural flow from personal habits to global exploration, blueprints, and finally team-based gameplay.</p>
+      
+      <div style="margin-top: 15px; background: #131315; border: 1px solid var(--border); padding: 16px; border-radius: 12px; display: flex; flex-direction: column; gap: 12px;">
+        <div style="font-size: 0.75rem; text-transform: uppercase; color: var(--text-secondary); letter-spacing: 0.05em;">Visual Representation (Right Side Focus)</div>
+        <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.05); padding: 8px 16px; border-radius: 8px;">
+          <!-- Left items -->
+          <div style="display: flex; gap: 16px; font-size: 0.75rem; color: rgba(255,255,255,0.4);">
+            <div style="text-align: center;">🌐<br>World</div>
+            <div style="text-align: center;">📅<br>Habits</div>
+          </div>
+          
+          <!-- Diamond FAB -->
+          <div style="width: 36px; height: 36px; border-radius: 6px; transform: rotate(45deg); background: linear-gradient(135deg, #00F0FF, #BD00FF); display: flex; align-items: center; justify-content: center;">
+            <div style="transform: rotate(-45deg); color: white; font-weight: bold; font-size: 1.1rem;">+</div>
+          </div>
+          
+          <!-- Right items -->
+          <div style="display: flex; gap: 16px; font-size: 0.75rem;">
+            <div style="text-align: center; color: #00F0FF; font-weight: bold;">🔍<br>Discover</div>
+            <div style="text-align: center; color: rgba(255,255,255,0.4);">👥<br>Tribe</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="option" data-choice="nav-order-2" onclick="toggleSelect(this)">
+    <div class="letter">B</div>
+    <div class="content">
+      <h3>Option B: World | Habits | [FAB] | Tribe | Discover</h3>
+      <p>Keeps "Tribe" directly next to the FAB (where it was originally) and puts "Discover" as the rightmost item. This preserves muscle memory for the primary Tribe Sanctum access point.</p>
+      
+      <div style="margin-top: 15px; background: #131315; border: 1px solid var(--border); padding: 16px; border-radius: 12px; display: flex; flex-direction: column; gap: 12px;">
+        <div style="font-size: 0.75rem; text-transform: uppercase; color: var(--text-secondary); letter-spacing: 0.05em;">Visual Representation (Right Side Focus)</div>
+        <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.05); padding: 8px 16px; border-radius: 8px;">
+          <!-- Left items -->
+          <div style="display: flex; gap: 16px; font-size: 0.75rem; color: rgba(255,255,255,0.4);">
+            <div style="text-align: center;">🌐<br>World</div>
+            <div style="text-align: center;">📅<br>Habits</div>
+          </div>
+          
+          <!-- Diamond FAB -->
+          <div style="width: 36px; height: 36px; border-radius: 6px; transform: rotate(45deg); background: linear-gradient(135deg, #00F0FF, #BD00FF); display: flex; align-items: center; justify-content: center;">
+            <div style="transform: rotate(-45deg); color: white; font-weight: bold; font-size: 1.1rem;">+</div>
+          </div>
+          
+          <!-- Right items -->
+          <div style="display: flex; gap: 16px; font-size: 0.75rem;">
+            <div style="text-align: center; color: rgba(255,255,255,0.4);">👥<br>Tribe</div>
+            <div style="text-align: center; color: #BD00FF; font-weight: bold;">🔍<br>Discover</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="pros-cons" style="margin-top: 2rem;">
+  <div class="pros">
+    <h4>Key Improvements</h4>
+    <ul>
+      <li>Removes Profile screen clutter from direct main navigation.</li>
+      <li>Gives immediate 1-tap access to the newly designed **Habit & Creator Blueprints Library** (Discover).</li>
+      <li>Perfectly fits the Emerge 4-tab model (World, Habits, Discover, Tribe) centered by the habit‑creation diamond FAB.</li>
+    </ul>
+  </div>
+  <div class="cons">
+    <h4>Considerations</h4>
+    <ul>
+      <li>User Profile/Identity settings will now be moved to a clean settings overlay or icon in the App Bar (e.g. on World or Discover screens) instead of occupying a primary bottom nav slot.</li>
+    </ul>
+  </div>
+</div>
