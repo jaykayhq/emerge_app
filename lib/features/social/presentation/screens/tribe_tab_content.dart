@@ -1,3 +1,4 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -16,6 +17,7 @@ import 'package:emerge_app/features/social/presentation/providers/tribes_provide
 import 'package:emerge_app/features/social/presentation/providers/leaderboard_provider.dart';
 import 'package:emerge_app/features/social/domain/entities/leaderboard_entry.dart';
 import 'package:emerge_app/features/gamification/presentation/providers/user_stats_providers.dart';
+import 'package:emerge_app/features/auth/domain/entities/user_extension.dart';
 import '../widgets/tribe_header_widgets.dart';
 import '../widgets/tribe_quests_section.dart';
 import '../widgets/tribe_activity_feed.dart';
@@ -93,165 +95,78 @@ class _TribeTabContentState extends ConsumerState<TribeTabContent> {
                   );
                 }
 
-                return RefreshIndicator(
-                  onRefresh: () async {
-                    ref.invalidate(allArchetypeClubsProvider);
-                    ref.invalidate(userStatsStreamProvider);
-                  },
-                  color: EmergeColors.teal,
-                  child: SingleChildScrollView(
-                    physics: const AlwaysScrollableScrollPhysics(),
-                    padding: const EdgeInsets.symmetric(horizontal: 20),
-                    child: Column(
-                      children: [
-                        const Gap(16),
-
-                        // ===== CLUB EMBLEM (Archetype-colored) =====
-                        ArchetypeClubEmblem(
-                          key: _emblemKey,
-                          theme: theme,
-                        ).animate().fadeIn().scale(begin: const Offset(0.9, 0.9)),
-
-                        const Gap(16),
-
-                        // ===== CLUB NAME & SUBTITLE =====
-                        Text(
-                          userClub.name.toUpperCase(),
-                          style: Theme.of(context).textTheme.headlineSmall
-                              ?.copyWith(
-                                fontWeight: FontWeight.bold,
-                                color: Colors.white,
-                                letterSpacing: 1.5,
-                              ),
-                        ).animate().fadeIn(delay: 100.ms),
-                        const Gap(4),
-                        Text(
-                          userClub.description,
-                          textAlign: TextAlign.center,
-                          style: const TextStyle(
-                            fontSize: 14,
-                            color: Colors.white70,
-                          ),
-                        ).animate().fadeIn(delay: 150.ms),
-
-                        const Gap(16),
-
-                        // ===== MEMBER COUNT (Real-time from members array) =====
-                        RealTimeMemberCount(
-                          tribeId: userClub.id,
-                        ).animate().fadeIn(delay: 200.ms),
-
-                        const Gap(32),
-
-                        // ===== TOP CONTRIBUTORS =====
-                        ContributorsSection(
-                          clubId: userClub.id,
-                        ).animate().fadeIn(delay: 300.ms),
-
-                        const Gap(32),
-
-                        // ===== PROGRESS METRICS (Real-time stats) =====
-                        RealTimeTribeProgressMetrics(
-                          isGlobal: _showGlobalActivity,
-                          tribeId: userClub.id,
-                          theme: theme,
-                        ).animate().fadeIn(delay: 350.ms),
-
-                        const Gap(32),
-
-                        // ===== LEADERBOARD =====
-                        _TribeLeaderboardSection(
-                          clubId: userClub.id,
-                          archetypeName: profile.archetype.name,
-                          isGlobal: _showGlobalActivity,
-                        ).animate().fadeIn(delay: 370.ms),
-
-                        const Gap(32),
-
-                        TribeAccountabilitySection(
-                          key: _bondsKey,
-                        ).animate().fadeIn(delay: 400.ms),
-
-                        const Gap(32),
-
-                        // ===== ACTIVE QUESTS =====
-                        const TribeQuestsSection().animate().fadeIn(delay: 450.ms),
-
-                        const Gap(32),
-
-                        // ===== ACTIVITY FEED HEADER CON toggle =====
-                        Row(
-                          key: _feedKey,
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Text(
-                              _showGlobalActivity
-                                  ? 'Global Activity'
-                                  : 'Recent Activity',
-                              style: const TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.white,
-                              ),
-                            ),
-                            Container(
-                              padding: const EdgeInsets.all(4),
+                return DefaultTabController(
+                  length: 4,
+                  child: Column(
+                    children: [
+                      // Secondary glassmorphic pill tab bar
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(24),
+                          child: BackdropFilter(
+                            filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+                            child: Container(
+                              height: 48,
                               decoration: BoxDecoration(
-                                color: EmergeColors.glassWhite,
-                                borderRadius: BorderRadius.circular(12),
-                                border: Border.all(color: EmergeColors.glassBorder),
+                                color: Colors.black.withValues(alpha: 0.3),
+                                borderRadius: BorderRadius.circular(24),
+                                border: Border.all(
+                                  color: Colors.white.withValues(alpha: 0.08),
+                                ),
                               ),
-                              child: Row(
-                                children: [
-                                  _ToggleItem(
-                                    label: 'Tribe',
-                                    isSelected: !_showGlobalActivity,
-                                    onTap: () =>
-                                        setState(() => _showGlobalActivity = false),
+                              child: TabBar(
+                                indicatorSize: TabBarIndicatorSize.tab,
+                                indicator: BoxDecoration(
+                                  gradient: LinearGradient(
+                                    colors: [
+                                      theme.primaryColor.withValues(alpha: 0.25),
+                                      theme.accentColor.withValues(alpha: 0.1),
+                                    ],
                                   ),
-                                  _ToggleItem(
-                                    label: 'Global',
-                                    isSelected: _showGlobalActivity,
-                                    onTap: () =>
-                                        setState(() => _showGlobalActivity = true),
+                                  borderRadius: BorderRadius.circular(24),
+                                  border: Border.all(
+                                    color: theme.primaryColor.withValues(alpha: 0.3),
                                   ),
+                                ),
+                                labelColor: Colors.white,
+                                unselectedLabelColor: Colors.white54,
+                                labelStyle: const TextStyle(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.bold,
+                                  letterSpacing: 0.5,
+                                ),
+                                tabs: const [
+                                  Tab(text: 'SANCTUM'),
+                                  Tab(text: 'QUESTS'),
+                                  Tab(text: 'MEMBERS'),
+                                  Tab(text: 'BONDS'),
                                 ],
                               ),
                             ),
-                          ],
-                        ).animate().fadeIn(delay: 500.ms),
-
-                        const Gap(16),
-
-                        // ===== ACTIVITY FEED =====
-                        TribeActivitySection(
-                          clubId: _showGlobalActivity ? null : userClub.id,
-                          isGlobal: _showGlobalActivity,
-                        ).animate().fadeIn(delay: 550.ms),
-
-                        const Gap(32),
-
-                        // ===== SEE ALL TRIBES =====
-                        SizedBox(
-                          width: double.infinity,
-                          child: OutlinedButton.icon(
-                            onPressed: () => context.push('/tribes/all'),
-                            icon: const Icon(Icons.explore_outlined, size: 20),
-                            label: const Text('SEE ALL'),
-                            style: OutlinedButton.styleFrom(
-                              foregroundColor: Colors.white,
-                              side: const BorderSide(color: Colors.white24),
-                              padding: const EdgeInsets.symmetric(vertical: 16),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                            ),
                           ),
-                        ).animate().fadeIn(delay: 600.ms),
-
-                        const Gap(48),
-                      ],
-                    ),
+                        ),
+                      ),
+                      
+                      // Tab contents
+                      Expanded(
+                        child: TabBarView(
+                          children: [
+                            // SANCTUM Tab
+                            _buildSanctumTab(context, userClub, theme, profile),
+                            
+                            // QUESTS Tab
+                            _buildQuestsTab(),
+                            
+                            // MEMBERS Tab
+                            _buildMembersTab(userClub, profile),
+                            
+                            // BONDS Tab
+                            _buildBondsTab(),
+                          ],
+                        ),
+                      ),
+                    ],
                   ),
                 );
               },
@@ -287,6 +202,166 @@ class _TribeTabContentState extends ConsumerState<TribeTabContent> {
             onDismiss: () => setState(() => _showFirstVisitGuide = false),
           ),
       ],
+    );
+  }
+
+  Widget _buildSanctumTab(BuildContext context, Tribe userClub, ArchetypeTheme theme, UserProfile profile) {
+    return RefreshIndicator(
+      onRefresh: () async {
+        ref.invalidate(allArchetypeClubsProvider);
+        ref.invalidate(userStatsStreamProvider);
+      },
+      color: EmergeColors.teal,
+      child: SingleChildScrollView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        padding: const EdgeInsets.symmetric(horizontal: 20),
+        child: Column(
+          children: [
+            const Gap(16),
+            ArchetypeClubEmblem(
+              key: _emblemKey,
+              theme: theme,
+            ).animate().fadeIn().scale(begin: const Offset(0.9, 0.9)),
+            const Gap(16),
+            Text(
+              userClub.name.toUpperCase(),
+              style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                    letterSpacing: 1.5,
+                  ),
+            ).animate().fadeIn(delay: 100.ms),
+            const Gap(4),
+            Text(
+              userClub.description,
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                fontSize: 14,
+                color: Colors.white70,
+              ),
+            ).animate().fadeIn(delay: 150.ms),
+            const Gap(16),
+            RealTimeMemberCount(
+              tribeId: userClub.id,
+            ).animate().fadeIn(delay: 200.ms),
+            const Gap(32),
+            RealTimeTribeProgressMetrics(
+              isGlobal: _showGlobalActivity,
+              tribeId: userClub.id,
+              theme: theme,
+            ).animate().fadeIn(delay: 350.ms),
+            const Gap(32),
+            Row(
+              key: _feedKey,
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  _showGlobalActivity ? 'Global Activity' : 'Recent Activity',
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
+                ),
+                Container(
+                  padding: const EdgeInsets.all(4),
+                  decoration: BoxDecoration(
+                    color: EmergeColors.glassWhite,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: EmergeColors.glassBorder),
+                  ),
+                  child: Row(
+                    children: [
+                      _ToggleItem(
+                        label: 'Tribe',
+                        isSelected: !_showGlobalActivity,
+                        onTap: () => setState(() => _showGlobalActivity = false),
+                      ),
+                      _ToggleItem(
+                        label: 'Global',
+                        isSelected: _showGlobalActivity,
+                        onTap: () => setState(() => _showGlobalActivity = true),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ).animate().fadeIn(delay: 500.ms),
+            const Gap(16),
+            TribeActivitySection(
+              clubId: _showGlobalActivity ? null : userClub.id,
+              isGlobal: _showGlobalActivity,
+            ).animate().fadeIn(delay: 550.ms),
+            const Gap(32),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildQuestsTab() {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.symmetric(horizontal: 20),
+      child: Column(
+        children: [
+          const Gap(16),
+          const TribeQuestsSection(),
+          const Gap(32),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMembersTab(Tribe userClub, UserProfile profile) {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.symmetric(horizontal: 20),
+      child: Column(
+        children: [
+          const Gap(16),
+          ContributorsSection(
+            clubId: userClub.id,
+          ).animate().fadeIn(delay: 300.ms),
+          const Gap(32),
+          _TribeLeaderboardSection(
+            clubId: userClub.id,
+            archetypeName: profile.archetype.name,
+            isGlobal: _showGlobalActivity,
+          ).animate().fadeIn(delay: 370.ms),
+          const Gap(32),
+          SizedBox(
+            width: double.infinity,
+            child: OutlinedButton.icon(
+              onPressed: () => context.push('/tribes/all'),
+              icon: const Icon(Icons.explore_outlined, size: 20),
+              label: const Text('SEE ALL TRIBES'),
+              style: OutlinedButton.styleFrom(
+                foregroundColor: Colors.white,
+                side: const BorderSide(color: Colors.white24),
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+            ),
+          ).animate().fadeIn(delay: 600.ms),
+          const Gap(32),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildBondsTab() {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.symmetric(horizontal: 20),
+      child: Column(
+        children: [
+          const Gap(16),
+          TribeAccountabilitySection(
+            key: _bondsKey,
+          ).animate().fadeIn(delay: 400.ms),
+          const Gap(32),
+        ],
+      ),
     );
   }
 }

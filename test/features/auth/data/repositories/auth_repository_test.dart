@@ -1,4 +1,4 @@
-import 'package:emerge_app/features/auth/data/repositories/fake_auth_repository.dart';
+import 'fake_auth_repository.dart';
 import 'package:emerge_app/features/auth/domain/entities/auth_user.dart';
 import 'package:flutter_test/flutter_test.dart';
 

@@ -1,0 +1,82 @@
+<h2>Reimagining the Tribe Sanctum: Layout Options</h2>
+<p class="subtitle">Select the visual layout that best fits the Emerge Pro "Metropolis of Focus" HUD design system.</p>
+
+<div class="options">
+  <div class="option" data-choice="approach-a" onclick="toggleSelect(this)">
+    <div class="letter">A</div>
+    <div class="content">
+      <h3>Approach A: Glassmorphic Sub-Tabs (Recommended)</h3>
+      <p>Clean, tabbed HUD layout within the Tribes section. Users switch between Sanctum, Quests, Members, and Bonds using a glass-styled capsule selector directly under the App Bar. Dedicated views for each sub-feature keep scroll-depth short.</p>
+      
+      <div style="margin-top: 10px; display: flex; flex-direction: column; gap: 4px; border: 1px solid var(--border); padding: 8px; border-radius: 6px; background: rgba(0,0,0,0.2);">
+        <div style="display: flex; gap: 8px; font-size: 0.75rem; border-bottom: 1px solid var(--border); padding-bottom: 4px;">
+          <span style="color: var(--accent); font-weight: bold; border-bottom: 2px solid var(--accent); padding-bottom: 2px;">Sanctum</span>
+          <span style="color: var(--text-secondary);">Quests</span>
+          <span style="color: var(--text-secondary);">Members</span>
+          <span style="color: var(--text-secondary);">Bonds</span>
+        </div>
+        <div style="font-size: 0.75rem; color: var(--text-secondary); margin-top: 4px;">
+          ⚡ [Emblem] Tier 3 Apex Outpost
+          <br>🔋 64% Completed Today (84/142 Members)
+          <br>📝 Recent Log: Marcus completed Kettlebell swings 4m ago
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="option" data-choice="approach-b" onclick="toggleSelect(this)">
+    <div class="letter">B</div>
+    <div class="content">
+      <h3>Approach B: Long-Scroll with Sticky Anchor HUD</h3>
+      <p>Keeps all widgets on a single long scrolling page, but introduces a sticky sub-navigation anchor bar. Clicking an item smooth-scrolls the view down to the corresponding section (Quests, Leaderboards, Activity, etc.).</p>
+      
+      <div style="margin-top: 10px; display: flex; flex-direction: column; gap: 4px; border: 1px solid var(--border); padding: 8px; border-radius: 6px; background: rgba(0,0,0,0.2);">
+        <div style="display: flex; gap: 8px; font-size: 0.75rem; background: var(--bg-tertiary); padding: 4px; border-radius: 4px;">
+          <span>Jump:</span>
+          <span style="text-decoration: underline; cursor: pointer; color: var(--accent);">Quests</span>
+          <span style="text-decoration: underline; cursor: pointer; color: var(--accent);">Leaderboard</span>
+          <span style="text-decoration: underline; cursor: pointer; color: var(--accent);">Bonds</span>
+        </div>
+        <div style="font-size: 0.7rem; color: var(--text-secondary); height: 50px; overflow-y: scroll; border: 1px dashed var(--border); margin-top: 4px; padding: 4px;">
+          [Scrollable Content]
+          <br>[Section 1: Sanctum Emblem]
+          <br>[Section 2: Quests (Step Marathon)]
+          <br>[Section 3: Accountability Partners]
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="option" data-choice="approach-c" onclick="toggleSelect(this)">
+    <div class="letter">C</div>
+    <div class="content">
+      <h3>Approach C: Floating Hub Nodes</h3>
+      <p>A game-like layout where the Sanctum screen displays only the emblem and core progress metrics. Floating glowing orbit nodes branch off the emblem. Tapping a node slides in a modal/overlay sheet with detailed view for Quests, Members, or Bonds.</p>
+      
+      <div style="margin-top: 10px; display: flex; justify-content: center; align-items: center; border: 1px solid var(--border); padding: 8px; border-radius: 6px; background: rgba(0,0,0,0.2); height: 80px;">
+        <div style="display: flex; gap: 12px; align-items: center;">
+          <div style="width: 12px; height: 12px; border-radius: 50%; background: var(--accent);" title="Quests node"></div>
+          <div style="width: 32px; height: 32px; border-radius: 50%; border: 2px solid var(--border); display: flex; align-items: center; justify-content: center; font-size: 0.6rem;">EMBLEM</div>
+          <div style="width: 12px; height: 12px; border-radius: 50%; background: var(--warning);" title="Bonds node"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="pros-cons" style="margin-top: 2rem;">
+  <div class="pros">
+    <h4>Approach A Pros</h4>
+    <ul>
+      <li>Reduces vertical scrolling completely</li>
+      <li>Highly modular and organized</li>
+      <li>Clear segregation of logic/state providers</li>
+    </ul>
+  </div>
+  <div class="cons">
+    <h4>Approach A Cons</h4>
+    <ul>
+      <li>Requires careful TabController swipe management to prevent conflicts with top-level tabs</li>
+    </ul>
+  </div>
+</div>

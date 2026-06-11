@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:emerge_app/core/drift/database.dart' hide Column;
 import 'package:emerge_app/features/monetization/presentation/providers/subscription_provider.dart';
 import 'package:emerge_app/core/presentation/widgets/world_background.dart';
@@ -220,45 +221,75 @@ class SettingsScreen extends ConsumerWidget {
                   );
                 },
               ),
-              HealthConnectTile(
-                isConnected: userSettings.healthKitConnected,
-                onTap: () =>
-                    _connectHealthData(context, ref, userProfile, userSettings),
-              ),
-              ScreenTimeTile(
-                isConnected: userSettings.screenTimeConnected,
-                onTap: () =>
-                    _connectScreenTime(context, ref, userProfile, userSettings),
-              ),
-              if (userSettings.healthKitConnected ||
-                  userSettings.screenTimeConnected) ...[
-                SwitchListTile(
-                  secondary: Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: EmergeColors.teal.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Icon(Icons.sync_outlined, color: EmergeColors.teal),
+              // Health Connect and Screen Time are stubbed/non-functional
+              // in production. Hide them in release builds.
+              if (kDebugMode) ...[
+                HealthConnectTile(
+                  isConnected: userSettings.healthKitConnected,
+                  onTap: () => _connectHealthData(
+                    context,
+                    ref,
+                    userProfile,
+                    userSettings,
                   ),
-                  title: Text(
-                    'Auto-Complete Habits',
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      fontWeight: FontWeight.w500,
-                      color: AppTheme.textMainDark,
-                    ),
+                ),
+                ScreenTimeTile(
+                  isConnected: userSettings.screenTimeConnected,
+                  onTap: () => _connectScreenTime(
+                    context,
+                    ref,
+                    userProfile,
+                    userSettings,
                   ),
-                  subtitle: Text(
-                    'Health data automatically completes linked habits',
-                    style: TextStyle(
-                      color: AppTheme.textSecondaryDark,
-                      fontSize: 12,
+                ),
+                if (userSettings.healthKitConnected ||
+                    userSettings.screenTimeConnected) ...[
+                  SwitchListTile(
+                    secondary: Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: EmergeColors.teal.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Icon(
+                        Icons.sync_outlined,
+                        color: EmergeColors.teal,
+                      ),
                     ),
+                    title: Text(
+                      'Auto-Complete Habits',
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        fontWeight: FontWeight.w500,
+                        color: AppTheme.textMainDark,
+                      ),
+                    ),
+                    subtitle: Text(
+                      'Health data automatically completes linked habits',
+                      style: TextStyle(
+                        color: AppTheme.textSecondaryDark,
+                        fontSize: 12,
+                      ),
+                    ),
+                    value: false,
+                    onChanged: (value) {},
+                    activeThumbColor: EmergeColors.teal,
+                    activeTrackColor: EmergeColors.teal.withValues(alpha: 0.5),
                   ),
-                  value: false,
-                  onChanged: (value) {},
-                  activeThumbColor: EmergeColors.teal,
-                  activeTrackColor: EmergeColors.teal.withValues(alpha: 0.5),
+                ],
+              ] else ...[
+                _buildListTile(
+                  context,
+                  Icons.favorite_outline,
+                  'Health Connect',
+                  subtitle: 'Coming soon',
+                  onTap: null,
+                ),
+                _buildListTile(
+                  context,
+                  Icons.phone_android_outlined,
+                  'Screen Time Sync',
+                  subtitle: 'Coming soon',
+                  onTap: null,
                 ),
               ],
             ]),

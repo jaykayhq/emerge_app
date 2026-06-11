@@ -16,7 +16,6 @@ import 'package:emerge_app/features/timeline/presentation/widgets/month_calendar
 import 'package:emerge_app/features/timeline/presentation/widgets/ai_coach_card.dart';
 import 'package:emerge_app/features/timeline/presentation/widgets/current_mission_banner.dart';
 import 'package:emerge_app/features/timeline/presentation/widgets/habit_timeline_section.dart';
-import 'package:emerge_app/features/timeline/presentation/widgets/timeline_share_preview.dart';
 import 'package:emerge_app/features/timeline/presentation/widgets/streak_flame_widget.dart';
 import 'package:emerge_app/features/timeline/presentation/widgets/completion_celebration.dart';
 import 'package:emerge_app/features/auth/domain/entities/user_extension.dart';
@@ -26,7 +25,7 @@ import 'package:emerge_app/features/companion/presentation/providers/companion_p
 import 'package:emerge_app/features/companion/domain/enums/companion_enums.dart';
 import 'package:emerge_app/core/presentation/widgets/world_background.dart';
 import 'package:emerge_app/core/domain/models/app_world_theme.dart';
-import 'package:emerge_app/core/presentation/widgets/archetype_sliver_app_bar.dart';
+import 'package:emerge_app/core/presentation/widgets/emerge_status_hud_top_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -216,48 +215,7 @@ class _TimelineScreenState extends ConsumerState<TimelineScreen> {
 
     return CustomScrollView(
       slivers: [
-        ArchetypeSliverAppBar(
-          title: 'TIMELINE',
-          syncIndicator: null,
-          badge: Consumer(
-            builder: (context, ref, _) {
-              final isPremium = ref.watch(isPremiumProvider).value ?? false;
-              if (!isPremium) return const SizedBox.shrink();
-              return Container(
-                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                decoration: BoxDecoration(
-                  color: Colors.amber,
-                  borderRadius: BorderRadius.circular(4),
-                ),
-                child: const Text(
-                  'PRO',
-                  style: TextStyle(
-                    color: Colors.black,
-                    fontSize: 8,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              );
-            },
-          ),
-          actions: [
-            IconButton(
-              icon: const Icon(Icons.ios_share, color: Colors.white),
-              onPressed: () => _shareTimelineProgress(),
-              tooltip: 'Share Progress',
-            ),
-            IconButton(
-              icon: const Icon(Icons.analytics_outlined, color: Colors.white),
-              onPressed: () => context.push('/recap'),
-              tooltip: 'Weekly Recap',
-            ),
-            IconButton(
-              icon: const Icon(Icons.person_outline, color: Colors.white),
-              onPressed: () => context.push('/profile'),
-              tooltip: 'Future Self Studio',
-            ),
-          ],
-        ),
+        const EmergeStatusHudTopBar(),
 
         SliverToBoxAdapter(
           child: MonthCalendarStrip(
@@ -880,34 +838,4 @@ class _TimelineScreenState extends ConsumerState<TimelineScreen> {
     );
   }
 
-  void _shareTimelineProgress() {
-    final habits = ref.read(dashboardStateProvider).habits;
-    final now = DateTime.now();
-    final completedToday = habits.where((h) {
-      final lastCompleted = h.lastCompletedDate;
-      if (lastCompleted == null) return false;
-      return lastCompleted.year == now.year &&
-          lastCompleted.month == now.month &&
-          lastCompleted.day == now.day;
-    }).toList();
-
-    final totalStreaks = habits.fold<int>(0, (sum, h) => sum + h.currentStreak);
-
-    final userProfileAsync = ref.read(userStatsStreamProvider);
-    final userProfile = userProfileAsync.value;
-    int totalVotes = 0;
-    userProfile?.identityVotes.forEach((key, value) {
-      totalVotes += value;
-    });
-
-    showDialog(
-      context: context,
-      builder: (context) => TimelineSharePreviewDialog(
-        completedHabits: completedToday.length,
-        totalHabits: habits.length,
-        totalStreaks: totalStreaks,
-        totalVotes: totalVotes,
-      ),
-    );
-  }
 }
