@@ -11,7 +11,8 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:emerge_app/features/monetization/presentation/providers/subscription_provider.dart';
 import 'package:go_router/go_router.dart';
 import 'package:emerge_app/features/social/presentation/widgets/blueprint_adopt_dialog.dart';
-
+import 'package:cached_network_image/cached_network_image.dart';
+import 'package:emerge_app/features/blueprints/presentation/providers/blueprint_detail_controller.dart';
 class BlueprintDetailScreen extends ConsumerWidget {
   final Blueprint blueprint;
 
@@ -77,7 +78,12 @@ class BlueprintDetailScreen extends ConsumerWidget {
             if (blueprint.imageUrl != null)
               blueprint.imageUrl!.startsWith('images/')
                   ? Image.asset(blueprint.imageUrl!, fit: BoxFit.cover)
-                  : Image.network(blueprint.imageUrl!, fit: BoxFit.cover)
+                  : CachedNetworkImage(
+                      imageUrl: blueprint.imageUrl!,
+                      fit: BoxFit.cover,
+                      placeholder: (context, url) => const Center(child: CircularProgressIndicator()),
+                      errorWidget: (context, url, error) => const Icon(Icons.error),
+                    )
             else
               Container(
                 decoration: const BoxDecoration(
@@ -254,87 +260,47 @@ class BlueprintDetailScreen extends ConsumerWidget {
   ) {
     final isPremiumAsync = ref.watch(isPremiumProvider);
     final isPremium = isPremiumAsync.value ?? false;
+    final isLoading = ref.watch(blueprintDetailControllerProvider).isLoading;
 
     return SizedBox(
       width: double.infinity,
       height: 56,
       child: ElevatedButton(
-        onPressed: () async {
-          if (userId == null) return;
+        onPressed: isLoading
+            ? null
+            : () async {
+                if (userId == null) return;
 
-          // GATING: Check if blueprint is premium and user is not
-          if (blueprint.isPremium && !isPremium) {
-            context.push('/paywall');
-            return;
-          }
-
-          // Check for duplicate adoption
-          final existingHabits = ref.read(habitsProvider).value ?? [];
-          final blueprintTitles = blueprint.habits.map((h) => h.title).toSet();
-          if (existingHabits.any((h) => blueprintTitles.contains(h.title))) {
-            if (context.mounted) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Blueprint already adopted'),
-                  backgroundColor: Colors.orange,
-                ),
-              );
-            }
-            return;
-          }
-
-          final screenContext = context;
-
-          showDialog(
-            context: screenContext,
-            builder: (_) => BlueprintAdoptDialog(
-              blueprint: blueprint,
-              onAdopt: (reminderTime) async {
                 try {
-                  final repository = ref.read(habitRepositoryProvider);
-                  final result = await repository.createHabitsFromBlueprint(
-                    userId: userId,
-                    blueprint: blueprint,
-                    reminderTime: reminderTime,
-                  );
+                  await ref
+                      .read(blueprintDetailControllerProvider.notifier)
+                      .adoptBlueprint(blueprint);
 
-                  result.fold(
-                    (failure) {
-                      if (screenContext.mounted) {
-                        ScaffoldMessenger.of(screenContext).showSnackBar(
-                          SnackBar(
-                            content: Text('Error: ${failure.message}'),
-                            backgroundColor: Colors.red,
-                          ),
-                        );
-                      }
-                    },
-                    (_) async {
-                      if (screenContext.mounted) {
-                        ScaffoldMessenger.of(screenContext).showSnackBar(
-                          const SnackBar(
-                            content: Text('Adopted successfully'),
-                            backgroundColor: EmergeColors.teal,
-                          ),
-                        );
-                        screenContext.go('/timeline');
-                      }
-                    },
-                  );
-                } catch (e) {
-                  if (screenContext.mounted) {
-                    ScaffoldMessenger.of(screenContext).showSnackBar(
-                      SnackBar(
-                        content: Text('Error: $e'),
-                        backgroundColor: Colors.red,
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Adopted successfully'),
+                        backgroundColor: EmergeColors.teal,
                       ),
                     );
+                    context.go('/timeline');
+                  }
+                } catch (e) {
+                  if (context.mounted) {
+                    final errorMsg = e.toString().replaceAll('Exception: ', '');
+                    if (errorMsg == 'Premium required') {
+                      context.push('/paywall');
+                    } else {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(errorMsg),
+                          backgroundColor: Colors.orange,
+                        ),
+                      );
+                    }
                   }
                 }
               },
-            ),
-          );
-        },
         style: ElevatedButton.styleFrom(
           backgroundColor: blueprint.isPremium
               ? EmergeColors.yellow
@@ -345,12 +311,21 @@ class BlueprintDetailScreen extends ConsumerWidget {
           ),
           elevation: 0,
         ),
-        child: Text(
-          blueprint.isPremium && !isPremium
-              ? 'UNLOCK PREMIUM STACK'
-              : 'ADOPT BLUEPRINT',
-          style: const TextStyle(fontWeight: FontWeight.bold, letterSpacing: 1),
-        ),
+        child: isLoading
+            ? const SizedBox(
+                width: 24,
+                height: 24,
+                child: CircularProgressIndicator(
+                  color: Colors.black,
+                  strokeWidth: 2,
+                ),
+              )
+            : Text(
+                blueprint.isPremium && !isPremium
+                    ? 'UNLOCK PREMIUM STACK'
+                    : 'ADOPT BLUEPRINT',
+                style: const TextStyle(fontWeight: FontWeight.bold, letterSpacing: 1),
+              ),
       ),
     );
   }
