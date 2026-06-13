@@ -48,6 +48,11 @@ import 'package:emerge_app/features/social/presentation/screens/tribe_feed_tab.d
 import 'package:emerge_app/features/social/presentation/screens/my_tribe_tab.dart';
 import 'package:emerge_app/features/social/presentation/screens/tribe_board_tab.dart';
 import 'package:emerge_app/features/social/presentation/screens/social_discover_tab.dart';
+import 'package:emerge_app/features/auth/presentation/screens/creator_login_screen.dart';
+import 'package:emerge_app/features/social/presentation/screens/creator/creator_dashboard_scaffold.dart';
+import 'package:emerge_app/features/social/presentation/screens/creator/creator_overview_tab.dart';
+import 'package:emerge_app/features/social/presentation/screens/creator/creator_blueprints_tab.dart';
+import 'package:emerge_app/features/social/presentation/screens/creator/creator_tribe_management_tab.dart';
 
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -87,8 +92,10 @@ GoRouter router(Ref ref) {
       final isWelcome = path == '/welcome';
       final isLogin = path == '/login';
       final isSignup = path == '/signup';
-      final isAuthScreen = isWelcome || isLogin || isSignup;
+      final isCreatorLogin = path == '/creator/login';
+      final isAuthScreen = isWelcome || isLogin || isSignup || isCreatorLogin;
       final isOnboardingPath = path.startsWith('/onboarding');
+      final isCreatorPath = path.startsWith('/creator');
 
       // 3. Handle Unauthenticated Users
       if (!isLoggedIn) {
@@ -116,12 +123,16 @@ GoRouter router(Ref ref) {
       // If onboarding is incomplete, restrict to onboarding flow
       if (!isOnboardingComplete) {
         if (isOnboardingPath) return null;
+        if (isCreatorPath) return null;
         return _getOnboardingRouteForProgress(onboardingProgress);
       }
 
       // Onboarding is complete:
       // Redirect auth screens to home, otherwise allow all paths (unblocks bottom nav)
-      if (isAuthScreen) return '/';
+      if (isAuthScreen) {
+        if (isCreatorLogin) return '/creator/dashboard';
+        return '/';
+      }
 
       return null;
     },
@@ -160,6 +171,40 @@ GoRouter router(Ref ref) {
       GoRoute(
         path: '/signup',
         builder: (context, state) => const SignUpScreen(),
+      ),
+      GoRoute(
+        path: '/creator/login',
+        builder: (context, state) => const CreatorLoginScreen(),
+      ),
+      StatefulShellRoute.indexedStack(
+        builder: (context, state, navigationShell) =>
+            CreatorDashboardScaffold(navigationShell: navigationShell),
+        branches: [
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/creator/dashboard',
+                builder: (context, state) => const CreatorOverviewTab(),
+              ),
+            ],
+          ),
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/creator/dashboard/blueprints',
+                builder: (context, state) => const CreatorBlueprintsTab(),
+              ),
+            ],
+          ),
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/creator/dashboard/tribe',
+                builder: (context, state) => const CreatorTribeManagementTab(),
+              ),
+            ],
+          ),
+        ],
       ),
       GoRoute(
         path: '/challenges',
