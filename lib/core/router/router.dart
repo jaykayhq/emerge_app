@@ -34,7 +34,6 @@ import 'package:emerge_app/features/settings/presentation/screens/notification_s
 import 'package:emerge_app/features/monetization/presentation/screens/paywall_screen.dart';
 
 import 'package:emerge_app/features/social/presentation/screens/social_screen.dart';
-import 'package:emerge_app/features/social/presentation/screens/social_discover_tab.dart';
 import 'package:emerge_app/features/social/presentation/screens/challenges_screen.dart';
 import 'package:emerge_app/features/social/presentation/screens/challenge_detail_screen.dart';
 import 'package:emerge_app/features/social/presentation/screens/friends_screen.dart';
@@ -157,42 +156,6 @@ GoRouter router(Ref ref) {
         path: '/challenges',
         builder: (context, state) => const ChallengesScreen(showAppBar: true),
       ),
-      GoRoute(
-        path: '/profile',
-        builder: (context, state) => const FutureSelfStudioScreen(),
-        routes: [
-          GoRoute(
-            path: 'settings',
-            builder: (context, state) => const SettingsScreen(),
-          ),
-          GoRoute(
-            path: 'notifications',
-            builder: (context, state) =>
-                const NotificationSettingsScreen(),
-          ),
-          GoRoute(
-            path: 'reflections',
-            builder: (context, state) => const AiReflectionsScreen(),
-          ),
-          GoRoute(
-            path: 'leveling',
-            builder: (context, state) => const LevelingScreen(),
-          ),
-          GoRoute(
-            path: 'goldilocks',
-            builder: (context, state) => const GoldilocksScreen(),
-          ),
-          GoRoute(
-            path: 'level-up-reward/:level',
-            parentNavigatorKey: _rootNavigatorKey,
-            builder: (context, state) {
-              final levelStr = state.pathParameters['level'];
-              final level = int.tryParse(levelStr ?? '1') ?? 1;
-              return LevelUpRewardScreen(celebratedLevel: level);
-            },
-          ),
-        ],
-      ),
       // ShellRoute for Bottom Navigation
       StatefulShellRoute.indexedStack(
         builder: (context, state, navigationShell) {
@@ -279,16 +242,7 @@ GoRouter router(Ref ref) {
               ),
             ],
           ),
-          // Branch 3: Discover (NEW ROOT TAB)
-          StatefulShellBranch(
-            routes: [
-              GoRoute(
-                path: '/discover',
-                builder: (context, state) => const SocialDiscoverTab(showAsRoot: true),
-              ),
-            ],
-          ),
-          // Branch 4: Social (Tribe & Challenges)
+          // Branch 3: Social (Tribe · Challenges · Discover)
           StatefulShellBranch(
             routes: [
               GoRoute(
@@ -332,6 +286,47 @@ GoRouter router(Ref ref) {
                     path: 'all',
                     parentNavigatorKey: _rootNavigatorKey,
                     builder: (context, state) => const AllTribesScreen(),
+                  ),
+                ],
+              ),
+            ],
+          ),
+          // Branch 4: Profile (Identity)
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/profile',
+                builder: (context, state) => const FutureSelfStudioScreen(),
+                routes: [
+                  GoRoute(
+                    path: 'settings',
+                    builder: (context, state) => const SettingsScreen(),
+                  ),
+                  GoRoute(
+                    path: 'notifications',
+                    builder: (context, state) =>
+                        const NotificationSettingsScreen(),
+                  ),
+                  GoRoute(
+                    path: 'reflections',
+                    builder: (context, state) => const AiReflectionsScreen(),
+                  ),
+                  GoRoute(
+                    path: 'leveling',
+                    builder: (context, state) => const LevelingScreen(),
+                  ),
+                  GoRoute(
+                    path: 'goldilocks',
+                    builder: (context, state) => const GoldilocksScreen(),
+                  ),
+                  GoRoute(
+                    path: 'level-up-reward/:level',
+                    parentNavigatorKey: _rootNavigatorKey,
+                    builder: (context, state) {
+                      final levelStr = state.pathParameters['level'];
+                      final level = int.tryParse(levelStr ?? '1') ?? 1;
+                      return LevelUpRewardScreen(celebratedLevel: level);
+                    },
                   ),
                 ],
               ),

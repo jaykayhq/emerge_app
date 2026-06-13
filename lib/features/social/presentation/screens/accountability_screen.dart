@@ -2,7 +2,6 @@ import 'package:emerge_app/core/presentation/widgets/growth_background.dart';
 import 'package:emerge_app/core/theme/app_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:gap/gap.dart';
-import 'package:go_router/go_router.dart';
 
 class AccountabilityScreen extends StatelessWidget {
   const AccountabilityScreen({super.key});
@@ -13,20 +12,11 @@ class AccountabilityScreen extends StatelessWidget {
       appBar: AppBar(
         title: const Text('Accountability'),
         backgroundColor: Colors.transparent,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.add_rounded),
-            tooltip: 'Create Habit Contract',
-            onPressed: () => context.push('/tribes/contracts'),
-          ),
-        ],
       ),
       child: ListView(
         padding: const EdgeInsets.all(16.0),
         children: [
           _buildInfoBanner(context),
-          const Gap(24),
-          _buildCreateContractButton(context),
           const Gap(24),
           _SectionHeader(title: 'Active Commitments'),
           const Gap(12),
@@ -53,23 +43,6 @@ class AccountabilityScreen extends StatelessWidget {
           _PartnerCard(name: 'Sarah Chen', streak: 12),
           const Gap(80),
         ],
-      ),
-    );
-  }
-
-  Widget _buildCreateContractButton(BuildContext context) {
-    return SizedBox(
-      width: double.infinity,
-      child: FilledButton.icon(
-        onPressed: () => context.push('/tribes/contracts'),
-        icon: const Icon(Icons.add_rounded),
-        label: const Text('Create Habit Contract'),
-        style: FilledButton.styleFrom(
-          padding: const EdgeInsets.symmetric(vertical: 14),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
-        ),
       ),
     );
   }
