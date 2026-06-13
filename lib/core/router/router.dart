@@ -39,6 +39,9 @@ import 'package:emerge_app/features/social/presentation/screens/challenge_detail
 import 'package:emerge_app/features/social/presentation/screens/friends_screen.dart';
 import 'package:emerge_app/features/social/presentation/screens/all_tribes_screen.dart';
 import 'package:emerge_app/features/monetization/presentation/screens/habit_contract_screen.dart';
+import 'package:emerge_app/features/social/presentation/screens/social_onboarding_screen.dart';
+import 'package:emerge_app/features/social/presentation/screens/tribe_lobby_screen.dart';
+import 'package:emerge_app/features/social/presentation/screens/tribe_space_scaffold.dart';
 
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -242,14 +245,23 @@ GoRouter router(Ref ref) {
               ),
             ],
           ),
-          // Branch 3: Social (Tribe · Challenges · Discover)
+          // Branch 3: Social (Tribe Lobby)
           StatefulShellBranch(
             routes: [
               GoRoute(
-                path: '/tribes',
-                builder: (context, state) =>
-                    const SocialScreen(initialIndex: 0),
+                path: '/social',
+                builder: (context, state) => const TribeLobbyScreen(),
                 routes: [
+                  GoRoute(
+                    path: 'onboarding',
+                    parentNavigatorKey: _rootNavigatorKey,
+                    builder: (context, state) => const SocialOnboardingScreen(),
+                  ),
+                  GoRoute(
+                    path: 'space',
+                    parentNavigatorKey: _rootNavigatorKey,
+                    builder: (context, state) => const TribeSpaceScaffold(),
+                  ),
                   GoRoute(
                     path: 'challenges',
                     builder: (context, state) =>
