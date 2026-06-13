@@ -371,6 +371,18 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         ],
                       ),
                       const Gap(16),
+                      // Creator Login Link
+                      TextButton(
+                        onPressed: () => context.push('/creator/login'),
+                        child: const Text(
+                          'Creator Login',
+                          style: TextStyle(
+                            color: Colors.white54,
+                            decoration: TextDecoration.underline,
+                          ),
+                        ),
+                      ),
+                      const Gap(16),
                       // Legal Links
                       Row(
                         mainAxisAlignment: MainAxisAlignment.center,
@@ -708,6 +720,18 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                         ),
                                       ),
                                     ],
+                                  ),
+                                  const Gap(16),
+                                  // Creator Login Link
+                                  TextButton(
+                                    onPressed: () => context.push('/creator/login'),
+                                    child: const Text(
+                                      'Creator Login',
+                                      style: TextStyle(
+                                        color: Colors.white54,
+                                        decoration: TextDecoration.underline,
+                                      ),
+                                    ),
                                   ),
                                 ],
                               ),
