@@ -3,7 +3,8 @@ import 'package:go_router/go_router.dart';
 import 'package:emerge_app/core/theme/emerge_colors.dart';
 import 'package:emerge_app/features/social/presentation/screens/tribe_feed_tab.dart';
 import 'package:emerge_app/features/social/presentation/screens/my_tribe_tab.dart';
-
+import 'package:emerge_app/features/social/presentation/screens/tribe_board_tab.dart';
+import 'package:emerge_app/features/social/presentation/screens/social_discover_tab.dart';
 class TribeSpaceScaffold extends StatefulWidget {
   const TribeSpaceScaffold({super.key});
 
@@ -17,8 +18,8 @@ class _TribeSpaceScaffoldState extends State<TribeSpaceScaffold> {
   final List<Widget> _tabs = const [
     TribeFeedTab(),
     MyTribeTab(),
-    Center(child: Text("Board", style: TextStyle(color: Colors.white))),
-    Center(child: Text("Discover", style: TextStyle(color: Colors.white))),
+    TribeBoardTab(),
+    SocialDiscoverTab(),
   ];
 
   @override
