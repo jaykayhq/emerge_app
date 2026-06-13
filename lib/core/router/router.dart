@@ -42,6 +42,7 @@ import 'package:emerge_app/features/monetization/presentation/screens/habit_cont
 import 'package:emerge_app/features/social/presentation/screens/social_onboarding_screen.dart';
 import 'package:emerge_app/features/social/presentation/screens/tribe_lobby_screen.dart';
 import 'package:emerge_app/features/social/presentation/screens/tribe_space_scaffold.dart';
+import 'package:emerge_app/features/social/presentation/screens/creator_profile_screen.dart';
 
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -298,6 +299,13 @@ GoRouter router(Ref ref) {
                     path: 'all',
                     parentNavigatorKey: _rootNavigatorKey,
                     builder: (context, state) => const AllTribesScreen(),
+                  ),
+                  GoRoute(
+                    path: 'creator/:id',
+                    parentNavigatorKey: _rootNavigatorKey,
+                    builder: (context, state) => CreatorProfileScreen(
+                      creatorId: state.pathParameters['id']!,
+                    ),
                   ),
                 ],
               ),
