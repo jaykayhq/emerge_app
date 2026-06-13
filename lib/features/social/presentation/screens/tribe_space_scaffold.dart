@@ -1,26 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:emerge_app/core/theme/emerge_colors.dart';
-import 'package:emerge_app/features/social/presentation/screens/tribe_feed_tab.dart';
-import 'package:emerge_app/features/social/presentation/screens/my_tribe_tab.dart';
-import 'package:emerge_app/features/social/presentation/screens/tribe_board_tab.dart';
-import 'package:emerge_app/features/social/presentation/screens/social_discover_tab.dart';
-class TribeSpaceScaffold extends StatefulWidget {
-  const TribeSpaceScaffold({super.key});
 
-  @override
-  State<TribeSpaceScaffold> createState() => _TribeSpaceScaffoldState();
-}
+class TribeSpaceScaffold extends StatelessWidget {
+  final StatefulNavigationShell navigationShell;
 
-class _TribeSpaceScaffoldState extends State<TribeSpaceScaffold> {
-  int _currentIndex = 0;
-
-  final List<Widget> _tabs = const [
-    TribeFeedTab(),
-    MyTribeTab(),
-    TribeBoardTab(),
-    SocialDiscoverTab(),
-  ];
+  const TribeSpaceScaffold({
+    super.key,
+    required this.navigationShell,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -35,13 +23,10 @@ class _TribeSpaceScaffoldState extends State<TribeSpaceScaffold> {
         ),
         title: const Text("Tribe Space"),
       ),
-      body: IndexedStack(
-        index: _currentIndex,
-        children: _tabs,
-      ),
+      body: navigationShell,
       bottomNavigationBar: BottomNavigationBar(
-        currentIndex: _currentIndex,
-        onTap: (index) => setState(() => _currentIndex = index),
+        currentIndex: navigationShell.currentIndex,
+        onTap: (index) => navigationShell.goBranch(index),
         backgroundColor: EmergeColors.cosmicVoidDark,
         selectedItemColor: EmergeColors.neonTeal,
         unselectedItemColor: Colors.white54,

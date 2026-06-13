@@ -1,28 +1,10 @@
 // lib/features/social/presentation/screens/tribe_lobby_screen.dart
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:emerge_app/core/presentation/widgets/world_background.dart';
-import 'package:emerge_app/features/social/presentation/providers/social_onboarding_provider.dart';
 
-class TribeLobbyScreen extends ConsumerStatefulWidget {
+class TribeLobbyScreen extends StatelessWidget {
   const TribeLobbyScreen({super.key});
-
-  @override
-  ConsumerState<TribeLobbyScreen> createState() => _TribeLobbyScreenState();
-}
-
-class _TribeLobbyScreenState extends ConsumerState<TribeLobbyScreen> {
-  @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      final isComplete = ref.read(socialOnboardingCompletedProvider);
-      if (!isComplete) {
-        context.go('/social/onboarding');
-      }
-    });
-  }
 
   @override
   Widget build(BuildContext context) {

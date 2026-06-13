@@ -43,6 +43,11 @@ import 'package:emerge_app/features/social/presentation/screens/social_onboardin
 import 'package:emerge_app/features/social/presentation/screens/tribe_lobby_screen.dart';
 import 'package:emerge_app/features/social/presentation/screens/tribe_space_scaffold.dart';
 import 'package:emerge_app/features/social/presentation/screens/creator_profile_screen.dart';
+import 'package:emerge_app/features/social/presentation/providers/social_onboarding_provider.dart';
+import 'package:emerge_app/features/social/presentation/screens/tribe_feed_tab.dart';
+import 'package:emerge_app/features/social/presentation/screens/my_tribe_tab.dart';
+import 'package:emerge_app/features/social/presentation/screens/tribe_board_tab.dart';
+import 'package:emerge_app/features/social/presentation/screens/social_discover_tab.dart';
 
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -252,16 +257,48 @@ GoRouter router(Ref ref) {
               GoRoute(
                 path: '/social',
                 builder: (context, state) => const TribeLobbyScreen(),
+                redirect: (context, state) {
+                  final isComplete = ref.read(socialOnboardingCompletedProvider);
+                  if (!isComplete && !state.uri.path.startsWith('/social/onboarding')) {
+                    return '/social/onboarding';
+                  }
+                  return null;
+                },
                 routes: [
                   GoRoute(
                     path: 'onboarding',
                     parentNavigatorKey: _rootNavigatorKey,
                     builder: (context, state) => const SocialOnboardingScreen(),
                   ),
-                  GoRoute(
-                    path: 'space',
+                  StatefulShellRoute.indexedStack(
                     parentNavigatorKey: _rootNavigatorKey,
-                    builder: (context, state) => const TribeSpaceScaffold(),
+                    builder: (context, state, navigationShell) => TribeSpaceScaffold(navigationShell: navigationShell),
+                    branches: [
+                      StatefulShellBranch(routes: [
+                        GoRoute(
+                          path: 'space',
+                          builder: (context, state) => const TribeFeedTab(),
+                        ),
+                      ]),
+                      StatefulShellBranch(routes: [
+                        GoRoute(
+                          path: 'space/my-tribe',
+                          builder: (context, state) => const MyTribeTab(),
+                        ),
+                      ]),
+                      StatefulShellBranch(routes: [
+                        GoRoute(
+                          path: 'space/board',
+                          builder: (context, state) => const TribeBoardTab(),
+                        ),
+                      ]),
+                      StatefulShellBranch(routes: [
+                        GoRoute(
+                          path: 'space/discover',
+                          builder: (context, state) => const SocialDiscoverTab(),
+                        ),
+                      ]),
+                    ],
                   ),
                   GoRoute(
                     path: 'challenges',
