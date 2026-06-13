@@ -1,8 +1,8 @@
-// lib/features/social/presentation/screens/creator_hub_screen.dart
+// lib/features/social/presentation/screens/creator/creator_overview_tab.dart
 import 'package:flutter/material.dart';
 
-class CreatorHubScreen extends StatelessWidget {
-  const CreatorHubScreen({super.key});
+class CreatorOverviewTab extends StatelessWidget {
+  const CreatorOverviewTab({super.key});
 
   @override
   Widget build(BuildContext context) {
