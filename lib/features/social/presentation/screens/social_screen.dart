@@ -2,12 +2,14 @@ import 'dart:ui';
 import 'package:emerge_app/core/theme/emerge_colors.dart';
 import 'package:emerge_app/core/domain/models/app_world_theme.dart';
 import 'package:emerge_app/core/presentation/widgets/world_background.dart';
-import 'package:emerge_app/core/presentation/widgets/emerge_status_hud_top_bar.dart';
+import 'package:emerge_app/core/presentation/widgets/archetype_sliver_app_bar.dart';
 import 'package:emerge_app/features/social/presentation/screens/tribe_tab_content.dart';
 import 'package:emerge_app/features/social/presentation/screens/challenges_screen.dart';
 import 'package:emerge_app/features/social/presentation/screens/create_solo_challenge_dialog.dart';
+import 'package:emerge_app/features/social/presentation/screens/social_discover_tab.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 /// Consolidated Social Screen for the 3-tab layout
 /// Hosts Archetype Tribe info, Challenges, and Discovery
@@ -29,7 +31,7 @@ class _SocialScreenState extends ConsumerState<SocialScreen>
     super.initState();
     _currentIndex = widget.initialIndex;
     _tabController = TabController(
-      length: 2,
+      length: 3,
       vsync: this,
       initialIndex: _currentIndex,
     );
@@ -63,6 +65,8 @@ class _SocialScreenState extends ConsumerState<SocialScreen>
         return const TribeTabContent(); // TRIBE
       case 1:
         return const ChallengesScreen(showAppBar: false); // CHALLENGES
+      case 2:
+        return const SocialDiscoverTab(); // DISCOVER
       default:
         return const SizedBox.shrink();
     }
@@ -94,7 +98,32 @@ class _SocialScreenState extends ConsumerState<SocialScreen>
       child: SafeArea(
         child: CustomScrollView(
           slivers: [
-            const EmergeStatusHudTopBar(),
+            ArchetypeSliverAppBar(
+              title: 'TRIBES',
+              actions: [
+                IconButton(
+                  icon: const Icon(
+                    Icons.handshake_outlined,
+                    color: Colors.white,
+                  ),
+                  onPressed: () => context.push('/tribes/contracts'),
+                  tooltip: 'Habit Contracts',
+                ),
+                IconButton(
+                  icon: const Icon(
+                    Icons.person_add_outlined,
+                    color: Colors.white,
+                  ),
+                  onPressed: () => context.push('/tribes/accountability'),
+                  tooltip: 'Accountability Partners',
+                ),
+                IconButton(
+                  icon: const Icon(Icons.person_outline, color: Colors.white),
+                  onPressed: () => context.push('/profile'),
+                  tooltip: 'Future Self Studio',
+                ),
+              ],
+            ),
             SliverPersistentHeader(
               pinned: true,
               delegate: _SliverAppBarDelegate(
@@ -107,6 +136,7 @@ class _SocialScreenState extends ConsumerState<SocialScreen>
                   tabs: const [
                     Tab(text: 'TRIBE'),
                     Tab(text: 'CHALLENGES'),
+                    Tab(text: 'DISCOVER'),
                   ],
                 ),
               ),

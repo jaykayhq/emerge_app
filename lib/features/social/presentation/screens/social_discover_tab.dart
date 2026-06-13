@@ -11,13 +11,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:emerge_app/core/presentation/widgets/feature_coach_mark.dart';
-import 'package:emerge_app/core/presentation/widgets/emerge_status_hud_top_bar.dart';
-import 'package:emerge_app/core/presentation/widgets/world_background.dart';
-import 'package:emerge_app/core/domain/models/app_world_theme.dart';
 
 class SocialDiscoverTab extends ConsumerStatefulWidget {
-  final bool showAsRoot;
-  const SocialDiscoverTab({super.key, this.showAsRoot = false});
+  const SocialDiscoverTab({super.key});
 
   @override
   ConsumerState<SocialDiscoverTab> createState() => _SocialDiscoverTabState();
@@ -60,7 +56,7 @@ class _SocialDiscoverTabState extends ConsumerState<SocialDiscoverTab> {
   Widget build(BuildContext context) {
     final blueprintsAsync = ref.watch(allBlueprintsStreamProvider);
 
-    final content = Stack(
+    return Stack(
       children: [
         blueprintsAsync.when(
           data: (blueprints) {
@@ -121,25 +117,6 @@ class _SocialDiscoverTabState extends ConsumerState<SocialDiscoverTab> {
           ),
       ],
     );
-
-    if (widget.showAsRoot) {
-      return WorldBackground(
-        useSafeArea: false,
-        themeOverride: AppWorldTheme.nebula,
-        child: SafeArea(
-          child: CustomScrollView(
-            slivers: [
-              const EmergeStatusHudTopBar(),
-              SliverFillRemaining(
-                child: content,
-              ),
-            ],
-          ),
-        ),
-      );
-    }
-
-    return content;
   }
 
   Widget _buildShimmerLoading() {
