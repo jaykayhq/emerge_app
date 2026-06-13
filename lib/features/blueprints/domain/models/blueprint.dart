@@ -73,6 +73,12 @@ class Blueprint extends Equatable {
   final String category; // e.g. 'Athlete', 'Creator'
   final bool isPremium;
   final BlueprintDifficulty difficulty;
+  final String? creatorBio;
+  final List<String> specialityTags;
+  final String? creatorHeroImageUrl;
+  final int tribeMemberCount;
+  final bool isCreatorBlueprint;
+  final String? creatorTribeId;
 
   const Blueprint({
     required this.id,
@@ -88,7 +94,57 @@ class Blueprint extends Equatable {
     required this.category,
     this.isPremium = false,
     this.difficulty = BlueprintDifficulty.beginner,
+    this.creatorBio,
+    this.specialityTags = const [],
+    this.creatorHeroImageUrl,
+    this.tribeMemberCount = 0,
+    this.isCreatorBlueprint = false,
+    this.creatorTribeId,
   });
+
+  Blueprint copyWith({
+    String? id,
+    String? creatorUserId,
+    String? creatorName,
+    String? creatorArchetype,
+    String? title,
+    String? description,
+    List<BlueprintHabit>? habits,
+    int? adoptionCount,
+    DateTime? createdAt,
+    String? imageUrl,
+    String? category,
+    bool? isPremium,
+    BlueprintDifficulty? difficulty,
+    String? creatorBio,
+    List<String>? specialityTags,
+    String? creatorHeroImageUrl,
+    int? tribeMemberCount,
+    bool? isCreatorBlueprint,
+    String? creatorTribeId,
+  }) {
+    return Blueprint(
+      id: id ?? this.id,
+      creatorUserId: creatorUserId ?? this.creatorUserId,
+      creatorName: creatorName ?? this.creatorName,
+      creatorArchetype: creatorArchetype ?? this.creatorArchetype,
+      title: title ?? this.title,
+      description: description ?? this.description,
+      habits: habits ?? this.habits,
+      adoptionCount: adoptionCount ?? this.adoptionCount,
+      createdAt: createdAt ?? this.createdAt,
+      imageUrl: imageUrl ?? this.imageUrl,
+      category: category ?? this.category,
+      isPremium: isPremium ?? this.isPremium,
+      difficulty: difficulty ?? this.difficulty,
+      creatorBio: creatorBio ?? this.creatorBio,
+      specialityTags: specialityTags ?? this.specialityTags,
+      creatorHeroImageUrl: creatorHeroImageUrl ?? this.creatorHeroImageUrl,
+      tribeMemberCount: tribeMemberCount ?? this.tribeMemberCount,
+      isCreatorBlueprint: isCreatorBlueprint ?? this.isCreatorBlueprint,
+      creatorTribeId: creatorTribeId ?? this.creatorTribeId,
+    );
+  }
 
   Map<String, dynamic> toMap() => {
     'id': id,
@@ -104,6 +160,12 @@ class Blueprint extends Equatable {
     'category': category,
     'isPremium': isPremium,
     'difficulty': difficulty.name,
+    'creatorBio': creatorBio,
+    'specialityTags': specialityTags,
+    'creatorHeroImageUrl': creatorHeroImageUrl,
+    'tribeMemberCount': tribeMemberCount,
+    'isCreatorBlueprint': isCreatorBlueprint,
+    'creatorTribeId': creatorTribeId,
   };
 
   factory Blueprint.fromMap(String id, Map<String, dynamic> map) {
@@ -142,6 +204,12 @@ class Blueprint extends Equatable {
       category: (map['category'] ?? 'General') as String,
       isPremium: map['isPremium'] as bool? ?? false,
       difficulty: parseDifficulty(map['difficulty'] as String?),
+      creatorBio: map['creatorBio'] as String?,
+      specialityTags: List<String>.from(map['specialityTags'] ?? []),
+      creatorHeroImageUrl: map['creatorHeroImageUrl'] as String?,
+      tribeMemberCount: map['tribeMemberCount']?.toInt() ?? 0,
+      isCreatorBlueprint: map['isCreatorBlueprint'] ?? false,
+      creatorTribeId: map['creatorTribeId'] as String?,
     );
   }
 
@@ -160,5 +228,11 @@ class Blueprint extends Equatable {
     category,
     isPremium,
     difficulty,
+    creatorBio,
+    specialityTags,
+    creatorHeroImageUrl,
+    tribeMemberCount,
+    isCreatorBlueprint,
+    creatorTribeId,
   ];
 }
