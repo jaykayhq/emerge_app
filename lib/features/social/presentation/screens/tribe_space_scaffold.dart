@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:emerge_app/core/theme/emerge_colors.dart';
+import 'package:emerge_app/features/social/presentation/screens/tribe_feed_tab.dart';
+import 'package:emerge_app/features/social/presentation/screens/my_tribe_tab.dart';
 
 class TribeSpaceScaffold extends StatefulWidget {
   const TribeSpaceScaffold({super.key});
@@ -13,8 +15,8 @@ class _TribeSpaceScaffoldState extends State<TribeSpaceScaffold> {
   int _currentIndex = 0;
 
   final List<Widget> _tabs = const [
-    Center(child: Text("Feed", style: TextStyle(color: Colors.white))),
-    Center(child: Text("My Tribe", style: TextStyle(color: Colors.white))),
+    TribeFeedTab(),
+    MyTribeTab(),
     Center(child: Text("Board", style: TextStyle(color: Colors.white))),
     Center(child: Text("Discover", style: TextStyle(color: Colors.white))),
   ];
