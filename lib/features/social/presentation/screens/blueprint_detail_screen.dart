@@ -35,6 +35,19 @@ class BlueprintDetailScreen extends ConsumerWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     _buildCreatorInfo(),
+                    if (blueprint.isCreatorBlueprint && blueprint.creatorUserId.isNotEmpty)
+                      Card(
+                        margin: const EdgeInsets.symmetric(vertical: 16),
+                        child: ListTile(
+                          leading: const CircleAvatar(child: Icon(Icons.person)),
+                          title: Text(blueprint.creatorName.isNotEmpty ? blueprint.creatorName : 'Creator'),
+                          subtitle: Text('${blueprint.tribeMemberCount} tribe members'),
+                          trailing: const Icon(Icons.chevron_right),
+                          onTap: () {
+                            context.push('/social/creator/${blueprint.creatorUserId}');
+                          },
+                        ),
+                      ),
                     const Gap(24),
                     _buildDescription(),
                     const Gap(32),
