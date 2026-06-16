@@ -1,3 +1,4 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -368,8 +369,10 @@ class _TribeLeaderboardSection extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final currentUserId = FirebaseAuth.instance.currentUser?.uid;
+
     if (isGlobal) {
-      return _WorldLeaderboardSection();
+      return _WorldLeaderboardSection(currentClubId: clubId);
     }
 
     final leaderboardAsync = ref.watch(clubLeaderboardProvider(clubId));
@@ -433,8 +436,11 @@ class _TribeLeaderboardSection extends ConsumerWidget {
                   .asMap()
                   .entries
                   .map(
-                    (e) => _LeaderboardRow(entry: e.value, rank: e.key + 1)
-                        .animate(delay: (e.key * 50).ms)
+                    (e) => _LeaderboardRow(
+                      entry: e.value,
+                      rank: e.key + 1,
+                      isCurrentUser: currentUserId != null && e.value.userId == currentUserId,
+                    ).animate(delay: (e.key * 50).ms)
                         .fadeIn()
                         .slideX(begin: 0.03),
                   )
@@ -450,6 +456,10 @@ class _TribeLeaderboardSection extends ConsumerWidget {
 }
 
 class _WorldLeaderboardSection extends ConsumerWidget {
+  final String? currentClubId;
+
+  const _WorldLeaderboardSection({this.currentClubId});
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final worldAsync = ref.watch(worldLeaderboardProvider);
@@ -494,11 +504,13 @@ class _WorldLeaderboardSection extends ConsumerWidget {
                   .asMap()
                   .entries
                   .map(
-                    (e) =>
-                        _WorldRankingRow(club: e.value.tribe, rank: e.key + 1)
-                            .animate(delay: (e.key * 50).ms)
-                            .fadeIn()
-                            .slideX(begin: 0.03),
+                    (e) => _WorldRankingRow(
+                      club: e.value.tribe,
+                      rank: e.key + 1,
+                      isCurrentUserTribe: currentClubId != null && e.value.tribe.id == currentClubId,
+                    ).animate(delay: (e.key * 50).ms)
+                        .fadeIn()
+                        .slideX(begin: 0.03),
                   )
                   .toList(),
             );
@@ -514,8 +526,13 @@ class _WorldLeaderboardSection extends ConsumerWidget {
 class _WorldRankingRow extends StatelessWidget {
   final Tribe club;
   final int rank;
+  final bool isCurrentUserTribe;
 
-  const _WorldRankingRow({required this.club, required this.rank});
+  const _WorldRankingRow({
+    required this.club,
+    required this.rank,
+    this.isCurrentUserTribe = false,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -523,9 +540,11 @@ class _WorldRankingRow extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 8),
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       decoration: BoxDecoration(
-        color: EmergeColors.glassWhite,
+        color: isCurrentUserTribe ? EmergeColors.teal.withValues(alpha: 0.15) : EmergeColors.glassWhite,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: EmergeColors.glassBorder),
+        border: Border.all(
+          color: isCurrentUserTribe ? EmergeColors.teal.withValues(alpha: 0.4) : EmergeColors.glassBorder,
+        ),
       ),
       child: Row(
         children: [
@@ -535,7 +554,7 @@ class _WorldRankingRow extends StatelessWidget {
               '$rank',
               style: TextStyle(
                 color: rank <= 3 ? EmergeColors.yellow : Colors.white38,
-                fontWeight: FontWeight.bold,
+                fontWeight: isCurrentUserTribe ? FontWeight.bold : FontWeight.bold,
                 fontSize: 14,
               ),
             ),
@@ -543,16 +562,22 @@ class _WorldRankingRow extends StatelessWidget {
           const Gap(8),
           CircleAvatar(
             radius: 16,
-            backgroundColor: EmergeColors.violet.withValues(alpha: 0.2),
-            child: Icon(Icons.shield, size: 16, color: EmergeColors.violet),
+            backgroundColor: isCurrentUserTribe
+                ? EmergeColors.teal.withValues(alpha: 0.3)
+                : EmergeColors.violet.withValues(alpha: 0.2),
+            child: Icon(
+              isCurrentUserTribe ? Icons.star : Icons.shield,
+              size: 16,
+              color: isCurrentUserTribe ? EmergeColors.teal : EmergeColors.violet,
+            ),
           ),
           const Gap(12),
           Expanded(
             child: Text(
               club.name,
-              style: const TextStyle(
+              style: TextStyle(
                 color: Colors.white,
-                fontWeight: FontWeight.w600,
+                fontWeight: isCurrentUserTribe ? FontWeight.bold : FontWeight.w600,
                 fontSize: 14,
               ),
               overflow: TextOverflow.ellipsis,
@@ -561,13 +586,23 @@ class _WorldRankingRow extends StatelessWidget {
           Column(
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
-              Text(
-                '${club.totalXp} XP',
-                style: const TextStyle(
-                  color: EmergeColors.yellow,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 13,
-                ),
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  if (isCurrentUserTribe)
+                    const Padding(
+                      padding: EdgeInsets.only(right: 4),
+                      child: Icon(Icons.star, size: 12, color: EmergeColors.yellow),
+                    ),
+                  Text(
+                    '${club.totalXp} XP',
+                    style: TextStyle(
+                      color: EmergeColors.yellow,
+                      fontWeight: isCurrentUserTribe ? FontWeight.bold : FontWeight.bold,
+                      fontSize: 13,
+                    ),
+                  ),
+                ],
               ),
               Text(
                 '${club.memberCount} members',
@@ -584,8 +619,13 @@ class _WorldRankingRow extends StatelessWidget {
 class _LeaderboardRow extends StatelessWidget {
   final LeaderboardEntry entry;
   final int rank;
+  final bool isCurrentUser;
 
-  const _LeaderboardRow({required this.entry, required this.rank});
+  const _LeaderboardRow({
+    required this.entry,
+    required this.rank,
+    this.isCurrentUser = false,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -593,9 +633,11 @@ class _LeaderboardRow extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 8),
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       decoration: BoxDecoration(
-        color: EmergeColors.glassWhite,
+        color: isCurrentUser ? EmergeColors.teal.withValues(alpha: 0.15) : EmergeColors.glassWhite,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: EmergeColors.glassBorder),
+        border: Border.all(
+          color: isCurrentUser ? EmergeColors.teal.withValues(alpha: 0.4) : EmergeColors.glassBorder,
+        ),
       ),
       child: Row(
         children: [
@@ -605,7 +647,7 @@ class _LeaderboardRow extends StatelessWidget {
               '$rank',
               style: TextStyle(
                 color: rank <= 3 ? EmergeColors.yellow : Colors.white38,
-                fontWeight: FontWeight.bold,
+                fontWeight: isCurrentUser ? FontWeight.bold : FontWeight.bold,
                 fontSize: 14,
               ),
             ),
@@ -613,11 +655,13 @@ class _LeaderboardRow extends StatelessWidget {
           const Gap(8),
           CircleAvatar(
             radius: 16,
-            backgroundColor: EmergeColors.teal.withValues(alpha: 0.2),
+            backgroundColor: isCurrentUser
+                ? EmergeColors.teal.withValues(alpha: 0.3)
+                : EmergeColors.teal.withValues(alpha: 0.2),
             child: Text(
               entry.userName.isNotEmpty ? entry.userName[0].toUpperCase() : '?',
               style: TextStyle(
-                color: EmergeColors.teal,
+                color: isCurrentUser ? Colors.white : EmergeColors.teal,
                 fontSize: 12,
                 fontWeight: FontWeight.bold,
               ),
@@ -627,9 +671,9 @@ class _LeaderboardRow extends StatelessWidget {
           Expanded(
             child: Text(
               entry.userName,
-              style: const TextStyle(
+              style: TextStyle(
                 color: Colors.white,
-                fontWeight: FontWeight.w600,
+                fontWeight: isCurrentUser ? FontWeight.bold : FontWeight.w600,
                 fontSize: 14,
               ),
               overflow: TextOverflow.ellipsis,
@@ -638,13 +682,23 @@ class _LeaderboardRow extends StatelessWidget {
           Column(
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
-              Text(
-                '${entry.xp} XP',
-                style: const TextStyle(
-                  color: EmergeColors.yellow,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 13,
-                ),
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  if (isCurrentUser)
+                    const Padding(
+                      padding: EdgeInsets.only(right: 4),
+                      child: Icon(Icons.star, size: 12, color: EmergeColors.yellow),
+                    ),
+                  Text(
+                    '${entry.xp} XP',
+                    style: TextStyle(
+                      color: EmergeColors.yellow,
+                      fontWeight: isCurrentUser ? FontWeight.bold : FontWeight.bold,
+                      fontSize: 13,
+                    ),
+                  ),
+                ],
               ),
               Text(
                 'Level ${entry.level}',
