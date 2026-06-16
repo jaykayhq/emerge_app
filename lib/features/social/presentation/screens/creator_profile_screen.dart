@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:emerge_app/features/social/presentation/providers/creator_provider.dart';
+import 'package:emerge_app/features/blueprints/data/repositories/blueprint_repository.dart';
 
 class CreatorProfileScreen extends ConsumerWidget {
   final String creatorId;
@@ -25,7 +26,51 @@ class CreatorProfileScreen extends ConsumerWidget {
               Text(profile.bio, style: const TextStyle(fontSize: 16)),
               const SizedBox(height: 24),
               const Text('Blueprints', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-              // Display blueprints here
+              const SizedBox(height: 12),
+              Consumer(
+                builder: (context, ref, _) {
+                  final blueprintsAsync = ref.watch(allBlueprintsStreamProvider);
+                  return blueprintsAsync.when(
+                    data: (blueprints) {
+                      final creatorBlueprints = blueprints.where((b) => b.creatorUserId == creatorId).toList();
+                      if (creatorBlueprints.isEmpty) {
+                        return const Text('No blueprints yet', style: TextStyle(color: Colors.grey));
+                      }
+                      return SizedBox(
+                        height: 200,
+                        child: ListView.separated(
+                          scrollDirection: Axis.horizontal,
+                          itemCount: creatorBlueprints.length,
+                          separatorBuilder: (_, __) => const SizedBox(width: 12),
+                          itemBuilder: (context, index) {
+                            final blueprint = creatorBlueprints[index];
+                            return SizedBox(
+                              width: 160,
+                              child: Card(
+                                child: Padding(
+                                  padding: const EdgeInsets.all(12),
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Icon(Icons.widgets_rounded, size: 32, color: Theme.of(context).colorScheme.primary),
+                                      const Spacer(),
+                                      Text(blueprint.title, style: const TextStyle(fontWeight: FontWeight.bold)),
+                                      const SizedBox(height: 4),
+                                      Text('${blueprint.habits.length} habits', style: const TextStyle(fontSize: 12, color: Colors.grey)),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+                      );
+                    },
+                    loading: () => const Center(child: CircularProgressIndicator()),
+                    error: (_, __) => const Text('Could not load blueprints', style: TextStyle(color: Colors.grey)),
+                  );
+                },
+              ),
             ],
           );
         },
