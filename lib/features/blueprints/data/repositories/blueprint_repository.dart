@@ -21,7 +21,7 @@ class BlueprintRepository {
     );
   }
 
-  Future<void> adoptBlueprint(String blueprintId) async {
+  Future<void> incrementAdoptionCount(String blueprintId) async {
     final docRef = _firestore.collection('blueprints').doc(blueprintId);
     await docRef.update({'adoptionCount': FieldValue.increment(1)});
   }
