@@ -127,7 +127,10 @@ class DriftChallengeRepository implements ChallengeRepository {
     String challengeId,
   ) async {
     try {
-      await _db.challengeProgressDao.updateDay(challengeId, 0, 'completed');
+      final challenges = await _db.challengeProgressDao.getAll(userId);
+      final progress = challenges.where((c) => c.challengeId == challengeId).firstOrNull;
+      final totalDays = progress?.totalDays ?? 1;
+      await _db.challengeProgressDao.updateDay(challengeId, totalDays, 'completed');
 
       // Sync to Firestore
       await _syncEngine.enqueueSet(
@@ -198,7 +201,10 @@ class DriftChallengeRepository implements ChallengeRepository {
 
   @override
   Future<void> completeChallenge(String userId, String challengeId) async {
-    await _db.challengeProgressDao.updateDay(challengeId, 0, 'completed');
+    final challenges = await _db.challengeProgressDao.getAll(userId);
+    final progress = challenges.where((c) => c.challengeId == challengeId).firstOrNull;
+    final totalDays = progress?.totalDays ?? 1;
+    await _db.challengeProgressDao.updateDay(challengeId, totalDays, 'completed');
 
     // Sync to Firestore
     await _syncEngine.enqueueSet(
