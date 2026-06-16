@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:emerge_app/features/blueprints/data/repositories/blueprint_repository.dart';
 import 'package:emerge_app/features/blueprints/domain/models/blueprint.dart';
 import 'package:emerge_app/features/habits/presentation/providers/habit_providers.dart';
 import 'package:emerge_app/features/auth/presentation/providers/auth_providers.dart';
@@ -43,7 +44,8 @@ class BlueprintDetailController extends AsyncNotifier<void> {
         (failure) {
           throw Exception(failure.message);
         },
-        (_) {
+        (_) async {
+          await ref.read(blueprintRepositoryProvider).incrementAdoptionCount(blueprint.id);
           state = const AsyncData(null);
         },
       );
