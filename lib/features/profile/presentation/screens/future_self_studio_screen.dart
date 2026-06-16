@@ -26,6 +26,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:emerge_app/core/theme/emerge_colors.dart';
+import 'package:emerge_app/features/social/presentation/providers/creator_provider.dart';
 
 part 'future_self_studio_screen.g.dart';
 
@@ -525,6 +526,30 @@ class _FutureSelfStudioScreenState
                           },
                           accentColor: accentColor,
                         ),
+                ),
+              ),
+
+              // Creator Hub entry — only for verified creators
+              SliverToBoxAdapter(
+                child: ref.watch(isVerifiedCreatorProvider).when(
+                  data: (verified) {
+                    if (verified) {
+                      return Padding(
+                        padding: const EdgeInsets.all(16),
+                        child: ElevatedButton.icon(
+                          onPressed: () => context.push('/creator/dashboard'),
+                          icon: const Icon(Icons.dashboard_customize),
+                          label: const Text('Creator Hub'),
+                          style: ElevatedButton.styleFrom(
+                            minimumSize: const Size(double.infinity, 48),
+                          ),
+                        ),
+                      );
+                    }
+                    return const SizedBox.shrink();
+                  },
+                  loading: () => const SizedBox.shrink(),
+                  error: (_, __) => const SizedBox.shrink(),
                 ),
               ),
 
