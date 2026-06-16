@@ -5,6 +5,7 @@ import 'package:emerge_app/core/sync/sync_engine.dart';
 import 'package:emerge_app/features/social/data/repositories/tribe_repository.dart';
 import 'package:emerge_app/features/social/data/seeds/official_clubs_seed.dart';
 import 'package:emerge_app/features/social/domain/models/tribe.dart';
+import 'package:flutter/foundation.dart';
 
 class DriftTribeRepository implements TribeRepository {
   final AppDatabase _db;
@@ -452,8 +453,25 @@ class DriftTribeRepository implements TribeRepository {
 
   @override
   Future<List<Tribe>> getUserTribes(String userId) async {
-    final rows = await _db.tribeStatsDao.getAll();
-    return rows.map(_rowToTribe).toList();
+    try {
+      final tribeDocs = await _firestore
+          .collection('tribes')
+          .where('members', arrayContains: userId)
+          .get();
+
+      if (tribeDocs.docs.isEmpty) return [];
+
+      final tribeIds = tribeDocs.docs.map((doc) => doc.id).toSet();
+      final rows = await _db.tribeStatsDao.getAll();
+
+      return rows
+          .where((row) => tribeIds.contains(row.tribeId))
+          .map(_rowToTribe)
+          .toList();
+    } catch (e) {
+      debugPrint('Error getting user tribes for $userId: $e');
+      return [];
+    }
   }
 
   @override
