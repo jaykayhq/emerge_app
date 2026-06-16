@@ -106,7 +106,7 @@ class _SocialScreenState extends ConsumerState<SocialScreen>
                     Icons.handshake_outlined,
                     color: Colors.white,
                   ),
-                  onPressed: () => context.push('/tribes/contracts'),
+                  onPressed: () => context.push('/social/contracts'),
                   tooltip: 'Habit Contracts',
                 ),
                 IconButton(
@@ -114,7 +114,7 @@ class _SocialScreenState extends ConsumerState<SocialScreen>
                     Icons.person_add_outlined,
                     color: Colors.white,
                   ),
-                  onPressed: () => context.push('/tribes/accountability'),
+                  onPressed: () => context.push('/social/accountability'),
                   tooltip: 'Accountability Partners',
                 ),
                 IconButton(

@@ -1498,7 +1498,7 @@ class _LevelImmersiveScreenState extends ConsumerState<LevelImmersiveScreen> {
   /// Show dialog to create a new solo challenge
   void _showCreateChallengeDialog(BuildContext context) {
     // Navigate to challenges screen where user can create solo challenges
-    context.push('/tribes/challenges');
+    context.push('/social/challenges');
   }
 }
 
