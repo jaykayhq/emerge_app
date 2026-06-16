@@ -419,6 +419,17 @@ class DriftHabitRepository implements HabitRepository {
           },
         );
       }
+
+      _socialService.logActivity(
+        type: 'blueprint_adopted',
+        data: {
+          'blueprintTitle': blueprint.title,
+          'blueprintId': blueprint.id,
+          'category': blueprint.category,
+          'habitCount': blueprint.habits.length,
+        },
+      );
+
       return const Right(unit);
     } catch (e, _) {
       return Left(ServerFailure(e.toString()));

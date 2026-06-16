@@ -317,47 +317,6 @@ final class LeaderboardEntriesDaoProvider
 String _$leaderboardEntriesDaoHash() =>
     r'749b485219bc1d452d30f40c595e0852fe37717c';
 
-@ProviderFor(blueprintsDao)
-final blueprintsDaoProvider = BlueprintsDaoProvider._();
-
-final class BlueprintsDaoProvider
-    extends $FunctionalProvider<BlueprintsDao, BlueprintsDao, BlueprintsDao>
-    with $Provider<BlueprintsDao> {
-  BlueprintsDaoProvider._()
-    : super(
-        from: null,
-        argument: null,
-        retry: null,
-        name: r'blueprintsDaoProvider',
-        isAutoDispose: false,
-        dependencies: null,
-        $allTransitiveDependencies: null,
-      );
-
-  @override
-  String debugGetCreateSourceHash() => _$blueprintsDaoHash();
-
-  @$internal
-  @override
-  $ProviderElement<BlueprintsDao> $createElement($ProviderPointer pointer) =>
-      $ProviderElement(pointer);
-
-  @override
-  BlueprintsDao create(Ref ref) {
-    return blueprintsDao(ref);
-  }
-
-  /// {@macro riverpod.override_with_value}
-  Override overrideWithValue(BlueprintsDao value) {
-    return $ProviderOverride(
-      origin: this,
-      providerOverride: $SyncValueProvider<BlueprintsDao>(value),
-    );
-  }
-}
-
-String _$blueprintsDaoHash() => r'2e59c3ee060534b6e13c9e37b996af967d97e2e4';
-
 @ProviderFor(mutationQueueDao)
 final mutationQueueDaoProvider = MutationQueueDaoProvider._();
 

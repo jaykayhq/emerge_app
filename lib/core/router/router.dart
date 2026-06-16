@@ -97,13 +97,18 @@ GoRouter router(Ref ref) {
       final isOnboardingPath = path.startsWith('/onboarding');
       final isCreatorPath = path.startsWith('/creator');
 
-      // 3. Handle Unauthenticated Users
+      // 3. Creator dashboard requires auth
+      if (path == '/creator/dashboard' && !isLoggedIn) {
+        return '/creator/login';
+      }
+
+      // 5. Handle Unauthenticated Users
       if (!isLoggedIn) {
         if (isAuthScreen) return null;
         return isFirstLaunch ? '/welcome' : '/login';
       }
 
-      // 4. Handle Authenticated Users
+      // 6. Handle Authenticated Users
 
       // Use ref.read for stats to avoid redundant rebuilds
       final statsAsync = ref.read(userStatsStreamProvider);

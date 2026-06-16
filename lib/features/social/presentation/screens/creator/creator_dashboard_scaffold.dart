@@ -1,8 +1,10 @@
 // lib/features/social/presentation/screens/creator/creator_dashboard_scaffold.dart
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:emerge_app/features/auth/presentation/providers/creator_auth_provider.dart';
 
-class CreatorDashboardScaffold extends StatelessWidget {
+class CreatorDashboardScaffold extends ConsumerWidget {
   final StatefulNavigationShell navigationShell;
 
   const CreatorDashboardScaffold({
@@ -11,7 +13,15 @@ class CreatorDashboardScaffold extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    ref.listen(isVerifiedCreatorProvider, (_, next) {
+      next.whenData((verified) {
+        if (!verified && context.mounted) {
+          context.go('/creator/login');
+        }
+      });
+    });
+
     final width = MediaQuery.sizeOf(context).width;
     final isWide = width >= 600;
 

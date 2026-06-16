@@ -383,12 +383,12 @@ final blueprintRepositoryProvider = Provider<BlueprintRepository>((ref) {
 });
 
 final blueprintsStreamProvider =
-    StreamProvider.family<List<Blueprint>, String?>((ref, category) {
+    StreamProvider.autoDispose.family<List<Blueprint>, String?>((ref, category) {
       final repo = ref.watch(blueprintRepositoryProvider);
       return repo.getBlueprints(category: category);
     });
 
-final allBlueprintsStreamProvider = StreamProvider<List<Blueprint>>((ref) {
+final allBlueprintsStreamProvider = StreamProvider.autoDispose<List<Blueprint>>((ref) {
   final repo = ref.watch(blueprintRepositoryProvider);
   return repo.getBlueprints();
 });
