@@ -117,10 +117,7 @@ class _CreatorLoginScreenState extends ConsumerState<CreatorLoginScreen> {
             mobile: Center(
               child: SingleChildScrollView(
                 padding: const EdgeInsets.all(24.0),
-                child: Form(
-                  key: _formKey,
-                  child: _buildFormContent(theme, isMobile: true),
-                ),
+                child: _buildFormContent(theme, isMobile: true),
               ),
             ),
             tablet: Center(
@@ -169,10 +166,7 @@ class _CreatorLoginScreenState extends ConsumerState<CreatorLoginScreen> {
                         ),
                         Expanded(
                           child: SingleChildScrollView(
-                            child: Form(
-                              key: _formKey,
-                              child: _buildFormContent(theme, isMobile: false),
-                            ),
+                            child: _buildFormContent(theme, isMobile: false),
                           ),
                         ),
                       ],
@@ -193,7 +187,6 @@ class _CreatorLoginScreenState extends ConsumerState<CreatorLoginScreen> {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         if (isMobile) ...[
-          // Logo / Branding
           Column(
             children: [
               Center(child: EmergeAppIcon(size: 80)),
@@ -227,144 +220,143 @@ class _CreatorLoginScreenState extends ConsumerState<CreatorLoginScreen> {
           const Gap(32),
         ],
 
-        // Email Field
-        TextFormField(
-          controller: _emailController,
-          style: const TextStyle(color: Colors.white),
-          decoration: InputDecoration(
-            labelText: 'Email',
-            labelStyle: const TextStyle(color: Colors.white70),
-            filled: true,
-            fillColor: EmergeColors.background.withValues(alpha: 0.5),
-            enabledBorder: OutlineInputBorder(
-              borderSide: const BorderSide(color: EmergeColors.hexLine),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderSide: const BorderSide(color: Colors.amber),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            prefixIcon: const Icon(Icons.email_outlined, color: Colors.amber),
-          ),
-          validator: (value) {
-            if (value == null || value.isEmpty) {
-              return 'Please enter your email';
-            }
-            return null;
-          },
-        ).animate(delay: 150.ms).fadeIn().slideX(begin: 0.02),
-        const Gap(16),
-
-        // Password Field
-        TextFormField(
-          controller: _passwordController,
-          obscureText: _obscurePassword,
-          style: const TextStyle(color: Colors.white),
-          decoration: InputDecoration(
-            labelText: 'Password',
-            labelStyle: const TextStyle(color: Colors.white70),
-            filled: true,
-            fillColor: EmergeColors.background.withValues(alpha: 0.5),
-            enabledBorder: OutlineInputBorder(
-              borderSide: const BorderSide(color: EmergeColors.hexLine),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderSide: const BorderSide(color: Colors.amber),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            prefixIcon: const Icon(Icons.lock_outline, color: Colors.amber),
-            suffixIcon: IconButton(
-              icon: Icon(
-                _obscurePassword ? Icons.visibility_outlined : Icons.visibility_off_outlined,
-                color: Colors.amber,
-              ),
-              onPressed: () {
-                setState(() {
-                  _obscurePassword = !_obscurePassword;
-                });
-              },
-              tooltip: _obscurePassword ? 'Show password' : 'Hide password',
-            ),
-          ),
-          validator: (value) {
-            if (value == null || value.isEmpty) {
-              return 'Please enter your password';
-            }
-            return null;
-          },
-        ).animate(delay: 250.ms).fadeIn().slideX(begin: 0.02),
-        
-        Align(
-          alignment: Alignment.centerRight,
-          child: TextButton(
-            onPressed: _isLoading ? null : _forgotPassword,
-            child: const Text(
-              'Forgot Password?',
-              style: TextStyle(color: Colors.amber),
-            ),
-          ),
-        ),
-        const Gap(24),
-
-        // Login Button
-        Container(
-          height: 50,
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(25),
-            gradient: const LinearGradient(
-              colors: [Colors.amber, Colors.orange],
-            ),
-          ),
-          child: ElevatedButton(
-            onPressed: _isLoading ? null : _login,
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.transparent,
-              shadowColor: Colors.transparent,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(25),
-              ),
-            ),
-            child: _isLoading
-                ? const SizedBox(
-                    height: 20,
-                    width: 20,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2,
-                      color: Colors.white,
-                    ),
-                  )
-                : const Text(
-                    'Login to Creator Hub',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                    ),
+        Form(
+          key: _formKey,
+          child: Column(
+            children: [
+              TextFormField(
+                controller: _emailController,
+                style: const TextStyle(color: Colors.white),
+                decoration: InputDecoration(
+                  labelText: 'Email',
+                  labelStyle: const TextStyle(color: Colors.white70),
+                  filled: true,
+                  fillColor: EmergeColors.background.withValues(alpha: 0.5),
+                  enabledBorder: OutlineInputBorder(
+                    borderSide: const BorderSide(color: EmergeColors.hexLine),
+                    borderRadius: BorderRadius.circular(12),
                   ),
-          ),
-        ).animate(delay: 350.ms).fadeIn().scale(begin: const Offset(0.97, 0.97)),
-        const Gap(24),
-
-        // Go Back Link
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Text(
-              "Not a creator? ",
-              style: TextStyle(color: Colors.white70),
-            ),
-            TextButton(
-              onPressed: () => context.push('/login'),
-              child: const Text(
-                'Go Back',
-                style: TextStyle(
-                  color: Colors.amber,
-                  fontWeight: FontWeight.bold,
+                  focusedBorder: OutlineInputBorder(
+                    borderSide: const BorderSide(color: Colors.amber),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  prefixIcon: const Icon(Icons.email_outlined, color: Colors.amber),
+                ),
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Please enter your email';
+                  }
+                  return null;
+                },
+              ).animate(delay: 150.ms).fadeIn().slideX(begin: 0.02),
+              const Gap(16),
+              TextFormField(
+                controller: _passwordController,
+                obscureText: _obscurePassword,
+                style: const TextStyle(color: Colors.white),
+                decoration: InputDecoration(
+                  labelText: 'Password',
+                  labelStyle: const TextStyle(color: Colors.white70),
+                  filled: true,
+                  fillColor: EmergeColors.background.withValues(alpha: 0.5),
+                  enabledBorder: OutlineInputBorder(
+                    borderSide: const BorderSide(color: EmergeColors.hexLine),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderSide: const BorderSide(color: Colors.amber),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  prefixIcon: const Icon(Icons.lock_outline, color: Colors.amber),
+                  suffixIcon: IconButton(
+                    icon: Icon(
+                      _obscurePassword ? Icons.visibility_outlined : Icons.visibility_off_outlined,
+                      color: Colors.amber,
+                    ),
+                    onPressed: () {
+                      setState(() {
+                        _obscurePassword = !_obscurePassword;
+                      });
+                    },
+                    tooltip: _obscurePassword ? 'Show password' : 'Hide password',
+                  ),
+                ),
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Please enter your password';
+                  }
+                  return null;
+                },
+              ).animate(delay: 250.ms).fadeIn().slideX(begin: 0.02),
+              Align(
+                alignment: Alignment.centerRight,
+                child: TextButton(
+                  onPressed: _isLoading ? null : _forgotPassword,
+                  child: const Text(
+                    'Forgot Password?',
+                    style: TextStyle(color: Colors.amber),
+                  ),
                 ),
               ),
-            ),
-          ],
+              const Gap(24),
+              Container(
+                height: 50,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(25),
+                  gradient: const LinearGradient(
+                    colors: [Colors.amber, Colors.orange],
+                  ),
+                ),
+                child: ElevatedButton(
+                  onPressed: _isLoading ? null : _login,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.transparent,
+                    shadowColor: Colors.transparent,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(25),
+                    ),
+                  ),
+                  child: _isLoading
+                      ? const SizedBox(
+                          height: 20,
+                          width: 20,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: Colors.white,
+                          ),
+                        )
+                      : const Text(
+                          'Login to Creator Hub',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
+                        ),
+                ),
+              ).animate(delay: 350.ms).fadeIn().scale(begin: const Offset(0.97, 0.97)),
+              const Gap(24),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Text(
+                    "Not a creator? ",
+                    style: TextStyle(color: Colors.white70),
+                  ),
+                  TextButton(
+                    onPressed: () => context.push('/login'),
+                    child: const Text(
+                      'Go Back',
+                      style: TextStyle(
+                        color: Colors.amber,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
         ),
       ],
     );
