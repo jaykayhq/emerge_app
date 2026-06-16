@@ -604,7 +604,7 @@ class ChallengeDetailScreen extends ConsumerWidget {
             ref.invalidate(challengeBundleProvider);
             if (screenContext.mounted) {
               _showSuccess(screenContext, 'QUEST STARTED! (+25 XP)');
-              screenContext.go('/tribes/challenges');
+              screenContext.go('/social/challenges');
             }
           });
         },

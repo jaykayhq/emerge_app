@@ -1145,7 +1145,7 @@ class _FriendsTabContentState extends ConsumerState<FriendsTabContent> {
                   children: [
                     TextButton(
                       onPressed: () =>
-                          context.push('/tribes/leaderboard?tab=friends'),
+                          context.push('/social/leaderboard?tab=friends'),
                       child: const Text(
                         'View Rankings',
                         style: TextStyle(
