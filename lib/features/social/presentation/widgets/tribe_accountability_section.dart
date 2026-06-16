@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:gap/gap.dart';
 import 'package:emerge_app/core/theme/emerge_colors.dart';
+import 'package:emerge_app/features/social/domain/entities/social_entities.dart';
 import 'package:emerge_app/features/social/presentation/providers/friend_provider.dart';
 import 'package:emerge_app/features/monetization/presentation/providers/contract_provider.dart';
 
@@ -148,8 +149,7 @@ class _AccountabilityToolCard extends StatelessWidget {
 }
 
 class _PartnerAvatarCircle extends StatelessWidget {
-  final dynamic
-  partner; // Using dynamic for now to match whatever entity we have
+  final Friend partner;
 
   const _PartnerAvatarCircle({required this.partner});
 
