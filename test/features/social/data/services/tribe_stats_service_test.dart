@@ -44,7 +44,7 @@ void main() {
     });
 
     test('falls back to top-level totalXp when avatarStats is null', () {
-      final userData = {
+      final Map<String, dynamic> userData = {
         'totalXp': 999,
       };
 

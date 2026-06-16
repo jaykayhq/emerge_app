@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 import 'package:emerge_app/features/social/presentation/providers/creator_provider.dart';
 import 'package:emerge_app/features/blueprints/data/repositories/blueprint_repository.dart';
 
@@ -41,7 +40,7 @@ class CreatorProfileScreen extends ConsumerWidget {
                         child: ListView.separated(
                           scrollDirection: Axis.horizontal,
                           itemCount: creatorBlueprints.length,
-                          separatorBuilder: (_, __) => const SizedBox(width: 12),
+                          separatorBuilder: (_, _) => const SizedBox(width: 12),
                           itemBuilder: (context, index) {
                             final blueprint = creatorBlueprints[index];
                             return SizedBox(
@@ -67,7 +66,7 @@ class CreatorProfileScreen extends ConsumerWidget {
                       );
                     },
                     loading: () => const Center(child: CircularProgressIndicator()),
-                    error: (_, __) => const Text('Could not load blueprints', style: TextStyle(color: Colors.grey)),
+                    error: (_, _) => const Text('Could not load blueprints', style: TextStyle(color: Colors.grey)),
                   );
                 },
               ),

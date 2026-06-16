@@ -389,6 +389,13 @@ service cloud.firestore {
       allow delete: if request.auth != null && request.auth.token.admin == true;
     }
 
+    // Creator Profiles (verified creators)
+    match /creator_profiles/{userId} {
+      allow read: if isAuthenticated();
+      allow create, update: if isOwner(userId);
+      allow delete: if false;
+    }
+
     // Challenge Templates (Read-only, Write by Admin)
     match /challengeTemplates/{templateId} {
       allow read: if isAuthenticated();

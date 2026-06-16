@@ -34,10 +34,13 @@ class BlueprintDetailController extends AsyncNotifier<void> {
       }
 
       final repository = ref.read(habitRepositoryProvider);
+      final reminderTimeStr = reminderTime != null
+          ? '${reminderTime.hour.toString().padLeft(2, '0')}:${reminderTime.minute.toString().padLeft(2, '0')}'
+          : null;
       final result = await repository.createHabitsFromBlueprint(
         userId: user.id,
         blueprint: blueprint,
-        reminderTime: reminderTime,
+        reminderTime: reminderTimeStr,
       );
 
       result.fold(
