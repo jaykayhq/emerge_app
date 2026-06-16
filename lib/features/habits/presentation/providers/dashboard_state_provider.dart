@@ -1,7 +1,7 @@
 import 'package:emerge_app/core/services/remote_config_service.dart';
 import 'package:emerge_app/core/utils/app_logger.dart';
 import 'package:emerge_app/features/auth/domain/entities/user_extension.dart';
-import 'package:emerge_app/features/gamification/domain/models/blueprint.dart';
+import 'package:emerge_app/features/blueprints/domain/models/blueprint.dart';
 import 'package:emerge_app/features/gamification/presentation/providers/gamification_providers.dart';
 import 'package:emerge_app/features/habits/domain/entities/habit.dart';
 import 'package:emerge_app/features/habits/presentation/providers/habit_providers.dart';
@@ -377,8 +377,8 @@ class DashboardStateNotifier extends _$DashboardStateNotifier {
     }
   }
 
-  TimeOfDayPreference _mapTimeOfDay(String timeOfDay) {
-    switch (timeOfDay.toLowerCase()) {
+  TimeOfDayPreference _mapTimeOfDay(String? timeOfDay) {
+    switch (timeOfDay?.toLowerCase()) {
       case 'morning':
         return TimeOfDayPreference.morning;
       case 'afternoon':
