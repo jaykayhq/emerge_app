@@ -1,6 +1,5 @@
 import 'package:emerge_app/core/theme/emerge_colors.dart';
 import 'package:emerge_app/features/auth/presentation/providers/auth_providers.dart';
-import 'package:emerge_app/features/habits/presentation/providers/habit_providers.dart';
 import 'package:emerge_app/core/presentation/widgets/world_background.dart';
 import 'package:emerge_app/core/domain/models/app_world_theme.dart';
 import 'package:emerge_app/features/blueprints/domain/models/blueprint.dart';
@@ -268,13 +267,36 @@ class BlueprintDetailScreen extends ConsumerWidget {
       child: ElevatedButton(
         onPressed: isLoading
             ? null
-            : () async {
+              : () async {
                 if (userId == null) return;
 
+                var didAdopt = false;
+                String? reminderTimeString;
+                await showDialog(
+                  context: context,
+                  builder: (ctx) => BlueprintAdoptDialog(
+                    blueprint: blueprint,
+                    onAdopt: (time) {
+                      didAdopt = true;
+                      reminderTimeString = time;
+                    },
+                  ),
+                );
+
+                if (!didAdopt || !context.mounted) return;
+
                 try {
+                  TimeOfDay? reminderTime;
+                  if (reminderTimeString != null) {
+                    final parts = reminderTimeString!.split(':');
+                    reminderTime = TimeOfDay(
+                      hour: int.parse(parts[0]),
+                      minute: int.parse(parts[1]),
+                    );
+                  }
                   await ref
                       .read(blueprintDetailControllerProvider.notifier)
-                      .adoptBlueprint(blueprint);
+                      .adoptBlueprint(blueprint, reminderTime: reminderTime);
 
                   if (context.mounted) {
                     ScaffoldMessenger.of(context).showSnackBar(

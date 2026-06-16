@@ -484,6 +484,27 @@ class SocialActivityService {
     }
   }
 
+  /// Logs a generic activity with a type and data payload.
+  Future<void> logActivity({
+    required String type,
+    required Map<String, dynamic> data,
+  }) async {
+    try {
+      final id = '${type}_${DateTime.now().millisecondsSinceEpoch}';
+      await _syncEngine.enqueueSet(
+        collectionPath: _kGlobalActivitiesCollection,
+        documentId: id,
+        data: {
+          'type': type,
+          'data': data,
+          'timestamp': DateTime.now().toUtc().toIso8601String(),
+        },
+      );
+    } catch (e) {
+      debugPrint('Error logging activity ($type): $e');
+    }
+  }
+
   /// Logs when a user commits to a high-stakes habit contract.
   Future<void> logContractCommitted({
     required String userId,

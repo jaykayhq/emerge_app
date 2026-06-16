@@ -57,11 +57,6 @@ LeaderboardEntriesDao leaderboardEntriesDao(Ref ref) {
 }
 
 @Riverpod(keepAlive: true)
-BlueprintsDao blueprintsDao(Ref ref) {
-  return ref.watch(appDatabaseProvider).blueprintsDao;
-}
-
-@Riverpod(keepAlive: true)
 MutationQueueDao mutationQueueDao(Ref ref) {
   return ref.watch(appDatabaseProvider).mutationQueueDao;
 }
