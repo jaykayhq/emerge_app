@@ -57,33 +57,39 @@ class TribeStatsService {
 
         for (final doc in userStatsSnapshot.docs) {
           final data = doc.data();
-          // Sum XP from avatarStats - only sum attribute XP fields
           final avatarStats = data['avatarStats'] as Map<String, dynamic>?;
-          if (avatarStats != null) {
-            // Only sum the 6 attribute XP fields (exclude level, streak, attributeXp map)
-            totalXp += avatarStats['strengthXp'] as int? ?? 0;
-            totalXp += avatarStats['intellectXp'] as int? ?? 0;
-            totalXp += avatarStats['vitalityXp'] as int? ?? 0;
-            totalXp += avatarStats['creativityXp'] as int? ?? 0;
-            totalXp += avatarStats['focusXp'] as int? ?? 0;
-            totalXp += avatarStats['spiritXp'] as int? ?? 0;
+          int userXp = 0;
 
-            // Also sum any custom attribute XP from the attributeXp map
-            final customAttributeXp =
-                avatarStats['attributeXp'] as Map<String, dynamic>?;
-            if (customAttributeXp != null) {
-              for (final value in customAttributeXp.values) {
-                if (value is int) totalXp += value;
+          if (avatarStats != null) {
+            // Try totalXp first, then currentXp, then sum of attributes as fallback
+            userXp = (avatarStats['totalXp'] as int?) ??
+                     (avatarStats['currentXp'] as int?) ??
+                     0;
+
+            if (userXp == 0) {
+              userXp += avatarStats['strengthXp'] as int? ?? 0;
+              userXp += avatarStats['intellectXp'] as int? ?? 0;
+              userXp += avatarStats['vitalityXp'] as int? ?? 0;
+              userXp += avatarStats['creativityXp'] as int? ?? 0;
+              userXp += avatarStats['focusXp'] as int? ?? 0;
+              userXp += avatarStats['spiritXp'] as int? ?? 0;
+
+              // Also sum any custom attribute XP from the attributeXp map
+              final customAttributeXp =
+                  avatarStats['attributeXp'] as Map<String, dynamic>?;
+              if (customAttributeXp != null) {
+                for (final value in customAttributeXp.values) {
+                  if (value is int) userXp += value;
+                }
               }
             }
+          } else {
+            userXp = (data['totalXp'] as int?) ??
+                     (data['currentXp'] as int?) ??
+                     0;
           }
 
-          // Also check for direct totalXp or currentXp fields (fallback)
-          final directXp =
-              (data['currentXp'] as int?) ?? (data['totalXp'] as int?);
-          if (directXp != null) {
-            totalXp += directXp;
-          }
+          totalXp += userXp;
         }
       }
 
