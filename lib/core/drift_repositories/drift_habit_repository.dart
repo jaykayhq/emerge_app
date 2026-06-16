@@ -422,6 +422,7 @@ class DriftHabitRepository implements HabitRepository {
 
       _socialService.logActivity(
         type: 'blueprint_adopted',
+        userId: userId,
         data: {
           'blueprintTitle': blueprint.title,
           'blueprintId': blueprint.id,

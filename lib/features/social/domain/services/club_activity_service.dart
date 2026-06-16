@@ -487,6 +487,7 @@ class SocialActivityService {
   /// Logs a generic activity with a type and data payload.
   Future<void> logActivity({
     required String type,
+    required String userId,
     required Map<String, dynamic> data,
   }) async {
     try {
@@ -496,6 +497,7 @@ class SocialActivityService {
         documentId: id,
         data: {
           'type': type,
+          'userId': userId,
           'data': data,
           'timestamp': DateTime.now().toUtc().toIso8601String(),
         },

@@ -57,7 +57,7 @@ class CreatorDashboardScaffold extends ConsumerWidget {
               destinations: railDestinations,
               selectedIconTheme: IconThemeData(color: Colors.amber.shade700),
               selectedLabelTextStyle: TextStyle(color: Colors.amber.shade700),
-              indicatorColor: Colors.amber.withOpacity(0.2),
+              indicatorColor: Colors.amber.withValues(alpha: 0.2),
             ),
           if (isWide) const VerticalDivider(thickness: 1, width: 1),
           Expanded(child: navigationShell),
@@ -69,7 +69,7 @@ class CreatorDashboardScaffold extends ConsumerWidget {
               selectedIndex: navigationShell.currentIndex,
               onDestinationSelected: _goBranch,
               destinations: items,
-              indicatorColor: Colors.amber.withOpacity(0.2),
+              indicatorColor: Colors.amber.withValues(alpha: 0.2),
             ),
     );
   }
