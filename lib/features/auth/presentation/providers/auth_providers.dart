@@ -28,7 +28,7 @@ Future<void> signIn(Ref ref, String email, String password) async {
     email: email,
     password: password,
   );
-  result.fold((error) => throw Exception(error), (_) => null);
+  result.fold((error) => throw Exception(error.message), (_) => null);
 }
 
 @riverpod

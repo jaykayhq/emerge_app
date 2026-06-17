@@ -61,7 +61,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   Future<void> _loginWithGoogle() async {
     setState(() => _isLoading = true);
     try {
-      final result = await ref.read(authRepositoryProvider).signInWithGoogle();
+      final result = await ref.read(authRepositoryProvider).signInWithGoogle(isLogin: true);
       result.fold(
         (error) {
           // 'redirect_initiated' is not a real error — on web the page
@@ -351,8 +351,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       const Gap(24),
 
                       // Sign Up Link
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
+                      Wrap(
+                        alignment: WrapAlignment.center,
+                        crossAxisAlignment: WrapCrossAlignment.center,
                         children: [
                           const Text(
                             "Don't have an account? ",
@@ -384,8 +385,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       ),
                       const Gap(16),
                       // Legal Links
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
+                      Wrap(
+                        alignment: WrapAlignment.center,
+                        crossAxisAlignment: WrapCrossAlignment.center,
                         children: [
                           GestureDetector(
                             onTap: () => launchUrl(
@@ -701,8 +703,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                   const Gap(16),
 
                                   // Sign Up Link
-                                  Row(
-                                    mainAxisAlignment: MainAxisAlignment.center,
+                                  Wrap(
+                                    alignment: WrapAlignment.center,
+                                    crossAxisAlignment: WrapCrossAlignment.center,
                                     children: [
                                       const Text(
                                         "Don't have an account? ",
