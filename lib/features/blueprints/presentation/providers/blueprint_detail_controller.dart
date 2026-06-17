@@ -43,8 +43,8 @@ class BlueprintDetailController extends AsyncNotifier<void> {
         reminderTime: reminderTimeStr,
       );
 
-      result.fold(
-        (failure) {
+      await result.fold(
+        (failure) async {
           throw Exception(failure.message);
         },
         (_) async {
