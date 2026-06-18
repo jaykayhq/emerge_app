@@ -40,6 +40,27 @@ Future<AuthUser> _readFirstAuthState(ProviderContainer container) {
   return completer.future;
 }
 
+Future<bool> _readFirstBoolState(ProviderContainer container, dynamic provider) {
+  final completer = Completer<bool>();
+  final sub = container.listen<AsyncValue<bool>>(
+    provider,
+    (previous, next) {
+      if (next is AsyncData<bool>) {
+        if (!completer.isCompleted) {
+          completer.complete(next.value);
+        }
+      } else if (next is AsyncError<bool>) {
+        if (!completer.isCompleted) {
+          completer.completeError(next.error, next.stackTrace);
+        }
+      }
+    },
+    fireImmediately: true,
+  );
+  completer.future.whenComplete(() => sub.close());
+  return completer.future;
+}
+
 void main() {
   late MockAuthRepository mockRepo;
 
@@ -177,6 +198,86 @@ void main() {
       );
 
       final result = await container.read(isCreatorProvider('creator123').future);
+      expect(result, isFalse);
+      container.dispose();
+    });
+
+    test('isNormalUserProvider returns false immediately if uid is empty or whitespace', () async {
+      final container = ProviderContainer(
+        overrides: [
+          firestoreProvider.overrideWithValue(fakeFirestore),
+        ],
+      );
+
+      expect(await container.read(isNormalUserProvider('').future), isFalse);
+      expect(await container.read(isNormalUserProvider('   ').future), isFalse);
+      container.dispose();
+    });
+
+    test('isCreatorProvider returns false immediately if uid is empty or whitespace', () async {
+      final container = ProviderContainer(
+        overrides: [
+          firestoreProvider.overrideWithValue(fakeFirestore),
+        ],
+      );
+
+      expect(await container.read(isCreatorProvider('').future), isFalse);
+      expect(await container.read(isCreatorProvider('   ').future), isFalse);
+      container.dispose();
+    });
+
+    test('isCurrentNormalUserProvider returns true if logged in and users/{uid} doc exists', () async {
+      await fakeFirestore.collection('users').doc('current123').set({'name': 'Current Normal'});
+
+      final container = ProviderContainer(
+        overrides: [
+          authStateChangesProvider.overrideWith((ref) => Stream.value(const AuthUser(id: 'current123', email: 'current@test.com'))),
+          firestoreProvider.overrideWithValue(fakeFirestore),
+        ],
+      );
+
+      final result = await _readFirstBoolState(container, isCurrentNormalUserProvider);
+      expect(result, isTrue);
+      container.dispose();
+    });
+
+    test('isCurrentNormalUserProvider returns false if not logged in or users/{uid} doc does not exist', () async {
+      final container = ProviderContainer(
+        overrides: [
+          authStateChangesProvider.overrideWith((ref) => Stream.value(AuthUser.empty)),
+          firestoreProvider.overrideWithValue(fakeFirestore),
+        ],
+      );
+
+      final result = await _readFirstBoolState(container, isCurrentNormalUserProvider);
+      expect(result, isFalse);
+      container.dispose();
+    });
+
+    test('isCurrentCreatorProvider returns true if logged in and creator_profiles/{uid} doc exists', () async {
+      await fakeFirestore.collection('creator_profiles').doc('current123').set({'name': 'Current Creator'});
+
+      final container = ProviderContainer(
+        overrides: [
+          authStateChangesProvider.overrideWith((ref) => Stream.value(const AuthUser(id: 'current123', email: 'current@test.com'))),
+          firestoreProvider.overrideWithValue(fakeFirestore),
+        ],
+      );
+
+      final result = await _readFirstBoolState(container, isCurrentCreatorProvider);
+      expect(result, isTrue);
+      container.dispose();
+    });
+
+    test('isCurrentCreatorProvider returns false if not logged in or creator_profiles/{uid} doc does not exist', () async {
+      final container = ProviderContainer(
+        overrides: [
+          authStateChangesProvider.overrideWith((ref) => Stream.value(AuthUser.empty)),
+          firestoreProvider.overrideWithValue(fakeFirestore),
+        ],
+      );
+
+      final result = await _readFirstBoolState(container, isCurrentCreatorProvider);
       expect(result, isFalse);
       container.dispose();
     });
