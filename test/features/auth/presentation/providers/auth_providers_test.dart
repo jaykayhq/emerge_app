@@ -1,5 +1,7 @@
 import 'dart:async';
 
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:fake_cloud_firestore/fake_cloud_firestore.dart';
 import 'package:emerge_app/core/error/failure.dart';
 import 'package:emerge_app/features/auth/domain/entities/auth_user.dart';
 import 'package:emerge_app/features/auth/domain/repositories/auth_repository.dart';
@@ -116,6 +118,66 @@ void main() {
       final container = _makeContainer(repo: mockRepo);
       await container.read(signOutProvider.future);
       verify(() => mockRepo.signOut()).called(1);
+      container.dispose();
+    });
+  });
+
+  group('role check providers', () {
+    late FakeFirebaseFirestore fakeFirestore;
+
+    setUp(() {
+      fakeFirestore = FakeFirebaseFirestore();
+    });
+
+    test('isNormalUserProvider returns true if users/{uid} document exists', () async {
+      await fakeFirestore.collection('users').doc('user123').set({'name': 'Test User'});
+
+      final container = ProviderContainer(
+        overrides: [
+          firestoreProvider.overrideWithValue(fakeFirestore),
+        ],
+      );
+
+      final result = await container.read(isNormalUserProvider('user123').future);
+      expect(result, isTrue);
+      container.dispose();
+    });
+
+    test('isNormalUserProvider returns false if users/{uid} document does not exist', () async {
+      final container = ProviderContainer(
+        overrides: [
+          firestoreProvider.overrideWithValue(fakeFirestore),
+        ],
+      );
+
+      final result = await container.read(isNormalUserProvider('user123').future);
+      expect(result, isFalse);
+      container.dispose();
+    });
+
+    test('isCreatorProvider returns true if creator_profiles/{uid} document exists', () async {
+      await fakeFirestore.collection('creator_profiles').doc('creator123').set({'name': 'Test Creator'});
+
+      final container = ProviderContainer(
+        overrides: [
+          firestoreProvider.overrideWithValue(fakeFirestore),
+        ],
+      );
+
+      final result = await container.read(isCreatorProvider('creator123').future);
+      expect(result, isTrue);
+      container.dispose();
+    });
+
+    test('isCreatorProvider returns false if creator_profiles/{uid} document does not exist', () async {
+      final container = ProviderContainer(
+        overrides: [
+          firestoreProvider.overrideWithValue(fakeFirestore),
+        ],
+      );
+
+      final result = await container.read(isCreatorProvider('creator123').future);
+      expect(result, isFalse);
       container.dispose();
     });
   });

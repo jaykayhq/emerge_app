@@ -133,7 +133,7 @@ final class SignInProvider
   }
 }
 
-String _$signInHash() => r'9abaebc4a7eab1020b4aab3dfd10389f2cb08f45';
+String _$signInHash() => r'7a832775e884281049cc17dae4ee120e390754c9';
 
 final class SignInFamily extends $Family
     with $FunctionalFamilyOverride<FutureOr<void>, (String, String)> {
@@ -185,3 +185,188 @@ final class SignOutProvider
 }
 
 String _$signOutHash() => r'4b280108d412d729ffb848f22e53cee3550fc524';
+
+@ProviderFor(firestore)
+final firestoreProvider = FirestoreProvider._();
+
+final class FirestoreProvider
+    extends
+        $FunctionalProvider<
+          FirebaseFirestore,
+          FirebaseFirestore,
+          FirebaseFirestore
+        >
+    with $Provider<FirebaseFirestore> {
+  FirestoreProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'firestoreProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$firestoreHash();
+
+  @$internal
+  @override
+  $ProviderElement<FirebaseFirestore> $createElement(
+    $ProviderPointer pointer,
+  ) => $ProviderElement(pointer);
+
+  @override
+  FirebaseFirestore create(Ref ref) {
+    return firestore(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(FirebaseFirestore value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<FirebaseFirestore>(value),
+    );
+  }
+}
+
+String _$firestoreHash() => r'0e25e335c5657f593fc1baf3d9fd026e70bca7fa';
+
+@ProviderFor(isNormalUser)
+final isNormalUserProvider = IsNormalUserFamily._();
+
+final class IsNormalUserProvider
+    extends $FunctionalProvider<AsyncValue<bool>, bool, FutureOr<bool>>
+    with $FutureModifier<bool>, $FutureProvider<bool> {
+  IsNormalUserProvider._({
+    required IsNormalUserFamily super.from,
+    required String super.argument,
+  }) : super(
+         retry: null,
+         name: r'isNormalUserProvider',
+         isAutoDispose: true,
+         dependencies: null,
+         $allTransitiveDependencies: null,
+       );
+
+  @override
+  String debugGetCreateSourceHash() => _$isNormalUserHash();
+
+  @override
+  String toString() {
+    return r'isNormalUserProvider'
+        ''
+        '($argument)';
+  }
+
+  @$internal
+  @override
+  $FutureProviderElement<bool> $createElement($ProviderPointer pointer) =>
+      $FutureProviderElement(pointer);
+
+  @override
+  FutureOr<bool> create(Ref ref) {
+    final argument = this.argument as String;
+    return isNormalUser(ref, argument);
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return other is IsNormalUserProvider && other.argument == argument;
+  }
+
+  @override
+  int get hashCode {
+    return argument.hashCode;
+  }
+}
+
+String _$isNormalUserHash() => r'4516ca18e97cdbf2622e9ffeb27bb94cbd90aa98';
+
+final class IsNormalUserFamily extends $Family
+    with $FunctionalFamilyOverride<FutureOr<bool>, String> {
+  IsNormalUserFamily._()
+    : super(
+        retry: null,
+        name: r'isNormalUserProvider',
+        dependencies: null,
+        $allTransitiveDependencies: null,
+        isAutoDispose: true,
+      );
+
+  IsNormalUserProvider call(String uid) =>
+      IsNormalUserProvider._(argument: uid, from: this);
+
+  @override
+  String toString() => r'isNormalUserProvider';
+}
+
+@ProviderFor(isCreator)
+final isCreatorProvider = IsCreatorFamily._();
+
+final class IsCreatorProvider
+    extends $FunctionalProvider<AsyncValue<bool>, bool, FutureOr<bool>>
+    with $FutureModifier<bool>, $FutureProvider<bool> {
+  IsCreatorProvider._({
+    required IsCreatorFamily super.from,
+    required String super.argument,
+  }) : super(
+         retry: null,
+         name: r'isCreatorProvider',
+         isAutoDispose: true,
+         dependencies: null,
+         $allTransitiveDependencies: null,
+       );
+
+  @override
+  String debugGetCreateSourceHash() => _$isCreatorHash();
+
+  @override
+  String toString() {
+    return r'isCreatorProvider'
+        ''
+        '($argument)';
+  }
+
+  @$internal
+  @override
+  $FutureProviderElement<bool> $createElement($ProviderPointer pointer) =>
+      $FutureProviderElement(pointer);
+
+  @override
+  FutureOr<bool> create(Ref ref) {
+    final argument = this.argument as String;
+    return isCreator(ref, argument);
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return other is IsCreatorProvider && other.argument == argument;
+  }
+
+  @override
+  int get hashCode {
+    return argument.hashCode;
+  }
+}
+
+String _$isCreatorHash() => r'83253513ac6b372b3ecf4a0499d104b780876c1e';
+
+final class IsCreatorFamily extends $Family
+    with $FunctionalFamilyOverride<FutureOr<bool>, String> {
+  IsCreatorFamily._()
+    : super(
+        retry: null,
+        name: r'isCreatorProvider',
+        dependencies: null,
+        $allTransitiveDependencies: null,
+        isAutoDispose: true,
+      );
+
+  IsCreatorProvider call(String uid) =>
+      IsCreatorProvider._(argument: uid, from: this);
+
+  @override
+  String toString() => r'isCreatorProvider';
+}
