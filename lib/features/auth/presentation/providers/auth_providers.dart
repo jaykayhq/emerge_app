@@ -36,3 +36,23 @@ Future<void> signOut(Ref ref) async {
   final repository = ref.read(authRepositoryProvider);
   await repository.signOut();
 }
+
+@riverpod
+FirebaseFirestore firestore(Ref ref) {
+  return FirebaseFirestore.instance;
+}
+
+@riverpod
+Future<bool> isNormalUser(Ref ref, String uid) async {
+  final firestore = ref.watch(firestoreProvider);
+  final doc = await firestore.collection('users').doc(uid).get();
+  return doc.exists;
+}
+
+@riverpod
+Future<bool> isCreator(Ref ref, String uid) async {
+  final firestore = ref.watch(firestoreProvider);
+  final doc = await firestore.collection('creator_profiles').doc(uid).get();
+  return doc.exists;
+}
+
