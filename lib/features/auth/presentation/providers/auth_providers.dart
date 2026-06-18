@@ -11,7 +11,7 @@ part 'auth_providers.g.dart';
 AuthRepository authRepository(Ref ref) {
   return FirebaseAuthRepository(
     firebase_auth.FirebaseAuth.instance,
-    FirebaseFirestore.instance,
+    ref.watch(firestoreProvider),
   );
 }
 
@@ -37,13 +37,14 @@ Future<void> signOut(Ref ref) async {
   await repository.signOut();
 }
 
-@riverpod
+@Riverpod(keepAlive: true)
 FirebaseFirestore firestore(Ref ref) {
   return FirebaseFirestore.instance;
 }
 
 @riverpod
 Future<bool> isNormalUser(Ref ref, String uid) async {
+  if (uid.trim().isEmpty) return false;
   final firestore = ref.watch(firestoreProvider);
   final doc = await firestore.collection('users').doc(uid).get();
   return doc.exists;
@@ -51,8 +52,23 @@ Future<bool> isNormalUser(Ref ref, String uid) async {
 
 @riverpod
 Future<bool> isCreator(Ref ref, String uid) async {
+  if (uid.trim().isEmpty) return false;
   final firestore = ref.watch(firestoreProvider);
   final doc = await firestore.collection('creator_profiles').doc(uid).get();
   return doc.exists;
+}
+
+@riverpod
+Future<bool> isCurrentNormalUser(Ref ref) async {
+  final authUser = await ref.watch(authStateChangesProvider.future);
+  if (authUser.isEmpty) return false;
+  return ref.watch(isNormalUserProvider(authUser.id).future);
+}
+
+@riverpod
+Future<bool> isCurrentCreator(Ref ref) async {
+  final authUser = await ref.watch(authStateChangesProvider.future);
+  if (authUser.isEmpty) return false;
+  return ref.watch(isCreatorProvider(authUser.id).future);
 }
 

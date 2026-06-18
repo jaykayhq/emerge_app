@@ -163,3 +163,40 @@
   git add lib/features/auth/presentation/providers/auth_providers.dart test/features/auth/presentation/providers/auth_providers_test.dart
   git commit -m "feat: add role check providers for normal and creator profiles"
   ```
+
+---
+
+### Task 4: Address Code Quality Reviewer Feedback
+
+**Files:**
+*   Modify: `lib/features/auth/presentation/providers/auth_providers.dart`
+*   Modify: `test/features/auth/presentation/providers/auth_providers_test.dart`
+
+- [ ] **Step 1: Write failing tests for empty UID check and derived role providers**
+  Add test cases to verify:
+  1. `isNormalUserProvider` and `isCreatorProvider` return false immediately for empty/whitespace UID.
+  2. `isCurrentNormalUserProvider` and `isCurrentCreatorProvider` return correct values based on `authStateChangesProvider`.
+  
+  Expected: Compile errors/failures (RED).
+
+- [ ] **Step 2: Implement the fixes in auth_providers.dart**
+  - Make `firestoreProvider` keepAlive: true.
+  - Refactor `authRepositoryProvider` to watch `firestoreProvider`.
+  - Add empty/whitespace checks in `isNormalUser` and `isCreator`.
+  - Implement `isCurrentNormalUser` and `isCurrentCreator` providers.
+
+- [ ] **Step 3: Run build_runner to regenerate providers**
+  Run: `flutter pub run build_runner build --delete-conflicting-outputs`
+  Expected: Succeeds and updates `auth_providers.g.dart`.
+
+- [ ] **Step 4: Verify all tests pass**
+  Run: `flutter test test/features/auth/presentation/providers/auth_providers_test.dart`
+  Expected: PASS (GREEN).
+
+- [ ] **Step 5: Commit changes**
+  Run:
+  ```bash
+  git add lib/features/auth/presentation/providers/auth_providers.dart lib/features/auth/presentation/providers/auth_providers.g.dart test/features/auth/presentation/providers/auth_providers_test.dart
+  git commit -m "refactor: address review comments on role check providers"
+  ```
+

@@ -48,7 +48,7 @@ final class AuthRepositoryProvider
   }
 }
 
-String _$authRepositoryHash() => r'924e0a5a942fe03f1f24a306b12cf5f4051d6976';
+String _$authRepositoryHash() => r'a327c9350b1516c9c5ba1ecd1e6a5f2b0497decb';
 
 @ProviderFor(authStateChanges)
 final authStateChangesProvider = AuthStateChangesProvider._();
@@ -203,7 +203,7 @@ final class FirestoreProvider
         argument: null,
         retry: null,
         name: r'firestoreProvider',
-        isAutoDispose: true,
+        isAutoDispose: false,
         dependencies: null,
         $allTransitiveDependencies: null,
       );
@@ -231,7 +231,7 @@ final class FirestoreProvider
   }
 }
 
-String _$firestoreHash() => r'0e25e335c5657f593fc1baf3d9fd026e70bca7fa';
+String _$firestoreHash() => r'a56abe42f3fb3ee8bfee4e56b46a7bf8561bdc93';
 
 @ProviderFor(isNormalUser)
 final isNormalUserProvider = IsNormalUserFamily._();
@@ -282,7 +282,7 @@ final class IsNormalUserProvider
   }
 }
 
-String _$isNormalUserHash() => r'4516ca18e97cdbf2622e9ffeb27bb94cbd90aa98';
+String _$isNormalUserHash() => r'0185c240387854155815805c6957ddb4c1691ded';
 
 final class IsNormalUserFamily extends $Family
     with $FunctionalFamilyOverride<FutureOr<bool>, String> {
@@ -351,7 +351,7 @@ final class IsCreatorProvider
   }
 }
 
-String _$isCreatorHash() => r'83253513ac6b372b3ecf4a0499d104b780876c1e';
+String _$isCreatorHash() => r'ad0121ac1010146e8857752fbece3040faf069e2';
 
 final class IsCreatorFamily extends $Family
     with $FunctionalFamilyOverride<FutureOr<bool>, String> {
@@ -370,3 +370,70 @@ final class IsCreatorFamily extends $Family
   @override
   String toString() => r'isCreatorProvider';
 }
+
+@ProviderFor(isCurrentNormalUser)
+final isCurrentNormalUserProvider = IsCurrentNormalUserProvider._();
+
+final class IsCurrentNormalUserProvider
+    extends $FunctionalProvider<AsyncValue<bool>, bool, FutureOr<bool>>
+    with $FutureModifier<bool>, $FutureProvider<bool> {
+  IsCurrentNormalUserProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'isCurrentNormalUserProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$isCurrentNormalUserHash();
+
+  @$internal
+  @override
+  $FutureProviderElement<bool> $createElement($ProviderPointer pointer) =>
+      $FutureProviderElement(pointer);
+
+  @override
+  FutureOr<bool> create(Ref ref) {
+    return isCurrentNormalUser(ref);
+  }
+}
+
+String _$isCurrentNormalUserHash() =>
+    r'ede53b9213fc56cd4780cf55a7307546e3df256b';
+
+@ProviderFor(isCurrentCreator)
+final isCurrentCreatorProvider = IsCurrentCreatorProvider._();
+
+final class IsCurrentCreatorProvider
+    extends $FunctionalProvider<AsyncValue<bool>, bool, FutureOr<bool>>
+    with $FutureModifier<bool>, $FutureProvider<bool> {
+  IsCurrentCreatorProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'isCurrentCreatorProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$isCurrentCreatorHash();
+
+  @$internal
+  @override
+  $FutureProviderElement<bool> $createElement($ProviderPointer pointer) =>
+      $FutureProviderElement(pointer);
+
+  @override
+  FutureOr<bool> create(Ref ref) {
+    return isCurrentCreator(ref);
+  }
+}
+
+String _$isCurrentCreatorHash() => r'17b72a3bee3494537ba60cad6eefe0f2edc071bd';
