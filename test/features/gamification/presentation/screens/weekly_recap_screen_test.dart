@@ -103,9 +103,12 @@ void main() {
         authStream: Stream.value(testUser),
       ));
       await tester.pump();
-      await tester.pump(const Duration(seconds: 2));
+      await tester.pump();
 
       expect(find.byType(CircularProgressIndicator), findsNothing);
+
+      // drain flutter_animate's zero-duration timer
+      await tester.pump(const Duration(seconds: 1));
     });
 
     testWidgets('shows loading when user auth stream is empty', (
