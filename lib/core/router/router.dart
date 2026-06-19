@@ -33,7 +33,6 @@ import 'package:emerge_app/features/settings/presentation/screens/settings_scree
 import 'package:emerge_app/features/settings/presentation/screens/notification_settings_screen.dart';
 import 'package:emerge_app/features/monetization/presentation/screens/paywall_screen.dart';
 
-import 'package:emerge_app/features/social/presentation/screens/social_screen.dart';
 import 'package:emerge_app/features/social/presentation/screens/challenges_screen.dart';
 import 'package:emerge_app/features/social/presentation/screens/challenge_detail_screen.dart';
 import 'package:emerge_app/features/social/presentation/screens/friends_screen.dart';
@@ -41,20 +40,25 @@ import 'package:emerge_app/features/social/presentation/screens/all_tribes_scree
 import 'package:emerge_app/features/monetization/presentation/screens/habit_contract_screen.dart';
 import 'package:emerge_app/features/social/presentation/screens/social_onboarding_screen.dart';
 import 'package:emerge_app/features/social/presentation/screens/tribe_lobby_screen.dart';
-import 'package:emerge_app/features/social/presentation/screens/tribe_space_scaffold.dart';
 import 'package:emerge_app/features/social/presentation/screens/creator_profile_screen.dart';
+import 'package:emerge_app/features/social/presentation/screens/blueprint_detail_screen.dart';
+import 'package:emerge_app/features/social/presentation/screens/creators_browse_screen.dart';
 import 'package:emerge_app/features/social/presentation/providers/social_onboarding_provider.dart';
-import 'package:emerge_app/features/social/presentation/screens/tribe_feed_tab.dart';
-import 'package:emerge_app/features/social/presentation/screens/my_tribe_tab.dart';
-import 'package:emerge_app/features/social/presentation/screens/tribe_board_tab.dart';
-import 'package:emerge_app/features/social/presentation/screens/social_discover_tab.dart';
 import 'package:emerge_app/features/auth/presentation/screens/creator_login_screen.dart';
+import 'package:emerge_app/features/auth/presentation/screens/creator_signup_screen.dart';
+import 'package:emerge_app/features/auth/presentation/screens/creator_verify_email_screen.dart';
 import 'package:emerge_app/features/social/presentation/screens/creator/creator_dashboard_scaffold.dart';
 import 'package:emerge_app/features/social/presentation/screens/creator/creator_overview_tab.dart';
 import 'package:emerge_app/features/social/presentation/screens/creator/creator_blueprints_tab.dart';
+import 'package:emerge_app/features/social/presentation/screens/creator/blueprint_builder_screen.dart';
 import 'package:emerge_app/features/social/presentation/screens/creator/creator_tribe_management_tab.dart';
 
+import 'package:emerge_app/features/blueprints/data/repositories/blueprint_repository.dart';
+import 'package:emerge_app/features/blueprints/domain/models/blueprint.dart';
+import 'package:emerge_app/core/presentation/widgets/app_error_widget.dart';
+
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
@@ -71,6 +75,7 @@ GoRouter router(Ref ref) {
   // Create a refresh notifier for onboarding completion only
   final refreshNotifier = ValueNotifier<int>(0);
   ref.listen(onboardingControllerProvider, (_, _) => refreshNotifier.value++);
+  ref.listen(socialOnboardingCompletedProvider, (_, _) => refreshNotifier.value++);
 
   return GoRouter(
     navigatorKey: _rootNavigatorKey,
@@ -93,23 +98,58 @@ GoRouter router(Ref ref) {
       final isLogin = path == '/login';
       final isSignup = path == '/signup';
       final isCreatorLogin = path == '/creator/login';
-      final isAuthScreen = isWelcome || isLogin || isSignup || isCreatorLogin;
+      final isCreatorSignup = path == '/creator/signup';
+      final isCreatorVerify = path == '/creator/verify-email';
+      final isCreatorAuthScreen = isCreatorLogin || isCreatorSignup;
+      final isAuthScreen = isWelcome || isLogin || isSignup || isCreatorAuthScreen;
       final isOnboardingPath = path.startsWith('/onboarding');
       final isCreatorPath = path.startsWith('/creator');
-
-      // 3. Creator dashboard requires auth
-      if (path == '/creator/dashboard' && !isLoggedIn) {
-        return '/creator/login';
-      }
 
       // 5. Handle Unauthenticated Users
       if (!isLoggedIn) {
         if (isAuthScreen) return null;
+        if (isCreatorPath) return '/creator/login';
         return isFirstLaunch ? '/welcome' : '/login';
       }
 
       // 6. Handle Authenticated Users
+      final user = authState.value;
+      if (user == null || user.isEmpty) return null;
 
+      final isCreatorAsync = ref.watch(isCreatorProvider(user.id));
+      final isNormalUserAsync = ref.watch(isNormalUserProvider(user.id));
+
+      if (isCreatorAsync.isLoading || isNormalUserAsync.isLoading) return null;
+
+      final isCreator = isCreatorAsync.value ?? false;
+      final isNormal = isNormalUserAsync.value ?? false;
+
+      // 6a. Creator Role Handling
+      if (isCreator) {
+        final firebaseUser = ref.read(firebaseAuthProvider).currentUser;
+        final isEmailVerified = firebaseUser?.emailVerified ?? false;
+
+        if (!isEmailVerified) {
+          if (path != '/creator/verify-email') {
+            return '/creator/verify-email';
+          }
+          return null;
+        }
+
+        if (path == '/creator/verify-email' || !isCreatorPath || isCreatorLogin || isCreatorSignup) {
+          return '/creator/dashboard';
+        }
+        return null;
+      }
+
+      // 6b. Normal User Role Handling
+      if (isNormal) {
+        if (isCreatorPath) {
+          return '/';
+        }
+      }
+
+      // 7. Normal User Onboarding Handling
       // Use ref.read for stats to avoid redundant rebuilds
       final statsAsync = ref.read(userStatsStreamProvider);
 
@@ -135,7 +175,6 @@ GoRouter router(Ref ref) {
       // Onboarding is complete:
       // Redirect auth screens to home, otherwise allow all paths (unblocks bottom nav)
       if (isAuthScreen) {
-        if (isCreatorLogin) return '/creator/dashboard';
         return '/';
       }
 
@@ -181,6 +220,14 @@ GoRouter router(Ref ref) {
         path: '/creator/login',
         builder: (context, state) => const CreatorLoginScreen(),
       ),
+      GoRoute(
+        path: '/creator/signup',
+        builder: (context, state) => const CreatorSignUpScreen(),
+      ),
+      GoRoute(
+        path: '/creator/verify-email',
+        builder: (context, state) => const CreatorVerifyEmailScreen(),
+      ),
       StatefulShellRoute.indexedStack(
         builder: (context, state, navigationShell) =>
             CreatorDashboardScaffold(navigationShell: navigationShell),
@@ -198,6 +245,12 @@ GoRouter router(Ref ref) {
               GoRoute(
                 path: '/creator/dashboard/blueprints',
                 builder: (context, state) => const CreatorBlueprintsTab(),
+                routes: [
+                  GoRoute(
+                    path: 'blueprint-builder',
+                    builder: (context, state) => const BlueprintBuilderScreen(),
+                  ),
+                ]
               ),
             ],
           ),
@@ -210,6 +263,32 @@ GoRouter router(Ref ref) {
             ],
           ),
         ],
+      ),
+      // ISSUE-13: Top-level /creators/:id alias for deep linking, share links, notifications
+      GoRoute(
+        path: '/creators/:id',
+        parentNavigatorKey: _rootNavigatorKey,
+        builder: (context, state) => CreatorProfileScreen(
+          creatorId: state.pathParameters['id']!,
+        ),
+      ),
+      // /blueprint/:id — deep-link entry point for any blueprint by id
+      // (push sites may also pass the resolved Blueprint via `extra` to skip the fetch).
+      GoRoute(
+        path: '/blueprint/:id',
+        parentNavigatorKey: _rootNavigatorKey,
+        builder: (context, state) {
+          final id = state.pathParameters['id']!;
+          final extra = state.extra;
+          if (extra is Blueprint) return BlueprintDetailScreen(blueprint: extra);
+          return _BlueprintByIdLoader(blueprintId: id);
+        },
+      ),
+      // /creators — browse all verified creators
+      GoRoute(
+        path: '/creators',
+        parentNavigatorKey: _rootNavigatorKey,
+        builder: (context, state) => const CreatorsBrowseScreen(),
       ),
       GoRoute(
         path: '/challenges',
@@ -308,7 +387,10 @@ GoRouter router(Ref ref) {
                 path: '/social',
                 builder: (context, state) => const TribeLobbyScreen(),
                 redirect: (context, state) {
-                  final isComplete = ref.read(socialOnboardingCompletedProvider);
+                  final asyncComplete = ref.read(socialOnboardingCompletedProvider);
+                  if (asyncComplete.isLoading) return null; // Don't redirect while checking
+                  
+                  final isComplete = asyncComplete.value ?? false;
                   if (!isComplete && !state.uri.path.startsWith('/social/onboarding')) {
                     return '/social/onboarding';
                   }
@@ -320,40 +402,11 @@ GoRouter router(Ref ref) {
                     parentNavigatorKey: _rootNavigatorKey,
                     builder: (context, state) => const SocialOnboardingScreen(),
                   ),
-                  StatefulShellRoute.indexedStack(
-                    parentNavigatorKey: _rootNavigatorKey,
-                    builder: (context, state, navigationShell) => TribeSpaceScaffold(navigationShell: navigationShell),
-                    branches: [
-                      StatefulShellBranch(routes: [
-                        GoRoute(
-                          path: 'space',
-                          builder: (context, state) => const TribeFeedTab(),
-                        ),
-                      ]),
-                      StatefulShellBranch(routes: [
-                        GoRoute(
-                          path: 'space/my-tribe',
-                          builder: (context, state) => const MyTribeTab(),
-                        ),
-                      ]),
-                      StatefulShellBranch(routes: [
-                        GoRoute(
-                          path: 'space/board',
-                          builder: (context, state) => const TribeBoardTab(),
-                        ),
-                      ]),
-                      StatefulShellBranch(routes: [
-                        GoRoute(
-                          path: 'space/discover',
-                          builder: (context, state) => const SocialDiscoverTab(),
-                        ),
-                      ]),
-                    ],
-                  ),
+
                   GoRoute(
                     path: 'challenges',
                     builder: (context, state) =>
-                        const SocialScreen(initialIndex: 1),
+                        const ChallengesScreen(showAppBar: true),
                   ),
                   GoRoute(
                     path: 'challenge/:challengeId',
@@ -393,6 +446,25 @@ GoRouter router(Ref ref) {
                     builder: (context, state) => CreatorProfileScreen(
                       creatorId: state.pathParameters['id']!,
                     ),
+                  ),
+                  // /social/discover — re-uses CreatorsBrowseScreen (avoids duplicate)
+                  GoRoute(
+                    path: 'discover',
+                    parentNavigatorKey: _rootNavigatorKey,
+                    builder: (context, state) => const CreatorsBrowseScreen(),
+                  ),
+                  // /social/blueprint/:id — branch-local alias of /blueprint/:id
+                  GoRoute(
+                    path: 'blueprint/:id',
+                    parentNavigatorKey: _rootNavigatorKey,
+                    builder: (context, state) {
+                      final id = state.pathParameters['id']!;
+                      final extra = state.extra;
+                      if (extra is Blueprint) {
+                        return BlueprintDetailScreen(blueprint: extra);
+                      }
+                      return _BlueprintByIdLoader(blueprintId: id);
+                    },
                   ),
                 ],
               ),
@@ -458,5 +530,55 @@ String _getOnboardingRouteForProgress(int progress) {
       return '/onboarding/world-reveal';
     default:
       return '/'; // Should reach this case only briefly before isOnboardingComplete takes over
+  }
+}
+
+/// Resolves a blueprint by id when the caller doesn't pass one via `extra`.
+/// Watches [allBlueprintsStreamProvider]; on miss or error, shows
+/// [AppErrorWidget] with a retry that invalidates the provider.
+class _BlueprintByIdLoader extends ConsumerWidget {
+  final String blueprintId;
+  const _BlueprintByIdLoader({required this.blueprintId});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final blueprintsAsync = ref.watch(allBlueprintsStreamProvider);
+
+    return blueprintsAsync.when(
+      loading: () => const Scaffold(
+        backgroundColor: Colors.transparent,
+        body: Center(child: CircularProgressIndicator()),
+      ),
+      error: (e, _) => Scaffold(
+        backgroundColor: Colors.transparent,
+        body: AppErrorWidget(
+          message: 'Failed to load blueprint: $e',
+          onRetry: () => ref.invalidate(allBlueprintsStreamProvider),
+        ),
+      ),
+      data: (blueprints) {
+        final match = blueprints
+            .where((b) => b.id == blueprintId)
+            .firstOrNull;
+        if (match == null) {
+          return Scaffold(
+            backgroundColor: Colors.transparent,
+            appBar: AppBar(
+              backgroundColor: Colors.transparent,
+              elevation: 0,
+              leading: IconButton(
+                icon: const Icon(Icons.arrow_back, color: Colors.white),
+                onPressed: () => Navigator.of(context).pop(),
+              ),
+            ),
+            body: AppErrorWidget(
+              message: 'Blueprint not found',
+              onRetry: () => ref.invalidate(allBlueprintsStreamProvider),
+            ),
+          );
+        }
+        return BlueprintDetailScreen(blueprint: match);
+      },
+    );
   }
 }
