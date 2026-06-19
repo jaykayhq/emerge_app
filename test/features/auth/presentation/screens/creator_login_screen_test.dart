@@ -1,9 +1,12 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
+import 'package:go_router/go_router.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_riverpod/misc.dart';
+import 'package:firebase_auth/firebase_auth.dart' as firebase_auth;
 import 'package:emerge_app/features/auth/domain/repositories/auth_repository.dart';
 import 'package:emerge_app/features/auth/presentation/providers/auth_providers.dart';
 import 'package:emerge_app/features/auth/presentation/screens/creator_login_screen.dart';
@@ -13,21 +16,75 @@ import 'package:emerge_app/features/auth/domain/entities/auth_user.dart';
 import '../../../../helpers/widget_test_utils.dart';
 import '../../../../helpers/mocks/auth_mocks.dart';
 
-Widget _buildTest(AuthRepository repo) {
-  return createScreenUnderTest(
-    screen: const CreatorLoginScreen(),
+class MockFirebaseAuth extends Mock implements firebase_auth.FirebaseAuth {}
+class MockUser extends Mock implements firebase_auth.User {}
+
+late GoRouter router;
+late MockAuthRepository mockAuth;
+late MockFirebaseAuth mockFirebaseAuth;
+late MockUser mockUser;
+
+Widget _buildTest(
+  AuthRepository repo, {
+  List<Override> overrides = const [],
+}) {
+  return ProviderScope(
     overrides: [
       authRepositoryProvider.overrideWithValue(repo),
+      firebaseAuthProvider.overrideWithValue(mockFirebaseAuth),
+      isCreatorProvider('test-uid').overrideWith((ref) async => true),
+      ...overrides,
     ],
+    child: MaterialApp.router(
+      routerConfig: router,
+    ),
   );
 }
 
 void main() {
-  late MockAuthRepository mockAuth;
-
   setUp(() {
     mockAuth = MockAuthRepository();
+    mockFirebaseAuth = MockFirebaseAuth();
+    mockUser = MockUser();
+
     when(() => mockAuth.user).thenAnswer((_) => const Stream.empty());
+    when(() => mockFirebaseAuth.currentUser).thenReturn(mockUser);
+    when(() => mockUser.uid).thenReturn('test-uid');
+    when(() => mockUser.emailVerified).thenReturn(true);
+
+    router = GoRouter(
+      initialLocation: '/creator/login',
+      routes: [
+        GoRoute(
+          path: '/creator/login',
+          builder: (context, state) => const CreatorLoginScreen(),
+        ),
+        GoRoute(
+          path: '/creator/verify-email',
+          builder: (context, state) => const Scaffold(
+            body: Text('verify-email-page'),
+          ),
+        ),
+        GoRoute(
+          path: '/creator/dashboard',
+          builder: (context, state) => const Scaffold(
+            body: Text('dashboard-page'),
+          ),
+        ),
+        GoRoute(
+          path: '/creator/signup',
+          builder: (context, state) => const Scaffold(
+            body: Text('signup-page'),
+          ),
+        ),
+        GoRoute(
+          path: '/login',
+          builder: (context, state) => const Scaffold(
+            body: Text('login-page'),
+          ),
+        ),
+      ],
+    );
   });
 
   Future<void> setMobileViewport(WidgetTester tester) async {
@@ -48,6 +105,7 @@ void main() {
     expect(find.text('Email'), findsOneWidget);
     expect(find.text('Password'), findsOneWidget);
     expect(find.text('Login to Creator Hub'), findsOneWidget);
+    expect(find.text('Sign in with Google'), findsOneWidget);
   });
 
   testWidgets('shows validation on empty submit', (tester) async {
@@ -107,5 +165,140 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.byType(SnackBar), findsOneWidget);
+  });
+
+  testWidgets('logging in as a non-creator signs out and shows snackbar', (tester) async {
+    await setMobileViewport(tester);
+
+    when(() => mockUser.uid).thenReturn('non-creator-uid');
+    when(() => mockAuth.signInWithEmailAndPassword(
+      email: any(named: 'email'),
+      password: any(named: 'password'),
+    )).thenAnswer((_) async => right(testAuthUser));
+    when(() => mockAuth.signOut()).thenAnswer((_) async {});
+
+    await tester.pumpWidget(_buildTest(
+      mockAuth,
+      overrides: [
+        isCreatorProvider('non-creator-uid').overrideWith((ref) async => false),
+      ],
+    ));
+    await tester.pumpAndSettle();
+
+    await tester.enterText(find.byType(TextFormField).first, 'test@example.com');
+    await tester.enterText(find.byType(TextFormField).last, 'password123');
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Login to Creator Hub'));
+    await tester.pumpAndSettle();
+
+    verify(() => mockAuth.signOut()).called(1);
+    expect(find.text('This account is not registered as a creator.'), findsOneWidget);
+  });
+
+  testWidgets('logging in as an unverified creator redirects to verify email', (tester) async {
+    await setMobileViewport(tester);
+
+    when(() => mockUser.uid).thenReturn('unverified-uid');
+    when(() => mockUser.emailVerified).thenReturn(false);
+    when(() => mockAuth.signInWithEmailAndPassword(
+      email: any(named: 'email'),
+      password: any(named: 'password'),
+    )).thenAnswer((_) async => right(testAuthUser));
+
+    await tester.pumpWidget(_buildTest(
+      mockAuth,
+      overrides: [
+        isCreatorProvider('unverified-uid').overrideWith((ref) async => true),
+      ],
+    ));
+    await tester.pumpAndSettle();
+
+    await tester.enterText(find.byType(TextFormField).first, 'test@example.com');
+    await tester.enterText(find.byType(TextFormField).last, 'password123');
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Login to Creator Hub'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('verify-email-page'), findsOneWidget);
+  });
+
+  testWidgets('logging in as a verified creator redirects to dashboard', (tester) async {
+    await setMobileViewport(tester);
+
+    when(() => mockUser.uid).thenReturn('verified-uid');
+    when(() => mockUser.emailVerified).thenReturn(true);
+    when(() => mockAuth.signInWithEmailAndPassword(
+      email: any(named: 'email'),
+      password: any(named: 'password'),
+    )).thenAnswer((_) async => right(testAuthUser));
+
+    await tester.pumpWidget(_buildTest(
+      mockAuth,
+      overrides: [
+        isCreatorProvider('verified-uid').overrideWith((ref) async => true),
+      ],
+    ));
+    await tester.pumpAndSettle();
+
+    await tester.enterText(find.byType(TextFormField).first, 'test@example.com');
+    await tester.enterText(find.byType(TextFormField).last, 'password123');
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Login to Creator Hub'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('dashboard-page'), findsOneWidget);
+  });
+
+  testWidgets('Google sign-in success redirects to dashboard', (tester) async {
+    await setMobileViewport(tester);
+
+    await tester.pumpWidget(_buildTest(
+      mockAuth,
+      overrides: [
+        signUpCreatorWithGoogleProvider.overrideWith((ref) async {}),
+      ],
+    ));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Sign in with Google'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('dashboard-page'), findsOneWidget);
+  });
+
+  testWidgets('Google sign-in failure shows snackbar', (tester) async {
+    await setMobileViewport(tester);
+
+    await tester.pumpWidget(_buildTest(
+      mockAuth,
+      overrides: [
+        signUpCreatorWithGoogleProvider.overrideWith((ref) async {
+          await Future.value(); // Yield control for Riverpod auto-dispose check
+          throw Exception('Google sign-in failed');
+        }),
+      ],
+    ));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Sign in with Google'));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(SnackBar), findsOneWidget);
+    expect(find.text('Google sign-in failed'), findsOneWidget);
+  });
+
+  testWidgets('tapping Sign Up link navigates to creator signup page', (tester) async {
+    await setMobileViewport(tester);
+
+    await tester.pumpWidget(_buildTest(mockAuth));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Sign Up'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('signup-page'), findsOneWidget);
   });
 }

@@ -10,6 +10,7 @@ import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:emerge_app/core/theme/emerge_colors.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 
 class CreatorLoginScreen extends ConsumerStatefulWidget {
   const CreatorLoginScreen({super.key});
@@ -44,8 +45,33 @@ class _CreatorLoginScreenState extends ConsumerState<CreatorLoginScreen> {
           _passwordController.text.trim(),
         ).future,
       );
-      // Success routing will be handled by router redirects, 
-      // or we can add context.go('/creator') here later if needed.
+      
+      final user = ref.read(firebaseAuthProvider).currentUser;
+      if (user == null) {
+        throw Exception('User not found');
+      }
+
+      final isCreator = await ref.read(isCreatorProvider(user.uid).future);
+      if (!isCreator) {
+        await ref.read(authRepositoryProvider).signOut();
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('This account is not registered as a creator.')),
+          );
+        }
+        return;
+      }
+
+      if (!user.emailVerified) {
+        if (mounted) {
+          context.go('/creator/verify-email');
+        }
+        return;
+      }
+
+      if (mounted) {
+        context.go('/creator/dashboard');
+      }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -53,6 +79,27 @@ class _CreatorLoginScreenState extends ConsumerState<CreatorLoginScreen> {
         );
       }
     } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  Future<void> _signInWithGoogle() async {
+    setState(() => _isLoading = true);
+    final subscription = ref.listenManual(signUpCreatorWithGoogleProvider, (previous, next) {});
+    try {
+      await ref.read(signUpCreatorWithGoogleProvider.future);
+      if (mounted) {
+        context.go('/creator/dashboard');
+      }
+    } catch (e) {
+      if (mounted) {
+        final errorMessage = e.toString().replaceAll('Exception: ', '');
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(errorMessage)),
+        );
+      }
+    } finally {
+      subscription.close();
       if (mounted) setState(() => _isLoading = false);
     }
   }
@@ -335,7 +382,47 @@ class _CreatorLoginScreenState extends ConsumerState<CreatorLoginScreen> {
                         ),
                 ),
               ).animate(delay: 350.ms).fadeIn().scale(begin: const Offset(0.97, 0.97)),
+              const Gap(16),
+              OutlinedButton.icon(
+                onPressed: _isLoading ? null : _signInWithGoogle,
+                style: OutlinedButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  side: BorderSide(
+                    color: Colors.amber.withValues(alpha: 0.5),
+                  ),
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                icon: SvgPicture.asset(
+                  'assets/images/google_logo.svg',
+                  width: 20,
+                  height: 20,
+                ),
+                label: const Text('Sign in with Google'),
+              ).animate(delay: 400.ms).fadeIn().scale(begin: const Offset(0.97, 0.97)),
               const Gap(24),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Text(
+                    "New creator? ",
+                    style: TextStyle(color: Colors.white70),
+                  ),
+                  TextButton(
+                    onPressed: () => context.push('/creator/signup'),
+                    child: const Text(
+                      'Sign Up',
+                      style: TextStyle(
+                        color: Colors.amber,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const Gap(8),
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
