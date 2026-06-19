@@ -40,12 +40,20 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
     setState(() => _isLoading = true);
     try {
-      await ref.read(
-        signInProvider(
-          _emailController.text.trim(),
-          _passwordController.text.trim(),
-        ).future,
-      );
+      final email = _emailController.text.trim();
+      final password = _passwordController.text.trim();
+      await ref.read(signInProvider(email, password).future);
+
+      final user = ref.read(firebaseAuthProvider).currentUser;
+      if (user == null) {
+        throw Exception('User not found');
+      }
+
+      final isNormal = await ref.read(isNormalUserProvider(user.uid).future);
+      if (!isNormal) {
+        await ref.read(authRepositoryProvider).signOut();
+        throw Exception('This is a creator account. Please log in through the Creator Hub.');
+      }
       // Navigation is handled by the router's redirect
     } catch (e) {
       if (mounted) {
@@ -62,6 +70,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     setState(() => _isLoading = true);
     try {
       final result = await ref.read(authRepositoryProvider).signInWithGoogle(isLogin: true);
+      
+      bool proceed = false;
       result.fold(
         (error) {
           // 'redirect_initiated' is not a real error — on web the page
@@ -73,8 +83,21 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
             ).showSnackBar(SnackBar(content: Text(error.message)));
           }
         },
-        (_) => null, // Navigation handled by router via auth stream
+        (_) => proceed = true, // Navigation handled by router via auth stream
       );
+
+      if (proceed) {
+        final user = ref.read(firebaseAuthProvider).currentUser;
+        if (user == null) {
+          throw Exception('User not found');
+        }
+
+        final isNormal = await ref.read(isNormalUserProvider(user.uid).future);
+        if (!isNormal) {
+          await ref.read(authRepositoryProvider).signOut();
+          throw Exception('This is a creator account. Please log in through the Creator Hub.');
+        }
+      }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(

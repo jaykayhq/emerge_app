@@ -1,9 +1,10 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
+import 'package:flutter_riverpod/misc.dart';
+import 'package:firebase_auth/firebase_auth.dart' as firebase_auth;
 import 'package:emerge_app/features/auth/domain/repositories/auth_repository.dart';
 import 'package:emerge_app/features/auth/presentation/providers/auth_providers.dart';
 import 'package:emerge_app/features/auth/presentation/screens/login_screen.dart';
@@ -13,11 +14,23 @@ import 'package:emerge_app/features/auth/domain/entities/auth_user.dart';
 import '../../../../helpers/widget_test_utils.dart';
 import '../../../../helpers/mocks/auth_mocks.dart';
 
-Widget _buildTest(AuthRepository repo) {
+class MockFirebaseAuth extends Mock implements firebase_auth.FirebaseAuth {}
+class MockUser extends Mock implements firebase_auth.User {}
+
+late MockFirebaseAuth mockFirebaseAuth;
+late MockUser mockUser;
+
+Widget _buildTest(
+  AuthRepository repo, {
+  List<Override> overrides = const [],
+}) {
   return createScreenUnderTest(
     screen: const LoginScreen(),
     overrides: [
       authRepositoryProvider.overrideWithValue(repo),
+      firebaseAuthProvider.overrideWithValue(mockFirebaseAuth),
+      isNormalUserProvider('test-uid').overrideWith((ref) async => true),
+      ...overrides,
     ],
   );
 }
@@ -27,7 +40,12 @@ void main() {
 
   setUp(() {
     mockAuth = MockAuthRepository();
+    mockFirebaseAuth = MockFirebaseAuth();
+    mockUser = MockUser();
+    
     when(() => mockAuth.user).thenAnswer((_) => const Stream.empty());
+    when(() => mockFirebaseAuth.currentUser).thenReturn(mockUser);
+    when(() => mockUser.uid).thenReturn('test-uid');
   });
 
   Future<void> setMobileViewport(WidgetTester tester) async {
@@ -107,5 +125,62 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.byType(SnackBar), findsOneWidget);
+  });
+
+  testWidgets('logging in as a creator/non-normal user signs out and shows snackbar', (tester) async {
+    await setMobileViewport(tester);
+
+    when(() => mockUser.uid).thenReturn('creator-uid');
+    when(() => mockAuth.signInWithEmailAndPassword(
+      email: any(named: 'email'),
+      password: any(named: 'password'),
+    )).thenAnswer((_) async => right(testAuthUser));
+    when(() => mockAuth.signOut()).thenAnswer((_) async {});
+
+    await tester.pumpWidget(_buildTest(
+      mockAuth,
+      overrides: [
+        isNormalUserProvider('creator-uid').overrideWith((ref) async {
+          await Future.value();
+          return false;
+        }),
+      ],
+    ));
+    await tester.pumpAndSettle();
+
+    await tester.enterText(find.byType(TextFormField).first, 'creator@example.com');
+    await tester.enterText(find.byType(TextFormField).last, 'password123');
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Login').last);
+    await tester.pumpAndSettle();
+
+    verify(() => mockAuth.signOut()).called(1);
+    expect(find.text('This is a creator account. Please log in through the Creator Hub.'), findsOneWidget);
+  });
+
+  testWidgets('Google Sign-In with a creator account signs out and shows snackbar', (tester) async {
+    await setMobileViewport(tester);
+
+    when(() => mockUser.uid).thenReturn('creator-uid');
+    when(() => mockAuth.signInWithGoogle(isLogin: true)).thenAnswer((_) async => right(testAuthUser));
+    when(() => mockAuth.signOut()).thenAnswer((_) async {});
+
+    await tester.pumpWidget(_buildTest(
+      mockAuth,
+      overrides: [
+        isNormalUserProvider('creator-uid').overrideWith((ref) async {
+          await Future.value();
+          return false;
+        }),
+      ],
+    ));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Sign in with Google'));
+    await tester.pumpAndSettle();
+
+    verify(() => mockAuth.signOut()).called(1);
+    expect(find.text('This is a creator account. Please log in through the Creator Hub.'), findsOneWidget);
   });
 }
