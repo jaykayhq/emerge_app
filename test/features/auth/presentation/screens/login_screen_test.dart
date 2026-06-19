@@ -156,7 +156,7 @@ void main() {
     await tester.pumpAndSettle();
 
     verify(() => mockAuth.signOut()).called(1);
-    expect(find.text('This is a creator account. Please log in through the Creator Hub.'), findsOneWidget);
+    expect(find.text('This is a creator account. Please log in through the Creator Hub or switch accounts.'), findsOneWidget);
   });
 
   testWidgets('Google Sign-In with a creator account signs out and shows snackbar', (tester) async {
@@ -181,6 +181,6 @@ void main() {
     await tester.pumpAndSettle();
 
     verify(() => mockAuth.signOut()).called(1);
-    expect(find.text('This is a creator account. Please log in through the Creator Hub.'), findsOneWidget);
+    expect(find.text('This is a creator account. Please log in through the Creator Hub or switch accounts.'), findsOneWidget);
   });
 }

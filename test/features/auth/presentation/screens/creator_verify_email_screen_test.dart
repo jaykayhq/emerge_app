@@ -31,7 +31,7 @@ void main() {
       routes: [
         GoRoute(
           path: '/creator/verify-email',
-          builder: (context, state) => const CreatorVerifyEmailScreen(),
+          builder: (context, state) => const CreatorVerifyEmailScreen(enableTimer: false),
         ),
         GoRoute(
           path: '/creator/dashboard',
