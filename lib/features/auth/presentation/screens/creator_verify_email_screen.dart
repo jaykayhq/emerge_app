@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:emerge_app/core/presentation/widgets/emerge_branding.dart';
 import 'package:emerge_app/core/presentation/widgets/responsive_layout.dart';
 import 'package:emerge_app/core/theme/emerge_colors.dart';
@@ -10,7 +12,11 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 
 class CreatorVerifyEmailScreen extends ConsumerStatefulWidget {
-  const CreatorVerifyEmailScreen({super.key});
+  final bool enableTimer;
+  const CreatorVerifyEmailScreen({
+    super.key,
+    this.enableTimer = true,
+  });
 
   @override
   ConsumerState<CreatorVerifyEmailScreen> createState() => _CreatorVerifyEmailScreenState();
@@ -19,6 +25,42 @@ class CreatorVerifyEmailScreen extends ConsumerStatefulWidget {
 class _CreatorVerifyEmailScreenState extends ConsumerState<CreatorVerifyEmailScreen> {
   bool _isReloading = false;
   bool _isResending = false;
+  Timer? _timer;
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.enableTimer) {
+      _startVerificationCheckTimer();
+    }
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
+  }
+
+  void _startVerificationCheckTimer() {
+    _timer = Timer.periodic(const Duration(seconds: 5), (_) async {
+      try {
+        final auth = ref.read(firebaseAuthProvider);
+        final user = auth.currentUser;
+        if (user != null) {
+          await user.reload();
+          final updatedUser = auth.currentUser;
+          if (updatedUser != null && updatedUser.emailVerified) {
+            _timer?.cancel();
+            if (mounted) {
+              context.go('/creator/dashboard');
+            }
+          }
+        }
+      } catch (_) {
+        // Silently ignore background reload errors to avoid disturbing the user
+      }
+    });
+  }
 
   Future<void> _checkEmailVerified() async {
     setState(() => _isReloading = true);

@@ -52,7 +52,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       final isNormal = await ref.read(isNormalUserProvider(user.uid).future);
       if (!isNormal) {
         await ref.read(authRepositoryProvider).signOut();
-        throw Exception('This is a creator account. Please log in through the Creator Hub.');
+        throw Exception('This is a creator account. Please log in through the Creator Hub or switch accounts.');
       }
       // Navigation is handled by the router's redirect
     } catch (e) {
@@ -95,7 +95,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         final isNormal = await ref.read(isNormalUserProvider(user.uid).future);
         if (!isNormal) {
           await ref.read(authRepositoryProvider).signOut();
-          throw Exception('This is a creator account. Please log in through the Creator Hub.');
+          throw Exception('This is a creator account. Please log in through the Creator Hub or switch accounts.');
         }
       }
     } catch (e) {

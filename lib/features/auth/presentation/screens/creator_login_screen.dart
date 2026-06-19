@@ -56,7 +56,7 @@ class _CreatorLoginScreenState extends ConsumerState<CreatorLoginScreen> {
         await ref.read(authRepositoryProvider).signOut();
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('This account is not registered as a creator.')),
+            const SnackBar(content: Text('This account is not registered as a creator. Please log out or switch accounts.')),
           );
         }
         return;

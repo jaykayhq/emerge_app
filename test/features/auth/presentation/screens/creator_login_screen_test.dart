@@ -193,7 +193,7 @@ void main() {
     await tester.pumpAndSettle();
 
     verify(() => mockAuth.signOut()).called(1);
-    expect(find.text('This account is not registered as a creator.'), findsOneWidget);
+    expect(find.text('This account is not registered as a creator. Please log out or switch accounts.'), findsOneWidget);
   });
 
   testWidgets('logging in as an unverified creator redirects to verify email', (tester) async {
