@@ -36,6 +36,7 @@ import 'package:emerge_app/features/monetization/presentation/screens/paywall_sc
 import 'package:emerge_app/features/social/presentation/screens/challenges_screen.dart';
 import 'package:emerge_app/features/social/presentation/screens/challenge_detail_screen.dart';
 import 'package:emerge_app/features/social/presentation/screens/friends_screen.dart';
+import 'package:emerge_app/features/social/presentation/screens/social_activity_screen.dart';
 import 'package:emerge_app/features/social/presentation/screens/all_tribes_screen.dart';
 import 'package:emerge_app/features/monetization/presentation/screens/habit_contract_screen.dart';
 import 'package:emerge_app/features/social/presentation/screens/social_onboarding_screen.dart';
@@ -99,7 +100,6 @@ GoRouter router(Ref ref) {
       final isSignup = path == '/signup';
       final isCreatorLogin = path == '/creator/login';
       final isCreatorSignup = path == '/creator/signup';
-      final isCreatorVerify = path == '/creator/verify-email';
       final isCreatorAuthScreen = isCreatorLogin || isCreatorSignup;
       final isAuthScreen = isWelcome || isLogin || isSignup || isCreatorAuthScreen;
       final isOnboardingPath = path.startsWith('/onboarding');
@@ -116,9 +116,13 @@ GoRouter router(Ref ref) {
       final user = authState.value;
       if (user == null || user.isEmpty) return null;
 
-      final isCreatorAsync = ref.watch(isCreatorProvider(user.id));
-      final isNormalUserAsync = ref.watch(isNormalUserProvider(user.id));
+      // Use ref.read (NOT ref.watch) for role providers.
+      // ref.watch inside redirect causes routerProvider to rebuild every time
+      // those async futures settle → new GoRouter with initialLocation='/splash' → infinite loop.
+      final isCreatorAsync = ref.read(isCreatorProvider(user.id));
+      final isNormalUserAsync = ref.read(isNormalUserProvider(user.id));
 
+      // While roles are still being determined, hold current path.
       if (isCreatorAsync.isLoading || isNormalUserAsync.isLoading) return null;
 
       final isCreator = isCreatorAsync.value ?? false;
@@ -150,18 +154,24 @@ GoRouter router(Ref ref) {
       }
 
       // 7. Normal User Onboarding Handling
-      // Use ref.read for stats to avoid redundant rebuilds
+      // Use ref.read for stats to avoid redundant rebuilds.
       final statsAsync = ref.read(userStatsStreamProvider);
 
-      // If stats are loading or in error state, allow current path to continue
+      // If stats are loading or in error state, allow current path to continue.
       if (statsAsync.isLoading || statsAsync.hasError) return null;
 
       final userStats = statsAsync.value;
-      if (userStats == null) return null;
+
+      // New user: no stats doc yet → treat as onboarding not complete.
+      // Allow onboarding paths through; send everything else to identity-studio.
+      if (userStats == null) {
+        if (isOnboardingPath) return null;
+        if (isAuthScreen) return null;
+        return '/onboarding/identity-studio';
+      }
 
       final onboardingProgress = userStats.onboardingProgress;
-      // Onboarding is complete if progress >= 3 OR we have a completion timestamp
-      // Threshold is 3 because the final step (World Reveal) marks the start of the app
+      // Onboarding is complete if progress >= 3 OR we have a completion timestamp.
       final isOnboardingComplete =
           onboardingProgress >= 3 || userStats.onboardingCompletedAt != null;
 
@@ -422,6 +432,15 @@ GoRouter router(Ref ref) {
                     builder: (context, state) => const FriendsScreen(),
                   ),
                   GoRoute(
+                    path: 'activity',
+                    parentNavigatorKey: _rootNavigatorKey,
+                    builder: (context, state) {
+                      final tribeId =
+                          state.uri.queryParameters['tribeId'] ?? '';
+                      return SocialActivityScreen(tribeId: tribeId);
+                    },
+                  ),
+                  GoRoute(
                     path: 'contracts',
                     parentNavigatorKey: _rootNavigatorKey,
                     builder: (context, state) => const HabitContractScreen(),
@@ -534,17 +553,19 @@ String _getOnboardingRouteForProgress(int progress) {
 }
 
 /// Resolves a blueprint by id when the caller doesn't pass one via `extra`.
-/// Watches [allBlueprintsStreamProvider]; on miss or error, shows
-/// [AppErrorWidget] with a retry that invalidates the provider.
+/// Uses [blueprintByIdProvider] (single-doc fetch, not a full collection
+/// stream) so deep-link navigation is cheap even when the `blueprints`
+/// collection is large. On miss or error, shows [AppErrorWidget] with a
+/// retry that invalidates the provider.
 class _BlueprintByIdLoader extends ConsumerWidget {
   final String blueprintId;
   const _BlueprintByIdLoader({required this.blueprintId});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final blueprintsAsync = ref.watch(allBlueprintsStreamProvider);
+    final blueprintAsync = ref.watch(blueprintByIdProvider(blueprintId));
 
-    return blueprintsAsync.when(
+    return blueprintAsync.when(
       loading: () => const Scaffold(
         backgroundColor: Colors.transparent,
         body: Center(child: CircularProgressIndicator()),
@@ -553,14 +574,11 @@ class _BlueprintByIdLoader extends ConsumerWidget {
         backgroundColor: Colors.transparent,
         body: AppErrorWidget(
           message: 'Failed to load blueprint: $e',
-          onRetry: () => ref.invalidate(allBlueprintsStreamProvider),
+          onRetry: () => ref.invalidate(blueprintByIdProvider(blueprintId)),
         ),
       ),
-      data: (blueprints) {
-        final match = blueprints
-            .where((b) => b.id == blueprintId)
-            .firstOrNull;
-        if (match == null) {
+      data: (blueprint) {
+        if (blueprint == null) {
           return Scaffold(
             backgroundColor: Colors.transparent,
             appBar: AppBar(
@@ -573,11 +591,12 @@ class _BlueprintByIdLoader extends ConsumerWidget {
             ),
             body: AppErrorWidget(
               message: 'Blueprint not found',
-              onRetry: () => ref.invalidate(allBlueprintsStreamProvider),
+              onRetry: () =>
+                  ref.invalidate(blueprintByIdProvider(blueprintId)),
             ),
           );
         }
-        return BlueprintDetailScreen(blueprint: match);
+        return BlueprintDetailScreen(blueprint: blueprint);
       },
     );
   }
