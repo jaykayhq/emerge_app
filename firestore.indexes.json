@@ -597,6 +597,25 @@
       "density": "SPARSE_ALL"
     },
     {
+      "collectionGroup": "creator_profiles",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "isVerifiedCreator",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "blueprintCount",
+          "order": "DESCENDING"
+        },
+        {
+          "fieldPath": "__name__",
+          "order": "DESCENDING"
+        }
+      ],
+      "density": "SPARSE_ALL"
+    },
+    {
       "collectionGroup": "partner_requests",
       "queryScope": "COLLECTION",
       "fields": [

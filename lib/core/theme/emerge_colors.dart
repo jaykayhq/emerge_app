@@ -31,6 +31,25 @@ class EmergeColors {
   static const Color forestSurface = Color(0xFF193324);
   static const Color forestBorder = Color(0xFF326747);
 
+  // ============ NEBULA ODYSSEY COLORS (Social Hub Redesign) ============
+  static const Color nebulaPrimary = Color(0xFFA5E7FF);
+  static const Color nebulaPrimaryContainer = Color(0xFF00D2FF);
+  static const Color nebulaSecondary = Color(0xFFEDB1FF);
+  static const Color nebulaSecondaryContainer = Color(0xFF6E208C);
+  static const Color nebulaBackground = Color(0xFF050505);
+  static const Color nebulaSurface = Color(0xFF111415);
+  static const Color nebulaTertiary = Color(0xFFDDDBF2);
+
+  static const LinearGradient nebulaCtaGradient = LinearGradient(
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+    colors: [nebulaPrimaryContainer, nebulaSecondary],
+  );
+
+  static const LinearGradient nebulaNeonGradient = LinearGradient(
+    colors: [nebulaPrimaryContainer, nebulaSecondaryContainer],
+  );
+
   // ============ ADDITIONAL ACCENTS ============
 
   static const Color warmGold = Color(0xFFFFD700); // Gold for progress/rewards

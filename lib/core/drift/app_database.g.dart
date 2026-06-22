@@ -357,6 +357,17 @@ class $UserStatsTableTable extends UserStatsTable
     requiredDuringInsert: false,
     defaultValue: const Constant(0.5),
   );
+  static const VerificationMeta _lastCelebratedLevelMeta =
+      const VerificationMeta('lastCelebratedLevel');
+  @override
+  late final GeneratedColumn<int> lastCelebratedLevel = GeneratedColumn<int>(
+    'last_celebrated_level',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
   @override
   List<GeneratedColumn> get $columns => [
     userId,
@@ -390,6 +401,7 @@ class $UserStatsTableTable extends UserStatsTable
     onboardingStartedAt,
     hasEmerged,
     momentumScore,
+    lastCelebratedLevel,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -636,6 +648,15 @@ class $UserStatsTableTable extends UserStatsTable
         ),
       );
     }
+    if (data.containsKey('last_celebrated_level')) {
+      context.handle(
+        _lastCelebratedLevelMeta,
+        lastCelebratedLevel.isAcceptableOrUnknown(
+          data['last_celebrated_level']!,
+          _lastCelebratedLevelMeta,
+        ),
+      );
+    }
     return context;
   }
 
@@ -769,6 +790,10 @@ class $UserStatsTableTable extends UserStatsTable
         DriftSqlType.double,
         data['${effectivePrefix}momentum_score'],
       )!,
+      lastCelebratedLevel: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}last_celebrated_level'],
+      )!,
     );
   }
 
@@ -811,6 +836,7 @@ class UserStatsTableData extends DataClass
   final String? onboardingStartedAt;
   final bool hasEmerged;
   final double momentumScore;
+  final int lastCelebratedLevel;
   const UserStatsTableData({
     required this.userId,
     this.displayName,
@@ -843,6 +869,7 @@ class UserStatsTableData extends DataClass
     this.onboardingStartedAt,
     required this.hasEmerged,
     required this.momentumScore,
+    required this.lastCelebratedLevel,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -910,6 +937,7 @@ class UserStatsTableData extends DataClass
     }
     map['has_emerged'] = Variable<bool>(hasEmerged);
     map['momentum_score'] = Variable<double>(momentumScore);
+    map['last_celebrated_level'] = Variable<int>(lastCelebratedLevel);
     return map;
   }
 
@@ -975,6 +1003,7 @@ class UserStatsTableData extends DataClass
           : Value(onboardingStartedAt),
       hasEmerged: Value(hasEmerged),
       momentumScore: Value(momentumScore),
+      lastCelebratedLevel: Value(lastCelebratedLevel),
     );
   }
 
@@ -1021,6 +1050,9 @@ class UserStatsTableData extends DataClass
       ),
       hasEmerged: serializer.fromJson<bool>(json['hasEmerged']),
       momentumScore: serializer.fromJson<double>(json['momentumScore']),
+      lastCelebratedLevel: serializer.fromJson<int>(
+        json['lastCelebratedLevel'],
+      ),
     );
   }
   @override
@@ -1062,6 +1094,7 @@ class UserStatsTableData extends DataClass
       'onboardingStartedAt': serializer.toJson<String?>(onboardingStartedAt),
       'hasEmerged': serializer.toJson<bool>(hasEmerged),
       'momentumScore': serializer.toJson<double>(momentumScore),
+      'lastCelebratedLevel': serializer.toJson<int>(lastCelebratedLevel),
     };
   }
 
@@ -1097,6 +1130,7 @@ class UserStatsTableData extends DataClass
     Value<String?> onboardingStartedAt = const Value.absent(),
     bool? hasEmerged,
     double? momentumScore,
+    int? lastCelebratedLevel,
   }) => UserStatsTableData(
     userId: userId ?? this.userId,
     displayName: displayName.present ? displayName.value : this.displayName,
@@ -1141,6 +1175,7 @@ class UserStatsTableData extends DataClass
         : this.onboardingStartedAt,
     hasEmerged: hasEmerged ?? this.hasEmerged,
     momentumScore: momentumScore ?? this.momentumScore,
+    lastCelebratedLevel: lastCelebratedLevel ?? this.lastCelebratedLevel,
   );
   UserStatsTableData copyWithCompanion(UserStatsTableCompanion data) {
     return UserStatsTableData(
@@ -1213,6 +1248,9 @@ class UserStatsTableData extends DataClass
       momentumScore: data.momentumScore.present
           ? data.momentumScore.value
           : this.momentumScore,
+      lastCelebratedLevel: data.lastCelebratedLevel.present
+          ? data.lastCelebratedLevel.value
+          : this.lastCelebratedLevel,
     );
   }
 
@@ -1249,7 +1287,8 @@ class UserStatsTableData extends DataClass
           ..write('onboardingCompletedAt: $onboardingCompletedAt, ')
           ..write('onboardingStartedAt: $onboardingStartedAt, ')
           ..write('hasEmerged: $hasEmerged, ')
-          ..write('momentumScore: $momentumScore')
+          ..write('momentumScore: $momentumScore, ')
+          ..write('lastCelebratedLevel: $lastCelebratedLevel')
           ..write(')'))
         .toString();
   }
@@ -1287,6 +1326,7 @@ class UserStatsTableData extends DataClass
     onboardingStartedAt,
     hasEmerged,
     momentumScore,
+    lastCelebratedLevel,
   ]);
   @override
   bool operator ==(Object other) =>
@@ -1322,7 +1362,8 @@ class UserStatsTableData extends DataClass
           other.onboardingCompletedAt == this.onboardingCompletedAt &&
           other.onboardingStartedAt == this.onboardingStartedAt &&
           other.hasEmerged == this.hasEmerged &&
-          other.momentumScore == this.momentumScore);
+          other.momentumScore == this.momentumScore &&
+          other.lastCelebratedLevel == this.lastCelebratedLevel);
 }
 
 class UserStatsTableCompanion extends UpdateCompanion<UserStatsTableData> {
@@ -1357,6 +1398,7 @@ class UserStatsTableCompanion extends UpdateCompanion<UserStatsTableData> {
   final Value<String?> onboardingStartedAt;
   final Value<bool> hasEmerged;
   final Value<double> momentumScore;
+  final Value<int> lastCelebratedLevel;
   final Value<int> rowid;
   const UserStatsTableCompanion({
     this.userId = const Value.absent(),
@@ -1390,6 +1432,7 @@ class UserStatsTableCompanion extends UpdateCompanion<UserStatsTableData> {
     this.onboardingStartedAt = const Value.absent(),
     this.hasEmerged = const Value.absent(),
     this.momentumScore = const Value.absent(),
+    this.lastCelebratedLevel = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   UserStatsTableCompanion.insert({
@@ -1424,6 +1467,7 @@ class UserStatsTableCompanion extends UpdateCompanion<UserStatsTableData> {
     this.onboardingStartedAt = const Value.absent(),
     this.hasEmerged = const Value.absent(),
     this.momentumScore = const Value.absent(),
+    this.lastCelebratedLevel = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : userId = Value(userId);
   static Insertable<UserStatsTableData> custom({
@@ -1458,6 +1502,7 @@ class UserStatsTableCompanion extends UpdateCompanion<UserStatsTableData> {
     Expression<String>? onboardingStartedAt,
     Expression<bool>? hasEmerged,
     Expression<double>? momentumScore,
+    Expression<int>? lastCelebratedLevel,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
@@ -1495,6 +1540,8 @@ class UserStatsTableCompanion extends UpdateCompanion<UserStatsTableData> {
         'onboarding_started_at': onboardingStartedAt,
       if (hasEmerged != null) 'has_emerged': hasEmerged,
       if (momentumScore != null) 'momentum_score': momentumScore,
+      if (lastCelebratedLevel != null)
+        'last_celebrated_level': lastCelebratedLevel,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -1531,6 +1578,7 @@ class UserStatsTableCompanion extends UpdateCompanion<UserStatsTableData> {
     Value<String?>? onboardingStartedAt,
     Value<bool>? hasEmerged,
     Value<double>? momentumScore,
+    Value<int>? lastCelebratedLevel,
     Value<int>? rowid,
   }) {
     return UserStatsTableCompanion(
@@ -1567,6 +1615,7 @@ class UserStatsTableCompanion extends UpdateCompanion<UserStatsTableData> {
       onboardingStartedAt: onboardingStartedAt ?? this.onboardingStartedAt,
       hasEmerged: hasEmerged ?? this.hasEmerged,
       momentumScore: momentumScore ?? this.momentumScore,
+      lastCelebratedLevel: lastCelebratedLevel ?? this.lastCelebratedLevel,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -1673,6 +1722,9 @@ class UserStatsTableCompanion extends UpdateCompanion<UserStatsTableData> {
     if (momentumScore.present) {
       map['momentum_score'] = Variable<double>(momentumScore.value);
     }
+    if (lastCelebratedLevel.present) {
+      map['last_celebrated_level'] = Variable<int>(lastCelebratedLevel.value);
+    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -1713,6 +1765,7 @@ class UserStatsTableCompanion extends UpdateCompanion<UserStatsTableData> {
           ..write('onboardingStartedAt: $onboardingStartedAt, ')
           ..write('hasEmerged: $hasEmerged, ')
           ..write('momentumScore: $momentumScore, ')
+          ..write('lastCelebratedLevel: $lastCelebratedLevel, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -1943,6 +1996,40 @@ class $HabitsTableTable extends HabitsTable
     type: DriftSqlType.string,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _timerDurationMinutesMeta =
+      const VerificationMeta('timerDurationMinutes');
+  @override
+  late final GeneratedColumn<int> timerDurationMinutes = GeneratedColumn<int>(
+    'timer_duration_minutes',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(2),
+  );
+  static const VerificationMeta _integrationTypeMeta = const VerificationMeta(
+    'integrationType',
+  );
+  @override
+  late final GeneratedColumn<String> integrationType = GeneratedColumn<String>(
+    'integration_type',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('none'),
+  );
+  static const VerificationMeta _integrationTargetMeta = const VerificationMeta(
+    'integrationTarget',
+  );
+  @override
+  late final GeneratedColumn<int> integrationTarget = GeneratedColumn<int>(
+    'integration_target',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -1965,6 +2052,9 @@ class $HabitsTableTable extends HabitsTable
     syncedAt,
     timeOfDayPreference,
     reminderTime,
+    timerDurationMinutes,
+    integrationType,
+    integrationTarget,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -2126,6 +2216,33 @@ class $HabitsTableTable extends HabitsTable
         ),
       );
     }
+    if (data.containsKey('timer_duration_minutes')) {
+      context.handle(
+        _timerDurationMinutesMeta,
+        timerDurationMinutes.isAcceptableOrUnknown(
+          data['timer_duration_minutes']!,
+          _timerDurationMinutesMeta,
+        ),
+      );
+    }
+    if (data.containsKey('integration_type')) {
+      context.handle(
+        _integrationTypeMeta,
+        integrationType.isAcceptableOrUnknown(
+          data['integration_type']!,
+          _integrationTypeMeta,
+        ),
+      );
+    }
+    if (data.containsKey('integration_target')) {
+      context.handle(
+        _integrationTargetMeta,
+        integrationTarget.isAcceptableOrUnknown(
+          data['integration_target']!,
+          _integrationTargetMeta,
+        ),
+      );
+    }
     return context;
   }
 
@@ -2215,6 +2332,18 @@ class $HabitsTableTable extends HabitsTable
         DriftSqlType.string,
         data['${effectivePrefix}reminder_time'],
       ),
+      timerDurationMinutes: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}timer_duration_minutes'],
+      )!,
+      integrationType: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}integration_type'],
+      )!,
+      integrationTarget: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}integration_target'],
+      ),
     );
   }
 
@@ -2245,6 +2374,9 @@ class HabitsTableData extends DataClass implements Insertable<HabitsTableData> {
   final String? syncedAt;
   final String? timeOfDayPreference;
   final String? reminderTime;
+  final int timerDurationMinutes;
+  final String integrationType;
+  final int? integrationTarget;
   const HabitsTableData({
     required this.id,
     required this.userId,
@@ -2266,6 +2398,9 @@ class HabitsTableData extends DataClass implements Insertable<HabitsTableData> {
     this.syncedAt,
     this.timeOfDayPreference,
     this.reminderTime,
+    required this.timerDurationMinutes,
+    required this.integrationType,
+    this.integrationTarget,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -2306,6 +2441,11 @@ class HabitsTableData extends DataClass implements Insertable<HabitsTableData> {
     if (!nullToAbsent || reminderTime != null) {
       map['reminder_time'] = Variable<String>(reminderTime);
     }
+    map['timer_duration_minutes'] = Variable<int>(timerDurationMinutes);
+    map['integration_type'] = Variable<String>(integrationType);
+    if (!nullToAbsent || integrationTarget != null) {
+      map['integration_target'] = Variable<int>(integrationTarget);
+    }
     return map;
   }
 
@@ -2345,6 +2485,11 @@ class HabitsTableData extends DataClass implements Insertable<HabitsTableData> {
       reminderTime: reminderTime == null && nullToAbsent
           ? const Value.absent()
           : Value(reminderTime),
+      timerDurationMinutes: Value(timerDurationMinutes),
+      integrationType: Value(integrationType),
+      integrationTarget: integrationTarget == null && nullToAbsent
+          ? const Value.absent()
+          : Value(integrationTarget),
     );
   }
 
@@ -2378,6 +2523,11 @@ class HabitsTableData extends DataClass implements Insertable<HabitsTableData> {
         json['timeOfDayPreference'],
       ),
       reminderTime: serializer.fromJson<String?>(json['reminderTime']),
+      timerDurationMinutes: serializer.fromJson<int>(
+        json['timerDurationMinutes'],
+      ),
+      integrationType: serializer.fromJson<String>(json['integrationType']),
+      integrationTarget: serializer.fromJson<int?>(json['integrationTarget']),
     );
   }
   @override
@@ -2404,6 +2554,9 @@ class HabitsTableData extends DataClass implements Insertable<HabitsTableData> {
       'syncedAt': serializer.toJson<String?>(syncedAt),
       'timeOfDayPreference': serializer.toJson<String?>(timeOfDayPreference),
       'reminderTime': serializer.toJson<String?>(reminderTime),
+      'timerDurationMinutes': serializer.toJson<int>(timerDurationMinutes),
+      'integrationType': serializer.toJson<String>(integrationType),
+      'integrationTarget': serializer.toJson<int?>(integrationTarget),
     };
   }
 
@@ -2428,6 +2581,9 @@ class HabitsTableData extends DataClass implements Insertable<HabitsTableData> {
     Value<String?> syncedAt = const Value.absent(),
     Value<String?> timeOfDayPreference = const Value.absent(),
     Value<String?> reminderTime = const Value.absent(),
+    int? timerDurationMinutes,
+    String? integrationType,
+    Value<int?> integrationTarget = const Value.absent(),
   }) => HabitsTableData(
     id: id ?? this.id,
     userId: userId ?? this.userId,
@@ -2453,6 +2609,11 @@ class HabitsTableData extends DataClass implements Insertable<HabitsTableData> {
         ? timeOfDayPreference.value
         : this.timeOfDayPreference,
     reminderTime: reminderTime.present ? reminderTime.value : this.reminderTime,
+    timerDurationMinutes: timerDurationMinutes ?? this.timerDurationMinutes,
+    integrationType: integrationType ?? this.integrationType,
+    integrationTarget: integrationTarget.present
+        ? integrationTarget.value
+        : this.integrationTarget,
   );
   HabitsTableData copyWithCompanion(HabitsTableCompanion data) {
     return HabitsTableData(
@@ -2494,6 +2655,15 @@ class HabitsTableData extends DataClass implements Insertable<HabitsTableData> {
       reminderTime: data.reminderTime.present
           ? data.reminderTime.value
           : this.reminderTime,
+      timerDurationMinutes: data.timerDurationMinutes.present
+          ? data.timerDurationMinutes.value
+          : this.timerDurationMinutes,
+      integrationType: data.integrationType.present
+          ? data.integrationType.value
+          : this.integrationType,
+      integrationTarget: data.integrationTarget.present
+          ? data.integrationTarget.value
+          : this.integrationTarget,
     );
   }
 
@@ -2519,13 +2689,16 @@ class HabitsTableData extends DataClass implements Insertable<HabitsTableData> {
           ..write('updatedAt: $updatedAt, ')
           ..write('syncedAt: $syncedAt, ')
           ..write('timeOfDayPreference: $timeOfDayPreference, ')
-          ..write('reminderTime: $reminderTime')
+          ..write('reminderTime: $reminderTime, ')
+          ..write('timerDurationMinutes: $timerDurationMinutes, ')
+          ..write('integrationType: $integrationType, ')
+          ..write('integrationTarget: $integrationTarget')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode => Object.hash(
+  int get hashCode => Object.hashAll([
     id,
     userId,
     title,
@@ -2546,7 +2719,10 @@ class HabitsTableData extends DataClass implements Insertable<HabitsTableData> {
     syncedAt,
     timeOfDayPreference,
     reminderTime,
-  );
+    timerDurationMinutes,
+    integrationType,
+    integrationTarget,
+  ]);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -2570,7 +2746,10 @@ class HabitsTableData extends DataClass implements Insertable<HabitsTableData> {
           other.updatedAt == this.updatedAt &&
           other.syncedAt == this.syncedAt &&
           other.timeOfDayPreference == this.timeOfDayPreference &&
-          other.reminderTime == this.reminderTime);
+          other.reminderTime == this.reminderTime &&
+          other.timerDurationMinutes == this.timerDurationMinutes &&
+          other.integrationType == this.integrationType &&
+          other.integrationTarget == this.integrationTarget);
 }
 
 class HabitsTableCompanion extends UpdateCompanion<HabitsTableData> {
@@ -2594,6 +2773,9 @@ class HabitsTableCompanion extends UpdateCompanion<HabitsTableData> {
   final Value<String?> syncedAt;
   final Value<String?> timeOfDayPreference;
   final Value<String?> reminderTime;
+  final Value<int> timerDurationMinutes;
+  final Value<String> integrationType;
+  final Value<int?> integrationTarget;
   final Value<int> rowid;
   const HabitsTableCompanion({
     this.id = const Value.absent(),
@@ -2616,6 +2798,9 @@ class HabitsTableCompanion extends UpdateCompanion<HabitsTableData> {
     this.syncedAt = const Value.absent(),
     this.timeOfDayPreference = const Value.absent(),
     this.reminderTime = const Value.absent(),
+    this.timerDurationMinutes = const Value.absent(),
+    this.integrationType = const Value.absent(),
+    this.integrationTarget = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   HabitsTableCompanion.insert({
@@ -2639,6 +2824,9 @@ class HabitsTableCompanion extends UpdateCompanion<HabitsTableData> {
     this.syncedAt = const Value.absent(),
     this.timeOfDayPreference = const Value.absent(),
     this.reminderTime = const Value.absent(),
+    this.timerDurationMinutes = const Value.absent(),
+    this.integrationType = const Value.absent(),
+    this.integrationTarget = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : id = Value(id),
        userId = Value(userId),
@@ -2666,6 +2854,9 @@ class HabitsTableCompanion extends UpdateCompanion<HabitsTableData> {
     Expression<String>? syncedAt,
     Expression<String>? timeOfDayPreference,
     Expression<String>? reminderTime,
+    Expression<int>? timerDurationMinutes,
+    Expression<String>? integrationType,
+    Expression<int>? integrationTarget,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
@@ -2690,6 +2881,10 @@ class HabitsTableCompanion extends UpdateCompanion<HabitsTableData> {
       if (timeOfDayPreference != null)
         'time_of_day_preference': timeOfDayPreference,
       if (reminderTime != null) 'reminder_time': reminderTime,
+      if (timerDurationMinutes != null)
+        'timer_duration_minutes': timerDurationMinutes,
+      if (integrationType != null) 'integration_type': integrationType,
+      if (integrationTarget != null) 'integration_target': integrationTarget,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -2715,6 +2910,9 @@ class HabitsTableCompanion extends UpdateCompanion<HabitsTableData> {
     Value<String?>? syncedAt,
     Value<String?>? timeOfDayPreference,
     Value<String?>? reminderTime,
+    Value<int>? timerDurationMinutes,
+    Value<String>? integrationType,
+    Value<int?>? integrationTarget,
     Value<int>? rowid,
   }) {
     return HabitsTableCompanion(
@@ -2738,6 +2936,9 @@ class HabitsTableCompanion extends UpdateCompanion<HabitsTableData> {
       syncedAt: syncedAt ?? this.syncedAt,
       timeOfDayPreference: timeOfDayPreference ?? this.timeOfDayPreference,
       reminderTime: reminderTime ?? this.reminderTime,
+      timerDurationMinutes: timerDurationMinutes ?? this.timerDurationMinutes,
+      integrationType: integrationType ?? this.integrationType,
+      integrationTarget: integrationTarget ?? this.integrationTarget,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -2807,6 +3008,15 @@ class HabitsTableCompanion extends UpdateCompanion<HabitsTableData> {
     if (reminderTime.present) {
       map['reminder_time'] = Variable<String>(reminderTime.value);
     }
+    if (timerDurationMinutes.present) {
+      map['timer_duration_minutes'] = Variable<int>(timerDurationMinutes.value);
+    }
+    if (integrationType.present) {
+      map['integration_type'] = Variable<String>(integrationType.value);
+    }
+    if (integrationTarget.present) {
+      map['integration_target'] = Variable<int>(integrationTarget.value);
+    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -2836,6 +3046,9 @@ class HabitsTableCompanion extends UpdateCompanion<HabitsTableData> {
           ..write('syncedAt: $syncedAt, ')
           ..write('timeOfDayPreference: $timeOfDayPreference, ')
           ..write('reminderTime: $reminderTime, ')
+          ..write('timerDurationMinutes: $timerDurationMinutes, ')
+          ..write('integrationType: $integrationType, ')
+          ..write('integrationTarget: $integrationTarget, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -6597,6 +6810,7 @@ typedef $$UserStatsTableTableCreateCompanionBuilder =
       Value<String?> onboardingStartedAt,
       Value<bool> hasEmerged,
       Value<double> momentumScore,
+      Value<int> lastCelebratedLevel,
       Value<int> rowid,
     });
 typedef $$UserStatsTableTableUpdateCompanionBuilder =
@@ -6632,6 +6846,7 @@ typedef $$UserStatsTableTableUpdateCompanionBuilder =
       Value<String?> onboardingStartedAt,
       Value<bool> hasEmerged,
       Value<double> momentumScore,
+      Value<int> lastCelebratedLevel,
       Value<int> rowid,
     });
 
@@ -6796,6 +7011,11 @@ class $$UserStatsTableTableFilterComposer
 
   ColumnFilters<double> get momentumScore => $composableBuilder(
     column: $table.momentumScore,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get lastCelebratedLevel => $composableBuilder(
+    column: $table.lastCelebratedLevel,
     builder: (column) => ColumnFilters(column),
   );
 }
@@ -6963,6 +7183,11 @@ class $$UserStatsTableTableOrderingComposer
     column: $table.momentumScore,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<int> get lastCelebratedLevel => $composableBuilder(
+    column: $table.lastCelebratedLevel,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$UserStatsTableTableAnnotationComposer
@@ -7104,6 +7329,11 @@ class $$UserStatsTableTableAnnotationComposer
     column: $table.momentumScore,
     builder: (column) => column,
   );
+
+  GeneratedColumn<int> get lastCelebratedLevel => $composableBuilder(
+    column: $table.lastCelebratedLevel,
+    builder: (column) => column,
+  );
 }
 
 class $$UserStatsTableTableTableManager
@@ -7175,6 +7405,7 @@ class $$UserStatsTableTableTableManager
                 Value<String?> onboardingStartedAt = const Value.absent(),
                 Value<bool> hasEmerged = const Value.absent(),
                 Value<double> momentumScore = const Value.absent(),
+                Value<int> lastCelebratedLevel = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => UserStatsTableCompanion(
                 userId: userId,
@@ -7208,6 +7439,7 @@ class $$UserStatsTableTableTableManager
                 onboardingStartedAt: onboardingStartedAt,
                 hasEmerged: hasEmerged,
                 momentumScore: momentumScore,
+                lastCelebratedLevel: lastCelebratedLevel,
                 rowid: rowid,
               ),
           createCompanionCallback:
@@ -7244,6 +7476,7 @@ class $$UserStatsTableTableTableManager
                 Value<String?> onboardingStartedAt = const Value.absent(),
                 Value<bool> hasEmerged = const Value.absent(),
                 Value<double> momentumScore = const Value.absent(),
+                Value<int> lastCelebratedLevel = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => UserStatsTableCompanion.insert(
                 userId: userId,
@@ -7277,6 +7510,7 @@ class $$UserStatsTableTableTableManager
                 onboardingStartedAt: onboardingStartedAt,
                 hasEmerged: hasEmerged,
                 momentumScore: momentumScore,
+                lastCelebratedLevel: lastCelebratedLevel,
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0
@@ -7326,6 +7560,9 @@ typedef $$HabitsTableTableCreateCompanionBuilder =
       Value<String?> syncedAt,
       Value<String?> timeOfDayPreference,
       Value<String?> reminderTime,
+      Value<int> timerDurationMinutes,
+      Value<String> integrationType,
+      Value<int?> integrationTarget,
       Value<int> rowid,
     });
 typedef $$HabitsTableTableUpdateCompanionBuilder =
@@ -7350,6 +7587,9 @@ typedef $$HabitsTableTableUpdateCompanionBuilder =
       Value<String?> syncedAt,
       Value<String?> timeOfDayPreference,
       Value<String?> reminderTime,
+      Value<int> timerDurationMinutes,
+      Value<String> integrationType,
+      Value<int?> integrationTarget,
       Value<int> rowid,
     });
 
@@ -7459,6 +7699,21 @@ class $$HabitsTableTableFilterComposer
 
   ColumnFilters<String> get reminderTime => $composableBuilder(
     column: $table.reminderTime,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get timerDurationMinutes => $composableBuilder(
+    column: $table.timerDurationMinutes,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get integrationType => $composableBuilder(
+    column: $table.integrationType,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get integrationTarget => $composableBuilder(
+    column: $table.integrationTarget,
     builder: (column) => ColumnFilters(column),
   );
 }
@@ -7571,6 +7826,21 @@ class $$HabitsTableTableOrderingComposer
     column: $table.reminderTime,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<int> get timerDurationMinutes => $composableBuilder(
+    column: $table.timerDurationMinutes,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get integrationType => $composableBuilder(
+    column: $table.integrationType,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get integrationTarget => $composableBuilder(
+    column: $table.integrationTarget,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$HabitsTableTableAnnotationComposer
@@ -7659,6 +7929,21 @@ class $$HabitsTableTableAnnotationComposer
     column: $table.reminderTime,
     builder: (column) => column,
   );
+
+  GeneratedColumn<int> get timerDurationMinutes => $composableBuilder(
+    column: $table.timerDurationMinutes,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get integrationType => $composableBuilder(
+    column: $table.integrationType,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get integrationTarget => $composableBuilder(
+    column: $table.integrationTarget,
+    builder: (column) => column,
+  );
 }
 
 class $$HabitsTableTableTableManager
@@ -7712,6 +7997,9 @@ class $$HabitsTableTableTableManager
                 Value<String?> syncedAt = const Value.absent(),
                 Value<String?> timeOfDayPreference = const Value.absent(),
                 Value<String?> reminderTime = const Value.absent(),
+                Value<int> timerDurationMinutes = const Value.absent(),
+                Value<String> integrationType = const Value.absent(),
+                Value<int?> integrationTarget = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => HabitsTableCompanion(
                 id: id,
@@ -7734,6 +8022,9 @@ class $$HabitsTableTableTableManager
                 syncedAt: syncedAt,
                 timeOfDayPreference: timeOfDayPreference,
                 reminderTime: reminderTime,
+                timerDurationMinutes: timerDurationMinutes,
+                integrationType: integrationType,
+                integrationTarget: integrationTarget,
                 rowid: rowid,
               ),
           createCompanionCallback:
@@ -7758,6 +8049,9 @@ class $$HabitsTableTableTableManager
                 Value<String?> syncedAt = const Value.absent(),
                 Value<String?> timeOfDayPreference = const Value.absent(),
                 Value<String?> reminderTime = const Value.absent(),
+                Value<int> timerDurationMinutes = const Value.absent(),
+                Value<String> integrationType = const Value.absent(),
+                Value<int?> integrationTarget = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => HabitsTableCompanion.insert(
                 id: id,
@@ -7780,6 +8074,9 @@ class $$HabitsTableTableTableManager
                 syncedAt: syncedAt,
                 timeOfDayPreference: timeOfDayPreference,
                 reminderTime: reminderTime,
+                timerDurationMinutes: timerDurationMinutes,
+                integrationType: integrationType,
+                integrationTarget: integrationTarget,
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0

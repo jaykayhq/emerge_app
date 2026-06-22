@@ -261,3 +261,4 @@ export * from "./rateLimiter";
 export * from "./ai_recap";
 export * from "./revenuecat_events";
 export * from "./payments/paystack";
+export { setUserRole } from "./setUserRole";

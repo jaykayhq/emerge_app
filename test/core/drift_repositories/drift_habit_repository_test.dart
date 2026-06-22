@@ -2,6 +2,7 @@ import 'package:drift/drift.dart' hide isNotNull, isNull;
 import 'package:emerge_app/core/drift/app_database.dart';
 import 'package:emerge_app/core/drift_repositories/drift_habit_repository.dart';
 import 'package:emerge_app/core/game_loop/game_loop_engine.dart';
+import 'package:emerge_app/features/blueprints/domain/models/blueprint.dart';
 import 'package:emerge_app/features/habits/domain/entities/habit.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -46,6 +47,14 @@ void main() {
       () => mockSyncEngine.enqueueUpdate(
         collectionPath: any(named: 'collectionPath'),
         documentId: any(named: 'documentId'),
+        data: any(named: 'data'),
+      ),
+    ).thenAnswer((_) async {});
+
+    when(
+      () => mockSocialService.logActivity(
+        type: any(named: 'type'),
+        userId: any(named: 'userId'),
         data: any(named: 'data'),
       ),
     ).thenAnswer((_) async {});
@@ -410,6 +419,83 @@ void main() {
       final hardStats = await db.userStatsDao.getStats(userId);
 
       expect(hardStats?.totalXp, greaterThan(easyXp));
+    });
+
+    test(
+      'completeHabit() delegates to SocialActivityService.logHabitCompletion',
+      () async {
+        final habit = createTestHabit();
+        await repository.createHabit(habit);
+
+        await db.userStatsDao.upsertStats(
+          UserStatsTableCompanion(
+            userId: Value(userId),
+            displayName: Value('Test User'),
+            archetype: Value('athlete'),
+            totalXp: Value(0),
+            level: Value(1),
+            vitalityXp: Value(0),
+          ),
+        );
+
+        final result = await repository.completeHabit(
+          habit.id,
+          DateTime.now(),
+        );
+
+        expect(result.isRight(), true);
+
+        verify(
+          () => mockSocialService.logHabitCompletion(
+            userId: userId,
+            userName: 'Test User',
+            archetype: 'athlete',
+            habitId: habit.id,
+            habitTitle: habit.title,
+            streakDay: any(named: 'streakDay'),
+            attribute: any(named: 'attribute'),
+            xpGained: any(named: 'xpGained'),
+            currentLevel: any(named: 'currentLevel'),
+          ),
+        ).called(1);
+      },
+    );
+
+    test('createHabitsFromBlueprint stores reminderTime in created habits', () async {
+      await db.userStatsDao.upsertStats(
+        UserStatsTableCompanion(
+          userId: Value(userId),
+          displayName: Value('Test User'),
+          archetype: Value('athlete'),
+          totalXp: Value(0),
+          level: Value(1),
+          vitalityXp: Value(0),
+        ),
+      );
+
+      final blueprint = Blueprint(
+        id: 'test_bp',
+        title: 'Test Blueprint',
+        description: 'A test blueprint',
+        category: 'Morning',
+        creatorName: 'Test',
+        creatorUserId: userId,
+        creatorArchetype: 'Scholar',
+        createdAt: DateTime.now(),
+        habits: [const BlueprintHabit(title: 'Wake Up')],
+      );
+
+      final result = await repository.createHabitsFromBlueprint(
+        userId: userId,
+        blueprint: blueprint,
+        reminderTime: '07:30',
+      );
+
+      expect(result.isRight(), true);
+
+      final habits = await db.habitsDao.watchHabits(userId).first;
+      expect(habits, isNotEmpty);
+      expect(habits.first.title, 'Wake Up');
     });
   });
 }

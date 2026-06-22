@@ -85,7 +85,7 @@ void main() {
           worldHealthServiceProvider.overrideWithValue(mockService),
         ],
       );
-      final sub = container.listen(worldHealthStreamProvider, (_, __) {});
+      final sub = container.listen(worldHealthStreamProvider, (_, _) {});
       final result = await container.read(worldHealthStreamProvider.future);
       expect(result, 0.5);
       sub.close();
@@ -100,7 +100,7 @@ void main() {
         healthService: mockService,
         statsRepo: mockRepo,
       );
-      final sub = container.listen(worldHealthStreamProvider, (_, __) {});
+      final sub = container.listen(worldHealthStreamProvider, (_, _) {});
       final result = await container.read(worldHealthStreamProvider.future);
       expect(result, 0.75);
       sub.close();
@@ -119,7 +119,7 @@ void main() {
           worldHealthServiceProvider.overrideWithValue(mockService),
         ],
       );
-      final sub = container.listen(worldEntropyStreamProvider, (_, __) {});
+      final sub = container.listen(worldEntropyStreamProvider, (_, _) {});
       final result = await container.read(worldEntropyStreamProvider.future);
       expect(result, 0.0);
       sub.close();
@@ -138,7 +138,7 @@ void main() {
         healthService: mockService,
         statsRepo: mockRepo,
       );
-      final sub = container.listen(worldEntropyStreamProvider, (_, __) {});
+      final sub = container.listen(worldEntropyStreamProvider, (_, _) {});
       final result = await container.read(worldEntropyStreamProvider.future);
       expect(result, 0.3);
       sub.close();

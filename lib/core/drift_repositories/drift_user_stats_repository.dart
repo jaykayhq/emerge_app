@@ -49,6 +49,7 @@ class DriftUserStatsRepository {
       'onboardingStartedAt': profile.onboardingStartedAt?.toIso8601String(),
       'hasEmerged': profile.hasEmerged,
       'momentumScore': profile.momentumScore,
+      'lastCelebratedLevel': profile.avatarStats.lastCelebratedLevel,
       'updatedAt': DateTime.now().toIso8601String(),
     });
 
@@ -94,6 +95,16 @@ class DriftUserStatsRepository {
 
   Future<void> syncUserIdentity(UserProfile profile) async {
     await saveUserStats(profile);
+  }
+
+  /// Seeds the local Drift cache from a raw Firestore document map.
+  /// Called by [SplashScreen] on every app open so that returning users
+  /// (e.g. after a reinstall) don't land back in onboarding.
+  Future<void> seedFromFirestoreData(
+    String userId,
+    Map<String, dynamic> data,
+  ) async {
+    await _db.userStatsDao.upsertFromFirebase(userId, data);
   }
 
   Stream<UserProfile> watchUserStats(String uid) {
@@ -286,6 +297,7 @@ class DriftUserStatsRepository {
         level: (row.level as int?) ?? 1,
         streak: (row.streak as int?) ?? 0,
         momentumScore: (((row.momentumScore as double?) ?? 0.5) * 100).toInt(),
+        lastCelebratedLevel: (row.lastCelebratedLevel as int?) ?? 0,
       ),
       worldState: _parseWorldState(row),
     );

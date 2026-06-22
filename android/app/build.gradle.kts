@@ -4,7 +4,6 @@ plugins {
     id("com.google.gms.google-services")
     id("com.google.firebase.crashlytics")
     // END: FlutterFire Configuration
-    id("kotlin-android")
     // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
     id("dev.flutter.flutter-gradle-plugin")
 }
@@ -29,20 +28,10 @@ android {
         targetCompatibility = JavaVersion.VERSION_17
     }
 
-    kotlinOptions {
-        jvmTarget = JavaVersion.VERSION_17.toString()
-    }
-
     buildFeatures {
         buildConfig = true
     }
 
-    // Memory optimization for 4GB RAM systems
-    dexOptions {
-        javaMaxHeapSize = "1g"
-        preDexLibraries = false
-        jumboMode = true
-    }
 
     // splits {
     //     abi {
@@ -118,6 +107,12 @@ android {
             buildConfigField("boolean", "DEBUG_MODE", "false")
             buildConfigField("String", "BUILD_TYPE", "\"profile\"")
         }
+    }
+}
+
+kotlin {
+    compilerOptions {
+        jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17)
     }
 }
 

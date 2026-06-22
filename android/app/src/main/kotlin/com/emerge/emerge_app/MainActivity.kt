@@ -13,6 +13,6 @@ class MainActivity : FlutterFragmentActivity() {
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
-        ScreenTimePlugin.registerWith(flutterEngine)
+        ScreenTimePlugin.registerWith(flutterEngine, this)
     }
 }

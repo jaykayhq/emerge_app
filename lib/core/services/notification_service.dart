@@ -167,7 +167,7 @@ class NotificationService {
         id: 0,
         title: 'Weekly Recap Ready',
         body: 'Check out how your world evolved this week!',
-        scheduledDate: _nextMondayNineAM(),
+        scheduledDate: _nextSundayNineAM(),
         notificationDetails: const NotificationDetails(
           android: AndroidNotificationDetails(
             'weekly_recap',
@@ -190,7 +190,7 @@ class NotificationService {
     }
   }
 
-  tz.TZDateTime _nextMondayNineAM() {
+  tz.TZDateTime _nextSundayNineAM() {
     final now = tz.TZDateTime.now(tz.local);
     tz.TZDateTime scheduledDate = tz.TZDateTime(
       tz.local,
@@ -200,12 +200,12 @@ class NotificationService {
       9,
     );
 
-    // Find next Monday
-    while (scheduledDate.weekday != DateTime.monday) {
+    // Find next Sunday
+    while (scheduledDate.weekday != DateTime.sunday) {
       scheduledDate = scheduledDate.add(const Duration(days: 1));
     }
 
-    // If today is Monday and it's past 9am, schedule for next week
+    // If today is Sunday and it's past 9am, schedule for next week
     if (scheduledDate.isBefore(now)) {
       scheduledDate = scheduledDate.add(const Duration(days: 7));
     }

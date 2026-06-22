@@ -43,6 +43,68 @@ void main() {
       expect(xp, 5000);
     });
 
+    test('uses currentXp when totalXp is absent and skips attribute sum', () {
+      final userData = {
+        'avatarStats': {
+          'currentXp': 3000,
+          'strengthXp': 100,
+          'intellectXp': 200,
+        },
+      };
+
+      final avatarStats = userData['avatarStats'] as Map<String, dynamic>;
+      int userXp = (avatarStats['totalXp'] as int?) ??
+          (avatarStats['currentXp'] as int?) ??
+          0;
+
+      if (userXp == 0) {
+        userXp += avatarStats['strengthXp'] as int? ?? 0;
+        userXp += avatarStats['intellectXp'] as int? ?? 0;
+      }
+      expect(userXp, 3000);
+    });
+
+    test('uses top-level currentXp when totalXp is absent', () {
+      final userData = {
+        'currentXp': 777,
+      };
+
+      final xp = userData['totalXp'] ??
+          userData['currentXp'] ??
+          0;
+      expect(xp, 777);
+    });
+
+    test('includes customAttributeXp in fallback sum', () {
+      final userData = {
+        'avatarStats': {
+          'attributeXp': {
+            'custom1': 50,
+            'custom2': 30,
+          },
+          'strengthXp': 10,
+        },
+      };
+
+      final avatarStats = userData['avatarStats'] as Map<String, dynamic>;
+      int userXp = (avatarStats['totalXp'] as int?) ??
+          (avatarStats['currentXp'] as int?) ??
+          0;
+
+      if (userXp == 0) {
+        userXp += avatarStats['strengthXp'] as int? ?? 0;
+
+        final customAttributeXp =
+            avatarStats['attributeXp'] as Map<String, dynamic>?;
+        if (customAttributeXp != null) {
+          for (final value in customAttributeXp.values) {
+            if (value is int) userXp += value;
+          }
+        }
+      }
+      expect(userXp, 90);
+    });
+
     test('falls back to top-level totalXp when avatarStats is null', () {
       final Map<String, dynamic> userData = {
         'totalXp': 999,

@@ -58,12 +58,13 @@ class WebUpdateBanner extends ConsumerWidget {
                     ),
                     child: Row(
                       children: [
+                        const SizedBox(width: 4),
                         const Icon(
                           Icons.system_update_alt,
                           color: Colors.white,
                           size: 24,
                         ),
-                        const SizedBox(width: 16),
+                        const SizedBox(width: 12),
                         const Expanded(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
@@ -89,7 +90,27 @@ class WebUpdateBanner extends ConsumerWidget {
                             ],
                           ),
                         ),
-                        const SizedBox(width: 16),
+                        const SizedBox(width: 8),
+                        ElevatedButton(
+                          onPressed: () {
+                            ref.read(webUpdateServiceProvider.notifier).dismissUpdate();
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.white24,
+                            foregroundColor: Colors.white,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 10,
+                              vertical: 10,
+                            ),
+                            elevation: 0,
+                            minimumSize: Size.zero,
+                          ),
+                          child: const Icon(Icons.close, size: 18),
+                        ),
+                        const SizedBox(width: 4),
                         ElevatedButton(
                           onPressed: () {
                             reloadAppWindow();

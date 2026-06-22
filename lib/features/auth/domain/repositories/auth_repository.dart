@@ -16,7 +16,7 @@ abstract class AuthRepository {
     required String username,
   });
 
-  Future<Either<Failure, AuthUser>> signInWithGoogle();
+  Future<Either<Failure, AuthUser>> signInWithGoogle({bool isLogin = false});
 
   Future<Either<Failure, void>> sendPasswordResetEmail(String email);
 

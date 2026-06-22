@@ -3,7 +3,6 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:firebase_core/firebase_core.dart';
-import 'package:firebase_core_platform_interface/firebase_core_platform_interface.dart';
 import 'package:firebase_core_platform_interface/test.dart';
 import 'package:emerge_app/features/social/presentation/screens/creator/creator_overview_tab.dart';
 import 'package:emerge_app/features/gamification/presentation/providers/user_stats_providers.dart';

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:emerge_app/core/presentation/widgets/glassmorphism_card.dart';
 import 'package:emerge_app/core/theme/emerge_earthy_theme.dart';
 import 'package:emerge_app/features/ai/domain/services/ai_personalization_service.dart';
@@ -46,6 +48,7 @@ class TimelineScreen extends ConsumerStatefulWidget {
 }
 
 class _TimelineScreenState extends ConsumerState<TimelineScreen> {
+  Timer? _initTimer;
   DateTime _selectedDate = DateTime.now();
   String? _aiInsight;
   String? _suggestedHabit;
@@ -60,7 +63,7 @@ class _TimelineScreenState extends ConsumerState<TimelineScreen> {
   void initState() {
     super.initState();
     _loadAiInsight();
-    Future.delayed(const Duration(milliseconds: 500), () {
+    _initTimer = Timer(const Duration(milliseconds: 500), () {
       if (!mounted) return;
       final repo = ref.read(companionRepositoryProvider);
       if (!repo.hasVisited('/timeline')) {
@@ -74,6 +77,12 @@ class _TimelineScreenState extends ConsumerState<TimelineScreen> {
         setState(() => _showFirstVisitGuide = true);
       }
     });
+  }
+
+  @override
+  void dispose() {
+    _initTimer?.cancel();
+    super.dispose();
   }
 
   Future<void> _loadAiInsight() async {

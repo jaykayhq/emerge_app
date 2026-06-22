@@ -655,7 +655,10 @@ class SettingsScreen extends ConsumerWidget {
             borderRadius: BorderRadius.circular(16),
             border: Border.all(color: Colors.white.withValues(alpha: 0.15)),
           ),
-          child: Column(children: children),
+          child: Material(
+            type: MaterialType.transparency,
+            child: Column(children: children),
+          ),
         ),
       ),
     );

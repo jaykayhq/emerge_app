@@ -85,19 +85,19 @@ class GroqAiService {
   }) async {
     try {
       final result = await _functions.httpsCallable('getGroqCoachAdvice').call({
-        'eventType': eventType,
-        'archetype': archetype,
-        'userContext': userContext,
-        'conversationHistory': conversationHistory ?? [],
+        'userContext':
+            'User archetype: $archetype. Event type: $eventType. '
+            'User context: ${jsonEncode(userContext)}'
+                '${conversationHistory != null && conversationHistory.isNotEmpty ? " Recent conversation: ${jsonEncode(conversationHistory)}" : ""}',
+        'userMessage':
+            'Generate a short, archetype-aligned companion message for this event.',
       });
 
-      if (result.data != null && result.data['message'] != null) {
+      if (result.data != null && result.data['advice'] != null) {
         return {
-          'message': result.data['message'].toString().trim(),
-          'tone': result.data['tone']?.toString() ?? 'neutral',
-          'suggestions': result.data['suggestions'] != null
-              ? List<String>.from(result.data['suggestions'])
-              : null,
+          'message': result.data['advice'].toString().trim(),
+          'tone': 'neutral',
+          'suggestions': null,
         };
       }
 

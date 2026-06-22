@@ -258,7 +258,7 @@ final class CompleteHabitProvider
   }
 }
 
-String _$completeHabitHash() => r'1d8f901ba0bda4d035e2249f57e41e84508ab6ed';
+String _$completeHabitHash() => r'937cbed8029f512b39ea17fbe9e65aa8046dd13e';
 
 final class CompleteHabitFamily extends $Family
     with $FunctionalFamilyOverride<FutureOr<HabitCompletionResult>, String> {

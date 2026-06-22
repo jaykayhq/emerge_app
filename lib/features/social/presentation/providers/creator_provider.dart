@@ -21,3 +21,13 @@ final isVerifiedCreatorProvider = FutureProvider<bool>((ref) async {
   final profile = await repo.getCreatorProfile(user.uid);
   return profile?.isVerifiedCreator ?? false;
 });
+
+/// Streams the list of all verified creators for the lobby strip and
+/// browse-all screen. Returns an empty list while loading; consumers
+/// should check [AsyncValue.isLoading]/[AsyncValue.hasError] to
+/// differentiate loading from a real empty result.
+final verifiedCreatorsStreamProvider =
+    StreamProvider.autoDispose<List<CreatorProfile>>((ref) {
+      final repo = ref.watch(creatorRepositoryProvider);
+      return repo.watchVerifiedCreators();
+    });

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:emerge_app/core/presentation/widgets/growth_background.dart';
 import 'package:emerge_app/core/theme/app_theme.dart';
 import 'package:emerge_app/features/gamification/presentation/providers/user_stats_providers.dart';
@@ -8,6 +10,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
+import 'package:go_router/go_router.dart';
 import 'package:emerge_app/core/presentation/widgets/feature_coach_mark.dart';
 
 class LevelingScreen extends ConsumerStatefulWidget {
@@ -18,12 +21,13 @@ class LevelingScreen extends ConsumerStatefulWidget {
 }
 
 class _LevelingScreenState extends ConsumerState<LevelingScreen> {
+  Timer? _initTimer;
   bool _showFirstVisitGuide = false;
 
   @override
   void initState() {
     super.initState();
-    Future.delayed(const Duration(milliseconds: 500), () {
+    _initTimer = Timer(const Duration(milliseconds: 500), () {
       if (!mounted) return;
       final repo = ref.read(companionRepositoryProvider);
       if (!repo.hasVisited('/gamification')) {
@@ -37,6 +41,12 @@ class _LevelingScreenState extends ConsumerState<LevelingScreen> {
         setState(() => _showFirstVisitGuide = true);
       }
     });
+  }
+
+  @override
+  void dispose() {
+    _initTimer?.cancel();
+    super.dispose();
   }
 
   @override
@@ -137,10 +147,35 @@ class _LevelingScreenState extends ConsumerState<LevelingScreen> {
                           ),
                         ),
                       ],
-                    ).animate().fadeIn(delay: 300.ms).slideY(begin: 0.2, end: 0),
-     
-                    const Gap(48),
-     
+                    ).animate().fadeIn(delay: 300.ms).slideY(begin: 0.2, end: 0),                    const Gap(48),
+
+                    // Continue Journey CTA
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton.icon(
+                        onPressed: () => context.go('/'),
+                        icon: const Icon(Icons.map_outlined, size: 20),
+                        label: const Text(
+                          'CONTINUE JOURNEY',
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            letterSpacing: 1,
+                          ),
+                        ),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppTheme.primary,
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          elevation: 0,
+                        ),
+                      ),
+                    ).animate().fadeIn(delay: 450.ms).slideY(begin: 0.2, end: 0),
+
+                    const Gap(24),
+
                     // Rewards Section
                     Container(
                       padding: const EdgeInsets.all(24),

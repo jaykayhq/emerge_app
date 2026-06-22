@@ -25,7 +25,7 @@ Widget _buildTest() {
             routes: [
               GoRoute(
                 path: '/dashboard',
-                builder: (_, __) => const SizedBox(),
+                builder: (_, _) => const SizedBox(),
               ),
             ],
           ),
@@ -33,7 +33,7 @@ Widget _buildTest() {
             routes: [
               GoRoute(
                 path: '/dashboard/blueprints',
-                builder: (_, __) => const SizedBox(),
+                builder: (_, _) => const SizedBox(),
               ),
             ],
           ),
@@ -41,7 +41,7 @@ Widget _buildTest() {
             routes: [
               GoRoute(
                 path: '/dashboard/tribe',
-                builder: (_, __) => const SizedBox(),
+                builder: (_, _) => const SizedBox(),
               ),
             ],
           ),

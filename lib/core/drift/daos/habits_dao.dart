@@ -49,6 +49,9 @@ class HabitsDao extends DatabaseAccessor<AppDatabase> with _$HabitsDaoMixin {
     required String updatedAt,
     String? timeOfDayPreference,
     String? reminderTime,
+    int timerDurationMinutes = 2,
+    String integrationType = 'none',
+    int? integrationTarget,
   }) {
     return into(habitsTable).insertOnConflictUpdate(
       HabitsTableCompanion(
@@ -70,6 +73,9 @@ class HabitsDao extends DatabaseAccessor<AppDatabase> with _$HabitsDaoMixin {
         updatedAt: Value(updatedAt),
         timeOfDayPreference: Value(timeOfDayPreference),
         reminderTime: Value(reminderTime),
+        timerDurationMinutes: Value(timerDurationMinutes),
+        integrationType: Value(integrationType),
+        integrationTarget: Value(integrationTarget),
       ),
     );
   }

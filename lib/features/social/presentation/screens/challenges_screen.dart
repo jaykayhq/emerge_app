@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:emerge_app/core/theme/app_theme.dart';
 import 'package:emerge_app/core/theme/emerge_colors.dart';
 import 'package:emerge_app/features/social/domain/models/challenge.dart';
@@ -25,6 +27,7 @@ class ChallengesScreen extends ConsumerStatefulWidget {
 }
 
 class _ChallengesScreenState extends ConsumerState<ChallengesScreen> {
+  Timer? _initTimer;
   int _selectedFilter = 0;
   final List<String> _filters = [
     'All',
@@ -43,7 +46,7 @@ class _ChallengesScreenState extends ConsumerState<ChallengesScreen> {
   @override
   void initState() {
     super.initState();
-    Future.delayed(const Duration(milliseconds: 500), () {
+    _initTimer = Timer(const Duration(milliseconds: 500), () {
       if (!mounted) return;
       final repo = ref.read(companionRepositoryProvider);
       if (!repo.hasVisited('/challenges')) {
@@ -57,6 +60,12 @@ class _ChallengesScreenState extends ConsumerState<ChallengesScreen> {
         setState(() => _showFirstVisitGuide = true);
       }
     });
+  }
+
+  @override
+  void dispose() {
+    _initTimer?.cancel();
+    super.dispose();
   }
 
   @override

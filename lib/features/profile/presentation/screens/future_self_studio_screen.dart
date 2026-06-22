@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:emerge_app/core/constants/gamification_constants.dart';
 import 'package:emerge_app/core/theme/app_theme.dart';
 import 'package:emerge_app/core/theme/archetype_theme.dart';
@@ -62,13 +64,14 @@ class FutureSelfStudioScreen extends ConsumerStatefulWidget {
 
 class _FutureSelfStudioScreenState
     extends ConsumerState<FutureSelfStudioScreen> {
+  Timer? _initTimer;
   int? _previousStreak;
   bool _showFirstVisitGuide = false;
 
   @override
   void initState() {
     super.initState();
-    Future.delayed(const Duration(milliseconds: 500), () {
+    _initTimer = Timer(const Duration(milliseconds: 500), () {
       if (!mounted) return;
       final repo = ref.read(companionRepositoryProvider);
       if (!repo.hasVisited('/profile/future-self')) {
@@ -82,6 +85,12 @@ class _FutureSelfStudioScreenState
         setState(() => _showFirstVisitGuide = true);
       }
     });
+  }
+
+  @override
+  void dispose() {
+    _initTimer?.cancel();
+    super.dispose();
   }
 
   @override
@@ -549,7 +558,7 @@ class _FutureSelfStudioScreenState
                     return const SizedBox.shrink();
                   },
                   loading: () => const SizedBox.shrink(),
-                  error: (_, __) => const SizedBox.shrink(),
+                  error: (error, stack) => const SizedBox.shrink(),
                 ),
               ),
 

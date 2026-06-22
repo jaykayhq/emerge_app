@@ -21,6 +21,9 @@ class HabitsTable extends Table {
   TextColumn get syncedAt => text().nullable()();
   TextColumn get timeOfDayPreference => text().nullable()();
   TextColumn get reminderTime => text().nullable()();
+  IntColumn get timerDurationMinutes => integer().withDefault(const Constant(2))();
+  TextColumn get integrationType => text().withDefault(const Constant('none'))();
+  IntColumn get integrationTarget => integer().nullable()();
 
   @override
   Set<Column> get primaryKey => {id};

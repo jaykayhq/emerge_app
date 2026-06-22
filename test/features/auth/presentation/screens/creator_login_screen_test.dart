@@ -13,7 +13,6 @@ import 'package:emerge_app/features/auth/presentation/screens/creator_login_scre
 import 'package:fpdart/fpdart.dart';
 import 'package:emerge_app/core/error/failure.dart';
 import 'package:emerge_app/features/auth/domain/entities/auth_user.dart';
-import '../../../../helpers/widget_test_utils.dart';
 import '../../../../helpers/mocks/auth_mocks.dart';
 
 class MockFirebaseAuth extends Mock implements firebase_auth.FirebaseAuth {}

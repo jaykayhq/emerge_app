@@ -55,7 +55,7 @@ abstract class _$EnhancedOnboardingNotifier
   EnhancedOnboardingState build();
   @$mustCallSuper
   @override
-  void runBuild() {
+  WhenComplete runBuild() {
     final ref =
         this.ref as $Ref<EnhancedOnboardingState, EnhancedOnboardingState>;
     final element =
@@ -66,7 +66,7 @@ abstract class _$EnhancedOnboardingNotifier
               Object?,
               Object?
             >;
-    element.handleCreate(ref, build);
+    return element.handleCreate(ref, build);
   }
 }
 

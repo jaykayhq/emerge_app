@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:ui';
 
 import 'package:emerge_app/features/habits/domain/entities/habit.dart';
@@ -308,6 +309,7 @@ class _IndentedHabitItemState extends State<_IndentedHabitItem> {
   bool _isExpanded = false;
   int _remainingSeconds = 0;
   bool _isTimerRunning = false;
+  Timer? _countdownTimer;
 
   @override
   void initState() {
@@ -318,7 +320,6 @@ class _IndentedHabitItemState extends State<_IndentedHabitItem> {
   void _startTimer() {
     if (_isTimerRunning) return;
     setState(() => _isTimerRunning = true);
-
     _tickTimer();
   }
 
@@ -326,7 +327,7 @@ class _IndentedHabitItemState extends State<_IndentedHabitItem> {
     if (!mounted || !_isTimerRunning) return;
 
     if (_remainingSeconds > 0) {
-      Future.delayed(const Duration(seconds: 1), () {
+      _countdownTimer = Timer(const Duration(seconds: 1), () {
         if (!mounted || !_isTimerRunning) return;
         setState(() => _remainingSeconds--);
         _tickTimer();
@@ -341,11 +342,13 @@ class _IndentedHabitItemState extends State<_IndentedHabitItem> {
   }
 
   void _pauseTimer() {
+    _countdownTimer?.cancel();
     setState(() => _isTimerRunning = false);
   }
 
   @override
   void dispose() {
+    _countdownTimer?.cancel();
     _isTimerRunning = false;
     super.dispose();
   }
@@ -985,7 +988,7 @@ class HabitTimelineSection extends StatelessWidget {
 /// Individual habit item in the vertical timeline.
 /// Colored by its [HabitAttribute] — shows attribute label, check state,
 /// and XP badge. Glassmorphism card style matching the Stitch design.
-class _HabitTimelineItem extends StatelessWidget {
+class _HabitTimelineItem extends StatefulWidget {
   final Habit habit;
   final DateTime selectedDate;
   final VoidCallback onTap;
@@ -998,21 +1001,78 @@ class _HabitTimelineItem extends StatelessWidget {
     required this.onToggle,
   });
 
+  @override
+  State<_HabitTimelineItem> createState() => _HabitTimelineItemState();
+}
+
+class _HabitTimelineItemState extends State<_HabitTimelineItem> {
+  int _remainingSeconds = 0;
+  bool _isTimerRunning = false;
+  Timer? _countdownTimer;
+
+  @override
+  void initState() {
+    super.initState();
+    _remainingSeconds = widget.habit.timerDurationMinutes * 60;
+  }
+
+  void _startTimer() {
+    if (_isTimerRunning) return;
+    setState(() => _isTimerRunning = true);
+    _tickTimer();
+  }
+
+  void _tickTimer() {
+    if (!mounted || !_isTimerRunning) return;
+
+    if (_remainingSeconds > 0) {
+      _countdownTimer = Timer(const Duration(seconds: 1), () {
+        if (!mounted || !_isTimerRunning) return;
+        setState(() => _remainingSeconds--);
+        _tickTimer();
+      });
+    } else {
+      setState(() => _isTimerRunning = false);
+      // Auto-complete the habit when timer reaches zero
+      if (!_isCompletedToday) {
+        widget.onToggle();
+      }
+    }
+  }
+
+  void _pauseTimer() {
+    _countdownTimer?.cancel();
+    setState(() => _isTimerRunning = false);
+  }
+
+  @override
+  void dispose() {
+    _countdownTimer?.cancel();
+    _isTimerRunning = false;
+    super.dispose();
+  }
+
   bool get _isCompletedToday {
-    final last = habit.lastCompletedDate;
+    final last = widget.habit.lastCompletedDate;
     if (last == null) return false;
-    return last.year == selectedDate.year &&
-        last.month == selectedDate.month &&
-        last.day == selectedDate.day;
+    return last.year == widget.selectedDate.year &&
+        last.month == widget.selectedDate.month &&
+        last.day == widget.selectedDate.day;
+  }
+
+  String get _timerString {
+    final m = (_remainingSeconds ~/ 60).toString().padLeft(2, '0');
+    final s = (_remainingSeconds % 60).toString().padLeft(2, '0');
+    return '$m:$s';
   }
 
   @override
   Widget build(BuildContext context) {
     final completed = _isCompletedToday;
     final hasAnchor =
-        habit.anchorHabitId != null && habit.anchorHabitId!.isNotEmpty;
-    final color = attributeColor(habit.attribute);
-    final label = attributeLabel(habit.attribute);
+        widget.habit.anchorHabitId != null && widget.habit.anchorHabitId!.isNotEmpty;
+    final color = attributeColor(widget.habit.attribute);
+    final label = attributeLabel(widget.habit.attribute);
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 6),
@@ -1034,8 +1094,8 @@ class _HabitTimelineItem extends StatelessWidget {
               ),
             ),
             child: InkWell(
-              onTap: onTap,
-              onLongPress: !completed ? onToggle : null,
+              onTap: widget.onTap,
+              onLongPress: !completed ? widget.onToggle : null,
               borderRadius: BorderRadius.circular(12),
               child: Padding(
                 padding: const EdgeInsets.symmetric(
@@ -1046,8 +1106,8 @@ class _HabitTimelineItem extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     // Environmental Priming nodes
-                    if (!completed && habit.environmentPriming.isNotEmpty) ...[
-                      for (final priming in habit.environmentPriming)
+                    if (!completed && widget.habit.environmentPriming.isNotEmpty) ...[
+                      for (final priming in widget.habit.environmentPriming)
                         Padding(
                           padding: const EdgeInsets.only(bottom: 8.0),
                           child: Row(
@@ -1105,10 +1165,10 @@ class _HabitTimelineItem extends StatelessWidget {
                                               letterSpacing: 1,
                                             ),
                                           ),
-                                          if (habit.timerDurationMinutes >
+                                          if (widget.habit.timerDurationMinutes >
                                               0) ...[
                                             Text(
-                                              '  •  ${habit.timerDurationMinutes}M',
+                                              '  •  ${widget.habit.timerDurationMinutes}M',
                                               style: TextStyle(
                                                 color: color.withValues(
                                                   alpha: 0.6,
@@ -1123,7 +1183,7 @@ class _HabitTimelineItem extends StatelessWidget {
                                       const SizedBox(height: 2),
                                       // Habit title
                                       Text(
-                                        habit.title,
+                                        widget.habit.title,
                                         style: const TextStyle(
                                           color: Colors.white,
                                           fontSize: 15,
@@ -1162,6 +1222,69 @@ class _HabitTimelineItem extends StatelessWidget {
                                     ],
                                   ),
                                 ),
+                                // Interactive Timer Button
+                                if (widget.habit.timerDurationMinutes > 0 &&
+                                    _remainingSeconds > 0) ...[
+                                  GestureDetector(
+                                    behavior: HitTestBehavior.opaque,
+                                    onTap: _isTimerRunning
+                                        ? _pauseTimer
+                                        : _startTimer,
+                                    child: Container(
+                                      constraints: const BoxConstraints(
+                                        minHeight: 40,
+                                        minWidth: 40,
+                                      ),
+                                      alignment: Alignment.center,
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 10,
+                                      ),
+                                      margin:
+                                          const EdgeInsets.only(right: 8),
+                                      decoration: BoxDecoration(
+                                        color: _isTimerRunning
+                                            ? color.withValues(alpha: 0.2)
+                                            : Colors.white
+                                                .withValues(alpha: 0.1),
+                                        borderRadius:
+                                            BorderRadius.circular(20),
+                                        border: Border.all(
+                                          color: _isTimerRunning
+                                              ? color
+                                              : Colors.transparent,
+                                        ),
+                                      ),
+                                      child: Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Icon(
+                                            _isTimerRunning
+                                                ? Icons.pause
+                                                : Icons.play_arrow,
+                                            color: _isTimerRunning
+                                                ? color
+                                                : Colors.white,
+                                            size: 14,
+                                          ),
+                                          const SizedBox(width: 4),
+                                          Text(
+                                            _timerString,
+                                            style: TextStyle(
+                                              color: _isTimerRunning
+                                                  ? color
+                                                  : Colors.white,
+                                              fontSize: 11,
+                                              fontWeight: FontWeight.bold,
+                                              fontFeatures: const [
+                                                FontFeature.tabularFigures(),
+                                              ],
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                ],
                                 const Icon(
                                   Icons.chevron_right,
                                   color: Colors.white30,
@@ -1172,7 +1295,7 @@ class _HabitTimelineItem extends StatelessWidget {
                           ),
 
                     // Temptation Bundling (Reward) node
-                    if (habit.reward.isNotEmpty) ...[
+                    if (widget.habit.reward.isNotEmpty) ...[
                       const SizedBox(height: 8),
                       Container(
                         padding: const EdgeInsets.symmetric(
@@ -1204,7 +1327,7 @@ class _HabitTimelineItem extends StatelessWidget {
                             ),
                             const SizedBox(width: 6),
                             Text(
-                              habit.reward,
+                              widget.habit.reward,
                               style: TextStyle(
                                 color: completed
                                     ? Colors.white
@@ -1231,9 +1354,9 @@ class _HabitTimelineItem extends StatelessWidget {
 
   Widget _buildCompletedState(BuildContext context, Color color) {
     int baseXp = 10;
-    if (habit.difficulty.toString().contains('medium')) baseXp = 20;
-    if (habit.difficulty.toString().contains('hard')) baseXp = 30;
-    final xp = (baseXp * (1 + (habit.currentStreak * 0.1).clamp(0.0, 0.5)))
+    if (widget.habit.difficulty.toString().contains('medium')) baseXp = 20;
+    if (widget.habit.difficulty.toString().contains('hard')) baseXp = 30;
+    final xp = (baseXp * (1 + (widget.habit.currentStreak * 0.1).clamp(0.0, 0.5)))
         .toInt();
 
     return Container(
@@ -1255,7 +1378,7 @@ class _HabitTimelineItem extends StatelessWidget {
             ),
           ),
           TextButton.icon(
-            onPressed: onToggle,
+            onPressed: widget.onToggle,
             icon: Icon(Icons.undo, size: 16, color: EmergeColors.background),
             label: Text(
               'Undo',

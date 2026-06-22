@@ -445,5 +445,43 @@ void main() {
 
       expect(progress.currentDay, 2);
     });
+
+    test(
+      'completeChallengeWithReward() sets currentDay to totalDays',
+      () async {
+        final template = ChallengeCatalog.getFeatured().first;
+        await repository.joinChallenge(userId, template.id);
+
+        await db.userStatsDao.upsertStats(
+          UserStatsTableCompanion(
+            userId: Value(userId),
+            displayName: Value('Test User'),
+            totalXp: Value(0),
+            level: Value(1),
+            vitalityXp: Value(0),
+          ),
+        );
+
+        reset(mockSyncEngine);
+        when(
+          () => mockSyncEngine.enqueueSet(
+            collectionPath: any(named: 'collectionPath'),
+            documentId: any(named: 'documentId'),
+            data: any(named: 'data'),
+          ),
+        ).thenAnswer((_) async {});
+
+        final result = await repository.completeChallengeWithReward(
+          userId,
+          template.id,
+        );
+        expect(result.isRight(), true);
+
+        final challenges = await repository.getUserChallenges(userId);
+        final challenge = challenges.firstWhere((c) => c.id == template.id);
+        expect(challenge.currentDay, challenge.totalDays);
+        expect(challenge.status, ChallengeStatus.completed);
+      },
+    );
   });
 }

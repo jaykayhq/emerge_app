@@ -2,6 +2,7 @@ import 'package:emerge_app/core/presentation/screens/splash_screen.dart';
 import 'package:emerge_app/core/presentation/screens/world_splash_screen.dart';
 import 'package:emerge_app/core/presentation/widgets/scaffold_with_nav_bar.dart';
 import 'package:emerge_app/features/auth/presentation/providers/auth_providers.dart';
+import 'package:emerge_app/features/auth/presentation/providers/role_provider.dart';
 import 'package:emerge_app/features/auth/presentation/screens/login_screen.dart';
 import 'package:emerge_app/features/auth/presentation/screens/signup_screen.dart';
 import 'package:emerge_app/features/gamification/presentation/providers/user_stats_providers.dart';
@@ -29,6 +30,9 @@ import 'package:emerge_app/features/onboarding/presentation/screens/identity_stu
 
 import 'package:emerge_app/features/onboarding/presentation/screens/welcome_screen.dart';
 import 'package:emerge_app/features/onboarding/presentation/screens/world_reveal_screen.dart';
+import 'package:emerge_app/features/onboarding/presentation/screens/creator_onboarding/creator_onboarding_archetype_screen.dart';
+import 'package:emerge_app/features/onboarding/presentation/screens/creator_onboarding/creator_onboarding_profile_screen.dart';
+import 'package:emerge_app/features/onboarding/presentation/screens/creator_onboarding/creator_onboarding_reveal_screen.dart';
 import 'package:emerge_app/features/settings/presentation/screens/settings_screen.dart';
 import 'package:emerge_app/features/settings/presentation/screens/notification_settings_screen.dart';
 import 'package:emerge_app/features/monetization/presentation/screens/paywall_screen.dart';
@@ -69,15 +73,196 @@ part 'router.g.dart';
 // Global navigator key - must be defined outside the provider to prevent duplication
 final _rootNavigatorKey = GlobalKey<NavigatorState>(debugLabel: 'root');
 
+/// Snapshot of everything the redirect decision needs.
+///
+/// This is a pure data struct so the redirect logic can be unit-tested
+/// without spinning up GoRouter, Riverpod, or Firebase. Production code
+/// builds it from providers; tests construct it directly.
+class RedirectContext {
+  final bool isLoggedIn;
+  final UserRole? role; // null = unknown / still resolving
+  final bool emailVerified;
+  final bool isFirstLaunch;
+  final int? userOnboardingProgress; // null = no user_stats doc yet
+  final DateTime? userOnboardingCompletedAt;
+  final CreatorOnboardingState? creatorOnboarding; // null = not a creator
+
+  const RedirectContext({
+    required this.isLoggedIn,
+    required this.role,
+    required this.emailVerified,
+    required this.isFirstLaunch,
+    required this.userOnboardingProgress,
+    required this.userOnboardingCompletedAt,
+    required this.creatorOnboarding,
+  });
+}
+
+/// Pure redirect decision. Returns:
+///   - null  : stay on the current path
+///   - path  : redirect to that path
+///
+/// The decision is driven by the `role` enum, which is the canonical
+/// source of truth (Firebase Auth custom claim, with Firestore fallback
+/// inside `currentUserRoleProvider`). This eliminates the
+/// collection-existence race that previously sent creators into the
+/// normal-user onboarding flow.
+String? decideRedirect({
+  required String currentPath,
+  required RedirectContext ctx,
+}) {
+  // 1. Always allow splash.
+  if (currentPath == '/splash') return null;
+
+  // 2. Public auth paths available to anyone (logged in or not).
+  const authPaths = {
+    '/welcome',
+    '/login',
+    '/signup',
+    '/creator/login',
+    '/creator/signup',
+  };
+  final isOnAuthPath = authPaths.contains(currentPath);
+  final isOnCreatorOnboardingPath =
+      currentPath.startsWith('/onboarding/creator/');
+  final isOnNormalOnboardingPath =
+      currentPath.startsWith('/onboarding/') && !isOnCreatorOnboardingPath;
+  final isOnCreatorPath = currentPath.startsWith('/creator');
+
+  // 3. Unauthenticated: bounce into the right login surface.
+  if (!ctx.isLoggedIn) {
+    if (isOnAuthPath) return null;
+    if (isOnCreatorPath || isOnCreatorOnboardingPath) return '/creator/login';
+    return ctx.isFirstLaunch ? '/welcome' : '/login';
+  }
+
+  // 4. Authenticated but role still resolving — hold the current path
+  //    so the router doesn't yank the user mid-signup. This is the
+  //    fix for the race window between Firebase Auth user creation
+  //    and the setUserRole Cloud Function returning.
+  //
+  //    We DO redirect away from clearly-stale paths (e.g. /welcome) to
+  //    avoid leaving a logged-in user on the welcome screen forever.
+  if (ctx.role == null || ctx.role == UserRole.unknown) {
+    if (isOnAuthPath && currentPath != '/welcome') return null;
+    if (isOnCreatorPath) return null; // verify-email must remain reachable
+    if (isOnCreatorOnboardingPath) return null;
+    if (isOnNormalOnboardingPath) return null;
+    if (currentPath == '/welcome') {
+      // No role known yet — assume normal user and route to onboarding.
+      // Will be re-evaluated as soon as the role provider settles.
+      return '/onboarding/identity-studio';
+    }
+    return null;
+  }
+
+  // 5. Creator branch.
+  if (ctx.role == UserRole.creator) {
+    // Email must be verified before any creator screens.
+    if (!ctx.emailVerified) {
+      // Always allow /creator/verify-email itself.
+      if (currentPath == '/creator/verify-email') return null;
+      return '/creator/verify-email';
+    }
+
+    // Email is verified. Drive the creator onboarding flow.
+    final onboarding = ctx.creatorOnboarding;
+    if (onboarding == null || !onboarding.isComplete) {
+      // Allow creator-onboarding screens through.
+      if (isOnCreatorOnboardingPath) return null;
+      // If the user somehow landed on a normal-user onboarding screen,
+      // push them to the corresponding creator step.
+      if (isOnNormalOnboardingPath) {
+        final progress = onboarding?.progress ?? 0;
+        switch (progress) {
+          case 0:
+            return '/onboarding/creator/archetype';
+          case 1:
+            return '/onboarding/creator/profile';
+          case 2:
+          default:
+            return '/onboarding/creator/reveal';
+        }
+      }
+      // Push the user to the next onboarding step.
+      final progress = onboarding?.progress ?? 0;
+      switch (progress) {
+        case 0:
+          return '/onboarding/creator/archetype';
+        case 1:
+          return '/onboarding/creator/profile';
+        case 2:
+          return '/onboarding/creator/reveal';
+        default:
+          return '/onboarding/creator/reveal';
+      }
+    }
+
+    // Onboarding complete: keep creators on creator surfaces only.
+    if (isOnCreatorOnboardingPath || isOnNormalOnboardingPath || isOnAuthPath) {
+      return '/creator/dashboard';
+    }
+    if (!isOnCreatorPath) return '/creator/dashboard';
+    return null;
+  }
+
+  // 6. Normal user branch.
+  if (ctx.role == UserRole.user) {
+    // Creators-only paths are forbidden here.
+    if (isOnCreatorPath || isOnCreatorOnboardingPath) {
+      return '/onboarding/identity-studio';
+    }
+
+    final progress = ctx.userOnboardingProgress;
+    final isUserOnboardingComplete = ctx.userOnboardingCompletedAt != null ||
+        (progress != null && progress >= 3);
+
+    if (!isUserOnboardingComplete) {
+      if (isOnNormalOnboardingPath) return null;
+      if (isOnAuthPath) return null;
+      // No stats doc yet OR progress < 3.
+      final effectiveProgress = progress ?? 0;
+      switch (effectiveProgress) {
+        case 0:
+        case 1:
+          return '/onboarding/identity-studio';
+        case 2:
+          return '/onboarding/first-habit';
+        default:
+          return '/onboarding/world-reveal';
+      }
+    }
+
+    // Onboarding complete.
+    if (isOnAuthPath) return '/';
+    return null;
+  }
+
+  // Unreachable.
+  return null;
+}
+
 @riverpod
 GoRouter router(Ref ref) {
-  // Watch auth state to rebuild router only on login/logout
+  // Watch auth state to rebuild router only on login/logout.
   final authState = ref.watch(authStateChangesProvider);
 
-  // Create a refresh notifier for onboarding completion only
+  // Watch role + onboarding state so the router reactively redirects
+  // when the role claim resolves or onboarding progress changes.
+  final roleAsync = ref.watch(currentUserRoleProvider);
+  final creatorOnboardingAsync = ref.watch(currentCreatorOnboardingProvider);
+  final userStatsAsync = ref.watch(userStatsStreamProvider);
+
+  // Create a refresh notifier that fires whenever any of the watched
+  // sources emit a new value.
   final refreshNotifier = ValueNotifier<int>(0);
+  ref.listen(authStateChangesProvider, (_, _) => refreshNotifier.value++);
   ref.listen(onboardingControllerProvider, (_, _) => refreshNotifier.value++);
   ref.listen(socialOnboardingCompletedProvider, (_, _) => refreshNotifier.value++);
+  ref.listen(currentUserRoleProvider, (_, _) => refreshNotifier.value++);
+  ref.listen(currentCreatorOnboardingProvider,
+      (_, _) => refreshNotifier.value++);
+  ref.listen(userStatsStreamProvider, (_, _) => refreshNotifier.value++);
 
   return GoRouter(
     navigatorKey: _rootNavigatorKey,
@@ -86,110 +271,35 @@ GoRouter router(Ref ref) {
     redirect: (context, state) {
       final path = state.uri.path;
 
-      // 1. Always allow splash screen
-      if (path == '/splash') return null;
-
-      // 2. Wait for auth state to initialize
+      // Wait for auth to initialize before making any routing decision.
       if (authState.isLoading) return null;
 
       final isLoggedIn = authState.value?.isNotEmpty ?? false;
       final isFirstLaunch = ref.read(onboardingControllerProvider);
 
-      // Define path guards
-      final isWelcome = path == '/welcome';
-      final isLogin = path == '/login';
-      final isSignup = path == '/signup';
-      final isCreatorLogin = path == '/creator/login';
-      final isCreatorSignup = path == '/creator/signup';
-      final isCreatorAuthScreen = isCreatorLogin || isCreatorSignup;
-      final isAuthScreen = isWelcome || isLogin || isSignup || isCreatorAuthScreen;
-      final isOnboardingPath = path.startsWith('/onboarding');
-      final isCreatorPath = path.startsWith('/creator');
+      // Read the rest synchronously — these are watched above so the
+      // router rebuilds when they change. We use ref.read inside the
+      // redirect because ref.watch inside redirect would create a
+      // circular rebuild loop.
+      final role = roleAsync.hasValue ? roleAsync.value : null;
+      final creatorOnboarding =
+          creatorOnboardingAsync.hasValue ? creatorOnboardingAsync.value : null;
+      final userStats = userStatsAsync.hasValue ? userStatsAsync.value : null;
+      final firebaseUser = ref.read(firebaseAuthProvider).currentUser;
+      final emailVerified = firebaseUser?.emailVerified ?? false;
 
-      // 5. Handle Unauthenticated Users
-      if (!isLoggedIn) {
-        if (isAuthScreen) return null;
-        if (isCreatorPath) return '/creator/login';
-        return isFirstLaunch ? '/welcome' : '/login';
-      }
-
-      // 6. Handle Authenticated Users
-      final user = authState.value;
-      if (user == null || user.isEmpty) return null;
-
-      // Use ref.read (NOT ref.watch) for role providers.
-      // ref.watch inside redirect causes routerProvider to rebuild every time
-      // those async futures settle → new GoRouter with initialLocation='/splash' → infinite loop.
-      final isCreatorAsync = ref.read(isCreatorProvider(user.id));
-      final isNormalUserAsync = ref.read(isNormalUserProvider(user.id));
-
-      // While roles are still being determined, hold current path.
-      if (isCreatorAsync.isLoading || isNormalUserAsync.isLoading) return null;
-
-      final isCreator = isCreatorAsync.value ?? false;
-      final isNormal = isNormalUserAsync.value ?? false;
-
-      // 6a. Creator Role Handling
-      if (isCreator) {
-        final firebaseUser = ref.read(firebaseAuthProvider).currentUser;
-        final isEmailVerified = firebaseUser?.emailVerified ?? false;
-
-        if (!isEmailVerified) {
-          if (path != '/creator/verify-email') {
-            return '/creator/verify-email';
-          }
-          return null;
-        }
-
-        if (path == '/creator/verify-email' || !isCreatorPath || isCreatorLogin || isCreatorSignup) {
-          return '/creator/dashboard';
-        }
-        return null;
-      }
-
-      // 6b. Normal User Role Handling
-      if (isNormal) {
-        if (isCreatorPath) {
-          return '/';
-        }
-      }
-
-      // 7. Normal User Onboarding Handling
-      // Use ref.read for stats to avoid redundant rebuilds.
-      final statsAsync = ref.read(userStatsStreamProvider);
-
-      // If stats are loading or in error state, allow current path to continue.
-      if (statsAsync.isLoading || statsAsync.hasError) return null;
-
-      final userStats = statsAsync.value;
-
-      // New user: no stats doc yet → treat as onboarding not complete.
-      // Allow onboarding paths through; send everything else to identity-studio.
-      if (userStats == null) {
-        if (isOnboardingPath) return null;
-        if (isAuthScreen) return null;
-        return '/onboarding/identity-studio';
-      }
-
-      final onboardingProgress = userStats.onboardingProgress;
-      // Onboarding is complete if progress >= 3 OR we have a completion timestamp.
-      final isOnboardingComplete =
-          onboardingProgress >= 3 || userStats.onboardingCompletedAt != null;
-
-      // If onboarding is incomplete, restrict to onboarding flow
-      if (!isOnboardingComplete) {
-        if (isOnboardingPath) return null;
-        if (isCreatorPath) return null;
-        return _getOnboardingRouteForProgress(onboardingProgress);
-      }
-
-      // Onboarding is complete:
-      // Redirect auth screens to home, otherwise allow all paths (unblocks bottom nav)
-      if (isAuthScreen) {
-        return '/';
-      }
-
-      return null;
+      return decideRedirect(
+        currentPath: path,
+        ctx: RedirectContext(
+          isLoggedIn: isLoggedIn,
+          role: role,
+          emailVerified: emailVerified,
+          isFirstLaunch: isFirstLaunch,
+          userOnboardingProgress: userStats?.onboardingProgress,
+          userOnboardingCompletedAt: userStats?.onboardingCompletedAt,
+          creatorOnboarding: creatorOnboarding,
+        ),
+      );
     },
     routes: [
       GoRoute(
@@ -208,12 +318,11 @@ GoRouter router(Ref ref) {
         path: '/welcome',
         builder: (context, state) => const WelcomeScreen(),
       ),
-      // Onboarding routes - removed the old OnboardingScreen
+      // Normal-user onboarding routes.
       GoRoute(
         path: '/onboarding/identity-studio',
         builder: (context, state) => const IdentityStudioScreen(),
       ),
-
       GoRoute(
         path: '/onboarding/first-habit',
         builder: (context, state) => const FirstHabitScreen(),
@@ -221,6 +330,19 @@ GoRouter router(Ref ref) {
       GoRoute(
         path: '/onboarding/world-reveal',
         builder: (context, state) => const WorldRevealScreen(),
+      ),
+      // Creator-specific onboarding routes.
+      GoRoute(
+        path: '/onboarding/creator/archetype',
+        builder: (context, state) => const CreatorOnboardingArchetypeScreen(),
+      ),
+      GoRoute(
+        path: '/onboarding/creator/profile',
+        builder: (context, state) => const CreatorOnboardingProfileScreen(),
+      ),
+      GoRoute(
+        path: '/onboarding/creator/reveal',
+        builder: (context, state) => const CreatorOnboardingRevealScreen(),
       ),
       GoRoute(path: '/login', builder: (context, state) => const LoginScreen()),
       GoRoute(
@@ -261,7 +383,7 @@ GoRouter router(Ref ref) {
                     path: 'blueprint-builder',
                     builder: (context, state) => const BlueprintBuilderScreen(),
                   ),
-                ]
+                ],
               ),
             ],
           ),
@@ -541,22 +663,6 @@ GoRouter router(Ref ref) {
       ),
     ],
   );
-}
-
-/// Helper function to get the onboarding route for a given progress level
-/// Flow: 0-1 = identity-studio, 2 = first-habit, 3 = world-reveal, 4+ = complete
-String _getOnboardingRouteForProgress(int progress) {
-  switch (progress) {
-    case 0:
-    case 1:
-      return '/onboarding/identity-studio';
-    case 2:
-      return '/onboarding/first-habit';
-    case 3:
-      return '/onboarding/world-reveal';
-    default:
-      return '/'; // Should reach this case only briefly before isOnboardingComplete takes over
-  }
 }
 
 /// Resolves a blueprint by id when the caller doesn't pass one via `extra`.

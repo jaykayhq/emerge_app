@@ -29,6 +29,16 @@ void main() {
       final xp = engine.computeXpGain(difficultyMultiplier: 1.0, streak: 100);
       expect(xp, 15);
     });
+
+    test('negative streak is treated as 0', () {
+      final xp = engine.computeXpGain(difficultyMultiplier: 1.0, streak: -5);
+      expect(xp, 10);
+    });
+
+    test('zero difficulty multiplier returns 0 XP', () {
+      final xp = engine.computeXpGain(difficultyMultiplier: 0.0, streak: 0);
+      expect(xp, 0);
+    });
   });
 
   group('computeLevel', () {
@@ -46,6 +56,14 @@ void main() {
 
     test('1500 XP returns level 4', () {
       expect(engine.computeLevel(1500), 4);
+    });
+
+    test('negative XP returns level 1', () {
+      expect(engine.computeLevel(-100), 1);
+    });
+
+    test('high XP at level boundary', () {
+      expect(engine.computeLevel(5000), 11);
     });
   });
 
@@ -194,6 +212,18 @@ void main() {
       );
 
       expect(result.newDay, 7);
+      expect(result.isCompleted, true);
+      expect(result.xpReward, 100);
+    });
+
+    test('day equals totalDays is completed', () {
+      final result = engine.processChallengeProgress(
+        currentDay: 7,
+        totalDays: 7,
+        xpReward: 100,
+      );
+
+      expect(result.newDay, 8);
       expect(result.isCompleted, true);
       expect(result.xpReward, 100);
     });

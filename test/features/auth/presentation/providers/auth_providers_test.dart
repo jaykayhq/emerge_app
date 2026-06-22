@@ -1,6 +1,5 @@
 import 'dart:async';
 
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:fake_cloud_firestore/fake_cloud_firestore.dart';
 import 'package:emerge_app/core/error/failure.dart';
 import 'package:emerge_app/features/auth/domain/entities/auth_user.dart';
@@ -187,6 +186,22 @@ void main() {
 
       final result = await container.read(isCreatorProvider('creator123').future);
       expect(result, isTrue);
+      container.dispose();
+    });
+
+    test('signUpCreatorProvider override with error propagates error', () async {
+      final container = ProviderContainer(
+        overrides: [
+          signUpCreatorProvider.overrideWith((ref, arg) async {
+            throw Exception('Sign up failed');
+          }),
+        ],
+      );
+
+      expect(
+        () => container.read(signUpCreatorProvider('test@example.com', 'password', 'TestUser').future),
+        throwsA(isA<Exception>()),
+      );
       container.dispose();
     });
 

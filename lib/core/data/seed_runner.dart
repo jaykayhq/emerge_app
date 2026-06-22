@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
 import 'package:emerge_app/features/blueprints/data/repositories/blueprint_repository.dart';
+import 'package:emerge_app/features/social/data/repositories/creator_repository.dart';
 import 'package:emerge_app/features/social/data/seeds/official_clubs_seed.dart';
 
 /// Retry-safe seeding of official clubs.
@@ -116,5 +117,23 @@ Future<void> seedBlueprints({FirebaseFirestore? firestore}) async {
     await repo.seedBlueprintsIfEmpty();
   } catch (e) {
     debugPrint('❌ Error seeding blueprints: $e');
+  }
+}
+
+Future<void> seedCreators({FirebaseFirestore? firestore}) async {
+  try {
+    final repo = CreatorRepository(firestore: firestore);
+    await repo.seedCreatorsIfEmpty();
+  } catch (e) {
+    debugPrint('❌ Error seeding creators: $e');
+  }
+}
+
+Future<void> seedCreatorBlueprints({FirebaseFirestore? firestore}) async {
+  try {
+    final repo = BlueprintRepository(firestore ?? FirebaseFirestore.instance);
+    await repo.seedCreatorBlueprintsIfEmpty();
+  } catch (e) {
+    debugPrint('❌ Error seeding creator blueprints: $e');
   }
 }

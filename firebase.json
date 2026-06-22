@@ -194,5 +194,17 @@
         ]
       }
     ]
+  },
+  "auth": {
+    "providers": {
+      "emailPassword": true,
+      "googleSignIn": {
+        "oAuthBrandDisplayName": "emerge",
+        "supportEmail": "joeukpai55@gmail.com",
+        "authorizedRedirectUris": [
+          "http://localhost"
+        ]
+      }
+    }
   }
 }
