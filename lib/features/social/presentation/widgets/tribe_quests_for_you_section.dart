@@ -41,8 +41,8 @@ class TribeQuestsForYouSection extends ConsumerWidget {
     final weekly = ref.watch(weeklySpotlightFromBundleProvider);
 
     final pool = <Challenge>[
-      if (daily != null) daily,
-      if (weekly != null) weekly,
+      ?daily,
+      ?weekly,
     ];
 
     return Column(
