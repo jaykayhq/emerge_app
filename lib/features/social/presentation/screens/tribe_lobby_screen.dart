@@ -1,11 +1,36 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:gap/gap.dart';
 import 'package:go_router/go_router.dart';
-import 'package:emerge_app/core/presentation/widgets/world_background.dart';
-import 'package:emerge_app/features/social/presentation/providers/tribes_provider.dart';
-import 'package:emerge_app/features/gamification/presentation/providers/user_stats_providers.dart';
+
+import 'package:emerge_app/core/presentation/widgets/app_back_handler.dart';
+import 'package:emerge_app/core/presentation/widgets/emerge_loading_skeleton.dart';
+import 'package:emerge_app/core/presentation/widgets/emerge_primary_button.dart';
+import 'package:emerge_app/core/theme/archetype_theme.dart';
 import 'package:emerge_app/core/theme/emerge_colors.dart';
 
+import 'package:emerge_app/features/auth/domain/entities/user_extension.dart';
+import 'package:emerge_app/features/gamification/presentation/providers/user_stats_providers.dart';
+import 'package:emerge_app/features/social/domain/models/tribe.dart';
+import 'package:emerge_app/features/social/presentation/providers/tribes_provider.dart';
+import 'package:emerge_app/features/social/presentation/widgets/glass_panel.dart';
+import 'package:emerge_app/features/social/presentation/widgets/tribe_circle_section.dart';
+import 'package:emerge_app/features/social/presentation/widgets/tribe_creators_strip.dart';
+import 'package:emerge_app/features/social/presentation/widgets/tribe_live_compact.dart';
+import 'package:emerge_app/features/social/presentation/widgets/tribe_pulse_status_row.dart';
+import 'package:emerge_app/features/social/presentation/widgets/tribe_quests_for_you_section.dart';
+import 'package:emerge_app/features/social/presentation/widgets/tribe_your_quests_section.dart';
+
+/// Tribe lobby — the canonical social hub (dual hub: tribe + friends).
+///
+/// Sequence (identity-first):
+///   Hero → Stats → Status chips → Your Circle (partners) →
+///   Live (feed / leaderboard) → Creators (faces only) →
+///   Your Quests (active) → Quests For You (featured) → sticky CTA bar
+///
+/// Background is provided by the shell's [WorldBackground]; this screen
+/// paints transparently over it. Hardware back returns to the world map
+/// (home) instead of exiting the app.
 class TribeLobbyScreen extends ConsumerWidget {
   const TribeLobbyScreen({super.key});
 
@@ -14,114 +39,339 @@ class TribeLobbyScreen extends ConsumerWidget {
     final profileAsync = ref.watch(userStatsStreamProvider);
     final clubsAsync = ref.watch(allArchetypeClubsProvider);
 
-    return WorldBackground(
-      child: SafeArea(
-        child: clubsAsync.when(
-          data: (clubs) {
-            return profileAsync.when(
+    return Scaffold(
+      backgroundColor: Colors.transparent,
+      body: AppBackToHome(
+        homeRoute: '/',
+        child: SafeArea(
+          child: clubsAsync.when(
+            data: (clubs) => profileAsync.when(
               data: (profile) {
-                final matchingIndex = clubs.isNotEmpty
-                    ? clubs.indexWhere(
-                        (club) => club.archetypeId == profile.archetype.name,
-                      )
-                    : -1;
-                final userClub = matchingIndex != -1
-                    ? clubs[matchingIndex]
-                    : clubs.isNotEmpty ? clubs.first : null;
-
+                final userClub = _resolveUserClub(clubs, profile);
                 if (userClub == null) {
-                  return const Center(
-                    child: Text(
-                      'No tribes available yet.',
-                      style: TextStyle(color: Colors.white54),
-                    ),
+                  return const _ErrorState(
+                    message: 'No tribe found.',
                   );
                 }
 
-                final completionRatio = profile.momentumScore;
+                final archetypeTheme =
+                    ArchetypeTheme.forArchetype(profile.archetype);
+                final momentumPct =
+                    (profile.momentumScore.clamp(0.0, 1.0) * 100).round();
 
-                return Center(
-                  child: SingleChildScrollView(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Container(
-                          margin: const EdgeInsets.all(24),
-                          padding: const EdgeInsets.all(24),
-                          decoration: BoxDecoration(
-                            color: Colors.black45,
-                            borderRadius: BorderRadius.circular(24),
-                            border: Border.all(color: Colors.white24),
-                          ),
-                          child: Column(
-                            children: [
-                              Text(
-                                userClub.name.toUpperCase(),
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 20,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                              const SizedBox(height: 8),
-                              Text(
-                                '${userClub.memberCount} members \u00b7 Your streak: \u{1F525}${profile.avatarStats.streak}d',
-                                style: const TextStyle(color: Colors.white70),
-                              ),
-                              const SizedBox(height: 24),
-                              Text(
-                                '\u{1F5E1}\uFE0F Collective Quest: ${(completionRatio * 100).toInt()}%',
-                                style: const TextStyle(color: Colors.white),
-                              ),
-                              const SizedBox(height: 8),
-                              LinearProgressIndicator(
-                                value: completionRatio.clamp(0.0, 1.0),
-                                backgroundColor: Colors.white24,
-                                color: EmergeColors.green,
-                              ),
-                              const SizedBox(height: 32),
-                              ElevatedButton.icon(
-                                icon: const Icon(Icons.flash_on),
-                                label: const Text("ENTER TRIBE"),
-                                onPressed: () {
-                                  context.push('/social/space');
-                                },
-                                style: ElevatedButton.styleFrom(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 32,
-                                    vertical: 16,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
+                return CustomScrollView(
+                  physics: const BouncingScrollPhysics(),
+                  slivers: [
+                    const SliverToBoxAdapter(child: Gap(12)),
+                    SliverToBoxAdapter(
+                      child: _Hero(
+                        userClub: userClub,
+                        archetypeTheme: archetypeTheme,
+                      ),
                     ),
-                  ),
+                    SliverToBoxAdapter(
+                      child: Padding(
+                        padding: const EdgeInsets.fromLTRB(20, 24, 20, 0),
+                        child: _StatsBar(
+                          userClub: userClub,
+                          profile: profile,
+                          momentumPct: momentumPct,
+                        ),
+                      ),
+                    ),
+                    const SliverToBoxAdapter(child: Gap(20)),
+                    SliverToBoxAdapter(
+                      child: TribePulseStatusRow(
+                        userClub: userClub,
+                        profile: profile,
+                      ),
+                    ),
+                    const SliverToBoxAdapter(child: Gap(8)),
+                    const SliverToBoxAdapter(child: TribeCircleSection()),
+                    const SliverToBoxAdapter(child: Gap(8)),
+                    SliverToBoxAdapter(
+                      child: TribeLiveCompact(
+                        clubId: userClub.id,
+                        profile: profile,
+                      ),
+                    ),
+                    const SliverToBoxAdapter(child: Gap(8)),
+                    const SliverToBoxAdapter(
+                      child: Padding(
+                        padding: EdgeInsets.only(bottom: 8),
+                        child: TribeCreatorsStrip(),
+                      ),
+                    ),
+                    const SliverToBoxAdapter(
+                      child: TribeYourQuestsSection(),
+                    ),
+                    const SliverToBoxAdapter(child: Gap(4)),
+                    const SliverToBoxAdapter(
+                      child: TribeQuestsForYouSection(),
+                    ),
+                    const SliverToBoxAdapter(child: Gap(24)),
+                  ],
                 );
               },
-              loading: () => const Center(
-                child: CircularProgressIndicator(),
+              loading: () => const _LobbyLoading(),
+              error: (_, _) => const _ErrorState(
+                message: 'Could not load profile.',
               ),
-              error: (err, _) => Center(
-                child: Text(
-                  'Could not load profile.',
-                  style: TextStyle(color: Colors.white70),
-                ),
-              ),
-            );
-          },
-          loading: () => const Center(
-            child: CircularProgressIndicator(),
-          ),
-          error: (err, _) => Center(
-            child: Text(
-              'Could not load tribes.',
-              style: TextStyle(color: Colors.white70),
+            ),
+            loading: () => const _LobbyLoading(),
+            error: (_, _) => const _ErrorState(
+              message: 'Could not load tribes.',
             ),
           ),
         ),
+      ),
+      bottomNavigationBar: profileAsync.value == null
+          ? null
+          : SafeArea(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(20, 12, 20, 16),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton.icon(
+                        icon: const Icon(
+                          Icons.swap_horiz_rounded,
+                          size: 16,
+                        ),
+                        label: const Text('SWITCH TRIBE'),
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: Colors.white70,
+                          side: const BorderSide(color: Colors.white24),
+                          padding:
+                              const EdgeInsets.symmetric(vertical: 22),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(28),
+                          ),
+                          textStyle: const TextStyle(
+                            fontWeight: FontWeight.bold,
+                            letterSpacing: 2,
+                          ),
+                        ),
+                        onPressed: () => context.push('/social/all'),
+                      ),
+                    ),
+                    const Gap(12),
+                    Expanded(
+                      child: EmergePrimaryButton(
+                        label: 'BROWSE CREATORS',
+                        leadingIcon: Icons.explore_rounded,
+                        onPressed: () => context.push('/creators'),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+    );
+  }
+
+  static Tribe? _resolveUserClub(List<Tribe> clubs, UserProfile profile) {
+    if (clubs.isEmpty) return null;
+    final matchIndex = clubs.indexWhere(
+      (c) => c.archetypeId == profile.archetype.name,
+    );
+    if (matchIndex != -1) return clubs[matchIndex];
+    return clubs.first;
+  }
+}
+
+// ── Hero ────────────────────────────────────────────────────────────────────
+
+class _Hero extends StatelessWidget {
+  final Tribe userClub;
+  final ArchetypeTheme archetypeTheme;
+
+  const _Hero({required this.userClub, required this.archetypeTheme});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Container(
+            width: 80,
+            height: 80,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              gradient: LinearGradient(
+                colors: [
+                  archetypeTheme.primaryColor,
+                  archetypeTheme.accentColor,
+                ],
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: archetypeTheme.primaryColor.withValues(alpha: 0.4),
+                  blurRadius: 20,
+                  spreadRadius: 4,
+                ),
+              ],
+            ),
+            child: Center(
+              child: Text(
+                archetypeTheme.emoji,
+                style: const TextStyle(fontSize: 40),
+              ),
+            ),
+          ),
+          const Gap(16),
+          Text(
+            userClub.name.toUpperCase(),
+            textAlign: TextAlign.center,
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 28,
+              fontWeight: FontWeight.w800,
+              fontFamily: 'Syne',
+              letterSpacing: -0.5,
+            ),
+          ),
+          const Gap(8),
+          Text(
+            'Your node in the ${userClub.archetypeId} network.',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              color: Colors.white.withValues(alpha: 0.6),
+              fontSize: 14,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ── Stats Bar ──────────────────────────────────────────────────────────────
+
+class _StatsBar extends StatelessWidget {
+  final Tribe userClub;
+  final UserProfile profile;
+  final int momentumPct;
+
+  const _StatsBar({
+    required this.userClub,
+    required this.profile,
+    required this.momentumPct,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GlassPanel(
+      level: GlassLevel.level2,
+      padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 16),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        children: [
+          _StatColumn(
+            label: 'MEMBERS',
+            value: '${userClub.memberCount}',
+          ),
+          Container(
+            width: 1,
+            height: 40,
+            color: Colors.white.withValues(alpha: 0.1),
+          ),
+          _StatColumn(
+            label: 'DAY STREAK',
+            value: '${profile.avatarStats.streak}',
+            color: EmergeColors.nebulaSecondary,
+          ),
+          Container(
+            width: 1,
+            height: 40,
+            color: Colors.white.withValues(alpha: 0.1),
+          ),
+          _StatColumn(
+            label: 'MOMENTUM',
+            value: '$momentumPct%',
+            color: EmergeColors.nebulaPrimary,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ── Stat Column ─────────────────────────────────────────────────────────────
+
+class _StatColumn extends StatelessWidget {
+  final String label;
+  final String value;
+  final Color color;
+
+  const _StatColumn({
+    required this.label,
+    required this.value,
+    this.color = Colors.white,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text(
+          value,
+          style: TextStyle(
+            color: color,
+            fontSize: 24,
+            fontWeight: FontWeight.w800,
+            fontFamily: 'Syne',
+          ),
+        ),
+        const Gap(4),
+        Text(
+          label,
+          style: TextStyle(
+            color: Colors.white.withValues(alpha: 0.5),
+            fontSize: 10,
+            fontWeight: FontWeight.w600,
+            letterSpacing: 1.5,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+// ── States ──────────────────────────────────────────────────────────────────
+
+class _LobbyLoading extends StatelessWidget {
+  const _LobbyLoading();
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.all(20),
+      child: Column(
+        children: const [
+          EmergeLoadingSkeleton(itemCount: 1),
+          Gap(16),
+          EmergeLoadingSkeleton(itemCount: 3),
+        ],
+      ),
+    );
+  }
+}
+
+class _ErrorState extends StatelessWidget {
+  final String message;
+
+  const _ErrorState({required this.message});
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Text(
+        message,
+        style: const TextStyle(color: Colors.white54),
       ),
     );
   }
