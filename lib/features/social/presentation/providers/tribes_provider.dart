@@ -26,8 +26,31 @@ final socialActivityServiceProvider = Provider<SocialActivityService>((ref) {
     syncEngine: syncEngine,
     activityDao: activityDao,
     leaderboardRepo: leaderboardRepo,
+    // Partner lookup: read the actor's friends subcollection directly via
+    // Firestore. We avoid depending on the friend repository here to break
+    // a potential dependency cycle (the friend repo depends on this service).
+    getPartnerIds: (userId) async {
+      final snapshot = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(userId)
+          .collection('friends')
+          .get();
+      return snapshot.docs.map((d) => d.id).toList();
+    },
   );
 });
+
+/// Active tribe override — when set, habit completions and XP contribute
+/// to this tribe instead of the archetype-matched one. Null = auto-detect
+/// by archetype.
+class ActiveTribeId extends Notifier<String?> {
+  @override
+  String? build() => null;
+
+  void select(String? tribeId) => state = tribeId;
+}
+
+final activeTribeIdProvider = NotifierProvider<ActiveTribeId, String?>(ActiveTribeId.new);
 
 /// The user's archetype club — auto-joined based on their archetype.
 final userClubProvider = FutureProvider.family<Tribe?, String>((

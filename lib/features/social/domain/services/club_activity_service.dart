@@ -5,6 +5,12 @@ import 'package:flutter/foundation.dart';
 import 'package:emerge_app/features/social/domain/repositories/leaderboard_repository.dart';
 import 'package:emerge_app/features/auth/domain/entities/user_extension.dart';
 
+/// Resolves the partner ids of an actor. Implemented as a Firestore read
+/// (see [socialActivityServiceProvider]) to avoid a dependency cycle: the
+/// friend repository depends on this service, so the service must not
+/// depend on the friend repository.
+typedef PartnerLookup = Future<List<String>> Function(String userId);
+
 /// Service for logging user activities to both their archetype club and a global activity feed.
 ///
 /// This has been refactored for the Offline-First Architecture. All writes are now queued
@@ -13,6 +19,7 @@ class SocialActivityService {
   final EnhancedSyncEngine _syncEngine;
   final TribeActivityDao _activityDao;
   final LeaderboardRepository _leaderboardRepo;
+  final PartnerLookup? _getPartnerIds;
 
   // Firestore collection and document path constants
   static const String _kTribesCollection = 'tribes';
@@ -33,9 +40,40 @@ class SocialActivityService {
     required EnhancedSyncEngine syncEngine,
     required TribeActivityDao activityDao,
     required LeaderboardRepository leaderboardRepo,
+    PartnerLookup? getPartnerIds,
   }) : _syncEngine = syncEngine,
        _activityDao = activityDao,
-       _leaderboardRepo = leaderboardRepo;
+       _leaderboardRepo = leaderboardRepo,
+       _getPartnerIds = getPartnerIds;
+
+  /// Fan-out-on-write: writes a denormalized partner-activity doc to each
+  /// of the actor's partners. Skipped silently when there is no partner
+  /// lookup (e.g. in legacy constructions) or when the actor has no partners.
+  Future<void> _fanOutToPartners({
+    required String actorId,
+    required String actorName,
+    required String type,
+    required Map<String, dynamic> data,
+    required String timestamp,
+    required String eventId,
+  }) async {
+    final lookup = _getPartnerIds;
+    if (lookup == null) return;
+    final partnerIds = await lookup(actorId);
+    for (final partnerId in partnerIds) {
+      await _syncEngine.enqueueSet(
+        collectionPath: 'users/$partnerId/partner_activity',
+        documentId: eventId,
+        data: {
+          'type': type,
+          'userId': actorId,
+          'userName': actorName,
+          'data': data,
+          'timestamp': timestamp,
+        },
+      );
+    }
+  }
 
   /// Gets the official club ID for a given archetype.
   String _getClubIdForArchetype(String archetype) {
@@ -126,6 +164,21 @@ class SocialActivityService {
         },
       );
 
+      // 3b. Fan out to partners
+      await _fanOutToPartners(
+        actorId: userId,
+        actorName: userName,
+        type: _kActivityTypeHabitComplete,
+        data: {
+          'habitId': habitId,
+          'habitTitle': habitTitle,
+          'streakDay': streakDay,
+          'attribute': attribute,
+        },
+        timestamp: nowStr,
+        eventId: id,
+      );
+
       // 4. Update Leaderboard via Repository
       if (xpGained != null || currentLevel != null) {
         final clubId = _getClubIdForArchetype(archetype);
@@ -203,6 +256,16 @@ class SocialActivityService {
           'data': {'newLevel': newLevel},
           'timestamp': nowStr,
         },
+      );
+
+      // 3b. Fan out to partners
+      await _fanOutToPartners(
+        actorId: userId,
+        actorName: userName,
+        type: _kActivityTypeLevelUp,
+        data: {'newLevel': newLevel},
+        timestamp: nowStr,
+        eventId: id,
       );
 
       // 4. Update Leaderboard
@@ -287,6 +350,19 @@ class SocialActivityService {
         },
       );
 
+      // 3b. Fan out to partners
+      await _fanOutToPartners(
+        actorId: userId,
+        actorName: userName,
+        type: _kActivityTypeChallengeComplete,
+        data: {
+          'challengeId': challengeId,
+          'challengeTitle': challengeTitle,
+        },
+        timestamp: nowStr,
+        eventId: id,
+      );
+
       // 4. Update Leaderboard via Repository
       await _leaderboardRepo.updateUserScore(
         userId,
@@ -345,6 +421,16 @@ class SocialActivityService {
           'timestamp': nowStr,
         },
       );
+
+      // 2b. Fan out to partners
+      await _fanOutToPartners(
+        actorId: userId,
+        actorName: userName,
+        type: _kActivityTypeStreakMilestone,
+        data: {'streakDays': streakDays},
+        timestamp: nowStr,
+        eventId: id,
+      );
     } catch (e) {
       debugPrint('Error logging streak milestone to social activity: $e');
     }
@@ -390,6 +476,16 @@ class SocialActivityService {
           'data': {'nodeId': nodeId, 'nodeName': nodeName},
           'timestamp': nowStr,
         },
+      );
+
+      // Fan out to partners
+      await _fanOutToPartners(
+        actorId: userId,
+        actorName: userName,
+        type: _kActivityTypeNodeClaim,
+        data: {'nodeId': nodeId, 'nodeName': nodeName},
+        timestamp: nowStr,
+        eventId: id,
       );
     } catch (e) {
       debugPrint('Error logging node claim: $e');
@@ -437,6 +533,16 @@ class SocialActivityService {
           'timestamp': nowStr,
         },
       );
+
+      // Fan out to partners
+      await _fanOutToPartners(
+        actorId: userId,
+        actorName: userName,
+        type: _kActivityTypeBadgeEarned,
+        data: {'badgeId': badgeId, 'badgeName': badgeName},
+        timestamp: nowStr,
+        eventId: id,
+      );
     } catch (e) {
       debugPrint('Error logging badge earned to social activity: $e');
     }
@@ -478,6 +584,16 @@ class SocialActivityService {
           'data': {'partnerName': partnerName},
           'timestamp': nowStr,
         },
+      );
+
+      // Fan out to partners (other than the newly added one) about the join.
+      await _fanOutToPartners(
+        actorId: userId,
+        actorName: userName,
+        type: _kActivityTypePartnerJoined,
+        data: {'partnerName': partnerName},
+        timestamp: nowStr,
+        eventId: id,
       );
     } catch (e) {
       debugPrint('Error logging partner joined: $e');
@@ -544,6 +660,16 @@ class SocialActivityService {
           'data': {'habitTitle': habitTitle, 'penalty': penalty},
           'timestamp': nowStr,
         },
+      );
+
+      // Fan out to partners
+      await _fanOutToPartners(
+        actorId: userId,
+        actorName: userName,
+        type: _kActivityTypeContractCommitted,
+        data: {'habitTitle': habitTitle, 'penalty': penalty},
+        timestamp: nowStr,
+        eventId: id,
       );
     } catch (e) {
       debugPrint('Error logging contract committed: $e');
