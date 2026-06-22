@@ -37,6 +37,7 @@ import 'package:emerge_app/features/social/presentation/screens/challenges_scree
 import 'package:emerge_app/features/social/presentation/screens/challenge_detail_screen.dart';
 import 'package:emerge_app/features/social/presentation/screens/friends_screen.dart';
 import 'package:emerge_app/features/social/presentation/screens/social_activity_screen.dart';
+import 'package:emerge_app/features/social/presentation/screens/social_contacts_screen.dart';
 import 'package:emerge_app/features/social/presentation/screens/all_tribes_screen.dart';
 import 'package:emerge_app/features/monetization/presentation/screens/habit_contract_screen.dart';
 import 'package:emerge_app/features/social/presentation/screens/social_onboarding_screen.dart';
@@ -439,6 +440,12 @@ GoRouter router(Ref ref) {
                           state.uri.queryParameters['tribeId'] ?? '';
                       return SocialActivityScreen(tribeId: tribeId);
                     },
+                  ),
+                  GoRoute(
+                    path: 'contacts',
+                    parentNavigatorKey: _rootNavigatorKey,
+                    builder: (context, state) =>
+                        const SocialContactsScreen(),
                   ),
                   GoRoute(
                     path: 'contracts',

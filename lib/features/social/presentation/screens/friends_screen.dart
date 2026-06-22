@@ -142,6 +142,29 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen> {
 
               const SliverToBoxAdapter(child: Gap(24)),
 
+              // Add from contacts entry
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                  child: OutlinedButton.icon(
+                    icon: const Icon(Icons.contact_page_outlined, size: 16),
+                    label: const Text('ADD FROM CONTACTS'),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: Colors.white70,
+                      side: const BorderSide(color: Colors.white24),
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(28),
+                      ),
+                    ),
+                    onPressed: () => context.push('/social/contacts'),
+                  ),
+                ),
+              ),
+
+              const SliverToBoxAdapter(child: Gap(16)),
+
               // Active Partners Section
               SliverToBoxAdapter(child: _ActivePartnersSection()),
 
