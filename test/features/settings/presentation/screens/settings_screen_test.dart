@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:firebase_core/firebase_core.dart';
-import 'package:firebase_core_platform_interface/firebase_core_platform_interface.dart';
 import 'package:firebase_core_platform_interface/test.dart';
 import 'package:emerge_app/core/domain/models/app_world_theme.dart';
 import 'package:emerge_app/core/drift/database.dart';
@@ -53,7 +52,7 @@ final testProfile = UserProfile(
 
 Widget createTest() {
   final mockCompanionRepo = _MockCompanionRepository();
-  when(() => mockCompanionRepo.migrateFromTutorials()).thenAnswer((_) async => null);
+  when(() => mockCompanionRepo.migrateFromTutorials()).thenAnswer((_) async {});
   when(() => mockCompanionRepo.isCompanionEnabled()).thenReturn(true);
   when(() => mockCompanionRepo.hasVisited(any())).thenReturn(true);
 

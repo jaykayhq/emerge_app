@@ -48,6 +48,8 @@ class _AdvancedCreateHabitDialogState
   TimeOfDay? _specificTime;
   String? _anchorHabitId;
   HabitAttribute _attribute = HabitAttribute.vitality;
+  HabitIntegrationType _integrationType = HabitIntegrationType.none;
+  int? _integrationTarget;
 
   bool _showFirstVisitGuide = false;
 
@@ -176,6 +178,8 @@ class _AdvancedCreateHabitDialogState
         twoMinuteVersion: _twoMinuteVersion,
         reward: 'Complete and enjoy your progress!', // Default reward
         timerDurationMinutes: _timerDuration,
+        integrationType: _integrationType,
+        integrationTarget: _integrationTarget,
         imageUrl: _emoji, // Using imageUrl to store emoji for now
       );
 
@@ -260,6 +264,11 @@ class _AdvancedCreateHabitDialogState
           default:
             _timeOfDay = TimeOfDayPreference.anytime;
         }
+      }
+
+      // Auto-set timer duration from template if specified
+      if (template.timerDurationMinutes > 0) {
+        _timerDuration = template.timerDurationMinutes;
       }
 
       // Auto-set the specific time from the template
@@ -904,6 +913,19 @@ class _AdvancedCreateHabitDialogState
         ),
         const SizedBox(height: 8),
         _buildTimerPicker(),
+        const SizedBox(height: 16),
+
+        // Health Integration
+        const Text(
+          'HEALTH INTEGRATION',
+          style: TextStyle(
+            color: Colors.white54,
+            fontSize: 9,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        const SizedBox(height: 8),
+        _buildHealthIntegrationPicker(),
       ],
     );
   }
@@ -1277,6 +1299,97 @@ class _AdvancedCreateHabitDialogState
           ),
         );
       }).toList(),
+    );
+  }
+
+  Widget _buildHealthIntegrationPicker() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12),
+          decoration: BoxDecoration(
+            color: Colors.white.withValues(alpha: 0.03),
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
+          ),
+          child: DropdownButtonHideUnderline(
+            child: DropdownButton<String>(
+              value: _integrationType == HabitIntegrationType.none
+                  ? 'none'
+                  : _integrationType.name,
+              isExpanded: true,
+              dropdownColor: const Color(0xFF1A1A2E),
+              style: const TextStyle(color: Colors.white, fontSize: 13),
+              items: const [
+                DropdownMenuItem(value: 'none', child: Text('None')),
+                DropdownMenuItem(
+                  value: 'healthSteps',
+                  child: Row(
+                    children: [
+                      Icon(Icons.directions_walk, size: 16, color: Colors.green),
+                      SizedBox(width: 8),
+                      Text('Health Steps'),
+                    ],
+                  ),
+                ),
+                DropdownMenuItem(
+                  value: 'screenTimeLimit',
+                  child: Row(
+                    children: [
+                      Icon(Icons.phone_android, size: 16, color: Colors.orange),
+                      SizedBox(width: 8),
+                      Text('Screen Time Limit'),
+                    ],
+                  ),
+                ),
+              ],
+              onChanged: (v) {
+                if (v == null) return;
+                setState(() {
+                  _integrationType = v == 'none'
+                      ? HabitIntegrationType.none
+                      : HabitIntegrationType.values.firstWhere(
+                          (e) => e.name == v);
+                  if (_integrationType == HabitIntegrationType.none) {
+                    _integrationTarget = null;
+                  }
+                  _updateIdentityStatement();
+                });
+              },
+            ),
+          ),
+        ),
+        // Integration target input (only shown when type is set)
+        if (_integrationType != HabitIntegrationType.none) ...[
+          const SizedBox(height: 12),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12),
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.03),
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
+            ),
+            child: TextFormField(
+              initialValue: _integrationTarget?.toString() ?? '',
+              keyboardType: TextInputType.number,
+              style: const TextStyle(color: Colors.white, fontSize: 13),
+              decoration: InputDecoration(
+                hintText: _integrationType == HabitIntegrationType.healthSteps
+                    ? 'Daily step goal (e.g., 8000)'
+                    : 'Daily limit in minutes (e.g., 120)',
+                hintStyle: const TextStyle(color: Colors.white24, fontSize: 12),
+                border: InputBorder.none,
+              ),
+              onChanged: (v) {
+                setState(() {
+                  _integrationTarget = int.tryParse(v);
+                });
+              },
+            ),
+          ),
+        ],
+      ],
     );
   }
 

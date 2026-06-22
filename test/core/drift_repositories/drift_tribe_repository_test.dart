@@ -326,5 +326,33 @@ void main() {
 
       expect(firstCount, secondCount);
     });
+
+    test('getUserTribes() returns empty list when user has no tribes', () async {
+      await db.tribeStatsDao.upsertStats(
+        TribeStatsTableCompanion(
+          tribeId: Value(tribeId),
+          tribeName: Value('Athletes'),
+          archetypeId: Value('athlete'),
+          memberCount: Value(0),
+          totalXp: Value(0),
+          totalHabitsCompleted: Value(0),
+          totalChallengesCompleted: Value(0),
+          userContributionXp: Value(0),
+          userHabitsCompleted: Value(0),
+          userChallengesCompleted: Value(0),
+          updatedAt: Value(DateTime.now().toIso8601String()),
+        ),
+      );
+
+      final tribes = await repository.getUserTribes(userId);
+
+      expect(tribes, isEmpty);
+    });
+
+    test('getUserTribes() returns empty list on Firestore error', () async {
+      final tribes = await repository.getUserTribes(userId);
+
+      expect(tribes, isEmpty);
+    });
   });
 }

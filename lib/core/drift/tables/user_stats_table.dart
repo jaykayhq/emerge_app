@@ -33,6 +33,8 @@ class UserStatsTable extends Table {
   TextColumn get onboardingStartedAt => text().nullable()();
   BoolColumn get hasEmerged => boolean().withDefault(const Constant(false))();
   RealColumn get momentumScore => real().withDefault(const Constant(0.5))();
+  IntColumn get lastCelebratedLevel =>
+      integer().withDefault(const Constant(0))();
 
   @override
   Set<Column> get primaryKey => {userId};

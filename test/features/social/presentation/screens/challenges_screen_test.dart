@@ -1,4 +1,3 @@
-import 'dart:async';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -24,7 +23,7 @@ void main() {
     when(() => mockCompanionRepo.hasVisited(any())).thenReturn(true);
   });
 
-  Future<void> _setScreenSize(tester) async {
+  Future<void> setScreenSize(tester) async {
     tester.view.physicalSize = const Size(400, 1200);
     tester.view.devicePixelRatio = 1.0;
     addTearDown(() {
@@ -33,7 +32,7 @@ void main() {
     });
   }
 
-  Widget _buildTest() {
+  Widget buildTest() {
     return ProviderScope(
       overrides: [
         challengeBundleProvider.overrideWith(() => _MockChallengeBundle()),
@@ -44,8 +43,8 @@ void main() {
   }
 
   testWidgets('ChallengesScreen renders with empty bundle', (tester) async {
-    await _setScreenSize(tester);
-    await tester.pumpWidget(_buildTest());
+    await setScreenSize(tester);
+    await tester.pumpWidget(buildTest());
     await tester.pumpAndSettle();
 
     expect(find.text('Weekly Spotlight'), findsOneWidget);

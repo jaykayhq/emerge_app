@@ -124,6 +124,7 @@ class UserStatsDao extends DatabaseAccessor<AppDatabase>
         momentumScore: Value(
           (data['momentumScore'] as num?)?.toDouble() ?? 0.5,
         ),
+        lastCelebratedLevel: Value(data['lastCelebratedLevel'] as int? ?? 0),
         syncedAt: Value(DateTime.now().toIso8601String()),
         updatedAt: Value(
           data['updatedAt'] as String? ?? DateTime.now().toIso8601String(),

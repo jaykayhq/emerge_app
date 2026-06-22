@@ -48,7 +48,7 @@ void main() {
           habitRepositoryProvider.overrideWithValue(mockRepo),
         ],
       );
-      final sub = container.listen(habitsProvider, (_, __) {});
+      final sub = container.listen(habitsProvider, (_, _) {});
       final result = await container.read(habitsProvider.future);
       expect(result, []);
       sub.close();
@@ -62,7 +62,7 @@ void main() {
         (_) => Stream.value(habits).asBroadcastStream(),
       );
       final container = _makeContainer(habitRepo: mockRepo);
-      final sub = container.listen(habitsProvider, (_, __) {});
+      final sub = container.listen(habitsProvider, (_, _) {});
       final result = await container.read(habitsProvider.future);
       expect(result, habits);
       sub.close();

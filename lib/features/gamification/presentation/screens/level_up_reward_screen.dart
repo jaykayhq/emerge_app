@@ -1,3 +1,4 @@
+import 'package:emerge_app/core/constants/gamification_constants.dart';
 import 'package:emerge_app/core/theme/app_theme.dart';
 import 'package:emerge_app/features/gamification/presentation/providers/user_stats_providers.dart';
 import 'package:emerge_app/features/auth/domain/entities/user_extension.dart';
@@ -262,20 +263,24 @@ class _LevelUpRewardScreenState extends ConsumerState<LevelUpRewardScreen>
 
         const SizedBox(height: 16),
 
-        // Customize button
-        Container(
+        // Customize button — navigates to profile (Future Self Studio)
+        SizedBox(
           width: 200,
           height: 40,
-          decoration: BoxDecoration(
-            color: Colors.white.withValues(alpha: 0.1),
-            borderRadius: BorderRadius.circular(8),
-            border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
-          ),
-          child: const Center(
-            child: Text(
+          child: ElevatedButton(
+            onPressed: () => context.go('/profile'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.white.withValues(alpha: 0.1),
+              foregroundColor: Colors.white,
+              side: BorderSide(color: Colors.white.withValues(alpha: 0.2)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+              elevation: 0,
+            ),
+            child: const Text(
               'Customize Persona',
               style: TextStyle(
-                color: Colors.white,
                 fontSize: 14,
                 fontWeight: FontWeight.bold,
               ),
@@ -287,8 +292,8 @@ class _LevelUpRewardScreenState extends ConsumerState<LevelUpRewardScreen>
   }
 
   Widget _buildProgressBar(UserAvatarStats stats, double progress) {
-    final xpInLevel = stats.totalXp % 500;
-    final xpForNextLevel = 500;
+    final xpForNextLevel = GamificationConstants.xpPerLevel;
+    final xpInLevel = stats.totalXp % xpForNextLevel;
     final xpProgress = (xpInLevel / xpForNextLevel).clamp(0.0, 1.0);
 
     return Column(

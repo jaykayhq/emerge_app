@@ -10,6 +10,9 @@ class BlueprintHabit extends Equatable {
   final TimeOfDay? defaultTime;
   final HabitAttribute attribute;
   final String frequency;
+  final int timerDurationMinutes; // 0 = no timer
+  final HabitIntegrationType integrationType;
+  final int? integrationTarget;
 
   const BlueprintHabit({
     required this.title,
@@ -17,6 +20,9 @@ class BlueprintHabit extends Equatable {
     this.defaultTime,
     this.attribute = HabitAttribute.vitality,
     this.frequency = 'Daily',
+    this.timerDurationMinutes = 0,
+    this.integrationType = HabitIntegrationType.none,
+    this.integrationTarget,
   });
 
   Map<String, dynamic> toMap() => {
@@ -27,6 +33,9 @@ class BlueprintHabit extends Equatable {
         : null,
     'attribute': attribute.name,
     'frequency': frequency,
+    'timerDurationMinutes': timerDurationMinutes,
+    'integrationType': integrationType.name,
+    'integrationTarget': integrationTarget,
   };
 
   factory BlueprintHabit.fromMap(Map<String, dynamic> map) {
@@ -46,6 +55,12 @@ class BlueprintHabit extends Equatable {
         orElse: () => HabitAttribute.vitality,
       ),
       frequency: map['frequency'] ?? 'Daily',
+      timerDurationMinutes: map['timerDurationMinutes'] ?? 0,
+      integrationType: HabitIntegrationType.values.firstWhere(
+        (e) => e.name == map['integrationType'],
+        orElse: () => HabitIntegrationType.none,
+      ),
+      integrationTarget: map['integrationTarget'],
     );
   }
 
@@ -56,6 +71,9 @@ class BlueprintHabit extends Equatable {
     defaultTime,
     attribute,
     frequency,
+    timerDurationMinutes,
+    integrationType,
+    integrationTarget,
   ];
 }
 

@@ -3,6 +3,7 @@ import 'package:emerge_app/features/auth/presentation/providers/auth_providers.d
 import 'package:emerge_app/core/presentation/widgets/world_background.dart';
 import 'package:emerge_app/core/domain/models/app_world_theme.dart';
 import 'package:emerge_app/features/blueprints/domain/models/blueprint.dart';
+import 'package:emerge_app/features/habits/domain/entities/habit.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
@@ -217,13 +218,19 @@ class BlueprintDetailScreen extends ConsumerWidget {
         ...blueprint.habits.asMap().entries.map((entry) {
           final index = entry.key;
           final habit = entry.value;
-          return Padding(
-            padding: const EdgeInsets.only(bottom: 12),
+          return Container(
+            margin: const EdgeInsets.only(bottom: 12),
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.04),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+            ),
             child: Row(
               children: [
                 Container(
-                  width: 24,
-                  height: 24,
+                  width: 28,
+                  height: 28,
                   decoration: BoxDecoration(
                     color: EmergeColors.teal.withValues(alpha: 0.2),
                     shape: BoxShape.circle,
@@ -239,10 +246,48 @@ class BlueprintDetailScreen extends ConsumerWidget {
                     ),
                   ),
                 ),
-                const Gap(16),
-                Text(
-                  habit.title,
-                  style: const TextStyle(color: Colors.white, fontSize: 16),
+                const Gap(12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        habit.title,
+                        style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w600),
+                      ),
+                      const SizedBox(height: 4),
+                      Wrap(
+                        spacing: 8,
+                        runSpacing: 4,
+                        children: [
+                          _StatBadge(
+                            icon: Icons.schedule,
+                            label: habit.frequency,
+                          ),
+                          if (habit.timeOfDay != null)
+                            _StatBadge(
+                              icon: Icons.wb_sunny,
+                              label: habit.timeOfDay!,
+                            ),
+                          if (habit.timerDurationMinutes > 0)
+                            _StatBadge(
+                              icon: Icons.timer_outlined,
+                              label: '${habit.timerDurationMinutes}M',
+                            ),
+                          if (habit.integrationType == HabitIntegrationType.healthSteps)
+                            _StatBadge(
+                              icon: Icons.directions_walk,
+                              label: 'Steps',
+                            ),
+                          if (habit.integrationType == HabitIntegrationType.screenTimeLimit)
+                            _StatBadge(
+                              icon: Icons.phone_android,
+                              label: 'Screen Time',
+                            ),
+                        ],
+                      ),
+                    ],
+                  ),
                 ),
               ],
             ),

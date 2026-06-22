@@ -12,14 +12,16 @@ class LocalGameLoopEngine {
     required double difficultyMultiplier,
     required int streak,
   }) {
-    double streakBonus = (streak / _streakBonusStepDays) * _streakBonusPerStep;
+    final clampedStreak = streak > 0 ? streak : 0;
+    double streakBonus = (clampedStreak / _streakBonusStepDays) * _streakBonusPerStep;
     if (streakBonus > _maxStreakBonus) streakBonus = _maxStreakBonus;
     return ((_baseXpPerHabit * difficultyMultiplier) * (1 + streakBonus))
         .round();
   }
 
   int computeLevel(int totalXp) {
-    return (totalXp / _xpPerLevel).floor() + 1;
+    final clamped = totalXp > 0 ? totalXp : 0;
+    return (clamped / _xpPerLevel).floor() + 1;
   }
 
   GameLoopResult processHabitCompletion({

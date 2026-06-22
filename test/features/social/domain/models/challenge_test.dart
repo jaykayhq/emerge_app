@@ -1,4 +1,5 @@
 import 'package:emerge_app/features/social/domain/models/challenge.dart';
+import 'package:emerge_app/features/social/domain/models/challenge_catalog.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
@@ -230,6 +231,43 @@ void main() {
       );
 
       expect(a, equals(b));
+    });
+  });
+
+  group('ChallengeCatalog steps', () {
+    test('featured challenges have sequential step days', () {
+      final challenges = ChallengeCatalog.getFeatured();
+      expect(challenges, isNotEmpty);
+
+      for (final challenge in challenges) {
+        for (var i = 0; i < challenge.steps.length; i++) {
+          expect(
+            challenge.steps[i].day,
+            i + 1,
+            reason: '${challenge.title}: step $i has day ${challenge.steps[i].day}, expected ${i + 1}',
+          );
+        }
+      }
+    });
+
+    test('daily quest steps start at day 1', () {
+      final daily = ChallengeCatalog.getDailyQuest('athlete');
+      expect(daily.steps, hasLength(1));
+      expect(daily.steps[0].day, 1);
+    });
+
+    test('getAvailableChallenges returns challenges with sequential step days', () {
+      final challenges = ChallengeCatalog.getAvailableChallenges('athlete');
+
+      for (final challenge in challenges) {
+        for (var i = 0; i < challenge.steps.length; i++) {
+          expect(
+            challenge.steps[i].day,
+            i + 1,
+            reason: '${challenge.title}: step $i has day ${challenge.steps[i].day}, expected ${i + 1}',
+          );
+        }
+      }
     });
   });
 }

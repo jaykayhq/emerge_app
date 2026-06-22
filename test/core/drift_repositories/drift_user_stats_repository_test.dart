@@ -315,6 +315,7 @@ class FakeUserStatsTableData implements UserStatsTableData {
     if (invocation.memberName == #challengeXp) return 0;
     if (invocation.memberName == #level) return 1;
     if (invocation.memberName == #streak) return 0;
+    if (invocation.memberName == #lastCelebratedLevel) return 0;
     return null;
   }
 }

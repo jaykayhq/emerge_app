@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:gap/gap.dart';
@@ -18,6 +20,8 @@ class WorldSplashScreen extends StatefulWidget {
 
 class _WorldSplashScreenState extends State<WorldSplashScreen>
     with SingleTickerProviderStateMixin {
+  Timer? _autoNavigateTimer;
+
   @override
   void initState() {
     super.initState();
@@ -26,11 +30,17 @@ class _WorldSplashScreenState extends State<WorldSplashScreen>
 
   void _autoNavigate() {
     // Automatically navigate after animations complete
-    Future.delayed(const Duration(milliseconds: 1800), () {
+    _autoNavigateTimer = Timer(const Duration(milliseconds: 1800), () {
       if (mounted) {
         context.go('/');
       }
     });
+  }
+
+  @override
+  void dispose() {
+    _autoNavigateTimer?.cancel();
+    super.dispose();
   }
 
   @override

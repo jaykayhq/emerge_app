@@ -47,7 +47,7 @@ class FakeAuthRepository implements AuthRepository {
   }
 
   @override
-  Future<Either<Failure, AuthUser>> signInWithGoogle() async {
+  Future<Either<Failure, AuthUser>> signInWithGoogle({bool isLogin = false}) async {
     await Future.delayed(const Duration(seconds: 1));
     _currentUser = const AuthUser(
       id: 'google-123',

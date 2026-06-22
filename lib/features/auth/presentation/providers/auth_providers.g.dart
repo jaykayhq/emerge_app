@@ -9,6 +9,53 @@ part of 'auth_providers.dart';
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint, type=warning
 
+@ProviderFor(firebaseAuth)
+final firebaseAuthProvider = FirebaseAuthProvider._();
+
+final class FirebaseAuthProvider
+    extends
+        $FunctionalProvider<
+          firebase_auth.FirebaseAuth,
+          firebase_auth.FirebaseAuth,
+          firebase_auth.FirebaseAuth
+        >
+    with $Provider<firebase_auth.FirebaseAuth> {
+  FirebaseAuthProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'firebaseAuthProvider',
+        isAutoDispose: false,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$firebaseAuthHash();
+
+  @$internal
+  @override
+  $ProviderElement<firebase_auth.FirebaseAuth> $createElement(
+    $ProviderPointer pointer,
+  ) => $ProviderElement(pointer);
+
+  @override
+  firebase_auth.FirebaseAuth create(Ref ref) {
+    return firebaseAuth(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(firebase_auth.FirebaseAuth value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<firebase_auth.FirebaseAuth>(value),
+    );
+  }
+}
+
+String _$firebaseAuthHash() => r'dffd78b4e77d56a1066f36e3d8d40a004d636084';
+
 @ProviderFor(authRepository)
 final authRepositoryProvider = AuthRepositoryProvider._();
 
@@ -48,7 +95,7 @@ final class AuthRepositoryProvider
   }
 }
 
-String _$authRepositoryHash() => r'a327c9350b1516c9c5ba1ecd1e6a5f2b0497decb';
+String _$authRepositoryHash() => r'2f55a520bde3835945366f53d9c10b838e00c188';
 
 @ProviderFor(authStateChanges)
 final authStateChangesProvider = AuthStateChangesProvider._();
@@ -165,7 +212,7 @@ final class SignOutProvider
         argument: null,
         retry: null,
         name: r'signOutProvider',
-        isAutoDispose: true,
+        isAutoDispose: false,
         dependencies: null,
         $allTransitiveDependencies: null,
       );
@@ -184,7 +231,7 @@ final class SignOutProvider
   }
 }
 
-String _$signOutHash() => r'4b280108d412d729ffb848f22e53cee3550fc524';
+String _$signOutHash() => r'6840d641d6cee42f9727d4232b28ca92351e1fe7';
 
 @ProviderFor(firestore)
 final firestoreProvider = FirestoreProvider._();
@@ -437,3 +484,109 @@ final class IsCurrentCreatorProvider
 }
 
 String _$isCurrentCreatorHash() => r'17b72a3bee3494537ba60cad6eefe0f2edc071bd';
+
+@ProviderFor(signUpCreator)
+final signUpCreatorProvider = SignUpCreatorFamily._();
+
+final class SignUpCreatorProvider
+    extends $FunctionalProvider<AsyncValue<void>, void, FutureOr<void>>
+    with $FutureModifier<void>, $FutureProvider<void> {
+  SignUpCreatorProvider._({
+    required SignUpCreatorFamily super.from,
+    required (String, String, String) super.argument,
+  }) : super(
+         retry: null,
+         name: r'signUpCreatorProvider',
+         isAutoDispose: false,
+         dependencies: null,
+         $allTransitiveDependencies: null,
+       );
+
+  @override
+  String debugGetCreateSourceHash() => _$signUpCreatorHash();
+
+  @override
+  String toString() {
+    return r'signUpCreatorProvider'
+        ''
+        '$argument';
+  }
+
+  @$internal
+  @override
+  $FutureProviderElement<void> $createElement($ProviderPointer pointer) =>
+      $FutureProviderElement(pointer);
+
+  @override
+  FutureOr<void> create(Ref ref) {
+    final argument = this.argument as (String, String, String);
+    return signUpCreator(ref, argument.$1, argument.$2, argument.$3);
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return other is SignUpCreatorProvider && other.argument == argument;
+  }
+
+  @override
+  int get hashCode {
+    return argument.hashCode;
+  }
+}
+
+String _$signUpCreatorHash() => r'ea8eb2c47f0090fa7b2defcbb4751dab5f07bda8';
+
+final class SignUpCreatorFamily extends $Family
+    with $FunctionalFamilyOverride<FutureOr<void>, (String, String, String)> {
+  SignUpCreatorFamily._()
+    : super(
+        retry: null,
+        name: r'signUpCreatorProvider',
+        dependencies: null,
+        $allTransitiveDependencies: null,
+        isAutoDispose: false,
+      );
+
+  SignUpCreatorProvider call(String email, String password, String username) =>
+      SignUpCreatorProvider._(
+        argument: (email, password, username),
+        from: this,
+      );
+
+  @override
+  String toString() => r'signUpCreatorProvider';
+}
+
+@ProviderFor(signUpCreatorWithGoogle)
+final signUpCreatorWithGoogleProvider = SignUpCreatorWithGoogleProvider._();
+
+final class SignUpCreatorWithGoogleProvider
+    extends $FunctionalProvider<AsyncValue<void>, void, FutureOr<void>>
+    with $FutureModifier<void>, $FutureProvider<void> {
+  SignUpCreatorWithGoogleProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'signUpCreatorWithGoogleProvider',
+        isAutoDispose: false,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$signUpCreatorWithGoogleHash();
+
+  @$internal
+  @override
+  $FutureProviderElement<void> $createElement($ProviderPointer pointer) =>
+      $FutureProviderElement(pointer);
+
+  @override
+  FutureOr<void> create(Ref ref) {
+    return signUpCreatorWithGoogle(ref);
+  }
+}
+
+String _$signUpCreatorWithGoogleHash() =>
+    r'e810679a2502ffabb1116ed9169b8e6ea6dcbdc6';

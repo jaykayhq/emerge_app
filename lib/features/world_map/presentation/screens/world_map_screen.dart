@@ -1,5 +1,7 @@
+import 'dart:async';
 import 'dart:ui';
 
+import 'package:emerge_app/core/constants/gamification_constants.dart';
 import 'package:emerge_app/core/theme/app_theme.dart';
 import 'package:emerge_app/features/auth/domain/entities/user_extension.dart';
 import 'package:emerge_app/features/gamification/presentation/providers/user_stats_providers.dart';
@@ -15,6 +17,7 @@ import 'package:emerge_app/features/companion/presentation/providers/companion_p
 import 'package:emerge_app/features/companion/domain/enums/companion_enums.dart';
 import 'package:emerge_app/features/monetization/presentation/providers/subscription_provider.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:emerge_app/core/theme/emerge_colors.dart';
@@ -33,6 +36,7 @@ class _WorldMapScreenState extends ConsumerState<WorldMapScreen> {
   final GlobalKey _topBarKey = GlobalKey();
   final GlobalKey _statsBarKey = GlobalKey();
   final GlobalKey _firstNodeKey = GlobalKey();
+  Timer? _initTimer;
 
   /// Whether the first-visit coach-mark overlay is visible.
   /// Set to true on first visit, dismissed by tapping anywhere.
@@ -41,7 +45,7 @@ class _WorldMapScreenState extends ConsumerState<WorldMapScreen> {
   @override
   void initState() {
     super.initState();
-    Future.delayed(const Duration(milliseconds: 800), () {
+    _initTimer = Timer(const Duration(milliseconds: 800), () {
       if (!mounted) return;
       final repo = ref.read(companionRepositoryProvider);
       if (!repo.hasVisited('/world-map')) {
@@ -60,6 +64,7 @@ class _WorldMapScreenState extends ConsumerState<WorldMapScreen> {
 
   @override
   void dispose() {
+    _initTimer?.cancel();
     _scrollController.dispose();
     super.dispose();
   }
@@ -68,8 +73,9 @@ class _WorldMapScreenState extends ConsumerState<WorldMapScreen> {
   Widget build(BuildContext context) {
     final statsAsync = ref.watch(userStatsStreamProvider);
 
-    return WorldBackground(
-      child: statsAsync.when(
+    return _DoubleTapExit(
+      child: WorldBackground(
+        child: statsAsync.when(
         data: (profile) {
           final archetype = profile.archetype;
           final mapConfig = ArchetypeMapsCatalog.getMapForArchetype(archetype);
@@ -197,8 +203,9 @@ class _WorldMapScreenState extends ConsumerState<WorldMapScreen> {
           ),
         ),
       ),
-    );
-  }
+    ),
+  );
+}
 
   List<WorldNode> _hydrateNodesWithSectionLogic(
     List<WorldNode> nodes,
@@ -477,7 +484,9 @@ class _GlassmorphismTopBar extends StatelessWidget {
                     final statsAsync = ref.watch(userStatsStreamProvider);
                     final stats = statsAsync.value?.avatarStats;
                     if (stats == null) return const SizedBox.shrink();
-                    final progress = (stats.totalXp % 500) / 500.0;
+                    final progress =
+                        (stats.totalXp % GamificationConstants.xpPerLevel) /
+                            GamificationConstants.xpPerLevel;
                     return LinearProgressIndicator(
                       value: progress,
                       backgroundColor: config.primaryColor.withValues(
@@ -1105,6 +1114,59 @@ class _CoachItem extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+}
+
+/// Inline double-tap-to-exit wrapper used as a temporary stand-in for the
+/// shared `AppDoubleTapExit` widget (which is being introduced in parallel
+/// under `lib/core/presentation/widgets/app_back_handler.dart`).
+///
+/// Intercepts Android hardware back: the first press shows a SnackBar
+/// "Tap back again to exit"; a second press within 2 seconds actually exits
+/// via `SystemNavigator.pop()`.
+class _DoubleTapExit extends StatefulWidget {
+  final Widget child;
+
+  const _DoubleTapExit({required this.child});
+
+  @override
+  State<_DoubleTapExit> createState() => _DoubleTapExitState();
+}
+
+class _DoubleTapExitState extends State<_DoubleTapExit> {
+  static const Duration _exitWindow = Duration(seconds: 2);
+
+  DateTime? _lastBackTime;
+
+  void _handleBack() {
+    final now = DateTime.now();
+    final last = _lastBackTime;
+    if (last != null && now.difference(last) < _exitWindow) {
+      SystemNavigator.pop();
+      return;
+    }
+    _lastBackTime = now;
+    if (!mounted) return;
+    final messenger = ScaffoldMessenger.maybeOf(context);
+    messenger?.hideCurrentSnackBar();
+    messenger?.showSnackBar(
+      const SnackBar(
+        content: Text('Tap back again to exit'),
+        duration: Duration(seconds: 2),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, _) {
+        if (didPop) return;
+        _handleBack();
+      },
+      child: widget.child,
     );
   }
 }

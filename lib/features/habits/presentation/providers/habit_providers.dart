@@ -192,8 +192,13 @@ Future<HabitCompletionResult> completeHabit(Ref ref, String habitId) async {
     final repository = ref.read(habitRepositoryProvider);
     final userAsync = ref.read(authStateChangesProvider);
     final userId = userAsync.value?.id;
+    final activeTribeId = ref.read(activeTribeIdProvider);
 
-    final result = await repository.completeHabit(habitId, DateTime.now());
+    final result = await repository.completeHabit(
+      habitId,
+      DateTime.now(),
+      activeTribeId: activeTribeId,
+    );
 
     return await result.fold(
       (failure) async {

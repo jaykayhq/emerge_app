@@ -195,5 +195,132 @@ void main() {
         ).called(2); // Global and Club
       });
     });
+
+    group('logActivity', () {
+      test('enqueues set to global_activities', () async {
+        await service.logActivity(
+          type: 'test_event',
+          userId: 'user1',
+          data: {'key': 'value'},
+        );
+
+        verify(
+          () => mockSyncEngine.enqueueSet(
+            collectionPath: 'global_activities',
+            documentId: any(named: 'documentId'),
+            data: any(named: 'data'),
+          ),
+        ).called(1);
+      });
+
+      test('does not throw on success', () async {
+        await expectLater(
+          service.logActivity(
+            type: 'test_event',
+            userId: 'user1',
+            data: {'key': 'value'},
+          ),
+          completes,
+        );
+      });
+    });
+
+    group('logStreakMilestone', () {
+      test('enqueues set for global and club activity', () async {
+        await service.logStreakMilestone(
+          userId: 'u1',
+          userName: 'Test',
+          archetype: 'athlete',
+          streakDays: 7,
+        );
+
+        verify(
+          () => mockSyncEngine.enqueueSet(
+            collectionPath: any(named: 'collectionPath'),
+            documentId: any(named: 'documentId'),
+            data: any(named: 'data'),
+          ),
+        ).called(2);
+      });
+    });
+
+    group('logNodeClaim', () {
+      test('enqueues set for global and club activity', () async {
+        await service.logNodeClaim(
+          userId: 'u1',
+          userName: 'Test',
+          archetype: 'stoic',
+          nodeId: 'n1',
+          nodeName: 'Focus Node',
+        );
+
+        verify(
+          () => mockSyncEngine.enqueueSet(
+            collectionPath: any(named: 'collectionPath'),
+            documentId: any(named: 'documentId'),
+            data: any(named: 'data'),
+          ),
+        ).called(2);
+      });
+    });
+
+    group('logBadgeEarned', () {
+      test('enqueues set for global and club activity', () async {
+        await service.logBadgeEarned(
+          userId: 'u1',
+          userName: 'Test',
+          archetype: 'creator',
+          badgeId: 'b1',
+          badgeName: 'Gold Star',
+        );
+
+        verify(
+          () => mockSyncEngine.enqueueSet(
+            collectionPath: any(named: 'collectionPath'),
+            documentId: any(named: 'documentId'),
+            data: any(named: 'data'),
+          ),
+        ).called(2);
+      });
+    });
+
+    group('logPartnerJoined', () {
+      test('enqueues set for global and club activity', () async {
+        await service.logPartnerJoined(
+          userId: 'u1',
+          userName: 'Test',
+          archetype: 'scholar',
+          partnerName: 'Partner',
+        );
+
+        verify(
+          () => mockSyncEngine.enqueueSet(
+            collectionPath: any(named: 'collectionPath'),
+            documentId: any(named: 'documentId'),
+            data: any(named: 'data'),
+          ),
+        ).called(2);
+      });
+    });
+
+    group('logContractCommitted', () {
+      test('enqueues set for global and club activity', () async {
+        await service.logContractCommitted(
+          userId: 'u1',
+          userName: 'Test',
+          archetype: 'zealot',
+          habitTitle: 'No Snooze',
+          penalty: '\$50',
+        );
+
+        verify(
+          () => mockSyncEngine.enqueueSet(
+            collectionPath: any(named: 'collectionPath'),
+            documentId: any(named: 'documentId'),
+            data: any(named: 'data'),
+          ),
+        ).called(2);
+      });
+    });
   });
 }

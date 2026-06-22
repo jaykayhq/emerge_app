@@ -36,7 +36,7 @@ void main() {
     );
   });
 
-  Widget _buildTest() {
+  Widget buildTest() {
     return ProviderScope(
       overrides: [
         authRepositoryProvider.overrideWithValue(mockAuthRepo),
@@ -48,7 +48,7 @@ void main() {
     );
   }
 
-  Future<void> _setScreenSize(tester) async {
+  Future<void> setScreenSize(tester) async {
     tester.view.physicalSize = const Size(600, 1200);
     tester.view.devicePixelRatio = 1.0;
     addTearDown(() {
@@ -58,8 +58,8 @@ void main() {
   }
 
   testWidgets('InviteCodeDialog renders form elements', (tester) async {
-    await _setScreenSize(tester);
-    await tester.pumpWidget(_buildTest());
+    await setScreenSize(tester);
+    await tester.pumpWidget(buildTest());
     await tester.pump();
 
     expect(find.text('Form a Partnership'), findsOneWidget);
@@ -70,11 +70,11 @@ void main() {
   });
 
   testWidgets('InviteCodeDialog generates code', (tester) async {
-    await _setScreenSize(tester);
+    await setScreenSize(tester);
     when(() => mockFriendRepo.generateInviteCode(any()))
         .thenAnswer((_) async => 'ABC123');
 
-    await tester.pumpWidget(_buildTest());
+    await tester.pumpWidget(buildTest());
     await tester.pump();
     await tester.pump();
 

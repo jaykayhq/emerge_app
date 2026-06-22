@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 import 'dart:ui';
 
@@ -50,13 +51,15 @@ class _LevelImmersiveScreenState extends ConsumerState<LevelImmersiveScreen> {
   // starting a mission without waiting for the database stream.
   NodeState? _overriddenNodeState;
 
+  Timer? _initTimer;
+  bool _disposed = false;
   bool _showFirstVisitGuide = false;
 
   @override
   void initState() {
     super.initState();
     _checkFirstNodeVisit();
-    Future.delayed(const Duration(milliseconds: 500), () {
+    _initTimer = Timer(const Duration(milliseconds: 500), () {
       if (!mounted) return;
       final repo = ref.read(companionRepositoryProvider);
       if (!repo.hasVisited('/world-map/immersive')) {
@@ -73,14 +76,21 @@ class _LevelImmersiveScreenState extends ConsumerState<LevelImmersiveScreen> {
   }
 
   Future<void> _checkFirstNodeVisit() async {
-    await Future.delayed(const Duration(milliseconds: 300));
-    if (!mounted) return;
+    await Future<void>.delayed(const Duration(milliseconds: 300));
+    if (!mounted || _disposed) return;
     final repo = LocalSettingsRepository();
     final hasSeen = await repo.getHasSeenNodeGuide(widget.node.id);
-    if (!hasSeen && mounted) {
+    if (!hasSeen && mounted && !_disposed) {
       await repo.setHasSeenNodeGuide(widget.node.id);
-      _showCompanionGuide();
+      if (!_disposed) _showCompanionGuide();
     }
+  }
+
+  @override
+  void dispose() {
+    _initTimer?.cancel();
+    _disposed = true;
+    super.dispose();
   }
 
   void _showCompanionGuide() {

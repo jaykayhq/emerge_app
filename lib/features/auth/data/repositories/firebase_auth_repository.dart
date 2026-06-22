@@ -12,11 +12,48 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:emerge_app/features/auth/domain/entities/user_extension.dart';
 
+/// Canonical role strings. Must stay in sync with
+/// `functions/src/setUserRole.ts` (VALID_ROLES). The 'creator' value
+/// is only written from `lib/features/auth/presentation/providers/
+/// auth_providers.dart` (signUpCreator*), which passes the literal
+/// directly; this file only writes the 'user' value.
+const String _kRoleUser = 'user';
+
 class FirebaseAuthRepository implements AuthRepository {
   final FirebaseAuth _firebaseAuth;
   final FirebaseFirestore _firestore;
 
-  FirebaseAuthRepository(this._firebaseAuth, this._firestore);
+  FirebaseAuthRepository(this._firebaseAuth, this._firestore) {
+    if (!kIsWeb) {
+      GoogleSignIn.instance.initialize();
+    }
+  }
+
+  /// Best-effort: invoke the `setUserRole` Cloud Function and refresh the
+  /// user's ID token so the new custom claim is picked up by the router
+  /// immediately. Never throws — failures are logged and swallowed so
+  /// a role-assignment hiccup can never break the auth flow itself.
+  ///
+  /// The router has a Firestore fallback (reads `users/{uid}.role`) for
+  /// the brief window where the claim hasn't propagated yet, so this is
+  /// a perf/UX improvement, not a correctness requirement.
+  Future<void> _assignRoleAndRefresh(User user, String role) async {
+    try {
+      final functions = FirebaseFunctions.instance;
+      await functions.httpsCallable('setUserRole').call(<String, dynamic>{
+        'role': role,
+      });
+      await user.getIdToken(true);
+      AppLogger.i('AuthRepository: role=$role assigned to uid=${user.uid}');
+    } catch (e, s) {
+      AppLogger.w(
+        'AuthRepository: setUserRole($role) failed; '
+        'router will fall back to Firestore mirror. Error: $e',
+        error: e,
+        stackTrace: s,
+      );
+    }
+  }
 
   @override
   Stream<AuthUser> get user {
@@ -66,7 +103,11 @@ class FirebaseAuthRepository implements AuthRepository {
       );
     } on FirebaseAuthException catch (e) {
       AppLogger.e('Sign in failed', e);
-      return Left(AuthFailure(e.message ?? 'Authentication failed'));
+      String message = e.message ?? 'Authentication failed';
+      if (e.code == 'user-not-found' || e.code == 'invalid-credential') {
+        message = 'Invalid email or password. Please make sure you have an account.';
+      }
+      return Left(AuthFailure(message));
     } catch (e, s) {
       AppLogger.e('Sign in failed', e, s);
       return Left(ServerFailure(e.toString()));
@@ -117,17 +158,27 @@ class FirebaseAuthRepository implements AuthRepository {
       // Create UserProfile in Firestore
       final userProfile = UserProfile(
         uid: updatedUser?.uid ?? user.uid,
+        role: _kRoleUser,
         displayName: updatedUser?.displayName ?? sanitizedUsername,
       );
       final profileMap = userProfile.toMap();
       profileMap['email'] = updatedUser?.email ?? user.email ?? '';
       profileMap['createdAt'] = FieldValue.serverTimestamp();
 
+      // Remove null values to comply with Firestore security rule type checks
+      // (isValidStats rejects null values for fields like photoUrl)
+      profileMap.removeWhere((_, value) => value == null);
+
       await _firestore.collection('users').doc(userProfile.uid).set(profileMap);
       await _firestore
           .collection('user_stats')
           .doc(userProfile.uid)
           .set(profileMap);
+
+      // Set the canonical `role` custom claim so the router has a
+      // deterministic source of truth. Failure is non-fatal — the Firestore
+      // mirror is the fallback read path.
+      await _assignRoleAndRefresh(updatedUser ?? user, _kRoleUser);
 
       return Right(
         AuthUser(
@@ -146,7 +197,7 @@ class FirebaseAuthRepository implements AuthRepository {
   }
 
   @override
-  Future<Either<Failure, AuthUser>> signInWithGoogle() async {
+  Future<Either<Failure, AuthUser>> signInWithGoogle({bool isLogin = false}) async {
     try {
       UserCredential userCredential;
 
@@ -167,17 +218,11 @@ class FirebaseAuthRepository implements AuthRepository {
         // the router will react to the idTokenChanges() stream and navigate.
         return const Left(AuthFailure('redirect_initiated'));
       } else {
-        // On mobile, use the GoogleSignIn package
-        final googleSignIn = GoogleSignIn();
-        final googleUser = await googleSignIn.signIn();
+        // On mobile, use the GoogleSignIn package with 7.x API
+        final googleUser = await GoogleSignIn.instance.authenticate();
 
-        if (googleUser == null) {
-          return const Left(AuthFailure('Google Sign-In cancelled'));
-        }
-
-        final googleAuth = await googleUser.authentication;
+        final googleAuth = googleUser.authentication;
         final AuthCredential credential = GoogleAuthProvider.credential(
-          accessToken: googleAuth.accessToken,
           idToken: googleAuth.idToken,
         );
 
@@ -190,21 +235,40 @@ class FirebaseAuthRepository implements AuthRepository {
         return const Left(AuthFailure('User not found'));
       }
 
-      // Create or update user profile in Firestore
+      // Check if user exists in Firestore
       final userDoc = await _firestore.collection('users').doc(user.uid).get();
+      
+      // If logging in and user doesn't exist, fail and clean up
+      if (isLogin && !userDoc.exists) {
+        await user.delete();
+        if (!kIsWeb) {
+          await GoogleSignIn.instance.signOut();
+        }
+        return const Left(AuthFailure('No account found for this Google account. Please sign up first.'));
+      }
+
+      // If signing up and user doesn't exist, create profile
       if (!userDoc.exists) {
         final displayName = user.displayName?.isNotEmpty == true
             ? user.displayName!
             : user.email?.split('@').first ?? 'User';
         final userProfile = UserProfile(
           uid: user.uid,
+          role: _kRoleUser,
           displayName: displayName,
         );
         final profileMap = userProfile.toMap();
         profileMap['email'] = user.email ?? '';
         profileMap['createdAt'] = FieldValue.serverTimestamp();
+        // Remove null values to comply with Firestore security rule type checks
+        profileMap.removeWhere((_, value) => value == null);
         await _firestore.collection('users').doc(user.uid).set(profileMap);
         await _firestore.collection('user_stats').doc(user.uid).set(profileMap);
+
+        // Set the canonical `role` custom claim so the router has a
+        // deterministic source of truth. Failure is non-fatal — the
+        // Firestore mirror we just wrote is the fallback read path.
+        await _assignRoleAndRefresh(user, _kRoleUser);
       }
 
       return Right(
@@ -246,8 +310,7 @@ class FirebaseAuthRepository implements AuthRepository {
   @override
   Future<void> signOut() async {
     if (!kIsWeb) {
-      final googleSignIn = GoogleSignIn();
-      await googleSignIn.signOut();
+      await GoogleSignIn.instance.signOut();
     }
     await _firebaseAuth.signOut();
   }
