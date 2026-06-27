@@ -4,6 +4,8 @@ import 'package:emerge_app/features/avatar/domain/models/avatar_pose.dart';
 import 'package:emerge_app/features/avatar/domain/models/evolution_data.dart';
 import 'package:emerge_app/features/avatar/domain/models/equipment_data.dart';
 
+const _emptyEquipment = <EquipmentSlot, ShopItem?>{};
+
 /// Composite avatar state combining colors, proportions, pose, equipment,
 /// and evolution phase. This is the primary data object consumed by the
 /// procedural renderer and ThreeFlutter scene builder.
@@ -37,7 +39,7 @@ class AvatarData {
         colors: AvatarColors.hero(),
         proportions: AvatarProportions.hero(),
         pose: AvatarPose.idle(),
-        equipment: {},
+        equipment: _emptyEquipment,
       );
 
   AvatarData copyWith({
