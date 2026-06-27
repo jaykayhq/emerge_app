@@ -1,0 +1,355 @@
+<h2>Hybrid Avatar Architecture — Full Design</h2>
+<p class="subtitle">Procedural 3D (CustomPainter) + ThreeFlutter (Full 3D) — same data model, two renderers</p>
+
+<hr style="margin: 1.5rem 0; border-color: #30363D;" />
+
+<h3>System Overview</h3>
+
+<div style="background: #161B22; border-radius: 12px; padding: 1.5rem; border: 1px solid #30363D; margin: 1rem 0; font-family: monospace; font-size: 13px; line-height: 1.6;">
+  ┌─────────────────────────────────────────────────────────────┐
+  │                    Shared Data Model                        │
+  │                                                             │
+  │  AvatarProportions  AvatarColors  Equipment[]  Evolution    │
+  │  (archetype-based)  (user-picked)  (items)    (phase+fx)   │
+  └─────────┬───────────────────────────┬──────────┬──────────┘
+            │                           │          │
+            ▼                           ▼          ▼
+  ┌──────────────────┐     ┌──────────────────────────────┐
+  │  Procedural 3D    │     │      ThreeFlutter 3D         │
+  │  (CustomPainter)  │     │   (full 3D engine)          │
+  │                   │     │                              │
+  │  • Lists/tribes   │     │  • Profile home screen       │
+  │  • Customization  │     │  • 360° spin viewer          │
+  │  • Preview pane   │     │  • Showcase mode             │
+  │  • Shop grid      │     │  • Achievement unlock anim   │
+  │  • Notifications  │     │                              │
+  ├───────────────────┤     ├──────────────────────────────┤
+  │  ~25 draw calls   │     │  OpenGL ES rendering          │
+  │  60fps guaranteed │     │  ~60fps on modern devices     │
+  │  Zero deps        │     │  three_flutter package        │
+  │  Auto-scales      │     │  glTF model loading           │
+  └───────────────────┘     └──────────────────────────────┘
+            │                          │
+            └──────────┬──────────────┘
+                       ▼
+            ┌──────────────────────┐
+            │  Riverpod Providers  │
+            │                      │
+            │  avatarConfigProvider │
+            │  equipmentProvider   │
+            │  evolutionProvider   │
+            │  shopProvider        │
+            └──────────────────────┘
+                       │
+                       ▼
+            ┌──────────────────────┐
+            │   Firestore Sync     │
+            │  (avatar document)   │
+            └──────────────────────┘
+</div>
+
+<hr style="margin: 1.5rem 0; border-color: #30363D;" />
+
+<h3>1. Shared Data Model</h3>
+
+<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+
+<div class="card">
+  <h4>Body Structure</h4>
+  <div style="background: #0D1117; border-radius: 8px; padding: 0.75rem; font-family: monospace; font-size: 12px; color: #8B949E;">
+    <span style="color: #FFB3B3;">Head</span> — sphere<br/>
+    <span style="color: #FFB3B3;">Neck</span> — short capsule<br/>
+    <span style="color: #FFB3B3;">Torso</span> — tapered capsule (wider at shoulders)<br/>
+    <span style="color: #FFB3B3;">Upper Arms</span> — capsule<br/>
+    <span style="color: #FFB3B3;">Forearms</span> — capsule<br/>
+    <span style="color: #FFB3B3;">Thighs</span> — capsule<br/>
+    <span style="color: #FFB3B3;">Shins</span> — capsule<br/>
+    <span style="color: #FFB3B3;">Hands</span> — small sphere<br/>
+    <span style="color: #FFB3B3;">Feet</span> — rounded box<br/>
+  </div>
+  <p style="font-size: 0.85rem;">11 components, each with position, rotation, scale, color, material</p>
+</div>
+
+<div class="card">
+  <h4>Color Slots</h4>
+  <div style="background: #0D1117; border-radius: 8px; padding: 0.75rem; font-family: monospace; font-size: 12px; color: #8B949E;">
+    <span style="color: #FFB3B3;">skinColor</span> — base body color (default by archetype)<br/>
+    <span style="color: #FFB3B3;">outlineColor</span> — rim/edge accent color<br/>
+    <span style="color: #FFB3B3;">accentColor</span> — secondary (eyes, details)<br/>
+    <span style="color: #FFB3B3;">glowColor</span> — evolution glow/aura<br/>
+    <span style="color: #FFB3B3;">equipmentColors</span> — per equipped item
+  </div>
+  <p style="font-size: 0.85rem;">Users pick from palette or custom hex — live preview in customizer</p>
+</div>
+
+<div class="card">
+  <h4>Equipment Slots</h4>
+  <div style="background: #0D1117; border-radius: 8px; padding: 0.75rem; font-family: monospace; font-size: 12px; color: #8B949E;">
+    <span style="color: #FFB3B3;">head</span> — hats, helmets, hair, halos, horns<br/>
+    <span style="color: #FFB3B3;">back</span> — capes, wings, backpacks, aura<br/>
+    <span style="color: #FFB3B3;">leftHand</span> — weapons, tools, instruments<br/>
+    <span style="color: #FFB3B3;">rightHand</span> — weapons, shields, orbs<br/>
+    <span style="color: #FFB3B3;">feet</span> — shoes, boots, anklet effects<br/>
+    <span style="color: #FFB3B3;">waist</span> — belts, sashes<br/>
+    <span style="color: #FFB3B3;">aura</span> — full-body effect overlays
+  </div>
+  <p style="font-size: 0.85rem;">Each slot: null (empty) or ShopItem (with visual data)</p>
+</div>
+
+<div class="card">
+  <h4>Evolution Integration</h4>
+  <div style="background: #0D1117; border-radius: 8px; padding: 0.75rem; font-family: monospace; font-size: 12px; color: #8B949E;">
+    <span style="color: #FFB3B3;">Phantom</span> — semi-transparent, faint glow<br/>
+    <span style="color: #FFB3B3;">Construct</span> — structural lines visible<br/>
+    <span style="color: #FFB3B3;">Incarnate</span> — solid, core glow appears<br/>
+    <span style="color: #FFB3B3;">Radiant</span> — kintsugi cracks, pulsing core<br/>
+    <span style="color: #FFB3B3;">Ascended</span> — sparkles, full aura flourish
+  </div>
+  <p style="font-size: 0.85rem;">Maps to your existing evolution system — applies as material/glow overrides</p>
+</div>
+
+</div>
+
+<hr style="margin: 1.5rem 0; border-color: #30363D;" />
+
+<h3>2. Procedural 3D Renderer (CustomPainter)</h3>
+
+<p>The workhorse renderer for lists, previews, and customization UI. Each body part is a capsule shape drawn on Canvas:</p>
+
+<div style="display: flex; gap: 2rem; align-items: center; flex-wrap: wrap;">
+  <div style="background: #0D1117; border-radius: 16px; padding: 1rem; flex: 0 0 auto;">
+    <pre style="color: #E6EDF3; margin: 0; font-size: 11px; line-height: 1.3; text-align: center;">
+      <span style="color: #FFB3B3;">  ╭────────╮</span>
+      <span style="color: #FFB3B3;">  │ (⊙)   │</span>  ← Head: circle + radial gradient
+      <span style="color: #FFB3B3;">  ╰────────╯</span>    (lighter at upper-left = fake sun)
+      <span style="color: #FFB3B3;">    ║</span>
+      <span style="color: #FFB3B3;">  ╔═╩══╗</span>    ← Torso: rounded rect with
+      <span style="color: #FFB3B3;">  ║    ║</span>      vertical gradient from light top
+      <span style="color: #FFB3B3;">  ║    ║</span>      to dark bottom
+      <span style="color: #FFB3B3;">  ╚═╦══╝</span>
+      <span style="color: #FFB3B3;"> ┌─╨─┐┌─╧─┐</span>  ← Arms: rounded rects/capsules
+      <span style="color: #FFB3B3;"> │   ││   │</span>    with shadow on bottom edge
+      <span style="color: #FFB3B3;"> └───┘└───┘</span>
+      <span style="color: #FFB3B3;">  ╱ ║ ╲</span>
+      <span style="color: #FFB3B3;"> ╱  ║  ╲</span>    ← Legs: same capsule + gradient
+      <span style="color: #FFB3B3;">▕   ║   ▏</span>    with ground shadow ellipse
+      <span style="color: #FFB3B3;"> ▔▔▔ ▔▔▔</span>
+    </pre>
+  </div>
+  <div style="flex: 1; min-width: 200px;">
+    <h4>Shading technique</h4>
+    <p>Each part uses a <strong>linear gradient</strong> from lighter (upper-left) to darker (lower-right) to simulate a fixed light source. Equipment items are drawn as additional shapes in the correct z-order.</p>
+    <p style="color: #8B949E; font-size: 0.85rem;">Draw order: back limbs → back equipment → torso → head → front equipment → front limbs → aura overlay</p>
+  </div>
+</div>
+
+<hr style="margin: 1.5rem 0; border-color: #30363D;" />
+
+<h3>3. ThreeFlutter 3D Renderer (Profile View)</h3>
+
+<div class="card">
+  <h4>Render Pipeline</h4>
+  <div style="font-family: monospace; font-size: 12px; color: #8B949E; background: #0D1117; border-radius: 8px; padding: 0.75rem; margin: 0.5rem 0;">
+    1. <span style="color: #35E0FF;">Shared AvatarData</span> → build ThreeScene
+    2. Create <span style="color: #35E0FF;">MeshStandardMaterial</span> per body part (color, roughness, metalness)
+    3. Position <span style="color: #35E0FF;">SphereGeometry</span> | <span style="color: #35E0FF;">CapsuleGeometry</span> | <span style="color: #35E0FF;">CylinderGeometry</span> at skeleton joints
+    4. Apply <span style="color: #35E0FF;">equipment meshes</span> at attachment points
+    5. Set <span style="color: #35E0FF;">evolution glow</span> as emissive + point light
+    6. Render with <span style="color: #35E0FF;">OrbitControls</span> (drag to rotate)
+  </div>
+  <p>The ThreeFlutter scene is wrapped in a <code>UiKitView</code> / <code>HtmlElementView</code> depending on platform. The model is built from primitives at runtime — no glTF files needed. Equipment items are pre-built Three.js geometries attached to skeleton joints.</p>
+</div>
+
+<hr style="margin: 1.5rem 0; border-color: #30363D;" />
+
+<h3>4. Customization UI</h3>
+
+<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+  <div class="card">
+    <h4>Tab 1: Colors</h4>
+    <p>Color picker per body region:</p>
+    <ul>
+      <li>Skin / Body fill</li>
+      <li>Outline / rim color</li>
+      <li>Accent color (eyes, details)</li>
+      <li>Equipment tint</li>
+      <li>Aura / glow color</li>
+    </ul>
+    <p>Each has archetype preset + custom hex picker. Live preview on the procedural renderer updates in real-time.</p>
+  </div>
+  <div class="card">
+    <h4>Tab 2: Equipment</h4>
+    <p>Slot-by-slot grid:</p>
+    <ul>
+      <li>Shows owned items per slot</li>
+      <li>Locked items shown grayed with unlock requirement</li>
+      <li>Tap to equip — preview updates immediately</li>
+      <li>"Visit Shop" link per slot</li>
+    </ul>
+  </div>
+  <div class="card">
+    <h4>Tab 3: Evolution</h4>
+    <p>Read-only display:</p>
+    <ul>
+      <li>Current phase + progress to next</li>
+      <li>Unlocked body artifacts with visual preview</li>
+      <li>Preview of next unlock</li>
+    </ul>
+  </div>
+  <div class="card">
+    <h4>Tab 4: Profile View</h4>
+    <p>Full 3D showcase:</p>
+    <ul>
+      <li>Rendered via ThreeFlutter</li>
+      <li>360° drag-to-rotate</li>
+      <li>Pinch to zoom</li>
+      <li>Auto-rotation toggle</li>
+      <li>Pose selector buttons</li>
+    </ul>
+  </div>
+</div>
+
+<hr style="margin: 1.5rem 0; border-color: #30363D;" />
+
+<h3>5. Shop Integration</h3>
+
+<div style="background: #161B22; border-radius: 12px; padding: 1rem; border: 1px solid #30363D; font-family: monospace; font-size: 13px;">
+  <span style="color: #58A6FF;">ShopItem</span> {<br/>
+  <span style="color: #8B949E;">  id</span>: <span style="color: #A5D6FF;">"crystal_crown"</span>,<br/>
+  <span style="color: #8B949E;">  name</span>: <span style="color: #A5D6FF;">"Crystal Crown"</span>,<br/>
+  <span style="color: #8B949E;">  slot</span>: <span style="color: #FFB3B3;">EquipmentSlot.head</span>,<br/>
+  <span style="color: #8B949E;">  rarity</span>: <span style="color: #FFB3B3;">Rarity.epic</span>,<br/>
+  <span style="color: #8B949E;">  priceXP</span>: <span style="color: #A5D6FF;">2000</span>,<br/>
+  <span style="color: #8B949E;">  priceGems</span>: <span style="color: #8B949E;">null</span>,<br/>
+  <span style="color: #8B949E;">  procedural</span>: {<span style="color: #8B949E;"> drawFn</span>: <span style="color: #A5D6FF;">"Crown"</span>, <span style="color: #8B949E;">params</span>: {...} },<br/>
+  <span style="color: #8B949E;">  threeDAsset</span>: {<span style="color: #8B949E;"> type</span>: <span style="color: #A5D6FF;">"primitive"</span>, <span style="color: #8B949E;">data</span>: {...} }<br/>
+  }
+</div>
+<p style="margin-top: 0.5rem;">Each shop item provides draw instructions for <strong>both</strong> renderers — procedural (simple shape + gradient) and 3D (primitive geometry). New items can be added server-side via Firestore.</p>
+
+<hr style="margin: 1.5rem 0; border-color: #30363D;" />
+
+<h3>6. Route Integration</h3>
+
+<div style="font-family: monospace; font-size: 13px; background: #161B22; border-radius: 12px; padding: 1rem; border: 1px solid #30363D;">
+<span style="color: #58A6FF;">/profile</span>          → FutureSelfStudio (ThreeFlutter view)<br/>
+<span style="color: #58A6FF;">/avatar/customize</span> → CustomizerScreen (procedural preview + tabs)<br/>
+<span style="color: #58A6FF;">/avatar/shop</span>      → ShopScreen (procedural thumbnails per item)<br/>
+<span style="color: #58A6FF;">/social/tribe</span>     → TribeLobby (procedural list — 20+ avatars)<br/>
+<span style="color: #58A6FF;">/leaderboard</span>      → Leaderboard (procedural small thumbnails)<br/>
+<br/>
+<span style="color: #8B949E;">// Composability — StickmanAvatar widget takes renderer arg</span><br/>
+<span style="color: #FFB3B3;">StickmanAvatar</span>(<br/>
+<span style="color: #8B949E;">  renderer</span>: <span style="color: #FFB3B3;">RendererType.procedural</span>, <span style="color: #8B949E;">// for lists</span><br/>
+<span style="color: #8B949E;">  avatarData</span>: data,<br/>
+<span style="color: #8B949E;">  size</span>: <span style="color: #A5D6FF;">60</span>,<br/>
+<span style="color: #8B949E;">)</span><br/>
+<br/>
+<span style="color: #FFB3B3;">StickmanAvatar</span>(<br/>
+<span style="color: #8B949E;">  renderer</span>: <span style="color: #FFB3B3;">RendererType.threeD</span>, <span style="color: #8B949E;">// for profile</span><br/>
+<span style="color: #8B949E;">  avatarData</span>: data,<br/>
+<span style="color: #8B949E;">  size</span>: <span style="color: #A5D6FF;">300</span>,<br/>
+<span style="color: #8B949E;">  onRotate</span>: ...,<br/>
+<span style="color: #8B949E;">)</span><br/>
+</div>
+
+<hr style="margin: 1.5rem 0; border-color: #30363D;" />
+
+<h3>7. File Structure</h3>
+
+<div style="font-family: monospace; font-size: 12px; background: #0D1117; border-radius: 12px; padding: 1rem; border: 1px solid #30363D; color: #8B949E;">
+lib/features/avatar/<br/>
+├── domain/<br/>
+│   └── models/<br/>
+│       ├── <span style="color: #58A6FF;">avatar_data.dart</span>       <span style="color: #8B949E;">// Shared: AvatarProportions, AvatarColors, Equipment[]</span><br/>
+│       ├── <span style="color: #58A6FF;">avatar_colors.dart</span>      <span style="color: #8B949E;">// Color schema per archetype + user overrides</span><br/>
+│       ├── <span style="color: #58A6FF">avatar_proportions.dart</span>  <span style="color: #8B949E;">// Archetype-specific body dimensions</span><br/>
+│       ├── <span style="color: #58A6FF;">equipment_data.dart</span>      <span style="color: #8B949E;">// EquipmentSlot enum, ShopItem model</span><br/>
+│       └── <span style="color: #58A6FF;">evolution_data.dart</span>      <span style="color: #8B949E;">// EvolutionPhase + BodyArtifact mapping</span><br/>
+├── data/<br/>
+│   ├── <span style="color: #58A6FF;">avatar_repository.dart</span>    <span style="color: #8B949E;">// Firestore CRUD for avatar data</span><br/>
+│   └── <span style="color: #58A6FF;">shop_repository.dart</span>       <span style="color: #8B949E;">// Shop catalog from Firestore</span><br/>
+├── presentation/<br/>
+│   ├── renderers/<br/>
+│   │   ├── <span style="color: #58A6FF;">procedural_avatar_painter.dart</span>  <span style="color: #8B949E;">// CustomPainter (capsule/gradient)</span><br/>
+│   │   └── <span style="color: #58A6FF;">three_d_avatar_view.dart</span>         <span style="color: #8B949E;">// ThreeFlutter widget</span><br/>
+│   ├── widgets/<br/>
+│   │   ├── <span style="color: #58A6FF;">stickman_avatar.dart</span>            <span style="color: #8B949E;">// Unified widget (switches renderer)</span><br/>
+│   │   ├── <span style="color: #58A6FF;">avatar_customizer.dart</span>           <span style="color: #8B949E;">// Full customization screen</span><br/>
+│   │   └── <span style="color: #58A6FF;">avatar_shop_screen.dart</span>          <span style="color: #8B949E;">// Shop with procedural previews</span><br/>
+│   └── providers/<br/>
+│       └── <span style="color: #58A6FF;">avatar_providers.dart</span>            <span style="color: #8B949E;">// Riverpod state</span><br/>
+└── <span style="color: #58A6FF;">equipment_catalog.dart</span>               <span style="color: #8B949E;">// All equipment items data</span><br/>
+</div>
+
+<hr style="margin: 1.5rem 0; border-color: #30363D;" />
+
+<h3>8. Testing Strategy</h3>
+
+<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+  <div class="card">
+    <h4>Unit Tests (domain models)</h4>
+    <ul>
+      <li>AvatarData serialization/deserialization</li>
+      <li>Color palette generation from archetype</li>
+      <li>Equipment slot equip/unequip logic</li>
+      <li>Evolution phase → visual params mapping</li>
+    </ul>
+  </div>
+  <div class="card">
+    <h4>Widget Tests (renderers)</h4>
+    <ul>
+      <li>ProceduralPainter draws all body parts</li>
+      <li>ProceduralPainter renders equipment</li>
+      <li>ProceduralPainter handles all evolution phases</li>
+      <li>StickmanAvatar switches renderer correctly</li>
+      <li>Customizer screen tab navigation</li>
+    </ul>
+  </div>
+</div>
+
+<hr style="margin: 1.5rem 0; border-color: #30363D;" />
+
+<h3>9. Performance Targets</h3>
+
+<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+  <div class="card">
+    <h4>Procedural Renderer</h4>
+    <table style="width: 100%; border-collapse: collapse; font-size: 0.85rem;">
+      <tr><td>Single avatar (100px)</td><td><strong>~0.05ms</strong></td></tr>
+      <tr><td>List of 20 avatars (60px)</td><td><strong>~0.8ms</strong></td></tr>
+      <tr><td>Equipment with effects</td><td><strong>+0.02ms</strong></td></tr>
+      <tr><td>Evolution glow pass</td><td><strong>+0.01ms</strong></td></tr>
+    </table>
+  </div>
+  <div class="card">
+    <h4>ThreeFlutter 3D</h4>
+    <table style="width: 100%; border-collapse: collapse; font-size: 0.85rem;">
+      <tr><td>Scene build from AvatarData</td><td><strong>~2ms</strong></td></tr>
+      <tr><td>Per-frame render (300px)</td><td><strong>~4-8ms</strong></td></tr>
+      <tr><td>OrbitControls drag</td><td><strong>~8ms</strong></td></tr>
+      <tr><td>Mesh rebuild on equipment change</td><td><strong>~3ms</strong></td></tr>
+    </table>
+  </div>
+</div>
+
+<div class="section" style="margin-top: 2rem;">
+  <h3>Does this design look right?</h3>
+  <p>I'll cover each section in more detail after your feedback. Specifically:</p>
+  <div class="options">
+    <div class="option" onclick="toggleSelect(this)" data-choice="approve-design">
+      <div class="letter">✓</div>
+      <div class="content">
+        <h3>Looks good — write the spec</h3>
+        <p>Save this design to docs and start the implementation plan</p>
+      </div>
+    </div>
+    <div class="option" onclick="toggleSelect(this)" data-choice="revise">
+      <div class="letter">✗</div>
+      <div class="content">
+        <h3>Needs changes</h3>
+        <p>Let me tell you what to adjust</p>
+      </div>
+    </div>
+  </div>
+</div>

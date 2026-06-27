@@ -1,7 +1,12 @@
+import 'dart:async';
+
 import 'package:emerge_app/core/presentation/widgets/app_error_widget.dart';
 import 'package:emerge_app/core/presentation/widgets/emerge_loading_skeleton.dart';
+import 'package:emerge_app/core/presentation/widgets/feature_coach_mark.dart';
 import 'package:emerge_app/core/theme/app_theme.dart';
 import 'package:emerge_app/features/auth/presentation/providers/auth_providers.dart';
+import 'package:emerge_app/features/companion/domain/enums/companion_enums.dart';
+import 'package:emerge_app/features/companion/presentation/providers/companion_providers.dart';
 import 'package:emerge_app/features/social/domain/entities/social_entities.dart';
 import 'package:emerge_app/features/social/presentation/providers/friend_provider.dart';
 import 'package:emerge_app/features/social/presentation/screens/invite_code_dialog.dart';
@@ -24,9 +29,31 @@ class FriendsScreen extends ConsumerStatefulWidget {
 
 class _FriendsScreenState extends ConsumerState<FriendsScreen> {
   final _searchController = TextEditingController();
+  Timer? _initTimer;
+  bool _showFirstVisitGuide = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _initTimer = Timer(const Duration(milliseconds: 500), () {
+      if (!mounted) return;
+      final repo = ref.read(companionRepositoryProvider);
+      if (!repo.hasVisited('/social/accountability')) {
+        repo.markVisited('/social/accountability');
+        ref
+            .read(companionEngineProvider.notifier)
+            .triggerEvent(
+              eventType: CompanionEventType.firstFeatureVisit,
+              userContext: {'route': '/social/accountability'},
+            );
+        setState(() => _showFirstVisitGuide = true);
+      }
+    });
+  }
 
   @override
   void dispose() {
+    _initTimer?.cancel();
     _searchController.dispose();
     super.dispose();
   }
@@ -37,7 +64,9 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen> {
 
     return Scaffold(
       backgroundColor: EmergeColors.background,
-      body: Container(
+      body: Stack(
+        children: [
+          Container(
         decoration: const BoxDecoration(gradient: AppTheme.cosmicGradient),
         child: SafeArea(
           child: CustomScrollView(
@@ -277,6 +306,31 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen> {
             ],
           ),
         ),
+      ),
+      if (_showFirstVisitGuide)
+        FeatureCoachMark(
+          title: "Accountability Partners",
+          primaryColor: EmergeColors.teal,
+          items: const [
+            CoachItemData(
+              icon: Icons.group,
+              title: "Partner Circles",
+              body: "Connect with accountability partners to stay on track with your daily habits.",
+            ),
+            CoachItemData(
+              icon: Icons.handshake,
+              title: "Habit Contracts",
+              body: "Create mutual habit contracts with stakes to keep both parties committed.",
+            ),
+            CoachItemData(
+              icon: Icons.person_add_alt,
+              title: "Find Partners",
+              body: "Search for partners or invite friends from your contacts to join you.",
+            ),
+          ],
+          onDismiss: () => setState(() => _showFirstVisitGuide = false),
+        ),
+      ],
       ),
     );
   }

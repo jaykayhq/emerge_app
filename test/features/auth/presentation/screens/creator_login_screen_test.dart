@@ -49,7 +49,6 @@ void main() {
     when(() => mockAuth.user).thenAnswer((_) => const Stream.empty());
     when(() => mockFirebaseAuth.currentUser).thenReturn(mockUser);
     when(() => mockUser.uid).thenReturn('test-uid');
-    when(() => mockUser.emailVerified).thenReturn(true);
 
     router = GoRouter(
       initialLocation: '/creator/login',
@@ -57,12 +56,6 @@ void main() {
         GoRoute(
           path: '/creator/login',
           builder: (context, state) => const CreatorLoginScreen(),
-        ),
-        GoRoute(
-          path: '/creator/verify-email',
-          builder: (context, state) => const Scaffold(
-            body: Text('verify-email-page'),
-          ),
         ),
         GoRoute(
           path: '/creator/dashboard',
@@ -195,11 +188,10 @@ void main() {
     expect(find.text('This account is not registered as a creator. Please log out or switch accounts.'), findsOneWidget);
   });
 
-  testWidgets('logging in as an unverified creator redirects to verify email', (tester) async {
+  testWidgets('logging in as a creator redirects to dashboard', (tester) async {
     await setMobileViewport(tester);
 
-    when(() => mockUser.uid).thenReturn('unverified-uid');
-    when(() => mockUser.emailVerified).thenReturn(false);
+    when(() => mockUser.uid).thenReturn('creator-uid');
     when(() => mockAuth.signInWithEmailAndPassword(
       email: any(named: 'email'),
       password: any(named: 'password'),
@@ -208,35 +200,7 @@ void main() {
     await tester.pumpWidget(_buildTest(
       mockAuth,
       overrides: [
-        isCreatorProvider('unverified-uid').overrideWith((ref) async => true),
-      ],
-    ));
-    await tester.pumpAndSettle();
-
-    await tester.enterText(find.byType(TextFormField).first, 'test@example.com');
-    await tester.enterText(find.byType(TextFormField).last, 'password123');
-    await tester.pumpAndSettle();
-
-    await tester.tap(find.text('Login to Creator Hub'));
-    await tester.pumpAndSettle();
-
-    expect(find.text('verify-email-page'), findsOneWidget);
-  });
-
-  testWidgets('logging in as a verified creator redirects to dashboard', (tester) async {
-    await setMobileViewport(tester);
-
-    when(() => mockUser.uid).thenReturn('verified-uid');
-    when(() => mockUser.emailVerified).thenReturn(true);
-    when(() => mockAuth.signInWithEmailAndPassword(
-      email: any(named: 'email'),
-      password: any(named: 'password'),
-    )).thenAnswer((_) async => right(testAuthUser));
-
-    await tester.pumpWidget(_buildTest(
-      mockAuth,
-      overrides: [
-        isCreatorProvider('verified-uid').overrideWith((ref) async => true),
+        isCreatorProvider('creator-uid').overrideWith((ref) async => true),
       ],
     ));
     await tester.pumpAndSettle();
@@ -254,12 +218,10 @@ void main() {
   testWidgets('Google sign-in success redirects to dashboard', (tester) async {
     await setMobileViewport(tester);
 
-    await tester.pumpWidget(_buildTest(
-      mockAuth,
-      overrides: [
-        signUpCreatorWithGoogleProvider.overrideWith((ref) async {}),
-      ],
-    ));
+    when(() => mockAuth.signInWithGoogle(isLogin: true))
+        .thenAnswer((_) async => right(testAuthUser));
+
+    await tester.pumpWidget(_buildTest(mockAuth));
     await tester.pumpAndSettle();
 
     await tester.tap(find.text('Sign in with Google'));
@@ -271,15 +233,10 @@ void main() {
   testWidgets('Google sign-in failure shows snackbar', (tester) async {
     await setMobileViewport(tester);
 
-    await tester.pumpWidget(_buildTest(
-      mockAuth,
-      overrides: [
-        signUpCreatorWithGoogleProvider.overrideWith((ref) async {
-          await Future.value(); // Yield control for Riverpod auto-dispose check
-          throw Exception('Google sign-in failed');
-        }),
-      ],
-    ));
+    when(() => mockAuth.signInWithGoogle(isLogin: true))
+        .thenAnswer((_) async => left(AuthFailure('Google sign-in failed')));
+
+    await tester.pumpWidget(_buildTest(mockAuth));
     await tester.pumpAndSettle();
 
     await tester.tap(find.text('Sign in with Google'));

@@ -69,7 +69,7 @@ service cloud.firestore {
       return profile.keys().hasAll(['userId']) &&
              sanitizeString(profile.userId) &&
              (!profile.keys().hasAny(['displayName']) || (sanitizeString(profile.displayName) && profile.displayName.size() <= 50)) &&
-             (!profile.keys().hasAny(['bio']) || sanitizeString(profile.bio)) &&
+             (!profile.keys().hasAny(['bio']) || (profile.bio is string && profile.bio.size() <= 500)) &&
              (!profile.keys().hasAny(['specialityTags']) || (profile.specialityTags is list)) &&
              (!profile.keys().hasAny(['avatarUrl']) || profile.avatarUrl == null || profile.avatarUrl is string) &&
              (!profile.keys().hasAny(['heroImageUrl']) || profile.heroImageUrl == null || profile.heroImageUrl is string) &&

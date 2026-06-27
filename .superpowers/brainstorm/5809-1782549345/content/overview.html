@@ -1,0 +1,69 @@
+<h2>Stickman Avatar — Concept Overview</h2>
+<p class="subtitle">A fully procedural, customizable stickman to replace the current PNG-based avatar system</p>
+
+<div class="section">
+  <h3>What You're Looking At</h3>
+  <p>This stickman is rendered entirely via <strong>CustomPainter</strong> — no image assets, no bundles. Every part (head, spine, arms, legs) is drawn as code-driven <strong>tapered bone quads</strong> with neon glow, rim lighting, and gradient fills. Results in a premium "neon silhouette" aesthetic.</p>
+</div>
+
+<div class="mockup" style="max-width: 300px; margin: 2rem auto; text-align: center;">
+  <div style="background: #0D1117; border-radius: 16px; padding: 2rem; border: 1px solid #30363D;">
+    <div style="font-family: monospace; color: #35E0FF; font-size: 14px; line-height: 1.6; text-align: left; display: inline-block;">
+<pre style="color: #35E0FF; margin: 0; font-size: 14px;">
+     <span style="color: #35E0FF;">✦</span>
+     <span style="color: #BDF4FF;">○</span>     ← Head (filled circle + neon ring)
+     <span style="color: #35E0FF;">|</span>      ← Neck bone
+    <span style="color: #35E0FF;">/|\</span>    ← Chest + Arms (tapered quads)
+     <span style="color: #35E0FF;">|</span>      ← Spine
+    <span style="color: #35E0FF;">/ \</span>    ← Legs
+   <span style="color: #35E0FF;">/   \</span>   ← Feet
+
+  <span style="color: #8B949E;">Fill: #12161F    Outline: #35E0FF</span>
+  <span style="color: #8B949E;">Glow: 5px        Core: #BDF4FF</span>
+</pre>
+    </div>
+  </div>
+  <div class="mockup-header">Hero Archetype — Idle Pose</div>
+</div>
+
+<div class="options">
+  <div class="option" data-choice="explore" onclick="toggleSelect(this)">
+    <div class="letter">1</div>
+    <div class="content">
+      <h3>Show me the evolution phases</h3>
+      <p>How the stickman changes from Phantom → Ascended (5 tiers)</p>
+    </div>
+  </div>
+  <div class="option" data-choice="archetypes" onclick="toggleSelect(this)">
+    <div class="letter">2</div>
+    <div class="content">
+      <h3>Show me the archetype colors</h3>
+      <p>Athlete, Scholar, Creator, Stoic, Zealot — side by side</p>
+    </div>
+  </div>
+  <div class="option" data-choice="customization" onclick="toggleSelect(this)">
+    <div class="letter">3</div>
+    <div class="content">
+      <h3>Show me the customization</h3>
+      <p>Equipment slots, color pickers, items, shop</p>
+    </div>
+  </div>
+  <div class="option" data-choice="animate" onclick="toggleSelect(this)">
+    <div class="letter">4</div>
+    <div class="content">
+      <h3>Show me the animations</h3>
+      <p>Idle, run, attack, emotes — how the stickman moves</p>
+    </div>
+  </div>
+  <div class="option" data-choice="approve" onclick="toggleSelect(this)">
+    <div class="letter">✓</div>
+    <div class="content">
+      <h3>Looks good — let's proceed</h3>
+      <p>I've seen enough, go ahead with the design</p>
+    </div>
+  </div>
+</div>
+
+<div class="section" style="margin-top: 2rem;">
+  <p class="subtitle">Open http://localhost:61515 in your browser. Click an option above to tell me where to start, then respond in the terminal.</p>
+</div>

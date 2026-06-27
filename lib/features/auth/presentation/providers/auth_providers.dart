@@ -5,12 +5,11 @@ import 'package:emerge_app/core/utils/app_logger.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_auth/firebase_auth.dart' as firebase_auth;
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:emerge_app/features/social/presentation/providers/creator_provider.dart';
 import 'package:emerge_app/features/social/domain/entities/creator_profile.dart';
 import 'package:google_sign_in/google_sign_in.dart';
-import 'package:flutter/foundation.dart' show kIsWeb;
-
 part 'auth_providers.g.dart';
 
 @Riverpod(keepAlive: true)
@@ -90,27 +89,22 @@ Future<void> signUpCreator(Ref ref, String email, String password, String userna
     email: email.trim(),
     password: password,
   );
-  
+
   final user = credential.user;
   if (user == null) throw Exception('User creation failed');
-  
+
   await user.updateDisplayName(username.trim());
-  await user.sendEmailVerification();
-  
+
   final creatorProfile = CreatorProfile(
     userId: user.uid,
     role: 'creator',
     displayName: username.trim(),
     isVerifiedCreator: false,
   );
-  
-  await ref.read(creatorRepositoryProvider).updateCreatorProfile(creatorProfile);
 
-  // Set the canonical `role` custom claim so the router has a deterministic
-  // source of truth. The Firestore mirror was written via updateCreatorProfile;
-  // we still want the claim set so the very first redirect after signup
-  // (which can fire before the claim is fully propagated) lands correctly.
-  // Failures are non-fatal — the role provider falls back to the mirror.
+  await ref.read(creatorRepositoryProvider).updateCreatorProfile(creatorProfile);
+  AppLogger.d('signUpCreator: wrote creator_profiles/${user.uid}');
+
   try {
     final functions = FirebaseFunctions.instance;
     await functions.httpsCallable('setUserRole').call(<String, dynamic>{
@@ -152,7 +146,6 @@ Future<void> signUpCreatorWithGoogle(Ref ref) async {
   final user = userCredential.user;
   if (user == null) throw Exception('Google sign-up failed');
 
-  // Check if a document already exists in the users collection (normal profiles)
   final userDoc = await firestore.collection('users').doc(user.uid).get();
   if (userDoc.exists) {
     await auth.signOut();
@@ -162,7 +155,6 @@ Future<void> signUpCreatorWithGoogle(Ref ref) async {
     throw Exception('This Google account is already registered as a normal user.');
   }
 
-  // Create CreatorProfile in /creator_profiles/{uid}
   final creatorProfile = CreatorProfile(
     userId: user.uid,
     role: 'creator',
@@ -172,8 +164,6 @@ Future<void> signUpCreatorWithGoogle(Ref ref) async {
 
   await creatorRepo.updateCreatorProfile(creatorProfile);
 
-  // Set the canonical `role` custom claim. Failure is non-fatal — the
-  // Firestore mirror is the fallback read path for the router.
   try {
     final functions = FirebaseFunctions.instance;
     await functions.httpsCallable('setUserRole').call(<String, dynamic>{
@@ -189,5 +179,3 @@ Future<void> signUpCreatorWithGoogle(Ref ref) async {
     );
   }
 }
-
-

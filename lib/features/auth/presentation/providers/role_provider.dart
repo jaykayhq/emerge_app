@@ -100,6 +100,11 @@ final currentUserRoleProvider = FutureProvider<UserRole?>((ref) async {
     // Give up — return unknown.
   }
 
+  // Return unknown when nothing resolves, rather than defaulting to user.
+  // The splash screen's determineSplashRoute and the router's decideRedirect
+  // both handle UserRole.unknown by either falling back to a direct Firestore
+  // check (splash) or holding the current path (router redirect) until the
+  // role resolves.
   return UserRole.unknown;
 });
 

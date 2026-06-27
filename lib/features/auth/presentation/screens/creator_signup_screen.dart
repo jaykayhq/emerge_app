@@ -55,7 +55,7 @@ class _CreatorSignUpScreenState extends ConsumerState<CreatorSignUpScreen> {
     try {
       await ref.read(provider.future);
       if (mounted) {
-        context.go('/creator/verify-email');
+        context.go('/splash');
       }
     } catch (e, stack) {
       debugPrint('CATCH ERROR _signUp: $e\n$stack');
@@ -73,11 +73,10 @@ class _CreatorSignUpScreenState extends ConsumerState<CreatorSignUpScreen> {
 
   Future<void> _signUpWithGoogle() async {
     setState(() => _isLoading = true);
-    final subscription = ref.listenManual(signUpCreatorWithGoogleProvider, (previous, next) {});
     try {
       await ref.read(signUpCreatorWithGoogleProvider.future);
       if (mounted) {
-        context.go('/creator/dashboard');
+        context.go('/splash');
       }
     } catch (e) {
       debugPrint('CATCH ERROR _signUpWithGoogle: $e');
@@ -88,7 +87,6 @@ class _CreatorSignUpScreenState extends ConsumerState<CreatorSignUpScreen> {
         );
       }
     } finally {
-      subscription.close();
       if (mounted) setState(() => _isLoading = false);
     }
   }

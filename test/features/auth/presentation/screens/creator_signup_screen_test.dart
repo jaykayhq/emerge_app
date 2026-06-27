@@ -12,6 +12,10 @@ Widget _buildTest({
 }) {
   return ProviderScope(
     overrides: overrides,
+    // Disable Riverpod's default retry mechanism so keepAlive FutureProviders
+    // immediately surface errors as AsyncError (rather than AsyncLoading+retry).
+    // This keeps tests fast and deterministic.
+    retry: (count, error) => null,
     child: MaterialApp.router(
       routerConfig: router,
     ),
@@ -30,9 +34,9 @@ void main() {
           builder: (context, state) => const CreatorSignUpScreen(),
         ),
         GoRoute(
-          path: '/creator/verify-email',
+          path: '/splash',
           builder: (context, state) => const Scaffold(
-            body: Text('verify-email-page'),
+            body: Text('splash-page'),
           ),
         ),
         GoRoute(
@@ -88,7 +92,7 @@ void main() {
     expect(find.text('Password is required'), findsOneWidget);
   });
 
-  testWidgets('successful email signup redirects to verify email screen', (tester) async {
+  testWidgets('successful email signup navigates to splash', (tester) async {
     await setMobileViewport(tester);
 
     final overrides = [
@@ -108,7 +112,7 @@ void main() {
     await tester.tap(find.text('Register as Creator'));
     await tester.pumpAndSettle();
 
-    expect(find.text('verify-email-page'), findsOneWidget);
+    expect(find.text('splash-page'), findsOneWidget);
   });
 
   testWidgets('failed email signup shows error snackbar', (tester) async {
@@ -138,7 +142,7 @@ void main() {
     expect(find.text('Sign up failed'), findsOneWidget);
   });
 
-  testWidgets('successful Google signup redirects to dashboard screen', (tester) async {
+  testWidgets('successful Google signup navigates to splash', (tester) async {
     await setMobileViewport(tester);
 
     final overrides = [
@@ -151,7 +155,7 @@ void main() {
     await tester.tap(find.text('Sign up with Google'));
     await tester.pumpAndSettle();
 
-    expect(find.text('dashboard-page'), findsOneWidget);
+    expect(find.text('splash-page'), findsOneWidget);
   });
 
   testWidgets('failed Google signup shows error snackbar', (tester) async {
@@ -159,7 +163,7 @@ void main() {
 
     final overrides = [
       signUpCreatorWithGoogleProvider.overrideWith((ref) async {
-        await Future.value();
+        await Future<void>.value();
         throw Exception('Google sign-up failed');
       }),
     ];

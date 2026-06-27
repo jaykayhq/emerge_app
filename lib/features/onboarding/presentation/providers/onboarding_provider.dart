@@ -473,6 +473,30 @@ class OnboardingStateController extends _$OnboardingStateController {
       state = fn(state);
 }
 
+/// Reactive toggle for node tutorials (replaces the legacy per-screen tutorial
+/// system). Watched so that toggling the setting in [SettingsScreen] takes
+/// effect immediately — no app restart or re-navigation needed.
+@Riverpod(keepAlive: true)
+class TutorialSetting extends _$TutorialSetting {
+  @override
+  bool build() {
+    final repo = ref.watch(localSettingsRepositoryProvider);
+    return repo.isTutorialsEnabled();
+  }
+
+  Future<void> setEnabled(bool enabled) async {
+    final repo = ref.read(localSettingsRepositoryProvider);
+    await repo.setTutorialsEnabled(enabled);
+    state = enabled;
+  }
+
+  /// Reset all per-node "seen" flags so tutorials re-appear next visit.
+  Future<void> resetTutorials() async {
+    final repo = ref.read(localSettingsRepositoryProvider);
+    await repo.resetTutorials();
+  }
+}
+
 // Keep legacy providers for backward compatibility if needed, or refactor screens to use onboardingStateControllerProvider
 final selectedArchetypeProvider = Provider<UserArchetype?>((ref) {
   return ref.watch(onboardingStateControllerProvider).selectedArchetype;
