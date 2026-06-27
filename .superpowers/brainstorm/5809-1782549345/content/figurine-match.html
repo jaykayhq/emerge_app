@@ -1,0 +1,344 @@
+<h2>Matching Your Reference Image</h2>
+<p class="subtitle">Solid 3D figurines — matte finish, spherical heads, thick limbs, friendly poses. The opposite of neon lines.</p>
+
+<div class="section">
+  <h3>Side-by-Side: Your Reference vs. My Rebuild</h3>
+  <p class="subtitle">Reference shows 6 matte-white figurines in friendly poses (arms around shoulders, thumbs up, pointing). Here's the same aesthetic, rendered live in 3D:</p>
+</div>
+
+<div style="background: #FFFFFF; border-radius: 16px; padding: 1rem; border: 1px solid #E1E4E8; min-height: 480px; position: relative;">
+  <div id="three-container" style="width: 100%; height: 440px; border-radius: 12px; overflow: hidden;"></div>
+  <div style="display: flex; gap: 0.5rem; margin-top: 0.75rem; flex-wrap: wrap; justify-content: center; align-items: center;">
+    <button class="mock-button" onclick="rotateLeft()">↺ Rotate</button>
+    <button class="mock-button" onclick="rotateRight()">↻ Rotate</button>
+    <button class="mock-button" onclick="toggleSpin()">⟳ Auto-Spin</button>
+    <span style="color: #586069; margin: 0 0.5rem;">|</span>
+    <span style="color: #24292E; font-weight: 600; font-size: 13px;">Color:</span>
+    <button class="mock-button" onclick="setColor('white')">⚪ White</button>
+    <button class="mock-button" onclick="setColor('gray')">⚫ Gray</button>
+    <button class="mock-button" onclick="setColor('navy')">🔵 Navy</button>
+    <button class="mock-button" onclick="setColor('coral')">🔴 Coral</button>
+    <button class="mock-button" onclick="setColor('teal')">🟢 Teal</button>
+    <button class="mock-button" onclick="setColor('violet')">🟣 Violet</button>
+    <button class="mock-button" onclick="setColor('gold')">🟡 Gold</button>
+    <span style="color: #586069; margin: 0 0.5rem;">|</span>
+    <button class="mock-button" onclick="setPose('thumbsUp')">👍 Thumbs Up</button>
+    <button class="mock-button" onclick="setPose('point')">☝️ Point</button>
+    <button class="mock-button" onclick="setPose('wave')">👋 Wave</button>
+    <button class="mock-button" onclick="setPose('idle')">🧍 Idle</button>
+  </div>
+</div>
+
+<div class="section" style="margin-top: 2rem;">
+  <h3>What Changed From the Neon Version</h3>
+  <div class="pros-cons">
+    <div class="pros">
+      <h4>Matching Your Reference</h4>
+      <ul>
+        <li><strong>Thick solid limbs</strong> — capsule geometry, not thin lines</li>
+        <li><strong>Matte finish</strong> — high roughness, low metalness, no emission</li>
+        <li><strong>Spherical heads</strong> with no facial features</li>
+        <li><strong>Soft ambient lighting</strong> — big area light, soft shadows</li>
+        <li><strong>Monochromatic</strong> base (customizable per archetype)</li>
+        <li><strong>Volume &amp; weight</strong> — they look like real figurines</li>
+      </ul>
+    </div>
+    <div class="cons">
+      <h4>Implications</h4>
+      <ul>
+        <li>3D is now the right path (2D canvas can't fake this volume)</li>
+        <li>Limbs are capsules, torso is a tapered capsule, head is a sphere</li>
+        <li>Skinning needed for smooth deformation at joints</li>
+        <li>Animation via skeletal bones + mesh deformation</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>How Does This Map to Emerge?</h3>
+  <p class="subtitle">The figurines start matte-white (or archetype-tinted), and evolve/customize as the user progresses:</p>
+</div>
+
+<div style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 0.75rem; margin: 1rem 0;">
+  <div style="text-align: center; padding: 1rem; background: #F6F8FA; border-radius: 12px;">
+    <div style="font-size: 2rem;">⚪</div>
+    <strong>Phantom</strong>
+    <p style="font-size: 12px; color: #586069; margin: 4px 0 0;">Translucent matte white, barely there</p>
+  </div>
+  <div style="text-align: center; padding: 1rem; background: #F6F8FA; border-radius: 12px;">
+    <div style="font-size: 2rem;">🌫️</div>
+    <strong>Construct</strong>
+    <p style="font-size: 12px; color: #586069; margin: 4px 0 0;">Solidifies, faint tint appears</p>
+  </div>
+  <div style="text-align: center; padding: 1rem; background: #F6F8FA; border-radius: 12px;">
+    <div style="font-size: 2rem;">🧍</div>
+    <strong>Incarnate</strong>
+    <p style="font-size: 12px; color: #586069; margin: 4px 0 0;">Full archetype color, solid</p>
+  </div>
+  <div style="text-align: center; padding: 1rem; background: #F6F8FA; border-radius: 12px;">
+    <div style="font-size: 2rem;">✨</div>
+    <strong>Radiant</strong>
+    <p style="font-size: 12px; color: #586069; margin: 4px 0 0;">Metallic sheen, gold accents</p>
+  </div>
+  <div style="text-align: center; padding: 1rem; background: #F6F8FA; border-radius: 12px;">
+    <div style="font-size: 2rem;">🌟</div>
+    <strong>Ascended</strong>
+    <p style="font-size: 12px; color: #586069; margin: 4px 0 0;">Glowing emissive aura, particles</p>
+  </div>
+</div>
+
+<div class="section" style="margin-top: 2rem;">
+  <h3>Is This the Right Direction Now?</h3>
+  <div class="options">
+    <div class="option" onclick="toggleSelect(this)" data-choice="yes-match">
+      <div class="letter">✓</div>
+      <div class="content">
+        <h3>Yes — this matches the reference</h3>
+        <p>Matte solid figurines with volume. Let's design the full system around this look.</p>
+      </div>
+    </div>
+    <div class="option" onclick="toggleSelect(this)" data-choice="tweak-style">
+      <div class="letter">~</div>
+      <div class="content">
+        <h3>Close — but tweak it</h3>
+        <p>Something's off (proportions, color, pose). Tell me what to change.</p>
+      </div>
+    </div>
+    <div class="option" onclick="toggleSelect(this)" data-choice="show-group">
+      <div class="letter">👥</div>
+      <div class="content">
+        <h3>Show me the group scene</h3>
+        <p>Render multiple figurines together like the reference (arms around shoulders, etc.)</p>
+      </div>
+    </div>
+    <div class="option" onclick="toggleSelect(this)" data-choice="customizer">
+      <div class="letter">🎨</div>
+      <div class="content">
+        <h3>Show me customization</h3>
+        <p>How colors, hats, accessories, items attach to these figurines</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+const container = document.getElementById('three-container');
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0xFFFFFF);
+
+// Soft gradient background like studio
+scene.fog = new THREE.Fog(0xFFFFFF, 15, 30);
+
+const camera = new THREE.PerspectiveCamera(35, container.clientWidth / container.clientHeight, 0.1, 100);
+camera.position.set(0, 1.5, 10);
+camera.lookAt(0, 1, 0);
+
+const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+renderer.setSize(container.clientWidth, container.clientHeight);
+renderer.setPixelRatio(window.devicePixelRatio);
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+container.appendChild(renderer.domElement);
+
+// Studio lighting — soft, diffuse, like product photography
+const ambient = new THREE.AmbientLight(0xFFFFFF, 0.7);
+scene.add(ambient);
+
+const keyLight = new THREE.DirectionalLight(0xFFFFFF, 0.8);
+keyLight.position.set(5, 10, 7);
+keyLight.castShadow = true;
+keyLight.shadow.mapSize.width = 2048;
+keyLight.shadow.mapSize.height = 2048;
+keyLight.shadow.camera.near = 0.5;
+keyLight.shadow.camera.far = 30;
+keyLight.shadow.camera.left = -5;
+keyLight.shadow.camera.right = 5;
+keyLight.shadow.camera.top = 5;
+keyLight.shadow.camera.bottom = -5;
+keyLight.shadow.bias = -0.0005;
+keyLight.shadow.radius = 4;
+scene.add(keyLight);
+
+const fillLight = new THREE.DirectionalLight(0xE8EEF5, 0.4);
+fillLight.position.set(-5, 3, 4);
+scene.add(fillLight);
+
+const rimLight = new THREE.DirectionalLight(0xFFFFFF, 0.5);
+rimLight.position.set(0, 5, -8);
+scene.add(rimLight);
+
+// Ground plane (catches shadow)
+const groundGeo = new THREE.CircleGeometry(8, 64);
+const groundMat = new THREE.ShadowMaterial({ opacity: 0.12 });
+const ground = new THREE.Mesh(groundGeo, groundMat);
+ground.rotation.x = -Math.PI / 2;
+ground.position.y = -1.5;
+ground.receiveShadow = true;
+scene.add(ground);
+
+// Stickman group
+const figure = new THREE.Group();
+scene.add(figure);
+
+let currentColor = 'white';
+let currentPose = 'idle';
+
+const colorMap = {
+  white:  { base: 0xF0F0F0, dark: 0xD8D8D8 },
+  gray:   { base: 0x808890, dark: 0x5A6068 },
+  navy:   { base: 0x354B6E, dark: 0x243550 },
+  coral:  { base: 0xE8704A, dark: 0xC0563A },
+  teal:   { base: 0x2EB8A6, dark: 0x1E8C7E },
+  violet: { base: 0x7B5BC9, dark: 0x553E94 },
+  gold:   { base: 0xD9A93C, dark: 0xA87C26 },
+};
+
+// Build a solid matte figurine with thick capsule limbs
+function buildFigure(colorName, poseName) {
+  while(figure.children.length) figure.remove(figure.children[0]);
+
+  const colors = colorMap[colorName] || colorMap.white;
+  const baseColor = new THREE.Color(colors.base);
+  const darkColor = new THREE.Color(colors.dark);
+
+  // Matte material — high roughness, no metalness, no emission
+  const mat = new THREE.MeshStandardMaterial({
+    color: baseColor,
+    roughness: 0.85,
+    metalness: 0.0,
+    flatShading: false,
+  });
+
+  // Poses (y-up). Each defines joint positions for a ~3.5 unit tall figure.
+  const poses = {
+    idle: {
+      head: [0, 2.6, 0],
+      neck: [0, 2.05, 0],
+      chest: [0, 1.6, 0],
+      pelvis: [0, 0.3, 0],
+      lShoulder: [-0.18, 1.7, 0], lElbow: [-0.45, 1.0, 0], lHand: [-0.55, 0.35, 0],
+      rShoulder: [0.18, 1.7, 0], rElbow: [0.45, 1.0, 0], rHand: [0.55, 0.35, 0],
+      lHip: [-0.16, 0.25, 0], lKnee: [-0.2, -0.55, 0], lFoot: [-0.22, -1.35, 0.1],
+      rHip: [0.16, 0.25, 0], rKnee: [0.2, -0.55, 0], rFoot: [0.22, -1.35, 0.1],
+    },
+    thumbsUp: {
+      head: [0, 2.6, 0], neck: [0, 2.05, 0], chest: [0, 1.6, 0], pelvis: [0, 0.3, 0],
+      lShoulder: [-0.18, 1.7, 0], lElbow: [-0.5, 1.0, 0], lHand: [-0.6, 0.35, 0],
+      rShoulder: [0.18, 1.7, 0], rElbow: [0.35, 2.0, 0.1], rHand: [0.3, 2.7, 0.15],
+      lHip: [-0.16, 0.25, 0], lKnee: [-0.2, -0.55, 0], lFoot: [-0.22, -1.35, 0.1],
+      rHip: [0.16, 0.25, 0], rKnee: [0.2, -0.55, 0], rFoot: [0.22, -1.35, 0.1],
+    },
+    point: {
+      head: [0, 2.6, 0], neck: [0, 2.05, 0], chest: [0, 1.6, 0], pelvis: [0, 0.3, 0],
+      lShoulder: [-0.18, 1.7, 0], lElbow: [-0.5, 1.0, 0], lHand: [-0.6, 0.35, 0],
+      rShoulder: [0.18, 1.7, 0], rElbow: [0.55, 1.85, 0.2], rHand: [1.0, 2.0, 0.3],
+      lHip: [-0.16, 0.25, 0], lKnee: [-0.2, -0.55, 0], lFoot: [-0.22, -1.35, 0.1],
+      rHip: [0.16, 0.25, 0], rKnee: [0.2, -0.55, 0], rFoot: [0.22, -1.35, 0.1],
+    },
+    wave: {
+      head: [0, 2.6, 0], neck: [0, 2.05, 0], chest: [0, 1.6, 0], pelvis: [0, 0.3, 0],
+      lShoulder: [-0.18, 1.7, 0], lElbow: [-0.5, 1.0, 0], lHand: [-0.6, 0.35, 0],
+      rShoulder: [0.18, 1.7, 0], rElbow: [0.5, 2.1, 0], rHand: [0.75, 2.7, 0.1],
+      lHip: [-0.16, 0.25, 0], lKnee: [-0.2, -0.55, 0], lFoot: [-0.22, -1.35, 0.1],
+      rHip: [0.16, 0.25, 0], rKnee: [0.2, -0.55, 0], rFoot: [0.22, -1.35, 0.1],
+    },
+  };
+
+  const p = poses[poseName] || poses.idle;
+
+  // Capsule between two points, with tapered radius option
+  function capsule(a, b, rA, rB, material) {
+    const start = new THREE.Vector3(...a);
+    const end = new THREE.Vector3(...b);
+    const mid = new THREE.Vector3().addVectors(start, end).multiplyScalar(0.5);
+    const dir = new THREE.Vector3().subVectors(end, start);
+    const len = dir.length();
+    if (len < 0.001) return new THREE.Group();
+    dir.normalize();
+    const radius = Math.max(rA, rB);
+    const geo = new THREE.CapsuleGeometry(radius, Math.max(0.01, len - radius * 0.5), 8, 16);
+    const mesh = new THREE.Mesh(geo, material);
+    mesh.castShadow = true;
+    mesh.receiveShadow = true;
+    mesh.position.copy(mid);
+    mesh.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), dir);
+    return mesh;
+  }
+
+  function sphere(pos, r, material) {
+    const geo = new THREE.SphereGeometry(r, 24, 24);
+    const mesh = new THREE.Mesh(geo, material);
+    mesh.position.set(...pos);
+    mesh.castShadow = true;
+    mesh.receiveShadow = true;
+    return mesh;
+  }
+
+  // HEAD — large sphere, no face
+  const headR = 0.5;
+  figure.add(sphere(p.head, headR, mat));
+
+  // NECK — short capsule
+  figure.add(capsule(p.neck, p.chest, 0.12, 0.18, mat));
+
+  // TORSO — tapered capsule (wider at chest, narrower at pelvis)
+  figure.add(capsule(p.pelvis, p.chest, 0.22, 0.32, mat));
+
+  // ARMS — upper arm + forearm, thick
+  figure.add(capsule(p.lShoulder, p.lElbow, 0.16, 0.14, mat));
+  figure.add(capsule(p.lElbow, p.lHand, 0.14, 0.11, mat));
+  figure.add(capsule(p.rShoulder, p.rElbow, 0.16, 0.14, mat));
+  figure.add(capsule(p.rElbow, p.rHand, 0.14, 0.11, mat));
+
+  // LEGS — thigh + shin, thick
+  figure.add(capsule(p.lHip, p.lKnee, 0.2, 0.16, mat));
+  figure.add(capsule(p.lKnee, p.lFoot, 0.16, 0.12, mat));
+  figure.add(capsule(p.rHip, p.rKnee, 0.2, 0.16, mat));
+  figure.add(capsule(p.rKnee, p.rFoot, 0.16, 0.12, mat));
+
+  // HANDS — small spheres
+  figure.add(sphere(p.lHand, 0.13, mat));
+  figure.add(sphere(p.rHand, 0.13, mat));
+
+  // FEET — slightly squashed spheres pointing forward
+  const lFootMesh = sphere(p.lFoot, 0.16, mat);
+  lFootMesh.scale.set(1, 0.7, 1.4);
+  figure.add(lFootMesh);
+  const rFootMesh = sphere(p.rFoot, 0.16, mat);
+  rFootMesh.scale.set(1, 0.7, 1.4);
+  figure.add(rFootMesh);
+}
+
+// Controls
+let spinning = false;
+function rotateLeft() { figure.rotation.y += 0.3; }
+function rotateRight() { figure.rotation.y -= 0.3; }
+function toggleSpin() { spinning = !spinning; }
+function setColor(name) { currentColor = name; buildFigure(currentColor, currentPose); }
+function setPose(name) { currentPose = name; buildFigure(currentColor, currentPose); }
+
+buildFigure('white', 'idle');
+
+function animate() {
+  requestAnimationFrame(animate);
+  if (spinning) figure.rotation.y += 0.008;
+  // gentle breathing bob
+  figure.position.y = Math.sin(Date.now() * 0.0015) * 0.02;
+  renderer.render(scene, camera);
+}
+animate();
+
+window.addEventListener('resize', () => {
+  const w = container.clientWidth;
+  const h = container.clientHeight;
+  camera.aspect = w / h;
+  camera.updateProjectionMatrix();
+  renderer.setSize(w, h);
+});
+</script>
+
+<div class="section" style="margin-top: 2rem;">
+  <p class="subtitle">Solid matte figurine rendered live in 3D. Thick capsule limbs, spherical head, soft studio shadows — matching your iStock reference. Try the color &amp; pose buttons.</p>
+</div>

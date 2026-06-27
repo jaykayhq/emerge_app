@@ -15,6 +15,7 @@ import 'package:emerge_app/features/settings/presentation/screens/notification_s
 import 'package:emerge_app/core/domain/models/app_world_theme.dart';
 import 'package:emerge_app/core/presentation/providers/world_theme_provider.dart';
 import 'package:emerge_app/features/companion/presentation/providers/companion_providers.dart';
+import 'package:emerge_app/features/onboarding/presentation/providers/onboarding_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -38,6 +39,7 @@ class SettingsScreen extends ConsumerWidget {
     final companionEnabled = ref.watch(
       companionEngineProvider.select((s) => s.companionEnabled),
     );
+    final tutorialsEnabled = ref.watch(tutorialSettingProvider);
 
     final userSettings = userProfile?.settings ?? const UserSettings();
     final selectedAppTheme = ref.watch(worldThemeProvider);
@@ -354,6 +356,39 @@ class SettingsScreen extends ConsumerWidget {
                 activeThumbColor: EmergeColors.teal,
                 activeTrackColor: EmergeColors.teal.withValues(alpha: 0.5),
               ),
+              SwitchListTile(
+                secondary: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: EmergeColors.teal.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Icon(Icons.explore_outlined, color: EmergeColors.teal),
+                ),
+                title: Text(
+                  'Show Node Guides',
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    fontWeight: FontWeight.w500,
+                    color: AppTheme.textMainDark,
+                  ),
+                ),
+                subtitle: Text(
+                  tutorialsEnabled
+                      ? 'Node guide shown on first node visit'
+                      : 'Node guide hidden',
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: AppTheme.textSecondaryDark,
+                  ),
+                ),
+                value: tutorialsEnabled,
+                onChanged: (value) async {
+                  await ref
+                      .read(tutorialSettingProvider.notifier)
+                      .setEnabled(value);
+                },
+                activeThumbColor: EmergeColors.teal,
+                activeTrackColor: EmergeColors.teal.withValues(alpha: 0.5),
+              ),
             ]),
             const SizedBox(height: 24),
 
@@ -366,6 +401,15 @@ class SettingsScreen extends ConsumerWidget {
                 'Reset Companion Tips',
                 onTap: () {
                   _showResetCompanionDialog(context, ref);
+                },
+              ),
+              _buildListTile(
+                context,
+                Icons.replay_outlined,
+                'Reset Node Guides',
+                subtitle: 'Makes node guides appear again on next node visit',
+                onTap: () {
+                  _showResetTutorialsDialog(context, ref);
                 },
               ),
               _buildListTile(
@@ -910,6 +954,54 @@ class SettingsScreen extends ConsumerWidget {
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(
                   content: Text('Companion tips reset successfully!'),
+                ),
+              );
+            },
+            style: ElevatedButton.styleFrom(backgroundColor: EmergeColors.teal),
+            child: const Text(
+              'RESET',
+              style: TextStyle(
+                color: Colors.black,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showResetTutorialsDialog(BuildContext context, WidgetRef ref) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: AppTheme.surfaceDark,
+        title: const Text(
+          'Reset Tutorials?',
+          style: TextStyle(color: Colors.white),
+        ),
+        content: const Text(
+          'This will reset node tutorials. They will show once the next time you visit a node.',
+          style: TextStyle(color: Colors.white70),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text(
+              'CANCEL',
+              style: TextStyle(color: Colors.white54),
+            ),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              await ref
+                  .read(tutorialSettingProvider.notifier)
+                  .resetTutorials();
+              if (!context.mounted) return;
+              Navigator.pop(context);
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('Tutorials reset successfully!'),
                 ),
               );
             },

@@ -1,6 +1,11 @@
+import 'dart:async';
+
 import 'package:emerge_app/core/presentation/widgets/app_error_widget.dart';
 import 'package:emerge_app/core/presentation/widgets/emerge_loading_skeleton.dart';
+import 'package:emerge_app/core/presentation/widgets/feature_coach_mark.dart';
 import 'package:emerge_app/core/theme/app_theme.dart';
+import 'package:emerge_app/features/companion/domain/enums/companion_enums.dart';
+import 'package:emerge_app/features/companion/presentation/providers/companion_providers.dart';
 import 'package:emerge_app/features/gamification/presentation/providers/user_stats_providers.dart';
 import 'package:emerge_app/features/social/presentation/providers/friends_leaderboard_provider.dart';
 import 'package:emerge_app/features/social/presentation/providers/leaderboard_provider.dart';
@@ -27,6 +32,8 @@ class LeaderboardScreen extends ConsumerStatefulWidget {
 class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
+  Timer? _initTimer;
+  bool _showFirstVisitGuide = false;
 
   @override
   void initState() {
@@ -36,10 +43,25 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen>
       vsync: this,
       initialIndex: widget.initialTabIndex,
     );
+    _initTimer = Timer(const Duration(milliseconds: 500), () {
+      if (!mounted) return;
+      final repo = ref.read(companionRepositoryProvider);
+      if (!repo.hasVisited('/social/leaderboard')) {
+        repo.markVisited('/social/leaderboard');
+        ref
+            .read(companionEngineProvider.notifier)
+            .triggerEvent(
+              eventType: CompanionEventType.firstFeatureVisit,
+              userContext: {'route': '/social/leaderboard'},
+            );
+        setState(() => _showFirstVisitGuide = true);
+      }
+    });
   }
 
   @override
   void dispose() {
+    _initTimer?.cancel();
     _tabController.dispose();
     super.dispose();
   }
@@ -48,7 +70,9 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen>
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppTheme.backgroundDark,
-      body: CustomScrollView(
+      body: Stack(
+        children: [
+          CustomScrollView(
         slivers: [
           SliverAppBar(
             expandedHeight: 120,
@@ -113,6 +137,26 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen>
             ),
           ),
         ],
+      ),
+      if (_showFirstVisitGuide)
+        FeatureCoachMark(
+          title: "Leaderboards",
+          primaryColor: AppTheme.primary,
+          items: const [
+            CoachItemData(
+              icon: Icons.people,
+              title: "Friends Ranking",
+              body: "See how you stack up against your accountability partners.",
+            ),
+            CoachItemData(
+              icon: Icons.shield,
+              title: "Tribe & World",
+              body: "Compare scores across your tribe and compete globally on the world leaderboard.",
+            ),
+          ],
+          onDismiss: () => setState(() => _showFirstVisitGuide = false),
+        ),
+      ],
       ),
     );
   }

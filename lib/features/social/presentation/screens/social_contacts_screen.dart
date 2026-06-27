@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:fast_contacts/fast_contacts.dart' as fc;
 import 'package:flutter/material.dart';
@@ -7,8 +9,11 @@ import 'package:go_router/go_router.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 import 'package:emerge_app/core/presentation/widgets/emerge_primary_button.dart';
+import 'package:emerge_app/core/presentation/widgets/feature_coach_mark.dart';
 import 'package:emerge_app/core/theme/emerge_colors.dart';
 import 'package:emerge_app/features/auth/presentation/providers/auth_providers.dart';
+import 'package:emerge_app/features/companion/domain/enums/companion_enums.dart';
+import 'package:emerge_app/features/companion/presentation/providers/companion_providers.dart';
 import 'package:emerge_app/features/social/domain/services/contact_resolver.dart';
 import 'package:emerge_app/features/social/presentation/providers/friend_provider.dart';
 
@@ -36,6 +41,33 @@ class _SocialContactsScreenState extends ConsumerState<SocialContactsScreen> {
   String? _error;
   List<ContactMatch> _matches = const [];
   bool _permissionGranted = false;
+  Timer? _initTimer;
+  bool _showFirstVisitGuide = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _initTimer = Timer(const Duration(milliseconds: 500), () {
+      if (!mounted) return;
+      final repo = ref.read(companionRepositoryProvider);
+      if (!repo.hasVisited('/social/contacts')) {
+        repo.markVisited('/social/contacts');
+        ref
+            .read(companionEngineProvider.notifier)
+            .triggerEvent(
+              eventType: CompanionEventType.firstFeatureVisit,
+              userContext: {'route': '/social/contacts'},
+            );
+        setState(() => _showFirstVisitGuide = true);
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _initTimer?.cancel();
+    super.dispose();
+  }
 
   Future<void> _loadContacts() async {
     setState(() {
@@ -102,20 +134,42 @@ class _SocialContactsScreenState extends ConsumerState<SocialContactsScreen> {
           onPressed: () => context.pop(),
         ),
       ),
-      body: _loading
-          ? const Center(child: CircularProgressIndicator(strokeWidth: 2))
-          : _error != null
-              ? Center(
-                  child: Text(
-                    _error!,
-                    style: const TextStyle(color: Colors.white60),
-                  ),
-                )
-              : _matches.isEmpty && _permissionGranted
-                  ? _emptyState()
-                  : _matches.isEmpty
-                      ? _permissionGate()
-                      : _list(),
+      body: Stack(
+        children: [
+          _loading
+              ? const Center(child: CircularProgressIndicator(strokeWidth: 2))
+              : _error != null
+                  ? Center(
+                      child: Text(
+                        _error!,
+                        style: const TextStyle(color: Colors.white60),
+                      ),
+                    )
+                  : _matches.isEmpty && _permissionGranted
+                      ? _emptyState()
+                      : _matches.isEmpty
+                          ? _permissionGate()
+                          : _list(),
+          if (_showFirstVisitGuide)
+            FeatureCoachMark(
+              title: "Find Partners from Contacts",
+              primaryColor: EmergeColors.teal,
+              items: const [
+                CoachItemData(
+                  icon: Icons.contact_page,
+                  title: "Discover Matches",
+                  body: "Find friends and contacts who are already on Emerge and connect as accountability partners.",
+                ),
+                CoachItemData(
+                  icon: Icons.person_add,
+                  title: "Invite Others",
+                  body: "Send invite codes to contacts who aren't on Emerge yet to grow your circle.",
+                ),
+              ],
+              onDismiss: () => setState(() => _showFirstVisitGuide = false),
+            ),
+        ],
+      ),
     );
   }
 

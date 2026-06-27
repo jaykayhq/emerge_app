@@ -1,9 +1,14 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
 import 'package:go_router/go_router.dart';
 
+import 'package:emerge_app/core/presentation/widgets/feature_coach_mark.dart';
 import 'package:emerge_app/core/theme/emerge_colors.dart';
+import 'package:emerge_app/features/companion/domain/enums/companion_enums.dart';
+import 'package:emerge_app/features/companion/presentation/providers/companion_providers.dart';
 import 'package:emerge_app/features/social/presentation/providers/partner_activity_provider.dart';
 import 'package:emerge_app/features/social/presentation/providers/tribes_provider.dart';
 
@@ -24,6 +29,33 @@ class SocialActivityScreen extends ConsumerStatefulWidget {
 
 class _SocialActivityScreenState extends ConsumerState<SocialActivityScreen> {
   int _tab = 0;
+  Timer? _initTimer;
+  bool _showFirstVisitGuide = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _initTimer = Timer(const Duration(milliseconds: 500), () {
+      if (!mounted) return;
+      final repo = ref.read(companionRepositoryProvider);
+      if (!repo.hasVisited('/social/activity')) {
+        repo.markVisited('/social/activity');
+        ref
+            .read(companionEngineProvider.notifier)
+            .triggerEvent(
+              eventType: CompanionEventType.firstFeatureVisit,
+              userContext: {'route': '/social/activity'},
+            );
+        setState(() => _showFirstVisitGuide = true);
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _initTimer?.cancel();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -38,18 +70,40 @@ class _SocialActivityScreenState extends ConsumerState<SocialActivityScreen> {
           onPressed: () => context.pop(),
         ),
       ),
-      body: Column(
+      body: Stack(
         children: [
-          _SegmentedTabs(
-            current: _tab,
-            onChanged: (i) => setState(() => _tab = i),
+          Column(
+            children: [
+              _SegmentedTabs(
+                current: _tab,
+                onChanged: (i) => setState(() => _tab = i),
+              ),
+              const Gap(12),
+              Expanded(
+                child: _tab == 0
+                    ? _TribeFeed(tribeId: widget.tribeId)
+                    : const _PartnersFeed(),
+              ),
+            ],
           ),
-          const Gap(12),
-          Expanded(
-            child: _tab == 0
-                ? _TribeFeed(tribeId: widget.tribeId)
-                : const _PartnersFeed(),
-          ),
+          if (_showFirstVisitGuide)
+            FeatureCoachMark(
+              title: "Activity Feed",
+              primaryColor: EmergeColors.nebulaPrimary,
+              items: const [
+                CoachItemData(
+                  icon: Icons.groups,
+                  title: "Tribe Activity",
+                  body: "See what your tribe mates are up to — completed habits, streaks, and quests.",
+                ),
+                CoachItemData(
+                  icon: Icons.sync_alt,
+                  title: "Partner Updates",
+                  body: "Track your accountability partners' progress and celebrate milestones together.",
+                ),
+              ],
+              onDismiss: () => setState(() => _showFirstVisitGuide = false),
+            ),
         ],
       ),
     );

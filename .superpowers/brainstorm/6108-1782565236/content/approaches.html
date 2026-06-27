@@ -1,0 +1,248 @@
+<h2>Soft 3D Rounded Figure — Technical Approaches</h2>
+
+<p>Three ways to get soft 3D rounded characters in Flutter, matching the reference image style.</p>
+
+<div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem; margin: 1.5rem 0;">
+
+  <div class="card" onclick="toggleSelect(this)" data-choice="procedural-3d-soft" style="cursor: pointer;">
+    <div class="card-body">
+      <div style="text-align: center; font-size: 3rem; margin-bottom: 0.5rem;">🎨</div>
+      <h3 style="text-align: center;">A — Procedural 3D</h3>
+      <p><strong>Pure CustomPainter</strong> — draw capsules, spheres, and ellipses with radial gradients to fake 3D lighting. Think "paper doll" meets 3D.</p>
+      <div class="pros-cons" style="margin-top: 0.75rem;">
+        <div class="pros"><strong>Pros:</strong>
+          <ul style="margin: 0.25rem 0; padding-left: 1.2rem;">
+            <li>Zero dependencies</li>
+            <li>60fps guaranteed</li>
+            <li>Full runtime color/part swap</li>
+            <li>Looks like image at display size</li>
+          </ul>
+        </div>
+        <div class="cons" style="margin-top: 0.5rem;"><strong>Cons:</strong>
+          <ul style="margin: 0.25rem 0; padding-left: 1.2rem;">
+            <li>Not true 3D — fixed angle</li>
+            <li>No model rotation</li>
+            <li>Manual shading code</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card" onclick="toggleSelect(this)" data-choice="threeflutter-soft" style="cursor: pointer;">
+    <div class="card-body">
+      <div style="text-align: center; font-size: 3rem; margin-bottom: 0.5rem;">🧊</div>
+      <h3 style="text-align: center;">B — ThreeFlutter</h3>
+      <p><strong>Full 3D engine in Flutter</strong> — render spheres/cylinders with real lights, shadows, subsurface scattering. Rotatable, zoomable.</p>
+      <div class="pros-cons" style="margin-top: 0.75rem;">
+        <div class="pros"><strong>Pros:</strong>
+          <ul style="margin: 0.25rem 0; padding-left: 1.2rem;">
+            <li>True 3D — all angles</li>
+            <li>Real lighting/shadows</li>
+            <li>Identical to reference image</li>
+            <li>Animated rotation</li>
+          </ul>
+        </div>
+        <div class="cons" style="margin-top: 0.5rem;"><strong>Cons:</strong>
+          <ul style="margin: 0.25rem 0; padding-left: 1.2rem;">
+            <li>~5MB package</li>
+            <li>Platform-specific quirks</li>
+            <li>Complex build setup</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card" onclick="toggleSelect(this)" data-choice="rive-soft" style="cursor: pointer;">
+    <div class="card-body">
+      <div style="text-align: center; font-size: 3rem; margin-bottom: 0.5rem;">🎭</div>
+      <h3 style="text-align: center;">C — Rive</h3>
+      <p><strong>Design in Rive editor</strong> — bone-based mesh deformation with vector fills that look 3D. Export .riv, animate with state machine.</p>
+      <div class="pros-cons" style="margin-top: 0.75rem;">
+        <div class="pros"><strong>Pros:</strong>
+          <ul style="margin: 0.25rem 0; padding-left: 1.2rem;">
+            <li>Visual editor</li>
+            <li>Bone animation built-in</li>
+            <li>Small runtime</li>
+            <li>Cross-platform</li>
+          </ul>
+        </div>
+        <div class="cons" style="margin-top: 0.5rem;"><strong>Cons:</strong>
+          <ul style="margin: 0.25rem 0; padding-left: 1.2rem;">
+            <li>Limited 3D (2.5D mesh)</li>
+            <li>Runtime customization hard</li>
+            <li>Must use Rive editor</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<hr style="margin: 2rem 0; border-color: #30363D;" />
+
+<h3>Live Demo: What Each Approach Looks Like</h3>
+
+<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+
+<div style="background: #0D1117; border-radius: 16px; padding: 1.5rem; border: 1px solid #30363D;">
+  <h4 style="margin-top: 0;">🎨 Procedural 3D (Approach A)</h4>
+  <div style="text-align: center; margin: 1rem 0;">
+    <div style="display: inline-block; background: #161B22; border-radius: 12px; padding: 1.5rem 2rem;">
+      <pre style="color: #E6EDF3; margin: 0; font-size: 12px; line-height: 1.4; text-align: center;">
+  <span style="color: #FFB3B3;">  ╭──────╮  </span>
+  <span style="color: #FFB3B3;">  │ ○ ○  │  </span>  ← Head: filled circle + radial gradient
+  <span style="color: #FFB3B3;">  ╰──────╯  </span>
+  <span style="color: #FFB3B3;">    ║        </span>  ← Neck
+  <span style="color: #FFB3B3;">  ╱─║─╲      </span>  ← Torso: rounded rect + gradient
+  <span style="color: #FFB3B3;">  │ ║ │      </span>
+  <span style="color: #FFB3B3;">  ╲─║─╱      </span>
+  <span style="color: #FFB3B3;">  ╱ ║ ╲      </span>  ← Arms: capsule shapes
+  <span style="color: #FFB3B3;">  ╱   ╲      </span>  ← Legs
+      </pre>
+    </div>
+  </div>
+  <p style="font-size: 0.85rem; color: #8B949E;">Draws smooth capsules with radial gradients for depth. Colors swap at runtime. Component-based (head/torso/limbs are independent painted shapes).</p>
+</div>
+
+<div style="background: #0D1117; border-radius: 16px; padding: 1.5rem; border: 1px solid #30363D;">
+  <h4 style="margin-top: 0;">🧊 ThreeFlutter (Approach B)</h4>
+  <div style="text-align: center; margin: 1rem 0;" id="three-preview">
+    <div style="display: inline-block; background: #161B22; border-radius: 12px; padding: 1rem; height: 160px; width: 160px;" id="three-mini-container"></div>
+  </div>
+  <p style="font-size: 0.85rem; color: #8B949E;">Real 3D spheres and cylinders with lighting, depth, and rotation. Loads glTF models or builds from primitives. Same as the earlier 3D demo.</p>
+  <button class="mock-button" onclick="document.getElementById('three-preview').innerHTML = '<div style=\\'padding: 1rem; color: #8B949E;\\'>Live 3D scene loads above — refresh page if blank</div>'">🔄 Reload 3D Preview</button>
+</div>
+
+</div>
+
+<hr style="margin: 2rem 0; border-color: #30363D;" />
+
+<h3>My Recommendation</h3>
+
+<div class="card" style="border: 2px solid #35E0FF; padding: 1.5rem;">
+  <div style="display: flex; align-items: start; gap: 1rem;">
+    <div style="font-size: 2rem;">⭐</div>
+    <div>
+      <h4 style="margin-top: 0;">Approach A — Procedural 3D (Recommended)</h4>
+      <p><strong>Why:</strong> For an avatar system that needs runtime customization (swap colors, add equipment, show evolution), procedural rendering is the most flexible. You can change any part's color/shape at runtime without re-exporting models. It performs at 60fps, has zero dependencies, and at avatar display size (~80-150px) the soft gradient shading looks indistinguishable from true 3D.</p>
+      <p>ThreeFlutter (B) is overkill for an avatar that's typically displayed at 100px — you'd fight platform quirks for minimal visual gain at that size. Rive (C) is great for pre-baked animations but makes runtime equipment/color swapping painful.</p>
+      <p><strong>Compromise:</strong> If you want true 3D rotation (spin the avatar on the profile screen), we can embed a small ThreeFlutter view just for the main avatar display, while the procedural renderer handles in-game/in-list thumbnails and customization previews.</p>
+    </div>
+  </div>
+</div>
+
+<div class="section" style="margin-top: 2rem;">
+  <h3>Which approach?</h3>
+  <div class="options">
+    <div class="option" onclick="toggleSelect(this)" data-choice="procedural-3d-go">
+      <div class="letter">A</div>
+      <div class="content">
+        <h3>Procedural 3D (Recommended)</h3>
+        <p>Pure Flutter, zero deps, 60fps, full runtime customization</p>
+      </div>
+    </div>
+    <div class="option" onclick="toggleSelect(this)" data-choice="threeflutter-go">
+      <div class="letter">B</div>
+      <div class="content">
+        <h3>ThreeFlutter — Full 3D</h3>
+        <p>True 3D engine, lighting, model rotation, more complex setup</p>
+      </div>
+    </div>
+    <div class="option" onclick="toggleSelect(this)" data-choice="hybrid-go">
+      <div class="letter">C</div>
+      <div class="content">
+        <h3>Hybrid — Both</h3>
+        <p>Procedural for thumbnails/customization, ThreeFlutter for profile view</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<p class="subtitle" style="margin-top: 2rem;">Reply in terminal with your choice (A/B/C) and I'll present the full design.</p>
+
+<script>
+// Three.js mini preview
+const container = document.getElementById('three-mini-container');
+try {
+  const scene = new THREE.Scene();
+  scene.background = new THREE.Color(0x161B22);
+  const camera = new THREE.PerspectiveCamera(50, 1, 1, 100);
+  camera.position.set(2, 1.5, 3.5);
+  camera.lookAt(0, 0, 0);
+  const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+  renderer.setSize(160, 160);
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  container.appendChild(renderer.domElement);
+  
+  // Lights
+  const ambient = new THREE.AmbientLight(0xFFFFFF, 0.5);
+  scene.add(ambient);
+  const dir = new THREE.DirectionalLight(0xFFEECC, 1.2);
+  dir.position.set(3, 4, 3);
+  scene.add(dir);
+  const fill = new THREE.DirectionalLight(0x88CCFF, 0.4);
+  fill.position.set(-2, 1, -2);
+  scene.add(fill);
+  
+  // Body parts: soft rounded figure
+  const group = new THREE.Group();
+  scene.add(group);
+  
+  const mat = new THREE.MeshStandardMaterial({
+    color: 0xCCBBAA,
+    roughness: 0.3,
+    metalness: 0.0,
+  });
+  const darkMat = new THREE.MeshStandardMaterial({
+    color: 0xAA9988,
+    roughness: 0.4,
+    metalness: 0.0,
+  });
+  
+  // Head
+  const head = new THREE.Mesh(new THREE.SphereGeometry(0.35, 20, 20), mat);
+  head.position.y = 1.6;
+  group.add(head);
+  
+  // Body (capsule shape - sphere + cylinder)
+  const bodyCyl = new THREE.Mesh(new THREE.CylinderGeometry(0.35, 0.4, 0.6, 16), mat);
+  bodyCyl.position.y = 1.1;
+  group.add(bodyCyl);
+  const bodyBot = new THREE.Mesh(new THREE.SphereGeometry(0.4, 16, 16), darkMat);
+  bodyBot.position.y = 0.8;
+  group.add(bodyBot);
+  
+  // Left arm
+  const armL = new THREE.Mesh(new THREE.CapsuleGeometry(0.1, 0.4, 8, 8), darkMat);
+  armL.position.set(-0.5, 1.2, 0);
+  armL.rotation.z = 0.3;
+  group.add(armL);
+  
+  // Right arm
+  const armR = new THREE.Mesh(new THREE.CapsuleGeometry(0.1, 0.4, 8, 8), darkMat);
+  armR.position.set(0.5, 1.2, 0);
+  armR.rotation.z = -0.3;
+  group.add(armR);
+  
+  // Left leg
+  const legL = new THREE.Mesh(new THREE.CapsuleGeometry(0.12, 0.4, 8, 8), darkMat);
+  legL.position.set(-0.2, 0.4, 0);
+  group.add(legL);
+  
+  // Right leg
+  const legR = new THREE.Mesh(new THREE.CapsuleGeometry(0.12, 0.4, 8, 8), darkMat);
+  legR.position.set(0.2, 0.4, 0);
+  group.add(legR);
+  
+  function animate() {
+    requestAnimationFrame(animate);
+    group.rotation.y += 0.01;
+    renderer.render(scene, camera);
+  }
+  animate();
+} catch(e) {
+  container.innerHTML = '<div style="color: #8B949E; padding: 2rem;">3D preview unavailable</div>';
+}
+</script>

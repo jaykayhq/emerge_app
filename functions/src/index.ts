@@ -262,3 +262,4 @@ export * from "./ai_recap";
 export * from "./revenuecat_events";
 export * from "./payments/paystack";
 export { setUserRole } from "./setUserRole";
+export { purgeOrphanedUserData } from "./purgeOrphanedUserData";

@@ -4,6 +4,7 @@ import 'dart:ui';
 
 import 'package:emerge_app/core/utils/app_logger.dart';
 import 'package:emerge_app/features/onboarding/data/repositories/local_settings_repository.dart';
+import 'package:emerge_app/features/onboarding/presentation/providers/onboarding_provider.dart';
 import 'package:emerge_app/features/auth/domain/entities/user_extension.dart';
 import 'package:emerge_app/features/auth/presentation/providers/auth_providers.dart';
 import 'package:emerge_app/features/habits/domain/entities/habit.dart';
@@ -16,14 +17,11 @@ import 'package:emerge_app/features/world_map/presentation/providers/world_healt
 import 'package:emerge_app/features/world_map/presentation/widgets/world_health_bar.dart';
 import 'package:emerge_app/features/gamification/presentation/providers/user_stats_providers.dart';
 import 'package:emerge_app/features/gamification/presentation/providers/recap_hub_provider.dart';
-import 'package:emerge_app/features/companion/presentation/providers/companion_providers.dart';
-import 'package:emerge_app/features/companion/domain/enums/companion_enums.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:emerge_app/core/theme/emerge_colors.dart';
-import 'package:emerge_app/core/presentation/widgets/feature_coach_mark.dart';
 
 /// Full-screen immersive level view with AI-generated background
 /// Shows habits, stats, health bar, and mission controls
@@ -51,34 +49,26 @@ class _LevelImmersiveScreenState extends ConsumerState<LevelImmersiveScreen> {
   // starting a mission without waiting for the database stream.
   NodeState? _overriddenNodeState;
 
-  Timer? _initTimer;
   bool _disposed = false;
-  bool _showFirstVisitGuide = false;
 
   @override
   void initState() {
     super.initState();
     _checkFirstNodeVisit();
-    _initTimer = Timer(const Duration(milliseconds: 500), () {
-      if (!mounted) return;
-      final repo = ref.read(companionRepositoryProvider);
-      if (!repo.hasVisited('/world-map/immersive')) {
-        repo.markVisited('/world-map/immersive');
-        ref
-            .read(companionEngineProvider.notifier)
-            .triggerEvent(
-              eventType: CompanionEventType.firstFeatureVisit,
-              userContext: {'route': '/world-map/immersive'},
-            );
-        setState(() => _showFirstVisitGuide = true);
-      }
-    });
   }
 
   Future<void> _checkFirstNodeVisit() async {
     await Future<void>.delayed(const Duration(milliseconds: 300));
     if (!mounted || _disposed) return;
+
     final repo = LocalSettingsRepository();
+
+    // Only show the node tutorial after onboarding is complete (not first launch).
+    if (repo.isFirstLaunch) return;
+
+    // Only show when the user has enabled tutorials in settings.
+    if (!repo.isTutorialsEnabled()) return;
+
     final hasSeen = await repo.getHasSeenNodeGuide(widget.node.id);
     if (!hasSeen && mounted && !_disposed) {
       await repo.setHasSeenNodeGuide(widget.node.id);
@@ -88,7 +78,6 @@ class _LevelImmersiveScreenState extends ConsumerState<LevelImmersiveScreen> {
 
   @override
   void dispose() {
-    _initTimer?.cancel();
     _disposed = true;
     super.dispose();
   }
@@ -187,6 +176,14 @@ class _LevelImmersiveScreenState extends ConsumerState<LevelImmersiveScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // Reactive: when the user enables node guides in settings while this
+    // screen is alive, show the guide immediately.
+    ref.listen(tutorialSettingProvider, (bool? prev, bool next) {
+      if (next && !(prev ?? false) && !_disposed) {
+        _checkFirstNodeVisit();
+      }
+    });
+
     final statsAsync = ref.watch(userStatsStreamProvider);
     final worldHealthAsync = ref.watch(worldHealthStreamProvider);
 
@@ -307,24 +304,8 @@ class _LevelImmersiveScreenState extends ConsumerState<LevelImmersiveScreen> {
             ),
           ),
         ),
-        if (_showFirstVisitGuide)
-          FeatureCoachMark(
-            title: "Biome & Node Exploration",
-            primaryColor: EmergeColors.emeraldPrimary,
-            items: const [
-              CoachItemData(
-                icon: Icons.map_outlined,
-                title: "Traversing the Biomes",
-                body: "Explore different parts of the map matching specific archetypes and difficulty levels.",
-              ),
-              CoachItemData(
-                icon: Icons.ads_click,
-                title: "Node Conquests",
-                body: "Tap active nodes to review directives, verify targeted attributes, and launch missions to rebuild the world.",
-              ),
-            ],
-            onDismiss: () => setState(() => _showFirstVisitGuide = false),
-          ),
+        // Node guide is shown via [_checkFirstNodeVisit] when conditions are met.
+        // (onboarding complete + node guide enabled in settings)
       ],
     );
   }

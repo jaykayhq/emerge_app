@@ -1,8 +1,14 @@
-import 'package:emerge_app/core/theme/app_theme.dart';
-import 'package:emerge_app/core/theme/emerge_colors.dart';
+import 'dart:async';
+import 'dart:ui';
+
+import 'package:emerge_app/core/presentation/widgets/feature_coach_mark.dart';
 import 'package:emerge_app/core/presentation/widgets/world_background.dart';
 import 'package:emerge_app/core/domain/models/app_world_theme.dart';
+import 'package:emerge_app/core/theme/app_theme.dart';
+import 'package:emerge_app/core/theme/emerge_colors.dart';
 import 'package:emerge_app/features/auth/presentation/providers/auth_providers.dart';
+import 'package:emerge_app/features/companion/domain/enums/companion_enums.dart';
+import 'package:emerge_app/features/companion/presentation/providers/companion_providers.dart';
 import 'package:emerge_app/features/gamification/presentation/providers/user_stats_providers.dart';
 import 'package:emerge_app/features/gamification/presentation/providers/recap_hub_provider.dart';
 import 'package:emerge_app/features/social/domain/models/challenge.dart';
@@ -14,18 +20,56 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
 import 'package:go_router/go_router.dart';
-import 'dart:ui';
 
-class ChallengeDetailScreen extends ConsumerWidget {
+class ChallengeDetailScreen extends ConsumerStatefulWidget {
   final Challenge? challenge;
   final String? challengeId;
 
   const ChallengeDetailScreen({super.key, this.challenge, this.challengeId});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<ChallengeDetailScreen> createState() =>
+      _ChallengeDetailScreenState();
+}
+
+class _ChallengeDetailScreenState extends ConsumerState<ChallengeDetailScreen> {
+  Timer? _initTimer;
+  bool _showFirstVisitGuide = false;
+
+  @override
+  void initState() {
+    super.initState();
+    final route = widget.challengeId != null
+        ? '/social/challenge/${widget.challengeId}'
+        : '/social/challenge';
+    _initTimer = Timer(const Duration(milliseconds: 500), () {
+      if (!mounted) return;
+      final repo = ref.read(companionRepositoryProvider);
+      if (!repo.hasVisited(route)) {
+        repo.markVisited(route);
+        ref
+            .read(companionEngineProvider.notifier)
+            .triggerEvent(
+              eventType: CompanionEventType.firstFeatureVisit,
+              userContext: {'route': route},
+            );
+        setState(() => _showFirstVisitGuide = true);
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _initTimer?.cancel();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final challenge = widget.challenge;
+    final challengeId = widget.challengeId;
     final challengeAsync = challenge != null
-        ? AsyncValue.data(challenge!)
+        ? AsyncValue.data(challenge)
         : ref.watch(challengeByIdProvider(challengeId ?? ''));
 
     return challengeAsync.when(
@@ -497,6 +541,26 @@ class ChallengeDetailScreen extends ConsumerWidget {
                     const SliverToBoxAdapter(child: Gap(120)),
                   ],
                 ),
+
+                if (_showFirstVisitGuide)
+                  FeatureCoachMark(
+                    title: "Challenge Details",
+                    primaryColor: AppTheme.primary,
+                    items: const [
+                      CoachItemData(
+                        icon: Icons.explore,
+                        title: "Mission Progress",
+                        body: "Track your progress through each day of the challenge with visual milestones.",
+                      ),
+                      CoachItemData(
+                        icon: Icons.timeline,
+                        title: "Journey Log",
+                        body: "View the full journey log of steps and complete daily actions to advance.",
+                      ),
+                    ],
+                    onDismiss: () =>
+                        setState(() => _showFirstVisitGuide = false),
+                  ),
 
                 // Bottom Action Button
                 Positioned(

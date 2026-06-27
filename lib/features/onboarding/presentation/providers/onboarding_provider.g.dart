@@ -163,6 +163,72 @@ abstract class _$OnboardingStateController extends $Notifier<OnboardingState> {
   }
 }
 
+/// Reactive toggle for node tutorials (replaces the legacy per-screen tutorial
+/// system). Watched so that toggling the setting in [SettingsScreen] takes
+/// effect immediately — no app restart or re-navigation needed.
+
+@ProviderFor(TutorialSetting)
+final tutorialSettingProvider = TutorialSettingProvider._();
+
+/// Reactive toggle for node tutorials (replaces the legacy per-screen tutorial
+/// system). Watched so that toggling the setting in [SettingsScreen] takes
+/// effect immediately — no app restart or re-navigation needed.
+final class TutorialSettingProvider
+    extends $NotifierProvider<TutorialSetting, bool> {
+  /// Reactive toggle for node tutorials (replaces the legacy per-screen tutorial
+  /// system). Watched so that toggling the setting in [SettingsScreen] takes
+  /// effect immediately — no app restart or re-navigation needed.
+  TutorialSettingProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'tutorialSettingProvider',
+        isAutoDispose: false,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$tutorialSettingHash();
+
+  @$internal
+  @override
+  TutorialSetting create() => TutorialSetting();
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(bool value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<bool>(value),
+    );
+  }
+}
+
+String _$tutorialSettingHash() => r'b7919027e16b241a3f5dcad0539b5f55482094a6';
+
+/// Reactive toggle for node tutorials (replaces the legacy per-screen tutorial
+/// system). Watched so that toggling the setting in [SettingsScreen] takes
+/// effect immediately — no app restart or re-navigation needed.
+
+abstract class _$TutorialSetting extends $Notifier<bool> {
+  bool build();
+  @$mustCallSuper
+  @override
+  WhenComplete runBuild() {
+    final ref = this.ref as $Ref<bool, bool>;
+    final element =
+        ref.element
+            as $ClassProviderElement<
+              AnyNotifier<bool, bool>,
+              bool,
+              Object?,
+              Object?
+            >;
+    return element.handleCreate(ref, build);
+  }
+}
+
 /// Provider that returns the currently active onboarding milestones
 /// Based on user's onboarding progress (0-5)
 /// Returns empty list if onboarding is complete or if user profile isn't loaded

@@ -30,9 +30,6 @@ import 'package:emerge_app/features/onboarding/presentation/screens/identity_stu
 
 import 'package:emerge_app/features/onboarding/presentation/screens/welcome_screen.dart';
 import 'package:emerge_app/features/onboarding/presentation/screens/world_reveal_screen.dart';
-import 'package:emerge_app/features/onboarding/presentation/screens/creator_onboarding/creator_onboarding_archetype_screen.dart';
-import 'package:emerge_app/features/onboarding/presentation/screens/creator_onboarding/creator_onboarding_profile_screen.dart';
-import 'package:emerge_app/features/onboarding/presentation/screens/creator_onboarding/creator_onboarding_reveal_screen.dart';
 import 'package:emerge_app/features/settings/presentation/screens/settings_screen.dart';
 import 'package:emerge_app/features/settings/presentation/screens/notification_settings_screen.dart';
 import 'package:emerge_app/features/monetization/presentation/screens/paywall_screen.dart';
@@ -50,15 +47,7 @@ import 'package:emerge_app/features/social/presentation/screens/creator_profile_
 import 'package:emerge_app/features/social/presentation/screens/blueprint_detail_screen.dart';
 import 'package:emerge_app/features/social/presentation/screens/creators_browse_screen.dart';
 import 'package:emerge_app/features/social/presentation/providers/social_onboarding_provider.dart';
-import 'package:emerge_app/features/auth/presentation/screens/creator_login_screen.dart';
-import 'package:emerge_app/features/auth/presentation/screens/creator_signup_screen.dart';
-import 'package:emerge_app/features/auth/presentation/screens/creator_verify_email_screen.dart';
-import 'package:emerge_app/features/social/presentation/screens/creator/creator_dashboard_scaffold.dart';
-import 'package:emerge_app/features/social/presentation/screens/creator/creator_overview_tab.dart';
-import 'package:emerge_app/features/social/presentation/screens/creator/creator_blueprints_tab.dart';
-import 'package:emerge_app/features/social/presentation/screens/creator/blueprint_builder_screen.dart';
-import 'package:emerge_app/features/social/presentation/screens/creator/creator_tribe_management_tab.dart';
-
+import 'package:emerge_app/core/router/creator_routes.dart';
 import 'package:emerge_app/features/blueprints/data/repositories/blueprint_repository.dart';
 import 'package:emerge_app/features/blueprints/domain/models/blueprint.dart';
 import 'package:emerge_app/core/presentation/widgets/app_error_widget.dart';
@@ -81,7 +70,6 @@ final _rootNavigatorKey = GlobalKey<NavigatorState>(debugLabel: 'root');
 class RedirectContext {
   final bool isLoggedIn;
   final UserRole? role; // null = unknown / still resolving
-  final bool emailVerified;
   final bool isFirstLaunch;
   final int? userOnboardingProgress; // null = no user_stats doc yet
   final DateTime? userOnboardingCompletedAt;
@@ -90,7 +78,6 @@ class RedirectContext {
   const RedirectContext({
     required this.isLoggedIn,
     required this.role,
-    required this.emailVerified,
     required this.isFirstLaunch,
     required this.userOnboardingProgress,
     required this.userOnboardingCompletedAt,
@@ -122,6 +109,7 @@ String? decideRedirect({
     '/creator/login',
     '/creator/signup',
   };
+
   final isOnAuthPath = authPaths.contains(currentPath);
   final isOnCreatorOnboardingPath =
       currentPath.startsWith('/onboarding/creator/');
@@ -145,7 +133,7 @@ String? decideRedirect({
   //    avoid leaving a logged-in user on the welcome screen forever.
   if (ctx.role == null || ctx.role == UserRole.unknown) {
     if (isOnAuthPath && currentPath != '/welcome') return null;
-    if (isOnCreatorPath) return null; // verify-email must remain reachable
+    if (isOnCreatorPath) return null;
     if (isOnCreatorOnboardingPath) return null;
     if (isOnNormalOnboardingPath) return null;
     if (currentPath == '/welcome') {
@@ -158,14 +146,6 @@ String? decideRedirect({
 
   // 5. Creator branch.
   if (ctx.role == UserRole.creator) {
-    // Email must be verified before any creator screens.
-    if (!ctx.emailVerified) {
-      // Always allow /creator/verify-email itself.
-      if (currentPath == '/creator/verify-email') return null;
-      return '/creator/verify-email';
-    }
-
-    // Email is verified. Drive the creator onboarding flow.
     final onboarding = ctx.creatorOnboarding;
     if (onboarding == null || !onboarding.isComplete) {
       // Allow creator-onboarding screens through.
@@ -285,15 +265,12 @@ GoRouter router(Ref ref) {
       final creatorOnboarding =
           creatorOnboardingAsync.hasValue ? creatorOnboardingAsync.value : null;
       final userStats = userStatsAsync.hasValue ? userStatsAsync.value : null;
-      final firebaseUser = ref.read(firebaseAuthProvider).currentUser;
-      final emailVerified = firebaseUser?.emailVerified ?? false;
 
       return decideRedirect(
         currentPath: path,
         ctx: RedirectContext(
           isLoggedIn: isLoggedIn,
           role: role,
-          emailVerified: emailVerified,
           isFirstLaunch: isFirstLaunch,
           userOnboardingProgress: userStats?.onboardingProgress,
           userOnboardingCompletedAt: userStats?.onboardingCompletedAt,
@@ -314,6 +291,8 @@ GoRouter router(Ref ref) {
         path: '/world-splash',
         builder: (context, state) => const WorldSplashScreen(),
       ),
+      // All creator routes (login, signup, onboarding, dashboard)
+      ...creatorRoutes,
       GoRoute(
         path: '/welcome',
         builder: (context, state) => const WelcomeScreen(),
@@ -331,72 +310,12 @@ GoRouter router(Ref ref) {
         path: '/onboarding/world-reveal',
         builder: (context, state) => const WorldRevealScreen(),
       ),
-      // Creator-specific onboarding routes.
-      GoRoute(
-        path: '/onboarding/creator/archetype',
-        builder: (context, state) => const CreatorOnboardingArchetypeScreen(),
-      ),
-      GoRoute(
-        path: '/onboarding/creator/profile',
-        builder: (context, state) => const CreatorOnboardingProfileScreen(),
-      ),
-      GoRoute(
-        path: '/onboarding/creator/reveal',
-        builder: (context, state) => const CreatorOnboardingRevealScreen(),
-      ),
       GoRoute(path: '/login', builder: (context, state) => const LoginScreen()),
       GoRoute(
         path: '/signup',
         builder: (context, state) => const SignUpScreen(),
       ),
-      GoRoute(
-        path: '/creator/login',
-        builder: (context, state) => const CreatorLoginScreen(),
-      ),
-      GoRoute(
-        path: '/creator/signup',
-        builder: (context, state) => const CreatorSignUpScreen(),
-      ),
-      GoRoute(
-        path: '/creator/verify-email',
-        builder: (context, state) => const CreatorVerifyEmailScreen(),
-      ),
-      StatefulShellRoute.indexedStack(
-        builder: (context, state, navigationShell) =>
-            CreatorDashboardScaffold(navigationShell: navigationShell),
-        branches: [
-          StatefulShellBranch(
-            routes: [
-              GoRoute(
-                path: '/creator/dashboard',
-                builder: (context, state) => const CreatorOverviewTab(),
-              ),
-            ],
-          ),
-          StatefulShellBranch(
-            routes: [
-              GoRoute(
-                path: '/creator/dashboard/blueprints',
-                builder: (context, state) => const CreatorBlueprintsTab(),
-                routes: [
-                  GoRoute(
-                    path: 'blueprint-builder',
-                    builder: (context, state) => const BlueprintBuilderScreen(),
-                  ),
-                ],
-              ),
-            ],
-          ),
-          StatefulShellBranch(
-            routes: [
-              GoRoute(
-                path: '/creator/dashboard/tribe',
-                builder: (context, state) => const CreatorTribeManagementTab(),
-              ),
-            ],
-          ),
-        ],
-      ),
+
       // ISSUE-13: Top-level /creators/:id alias for deep linking, share links, notifications
       GoRoute(
         path: '/creators/:id',

@@ -48,6 +48,16 @@ class LocalSettingsRepository {
     }
   }
 
+  Set<String> _getKeys() => _prefs?.getKeys() ?? _fallback.keys.toSet();
+
+  Future<void> _remove(String key) async {
+    if (_prefs != null) {
+      await _prefs!.remove(key);
+    } else {
+      _fallback.remove(key);
+    }
+  }
+
   // --- public API ---------------------------------------------------------
 
   bool get isFirstLaunch => _getBool(_keyIsFirstLaunch, defaultValue: true);
@@ -80,5 +90,24 @@ class LocalSettingsRepository {
 
   Future<void> setHasSeenNodeGuide(String nodeId) async {
     await _setBool('hasSeenNodeGuide_$nodeId', true);
+  }
+
+  // --- Tutorials toggle (replaces legacy per-screen tutorials) -----------
+
+  static const _keyTutorialsEnabled = 'tutorialsEnabled';
+
+  bool isTutorialsEnabled() =>
+      _getBool(_keyTutorialsEnabled, defaultValue: true);
+
+  Future<void> setTutorialsEnabled(bool enabled) async {
+    await _setBool(_keyTutorialsEnabled, enabled);
+  }
+
+  /// Clears all per-node "seen" flags so tutorials re-appear next visit.
+  Future<void> resetTutorials() async {
+    final keys = _getKeys().where((k) => k.startsWith('hasSeenNodeGuide_'));
+    for (final key in keys) {
+      await _remove(key);
+    }
   }
 }

@@ -15,6 +15,63 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
 import 'package:go_router/go_router.dart';
 
+/// Pure routing decision for the splash screen.
+///
+/// Extracted from the widget so it can be unit-tested without Firebase.
+/// Mirrors the logic in [decideRedirect] but is splash-specific.
+///
+/// The [hasCreatorProfile] flag is the fallback when [role] is
+/// [UserRole.unknown] — it lets the splash screen detect creators even
+/// when the `currentUserRoleProvider` fails to resolve (e.g. no emulator).
+String determineSplashRoute({
+  required bool isLoggedIn,
+  required bool isFirstLaunch,
+  UserRole role = UserRole.unknown,
+  required bool hasCreatorProfile,
+  required CreatorOnboardingState? creatorOnboarding,
+  required int? userOnboardingProgress,
+  required DateTime? userOnboardingCompletedAt,
+}) {
+  if (!isLoggedIn) {
+    return isFirstLaunch ? '/welcome' : '/login';
+  }
+
+  // Fallback: if the role provider didn't resolve to creator but a
+  // creator_profile document exists, treat as creator anyway.
+  // This handles dev environments where the setUserRole Cloud Function
+  // is not available and the custom claim never propagates.
+  final effectiveRole = hasCreatorProfile ? UserRole.creator : role;
+
+  if (effectiveRole == UserRole.creator) {
+    final progress = creatorOnboarding?.progress ?? 0;
+    final isComplete = creatorOnboarding?.isComplete ?? false;
+    if (isComplete) return '/creator/dashboard';
+    switch (progress) {
+      case 0:
+        return '/onboarding/creator/archetype';
+      case 1:
+        return '/onboarding/creator/profile';
+      default:
+        return '/onboarding/creator/reveal';
+    }
+  }
+
+  // Normal user or truly unknown role without creator profile.
+  final progress = userOnboardingProgress;
+  final isComplete = userOnboardingCompletedAt != null ||
+      (progress != null && progress >= 3);
+  if (isComplete) return '/';
+  switch (progress ?? 0) {
+    case 0:
+    case 1:
+      return '/onboarding/identity-studio';
+    case 2:
+      return '/onboarding/first-habit';
+    default:
+      return '/onboarding/world-reveal';
+  }
+}
+
 class SplashScreen extends ConsumerStatefulWidget {
   const SplashScreen({super.key});
 
@@ -75,59 +132,50 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
       return;
     }
 
-    // CRITICAL: Check the user's role BEFORE deciding where to go. A
-    // creator has no user_stats doc (only creator_profiles), so the
-    // onboardingProgress-based logic below would route them to
-    // /onboarding/identity-studio (normal-user flow) — the bug we are
-    // fixing. By branching on role here, creators go to their own flow.
+    // Resolve the user role. Then do a direct Firestore check for a
+    // creator_profile document as a fallback, regardless of role value.
+    // This handles the dev-environment case where the setUserRole Cloud
+    // Function is not running and the custom claim never propagates.
     final role = await ref.read(currentUserRoleProvider.future);
     if (!mounted) return;
-    final firebaseUser = FirebaseAuth.instance.currentUser;
-    final emailVerified = firebaseUser?.emailVerified ?? false;
+    AppLogger.d('Splash: resolved role=$role');
 
-    AppLogger.d('Splash: role=$role, emailVerified=$emailVerified');
-
-    if (role == UserRole.creator) {
-      // Creator flow. Email verification comes first.
-      if (!emailVerified) {
-        AppLogger.d(
-          'Splash: Creator with unverified email -> /creator/verify-email',
-        );
-        context.go('/creator/verify-email');
-        return;
+    // Defensive: check creator_profiles directly for any non-creator result.
+    // This catches creators whose role claim / mirror hasn't propagated yet.
+    bool hasCreatorProfile = false;
+    if (role != UserRole.creator) {
+      final uid = FirebaseAuth.instance.currentUser?.uid ?? '(null)';
+      AppLogger.d('Splash: checking creator_profiles for uid=$uid');
+      try {
+        if (uid.isNotEmpty && uid != '(null)') {
+          final creatorDoc = await FirebaseFirestore.instance
+              .collection('creator_profiles')
+              .doc(uid)
+              .get();
+          hasCreatorProfile = creatorDoc.exists;
+          AppLogger.d(
+            'Splash: creator_profiles/${uid}=${hasCreatorProfile ? "EXISTS" : "MISSING"}',
+          );
+        }
+      } catch (e) {
+        AppLogger.w('Splash: Firestore creator_profiles check failed: $e');
       }
-      // Email is verified. Drive the creator onboarding flow.
-      final creatorOnboarding =
-          await ref.read(currentCreatorOnboardingProvider.future);
-      if (!mounted) return;
-      final progress = creatorOnboarding?.progress ?? 0;
-      final isComplete = creatorOnboarding?.isComplete ?? false;
-      if (isComplete) {
-        AppLogger.d('Splash: Creator onboarding complete -> /creator/dashboard');
-        context.go('/creator/dashboard');
-        return;
-      }
-      final next = switch (progress) {
-        0 => '/onboarding/creator/archetype',
-        1 => '/onboarding/creator/profile',
-        _ => '/onboarding/creator/reveal',
-      };
-      AppLogger.d('Splash: Creator onboarding progress=$progress -> $next');
-      context.go(next);
-      return;
     }
 
-    // For role=user or role=unknown, fall through to the existing
-    // user_stats-based logic (legacy users may not have a role claim
-    // yet, and that path is correct for them).
+    if (!mounted) return;
 
-    // Logged in — seed Drift from Firestore BEFORE reading onboardingProgress.
-    // On a fresh install or reinstall the local Drift DB is empty, so
-    // watchUserStats returns onboardingProgress=0 for every returning user
-    // and sends them back through onboarding endlessly.
-    AppLogger.d('Splash: Logged in, seeding Drift from Firestore...');
+    // Fetch creator onboarding state (needed for both known and
+    // fallback-detected creators).
+    final creatorOnboarding =
+        await ref.read(currentCreatorOnboardingProvider.future);
+    if (!mounted) return;
+
+    // For normal users, seed Drift from Firestore.
+    // Also grab onboardingProgress for the decision.
     final userId = ref.read(authStateChangesProvider).value?.id ?? '';
-    if (userId.isNotEmpty) {
+    bool seededFromFirestore = false;
+    if (userId.isNotEmpty && role != UserRole.creator && !hasCreatorProfile) {
+      AppLogger.d('Splash: Logged in, seeding Drift from Firestore...');
       try {
         final firestoreDoc = await FirebaseFirestore.instance
             .collection('user_stats')
@@ -136,7 +184,6 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
 
         if (firestoreDoc.exists) {
           final data = firestoreDoc.data()!;
-          // Coerce Firestore types that Drift expects as primitives
           final normalised = <String, dynamic>{
             'displayName': data['displayName'],
             'photoUrl': data['photoUrl'],
@@ -183,11 +230,9 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
 
           final repo = ref.read(userStatsRepositoryProvider);
           await repo.seedFromFirestoreData(userId, normalised);
+          seededFromFirestore = true;
           AppLogger.d('Splash: Drift seeded from Firestore (user_stats).');
         } else {
-          // user_stats doc not found — try users collection as fallback.
-          // This covers new users whose data hasn't been flushed from the
-          // sync-engine queue to user_stats yet, but IS in users already.
           AppLogger.d(
             'Splash: user_stats doc missing, checking users collection...',
           );
@@ -206,7 +251,6 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
                     .toIso8601String()
                 : data['onboardingCompletedAt'] as String?;
 
-            // Seed Drift with just the onboarding fields from users doc
             final repo = ref.read(userStatsRepositoryProvider);
             await repo.seedFromFirestoreData(userId, {
               'displayName': data['displayName'],
@@ -216,6 +260,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
               'onboardingCompletedAt': completedAt,
               'hasEmerged': data['hasEmerged'] as bool? ?? false,
             });
+            seededFromFirestore = true;
             AppLogger.d(
               'Splash: Drift seeded from users collection (progress=$progress).',
             );
@@ -226,46 +271,42 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
           }
         }
       } catch (e) {
-        // Non-fatal: if offline or doc missing, fall through and use Drift as-is
         AppLogger.w('Splash: Could not seed Drift from Firestore: $e');
       }
     }
 
     if (!mounted) return;
 
-    AppLogger.d('Splash: Logged in, loading user stats...');
-    final userStatsAsync = await ref.read(userStatsStreamProvider.future);
+    // Read user onboarding progress for the decision.
+    int? userOnboardingProgress;
+    DateTime? userOnboardingCompletedAt;
+    if (role != UserRole.creator && !hasCreatorProfile) {
+      if (seededFromFirestore) {
+        final userStatsAsync = await ref.read(userStatsStreamProvider.future);
+        if (!mounted) return;
+        userOnboardingProgress = userStatsAsync.onboardingProgress;
+        userOnboardingCompletedAt = userStatsAsync.onboardingCompletedAt;
+      } else {
+        userOnboardingProgress = 0;
+        userOnboardingCompletedAt = null;
+      }
+    }
 
     if (!mounted) return;
 
-    final onboardingProgress = userStatsAsync.onboardingProgress;
-
-    AppLogger.d(
-      'Splash: Navigation ready, onboardingProgress=$onboardingProgress',
+    final nextRoute = determineSplashRoute(
+      isLoggedIn: true,
+      isFirstLaunch: ref.read(onboardingControllerProvider),
+      role: role ?? UserRole.unknown,
+      hasCreatorProfile: hasCreatorProfile,
+      creatorOnboarding: creatorOnboarding,
+      userOnboardingProgress: userOnboardingProgress,
+      userOnboardingCompletedAt: userOnboardingCompletedAt,
     );
-
-    final nextRoute = onboardingProgress >= 3
-        ? '/'
-        : _getOnboardingRouteForProgress(onboardingProgress);
 
     AppLogger.d('Splash: Navigating to $nextRoute');
     if (mounted) {
       context.go(nextRoute);
-    }
-  }
-
-  /// Helper function to get the onboarding route for a given progress level.
-  /// Matches the router's [_getOnboardingRouteForProgress] exactly:
-  /// 0,1 = identity-studio, 2 = first-habit, 3 = world-reveal, 4+ = home
-  String _getOnboardingRouteForProgress(int progress) {
-    switch (progress) {
-      case 0:
-      case 1:
-        return '/onboarding/identity-studio';
-      case 2:
-        return '/onboarding/first-habit';
-      default:
-        return '/onboarding/world-reveal';
     }
   }
 

@@ -62,13 +62,6 @@ class _CreatorLoginScreenState extends ConsumerState<CreatorLoginScreen> {
         return;
       }
 
-      if (!user.emailVerified) {
-        if (mounted) {
-          context.go('/creator/verify-email');
-        }
-        return;
-      }
-
       if (mounted) {
         context.go('/creator/dashboard');
       }
@@ -85,11 +78,42 @@ class _CreatorLoginScreenState extends ConsumerState<CreatorLoginScreen> {
 
   Future<void> _signInWithGoogle() async {
     setState(() => _isLoading = true);
-    final subscription = ref.listenManual(signUpCreatorWithGoogleProvider, (previous, next) {});
     try {
-      await ref.read(signUpCreatorWithGoogleProvider.future);
-      if (mounted) {
-        context.go('/creator/dashboard');
+      final result = await ref.read(authRepositoryProvider).signInWithGoogle(isLogin: true);
+
+      bool proceed = false;
+      result.fold(
+        (error) {
+          // 'redirect_initiated' is not a real error — on web the page
+          // navigates away to Google OAuth. Keep loading; do not show snackbar.
+          if (error.message == 'redirect_initiated') return;
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text(error.message)),
+            );
+          }
+        },
+        (_) => proceed = true,
+      );
+
+      if (proceed) {
+        final user = ref.read(firebaseAuthProvider).currentUser;
+        if (user == null) {
+          throw Exception('User not found');
+        }
+
+        final isCreator = await ref.read(isCreatorProvider(user.uid).future);
+        if (!isCreator) {
+          await ref.read(authRepositoryProvider).signOut();
+          throw Exception(
+            'This account is not registered as a creator. '
+            'Please log out or switch accounts.',
+          );
+        }
+
+        if (mounted) {
+          context.go('/creator/dashboard');
+        }
       }
     } catch (e) {
       if (mounted) {
@@ -99,7 +123,8 @@ class _CreatorLoginScreenState extends ConsumerState<CreatorLoginScreen> {
         );
       }
     } finally {
-      subscription.close();
+      // Don't reset loading on web redirect — the page will navigate away.
+      // Only reset if still mounted and not mid-redirect.
       if (mounted) setState(() => _isLoading = false);
     }
   }
