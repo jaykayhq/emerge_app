@@ -1,6 +1,7 @@
-import 'dart:ui' as ui show Gradient, Gradient, Shader;
+import 'dart:ui' as ui show Gradient, Shader;
 import 'package:flutter/material.dart';
 import 'package:emerge_app/features/avatar/domain/models/avatar_data.dart';
+import 'package:emerge_app/features/avatar/domain/models/equipment_data.dart';
 
 /// Body positions computed once per [paint] call for reuse during rendering.
 class BodyPositions {
@@ -197,6 +198,21 @@ class ProceduralAvatarPainter extends CustomPainter {
       ..strokeWidth = 1.5 * pos.scale;
     canvas.drawPath(torsoPath, torsoOutlinePaint);
 
+    // Kintsugi cracks (radiant+)
+    if (phase.hasKintsugi) {
+      final crackPaint = Paint()
+        ..color = colors.glow.withOpacity(0.6)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 1.0 * pos.scale;
+      final crack = Path()
+        ..moveTo(pos.chestCenter.dx - 3 * pos.scale,
+                 pos.chestCenter.dy - 2 * pos.scale)
+        ..lineTo(pos.chestCenter.dx, pos.chestCenter.dy + 3 * pos.scale)
+        ..lineTo(pos.chestCenter.dx + 4 * pos.scale,
+                 pos.chestCenter.dy + 1 * pos.scale);
+      canvas.drawPath(crack, crackPaint);
+    }
+
     // 3. Neck
     drawCapsule(pos.neckBase, pos.chestCenter, 3 * pos.scale,
         colors.skin.withOpacity(phase.alpha),
@@ -258,6 +274,89 @@ class ProceduralAvatarPainter extends CustomPainter {
       1.5 * pos.scale,
       eyePaint,
     );
+
+    // 8. Equipment
+    for (final item in data.equippedItems) {
+      _drawEquipment(canvas, item, pos, data);
+    }
+
+    // 9. Sparkles (ascended+)
+    if (phase.hasSparkles) {
+      final sparkPaint = Paint()
+        ..color = colors.glow.withOpacity(0.8);
+      final sparkles = [
+        Offset(pos.headCenter.dx + pos.headRadius + 3,
+               pos.headCenter.dy - pos.headRadius),
+        Offset(pos.leftShoulder.dx - 5, pos.leftShoulder.dy - 3),
+        Offset(pos.rightHand.dx + 4, pos.rightHand.dy),
+      ];
+      for (final s in sparkles) {
+        canvas.drawCircle(s, 1.5 * pos.scale, sparkPaint);
+      }
+    }
+  }
+
+  void _drawEquipment(Canvas canvas, ShopItem item, BodyPositions pos,
+      AvatarData data) {
+    final colors = data.colors;
+    final paint = Paint()
+      ..color = colors.outline.withOpacity(0.8)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 2.0 * pos.scale;
+
+    switch (item.slot) {
+      case EquipmentSlot.head:
+        // Hat/head accessory: arc above head
+        final rect = Rect.fromCircle(
+          center: pos.headCenter,
+          radius: pos.headRadius + 4 * pos.scale,
+        );
+        canvas.drawArc(rect, 0.3, 2.6, false, paint);
+        break;
+      case EquipmentSlot.back:
+        // Cape/wings: path behind shoulders
+        final capePath = Path()
+          ..moveTo(pos.leftShoulder.dx - 5, pos.leftShoulder.dy + 2)
+          ..lineTo(pos.leftShoulder.dx - 8, pos.leftShoulder.dy + 15)
+          ..lineTo(pos.rightShoulder.dx + 8, pos.rightShoulder.dy + 15)
+          ..lineTo(pos.rightShoulder.dx + 5, pos.rightShoulder.dy + 2);
+        canvas.drawPath(capePath, paint);
+        break;
+      case EquipmentSlot.leftHand:
+        canvas.drawCircle(pos.leftHand, 5 * pos.scale, paint);
+        break;
+      case EquipmentSlot.rightHand:
+        canvas.drawCircle(pos.rightHand, 5 * pos.scale, paint);
+        break;
+      case EquipmentSlot.waist:
+        canvas.drawLine(
+          Offset(pos.pelvisCenter.dx - pos.torsoWidth * 0.7,
+                 pos.pelvisCenter.dy),
+          Offset(pos.pelvisCenter.dx + pos.torsoWidth * 0.7,
+                 pos.pelvisCenter.dy),
+          paint,
+        );
+        break;
+      case EquipmentSlot.feet:
+        final bootPaint = Paint()
+          ..color = colors.outline.withOpacity(0.8)
+          ..style = PaintingStyle.fill;
+        canvas.drawRect(
+          Rect.fromCenter(
+            center: pos.leftFoot, width: 5 * pos.scale, height: 3 * pos.scale),
+          bootPaint);
+        canvas.drawRect(
+          Rect.fromCenter(
+            center: pos.rightFoot, width: 5 * pos.scale, height: 3 * pos.scale),
+          bootPaint);
+        break;
+      case EquipmentSlot.aura:
+        final auraPaint = Paint()
+          ..color = colors.glow.withOpacity(0.15)
+          ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 10);
+        canvas.drawCircle(pos.pelvisCenter, 30 * pos.scale, auraPaint);
+        break;
+    }
   }
 
   @override
