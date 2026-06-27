@@ -4,8 +4,8 @@ import 'package:emerge_app/core/constants/gamification_constants.dart';
 import 'package:emerge_app/core/theme/app_theme.dart';
 import 'package:emerge_app/core/theme/archetype_theme.dart';
 import 'package:emerge_app/features/auth/domain/entities/user_extension.dart';
-import 'package:emerge_app/features/avatar/domain/models/avatar_config.dart';
-import 'package:emerge_app/features/avatar/presentation/widgets/avatar_renderer.dart';
+import 'package:emerge_app/features/avatar/domain/models/avatar_data.dart';
+import 'package:emerge_app/features/avatar/presentation/widgets/stickman_avatar.dart';
 import 'package:emerge_app/features/gamification/presentation/providers/gamification_providers.dart';
 import 'package:emerge_app/features/gamification/presentation/providers/user_stats_providers.dart';
 import 'package:emerge_app/features/habits/presentation/providers/habit_providers.dart';
@@ -781,7 +781,7 @@ class _FutureSelfStudioScreenState
     );
   }
 
-  /// Build the new 2D isometric avatar renderer
+  /// Build the new procedural avatar figure
   Widget _buildAvatarRenderer(
     BuildContext context,
     UserArchetype archetype,
@@ -791,8 +791,8 @@ class _FutureSelfStudioScreenState
     WidgetRef ref,
     bool isRecovering,
   ) {
-    final avatarConfig = AvatarConfig.fromUserStats(
-      archetype: archetype,
+    final avatarData = AvatarData.defaultAvatar().copyWith(
+      archetype: archetype.name,
       level: level,
     );
 
@@ -809,10 +809,9 @@ class _FutureSelfStudioScreenState
           HapticFeedback.lightImpact();
           _showEvolutionInfo(context, level, accentColor);
         },
-        child: AvatarRenderer(
-          config: avatarConfig,
-          size: 280,
-          showPhaseLabel: true,
+        child: StickmanAvatar(
+          avatarData: avatarData,
+          size: 140,
         ),
       ),
     );
