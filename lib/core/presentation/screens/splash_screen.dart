@@ -154,7 +154,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
               .get();
           hasCreatorProfile = creatorDoc.exists;
           AppLogger.d(
-            'Splash: creator_profiles/${uid}=${hasCreatorProfile ? "EXISTS" : "MISSING"}',
+            'Splash: creator_profiles/$uid=${hasCreatorProfile ? "EXISTS" : "MISSING"}',
           );
         }
       } catch (e) {

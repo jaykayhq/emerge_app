@@ -17,12 +17,12 @@ class AvatarRepository {
         'archetype': avatar.archetype,
         'level': avatar.level,
         'colors': {
-          'skin': avatar.colors.skin.value.toRadixString(16).padLeft(8, '0'),
+          'skin': avatar.colors.skin.toARGB32().toRadixString(16).padLeft(8, '0'),
           'outline':
-              avatar.colors.outline.value.toRadixString(16).padLeft(8, '0'),
+              avatar.colors.outline.toARGB32().toRadixString(16).padLeft(8, '0'),
           'accent':
-              avatar.colors.accent.value.toRadixString(16).padLeft(8, '0'),
-          'glow': avatar.colors.glow.value.toRadixString(16).padLeft(8, '0'),
+              avatar.colors.accent.toARGB32().toRadixString(16).padLeft(8, '0'),
+          'glow': avatar.colors.glow.toARGB32().toRadixString(16).padLeft(8, '0'),
         },
         'equipment': avatar.equippedItems.map((e) => e.id).toList(),
       },

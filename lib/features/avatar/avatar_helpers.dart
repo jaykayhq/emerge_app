@@ -9,6 +9,6 @@ AvatarData generateDefaultAvatar() => AvatarData.defaultAvatar();
 ///
 /// Strips the alpha channel (assumes fully opaque).
 String colorToHex(Color color) {
-  final hex = color.value.toRadixString(16).substring(2).toUpperCase();
+  final hex = color.toARGB32().toRadixString(16).substring(2).toUpperCase();
   return '#$hex';
 }
