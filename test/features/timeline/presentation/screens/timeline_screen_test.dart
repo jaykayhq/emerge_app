@@ -71,5 +71,47 @@ void main() {
         findsOneWidget,
       );
     });
+
+    testWidgets('shows create habit FAB', (tester) async {
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            dashboardStateProvider.overrideWithValue(DashboardState()),
+            habitsProvider.overrideWith(
+              (ref) => const Stream.empty(),
+            ),
+            userStatsStreamProvider.overrideWith(
+              (ref) => Stream.value(_emptyProfile),
+            ),
+            worldThemeProvider.overrideWith(WorldThemeNotifier.new),
+            worldHealthStreamProvider.overrideWith(
+              (ref) => Stream.value(0.5),
+            ),
+            worldEntropyStreamProvider.overrideWith(
+              (ref) => Stream.value(0.0),
+            ),
+            companionRepositoryProvider.overrideWith(
+              (ref) => CompanionRepository(),
+            ),
+            isPremiumProvider.overrideWith(() => TestIsPremium(false)),
+          ],
+          child: const MaterialApp(home: TimelineScreen()),
+        ),
+      );
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 600));
+
+      // The floating action button should be present
+      expect(find.byType(FloatingActionButton), findsOneWidget);
+
+      // The FAB should have an add icon
+      expect(
+        find.descendant(
+          of: find.byType(FloatingActionButton),
+          matching: find.byIcon(Icons.add),
+        ),
+        findsOneWidget,
+      );
+    });
   });
 }

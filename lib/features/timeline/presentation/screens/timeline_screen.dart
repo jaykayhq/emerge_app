@@ -640,10 +640,43 @@ class _TimelineScreenState extends ConsumerState<TimelineScreen> {
         habit.lastCompletedDate!.month == now.month &&
         habit.lastCompletedDate!.day == now.day;
 
-    if (!isCompleted) {
-      _completeHabitWithCelebration(habit);
-    } else {
+    if (isCompleted) {
+      // Undo completion
       ref.read(completeHabitProvider(habit.id));
+      return;
+    }
+
+    // One-tap completion - no confirmation dialog
+    _completeHabitSilently(habit);
+  }
+
+  Future<void> _completeHabitSilently(Habit habit) async {
+    try {
+      final result = await ref.read(completeHabitProvider(habit.id).future);
+
+      if (!result.isUndo && mounted) {
+        // Show milestone celebration for streak milestones
+        if (result.isStreakMilestone) {
+          _showCompletionCelebration(
+            xpEarned: result.xpEarned,
+            newStreak: result.newStreak,
+            isMilestone: true,
+          );
+        } else if (result.wasRecovery) {
+          Navigator.of(context).push(
+            MaterialPageRoute(
+              builder: (_) =>
+                  StreakRecoveryScreen(habit: habit, xpEarned: result.xpEarned),
+            ),
+          );
+        }
+        // Otherwise: silent completion — particles provide visual feedback
+
+        // Show interstitial ad after habit completion (rate-limited to 12h)
+        ref.read(adManagerProvider).showInterstitialAd();
+      }
+    } catch (e) {
+      // Silent fail - the OneTapCompletionZone's particles still show locally
     }
   }
 
@@ -691,55 +724,6 @@ class _TimelineScreenState extends ConsumerState<TimelineScreen> {
           SnackBar(
             content: Text('Error deleting habit'),
             backgroundColor: Colors.red,
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
-      }
-    }
-  }
-
-  Future<void> _completeHabitWithCelebration(Habit habit) async {
-    try {
-      final result = await ref.read(completeHabitProvider(habit.id).future);
-
-      if (!result.isUndo && result.wasRecovery) {
-        if (mounted) {
-          Navigator.of(context).push(
-            MaterialPageRoute(
-              builder: (_) =>
-                  StreakRecoveryScreen(habit: habit, xpEarned: result.xpEarned),
-            ),
-          );
-        }
-      } else if (!result.isUndo && result.xpEarned > 0) {
-        _showCompletionCelebration(
-          xpEarned: result.xpEarned,
-          newStreak: result.newStreak,
-          isMilestone: result.isStreakMilestone,
-        );
-      } else if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('${habit.title} completed! +${result.xpEarned} XP'),
-            backgroundColor: EmergeColors.teal,
-            behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
-          ),
-        );
-      }
-
-      // Show interstitial ad after habit completion (rate-limited to 12h)
-      if (!result.isUndo && mounted) {
-        ref.read(adManagerProvider).showInterstitialAd();
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('${habit.title} completed!'),
-            backgroundColor: EmergeColors.teal,
             behavior: SnackBarBehavior.floating,
           ),
         );

@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:ui';
 
+import 'package:emerge_app/core/presentation/widgets/one_tap_completion_zone.dart';
 import 'package:emerge_app/features/habits/domain/entities/habit.dart';
 import 'package:flutter/material.dart';
 import 'package:emerge_app/core/theme/emerge_colors.dart';
@@ -692,16 +693,12 @@ class _IndentedHabitItemState extends State<_IndentedHabitItem> {
   Widget _buildPending(Color color, String label) {
     return Row(
       children: [
-        // Checkbox
+        // One-tap completion zone
         Padding(
           padding: const EdgeInsets.only(right: 12),
-          child: GestureDetector(
-            onTap: widget.onToggle,
-            child: Icon(
-              Icons.radio_button_unchecked,
-              color: color.withValues(alpha: 0.5),
-              size: 20,
-            ),
+          child: OneTapCompletionZone(
+            color: color,
+            onComplete: widget.onToggle,
           ),
         ),
         // Habit info
@@ -1095,7 +1092,6 @@ class _HabitTimelineItemState extends State<_HabitTimelineItem> {
             ),
             child: InkWell(
               onTap: widget.onTap,
-              onLongPress: !completed ? widget.onToggle : null,
               borderRadius: BorderRadius.circular(12),
               child: Padding(
                 padding: const EdgeInsets.symmetric(
@@ -1133,18 +1129,17 @@ class _HabitTimelineItemState extends State<_HabitTimelineItem> {
                     ],
 
                     completed
-                        ? _buildCompletedState(context, color)
+                        ? _buildCompletedState(color)
                         : Opacity(
                             opacity: 1.0,
                             child: Row(
                               children: [
-                                // Checkbox — colored by attribute (non-clickable)
+                                // One-tap completion zone
                                 Padding(
                                   padding: const EdgeInsets.only(right: 12),
-                                  child: Icon(
-                                    Icons.radio_button_unchecked,
-                                    color: color.withValues(alpha: 0.5),
-                                    size: 24,
+                                  child: OneTapCompletionZone(
+                                    color: color,
+                                    onComplete: widget.onToggle,
                                   ),
                                 ),
                                 // Habit info: attribute label + title + anchor
@@ -1352,7 +1347,7 @@ class _HabitTimelineItemState extends State<_HabitTimelineItem> {
     );
   }
 
-  Widget _buildCompletedState(BuildContext context, Color color) {
+  Widget _buildCompletedState(Color color) {
     int baseXp = 10;
     if (widget.habit.difficulty.toString().contains('medium')) baseXp = 20;
     if (widget.habit.difficulty.toString().contains('hard')) baseXp = 30;
