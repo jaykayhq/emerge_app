@@ -5,18 +5,15 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:emerge_app/core/theme/emerge_colors.dart';
 
-/// Custom bottom navigation bar with elevated center FAB (diamond shape)
+/// Custom bottom navigation bar (no center FAB).
 ///
-/// Navigation order: World → Timeline → [+FAB] → Tribes → Profile
-/// The FAB is elevated above the nav bar in a diamond shape (rotated 45°)
+/// Navigation order: Today (Timeline) → World → Tribes → Identity
 class EmergeBottomNav extends StatelessWidget {
   final StatefulNavigationShell navigationShell;
-  final VoidCallback onFabPressed;
 
   const EmergeBottomNav({
     super.key,
     required this.navigationShell,
-    required this.onFabPressed,
   });
 
   @override
@@ -29,60 +26,32 @@ class EmergeBottomNav extends StatelessWidget {
         top: false,
         child: SizedBox(
           height: EmergeDimensions.navBarHeight,
-          child: Stack(
-            clipBehavior: Clip.none,
-            alignment: Alignment.center,
+          child: Row(
             children: [
-              // Main navigation row
-              Row(
-                children: [
-                  // Left side: World, Timeline
-                  Expanded(
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                      children: [
-                        _NavItem(
-                          icon: Icons.public,
-                          label: 'World',
-                          isSelected: currentIndex == 0,
-                          onTap: () => _onItemTapped(0),
-                        ),
-                        _NavItem(
-                          icon: Icons.calendar_today,
-                          label: 'Habits',
-                          isSelected: currentIndex == 1,
-                          onTap: () => _onItemTapped(1),
-                        ),
-                      ],
-                    ),
-                  ),
-                  // Center spacer for FAB
-                  const SizedBox(width: 80),
-                  // Right side: Tribe + Profile
-                  Expanded(
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                      children: [
-                        _NavItem(
-                          icon: Icons.groups,
-                          label: 'Tribe',
-                          isSelected: currentIndex == 2,
-                          onTap: () => _onItemTapped(2),
-                        ),
-                        _NavItem(
-                          icon: Icons.person,
-                          label: 'Identity',
-                          isSelected: currentIndex == 3,
-                          onTap: () => _onItemTapped(3),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
+              _NavItem(
+                icon: Icons.check_circle_outline,
+                label: 'Today',
+                isSelected: currentIndex == 0,
+                onTap: () => _onItemTapped(0),
               ),
-
-              // Center elevated FAB (diamond shape)
-              Positioned(top: -20, child: _DiamondFab(onPressed: onFabPressed)),
+              _NavItem(
+                icon: Icons.public,
+                label: 'World',
+                isSelected: currentIndex == 1,
+                onTap: () => _onItemTapped(1),
+              ),
+              _NavItem(
+                icon: Icons.groups,
+                label: 'Tribe',
+                isSelected: currentIndex == 2,
+                onTap: () => _onItemTapped(2),
+              ),
+              _NavItem(
+                icon: Icons.person,
+                label: 'Identity',
+                isSelected: currentIndex == 3,
+                onTap: () => _onItemTapped(3),
+              ),
             ],
           ),
         ),
@@ -116,76 +85,37 @@ class _NavItem extends StatelessWidget {
   Widget build(BuildContext context) {
     final color = isSelected ? EmergeColors.teal : AppTheme.textSecondaryDark;
 
-    return EmergeTappable(
-      label: label,
-      hint: isSelected ? 'Currently on $label screen' : 'Navigate to $label',
-      onTap: onTap,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 2),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            AnimatedContainer(
-              duration: EmergeDimensions.animationMedium,
-              padding: const EdgeInsets.all(6),
-              decoration: BoxDecoration(
-                color: isSelected
-                    ? EmergeColors.teal.withValues(alpha: 0.1)
-                    : Colors.transparent,
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Icon(icon, color: color, size: 24),
-            ),
-            const SizedBox(height: 2),
-            Text(
-              label,
-              style: TextStyle(
-                color: color,
-                fontSize: EmergeDimensions.minFontSize, // 12px minimum
-                fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-/// Diamond-shaped FAB (rotated 45°) with accessibility support
-class _DiamondFab extends StatelessWidget {
-  final VoidCallback onPressed;
-
-  const _DiamondFab({required this.onPressed});
-
-  @override
-  Widget build(BuildContext context) {
-    return EmergeSemantics(
-      label: 'Create new habit',
-      hint: 'Opens the habit creation screen',
-      button: true,
-      child: GestureDetector(
-        onTap: onPressed,
-        child: Container(
-          width: EmergeDimensions.fabSize, // 56px standard
-          height: EmergeDimensions.fabSize,
-          decoration: const BoxDecoration(),
-          child: Transform.rotate(
-            angle: 0.785398, // 45 degrees in radians
-            child: Container(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [EmergeColors.teal, EmergeColors.violet],
+    return Expanded(
+      child: EmergeTappable(
+        label: label,
+        hint: isSelected ? 'Currently on $label screen' : 'Navigate to $label',
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 2),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              AnimatedContainer(
+                duration: EmergeDimensions.animationMedium,
+                padding: const EdgeInsets.all(6),
+                decoration: BoxDecoration(
+                  color: isSelected
+                      ? EmergeColors.teal.withValues(alpha: 0.1)
+                      : Colors.transparent,
+                  borderRadius: BorderRadius.circular(12),
                 ),
-                borderRadius: BorderRadius.circular(12),
+                child: Icon(icon, color: color, size: 24),
               ),
-              child: Transform.rotate(
-                angle: -0.785398, // Rotate icon back
-                child: const Icon(Icons.add, color: Colors.white, size: 32),
+              const SizedBox(height: 2),
+              Text(
+                label,
+                style: TextStyle(
+                  color: color,
+                  fontSize: EmergeDimensions.minFontSize, // 12px minimum
+                  fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                ),
               ),
-            ),
+            ],
           ),
         ),
       ),

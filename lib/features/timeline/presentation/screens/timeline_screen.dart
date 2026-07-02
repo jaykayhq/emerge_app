@@ -202,6 +202,18 @@ class _TimelineScreenState extends ConsumerState<TimelineScreen> {
               ],
               onDismiss: () => setState(() => _showFirstVisitGuide = false),
             ),
+
+          // Floating Action Button to create new habits
+          Positioned(
+            right: 16,
+            bottom: 16,
+            child: FloatingActionButton.small(
+              heroTag: 'timeline_create_habit',
+              backgroundColor: EmergeColors.teal,
+              onPressed: () => context.push('/timeline/create-habit'),
+              child: const Icon(Icons.add, color: Colors.white),
+            ),
+          ),
         ],
       ),
     );

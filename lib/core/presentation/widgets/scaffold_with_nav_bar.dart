@@ -104,7 +104,6 @@ class ScaffoldWithNavBar extends ConsumerWidget {
       ),
       bottomNavigationBar: EmergeBottomNav(
         navigationShell: navigationShell,
-        onFabPressed: () => context.push('/timeline/create-habit'),
       ),
     );
   }

@@ -354,7 +354,30 @@ GoRouter router(Ref ref) {
           );
         },
         branches: [
-          // Branch 1: World (Gamification) - NEW HOME
+          // Branch 0: Timeline (Home) - Daily Command Center
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/timeline',
+                builder: (context, state) => const TimelineScreen(),
+                routes: [
+                  GoRoute(
+                    path: 'create-habit',
+                    builder: (context, state) =>
+                        const AdvancedCreateHabitDialog(),
+                  ),
+                  GoRoute(
+                    path: 'detail/:habitId',
+                    builder: (context, state) {
+                      final habitId = state.pathParameters['habitId']!;
+                      return HabitDetailScreen(habitId: habitId);
+                    },
+                  ),
+                ],
+              ),
+            ],
+          ),
+          // Branch 1: World (Gamification)
           StatefulShellBranch(
             routes: [
               GoRoute(
@@ -403,29 +426,6 @@ GoRouter router(Ref ref) {
                         orElse: () => config.nodes.first,
                       );
                       return LevelImmersiveScreen(node: node, config: config);
-                    },
-                  ),
-                ],
-              ),
-            ],
-          ),
-          // Branch 2: Timeline (NEW)
-          StatefulShellBranch(
-            routes: [
-              GoRoute(
-                path: '/timeline',
-                builder: (context, state) => const TimelineScreen(),
-                routes: [
-                  GoRoute(
-                    path: 'create-habit',
-                    builder: (context, state) =>
-                        const AdvancedCreateHabitDialog(),
-                  ),
-                  GoRoute(
-                    path: 'detail/:habitId',
-                    builder: (context, state) {
-                      final habitId = state.pathParameters['habitId']!;
-                      return HabitDetailScreen(habitId: habitId);
                     },
                   ),
                 ],
