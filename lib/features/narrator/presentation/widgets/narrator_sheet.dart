@@ -1,4 +1,3 @@
-import 'dart:async';
 import 'dart:ui';
 
 import 'package:emerge_app/core/theme/emerge_colors.dart';
