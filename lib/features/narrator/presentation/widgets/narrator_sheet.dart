@@ -98,6 +98,9 @@ class _NarratorSheetState extends ConsumerState<NarratorSheet>
             onTap: () {}, // prevent dismiss when tapping inside card
             child: Container(
               width: cardWidth,
+              constraints: BoxConstraints(
+                maxHeight: MediaQuery.of(context).size.height * 0.7,
+              ),
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(20),
                 boxShadow: [
@@ -112,168 +115,174 @@ class _NarratorSheetState extends ConsumerState<NarratorSheet>
                 borderRadius: BorderRadius.circular(20),
                 child: BackdropFilter(
                   filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
-                  child: Container(
-                    padding: const EdgeInsets.all(24),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.08),
-                      borderRadius: BorderRadius.circular(20),
-                      border: Border.all(
-                        color: Colors.white.withValues(alpha: 0.15),
-                        width: 1,
+                  child: SingleChildScrollView(
+                    child: Container(
+                      padding: const EdgeInsets.all(24),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.08),
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(
+                          color: Colors.white.withValues(alpha: 0.15),
+                          width: 1,
+                        ),
                       ),
-                    ),
-                    child: Stack(
-                      children: [
-                        // Main content
-                        AnimatedSize(
-                          duration: const Duration(milliseconds: 300),
-                          curve: Curves.easeOut,
-                          alignment: Alignment.topCenter,
-                          child: Column(
-                            mainAxisSize: MainAxisSize.min,
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              // Header
-                              Row(
-                                children: [
-                                  NarratorPulseIndicator(
-                                    color: EmergeColors.teal,
-                                    size: 20,
-                                  ),
-                                  const SizedBox(width: 10),
-                                  Text(
-                                    'EMERGE',
-                                    style: Theme.of(context)
-                                        .textTheme
-                                        .titleSmall
-                                        ?.copyWith(
-                                          color: EmergeColors.teal,
-                                          fontWeight: FontWeight.bold,
-                                          letterSpacing: 3,
-                                        ),
-                                  ),
-                                ],
-                              ),
-                              const SizedBox(height: 16),
-
-                              // Typewriter text
-                              NarratorTypewriter(
-                                key: _typewriterKey,
-                                text: appearance.shellText,
-                                baseDelayMs: 28,
-                                pauseDurations: const {
-                                  '.': 250,
-                                  '?': 300,
-                                  '!': 300,
-                                  ',': 150,
-                                },
-                                style: Theme.of(context)
-                                    .textTheme
-                                    .bodyLarge
-                                    ?.copyWith(
-                                      color: Colors.white,
-                                      height: 1.6,
-                                    ),
-                                onComplete: () {
-                                  if (mounted) {
-                                    setState(() => _textComplete = true);
-                                  }
-                                },
-                              ),
-
-                              // Optional text field (eveningReflection only)
-                              if (appearance.hasTextField) ...[
-                                const SizedBox(height: 16),
-                                TextField(
-                                  controller: _noteController,
-                                  maxLines: 3,
-                                  style: const TextStyle(color: Colors.white),
-                                  decoration: InputDecoration(
-                                    hintText: 'How was your day?',
-                                    hintStyle: TextStyle(
-                                      color: Colors.white.withValues(alpha: 0.4),
-                                    ),
-                                    filled: true,
-                                    fillColor:
-                                        Colors.white.withValues(alpha: 0.08),
-                                    border: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(12),
-                                      borderSide: BorderSide.none,
-                                    ),
-                                    focusedBorder: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(12),
-                                      borderSide: BorderSide(
-                                        color: EmergeColors.teal,
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ],
-
-                              const SizedBox(height: 20),
-
-                              // Action buttons (fade in after text completes)
-                              AnimatedOpacity(
-                                opacity: _textComplete ? 1.0 : 0.0,
-                                duration: const Duration(milliseconds: 500),
-                                child: Row(
+                      child: Stack(
+                        children: [
+                          // Main content
+                          AnimatedSize(
+                            duration: const Duration(milliseconds: 300),
+                            curve: Curves.easeOut,
+                            alignment: Alignment.topCenter,
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                // Header
+                                Row(
                                   children: [
-                                    Expanded(
-                                      child: _ActionButton(
-                                        label: appearance.buttonA,
-                                        color: EmergeColors.teal,
-                                        isSelected: _actionButtonADone,
-                                        onTap: () {
-                                          setState(() =>
-                                              _actionButtonADone = true);
-                                          _onButtonTap(appearance.buttonA);
-                                        },
-                                      ),
+                                    NarratorPulseIndicator(
+                                      color: EmergeColors.teal,
+                                      size: 20,
                                     ),
-                                    const SizedBox(width: 12),
-                                    Expanded(
-                                      child: _ActionButton(
-                                        label: appearance.buttonB,
-                                        color: EmergeColors.violet,
-                                        isSelected: _actionButtonBDone,
-                                        onTap: () {
-                                          setState(() =>
-                                              _actionButtonBDone = true);
-                                          _onButtonTap(appearance.buttonB);
-                                        },
-                                      ),
+                                    const SizedBox(width: 10),
+                                    Text(
+                                      'EMERGE',
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .titleSmall
+                                          ?.copyWith(
+                                            color: EmergeColors.teal,
+                                            fontWeight: FontWeight.bold,
+                                            letterSpacing: 3,
+                                          ),
                                     ),
                                   ],
                                 ),
-                              ),
-                            ],
-                          ),
-                        ),
+                                const SizedBox(height: 16),
 
-                        // Skip button (top-right, only visible during typing)
-                        if (!_textComplete)
-                          Positioned(
-                            top: 4,
-                            right: 4,
-                            child: GestureDetector(
-                              onTap: _skipTyping,
-                              child: Container(
-                                padding: const EdgeInsets.all(6),
-                                decoration: BoxDecoration(
-                                  color: Colors.white.withValues(alpha: 0.05),
-                                  shape: BoxShape.circle,
+                                // Typewriter text
+                                NarratorTypewriter(
+                                  key: _typewriterKey,
+                                  text: appearance.shellText,
+                                  baseDelayMs: 28,
+                                  pauseDurations: const {
+                                    '.': 250,
+                                    '?': 300,
+                                    '!': 300,
+                                    ',': 150,
+                                  },
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .bodyLarge
+                                      ?.copyWith(
+                                        color: Colors.white,
+                                        height: 1.6,
+                                      ),
+                                  onComplete: () {
+                                    if (mounted) {
+                                      setState(() => _textComplete = true);
+                                    }
+                                  },
                                 ),
-                                child: Text(
-                                  '✕',
-                                  style: TextStyle(
-                                    color: Colors.white.withValues(alpha: 0.3),
-                                    fontSize: 16,
+
+                                // Optional text field (eveningReflection only)
+                                if (appearance.hasTextField) ...[
+                                  const SizedBox(height: 16),
+                                  TextField(
+                                    controller: _noteController,
+                                    maxLines: 3,
+                                    style: const TextStyle(color: Colors.white),
+                                    decoration: InputDecoration(
+                                      hintText: 'How was your day?',
+                                      hintStyle: TextStyle(
+                                        color:
+                                            Colors.white.withValues(alpha: 0.4),
+                                      ),
+                                      filled: true,
+                                      fillColor:
+                                          Colors.white.withValues(alpha: 0.08),
+                                      border: OutlineInputBorder(
+                                        borderRadius:
+                                            BorderRadius.circular(12),
+                                        borderSide: BorderSide.none,
+                                      ),
+                                      focusedBorder: OutlineInputBorder(
+                                        borderRadius:
+                                            BorderRadius.circular(12),
+                                        borderSide: BorderSide(
+                                          color: EmergeColors.teal,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ],
+
+                                const SizedBox(height: 20),
+
+                                // Action buttons (fade in after text completes)
+                                AnimatedOpacity(
+                                  opacity: _textComplete ? 1.0 : 0.0,
+                                  duration: const Duration(milliseconds: 500),
+                                  child: Row(
+                                    children: [
+                                      Expanded(
+                                        child: _ActionButton(
+                                          label: appearance.buttonA,
+                                          color: EmergeColors.teal,
+                                          isSelected: _actionButtonADone,
+                                          onTap: () {
+                                            setState(() =>
+                                                _actionButtonADone = true);
+                                            _onButtonTap(appearance.buttonA);
+                                          },
+                                        ),
+                                      ),
+                                      const SizedBox(width: 12),
+                                      Expanded(
+                                        child: _ActionButton(
+                                          label: appearance.buttonB,
+                                          color: EmergeColors.violet,
+                                          isSelected: _actionButtonBDone,
+                                          onTap: () {
+                                            setState(() =>
+                                                _actionButtonBDone = true);
+                                            _onButtonTap(appearance.buttonB);
+                                          },
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+
+                          // Skip button (top-right, only visible during typing)
+                          if (!_textComplete)
+                            Positioned(
+                              top: 4,
+                              right: 4,
+                              child: GestureDetector(
+                                onTap: _skipTyping,
+                                child: Container(
+                                  padding: const EdgeInsets.all(6),
+                                  decoration: BoxDecoration(
+                                    color: Colors.white.withValues(alpha: 0.05),
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: Text(
+                                    '✕',
+                                    style: TextStyle(
+                                      color:
+                                          Colors.white.withValues(alpha: 0.3),
+                                      fontSize: 16,
+                                    ),
                                   ),
                                 ),
                               ),
                             ),
-                          ),
-                      ],
+                        ],
+                      ),
                     ),
                   ),
                 ),
