@@ -3,6 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:emerge_app/core/drift/database.dart';
 import 'package:emerge_app/core/drift_repositories/repositories_barrel.dart';
 import 'package:emerge_app/core/sync/sync_providers.dart';
+import 'package:emerge_app/core/utils/app_logger.dart';
 import 'package:emerge_app/features/social/data/repositories/tribe_repository.dart'
     show TribeRepository;
 import 'package:emerge_app/features/social/domain/models/tribe.dart';
@@ -300,7 +301,7 @@ final worldLeaderboardProvider =
               emitMerged();
             },
             onError: (Object err) {
-              // Remote failure: just log, UI already showing local data
+              AppLogger.e('Firestore leaderboard sync failed', err);
             },
           );
 

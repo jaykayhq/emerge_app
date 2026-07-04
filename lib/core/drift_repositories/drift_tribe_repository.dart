@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:emerge_app/core/drift/database.dart';
 import 'package:emerge_app/core/sync/sync_engine.dart';
+import 'package:emerge_app/core/utils/app_logger.dart';
 import 'package:emerge_app/features/social/data/repositories/tribe_repository.dart';
 import 'package:emerge_app/features/social/data/seeds/official_clubs_seed.dart';
 import 'package:emerge_app/features/social/domain/models/tribe.dart';
@@ -118,7 +119,7 @@ class DriftTribeRepository implements TribeRepository {
                   emitMerged();
                 },
                 onError: (Object err) {
-                  // Remote failure: just log, UI already showing local data
+                  AppLogger.e('Firestore tribe sync failed', err);
                 },
               );
         })
