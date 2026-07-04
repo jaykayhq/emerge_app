@@ -816,7 +816,6 @@ class _WorldStateSheet extends StatelessWidget {
             style: const TextStyle(color: Colors.white60, height: 1.5),
             textAlign: TextAlign.center,
           ),
-          const SizedBox(height: 24),
           const SizedBox(height: 32),
           SizedBox(
             width: double.infinity,

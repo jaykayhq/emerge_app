@@ -9,9 +9,9 @@ import 'package:emerge_app/features/auth/presentation/providers/auth_providers.d
 import 'package:emerge_app/features/gamification/presentation/providers/user_stats_providers.dart';
 import 'package:emerge_app/features/narrator/domain/models/narrator_appearance.dart';
 import 'package:emerge_app/features/narrator/domain/models/narrator_trigger.dart';
-import 'package:emerge_app/features/narrator/domain/services/narrator_trigger_engine.dart';
 import 'package:emerge_app/features/narrator/presentation/widgets/narrator_sheet.dart';
 import 'package:emerge_app/features/gamification/presentation/providers/recap_hub_provider.dart';
+import 'package:emerge_app/features/onboarding/data/repositories/local_settings_repository.dart';
 import 'package:emerge_app/features/social/domain/models/challenge.dart';
 import 'package:emerge_app/features/social/presentation/providers/challenge_provider.dart';
 import 'package:emerge_app/features/social/presentation/providers/challenge_bundle_provider.dart';
@@ -34,21 +34,44 @@ class ChallengeDetailScreen extends ConsumerStatefulWidget {
 }
 
 class _ChallengeDetailScreenState extends ConsumerState<ChallengeDetailScreen> {
+  bool _disposed = false;
+
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _checkScreenFirstVisit(
-        '/social/challenge',
-        const NarratorAppearance(
-          trigger: NarratorTrigger.screenFirstVisit,
-          shellText:
-              'This challenge is a concentrated test... Finish it and your world shifts.',
-          buttonA: "I'm in",
-          buttonB: "Tell me what's at stake",
-        ),
-      );
-    });
+    _checkFirstVisit();
+  }
+
+  @override
+  void dispose() {
+    _disposed = true;
+    super.dispose();
+  }
+
+  Future<void> _checkFirstVisit() async {
+    await Future<void>.delayed(const Duration(milliseconds: 500));
+    if (!mounted || _disposed) return;
+
+    final repo = LocalSettingsRepository();
+    if (repo.isFirstLaunch) return;
+    if (!repo.isTutorialsEnabled()) return;
+
+    final hasSeen = await repo.getHasSeenNodeGuide('/social/challenge');
+    if (!hasSeen && mounted && !_disposed) {
+      await repo.setHasSeenNodeGuide('/social/challenge');
+      if (!_disposed && mounted) {
+        NarratorSheet.show(
+          context,
+          const NarratorAppearance(
+            trigger: NarratorTrigger.screenFirstVisit,
+            shellText:
+                'This challenge is a concentrated test... Finish it and your world shifts.',
+            buttonA: "I'm in",
+            buttonB: "Tell me what's at stake",
+          ),
+        );
+      }
+    }
   }
 
   @override
@@ -547,39 +570,6 @@ class _ChallengeDetailScreenState extends ConsumerState<ChallengeDetailScreen> {
         );
       },
     );
-  }
-
-  void _checkScreenFirstVisit(String route, NarratorAppearance appearance) {
-    final trigger = NarratorTriggerEngine.shouldTrigger(
-      stats: const NarratorUserStats(
-        momentumScore: 0.5,
-        consecutiveActiveDays: 1,
-        totalHabitsToday: 0,
-        completedHabitsToday: 0,
-        currentLevel: 1,
-        previousLevel: 1,
-        hasStreakBreak: false,
-        currentStreak: 0,
-        longestStreak: 0,
-        consecutiveMisses: 0,
-        isFirstVisitToRoute: true,
-        isFirstVisitToNode: false,
-        hasCompletedEveningReflectionToday: false,
-        hasCompletedOnboarding: true,
-        archetypeSelected: true,
-      ),
-      context: AppOpenContext(
-        currentRoute: route,
-        now: DateTime.now(),
-        isFirstAppOpen: false,
-        daysSinceInstall: 10,
-        daysSinceLastOpen: 0,
-      ),
-      recentTriggers: const {},
-    );
-    if (trigger == NarratorTrigger.screenFirstVisit && mounted) {
-      NarratorSheet.show(context, appearance);
-    }
   }
 
   Widget _buildActionButton(

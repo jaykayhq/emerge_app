@@ -1,5 +1,6 @@
 import 'dart:ui';
 
+import 'package:emerge_app/core/utils/app_logger.dart';
 import 'package:emerge_app/core/theme/emerge_colors.dart';
 import 'package:emerge_app/features/narrator/domain/models/narrator_appearance.dart';
 import 'package:emerge_app/features/narrator/presentation/providers/narrator_providers.dart';
@@ -112,7 +113,7 @@ class _NarratorSheetState extends ConsumerState<NarratorSheet>
                 child: BackdropFilter(
                   filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
                   child: Container(
-                    padding: const EdgeInsets.all(20),
+                    padding: const EdgeInsets.all(24),
                     decoration: BoxDecoration(
                       color: Colors.white.withValues(alpha: 0.08),
                       borderRadius: BorderRadius.circular(20),
@@ -209,7 +210,7 @@ class _NarratorSheetState extends ConsumerState<NarratorSheet>
                                 ),
                               ],
 
-                              const SizedBox(height: 16),
+                              const SizedBox(height: 20),
 
                               // Action buttons (fade in after text completes)
                               AnimatedOpacity(
@@ -252,12 +253,16 @@ class _NarratorSheetState extends ConsumerState<NarratorSheet>
                         // Skip button (top-right, only visible during typing)
                         if (!_textComplete)
                           Positioned(
-                            top: 0,
-                            right: 0,
+                            top: 4,
+                            right: 4,
                             child: GestureDetector(
                               onTap: _skipTyping,
                               child: Container(
-                                padding: const EdgeInsets.all(4),
+                                padding: const EdgeInsets.all(6),
+                                decoration: BoxDecoration(
+                                  color: Colors.white.withValues(alpha: 0.05),
+                                  shape: BoxShape.circle,
+                                ),
                                 child: Text(
                                   '✕',
                                   style: TextStyle(
@@ -287,8 +292,9 @@ class _NarratorSheetState extends ConsumerState<NarratorSheet>
     );
     try {
       ref.read(narratorStateProvider.notifier).dismiss();
-    } catch (_) {
+    } catch (e) {
       // Provider might not be available in test context
+      AppLogger.e('NarratorSheet: failed to dismiss provider state', e);
     }
     Navigator.of(context).pop();
   }
@@ -313,7 +319,7 @@ class _ActionButton extends StatelessWidget {
       onTap: isSelected ? null : onTap,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 300),
-        padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 12),
+        padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
         decoration: BoxDecoration(
           color: isSelected
               ? color.withValues(alpha: 0.3)
