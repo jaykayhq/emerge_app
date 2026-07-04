@@ -327,7 +327,7 @@ void main() {
         userOnboardingCompletedAt: DateTime(2026, 1, 1),
         creatorOnboarding: null,
       );
-      expect(decideRedirect(currentPath: '/login', ctx: ctx), '/');
+      expect(decideRedirect(currentPath: '/login', ctx: ctx), '/timeline');
     });
 
     test('role=user, on /creator/dashboard -> /onboarding/identity-studio '

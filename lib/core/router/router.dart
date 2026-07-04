@@ -42,7 +42,6 @@ import 'package:emerge_app/features/social/presentation/screens/social_contacts_
 import 'package:emerge_app/features/social/presentation/screens/all_tribes_screen.dart';
 import 'package:emerge_app/features/monetization/presentation/screens/habit_contract_screen.dart';
 import 'package:emerge_app/features/social/presentation/screens/social_onboarding_screen.dart';
-import 'package:emerge_app/features/social/presentation/screens/tribe_lobby_screen.dart';
 import 'package:emerge_app/features/social/presentation/screens/creator_profile_screen.dart';
 import 'package:emerge_app/features/social/presentation/screens/blueprint_detail_screen.dart';
 import 'package:emerge_app/features/social/presentation/screens/creators_browse_screen.dart';
@@ -51,6 +50,7 @@ import 'package:emerge_app/core/router/creator_routes.dart';
 import 'package:emerge_app/features/blueprints/data/repositories/blueprint_repository.dart';
 import 'package:emerge_app/features/blueprints/domain/models/blueprint.dart';
 import 'package:emerge_app/core/presentation/widgets/app_error_widget.dart';
+import 'package:emerge_app/features/pulse_feed/presentation/screens/pulse_feed_screen.dart';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -214,7 +214,7 @@ String? decideRedirect({
     }
 
     // Onboarding complete.
-    if (isOnAuthPath) return '/';
+    if (isOnAuthPath) return '/timeline';
     return null;
   }
 
@@ -224,25 +224,14 @@ String? decideRedirect({
 
 @riverpod
 GoRouter router(Ref ref) {
-  // Watch auth state to rebuild router only on login/logout.
+  // Watch ONLY auth state. Rebuilding the GoRouter on any other data
+  // change resets initialLocation to /splash, re-mounting the splash
+  // screen and creating an infinite loop.
   final authState = ref.watch(authStateChangesProvider);
 
-  // Watch role + onboarding state so the router reactively redirects
-  // when the role claim resolves or onboarding progress changes.
-  final roleAsync = ref.watch(currentUserRoleProvider);
-  final creatorOnboardingAsync = ref.watch(currentCreatorOnboardingProvider);
-  final userStatsAsync = ref.watch(userStatsStreamProvider);
-
-  // Create a refresh notifier that fires whenever any of the watched
-  // sources emit a new value.
+  // Single refresh notifier — fires only on auth login/logout.
   final refreshNotifier = ValueNotifier<int>(0);
   ref.listen(authStateChangesProvider, (_, _) => refreshNotifier.value++);
-  ref.listen(onboardingControllerProvider, (_, _) => refreshNotifier.value++);
-  ref.listen(socialOnboardingCompletedProvider, (_, _) => refreshNotifier.value++);
-  ref.listen(currentUserRoleProvider, (_, _) => refreshNotifier.value++);
-  ref.listen(currentCreatorOnboardingProvider,
-      (_, _) => refreshNotifier.value++);
-  ref.listen(userStatsStreamProvider, (_, _) => refreshNotifier.value++);
 
   return GoRouter(
     navigatorKey: _rootNavigatorKey,
@@ -257,14 +246,16 @@ GoRouter router(Ref ref) {
       final isLoggedIn = authState.value?.isNotEmpty ?? false;
       final isFirstLaunch = ref.read(onboardingControllerProvider);
 
-      // Read the rest synchronously — these are watched above so the
-      // router rebuilds when they change. We use ref.read inside the
-      // redirect because ref.watch inside redirect would create a
-      // circular rebuild loop.
-      final role = roleAsync.hasValue ? roleAsync.value : null;
+      // Read synchronously inside redirect — ref.read gives the latest
+      // value at navigation time without subscribing to rebuilds.
+      final roleAsync = ref.read(currentUserRoleProvider);
+      final creatorOnboardingAsync = ref.read(currentCreatorOnboardingProvider);
+      final userStatsAsync = ref.read(userStatsStreamProvider);
+
+      final role = roleAsync is AsyncData ? roleAsync.value : null;
       final creatorOnboarding =
-          creatorOnboardingAsync.hasValue ? creatorOnboardingAsync.value : null;
-      final userStats = userStatsAsync.hasValue ? userStatsAsync.value : null;
+          creatorOnboardingAsync is AsyncData ? creatorOnboardingAsync.value : null;
+      final userStats = userStatsAsync is AsyncData ? userStatsAsync.value : null;
 
       return decideRedirect(
         currentPath: path,
@@ -432,12 +423,12 @@ GoRouter router(Ref ref) {
               ),
             ],
           ),
-          // Branch 3: Social (Tribe Lobby)
+          // Branch 2: Social (Pulse Feed)
           StatefulShellBranch(
             routes: [
               GoRoute(
                 path: '/social',
-                builder: (context, state) => const TribeLobbyScreen(),
+                builder: (context, state) => const PulseFeedScreen(),
                 redirect: (context, state) {
                   final asyncComplete = ref.read(socialOnboardingCompletedProvider);
                   if (asyncComplete.isLoading) return null; // Don't redirect while checking
@@ -537,7 +528,7 @@ GoRouter router(Ref ref) {
               ),
             ],
           ),
-          // Branch 4: Profile (Identity)
+          // Branch 3: Profile (Identity)
           StatefulShellBranch(
             routes: [
               GoRoute(
