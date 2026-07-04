@@ -2,7 +2,6 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:emerge_app/core/utils/app_logger.dart';
 import 'package:emerge_app/features/social/domain/models/tribe.dart';
 import 'package:emerge_app/features/social/data/seeds/official_clubs_seed.dart';
-import 'package:flutter/foundation.dart';
 
 /// Repository for archetype-based clubs (tribes).
 /// Users are auto-assigned to their archetype club — no user creation.
