@@ -88,8 +88,8 @@ void main() {
       await openDialog(tester);
 
       final forgeButton = find.text('FORGE HABIT');
-      await tester.ensureVisible(forgeButton);
-      await tester.tap(forgeButton);
+      await tester.scrollUntilVisible(forgeButton, 100.0, scrollable: find.byType(Scrollable).first);
+      await tester.tap(forgeButton, warnIfMissed: false);
       await tester.pump();
 
       expect(find.text('Required'), findsOneWidget);

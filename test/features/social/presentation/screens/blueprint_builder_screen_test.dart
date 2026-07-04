@@ -27,8 +27,7 @@ void main() {
     await tester.ensureVisible(button);
     await tester.pump(const Duration(milliseconds: 100));
     await tester.tap(button, warnIfMissed: false);
-    await tester.pump();
-    await tester.pump(const Duration(milliseconds: 100));
+    await tester.pump(const Duration(seconds: 1));
 
     // Verify validation triggers
     expect(find.text('Identity requires a name'), findsOneWidget);

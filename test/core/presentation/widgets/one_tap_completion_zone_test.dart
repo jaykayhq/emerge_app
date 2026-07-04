@@ -49,6 +49,7 @@ void main() {
 
       await tester.tap(find.byKey(const Key('completion-zone')));
       expect(completed, true);
+      await tester.pump(const Duration(seconds: 1));
     });
 
     testWidgets('shows CompletionParticles after tap', (tester) async {
@@ -77,6 +78,56 @@ void main() {
         ),
         findsOneWidget,
       );
+
+      await tester.pump(const Duration(seconds: 1));
+    });
+
+    testWidgets('removes CompletionParticles after animation completes',
+        (tester) async {
+      await tester.pumpWidget(
+        buildTestWidget(color: Colors.blue, onComplete: () {}),
+      );
+
+      await tester.tap(find.byKey(const Key('completion-zone')));
+      await tester.pump();
+
+      // Particles visible immediately after tap
+      expect(
+        find.descendant(
+          of: find.byKey(const Key('completion-zone')),
+          matching: find.byType(CompletionParticles),
+        ),
+        findsOneWidget,
+      );
+
+      // Advance past 800 ms animation
+      await tester.pumpAndSettle(const Duration(seconds: 2));
+
+      // Particles removed from tree after animation
+      expect(
+        find.descendant(
+          of: find.byKey(const Key('completion-zone')),
+          matching: find.byType(CompletionParticles),
+        ),
+        findsNothing,
+      );
+    });
+
+    testWidgets('does not call onComplete twice on double tap', (tester) async {
+      int callCount = 0;
+      await tester.pumpWidget(
+        buildTestWidget(color: Colors.green, onComplete: () => callCount++),
+      );
+
+      // Tap twice in quick succession
+      await tester.tap(find.byKey(const Key('completion-zone')));
+      await tester.tap(find.byKey(const Key('completion-zone')));
+      await tester.pump();
+
+      // Second tap is ignored by _isProcessing guard
+      expect(callCount, 1);
+      
+      await tester.pump(const Duration(seconds: 1));
     });
 
     testWidgets('uses the provided color for the circle container',
@@ -85,15 +136,22 @@ void main() {
         buildTestWidget(color: Colors.amber, onComplete: () {}),
       );
 
-      // Find the Container descendant of the SizedBox
-      final container = tester.widget<Container>(
+      // Fix 10: find specifically the decorated circular Container
+      // (there may be multiple Containers in the tree after a tap)
+      final containers = tester.widgetList<Container>(
         find.descendant(
           of: find.byKey(const Key('completion-zone')),
           matching: find.byType(Container),
         ),
-      );
+      ).toList();
 
-      final decoration = container.decoration as BoxDecoration;
+      // The decoration container is the one with a BoxDecoration circle shape
+      final decoratedContainer = containers.firstWhere(
+        (c) =>
+            c.decoration is BoxDecoration &&
+            (c.decoration as BoxDecoration).shape == BoxShape.circle,
+      );
+      final decoration = decoratedContainer.decoration as BoxDecoration;
       expect(decoration.color, Colors.amber);
     });
   });

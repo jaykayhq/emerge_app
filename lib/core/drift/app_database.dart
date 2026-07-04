@@ -10,6 +10,7 @@ import 'tables/tribe_stats_table.dart';
 import 'tables/leaderboard_entries_table.dart';
 import 'tables/mutation_queue_table.dart';
 import 'tables/tribe_activity_table.dart';
+import 'tables/narrator_notes_table.dart';
 
 import 'daos/user_stats_dao.dart';
 import 'daos/habits_dao.dart';
@@ -19,6 +20,7 @@ import 'daos/tribe_stats_dao.dart';
 import 'daos/leaderboard_entries_dao.dart';
 import 'daos/mutation_queue_dao.dart';
 import 'daos/tribe_activity_dao.dart';
+import 'daos/narrator_notes_dao.dart';
 
 part 'app_database.g.dart';
 
@@ -32,6 +34,7 @@ part 'app_database.g.dart';
     LeaderboardEntriesTable,
     MutationQueueTable,
     TribeActivityTable,
+    NarratorNotesTable,
   ],
   daos: [
     UserStatsDao,
@@ -42,6 +45,7 @@ part 'app_database.g.dart';
     LeaderboardEntriesDao,
     MutationQueueDao,
     TribeActivityDao,
+    NarratorNotesDao,
   ],
 )
 class AppDatabase extends _$AppDatabase {
@@ -50,7 +54,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.withExecutor(super.executor);
 
   @override
-  int get schemaVersion => 4;
+  int get schemaVersion => 5;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -78,6 +82,9 @@ class AppDatabase extends _$AppDatabase {
           habitsTable,
           habitsTable.integrationTarget,
         );
+      }
+      if (from < 5) {
+        await m.createTable(narratorNotesTable);
       }
     },
     beforeOpen: (details) async {

@@ -22,6 +22,9 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:emerge_app/core/theme/emerge_colors.dart';
+import 'package:emerge_app/features/narrator/domain/models/narrator_appearance.dart';
+import 'package:emerge_app/features/narrator/domain/models/narrator_trigger.dart';
+import 'package:emerge_app/features/narrator/presentation/widgets/narrator_sheet.dart';
 
 /// Full-screen immersive level view with AI-generated background
 /// Shows habits, stats, health bar, and mission controls
@@ -62,17 +65,42 @@ class _LevelImmersiveScreenState extends ConsumerState<LevelImmersiveScreen> {
     if (!mounted || _disposed) return;
 
     final repo = LocalSettingsRepository();
-
-    // Only show the node tutorial after onboarding is complete (not first launch).
     if (repo.isFirstLaunch) return;
-
-    // Only show when the user has enabled tutorials in settings.
     if (!repo.isTutorialsEnabled()) return;
 
     final hasSeen = await repo.getHasSeenNodeGuide(widget.node.id);
     if (!hasSeen && mounted && !_disposed) {
       await repo.setHasSeenNodeGuide(widget.node.id);
-      if (!_disposed) _showCompanionGuide();
+      if (!_disposed && mounted) {
+        final region = widget.config.mapName.isNotEmpty
+            ? widget.config.mapName
+            : 'the map';
+        final attrs = widget.node.targetedAttributes
+            .map((a) => a.name)
+            .join(', ');
+
+        await NarratorSheet.show(
+          context,
+          NarratorAppearance(
+            trigger: NarratorTrigger.nodeFirstVisit,
+            shellText:
+                'You\'ve reached the ${widget.node.name}. '
+                'Directives here build $attrs. '
+                'Every one you complete shifts $region. '
+                'Complete the missions. Conquer the node. '
+                'What happens after that is worth seeing.',
+            buttonA: 'Begin the node',
+            buttonB: 'What unlocks next?',
+            slotKeys: [widget.node.id],
+            context: {
+              'nodeId': widget.node.id,
+              'nodeTitle': widget.node.name,
+              'primaryAttribute': widget.node.targetedAttributes.first.name,
+              'userLevel': 1,
+            },
+          ),
+        );
+      }
     }
   }
 
@@ -80,98 +108,6 @@ class _LevelImmersiveScreenState extends ConsumerState<LevelImmersiveScreen> {
   void dispose() {
     _disposed = true;
     super.dispose();
-  }
-
-  void _showCompanionGuide() {
-    if (!mounted) return;
-    showDialog(
-      context: context,
-      barrierDismissible: true,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: Colors.transparent,
-        insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 80),
-        content: ClipRRect(
-          borderRadius: BorderRadius.circular(16),
-          child: BackdropFilter(
-            filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
-            child: Container(
-              padding: const EdgeInsets.all(24),
-              decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.08),
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: Colors.white.withValues(alpha: 0.15)),
-              ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'NODE GUIDE',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 18,
-                      fontWeight: FontWeight.w900,
-                      letterSpacing: 2,
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  _guideRow('1', 'Complete directives to earn attribute XP'),
-                  const SizedBox(height: 12),
-                  _guideRow('2', 'Check in with quest challenges daily'),
-                  const SizedBox(height: 12),
-                  _guideRow('3', 'Complete missions to conquer the node'),
-                  const SizedBox(height: 24),
-                  Center(
-                    child: TextButton(
-                      onPressed: () => Navigator.pop(ctx),
-                      child: Text(
-                        'GOT IT',
-                        style: TextStyle(
-                          color: Colors.white.withValues(alpha: 0.7),
-                          fontWeight: FontWeight.w700,
-                          letterSpacing: 2,
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _guideRow(String num, String text) {
-    return Row(
-      children: [
-        Container(
-          width: 24,
-          height: 24,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            color: Colors.white.withValues(alpha: 0.15),
-          ),
-          child: Center(
-            child: Text(
-              num,
-              style: const TextStyle(color: Colors.white, fontSize: 12),
-            ),
-          ),
-        ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: Text(
-            text,
-            style: TextStyle(
-              color: Colors.white.withValues(alpha: 0.6),
-              fontSize: 14,
-            ),
-          ),
-        ),
-      ],
-    );
   }
 
   @override

@@ -1,15 +1,16 @@
-import 'dart:async';
 import 'dart:ui';
 
-import 'package:emerge_app/core/presentation/widgets/feature_coach_mark.dart';
+import 'package:emerge_app/core/presentation/widgets/app_error_widget.dart';
 import 'package:emerge_app/core/presentation/widgets/world_background.dart';
 import 'package:emerge_app/core/domain/models/app_world_theme.dart';
 import 'package:emerge_app/core/theme/app_theme.dart';
 import 'package:emerge_app/core/theme/emerge_colors.dart';
 import 'package:emerge_app/features/auth/presentation/providers/auth_providers.dart';
-import 'package:emerge_app/features/companion/domain/enums/companion_enums.dart';
-import 'package:emerge_app/features/companion/presentation/providers/companion_providers.dart';
 import 'package:emerge_app/features/gamification/presentation/providers/user_stats_providers.dart';
+import 'package:emerge_app/features/narrator/domain/models/narrator_appearance.dart';
+import 'package:emerge_app/features/narrator/domain/models/narrator_trigger.dart';
+import 'package:emerge_app/features/narrator/domain/services/narrator_trigger_engine.dart';
+import 'package:emerge_app/features/narrator/presentation/widgets/narrator_sheet.dart';
 import 'package:emerge_app/features/gamification/presentation/providers/recap_hub_provider.dart';
 import 'package:emerge_app/features/social/domain/models/challenge.dart';
 import 'package:emerge_app/features/social/presentation/providers/challenge_provider.dart';
@@ -33,35 +34,21 @@ class ChallengeDetailScreen extends ConsumerStatefulWidget {
 }
 
 class _ChallengeDetailScreenState extends ConsumerState<ChallengeDetailScreen> {
-  Timer? _initTimer;
-  bool _showFirstVisitGuide = false;
-
   @override
   void initState() {
     super.initState();
-    final route = widget.challengeId != null
-        ? '/social/challenge/${widget.challengeId}'
-        : '/social/challenge';
-    _initTimer = Timer(const Duration(milliseconds: 500), () {
-      if (!mounted) return;
-      final repo = ref.read(companionRepositoryProvider);
-      if (!repo.hasVisited(route)) {
-        repo.markVisited(route);
-        ref
-            .read(companionEngineProvider.notifier)
-            .triggerEvent(
-              eventType: CompanionEventType.firstFeatureVisit,
-              userContext: {'route': route},
-            );
-        setState(() => _showFirstVisitGuide = true);
-      }
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _checkScreenFirstVisit(
+        '/social/challenge',
+        const NarratorAppearance(
+          trigger: NarratorTrigger.screenFirstVisit,
+          shellText:
+              'This challenge is a concentrated test... Finish it and your world shifts.',
+          buttonA: "I'm in",
+          buttonB: "Tell me what's at stake",
+        ),
+      );
     });
-  }
-
-  @override
-  void dispose() {
-    _initTimer?.cancel();
-    super.dispose();
   }
 
   @override
@@ -82,9 +69,10 @@ class _ChallengeDetailScreenState extends ConsumerState<ChallengeDetailScreen> {
       error: (err, stack) => Scaffold(
         backgroundColor: EmergeColors.background,
         body: Center(
-          child: Text(
-            'Error loading challenge: $err',
-            style: const TextStyle(color: Colors.white),
+          child: AppErrorWidget(
+            message: 'Error loading challenge: $err',
+            onRetry: () =>
+                ref.invalidate(challengeByIdProvider(challengeId ?? '')),
           ),
         ),
       ),
@@ -542,26 +530,6 @@ class _ChallengeDetailScreenState extends ConsumerState<ChallengeDetailScreen> {
                   ],
                 ),
 
-                if (_showFirstVisitGuide)
-                  FeatureCoachMark(
-                    title: "Challenge Details",
-                    primaryColor: AppTheme.primary,
-                    items: const [
-                      CoachItemData(
-                        icon: Icons.explore,
-                        title: "Mission Progress",
-                        body: "Track your progress through each day of the challenge with visual milestones.",
-                      ),
-                      CoachItemData(
-                        icon: Icons.timeline,
-                        title: "Journey Log",
-                        body: "View the full journey log of steps and complete daily actions to advance.",
-                      ),
-                    ],
-                    onDismiss: () =>
-                        setState(() => _showFirstVisitGuide = false),
-                  ),
-
                 // Bottom Action Button
                 Positioned(
                   bottom: 32,
@@ -579,6 +547,39 @@ class _ChallengeDetailScreenState extends ConsumerState<ChallengeDetailScreen> {
         );
       },
     );
+  }
+
+  void _checkScreenFirstVisit(String route, NarratorAppearance appearance) {
+    final trigger = NarratorTriggerEngine.shouldTrigger(
+      stats: const NarratorUserStats(
+        momentumScore: 0.5,
+        consecutiveActiveDays: 1,
+        totalHabitsToday: 0,
+        completedHabitsToday: 0,
+        currentLevel: 1,
+        previousLevel: 1,
+        hasStreakBreak: false,
+        currentStreak: 0,
+        longestStreak: 0,
+        consecutiveMisses: 0,
+        isFirstVisitToRoute: true,
+        isFirstVisitToNode: false,
+        hasCompletedEveningReflectionToday: false,
+        hasCompletedOnboarding: true,
+        archetypeSelected: true,
+      ),
+      context: AppOpenContext(
+        currentRoute: route,
+        now: DateTime.now(),
+        isFirstAppOpen: false,
+        daysSinceInstall: 10,
+        daysSinceLastOpen: 0,
+      ),
+      recentTriggers: const {},
+    );
+    if (trigger == NarratorTrigger.screenFirstVisit && mounted) {
+      NarratorSheet.show(context, appearance);
+    }
   }
 
   Widget _buildActionButton(

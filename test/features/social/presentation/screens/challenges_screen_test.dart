@@ -45,7 +45,7 @@ void main() {
   testWidgets('ChallengesScreen renders with empty bundle', (tester) async {
     await setScreenSize(tester);
     await tester.pumpWidget(buildTest());
-    await tester.pumpAndSettle();
+    await tester.pump(const Duration(seconds: 1));
 
     expect(find.text('Weekly Spotlight'), findsOneWidget);
     expect(find.text('Daily Quest'), findsOneWidget);

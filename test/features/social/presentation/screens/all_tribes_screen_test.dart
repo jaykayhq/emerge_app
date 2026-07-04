@@ -82,7 +82,8 @@ void main() {
       ),
     );
 
-    await tester.pumpAndSettle();
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 500));
     expect(find.text('MORNING WARRIORS'), findsOneWidget);
   });
 
@@ -101,7 +102,8 @@ void main() {
       ),
     );
 
-    await tester.pumpAndSettle();
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 500));
     expect(find.text('No tribes available'), findsOneWidget);
   });
 }

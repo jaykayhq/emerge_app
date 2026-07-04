@@ -80,6 +80,8 @@ class SplashScreen extends ConsumerStatefulWidget {
 }
 
 class _SplashScreenState extends ConsumerState<SplashScreen> {
+  bool _navigated = false;
+
   @override
   void initState() {
     super.initState();
@@ -87,6 +89,10 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
   }
 
   Future<void> _navigateToNext() async {
+    // Guard: if we already navigated (e.g. router rebuilt and re-created
+    // the splash), don't run the full logic again.
+    if (_navigated) return;
+    _navigated = true;
     // UNCONDITIONAL 3 second splash screen for branding
     await Future.delayed(const Duration(seconds: 3));
 

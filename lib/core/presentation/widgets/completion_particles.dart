@@ -4,13 +4,19 @@ import 'package:flutter/material.dart';
 /// A particle burst animation that plays when a habit is completed.
 ///
 /// Renders 30 particles that burst outward from center with gravity,
-/// fade out over 800ms, then remove themselves from the widget tree.
+/// fade out over 800ms, then calls [onComplete] so the parent can
+/// remove this widget from the tree.
 class CompletionParticles extends StatefulWidget {
   final Color color;
+
+  /// Called once when the 800 ms animation finishes.
+  /// The parent is responsible for removing this widget from the tree.
+  final VoidCallback onComplete;
 
   const CompletionParticles({
     super.key,
     required this.color,
+    required this.onComplete,
   });
 
   @override
@@ -21,9 +27,13 @@ class _CompletionParticlesState extends State<CompletionParticles>
     with SingleTickerProviderStateMixin {
   late final AnimationController _controller;
 
+  /// Pre-generated list — created once so particles don't teleport each frame.
+  late final List<ParticleData> _particles;
+
   @override
   void initState() {
     super.initState();
+    _particles = List.generate(30, (_) => ParticleData.random());
     _controller = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 800),
@@ -34,9 +44,7 @@ class _CompletionParticlesState extends State<CompletionParticles>
 
   void _onAnimationEnd(AnimationStatus status) {
     if (status == AnimationStatus.completed && mounted) {
-      setState(() {
-        // No-op: widget will be rebuilt out of tree
-      });
+      widget.onComplete();
     }
   }
 
@@ -49,19 +57,16 @@ class _CompletionParticlesState extends State<CompletionParticles>
 
   @override
   Widget build(BuildContext context) {
-    // Once the animation completes, remove this widget from the tree
-    if (_controller.isCompleted) {
-      return const SizedBox.shrink();
-    }
-
     return AnimatedBuilder(
       animation: _controller,
       builder: (context, child) {
         return CustomPaint(
-          size: const Size(100, 100),
+          size: Size.zero,
+          isComplex: true,
           painter: ParticleBurstPainter(
             color: widget.color,
             progress: _controller.value,
+            particles: _particles,
           ),
         );
       },
@@ -77,10 +82,11 @@ class ParticleBurstPainter extends CustomPainter {
   /// 30 pre-generated particles with random offsets, angles, and speeds.
   final List<ParticleData> particles;
 
-  ParticleBurstPainter({
+  const ParticleBurstPainter({
     required this.color,
     required this.progress,
-  }) : particles = List.generate(30, (_) => ParticleData._random());
+    required this.particles,
+  });
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -125,7 +131,7 @@ class ParticleData {
   final double speed;
   final double size;
 
-  ParticleData({
+  const ParticleData({
     required this.offsetDx,
     required this.offsetDy,
     required this.angle,
@@ -133,7 +139,7 @@ class ParticleData {
     required this.size,
   });
 
-  factory ParticleData._random() {
+  factory ParticleData.random() {
     final random = math.Random();
     return ParticleData(
       offsetDx: (random.nextDouble() - 0.5) * 20,

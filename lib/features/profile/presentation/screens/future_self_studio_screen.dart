@@ -1,5 +1,3 @@
-import 'dart:async';
-
 import 'package:emerge_app/core/constants/gamification_constants.dart';
 import 'package:emerge_app/core/theme/app_theme.dart';
 import 'package:emerge_app/core/theme/archetype_theme.dart';
@@ -18,12 +16,13 @@ import 'package:emerge_app/features/profile/presentation/widgets/trajectory_time
 import 'package:emerge_app/features/profile/presentation/widgets/synergy_status_card.dart';
 import 'package:emerge_app/features/profile/presentation/widgets/synergy_card.dart';
 import 'package:emerge_app/features/profile/presentation/widgets/emerge_splash_reveal.dart';
-import 'package:emerge_app/features/companion/presentation/providers/companion_providers.dart';
-import 'package:emerge_app/features/companion/domain/enums/companion_enums.dart';
 import 'package:emerge_app/features/monetization/presentation/providers/subscription_provider.dart';
 import 'package:flutter/material.dart';
-import 'package:emerge_app/core/presentation/widgets/feature_coach_mark.dart';
 import 'package:flutter/services.dart';
+import 'package:emerge_app/features/narrator/domain/models/narrator_appearance.dart';
+import 'package:emerge_app/features/narrator/domain/models/narrator_trigger.dart';
+import 'package:emerge_app/features/narrator/domain/services/narrator_trigger_engine.dart';
+import 'package:emerge_app/features/narrator/presentation/widgets/narrator_sheet.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
@@ -64,33 +63,23 @@ class FutureSelfStudioScreen extends ConsumerStatefulWidget {
 
 class _FutureSelfStudioScreenState
     extends ConsumerState<FutureSelfStudioScreen> {
-  Timer? _initTimer;
   int? _previousStreak;
-  bool _showFirstVisitGuide = false;
 
   @override
   void initState() {
     super.initState();
-    _initTimer = Timer(const Duration(milliseconds: 500), () {
-      if (!mounted) return;
-      final repo = ref.read(companionRepositoryProvider);
-      if (!repo.hasVisited('/profile/future-self')) {
-        repo.markVisited('/profile/future-self');
-        ref
-            .read(companionEngineProvider.notifier)
-            .triggerEvent(
-              eventType: CompanionEventType.firstFeatureVisit,
-              userContext: {'route': '/profile/future-self'},
-            );
-        setState(() => _showFirstVisitGuide = true);
-      }
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _checkScreenFirstVisit(
+        '/profile/future-self',
+        const NarratorAppearance(
+          trigger: NarratorTrigger.screenFirstVisit,
+          shellText:
+              'This is where you decide who you\'re becoming... Every identity tag you set here shapes what your Narrator says...',
+          buttonA: "I'm ready to define it",
+          buttonB: 'What happens if I change this later',
+        ),
+      );
     });
-  }
-
-  @override
-  void dispose() {
-    _initTimer?.cancel();
-    super.dispose();
   }
 
   @override
@@ -139,9 +128,7 @@ class _FutureSelfStudioScreenState
         final accentColor = archetypeTheme.primaryColor;
 
         return WorldBackground(
-          child: Stack(
-            children: [
-              CustomScrollView(
+          child: CustomScrollView(
                 slivers: [
                   // App Bar
                   SliverAppBar(
@@ -565,26 +552,6 @@ class _FutureSelfStudioScreenState
                   const SliverToBoxAdapter(child: SizedBox(height: 40)),
                 ],
               ),
-              if (_showFirstVisitGuide)
-                FeatureCoachMark(
-                  title: "Future Self Studio",
-                  primaryColor: accentColor,
-                  items: const [
-                    CoachItemData(
-                      icon: Icons.person_outline,
-                      title: "Archetype Silhouette",
-                      body: "Cast identity votes by completing daily habits to evolve your silhouette through the 5 evolution phases.",
-                    ),
-                    CoachItemData(
-                      icon: Icons.bubble_chart_outlined,
-                      title: "Synergy & Multipliers",
-                      body: "Boost specific attributes to unlock special status synergies, increasing daily momentum growth.",
-                    ),
-                  ],
-                  onDismiss: () => setState(() => _showFirstVisitGuide = false),
-                ),
-            ],
-          ),
         );
       },
       loading: () => const Scaffold(
@@ -681,6 +648,39 @@ class _FutureSelfStudioScreenState
         return 'Ethereal Realm';
       case UserArchetype.none:
         return 'Living Forest';
+    }
+  }
+
+  void _checkScreenFirstVisit(String route, NarratorAppearance appearance) {
+    final trigger = NarratorTriggerEngine.shouldTrigger(
+      stats: const NarratorUserStats(
+        momentumScore: 0.5,
+        consecutiveActiveDays: 1,
+        totalHabitsToday: 0,
+        completedHabitsToday: 0,
+        currentLevel: 1,
+        previousLevel: 1,
+        hasStreakBreak: false,
+        currentStreak: 0,
+        longestStreak: 0,
+        consecutiveMisses: 0,
+        isFirstVisitToRoute: true,
+        isFirstVisitToNode: false,
+        hasCompletedEveningReflectionToday: false,
+        hasCompletedOnboarding: true,
+        archetypeSelected: true,
+      ),
+      context: AppOpenContext(
+        currentRoute: route,
+        now: DateTime.now(),
+        isFirstAppOpen: false,
+        daysSinceInstall: 10,
+        daysSinceLastOpen: 0,
+      ),
+      recentTriggers: const {},
+    );
+    if (trigger == NarratorTrigger.screenFirstVisit && mounted) {
+      NarratorSheet.show(context, appearance);
     }
   }
 

@@ -32,7 +32,7 @@ void main() {
         child: const MaterialApp(home: FriendsScreen()),
       ),
     );
-    await tester.pumpAndSettle();
+    await tester.pump(const Duration(seconds: 1));
 
     expect(find.text('PARTNERS'), findsOneWidget);
     expect(find.text('Find a partner...'), findsOneWidget);

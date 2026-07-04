@@ -8,8 +8,6 @@ import 'package:emerge_app/features/habits/domain/entities/habit.dart';
 import 'package:emerge_app/features/habits/presentation/providers/habit_providers.dart';
 import 'package:emerge_app/features/habits/presentation/widgets/habit_template_picker.dart';
 import 'package:emerge_app/features/timeline/presentation/widgets/habit_timeline_section.dart';
-import 'package:emerge_app/features/companion/presentation/providers/companion_providers.dart';
-import 'package:emerge_app/features/companion/domain/enums/companion_enums.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -18,7 +16,10 @@ import 'package:go_router/go_router.dart';
 import 'package:uuid/uuid.dart';
 import 'package:emerge_app/core/theme/emerge_colors.dart';
 import 'package:emerge_app/features/monetization/presentation/widgets/premium_limit_dialog.dart';
-import 'package:emerge_app/core/presentation/widgets/feature_coach_mark.dart';
+import 'package:emerge_app/features/narrator/domain/models/narrator_appearance.dart';
+import 'package:emerge_app/features/narrator/domain/models/narrator_trigger.dart';
+import 'package:emerge_app/features/narrator/domain/services/narrator_trigger_engine.dart';
+import 'package:emerge_app/features/narrator/presentation/widgets/narrator_sheet.dart';
 
 /// Redesigned Create Habit Dialog with Stitch-inspired cosmic glassmorphism
 class AdvancedCreateHabitDialog extends ConsumerStatefulWidget {
@@ -51,26 +52,22 @@ class _AdvancedCreateHabitDialogState
   HabitIntegrationType _integrationType = HabitIntegrationType.none;
   int? _integrationTarget;
 
-  bool _showFirstVisitGuide = false;
-
   @override
   void initState() {
     super.initState();
     _titleController.addListener(_updateIdentityStatement);
     _locationController.addListener(_updateIdentityStatement);
-    Future.delayed(const Duration(milliseconds: 500), () {
-      if (!mounted) return;
-      final repo = ref.read(companionRepositoryProvider);
-      if (!repo.hasVisited('/habits/create')) {
-        repo.markVisited('/habits/create');
-        ref
-            .read(companionEngineProvider.notifier)
-            .triggerEvent(
-              eventType: CompanionEventType.firstFeatureVisit,
-              userContext: {'route': '/habits/create'},
-            );
-        setState(() => _showFirstVisitGuide = true);
-      }
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _checkScreenFirstVisit(
+        '/habits/create',
+        const NarratorAppearance(
+          trigger: NarratorTrigger.screenFirstVisit,
+          shellText:
+              'A [archetype] who wants to build [habitGoal]. The best habits are small enough...',
+          buttonA: 'That works for me',
+          buttonB: 'Help me make it smaller',
+        ),
+      );
     });
   }
 
@@ -80,6 +77,39 @@ class _AdvancedCreateHabitDialogState
     _locationController.dispose();
 
     super.dispose();
+  }
+
+  void _checkScreenFirstVisit(String route, NarratorAppearance appearance) {
+    final trigger = NarratorTriggerEngine.shouldTrigger(
+      stats: const NarratorUserStats(
+        momentumScore: 0.5,
+        consecutiveActiveDays: 1,
+        totalHabitsToday: 0,
+        completedHabitsToday: 0,
+        currentLevel: 1,
+        previousLevel: 1,
+        hasStreakBreak: false,
+        currentStreak: 0,
+        longestStreak: 0,
+        consecutiveMisses: 0,
+        isFirstVisitToRoute: true,
+        isFirstVisitToNode: false,
+        hasCompletedEveningReflectionToday: false,
+        hasCompletedOnboarding: true,
+        archetypeSelected: true,
+      ),
+      context: AppOpenContext(
+        currentRoute: route,
+        now: DateTime.now(),
+        isFirstAppOpen: false,
+        daysSinceInstall: 10,
+        daysSinceLastOpen: 0,
+      ),
+      recentTriggers: const {},
+    );
+    if (trigger == NarratorTrigger.screenFirstVisit && mounted) {
+      NarratorSheet.show(context, appearance);
+    }
   }
 
   void _updateIdentityStatement() {
@@ -300,79 +330,57 @@ class _AdvancedCreateHabitDialogState
     final habitsAsync = ref.watch(habitsProvider);
     final userProfile = ref.watch(userStatsStreamProvider).value;
 
-    return Stack(
-      children: [
-        Dialog(
-          backgroundColor: Colors.transparent,
-          insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 40),
-          child: Stack(
-            clipBehavior: Clip.none,
-            children: [
-              Form(
-                key: _formKey,
-                child: SingleChildScrollView(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      _buildMainDialog(context, userProfile, habitsAsync),
-                      const SizedBox(height: 24),
-                      _buildForgeButton(context),
-                    ],
-                  ),
-                ),
+    return Dialog(
+      backgroundColor: Colors.transparent,
+      insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 40),
+      child: Stack(
+        clipBehavior: Clip.none,
+        children: [
+          Form(
+            key: _formKey,
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  _buildMainDialog(context, userProfile, habitsAsync),
+                  const SizedBox(height: 24),
+                  _buildForgeButton(context),
+                ],
               ),
-              // Close button at top right — kept inside Stack bounds for reliable hit testing
-              Positioned(
-                top: 8,
-                right: 8,
-                child: GestureDetector(
-                  behavior: HitTestBehavior.opaque,
-                  onTap: () => context.pop(),
-                  child: Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF1A1A2E),
-                      shape: BoxShape.circle,
-                      border: Border.all(
-                        color: _getAttributeColor(
-                          _attribute,
-                        ).withValues(alpha: 0.5),
-                      ),
-                      boxShadow: [
-                        BoxShadow(
-                          color: _getAttributeColor(
-                            _attribute,
-                          ).withValues(alpha: 0.3),
-                          blurRadius: 8,
-                        ),
-                      ],
+            ),
+          ),
+          // Close button at top right — kept inside Stack bounds for reliable hit testing
+          Positioned(
+            top: 8,
+            right: 8,
+            child: GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onTap: () => context.pop(),
+              child: Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF1A1A2E),
+                  shape: BoxShape.circle,
+                  border: Border.all(
+                    color: _getAttributeColor(
+                      _attribute,
+                    ).withValues(alpha: 0.5),
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: _getAttributeColor(
+                        _attribute,
+                      ).withValues(alpha: 0.3),
+                      blurRadius: 8,
                     ),
-                    child: const Icon(Icons.close, color: Colors.white, size: 18),
-                  ),
+                  ],
                 ),
+                child: const Icon(Icons.close, color: Colors.white, size: 18),
               ),
-            ],
+            ),
           ),
-        ),
-        if (_showFirstVisitGuide)
-          FeatureCoachMark(
-            title: "Forge Your Character Habit",
-            primaryColor: EmergeColors.teal,
-            items: const [
-              CoachItemData(
-                icon: Icons.title_outlined,
-                title: "Identity Statements",
-                body: "Type your habit title and watch it automatically formulate into an identity-reinforcing belief statement.",
-              ),
-              CoachItemData(
-                icon: Icons.tune_outlined,
-                title: "Advanced Behavioral Hooks",
-                body: "Expand the advanced section below to configure Two-Minute Versions, Environment Priming, and custom rewards.",
-              ),
-            ],
-            onDismiss: () => setState(() => _showFirstVisitGuide = false),
-          ),
-      ],
+        ],
+      ),
     );
   }
 

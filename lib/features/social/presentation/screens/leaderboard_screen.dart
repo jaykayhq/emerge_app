@@ -1,11 +1,6 @@
-import 'dart:async';
-
 import 'package:emerge_app/core/presentation/widgets/app_error_widget.dart';
 import 'package:emerge_app/core/presentation/widgets/emerge_loading_skeleton.dart';
-import 'package:emerge_app/core/presentation/widgets/feature_coach_mark.dart';
 import 'package:emerge_app/core/theme/app_theme.dart';
-import 'package:emerge_app/features/companion/domain/enums/companion_enums.dart';
-import 'package:emerge_app/features/companion/presentation/providers/companion_providers.dart';
 import 'package:emerge_app/features/gamification/presentation/providers/user_stats_providers.dart';
 import 'package:emerge_app/features/social/presentation/providers/friends_leaderboard_provider.dart';
 import 'package:emerge_app/features/social/presentation/providers/leaderboard_provider.dart';
@@ -16,6 +11,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
 import 'package:go_router/go_router.dart';
+import 'package:emerge_app/features/narrator/domain/models/narrator_appearance.dart';
+import 'package:emerge_app/features/narrator/domain/models/narrator_trigger.dart';
+import 'package:emerge_app/features/narrator/domain/services/narrator_trigger_engine.dart';
+import 'package:emerge_app/features/narrator/presentation/widgets/narrator_sheet.dart';
 
 export 'package:emerge_app/features/social/presentation/providers/tribes_provider.dart'
     show TribeStats;
@@ -32,8 +31,6 @@ class LeaderboardScreen extends ConsumerStatefulWidget {
 class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
-  Timer? _initTimer;
-  bool _showFirstVisitGuide = false;
 
   @override
   void initState() {
@@ -43,25 +40,22 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen>
       vsync: this,
       initialIndex: widget.initialTabIndex,
     );
-    _initTimer = Timer(const Duration(milliseconds: 500), () {
-      if (!mounted) return;
-      final repo = ref.read(companionRepositoryProvider);
-      if (!repo.hasVisited('/social/leaderboard')) {
-        repo.markVisited('/social/leaderboard');
-        ref
-            .read(companionEngineProvider.notifier)
-            .triggerEvent(
-              eventType: CompanionEventType.firstFeatureVisit,
-              userContext: {'route': '/social/leaderboard'},
-            );
-        setState(() => _showFirstVisitGuide = true);
-      }
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _checkScreenFirstVisit(
+        '/social/leaderboard',
+        const NarratorAppearance(
+          trigger: NarratorTrigger.screenFirstVisit,
+          shellText:
+              'This is the scoreboard for... this week. Momentum is the metric — not perfection.',
+          buttonA: 'I understand',
+          buttonB: 'How is the score calculated',
+        ),
+      );
     });
   }
 
   @override
   void dispose() {
-    _initTimer?.cancel();
     _tabController.dispose();
     super.dispose();
   }
@@ -70,9 +64,7 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen>
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppTheme.backgroundDark,
-      body: Stack(
-        children: [
-          CustomScrollView(
+      body: CustomScrollView(
         slivers: [
           SliverAppBar(
             expandedHeight: 120,
@@ -138,27 +130,40 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen>
           ),
         ],
       ),
-      if (_showFirstVisitGuide)
-        FeatureCoachMark(
-          title: "Leaderboards",
-          primaryColor: AppTheme.primary,
-          items: const [
-            CoachItemData(
-              icon: Icons.people,
-              title: "Friends Ranking",
-              body: "See how you stack up against your accountability partners.",
-            ),
-            CoachItemData(
-              icon: Icons.shield,
-              title: "Tribe & World",
-              body: "Compare scores across your tribe and compete globally on the world leaderboard.",
-            ),
-          ],
-          onDismiss: () => setState(() => _showFirstVisitGuide = false),
-        ),
-      ],
-      ),
     );
+  }
+
+  void _checkScreenFirstVisit(String route, NarratorAppearance appearance) {
+    final trigger = NarratorTriggerEngine.shouldTrigger(
+      stats: const NarratorUserStats(
+        momentumScore: 0.5,
+        consecutiveActiveDays: 1,
+        totalHabitsToday: 0,
+        completedHabitsToday: 0,
+        currentLevel: 1,
+        previousLevel: 1,
+        hasStreakBreak: false,
+        currentStreak: 0,
+        longestStreak: 0,
+        consecutiveMisses: 0,
+        isFirstVisitToRoute: true,
+        isFirstVisitToNode: false,
+        hasCompletedEveningReflectionToday: false,
+        hasCompletedOnboarding: true,
+        archetypeSelected: true,
+      ),
+      context: AppOpenContext(
+        currentRoute: route,
+        now: DateTime.now(),
+        isFirstAppOpen: false,
+        daysSinceInstall: 10,
+        daysSinceLastOpen: 0,
+      ),
+      recentTriggers: const {},
+    );
+    if (trigger == NarratorTrigger.screenFirstVisit && mounted) {
+      NarratorSheet.show(context, appearance);
+    }
   }
 }
 

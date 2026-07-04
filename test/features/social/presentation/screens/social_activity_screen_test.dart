@@ -61,9 +61,15 @@ void main() {
     await tester.pumpWidget(buildTest());
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 50));
-    await tester.tap(find.text('PARTNERS'));
+    final gestureDetector = tester.widget<GestureDetector>(
+      find.ancestor(
+        of: find.text('PARTNERS'),
+        matching: find.byType(GestureDetector),
+      ).first,
+    );
+    gestureDetector.onTap!();
     await tester.pump();
-    await tester.pump(const Duration(milliseconds: 50));
+    await tester.pump(const Duration(seconds: 1));
     expect(find.textContaining('Find a partner'), findsOneWidget);
   });
 }

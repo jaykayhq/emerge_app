@@ -3,11 +3,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:emerge_app/features/habits/domain/entities/habit.dart';
 import 'package:emerge_app/core/theme/app_theme.dart';
+import 'package:emerge_app/features/narrator/domain/models/narrator_appearance.dart';
+import 'package:emerge_app/features/narrator/domain/models/narrator_trigger.dart';
+import 'package:emerge_app/features/narrator/presentation/widgets/narrator_sheet.dart';
 
 /// A dedicated flow for when a user misses a habit to maintain their identity momentum.
 /// Frames the return positively ("You're human. Never miss twice.")
 /// Visually restores momentum.
-class StreakRecoveryScreen extends ConsumerWidget {
+class StreakRecoveryScreen extends ConsumerStatefulWidget {
   final Habit habit;
   final int xpEarned;
 
@@ -18,7 +21,37 @@ class StreakRecoveryScreen extends ConsumerWidget {
   });
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<StreakRecoveryScreen> createState() => _StreakRecoveryScreenState();
+}
+
+class _StreakRecoveryScreenState extends ConsumerState<StreakRecoveryScreen> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _showNarrator();
+    });
+  }
+
+  Future<void> _showNarrator() async {
+    // Wait a brief moment for the screen to settle
+    await Future.delayed(const Duration(milliseconds: 600));
+    if (!mounted) return;
+    
+    await NarratorSheet.show(
+      context,
+      NarratorAppearance(
+        trigger: NarratorTrigger.streakBreakFirstMiss,
+        shellText: 'You missed a step. But you did not stop. That is what separates the dedicated from the dreamers.',
+        buttonA: 'I will not stop',
+        buttonB: 'Let\'s keep going',
+        slotKeys: [widget.habit.id],
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppTheme.backgroundDark,
       body: Stack(
@@ -65,7 +98,7 @@ class StreakRecoveryScreen extends ConsumerWidget {
                     ),
                     const SizedBox(height: 16),
                     Text(
-                      'You missed a day on "${habit.title}", but you came back. '
+                      'You missed a day on "${widget.habit.title}", but you came back. '
                       'Identity isn\'t about perfection, it\'s about resilience.',
                       textAlign: TextAlign.center,
                       style: Theme.of(context).textTheme.bodyLarge?.copyWith(
@@ -109,7 +142,7 @@ class StreakRecoveryScreen extends ConsumerWidget {
                                 ),
                               ),
                               Text(
-                                '$xpEarned',
+                                '${widget.xpEarned}',
                                 style: const TextStyle(
                                   color: Colors.white,
                                   fontSize: 48,

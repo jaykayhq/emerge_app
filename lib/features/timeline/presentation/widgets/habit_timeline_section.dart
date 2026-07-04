@@ -1,10 +1,8 @@
 import 'dart:async';
-import 'dart:ui';
 
 import 'package:emerge_app/core/presentation/widgets/one_tap_completion_zone.dart';
 import 'package:emerge_app/features/habits/domain/entities/habit.dart';
 import 'package:flutter/material.dart';
-import 'package:emerge_app/core/theme/emerge_colors.dart';
 import 'package:emerge_app/features/timeline/presentation/widgets/habit_rune_indicator.dart';
 
 /// Maps a [HabitAttribute] to its identity color.
@@ -157,20 +155,7 @@ class _HabitCategorySection extends StatelessWidget {
     }
   }
 
-  IconData get _categoryIcon {
-    switch (slot) {
-      case 'morning':
-        return Icons.wb_sunny;
-      case 'afternoon':
-        return Icons.wb_cloudy;
-      case 'evening':
-        return Icons.bedtime;
-      case 'anytime':
-        return Icons.access_time;
-      default:
-        return Icons.access_time;
-    }
-  }
+
 
   Color get _categoryColor {
     switch (slot) {
@@ -195,7 +180,6 @@ class _HabitCategorySection extends StatelessWidget {
         // Category header with bullet
         _CategoryHeader(
           title: _categoryTitle,
-          icon: _categoryIcon,
           color: _categoryColor,
           habitCount: habits.length,
         ),
@@ -222,13 +206,11 @@ class _HabitCategorySection extends StatelessWidget {
 /// Category header with bullet/circle icon
 class _CategoryHeader extends StatelessWidget {
   final String title;
-  final IconData icon;
   final Color color;
   final int habitCount;
 
   const _CategoryHeader({
     required this.title,
-    required this.icon,
     required this.color,
     required this.habitCount,
   });
@@ -355,11 +337,7 @@ class _IndentedHabitItemState extends State<_IndentedHabitItem> {
   }
 
   bool get _isCompletedToday {
-    final last = widget.habit.lastCompletedDate;
-    if (last == null) return false;
-    return last.year == widget.selectedDate.year &&
-        last.month == widget.selectedDate.month &&
-        last.day == widget.selectedDate.day;
+    return widget.habit.isCompletedOn(widget.selectedDate);
   }
 
   String get _timerString {
@@ -385,7 +363,7 @@ class _IndentedHabitItemState extends State<_IndentedHabitItem> {
         DismissDirection.endToStart: 0.4,
       },
       child: Padding(
-        padding: const EdgeInsets.only(left: 24, bottom: 8),
+        padding: const EdgeInsets.only(left: 16, bottom: 8),
         child: Column(
           children: [
             Row(
@@ -399,14 +377,14 @@ class _IndentedHabitItemState extends State<_IndentedHabitItem> {
                       width: 2,
                       height: 48,
                       decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          begin: Alignment.topCenter,
-                          end: Alignment.bottomCenter,
-                          colors: [
-                            color.withValues(alpha: 0.3),
-                            color.withValues(alpha: 0.1),
-                          ],
-                        ),
+                        color: color.withValues(alpha: 0.2),
+                        boxShadow: [
+                          BoxShadow(
+                            color: color.withValues(alpha: 0.1),
+                            blurRadius: 4,
+                            spreadRadius: 1,
+                          ),
+                        ],
                       ),
                     ),
                   )
@@ -603,7 +581,7 @@ class _IndentedHabitItemState extends State<_IndentedHabitItem> {
         borderRadius: BorderRadius.circular(10),
       ),
       alignment: Alignment.centerLeft,
-      padding: const EdgeInsets.only(left: 24),
+      padding: const EdgeInsets.only(left: 16),
       child: const Row(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -629,7 +607,7 @@ class _IndentedHabitItemState extends State<_IndentedHabitItem> {
         borderRadius: BorderRadius.circular(10),
       ),
       alignment: Alignment.centerRight,
-      padding: const EdgeInsets.only(right: 24),
+      padding: const EdgeInsets.only(right: 16),
       child: const Row(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -788,13 +766,14 @@ class _IndentedHabitItemState extends State<_IndentedHabitItem> {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
               decoration: BoxDecoration(
-                color: color.withValues(alpha: 0.15),
+                color: color.withValues(alpha: 0.25),
                 borderRadius: BorderRadius.circular(4),
+                border: Border.all(color: color.withValues(alpha: 0.5)),
               ),
               child: Text(
                 label,
-                style: TextStyle(
-                  color: color,
+                style: const TextStyle(
+                  color: Colors.white,
                   fontSize: 9,
                   fontWeight: FontWeight.bold,
                 ),
@@ -808,9 +787,11 @@ class _IndentedHabitItemState extends State<_IndentedHabitItem> {
 
   Widget _buildCompleted(Color color) {
     // Calculate XP
-    int baseXp = 10;
-    if (widget.habit.difficulty.toString().contains('medium')) baseXp = 20;
-    if (widget.habit.difficulty.toString().contains('hard')) baseXp = 30;
+    final baseXp = switch (widget.habit.difficulty) {
+      HabitDifficulty.easy => 10,
+      HabitDifficulty.medium => 20,
+      HabitDifficulty.hard => 30,
+    };
     final xp =
         (baseXp * (1 + (widget.habit.currentStreak * 0.1).clamp(0.0, 0.5)))
             .toInt();
@@ -846,550 +827,3 @@ class _IndentedHabitItemState extends State<_IndentedHabitItem> {
   }
 }
 
-/// A vertical timeline section showing habits grouped by time-of-day.
-///
-/// Matches the Stitch design: left column with icon node + vertical connector,
-/// right column with section title, completion count, and habit list.
-/// Each habit item is colored by its attribute for visual identity.
-class HabitTimelineSection extends StatelessWidget {
-  final String title;
-  final String description;
-  final IconData icon;
-  final List<Habit> habits;
-  final DateTime selectedDate;
-  final Color accentColor;
-  final void Function(Habit habit) onHabitTap;
-  final void Function(Habit habit) onHabitToggle;
-  final bool isLast;
-
-  const HabitTimelineSection({
-    super.key,
-    required this.title,
-    required this.description,
-    required this.icon,
-    required this.habits,
-    required this.selectedDate,
-    required this.accentColor,
-    required this.onHabitTap,
-    required this.onHabitToggle,
-    this.isLast = false,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final completedCount = habits.where((h) {
-      final last = h.lastCompletedDate;
-      if (last == null) return false;
-      return last.year == selectedDate.year &&
-          last.month == selectedDate.month &&
-          last.day == selectedDate.day;
-    }).length;
-
-    final allDone = completedCount == habits.length && habits.isNotEmpty;
-
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      child: IntrinsicHeight(
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Left column: icon node + vertical line
-            SizedBox(
-              width: 40,
-              child: Column(
-                children: [
-                  // Icon node
-                  Container(
-                    width: 36,
-                    height: 36,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: allDone
-                          ? accentColor.withValues(alpha: 0.2)
-                          : const Color(0xFF193324),
-                      border: allDone
-                          ? null
-                          : Border.all(
-                              color: const Color(0xFF326747),
-                              width: 2,
-                            ),
-                    ),
-                    child: Icon(
-                      icon,
-                      size: 18,
-                      color: allDone ? accentColor : Colors.white70,
-                    ),
-                  ),
-                  // Vertical connector line (grows to fill remaining height)
-                  if (!isLast)
-                    Expanded(
-                      child: Container(
-                        width: 2,
-                        color: const Color(0xFF326747),
-                      ),
-                    ),
-                ],
-              ),
-            ),
-            const SizedBox(width: 12),
-            // Right column: content
-            Expanded(
-              child: Padding(
-                padding: const EdgeInsets.only(bottom: 16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Section title
-                    Text(
-                      title,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    // Completion count
-                    Text(
-                      habits.isEmpty
-                          ? 'No habits scheduled'
-                          : allDone
-                          ? 'Completed $completedCount/$completedCount ✓'
-                          : '$completedCount/${habits.length} remaining',
-                      style: TextStyle(
-                        color: EmergeColors.tealMuted,
-                        fontSize: 14,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    // Habit items — each colored by attribute
-                    ...habits.map(
-                      (habit) => _HabitTimelineItem(
-                        habit: habit,
-                        selectedDate: selectedDate,
-                        onTap: () => onHabitTap(habit),
-                        onToggle: () => onHabitToggle(habit),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-/// Individual habit item in the vertical timeline.
-/// Colored by its [HabitAttribute] — shows attribute label, check state,
-/// and XP badge. Glassmorphism card style matching the Stitch design.
-class _HabitTimelineItem extends StatefulWidget {
-  final Habit habit;
-  final DateTime selectedDate;
-  final VoidCallback onTap;
-  final VoidCallback onToggle;
-
-  const _HabitTimelineItem({
-    required this.habit,
-    required this.selectedDate,
-    required this.onTap,
-    required this.onToggle,
-  });
-
-  @override
-  State<_HabitTimelineItem> createState() => _HabitTimelineItemState();
-}
-
-class _HabitTimelineItemState extends State<_HabitTimelineItem> {
-  int _remainingSeconds = 0;
-  bool _isTimerRunning = false;
-  Timer? _countdownTimer;
-
-  @override
-  void initState() {
-    super.initState();
-    _remainingSeconds = widget.habit.timerDurationMinutes * 60;
-  }
-
-  void _startTimer() {
-    if (_isTimerRunning) return;
-    setState(() => _isTimerRunning = true);
-    _tickTimer();
-  }
-
-  void _tickTimer() {
-    if (!mounted || !_isTimerRunning) return;
-
-    if (_remainingSeconds > 0) {
-      _countdownTimer = Timer(const Duration(seconds: 1), () {
-        if (!mounted || !_isTimerRunning) return;
-        setState(() => _remainingSeconds--);
-        _tickTimer();
-      });
-    } else {
-      setState(() => _isTimerRunning = false);
-      // Auto-complete the habit when timer reaches zero
-      if (!_isCompletedToday) {
-        widget.onToggle();
-      }
-    }
-  }
-
-  void _pauseTimer() {
-    _countdownTimer?.cancel();
-    setState(() => _isTimerRunning = false);
-  }
-
-  @override
-  void dispose() {
-    _countdownTimer?.cancel();
-    _isTimerRunning = false;
-    super.dispose();
-  }
-
-  bool get _isCompletedToday {
-    final last = widget.habit.lastCompletedDate;
-    if (last == null) return false;
-    return last.year == widget.selectedDate.year &&
-        last.month == widget.selectedDate.month &&
-        last.day == widget.selectedDate.day;
-  }
-
-  String get _timerString {
-    final m = (_remainingSeconds ~/ 60).toString().padLeft(2, '0');
-    final s = (_remainingSeconds % 60).toString().padLeft(2, '0');
-    return '$m:$s';
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final completed = _isCompletedToday;
-    final hasAnchor =
-        widget.habit.anchorHabitId != null && widget.habit.anchorHabitId!.isNotEmpty;
-    final color = attributeColor(widget.habit.attribute);
-    final label = attributeLabel(widget.habit.attribute);
-
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 6),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(12),
-        child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
-          child: Container(
-            decoration: BoxDecoration(
-              color: completed
-                  ? Colors.white.withValues(alpha: 0.04)
-                  : Colors.white.withValues(alpha: 0.08),
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(
-                color: completed
-                    ? color.withValues(alpha: 0.15)
-                    : color.withValues(alpha: 0.25),
-                width: 1,
-              ),
-            ),
-            child: InkWell(
-              onTap: widget.onTap,
-              borderRadius: BorderRadius.circular(12),
-              child: Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 10,
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Environmental Priming nodes
-                    if (!completed && widget.habit.environmentPriming.isNotEmpty) ...[
-                      for (final priming in widget.habit.environmentPriming)
-                        Padding(
-                          padding: const EdgeInsets.only(bottom: 8.0),
-                          child: Row(
-                            children: [
-                              Icon(
-                                Icons.check_box_outline_blank,
-                                size: 16,
-                                color: color.withValues(alpha: 0.5),
-                              ),
-                              const SizedBox(width: 8),
-                              Expanded(
-                                child: Text(
-                                  priming,
-                                  style: TextStyle(
-                                    color: Colors.white.withValues(alpha: 0.7),
-                                    fontSize: 12,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                    ],
-
-                    completed
-                        ? _buildCompletedState(color)
-                        : Opacity(
-                            opacity: 1.0,
-                            child: Row(
-                              children: [
-                                // One-tap completion zone
-                                Padding(
-                                  padding: const EdgeInsets.only(right: 12),
-                                  child: OneTapCompletionZone(
-                                    color: color,
-                                    onComplete: widget.onToggle,
-                                  ),
-                                ),
-                                // Habit info: attribute label + title + anchor
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      // Attribute label
-                                      Row(
-                                        children: [
-                                          Text(
-                                            label,
-                                            style: TextStyle(
-                                              color: color,
-                                              fontSize: 9,
-                                              fontWeight: FontWeight.bold,
-                                              letterSpacing: 1,
-                                            ),
-                                          ),
-                                          if (widget.habit.timerDurationMinutes >
-                                              0) ...[
-                                            Text(
-                                              '  •  ${widget.habit.timerDurationMinutes}M',
-                                              style: TextStyle(
-                                                color: color.withValues(
-                                                  alpha: 0.6,
-                                                ),
-                                                fontSize: 9,
-                                                fontWeight: FontWeight.w500,
-                                              ),
-                                            ),
-                                          ],
-                                        ],
-                                      ),
-                                      const SizedBox(height: 2),
-                                      // Habit title
-                                      Text(
-                                        widget.habit.title,
-                                        style: const TextStyle(
-                                          color: Colors.white,
-                                          fontSize: 15,
-                                          fontWeight: FontWeight.w600,
-                                        ),
-                                      ),
-                                      // Anchor indicator
-                                      if (hasAnchor)
-                                        Padding(
-                                          padding: const EdgeInsets.only(
-                                            top: 2,
-                                          ),
-                                          child: Row(
-                                            children: [
-                                              Icon(
-                                                Icons.link,
-                                                size: 12,
-                                                color: color.withValues(
-                                                  alpha: 0.7,
-                                                ),
-                                              ),
-                                              const SizedBox(width: 4),
-                                              Text(
-                                                'Anchored habit',
-                                                style: TextStyle(
-                                                  color: color.withValues(
-                                                    alpha: 0.7,
-                                                  ),
-                                                  fontSize: 11,
-                                                  fontWeight: FontWeight.w500,
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-                                    ],
-                                  ),
-                                ),
-                                // Interactive Timer Button
-                                if (widget.habit.timerDurationMinutes > 0 &&
-                                    _remainingSeconds > 0) ...[
-                                  GestureDetector(
-                                    behavior: HitTestBehavior.opaque,
-                                    onTap: _isTimerRunning
-                                        ? _pauseTimer
-                                        : _startTimer,
-                                    child: Container(
-                                      constraints: const BoxConstraints(
-                                        minHeight: 40,
-                                        minWidth: 40,
-                                      ),
-                                      alignment: Alignment.center,
-                                      padding: const EdgeInsets.symmetric(
-                                        horizontal: 10,
-                                      ),
-                                      margin:
-                                          const EdgeInsets.only(right: 8),
-                                      decoration: BoxDecoration(
-                                        color: _isTimerRunning
-                                            ? color.withValues(alpha: 0.2)
-                                            : Colors.white
-                                                .withValues(alpha: 0.1),
-                                        borderRadius:
-                                            BorderRadius.circular(20),
-                                        border: Border.all(
-                                          color: _isTimerRunning
-                                              ? color
-                                              : Colors.transparent,
-                                        ),
-                                      ),
-                                      child: Row(
-                                        mainAxisSize: MainAxisSize.min,
-                                        children: [
-                                          Icon(
-                                            _isTimerRunning
-                                                ? Icons.pause
-                                                : Icons.play_arrow,
-                                            color: _isTimerRunning
-                                                ? color
-                                                : Colors.white,
-                                            size: 14,
-                                          ),
-                                          const SizedBox(width: 4),
-                                          Text(
-                                            _timerString,
-                                            style: TextStyle(
-                                              color: _isTimerRunning
-                                                  ? color
-                                                  : Colors.white,
-                                              fontSize: 11,
-                                              fontWeight: FontWeight.bold,
-                                              fontFeatures: const [
-                                                FontFeature.tabularFigures(),
-                                              ],
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                                const Icon(
-                                  Icons.chevron_right,
-                                  color: Colors.white30,
-                                  size: 20,
-                                ),
-                              ],
-                            ),
-                          ),
-
-                    // Temptation Bundling (Reward) node
-                    if (widget.habit.reward.isNotEmpty) ...[
-                      const SizedBox(height: 8),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 10,
-                          vertical: 6,
-                        ),
-                        decoration: BoxDecoration(
-                          color: completed
-                              ? color.withValues(alpha: 0.2)
-                              : Colors.white.withValues(alpha: 0.05),
-                          borderRadius: BorderRadius.circular(8),
-                          border: Border.all(
-                            color: completed
-                                ? color.withValues(alpha: 0.5)
-                                : Colors.white.withValues(alpha: 0.1),
-                          ),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(
-                              completed
-                                  ? Icons.card_giftcard
-                                  : Icons.lock_outline,
-                              size: 14,
-                              color: completed
-                                  ? color
-                                  : Colors.white.withValues(alpha: 0.5),
-                            ),
-                            const SizedBox(width: 6),
-                            Text(
-                              widget.habit.reward,
-                              style: TextStyle(
-                                color: completed
-                                    ? Colors.white
-                                    : Colors.white.withValues(alpha: 0.5),
-                                fontSize: 12,
-                                fontWeight: completed
-                                    ? FontWeight.bold
-                                    : FontWeight.normal,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ],
-                ),
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildCompletedState(Color color) {
-    int baseXp = 10;
-    if (widget.habit.difficulty.toString().contains('medium')) baseXp = 20;
-    if (widget.habit.difficulty.toString().contains('hard')) baseXp = 30;
-    final xp = (baseXp * (1 + (widget.habit.currentStreak * 0.1).clamp(0.0, 0.5)))
-        .toInt();
-
-    return Container(
-      width: double.infinity,
-      decoration: BoxDecoration(
-        color: EmergeColors.teal,
-        borderRadius: BorderRadius.circular(12),
-      ),
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(
-            'Completed! +$xp XP',
-            style: TextStyle(
-              color: EmergeColors.background,
-              fontWeight: FontWeight.bold,
-              fontSize: 14,
-            ),
-          ),
-          TextButton.icon(
-            onPressed: widget.onToggle,
-            icon: Icon(Icons.undo, size: 16, color: EmergeColors.background),
-            label: Text(
-              'Undo',
-              style: TextStyle(
-                color: EmergeColors.background,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            style: TextButton.styleFrom(
-              padding: const EdgeInsets.symmetric(horizontal: 8),
-              minimumSize: Size.zero,
-              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}

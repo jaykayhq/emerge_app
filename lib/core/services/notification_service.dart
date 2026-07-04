@@ -1,5 +1,9 @@
+import 'dart:async';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:flutter/widgets.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter/foundation.dart';
@@ -9,18 +13,52 @@ import 'package:timezone/data/latest_all.dart' as tz;
 import 'package:timezone/timezone.dart' as tz;
 
 import 'package:emerge_app/core/services/notification_templates.dart';
+import 'package:emerge_app/core/services/notification_action_handler.dart';
 import 'package:emerge_app/core/theme/archetype_theme.dart';
 import 'package:emerge_app/features/habits/domain/entities/habit.dart';
 import 'package:emerge_app/features/auth/domain/entities/user_extension.dart';
 
+@pragma('vm:entry-point')
+Future<void> notificationTapBackground(NotificationResponse details) async {
+  if (details.actionId != null && details.actionId!.isNotEmpty) {
+    WidgetsFlutterBinding.ensureInitialized();
+    try {
+      if (Firebase.apps.isEmpty) {
+        await Firebase.initializeApp();
+      }
+      final container = ProviderContainer();
+      await NotificationActionHandler.handle(
+        actionId: details.actionId!,
+        payload: details.payload,
+        container: container,
+      );
+      container.dispose();
+    } catch (e) {
+      debugPrint('Background notification error: $e');
+    }
+  }
+}
+
 final notificationServiceProvider = Provider<NotificationService>((ref) {
-  return NotificationService();
+  final service = NotificationService();
+  service._attachRef(ref);
+  return service;
 });
 
 class NotificationService {
   static final NotificationService _instance = NotificationService._internal();
   factory NotificationService() => _instance;
   NotificationService._internal();
+
+  /// Riverpod [Ref] attached by the provider so that action handlers
+  /// can read providers (repositories, services) from notification callbacks.
+  Ref? _ref;
+
+  /// Called by [notificationServiceProvider] to give this singleton access
+  /// to the Riverpod container.
+  void _attachRef(Ref ref) {
+    _ref = ref;
+  }
 
   final FirebaseMessaging _firebaseMessaging = FirebaseMessaging.instance;
   final FlutterLocalNotificationsPlugin _localNotifications =
@@ -63,9 +101,29 @@ class NotificationService {
         ),
         iOS: DarwinInitializationSettings(),
       ),
+      onDidReceiveBackgroundNotificationResponse: notificationTapBackground,
       onDidReceiveNotificationResponse: (details) {
-        // Handle notification tap - navigate to recap
-        // implementation would require access to a router or global navigator context
+        // Action button tap → delegate to NotificationActionHandler.
+        if (details.actionId != null && details.actionId!.isNotEmpty) {
+          final ref = _ref;
+          if (ref != null) {
+            unawaited(
+              NotificationActionHandler.handle(
+                actionId: details.actionId!,
+                payload: details.payload,
+                container: ref.container,
+              ),
+            );
+          } else {
+            debugPrint(
+              'NotificationActionHandler: _ref not attached yet, '
+              'cannot handle action "${details.actionId}"',
+            );
+          }
+          return;
+        }
+
+        // Plain tap → navigate to recap (payload holds route).
         debugPrint('Notification tapped: ${details.payload}');
       },
     );
@@ -326,6 +384,18 @@ class NotificationService {
       ledColor: primaryColor,
       largeIcon: DrawableResourceAndroidBitmap(iconName),
       styleInformation: const BigTextStyleInformation(''),
+      actions: <AndroidNotificationAction>[
+        AndroidNotificationAction(
+          NotificationActionIds.complete,
+          'Complete',
+          showsUserInterface: false,
+        ),
+        AndroidNotificationAction(
+          NotificationActionIds.snooze1h,
+          'Snooze 1h',
+          showsUserInterface: false,
+        ),
+      ],
     );
   }
 
@@ -486,6 +556,42 @@ class NotificationService {
       debugPrint('Cancelled notifications for habit: $habitId');
     } catch (e) {
       debugPrint('Error cancelling habit notifications: $e');
+    }
+  }
+
+  /// Snoozes a habit reminder by cancelling the current notification
+  /// and scheduling a new one ~1 hour later.
+  Future<void> snoozeHabit(String habitId) async {
+    if (kIsWeb) return;
+    try {
+      // Cancel the existing notification for this habit.
+      await _localNotifications.cancel(id: habitId.hashCode);
+
+      // Schedule a generic follow-up 1 hour from now.
+      final snoozedAt = DateTime.now().add(const Duration(hours: 1));
+      final tzSnoozed = tz.TZDateTime.from(snoozedAt, tz.local);
+
+      await _localNotifications.zonedSchedule(
+        id: '${habitId}_snoozed'.hashCode,
+        title: '⏰ Reminder (Snoozed)',
+        body: 'Time to complete your habit!',
+        scheduledDate: tzSnoozed,
+        notificationDetails: const NotificationDetails(
+          android: AndroidNotificationDetails(
+            'habit_reminders',
+            'Habit Reminders',
+            channelDescription: 'Habit reminder notifications',
+            importance: Importance.high,
+            priority: Priority.high,
+          ),
+          iOS: DarwinNotificationDetails(),
+        ),
+        androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
+        payload: habitId,
+      );
+      debugPrint('Habit $habitId snoozed until $snoozedAt');
+    } catch (e) {
+      debugPrint('Error snoozing habit $habitId: $e');
     }
   }
 

@@ -3,8 +3,6 @@ import 'package:emerge_app/core/theme/app_theme.dart';
 import 'package:emerge_app/features/ai/domain/services/ai_personalization_service.dart';
 import 'package:emerge_app/features/habits/presentation/providers/habit_providers.dart';
 import 'package:emerge_app/features/gamification/presentation/providers/user_stats_providers.dart';
-import 'package:emerge_app/features/companion/presentation/providers/companion_providers.dart';
-import 'package:emerge_app/features/companion/domain/enums/companion_enums.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -15,7 +13,10 @@ import 'package:emerge_app/features/monetization/presentation/providers/subscrip
 import 'package:emerge_app/core/presentation/widgets/oracle_card.dart';
 import 'package:emerge_app/features/habits/domain/entities/habit.dart';
 import 'package:emerge_app/features/gamification/domain/services/identity_engine.dart';
-import 'package:emerge_app/core/presentation/widgets/feature_coach_mark.dart';
+import 'package:emerge_app/features/narrator/domain/models/narrator_appearance.dart';
+import 'package:emerge_app/features/narrator/domain/models/narrator_trigger.dart';
+import 'package:emerge_app/features/narrator/domain/services/narrator_trigger_engine.dart';
+import 'package:emerge_app/features/narrator/presentation/widgets/narrator_sheet.dart';
 
 class AiReflectionsScreen extends ConsumerStatefulWidget {
   const AiReflectionsScreen({super.key});
@@ -26,24 +27,20 @@ class AiReflectionsScreen extends ConsumerStatefulWidget {
 }
 
 class _AiReflectionsScreenState extends ConsumerState<AiReflectionsScreen> {
-  bool _showFirstVisitGuide = false;
-
   @override
   void initState() {
     super.initState();
-    Future.delayed(const Duration(milliseconds: 500), () {
-      if (!mounted) return;
-      final repo = ref.read(companionRepositoryProvider);
-      if (!repo.hasVisited('/profile/reflections')) {
-        repo.markVisited('/profile/reflections');
-        ref
-            .read(companionEngineProvider.notifier)
-            .triggerEvent(
-              eventType: CompanionEventType.firstFeatureVisit,
-              userContext: {'route': '/profile/reflections'},
-            );
-        setState(() => _showFirstVisitGuide = true);
-      }
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _checkScreenFirstVisit(
+        '/profile/reflections',
+        const NarratorAppearance(
+          trigger: NarratorTrigger.screenFirstVisit,
+          shellText:
+              'This is your memory... Every session your Narrator watches gets stored here...',
+          buttonA: 'Show me my patterns',
+          buttonB: 'What does the Narrator watch for',
+        ),
+      );
     });
   }
 
@@ -219,27 +216,42 @@ class _AiReflectionsScreenState extends ConsumerState<AiReflectionsScreen> {
               ],
             ),
           ),
-          if (_showFirstVisitGuide)
-            FeatureCoachMark(
-              title: "AI Reflections & Insights",
-              primaryColor: EmergeColors.violet,
-              items: const [
-                CoachItemData(
-                  icon: Icons.auto_awesome,
-                  title: "Identity Recalibrations",
-                  body: "The Oracle periodically analyzes your habit compliance and voting behaviors to output tailored guidance.",
-                ),
-                CoachItemData(
-                  icon: Icons.lightbulb_outline,
-                  title: "Actionable Prompts",
-                  body: "Discover scheduling advice and custom schedules recommended directly by the companion engine.",
-                ),
-              ],
-              onDismiss: () => setState(() => _showFirstVisitGuide = false),
-            ),
         ],
       ),
     );
+  }
+
+  void _checkScreenFirstVisit(String route, NarratorAppearance appearance) {
+    final trigger = NarratorTriggerEngine.shouldTrigger(
+      stats: const NarratorUserStats(
+        momentumScore: 0.5,
+        consecutiveActiveDays: 1,
+        totalHabitsToday: 0,
+        completedHabitsToday: 0,
+        currentLevel: 1,
+        previousLevel: 1,
+        hasStreakBreak: false,
+        currentStreak: 0,
+        longestStreak: 0,
+        consecutiveMisses: 0,
+        isFirstVisitToRoute: true,
+        isFirstVisitToNode: false,
+        hasCompletedEveningReflectionToday: false,
+        hasCompletedOnboarding: true,
+        archetypeSelected: true,
+      ),
+      context: AppOpenContext(
+        currentRoute: route,
+        now: DateTime.now(),
+        isFirstAppOpen: false,
+        daysSinceInstall: 10,
+        daysSinceLastOpen: 0,
+      ),
+      recentTriggers: const {},
+    );
+    if (trigger == NarratorTrigger.screenFirstVisit && mounted) {
+      NarratorSheet.show(context, appearance);
+    }
   }
 
   Future<void> _applyAdjustment(

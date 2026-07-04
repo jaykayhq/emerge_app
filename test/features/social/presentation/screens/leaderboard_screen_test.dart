@@ -49,7 +49,7 @@ void main() {
       ),
     );
 
-    await tester.pumpAndSettle();
+    await tester.pump(const Duration(seconds: 1));
 
     expect(find.text('LEADERBOARD'), findsOneWidget);
     expect(find.text('FRIENDS'), findsOneWidget);

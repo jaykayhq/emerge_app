@@ -10,6 +10,7 @@ plugins {
 
 import java.util.Properties
 import java.io.FileInputStream
+import com.google.firebase.crashlytics.buildtools.gradle.CrashlyticsExtension
 
 val keystoreProperties = Properties()
 val keystorePropertiesFile = rootProject.file("key.properties")
@@ -63,6 +64,9 @@ android {
 
     buildTypes {
         release {
+            configure<CrashlyticsExtension> {
+                mappingFileUploadEnabled = false
+            }
             // IMPORTANT: Use production signing keys for release builds
             signingConfig = signingConfigs.getByName("release")
 

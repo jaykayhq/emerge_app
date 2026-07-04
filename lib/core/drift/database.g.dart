@@ -408,3 +408,49 @@ final class TribeActivityDaoProvider
 }
 
 String _$tribeActivityDaoHash() => r'de601102a250401a43f7f6d392941bf457d5c6ce';
+
+@ProviderFor(narratorNotesDao)
+final narratorNotesDaoProvider = NarratorNotesDaoProvider._();
+
+final class NarratorNotesDaoProvider
+    extends
+        $FunctionalProvider<
+          NarratorNotesDao,
+          NarratorNotesDao,
+          NarratorNotesDao
+        >
+    with $Provider<NarratorNotesDao> {
+  NarratorNotesDaoProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'narratorNotesDaoProvider',
+        isAutoDispose: false,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$narratorNotesDaoHash();
+
+  @$internal
+  @override
+  $ProviderElement<NarratorNotesDao> $createElement($ProviderPointer pointer) =>
+      $ProviderElement(pointer);
+
+  @override
+  NarratorNotesDao create(Ref ref) {
+    return narratorNotesDao(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(NarratorNotesDao value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<NarratorNotesDao>(value),
+    );
+  }
+}
+
+String _$narratorNotesDaoHash() => r'076d0026ab8fc2ab6824c63e4ffed8f17512ebb9';

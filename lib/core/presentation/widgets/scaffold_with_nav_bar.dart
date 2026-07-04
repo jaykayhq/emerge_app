@@ -6,21 +6,18 @@ import 'package:emerge_app/features/habits/presentation/providers/cue_providers.
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:emerge_app/features/companion/presentation/providers/companion_providers.dart';
-import 'package:emerge_app/features/companion/presentation/widgets/companion_overlay.dart';
-import 'package:emerge_app/features/companion/presentation/widgets/companion_panel.dart';
-import 'package:emerge_app/features/companion/presentation/widgets/companion_inline_card.dart';
-import 'package:emerge_app/features/companion/presentation/widgets/ask_mentor_button.dart';
-import 'package:emerge_app/features/companion/domain/enums/companion_enums.dart';
-import 'package:emerge_app/core/theme/emerge_dimensions.dart';
 
-/// Main scaffold wrapper that provides the growth background and
-/// custom bottom navigation with elevated diamond FAB.
+/// Main scaffold wrapper that provides the world background and
+/// custom bottom navigation bar.
 ///
-/// Navigation order: World → Timeline → [+FAB] → Tribes → Profile
+/// Navigation order: Timeline → World → Pulse Feed → Profile
 ///
 /// Also serves as the CueEngine display layer — listens to cueStreamProvider
 /// and shows [CuePopupDialog] or [CueBanner] for in-app habit cues.
+///
+/// Note: The companion system has been superseded by the Narrator.
+/// Companion overlay rendering is removed — the Narrator handles all
+/// inline guidance via NarratorSheet / NarratorSummaryCard.
 class ScaffoldWithNavBar extends ConsumerWidget {
   final StatefulNavigationShell navigationShell;
 
@@ -36,71 +33,10 @@ class ScaffoldWithNavBar extends ConsumerWidget {
       });
     });
 
-    // Wire the CompanionEngine bottom panel bottom sheet
-    ref.listen<CompanionState?>(companionVisibilityProvider, (previous, next) {
-      if (next != null && next.visible && next.mode == CompanionMode.panel) {
-        if (!context.mounted) return;
-        CompanionPanel.show(
-          context,
-          message: next.message!,
-          persona: next.persona!,
-        ).then((_) {
-          ref.read(companionEngineProvider.notifier).dismiss();
-        });
-      }
-    });
-
-    final companionState = ref.watch(companionVisibilityProvider);
-
     return Scaffold(
       body: WorldBackground(
         useSafeArea: false,
-        child: Stack(
-          children: [
-            navigationShell,
-            // Floating AskMentorButton
-            Positioned(
-              right: 16,
-              bottom: EmergeDimensions.navBarHeight + 16,
-              child: AskMentorButton(
-                onTap: () => ref.read(companionEngineProvider.notifier).openPanel(),
-              ),
-            ),
-            // Overlay Mode
-            if (companionState != null &&
-                companionState.visible &&
-                companionState.mode == CompanionMode.overlay &&
-                companionState.message != null &&
-                companionState.persona != null)
-              CompanionOverlay(
-                message: companionState.message!,
-                persona: companionState.persona!,
-                targetKey: companionState.targetKey,
-                onDismiss: () => ref.read(companionEngineProvider.notifier).dismiss(),
-                onSkip: () => ref.read(companionEngineProvider.notifier).dismiss(),
-              ),
-            // Inline Card Mode
-            if (companionState != null &&
-                companionState.visible &&
-                companionState.mode == CompanionMode.inlineCard &&
-                companionState.message != null &&
-                companionState.persona != null)
-              Positioned(
-                top: MediaQuery.of(context).padding.top + 8,
-                left: 0,
-                right: 0,
-                child: CompanionInlineCard(
-                  message: companionState.message!,
-                  persona: companionState.persona!,
-                  onDismiss: () => ref.read(companionEngineProvider.notifier).dismiss(),
-                  onTap: () {
-                    ref.read(companionEngineProvider.notifier).dismiss();
-                    ref.read(companionEngineProvider.notifier).openPanel();
-                  },
-                ),
-              ),
-          ],
-        ),
+        child: navigationShell,
       ),
       bottomNavigationBar: EmergeBottomNav(
         navigationShell: navigationShell,

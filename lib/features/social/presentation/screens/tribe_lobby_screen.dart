@@ -1,18 +1,14 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:emerge_app/core/presentation/widgets/app_back_handler.dart';
+import 'package:emerge_app/core/presentation/widgets/app_error_widget.dart';
 import 'package:emerge_app/core/presentation/widgets/emerge_loading_skeleton.dart';
 import 'package:emerge_app/core/presentation/widgets/emerge_primary_button.dart';
-import 'package:emerge_app/core/presentation/widgets/feature_coach_mark.dart';
 import 'package:emerge_app/core/theme/archetype_theme.dart';
 import 'package:emerge_app/core/theme/emerge_colors.dart';
-import 'package:emerge_app/features/companion/domain/enums/companion_enums.dart';
-import 'package:emerge_app/features/companion/presentation/providers/companion_providers.dart';
 
 import 'package:emerge_app/features/auth/domain/entities/user_extension.dart';
 import 'package:emerge_app/features/gamification/presentation/providers/user_stats_providers.dart';
@@ -44,34 +40,6 @@ class TribeLobbyScreen extends ConsumerStatefulWidget {
 }
 
 class _TribeLobbyScreenState extends ConsumerState<TribeLobbyScreen> {
-  Timer? _initTimer;
-  bool _showFirstVisitGuide = false;
-
-  @override
-  void initState() {
-    super.initState();
-    _initTimer = Timer(const Duration(milliseconds: 500), () {
-      if (!mounted) return;
-      final repo = ref.read(companionRepositoryProvider);
-      if (!repo.hasVisited('/social')) {
-        repo.markVisited('/social');
-        ref
-            .read(companionEngineProvider.notifier)
-            .triggerEvent(
-              eventType: CompanionEventType.firstFeatureVisit,
-              userContext: {'route': '/social'},
-            );
-        setState(() => _showFirstVisitGuide = true);
-      }
-    });
-  }
-
-  @override
-  void dispose() {
-    _initTimer?.cancel();
-    super.dispose();
-  }
-
   @override
   Widget build(BuildContext context) {
     final profileAsync = ref.watch(userStatsStreamProvider);
@@ -97,98 +65,72 @@ class _TribeLobbyScreenState extends ConsumerState<TribeLobbyScreen> {
                 final momentumPct =
                     (profile.momentumScore.clamp(0.0, 1.0) * 100).round();
 
-                return Stack(
-                  children: [
-                    CustomScrollView(
-                      physics: const BouncingScrollPhysics(),
-                      slivers: [
-                        const SliverToBoxAdapter(child: Gap(12)),
-                        SliverToBoxAdapter(
-                          child: _Hero(
-                            userClub: userClub,
-                            archetypeTheme: archetypeTheme,
-                          ),
-                        ),
-                        SliverToBoxAdapter(
-                          child: Padding(
-                            padding:
-                                const EdgeInsets.fromLTRB(20, 24, 20, 0),
-                            child: _StatsBar(
-                              userClub: userClub,
-                              profile: profile,
-                              momentumPct: momentumPct,
-                            ),
-                          ),
-                        ),
-                        const SliverToBoxAdapter(child: Gap(20)),
-                        SliverToBoxAdapter(
-                          child: TribePulseStatusRow(
-                            userClub: userClub,
-                            profile: profile,
-                          ),
-                        ),
-                        const SliverToBoxAdapter(child: Gap(8)),
-                        const SliverToBoxAdapter(
-                            child: TribeCircleSection()),
-                        const SliverToBoxAdapter(child: Gap(8)),
-                        SliverToBoxAdapter(
-                          child: TribeLiveCompact(
-                            clubId: userClub.id,
-                            profile: profile,
-                          ),
-                        ),
-                        const SliverToBoxAdapter(child: Gap(8)),
-                        const SliverToBoxAdapter(
-                          child: Padding(
-                            padding: EdgeInsets.only(bottom: 8),
-                            child: TribeCreatorsStrip(),
-                          ),
-                        ),
-                        const SliverToBoxAdapter(
-                          child: TribeYourQuestsSection(),
-                        ),
-                        const SliverToBoxAdapter(child: Gap(4)),
-                        const SliverToBoxAdapter(
-                          child: TribeQuestsForYouSection(),
-                        ),
-                        const SliverToBoxAdapter(child: Gap(24)),
-                      ],
-                    ),
-                    if (_showFirstVisitGuide)
-                      FeatureCoachMark(
-                        title: "Your Social Hub",
-                        primaryColor: EmergeColors.nebulaPrimary,
-                        items: const [
-                          CoachItemData(
-                            icon: Icons.group,
-                            title: "Tribe Circle",
-                            body: "See your accountability partners, active contracts, and tribe pulse all in one place.",
-                          ),
-                          CoachItemData(
-                            icon: Icons.emoji_events,
-                            title: "Quests & Challenges",
-                            body: "Find featured quests for your archetype and track your active challenges.",
-                          ),
-                          CoachItemData(
-                            icon: Icons.swap_horiz,
-                            title: "Switch Tribes",
-                            body: "Browse and switch between different archetype tribes to find your community.",
-                          ),
-                        ],
-                        onDismiss: () =>
-                            setState(() => _showFirstVisitGuide = false),
+                return CustomScrollView(
+                  physics: const BouncingScrollPhysics(),
+                  slivers: [
+                    const SliverToBoxAdapter(child: Gap(12)),
+                    SliverToBoxAdapter(
+                      child: _Hero(
+                        userClub: userClub,
+                        archetypeTheme: archetypeTheme,
                       ),
+                    ),
+                    SliverToBoxAdapter(
+                      child: Padding(
+                        padding:
+                            const EdgeInsets.fromLTRB(20, 24, 20, 0),
+                        child: _StatsBar(
+                          userClub: userClub,
+                          profile: profile,
+                          momentumPct: momentumPct,
+                        ),
+                      ),
+                    ),
+                    const SliverToBoxAdapter(child: Gap(20)),
+                    SliverToBoxAdapter(
+                      child: TribePulseStatusRow(
+                        userClub: userClub,
+                        profile: profile,
+                      ),
+                    ),
+                    const SliverToBoxAdapter(child: Gap(8)),
+                    const SliverToBoxAdapter(
+                        child: TribeCircleSection()),
+                    const SliverToBoxAdapter(child: Gap(8)),
+                    SliverToBoxAdapter(
+                      child: TribeLiveCompact(
+                        clubId: userClub.id,
+                        profile: profile,
+                      ),
+                    ),
+                    const SliverToBoxAdapter(child: Gap(8)),
+                    const SliverToBoxAdapter(
+                      child: Padding(
+                        padding: EdgeInsets.only(bottom: 8),
+                        child: TribeCreatorsStrip(),
+                      ),
+                    ),
+                    const SliverToBoxAdapter(
+                      child: TribeYourQuestsSection(),
+                    ),
+                    const SliverToBoxAdapter(child: Gap(4)),
+                    const SliverToBoxAdapter(
+                      child: TribeQuestsForYouSection(),
+                    ),
+                    const SliverToBoxAdapter(child: Gap(24)),
                   ],
                 );
               },
               loading: () => const _LobbyLoading(),
-              error: (_, _) => const _ErrorState(
+              error: (_, _) => AppErrorWidget(
                 message: 'Could not load profile.',
+                onRetry: () => ref.invalidate(userStatsStreamProvider),
               ),
             ),
             loading: () => const _LobbyLoading(),
-            error: (_, _) => const _ErrorState(
+            error: (_, _) => AppErrorWidget(
               message: 'Could not load tribes.',
+              onRetry: () => ref.invalidate(allArchetypeClubsProvider),
             ),
           ),
         ),

@@ -352,4 +352,12 @@ extension HabitExtension on Habit {
     }
     return timeOfDayPreference!.name;
   }
+
+  bool isCompletedOn(DateTime date) {
+    final last = lastCompletedDate;
+    if (last == null) return false;
+    return last.year == date.year &&
+        last.month == date.month &&
+        last.day == date.day;
+  }
 }

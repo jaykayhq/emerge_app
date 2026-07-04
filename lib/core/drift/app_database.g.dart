@@ -6726,6 +6726,380 @@ class TribeActivityTableCompanion
   }
 }
 
+class $NarratorNotesTableTable extends NarratorNotesTable
+    with TableInfo<$NarratorNotesTableTable, NarratorNotesTableData> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $NarratorNotesTableTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _typeMeta = const VerificationMeta('type');
+  @override
+  late final GeneratedColumn<String> type = GeneratedColumn<String>(
+    'type',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _dataJsonMeta = const VerificationMeta(
+    'dataJson',
+  );
+  @override
+  late final GeneratedColumn<String> dataJson = GeneratedColumn<String>(
+    'data_json',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _recordedAtMeta = const VerificationMeta(
+    'recordedAt',
+  );
+  @override
+  late final GeneratedColumn<String> recordedAt = GeneratedColumn<String>(
+    'recorded_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _habitIdMeta = const VerificationMeta(
+    'habitId',
+  );
+  @override
+  late final GeneratedColumn<String> habitId = GeneratedColumn<String>(
+    'habit_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    type,
+    dataJson,
+    recordedAt,
+    habitId,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'narrator_notes';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<NarratorNotesTableData> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('type')) {
+      context.handle(
+        _typeMeta,
+        type.isAcceptableOrUnknown(data['type']!, _typeMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_typeMeta);
+    }
+    if (data.containsKey('data_json')) {
+      context.handle(
+        _dataJsonMeta,
+        dataJson.isAcceptableOrUnknown(data['data_json']!, _dataJsonMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_dataJsonMeta);
+    }
+    if (data.containsKey('recorded_at')) {
+      context.handle(
+        _recordedAtMeta,
+        recordedAt.isAcceptableOrUnknown(data['recorded_at']!, _recordedAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_recordedAtMeta);
+    }
+    if (data.containsKey('habit_id')) {
+      context.handle(
+        _habitIdMeta,
+        habitId.isAcceptableOrUnknown(data['habit_id']!, _habitIdMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  NarratorNotesTableData map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return NarratorNotesTableData(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      type: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}type'],
+      )!,
+      dataJson: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}data_json'],
+      )!,
+      recordedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}recorded_at'],
+      )!,
+      habitId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}habit_id'],
+      ),
+    );
+  }
+
+  @override
+  $NarratorNotesTableTable createAlias(String alias) {
+    return $NarratorNotesTableTable(attachedDatabase, alias);
+  }
+}
+
+class NarratorNotesTableData extends DataClass
+    implements Insertable<NarratorNotesTableData> {
+  /// Unique identifier for this note.
+  final String id;
+
+  /// The type of note, stored as a string (NarratorNoteType enum name).
+  final String type;
+
+  /// Arbitrary JSON data associated with this note.
+  final String dataJson;
+
+  /// ISO8601 timestamp of when this note was recorded.
+  final String recordedAt;
+
+  /// Optional habit ID this note is associated with.
+  final String? habitId;
+  const NarratorNotesTableData({
+    required this.id,
+    required this.type,
+    required this.dataJson,
+    required this.recordedAt,
+    this.habitId,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['type'] = Variable<String>(type);
+    map['data_json'] = Variable<String>(dataJson);
+    map['recorded_at'] = Variable<String>(recordedAt);
+    if (!nullToAbsent || habitId != null) {
+      map['habit_id'] = Variable<String>(habitId);
+    }
+    return map;
+  }
+
+  NarratorNotesTableCompanion toCompanion(bool nullToAbsent) {
+    return NarratorNotesTableCompanion(
+      id: Value(id),
+      type: Value(type),
+      dataJson: Value(dataJson),
+      recordedAt: Value(recordedAt),
+      habitId: habitId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(habitId),
+    );
+  }
+
+  factory NarratorNotesTableData.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return NarratorNotesTableData(
+      id: serializer.fromJson<String>(json['id']),
+      type: serializer.fromJson<String>(json['type']),
+      dataJson: serializer.fromJson<String>(json['dataJson']),
+      recordedAt: serializer.fromJson<String>(json['recordedAt']),
+      habitId: serializer.fromJson<String?>(json['habitId']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'type': serializer.toJson<String>(type),
+      'dataJson': serializer.toJson<String>(dataJson),
+      'recordedAt': serializer.toJson<String>(recordedAt),
+      'habitId': serializer.toJson<String?>(habitId),
+    };
+  }
+
+  NarratorNotesTableData copyWith({
+    String? id,
+    String? type,
+    String? dataJson,
+    String? recordedAt,
+    Value<String?> habitId = const Value.absent(),
+  }) => NarratorNotesTableData(
+    id: id ?? this.id,
+    type: type ?? this.type,
+    dataJson: dataJson ?? this.dataJson,
+    recordedAt: recordedAt ?? this.recordedAt,
+    habitId: habitId.present ? habitId.value : this.habitId,
+  );
+  NarratorNotesTableData copyWithCompanion(NarratorNotesTableCompanion data) {
+    return NarratorNotesTableData(
+      id: data.id.present ? data.id.value : this.id,
+      type: data.type.present ? data.type.value : this.type,
+      dataJson: data.dataJson.present ? data.dataJson.value : this.dataJson,
+      recordedAt: data.recordedAt.present
+          ? data.recordedAt.value
+          : this.recordedAt,
+      habitId: data.habitId.present ? data.habitId.value : this.habitId,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('NarratorNotesTableData(')
+          ..write('id: $id, ')
+          ..write('type: $type, ')
+          ..write('dataJson: $dataJson, ')
+          ..write('recordedAt: $recordedAt, ')
+          ..write('habitId: $habitId')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(id, type, dataJson, recordedAt, habitId);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is NarratorNotesTableData &&
+          other.id == this.id &&
+          other.type == this.type &&
+          other.dataJson == this.dataJson &&
+          other.recordedAt == this.recordedAt &&
+          other.habitId == this.habitId);
+}
+
+class NarratorNotesTableCompanion
+    extends UpdateCompanion<NarratorNotesTableData> {
+  final Value<String> id;
+  final Value<String> type;
+  final Value<String> dataJson;
+  final Value<String> recordedAt;
+  final Value<String?> habitId;
+  final Value<int> rowid;
+  const NarratorNotesTableCompanion({
+    this.id = const Value.absent(),
+    this.type = const Value.absent(),
+    this.dataJson = const Value.absent(),
+    this.recordedAt = const Value.absent(),
+    this.habitId = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  NarratorNotesTableCompanion.insert({
+    required String id,
+    required String type,
+    required String dataJson,
+    required String recordedAt,
+    this.habitId = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       type = Value(type),
+       dataJson = Value(dataJson),
+       recordedAt = Value(recordedAt);
+  static Insertable<NarratorNotesTableData> custom({
+    Expression<String>? id,
+    Expression<String>? type,
+    Expression<String>? dataJson,
+    Expression<String>? recordedAt,
+    Expression<String>? habitId,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (type != null) 'type': type,
+      if (dataJson != null) 'data_json': dataJson,
+      if (recordedAt != null) 'recorded_at': recordedAt,
+      if (habitId != null) 'habit_id': habitId,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  NarratorNotesTableCompanion copyWith({
+    Value<String>? id,
+    Value<String>? type,
+    Value<String>? dataJson,
+    Value<String>? recordedAt,
+    Value<String?>? habitId,
+    Value<int>? rowid,
+  }) {
+    return NarratorNotesTableCompanion(
+      id: id ?? this.id,
+      type: type ?? this.type,
+      dataJson: dataJson ?? this.dataJson,
+      recordedAt: recordedAt ?? this.recordedAt,
+      habitId: habitId ?? this.habitId,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (type.present) {
+      map['type'] = Variable<String>(type.value);
+    }
+    if (dataJson.present) {
+      map['data_json'] = Variable<String>(dataJson.value);
+    }
+    if (recordedAt.present) {
+      map['recorded_at'] = Variable<String>(recordedAt.value);
+    }
+    if (habitId.present) {
+      map['habit_id'] = Variable<String>(habitId.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('NarratorNotesTableCompanion(')
+          ..write('id: $id, ')
+          ..write('type: $type, ')
+          ..write('dataJson: $dataJson, ')
+          ..write('recordedAt: $recordedAt, ')
+          ..write('habitId: $habitId, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
@@ -6744,6 +7118,8 @@ abstract class _$AppDatabase extends GeneratedDatabase {
       $MutationQueueTableTable(this);
   late final $TribeActivityTableTable tribeActivityTable =
       $TribeActivityTableTable(this);
+  late final $NarratorNotesTableTable narratorNotesTable =
+      $NarratorNotesTableTable(this);
   late final UserStatsDao userStatsDao = UserStatsDao(this as AppDatabase);
   late final HabitsDao habitsDao = HabitsDao(this as AppDatabase);
   late final HabitCompletionsDao habitCompletionsDao = HabitCompletionsDao(
@@ -6761,6 +7137,9 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final TribeActivityDao tribeActivityDao = TribeActivityDao(
     this as AppDatabase,
   );
+  late final NarratorNotesDao narratorNotesDao = NarratorNotesDao(
+    this as AppDatabase,
+  );
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -6774,6 +7153,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     leaderboardEntriesTable,
     mutationQueueTable,
     tribeActivityTable,
+    narratorNotesTable,
   ];
 }
 
@@ -9974,6 +10354,221 @@ typedef $$TribeActivityTableTableProcessedTableManager =
       TribeActivityTableData,
       PrefetchHooks Function()
     >;
+typedef $$NarratorNotesTableTableCreateCompanionBuilder =
+    NarratorNotesTableCompanion Function({
+      required String id,
+      required String type,
+      required String dataJson,
+      required String recordedAt,
+      Value<String?> habitId,
+      Value<int> rowid,
+    });
+typedef $$NarratorNotesTableTableUpdateCompanionBuilder =
+    NarratorNotesTableCompanion Function({
+      Value<String> id,
+      Value<String> type,
+      Value<String> dataJson,
+      Value<String> recordedAt,
+      Value<String?> habitId,
+      Value<int> rowid,
+    });
+
+class $$NarratorNotesTableTableFilterComposer
+    extends Composer<_$AppDatabase, $NarratorNotesTableTable> {
+  $$NarratorNotesTableTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get type => $composableBuilder(
+    column: $table.type,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get dataJson => $composableBuilder(
+    column: $table.dataJson,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get recordedAt => $composableBuilder(
+    column: $table.recordedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get habitId => $composableBuilder(
+    column: $table.habitId,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$NarratorNotesTableTableOrderingComposer
+    extends Composer<_$AppDatabase, $NarratorNotesTableTable> {
+  $$NarratorNotesTableTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get type => $composableBuilder(
+    column: $table.type,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get dataJson => $composableBuilder(
+    column: $table.dataJson,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get recordedAt => $composableBuilder(
+    column: $table.recordedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get habitId => $composableBuilder(
+    column: $table.habitId,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$NarratorNotesTableTableAnnotationComposer
+    extends Composer<_$AppDatabase, $NarratorNotesTableTable> {
+  $$NarratorNotesTableTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get type =>
+      $composableBuilder(column: $table.type, builder: (column) => column);
+
+  GeneratedColumn<String> get dataJson =>
+      $composableBuilder(column: $table.dataJson, builder: (column) => column);
+
+  GeneratedColumn<String> get recordedAt => $composableBuilder(
+    column: $table.recordedAt,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get habitId =>
+      $composableBuilder(column: $table.habitId, builder: (column) => column);
+}
+
+class $$NarratorNotesTableTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $NarratorNotesTableTable,
+          NarratorNotesTableData,
+          $$NarratorNotesTableTableFilterComposer,
+          $$NarratorNotesTableTableOrderingComposer,
+          $$NarratorNotesTableTableAnnotationComposer,
+          $$NarratorNotesTableTableCreateCompanionBuilder,
+          $$NarratorNotesTableTableUpdateCompanionBuilder,
+          (
+            NarratorNotesTableData,
+            BaseReferences<
+              _$AppDatabase,
+              $NarratorNotesTableTable,
+              NarratorNotesTableData
+            >,
+          ),
+          NarratorNotesTableData,
+          PrefetchHooks Function()
+        > {
+  $$NarratorNotesTableTableTableManager(
+    _$AppDatabase db,
+    $NarratorNotesTableTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$NarratorNotesTableTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$NarratorNotesTableTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$NarratorNotesTableTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> type = const Value.absent(),
+                Value<String> dataJson = const Value.absent(),
+                Value<String> recordedAt = const Value.absent(),
+                Value<String?> habitId = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => NarratorNotesTableCompanion(
+                id: id,
+                type: type,
+                dataJson: dataJson,
+                recordedAt: recordedAt,
+                habitId: habitId,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required String type,
+                required String dataJson,
+                required String recordedAt,
+                Value<String?> habitId = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => NarratorNotesTableCompanion.insert(
+                id: id,
+                type: type,
+                dataJson: dataJson,
+                recordedAt: recordedAt,
+                habitId: habitId,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$NarratorNotesTableTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $NarratorNotesTableTable,
+      NarratorNotesTableData,
+      $$NarratorNotesTableTableFilterComposer,
+      $$NarratorNotesTableTableOrderingComposer,
+      $$NarratorNotesTableTableAnnotationComposer,
+      $$NarratorNotesTableTableCreateCompanionBuilder,
+      $$NarratorNotesTableTableUpdateCompanionBuilder,
+      (
+        NarratorNotesTableData,
+        BaseReferences<
+          _$AppDatabase,
+          $NarratorNotesTableTable,
+          NarratorNotesTableData
+        >,
+      ),
+      NarratorNotesTableData,
+      PrefetchHooks Function()
+    >;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -10000,4 +10595,6 @@ class $AppDatabaseManager {
       $$MutationQueueTableTableTableManager(_db, _db.mutationQueueTable);
   $$TribeActivityTableTableTableManager get tribeActivityTable =>
       $$TribeActivityTableTableTableManager(_db, _db.tribeActivityTable);
+  $$NarratorNotesTableTableTableManager get narratorNotesTable =>
+      $$NarratorNotesTableTableTableManager(_db, _db.narratorNotesTable);
 }

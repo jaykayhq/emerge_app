@@ -65,3 +65,8 @@ MutationQueueDao mutationQueueDao(Ref ref) {
 TribeActivityDao tribeActivityDao(Ref ref) {
   return ref.watch(appDatabaseProvider).tribeActivityDao;
 }
+
+@Riverpod(keepAlive: true)
+NarratorNotesDao narratorNotesDao(Ref ref) {
+  return ref.watch(appDatabaseProvider).narratorNotesDao;
+}

@@ -1,16 +1,15 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
 import 'package:go_router/go_router.dart';
 
-import 'package:emerge_app/core/presentation/widgets/feature_coach_mark.dart';
 import 'package:emerge_app/core/theme/emerge_colors.dart';
-import 'package:emerge_app/features/companion/domain/enums/companion_enums.dart';
-import 'package:emerge_app/features/companion/presentation/providers/companion_providers.dart';
 import 'package:emerge_app/features/social/presentation/providers/partner_activity_provider.dart';
 import 'package:emerge_app/features/social/presentation/providers/tribes_provider.dart';
+import 'package:emerge_app/features/narrator/domain/models/narrator_appearance.dart';
+import 'package:emerge_app/features/narrator/domain/models/narrator_trigger.dart';
+import 'package:emerge_app/features/narrator/domain/services/narrator_trigger_engine.dart';
+import 'package:emerge_app/features/narrator/presentation/widgets/narrator_sheet.dart';
 
 /// Honest destination for the live feed. Two tabs:
 /// - Tribe:    full club activity feed (club-scoped)
@@ -29,32 +28,22 @@ class SocialActivityScreen extends ConsumerStatefulWidget {
 
 class _SocialActivityScreenState extends ConsumerState<SocialActivityScreen> {
   int _tab = 0;
-  Timer? _initTimer;
-  bool _showFirstVisitGuide = false;
 
   @override
   void initState() {
     super.initState();
-    _initTimer = Timer(const Duration(milliseconds: 500), () {
-      if (!mounted) return;
-      final repo = ref.read(companionRepositoryProvider);
-      if (!repo.hasVisited('/social/activity')) {
-        repo.markVisited('/social/activity');
-        ref
-            .read(companionEngineProvider.notifier)
-            .triggerEvent(
-              eventType: CompanionEventType.firstFeatureVisit,
-              userContext: {'route': '/social/activity'},
-            );
-        setState(() => _showFirstVisitGuide = true);
-      }
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _checkScreenFirstVisit(
+        '/social/activity',
+        const NarratorAppearance(
+          trigger: NarratorTrigger.screenFirstVisit,
+          shellText:
+              'This is what movement looks like in real-time... You\'re part of this.',
+          buttonA: "Let's go",
+          buttonB: 'Tell me more',
+        ),
+      );
     });
-  }
-
-  @override
-  void dispose() {
-    _initTimer?.cancel();
-    super.dispose();
   }
 
   @override
@@ -70,43 +59,54 @@ class _SocialActivityScreenState extends ConsumerState<SocialActivityScreen> {
           onPressed: () => context.pop(),
         ),
       ),
-      body: Stack(
+      body: Column(
         children: [
-          Column(
-            children: [
-              _SegmentedTabs(
-                current: _tab,
-                onChanged: (i) => setState(() => _tab = i),
-              ),
-              const Gap(12),
-              Expanded(
-                child: _tab == 0
-                    ? _TribeFeed(tribeId: widget.tribeId)
-                    : const _PartnersFeed(),
-              ),
-            ],
+          _SegmentedTabs(
+            current: _tab,
+            onChanged: (i) => setState(() => _tab = i),
           ),
-          if (_showFirstVisitGuide)
-            FeatureCoachMark(
-              title: "Activity Feed",
-              primaryColor: EmergeColors.nebulaPrimary,
-              items: const [
-                CoachItemData(
-                  icon: Icons.groups,
-                  title: "Tribe Activity",
-                  body: "See what your tribe mates are up to — completed habits, streaks, and quests.",
-                ),
-                CoachItemData(
-                  icon: Icons.sync_alt,
-                  title: "Partner Updates",
-                  body: "Track your accountability partners' progress and celebrate milestones together.",
-                ),
-              ],
-              onDismiss: () => setState(() => _showFirstVisitGuide = false),
-            ),
+          const Gap(12),
+          Expanded(
+            child: _tab == 0
+                ? _TribeFeed(tribeId: widget.tribeId)
+                : const _PartnersFeed(),
+          ),
         ],
       ),
     );
+  }
+
+  void _checkScreenFirstVisit(String route, NarratorAppearance appearance) {
+    final trigger = NarratorTriggerEngine.shouldTrigger(
+      stats: const NarratorUserStats(
+        momentumScore: 0.5,
+        consecutiveActiveDays: 1,
+        totalHabitsToday: 0,
+        completedHabitsToday: 0,
+        currentLevel: 1,
+        previousLevel: 1,
+        hasStreakBreak: false,
+        currentStreak: 0,
+        longestStreak: 0,
+        consecutiveMisses: 0,
+        isFirstVisitToRoute: true,
+        isFirstVisitToNode: false,
+        hasCompletedEveningReflectionToday: false,
+        hasCompletedOnboarding: true,
+        archetypeSelected: true,
+      ),
+      context: AppOpenContext(
+        currentRoute: route,
+        now: DateTime.now(),
+        isFirstAppOpen: false,
+        daysSinceInstall: 10,
+        daysSinceLastOpen: 0,
+      ),
+      recentTriggers: const {},
+    );
+    if (trigger == NarratorTrigger.screenFirstVisit && mounted) {
+      NarratorSheet.show(context, appearance);
+    }
   }
 }
 
@@ -155,6 +155,7 @@ class _TabButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
+      behavior: HitTestBehavior.opaque,
       onTap: onTap,
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 12),

@@ -1,15 +1,13 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:emerge_app/core/presentation/widgets/app_error_widget.dart';
 import 'package:emerge_app/core/presentation/widgets/emerge_loading_skeleton.dart';
-import 'package:emerge_app/core/presentation/widgets/feature_coach_mark.dart';
-import 'package:emerge_app/core/theme/emerge_colors.dart';
-import 'package:emerge_app/features/companion/domain/enums/companion_enums.dart';
-import 'package:emerge_app/features/companion/presentation/providers/companion_providers.dart';
 import 'package:emerge_app/features/social/presentation/providers/tribes_provider.dart';
 import 'package:emerge_app/features/social/presentation/widgets/tribe_card.dart';
+import 'package:emerge_app/features/narrator/domain/models/narrator_appearance.dart';
+import 'package:emerge_app/features/narrator/domain/models/narrator_trigger.dart';
+import 'package:emerge_app/features/narrator/domain/services/narrator_trigger_engine.dart';
+import 'package:emerge_app/features/narrator/presentation/widgets/narrator_sheet.dart';
 
 class AllTribesScreen extends ConsumerStatefulWidget {
   const AllTribesScreen({super.key});
@@ -19,32 +17,21 @@ class AllTribesScreen extends ConsumerStatefulWidget {
 }
 
 class _AllTribesScreenState extends ConsumerState<AllTribesScreen> {
-  Timer? _initTimer;
-  bool _showFirstVisitGuide = false;
-
   @override
   void initState() {
     super.initState();
-    _initTimer = Timer(const Duration(milliseconds: 500), () {
-      if (!mounted) return;
-      final repo = ref.read(companionRepositoryProvider);
-      if (!repo.hasVisited('/social/all')) {
-        repo.markVisited('/social/all');
-        ref
-            .read(companionEngineProvider.notifier)
-            .triggerEvent(
-              eventType: CompanionEventType.firstFeatureVisit,
-              userContext: {'route': '/social/all'},
-            );
-        setState(() => _showFirstVisitGuide = true);
-      }
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _checkScreenFirstVisit(
+        '/social/all',
+        const NarratorAppearance(
+          trigger: NarratorTrigger.screenFirstVisit,
+          shellText:
+              'Your... path is clearer in a group. People who track together outperform solo trackers by 65%.',
+          buttonA: 'Find my tribe',
+          buttonB: "I'll explore first",
+        ),
+      );
     });
-  }
-
-  @override
-  void dispose() {
-    _initTimer?.cancel();
-    super.dispose();
   }
 
   @override
@@ -73,56 +60,72 @@ class _AllTribesScreenState extends ConsumerState<AllTribesScreen> {
           onPressed: () => Navigator.of(context).pop(),
         ),
       ),
-      body: Stack(
-        children: [
-          tribesAsync.when(
-            data: (tribes) {
-              if (tribes.isEmpty) {
-                return const Center(
-                  child: Text(
-                    'No tribes available',
-                    style: TextStyle(color: Colors.white70),
-                  ),
-                );
-              }
-
-              return RefreshIndicator(
-                onRefresh: () async {
-                  ref.invalidate(allArchetypeClubsProvider);
-                },
-                child: ListView.builder(
-                  padding: const EdgeInsets.only(bottom: 32, top: 8),
-                  itemCount: tribes.length,
-                  itemBuilder: (context, index) {
-                    return TribeCard(tribe: tribes[index]);
-                  },
-                ),
-              );
-            },
-            loading: () =>
-                const Center(child: EmergeLoadingSkeleton(itemCount: 5)),
-            error: (error, stack) => Center(
-              child: AppErrorWidget(
-                message: 'Could not load tribes',
-                onRetry: () => ref.invalidate(allArchetypeClubsProvider),
+      body: tribesAsync.when(
+        data: (tribes) {
+          if (tribes.isEmpty) {
+            return const Center(
+              child: Text(
+                'No tribes available',
+                style: TextStyle(color: Colors.white70),
               ),
+            );
+          }
+
+          return RefreshIndicator(
+            onRefresh: () async {
+              ref.invalidate(allArchetypeClubsProvider);
+            },
+            child: ListView.builder(
+              padding: const EdgeInsets.only(bottom: 32, top: 8),
+              itemCount: tribes.length,
+              itemBuilder: (context, index) {
+                return TribeCard(tribe: tribes[index]);
+              },
             ),
+          );
+        },
+        loading: () =>
+            const Center(child: EmergeLoadingSkeleton(itemCount: 5)),
+        error: (error, stack) => Center(
+          child: AppErrorWidget(
+            message: 'Could not load tribes',
+            onRetry: () => ref.invalidate(allArchetypeClubsProvider),
           ),
-          if (_showFirstVisitGuide)
-            FeatureCoachMark(
-              title: "All Tribes",
-              primaryColor: EmergeColors.nebulaPrimary,
-              items: const [
-                CoachItemData(
-                  icon: Icons.explore,
-                  title: "Browse Archetype Clubs",
-                  body: "Explore all the archetype tribes available. Find your community and join one that resonates with your path.",
-                ),
-              ],
-              onDismiss: () => setState(() => _showFirstVisitGuide = false),
-            ),
-        ],
+        ),
       ),
     );
+  }
+
+  void _checkScreenFirstVisit(String route, NarratorAppearance appearance) {
+    final trigger = NarratorTriggerEngine.shouldTrigger(
+      stats: const NarratorUserStats(
+        momentumScore: 0.5,
+        consecutiveActiveDays: 1,
+        totalHabitsToday: 0,
+        completedHabitsToday: 0,
+        currentLevel: 1,
+        previousLevel: 1,
+        hasStreakBreak: false,
+        currentStreak: 0,
+        longestStreak: 0,
+        consecutiveMisses: 0,
+        isFirstVisitToRoute: true,
+        isFirstVisitToNode: false,
+        hasCompletedEveningReflectionToday: false,
+        hasCompletedOnboarding: true,
+        archetypeSelected: true,
+      ),
+      context: AppOpenContext(
+        currentRoute: route,
+        now: DateTime.now(),
+        isFirstAppOpen: false,
+        daysSinceInstall: 10,
+        daysSinceLastOpen: 0,
+      ),
+      recentTriggers: const {},
+    );
+    if (trigger == NarratorTrigger.screenFirstVisit && mounted) {
+      NarratorSheet.show(context, appearance);
+    }
   }
 }

@@ -1,12 +1,7 @@
-import 'dart:async';
-
 import 'package:emerge_app/core/presentation/widgets/app_error_widget.dart';
 import 'package:emerge_app/core/presentation/widgets/emerge_loading_skeleton.dart';
-import 'package:emerge_app/core/presentation/widgets/feature_coach_mark.dart';
 import 'package:emerge_app/core/theme/app_theme.dart';
 import 'package:emerge_app/features/auth/presentation/providers/auth_providers.dart';
-import 'package:emerge_app/features/companion/domain/enums/companion_enums.dart';
-import 'package:emerge_app/features/companion/presentation/providers/companion_providers.dart';
 import 'package:emerge_app/features/social/domain/entities/social_entities.dart';
 import 'package:emerge_app/features/social/presentation/providers/friend_provider.dart';
 import 'package:emerge_app/features/social/presentation/screens/invite_code_dialog.dart';
@@ -18,6 +13,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
 import 'package:go_router/go_router.dart';
 import 'package:emerge_app/core/theme/emerge_colors.dart';
+import 'package:emerge_app/features/narrator/domain/models/narrator_appearance.dart';
+import 'package:emerge_app/features/narrator/domain/models/narrator_trigger.dart';
+import 'package:emerge_app/features/narrator/domain/services/narrator_trigger_engine.dart';
+import 'package:emerge_app/features/narrator/presentation/widgets/narrator_sheet.dart';
 
 /// Friends Screen - Accountability Partners
 class FriendsScreen extends ConsumerStatefulWidget {
@@ -29,31 +28,26 @@ class FriendsScreen extends ConsumerStatefulWidget {
 
 class _FriendsScreenState extends ConsumerState<FriendsScreen> {
   final _searchController = TextEditingController();
-  Timer? _initTimer;
-  bool _showFirstVisitGuide = false;
 
   @override
   void initState() {
     super.initState();
-    _initTimer = Timer(const Duration(milliseconds: 500), () {
-      if (!mounted) return;
-      final repo = ref.read(companionRepositoryProvider);
-      if (!repo.hasVisited('/social/accountability')) {
-        repo.markVisited('/social/accountability');
-        ref
-            .read(companionEngineProvider.notifier)
-            .triggerEvent(
-              eventType: CompanionEventType.firstFeatureVisit,
-              userContext: {'route': '/social/accountability'},
-            );
-        setState(() => _showFirstVisitGuide = true);
-      }
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _checkScreenFirstVisit(
+        '/social/accountability',
+        const NarratorAppearance(
+          trigger: NarratorTrigger.screenFirstVisit,
+          shellText:
+              'The people in this list are watching the same thing you are... Witnessing each other is enough.',
+          buttonA: 'Invite someone I know',
+          buttonB: 'Just browse for now',
+        ),
+      );
     });
   }
 
   @override
   void dispose() {
-    _initTimer?.cancel();
     _searchController.dispose();
     super.dispose();
   }
@@ -64,9 +58,7 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen> {
 
     return Scaffold(
       backgroundColor: EmergeColors.background,
-      body: Stack(
-        children: [
-          Container(
+      body: Container(
         decoration: const BoxDecoration(gradient: AppTheme.cosmicGradient),
         child: SafeArea(
           child: CustomScrollView(
@@ -307,32 +299,40 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen> {
           ),
         ),
       ),
-      if (_showFirstVisitGuide)
-        FeatureCoachMark(
-          title: "Accountability Partners",
-          primaryColor: EmergeColors.teal,
-          items: const [
-            CoachItemData(
-              icon: Icons.group,
-              title: "Partner Circles",
-              body: "Connect with accountability partners to stay on track with your daily habits.",
-            ),
-            CoachItemData(
-              icon: Icons.handshake,
-              title: "Habit Contracts",
-              body: "Create mutual habit contracts with stakes to keep both parties committed.",
-            ),
-            CoachItemData(
-              icon: Icons.person_add_alt,
-              title: "Find Partners",
-              body: "Search for partners or invite friends from your contacts to join you.",
-            ),
-          ],
-          onDismiss: () => setState(() => _showFirstVisitGuide = false),
-        ),
-      ],
-      ),
     );
+  }
+
+  void _checkScreenFirstVisit(String route, NarratorAppearance appearance) {
+    final trigger = NarratorTriggerEngine.shouldTrigger(
+      stats: const NarratorUserStats(
+        momentumScore: 0.5,
+        consecutiveActiveDays: 1,
+        totalHabitsToday: 0,
+        completedHabitsToday: 0,
+        currentLevel: 1,
+        previousLevel: 1,
+        hasStreakBreak: false,
+        currentStreak: 0,
+        longestStreak: 0,
+        consecutiveMisses: 0,
+        isFirstVisitToRoute: true,
+        isFirstVisitToNode: false,
+        hasCompletedEveningReflectionToday: false,
+        hasCompletedOnboarding: true,
+        archetypeSelected: true,
+      ),
+      context: AppOpenContext(
+        currentRoute: route,
+        now: DateTime.now(),
+        isFirstAppOpen: false,
+        daysSinceInstall: 10,
+        daysSinceLastOpen: 0,
+      ),
+      recentTriggers: const {},
+    );
+    if (trigger == NarratorTrigger.screenFirstVisit && mounted) {
+      NarratorSheet.show(context, appearance);
+    }
   }
 
   void _showInviteSheet(BuildContext context) {
