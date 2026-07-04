@@ -317,7 +317,7 @@ void main() {
     });
 
     test(
-        'role=user, completed onboarding (timestamp), on /login -> / (kick off auth surface)',
+        'role=user, completed onboarding (timestamp), on /login -> /timeline (kick off auth surface)',
         () {
       final ctx = RedirectContext(
         isLoggedIn: true,
