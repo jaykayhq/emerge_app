@@ -1,8 +1,11 @@
-# Narrator Glass Dialog Redesign — Spec
+# Narrator Glass Dialog, Tribe Drift-First, & Performance Fixes — Spec
 
 ## Summary
 
-Replace the narrator modal bottom sheet with a centered, expanding glassmorphic dialog. Remove all remaining old node-guide (`FeatureCoachMark` / `_WorldMapCoachMark`) code from `world_map_screen.dart`. Fix onboarding redirect to land on Timeline instead of World Map. Improve typewriter performance.
+1. **Narrator**: Replace modal bottom sheet with centered, expanding glassmorphic dialog. Remove all remaining old node-guide (`_WorldMapCoachMark`) code.
+2. **Onboarding redirect**: Land on Timeline (`/timeline`) instead of World Map (`/`).
+3. **Tribe lobby drift-first**: Eliminate Firestore permission errors by making tribe data work entirely from local Drift, with Firestore as optional background sync.
+4. **Performance**: Fix typewriter rebuild scope, fix narrator entry/exit animation efficiency.
 
 ---
 
@@ -10,22 +13,22 @@ Replace the narrator modal bottom sheet with a centered, expanding glassmorphic 
 
 ### 1.1 `world_map_screen.dart`
 
-Delete the following from `_WorldMapScreenState`:
+Delete from `_WorldMapScreenState`:
 
-- `Timer? _initTimer` field (line 39)
-- `bool _showFirstVisitGuide` field (line 43)
-- `_initTimer` setup in `initState` (lines 48-62)
-- `_initTimer?.cancel()` in `dispose` (line 67)
-- `if (_showFirstVisitGuide) _WorldMapCoachMark(...)` rendering (lines 189-193)
-- The entire `_WorldMapCoachMark` and `_WorldMapCoachMarkState` classes (lines 896-970+)
+- `Timer? _initTimer` field
+- `bool _showFirstVisitGuide` field
+- `_initTimer` setup in `initState` (currently lines 48–62)
+- `_initTimer?.cancel()` in `dispose`
+- `if (_showFirstVisitGuide) _WorldMapCoachMark(...)` rendering
+- Entire `_WorldMapCoachMark` and `_WorldMapCoachMarkState` classes
 
-**Replace with:** A first-visit trigger that calls `NarratorSheet.show()` with a `NarratorTrigger.screenFirstVisit` appearance, following the same pattern as `level_immersive_screen.dart:_checkFirstNodeVisit()` — but for the world map screen itself.
+**Replace with:** A first-visit trigger that calls `NarratorSheet.show()` with `NarratorTrigger.screenFirstVisit`, following the same pattern as `level_immersive_screen.dart:_checkFirstNodeVisit()`.
 
-Remove imports that are no longer needed (`companion_repository`, `companion_providers`, `companion_enums` — verify).
+Remove now-unused imports (`companion_repository`, `companion_providers`, `companion_enums`).
 
 ### 1.2 `local_settings_repository.dart`
 
-Keep `getHasSeenNodeGuide` / `setHasSeenNodeGuide` / `resetTutorials` — these are used by `level_immersive_screen.dart`'s narrator-based node guide. No change.
+Keep `getHasSeenNodeGuide` / `setHasSeenNodeGuide` — used by `level_immersive_screen.dart`.
 
 ---
 
@@ -56,113 +59,161 @@ static Future<void> show(
 ### 2.2 Container / Card
 
 - Outer: `BackdropFilter` with `ImageFilter.blur(sigmaX: 12, sigmaY: 12)` + `Colors.white.withOpacity(0.08)` background.
-- Border: `Colors.white.withOpacity(0.15)` at 1px width.
-- Border radius: 20.
-- Box shadow: optional glow (same pattern as `GlassmorphismCard`).
-- Width: constrained to ~85% of screen width, max 400px.
-- Positioned center-screen via `Align` or `Center` inside `Dialog`.
+- Border: 1px `Colors.white.withOpacity(0.15)`, radius 20.
+- Box shadow: green glow (`#2BEE79`) matching `EmergeGlassCard` pattern.
+- Width: 85% of screen width, max 400px.
+- Positioned center-screen via `Align` or `Center` inside the dialog.
 
 ### 2.3 Size animation — expand with text
 
 Wrap the content column in `AnimatedSize` (`duration: 300ms, curve: Curves.easeOut`).
 
-- Initial state (before typewriter starts / first chars): shows only the header row (pulse + EMERGE).
-- As `_displayedText` grows, `AnimatedSize` smoothly expands the container height.
-- Action buttons still fade in after text completes (`AnimatedOpacity`).
+- Initial state (before typewriter reveals text): shows only header (pulse + EMERGE).
+- As `_displayedText` grows, `AnimatedSize` smoothly expands the container.
+- Action buttons still fade in after text completes via `AnimatedOpacity`.
 
-This prevents a blank large card from appearing before there's text to read.
+This prevents a blank card from appearing before there's content.
 
 ### 2.4 Entry animation
 
-- Use `FadeTransition` + `ScaleTransition` (or `AnimatedScale`) for the card entry — same feel as the old coach mark.
-- `AnimationController` with 400ms, `Curves.easeOut`.
+- `FadeTransition` + `ScaleTransition` wrapping the entire card.
+- `AnimationController` 400ms, `Curves.easeOut` — same feel as the old coach mark.
 
 ### 2.5 Skip button
 
-- Positioned top-right inside the card (not outside).
-- Small "×" icon.
-- Opacity: 0.3, no background, minimal size.
-- Only visible while typewriter is still typing (`!_textComplete`).
-- Fades out with `AnimatedOpacity` when text completes.
-- On tap: instantly reveals all remaining text, triggers `onComplete`, and shows action buttons. Does NOT dismiss the dialog — that's the user's choice via action buttons or barrier tap.
+- Positioned top-right inside the card.
+- Small "×" icon, opacity 0.3, no background, minimal hit area.
+- Only visible while typewriter is typing (`!_textComplete`).
+- On tap: instantly reveals all remaining text, triggers `onComplete`, shows action buttons. Does NOT dismiss.
 
-### 2.6 Content structure (unchanged)
+### 2.6 Content (unchanged from current)
 
 - Header: `NarratorPulseIndicator` + "EMERGE" text.
-- Typewriter text (with `onComplete` callback).
+- Typewriter text.
 - Optional text field (evening reflection).
 - Action buttons (fade in after text completes).
-- Dismiss: tapping outside the card (barrier dismiss) or tapping action buttons dismisses.
+- Dismiss: barrier tap, or tapping an action button.
 
 ### 2.7 Dismiss behavior
 
-- Barrier dismiss: allowed.
-- On dismiss: call `widget.onResponse` if set (with null button label) and `narratorStateProvider.notifier.dismiss()`.
+- Barrier dismiss allowed.
+- Calls `widget.onResponse` (null button label) and `narratorStateProvider.notifier.dismiss()`.
+- Exit animation: reverse the entry `FadeTransition` + `ScaleTransition`.
 
 ---
 
 ## 3. Onboarding Redirect Fix
 
-### 3.1 `world_reveal_screen.dart` line 116
+### 3.1 `world_reveal_screen.dart`
 
 Change:
 ```dart
 context.go('/');
 ```
-To:
+→
 ```dart
 context.go('/timeline');
 ```
 
-### 3.2 `router.dart` `decideRedirect` line 217
+### 3.2 `router.dart` `decideRedirect`
 
-Change:
+Change line 217:
 ```dart
 if (isOnAuthPath) return '/';
 ```
-To:
+→
 ```dart
 if (isOnAuthPath) return '/timeline';
 ```
 
-This ensures that after onboarding completion, the user lands on Timeline (the intended home/daily command center) rather than the World Map.
+---
+
+## 4. Tribe Lobby — Drift-First (Fix Firestore Permission Error)
+
+### 4.1 Root cause
+
+`DriftTribeRepository.watchArchetypeClubs()` (drift_tribe_repository.dart:45–140) uses a `StreamController` that **waits for both local and remote** before emitting merged data:
+
+```dart
+void emitMerged() {
+  if (!localReady || !remoteReady) return;  // blocks UI
+  ...
+}
+```
+
+The remote subscription does:
+```dart
+_firestore.collection('tribes')
+    .where('type', isEqualTo: TribeType.official.name)
+    .snapshots()
+```
+
+If this query fails (permission denied, missing composite index, network timeout), the error handler sets `remoteReady = true` and falls back to local. **But** if the Firestore listener silently hangs or the initial snapshot is delayed, the merged stream never emits and the user sees an infinite loading spinner.
+
+Additionally, `TribeLobbyScreen` and `AllTribesScreen` both use `allArchetypeClubsProvider` which depends on this stream. A Firestore failure at this point blocks the entire social tab.
+
+### 4.2 Fix: emit local immediately, merge remote asynchronously
+
+Change `watchArchetypeClubs()` to:
+
+1. **Emit local data immediately** from Drift (no waiting for remote).
+2. **Start remote listener in the background** — when remote data arrives, re-emit merged.
+3. **Remote failure is non-blocking** — log the error, never block the stream.
+4. **Add a timeout** (5s) to the remote fetch; if it doesn't arrive in time, emit local data and keep listening for remote in the background.
+
+### 4.3 Same fix for `worldLeaderboardProvider`
+
+The `worldLeaderboardProvider` in `tribes_provider.dart` has the same pattern (lines 207–319). Apply the same fix: emit local data immediately, merge remote when it arrives.
+
+### 4.4 Firestore rules note
+
+The current rules allow `read: if true` on `/tribes/{tribeId}` — world-readable. If the issue is a missing composite index for `.where('type', ...)`, the drift-first approach sidesteps this entirely because the UI never blocks on Firestore. The index can be created later for the background sync.
+
+### 4.5 Seed data verification
+
+Ensure `OfficialClubsSeed` contains all expected archetype clubs so local-only mode shows a complete list. The seed currently covers: athlete, scholar, strategist, creator. Verify all user archetypes are represented.
 
 ---
 
-## 4. Typewriter Performance
+## 5. Typewriter Performance Fix
 
-### 4.1 Current problem
+### 5.1 Current problem
 
-`NarratorTypewriter` calls `setState()` on every character (36 calls/sec at 28ms). This rebuilds the entire `Text` widget 36 times per second, causing unnecessary widget tree rebuilds in the host screen.
+`NarratorTypewriter` calls `setState()` on every character (36 calls/sec at 28ms). This rebuilds the entire widget tree of the NarratorSheet on each tick.
 
-### 4.2 Fix
+### 5.2 Fix
 
-Replace `setState` + `Timer` with a `ValueNotifier<String>`:
+Replace `setState` + `_displayedText` with a `ValueNotifier<String>` owned by the typewriter state:
 
 - `_displayedTextNotifier = ValueNotifier<String>('')`
-- Timer ticks update `_displayedTextNotifier.value`
-- The `build()` method uses `ValueListenableBuilder<Text>` or `AnimatedBuilder` to listen to the notifier
-- Only the text widget rebuilds per character, not the entire NarratorSheet
+- Timer ticks update `_displayedTextNotifier.value = ...`
+- Build returns `ValueListenableBuilder<Text>` that only rebuilds the `Text` widget.
+- The `onComplete` callback still fires when the full text is revealed.
 
-Alternatively, keep `Timer` but use `AnimatedBuilder` with a `Listenable` to scope rebuilds to the `Text` widget only.
+This scopes rebuilds to just the `Text` widget instead of the entire narrator dialog.
+
+### 5.3 Narrator entry animation
+
+Ensure the `AnimationController` is disposed properly and the `TickerProvider` is used correctly. Current `NarratorSheet` is `ConsumerStatefulWidget` — if converting to dialog, ensure it still has a valid `vsync` (the dialog `builder` provides a `BuildContext` that can reach a `TickerProvider`).
 
 ---
 
-## 5. Files Changed
+## 6. Files Changed
 
 | File | Change |
 |------|--------|
 | `lib/features/world_map/presentation/screens/world_map_screen.dart` | Remove old coach mark, add narrator first-visit |
 | `lib/features/narrator/presentation/widgets/narrator_sheet.dart` | Bottom sheet → centered glass dialog, AnimatedSize, skip button |
-| `lib/features/narrator/presentation/widgets/narrator_typewriter.dart` | Performance: scope rebuilds to Text widget |
-| `lib/features/onboarding/presentation/screens/world_reveal_screen.dart` | `context.go('/')` → `context.go('/timeline')` |
+| `lib/features/narrator/presentation/widgets/narrator_typewriter.dart` | Performance: ValueNotifier + ValueListenableBuilder |
+| `lib/features/onboarding/presentation/screens/world_reveal_screen.dart` | `'/'` → `'/timeline'` |
 | `lib/core/router/router.dart` | `return '/'` → `return '/timeline'` |
+| `lib/core/drift_repositories/drift_tribe_repository.dart` | Emit local immediately, background remote merge |
+| `lib/features/social/presentation/providers/tribes_provider.dart` | Same drift-first fix for worldLeaderboardProvider |
 
 ---
 
-## 6. Not In Scope
+## 7. Not In Scope (for this pass)
 
-- Changing Narrator trigger logic (trigger engine, cooldowns, etc.)
-- Changing the Drift persistence layer
-- Changing tribe/social Firestore permissions (separate investigation)
-- Performance improvements outside the narrator typewriter
+- Changing Firestore security rules (drift-first approach makes this less urgent).
+- Social features beyond tribe lobby loading (friends, challenges, partner matching).
+- General app performance outside the narrator and tribe loading paths.
