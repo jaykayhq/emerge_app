@@ -216,11 +216,8 @@ final worldLeaderboardProvider =
       // Index local rows by tribeId for O(1) merge
       var localIndex = <String, TribeStatsTableData>{};
       var remoteDocs = <String, Map<String, dynamic>>{};
-      var remoteReady = false;
 
       void emitMerged() {
-        // Emit as soon as remote is ready so world leaderboard works on fresh installs
-        if (!remoteReady) return;
 
         // Build entries from Firestore (source of truth for cross-user data).
         // Merge local increments for the current user's own tribe.
@@ -300,13 +297,10 @@ final worldLeaderboardProvider =
           .listen(
             (snap) {
               remoteDocs = {for (final doc in snap.docs) doc.id: doc.data()};
-              remoteReady = true;
               emitMerged();
             },
             onError: (Object err) {
-              // If Firestore fails, fall back to local-only
-              remoteReady = true;
-              emitMerged();
+              // Remote failure: just log, UI already showing local data
             },
           );
 

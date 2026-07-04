@@ -48,17 +48,12 @@ class DriftTribeRepository implements TribeRepository {
     StreamSubscription<List<TribeStatsTableData>>? localSub;
     StreamSubscription<QuerySnapshot>? remoteSub;
 
-    var localRows = <TribeStatsTableData>[];
     var remoteDocs = <String, Map<String, dynamic>>{};
-    var localReady = false;
-    var remoteReady = false;
 
-    void emitMerged() {
-      if (!localReady || !remoteReady) return;
-
+    Future<void> emitMerged() async {
+      final localRows = await _db.tribeStatsDao.getAll();
       final tribes = localRows.map((row) {
         final remote = remoteDocs[row.tribeId];
-        // Remote is authoritative for cross-user stats; fall back to local
         final memberCount =
             (remote?['memberCount'] as num?)?.toInt() ?? row.memberCount;
         final totalXp = (remote?['totalXp'] as num?)?.toInt() ?? row.totalXp;
@@ -101,12 +96,16 @@ class DriftTribeRepository implements TribeRepository {
         .then((rows) async {
           if (rows.isEmpty) await _seedLocalClubs();
 
-          localSub = _db.tribeStatsDao.watchAll().listen((updatedRows) {
-            localRows = updatedRows;
-            localReady = true;
-            emitMerged();
-          }, onError: controller.addError);
+          // Emit local data immediately
+          await emitMerged();
 
+          // Listen to local changes
+          localSub = _db.tribeStatsDao.watchAll().listen(
+            (_) => emitMerged(),
+            onError: controller.addError,
+          );
+
+          // Remote: background sync, never blocks
           remoteSub = _firestore
               .collection('tribes')
               .where('type', isEqualTo: TribeType.official.name)
@@ -116,13 +115,10 @@ class DriftTribeRepository implements TribeRepository {
                   remoteDocs = {
                     for (final doc in snapshot.docs) doc.id: doc.data(),
                   };
-                  remoteReady = true;
                   emitMerged();
                 },
                 onError: (Object err) {
-                  // Remote failure: emit local-only so the UI still works
-                  remoteReady = true;
-                  emitMerged();
+                  // Remote failure: just log, UI already showing local data
                 },
               );
         })
