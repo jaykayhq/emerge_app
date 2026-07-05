@@ -24,6 +24,7 @@ import 'daos/mutation_queue_dao.dart';
 import 'daos/tribe_activity_dao.dart';
 import 'daos/narrator_notes_dao.dart';
 import 'daos/pulse_feed_dao.dart';
+import 'daos/daily_reflections_dao.dart';
 
 part 'app_database.g.dart';
 
@@ -52,6 +53,7 @@ part 'app_database.g.dart';
     TribeActivityDao,
     NarratorNotesDao,
     PulseFeedDao,
+    DailyReflectionsDao,
   ],
 )
 class AppDatabase extends _$AppDatabase {
