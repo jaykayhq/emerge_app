@@ -248,26 +248,37 @@ GoRouter router(Ref ref) {
 
       // Read synchronously inside redirect — ref.read gives the latest
       // value at navigation time without subscribing to rebuilds.
-      final roleAsync = ref.read(currentUserRoleProvider);
-      final creatorOnboardingAsync = ref.read(currentCreatorOnboardingProvider);
-      final userStatsAsync = ref.read(userStatsStreamProvider);
+      // Wrap in try/catch for web: ref.read can trigger provider
+      // initialization that calls setState() during the build phase,
+      // which throws on Flutter web (DDC). Returning null defers the
+      // redirect — it will re-trigger on the next navigation event.
+      try {
+        final roleAsync = ref.read(currentUserRoleProvider);
+        final creatorOnboardingAsync = ref.read(currentCreatorOnboardingProvider);
+        final userStatsAsync = ref.read(userStatsStreamProvider);
 
-      final role = roleAsync is AsyncData ? roleAsync.value : null;
-      final creatorOnboarding =
-          creatorOnboardingAsync is AsyncData ? creatorOnboardingAsync.value : null;
-      final userStats = userStatsAsync is AsyncData ? userStatsAsync.value : null;
+        final role = roleAsync is AsyncData ? roleAsync.value : null;
+        final creatorOnboarding = creatorOnboardingAsync is AsyncData
+            ? creatorOnboardingAsync.value
+            : null;
+        final userStats = userStatsAsync is AsyncData ? userStatsAsync.value : null;
 
-      return decideRedirect(
-        currentPath: path,
-        ctx: RedirectContext(
-          isLoggedIn: isLoggedIn,
-          role: role,
-          isFirstLaunch: isFirstLaunch,
-          userOnboardingProgress: userStats?.onboardingProgress,
-          userOnboardingCompletedAt: userStats?.onboardingCompletedAt,
-          creatorOnboarding: creatorOnboarding,
-        ),
-      );
+        return decideRedirect(
+          currentPath: path,
+          ctx: RedirectContext(
+            isLoggedIn: isLoggedIn,
+            role: role,
+            isFirstLaunch: isFirstLaunch,
+            userOnboardingProgress: userStats?.onboardingProgress,
+            userOnboardingCompletedAt: userStats?.onboardingCompletedAt,
+            creatorOnboarding: creatorOnboarding,
+          ),
+        );
+      } catch (_) {
+        // Provider not yet initialized during build phase.
+        // Stay on current path; redirect will re-trigger.
+        return null;
+      }
     },
     routes: [
       GoRoute(
