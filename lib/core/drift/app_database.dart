@@ -12,6 +12,7 @@ import 'tables/mutation_queue_table.dart';
 import 'tables/tribe_activity_table.dart';
 import 'tables/narrator_notes_table.dart';
 import 'tables/pulse_feed_cards_table.dart';
+import 'tables/daily_reflections_table.dart';
 
 import 'daos/user_stats_dao.dart';
 import 'daos/habits_dao.dart';
@@ -38,6 +39,7 @@ part 'app_database.g.dart';
     TribeActivityTable,
     NarratorNotesTable,
     PulseFeedCardsTable,
+    DailyReflectionsTable,
   ],
   daos: [
     UserStatsDao,
@@ -58,7 +60,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.withExecutor(super.executor);
 
   @override
-  int get schemaVersion => 6;
+  int get schemaVersion => 7;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -92,6 +94,9 @@ class AppDatabase extends _$AppDatabase {
       }
       if (from < 6) {
         await m.createTable(pulseFeedCardsTable);
+      }
+      if (from < 7) {
+        await m.createTable(dailyReflectionsTable);
       }
     },
     beforeOpen: (details) async {
