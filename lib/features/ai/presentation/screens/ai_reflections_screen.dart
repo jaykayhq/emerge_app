@@ -13,10 +13,7 @@ import 'package:emerge_app/features/monetization/presentation/providers/subscrip
 import 'package:emerge_app/core/presentation/widgets/oracle_card.dart';
 import 'package:emerge_app/features/habits/domain/entities/habit.dart';
 import 'package:emerge_app/features/gamification/domain/services/identity_engine.dart';
-import 'package:emerge_app/features/narrator/domain/models/narrator_appearance.dart';
-import 'package:emerge_app/features/narrator/domain/models/narrator_trigger.dart';
-import 'package:emerge_app/features/narrator/domain/services/narrator_trigger_engine.dart';
-import 'package:emerge_app/features/narrator/presentation/widgets/narrator_sheet.dart';
+
 
 class AiReflectionsScreen extends ConsumerStatefulWidget {
   const AiReflectionsScreen({super.key});
@@ -30,18 +27,6 @@ class _AiReflectionsScreenState extends ConsumerState<AiReflectionsScreen> {
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _checkScreenFirstVisit(
-        '/profile/reflections',
-        const NarratorAppearance(
-          trigger: NarratorTrigger.screenFirstVisit,
-          shellText:
-              'This is your memory... Every session your Narrator watches gets stored here...',
-          buttonA: 'Show me my patterns',
-          buttonB: 'What does the Narrator watch for',
-        ),
-      );
-    });
   }
 
   @override
@@ -219,39 +204,6 @@ class _AiReflectionsScreenState extends ConsumerState<AiReflectionsScreen> {
         ],
       ),
     );
-  }
-
-  void _checkScreenFirstVisit(String route, NarratorAppearance appearance) {
-    final trigger = NarratorTriggerEngine.shouldTrigger(
-      stats: const NarratorUserStats(
-        momentumScore: 0.5,
-        consecutiveActiveDays: 1,
-        totalHabitsToday: 0,
-        completedHabitsToday: 0,
-        currentLevel: 1,
-        previousLevel: 1,
-        hasStreakBreak: false,
-        currentStreak: 0,
-        longestStreak: 0,
-        consecutiveMisses: 0,
-        isFirstVisitToRoute: true,
-        isFirstVisitToNode: false,
-        hasCompletedEveningReflectionToday: false,
-        hasCompletedOnboarding: true,
-        archetypeSelected: true,
-      ),
-      context: AppOpenContext(
-        currentRoute: route,
-        now: DateTime.now(),
-        isFirstAppOpen: false,
-        daysSinceInstall: 10,
-        daysSinceLastOpen: 0,
-      ),
-      recentTriggers: const {},
-    );
-    if (trigger == NarratorTrigger.screenFirstVisit && mounted) {
-      NarratorSheet.show(context, appearance);
-    }
   }
 
   Future<void> _applyAdjustment(

@@ -1,0 +1,171 @@
+<h2>Approach B: Narrator as a Companion</h2>
+<p class="subtitle">Quiet by default. A small persistent avatar on the timeline. Tap to talk. Milestones surface as a soft, auto-dismissing card. The reflection widget lives inline with today's habits.</p>
+
+<!-- ===== STATE 1: Timeline default ===== -->
+<div class="mockup">
+  <div class="mockup-header">Default timeline (most days, narrator silent)</div>
+  <div class="mockup-body" style="background: #0B0F1E; padding: 16px; border-radius: 12px;">
+    <div style="max-width: 360px; margin: 0 auto; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; color: #fff;">
+
+      <!-- Status bar -->
+      <div style="display: flex; justify-content: space-between; align-items: center; font-size: 11px; color: rgba(255,255,255,0.5); padding-bottom: 12px;">
+        <span>9:41</span>
+        <span>●●● 5G ▓▓</span>
+      </div>
+
+      <!-- Header: Date + narrator avatar -->
+      <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 16px;">
+        <div>
+          <div style="font-size: 11px; color: rgba(255,255,255,0.4); letter-spacing: 2px;">TUESDAY</div>
+          <div style="font-size: 24px; font-weight: 700; color: #fff;">July 5</div>
+          <div style="font-size: 12px; color: rgba(255,255,255,0.5); margin-top: 2px;">4 of 6 done · 12-day streak</div>
+        </div>
+        <!-- Narrator avatar: small, persistent, with idle pulse -->
+        <div style="position: relative; width: 44px; height: 44px; border-radius: 50%; background: radial-gradient(circle, rgba(139,92,246,0.25), rgba(43,238,121,0.15)); display: flex; align-items: center; justify-content: center; cursor: pointer;" title="Tap to ask the narrator">
+          <div style="width: 32px; height: 32px; border-radius: 50%; background: linear-gradient(135deg, #8E44AD, #2BEE79); display: flex; align-items: center; justify-content: center; font-size: 14px;">✦</div>
+          <div style="position: absolute; bottom: -2px; right: -2px; width: 12px; height: 12px; border-radius: 50%; background: #2BEE79; box-shadow: 0 0 8px #2BEE79;"></div>
+        </div>
+      </div>
+
+      <!-- Date strip -->
+      <div style="display: flex; gap: 6px; margin-bottom: 20px; padding: 8px; background: rgba(255,255,255,0.04); border-radius: 12px;">
+        <div style="flex: 1; text-align: center; padding: 6px 2px; font-size: 11px; color: rgba(255,255,255,0.4); border-radius: 8px;">MON<br><span style="font-size: 14px; color: #fff;">30</span></div>
+        <div style="flex: 1; text-align: center; padding: 6px 2px; font-size: 11px; color: rgba(255,255,255,0.4); border-radius: 8px;">TUE<br><span style="font-size: 14px; color: #fff;">1</span></div>
+        <div style="flex: 1; text-align: center; padding: 6px 2px; font-size: 11px; color: #fff; background: #2BEE79; color: #0B0F1E; border-radius: 8px; font-weight: 700;">TUE<br><span style="font-size: 14px;">5</span></div>
+        <div style="flex: 1; text-align: center; padding: 6px 2px; font-size: 11px; color: rgba(255,255,255,0.4); border-radius: 8px;">WED<br><span style="font-size: 14px; color: #fff;">6</span></div>
+        <div style="flex: 1; text-align: center; padding: 6px 2px; font-size: 11px; color: rgba(255,255,255,0.4); border-radius: 8px;">THU<br><span style="font-size: 14px; color: #fff;">7</span></div>
+        <div style="flex: 1; text-align: center; padding: 6px 2px; font-size: 11px; color: rgba(255,255,255,0.4); border-radius: 8px;">FRI<br><span style="font-size: 14px; color: #fff;">8</span></div>
+        <div style="flex: 1; text-align: center; padding: 6px 2px; font-size: 11px; color: rgba(255,255,255,0.4); border-radius: 8px;">SAT<br><span style="font-size: 14px; color: #fff;">9</span></div>
+      </div>
+
+      <!-- Today's arc -->
+      <div style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 16px; padding: 16px; margin-bottom: 16px;">
+        <div style="display: flex; align-items: center; gap: 12px;">
+          <div style="width: 56px; height: 56px; border-radius: 50%; background: conic-gradient(#2BEE79 0% 67%, rgba(255,255,255,0.1) 67% 100%); display: flex; align-items: center; justify-content: center; position: relative;">
+            <div style="width: 44px; height: 44px; border-radius: 50%; background: #0B0F1E; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; color: #fff;">67%</div>
+          </div>
+          <div style="flex: 1;">
+            <div style="font-size: 13px; font-weight: 600; color: #fff;">You're on track</div>
+            <div style="font-size: 11px; color: rgba(255,255,255,0.5); margin-top: 2px;">2 habits left today · evening slot</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Morning group -->
+      <div style="font-size: 11px; letter-spacing: 2px; color: rgba(255,255,255,0.4); margin-bottom: 8px;">MORNING</div>
+      <div style="display: flex; flex-direction: column; gap: 8px; margin-bottom: 16px;">
+        <div style="display: flex; align-items: center; gap: 12px; padding: 12px; background: rgba(255,255,255,0.04); border-radius: 12px; border: 1px solid rgba(43,238,121,0.2);">
+          <div style="width: 24px; height: 24px; border-radius: 50%; background: #2BEE79; display: flex; align-items: center; justify-content: center; font-size: 14px; color: #0B0F1E;">✓</div>
+          <div style="flex: 1; font-size: 14px; color: #fff; text-decoration: line-through; opacity: 0.6;">Morning meditation · 10 min</div>
+        </div>
+        <div style="display: flex; align-items: center; gap: 12px; padding: 12px; background: rgba(255,255,255,0.04); border-radius: 12px;">
+          <div style="width: 24px; height: 24px; border-radius: 50%; border: 2px solid rgba(255,255,255,0.3);"></div>
+          <div style="flex: 1; font-size: 14px; color: #fff;">Stretch routine</div>
+        </div>
+      </div>
+
+      <!-- Afternoon group -->
+      <div style="font-size: 11px; letter-spacing: 2px; color: rgba(255,255,255,0.4); margin-bottom: 8px;">AFTERNOON</div>
+      <div style="display: flex; flex-direction: column; gap: 8px; margin-bottom: 16px;">
+        <div style="display: flex; align-items: center; gap: 12px; padding: 12px; background: rgba(255,255,255,0.04); border-radius: 12px; border: 1px solid rgba(43,238,121,0.2);">
+          <div style="width: 24px; height: 24px; border-radius: 50%; background: #2BEE79; display: flex; align-items: center; justify-content: center; font-size: 14px; color: #0B0F1E;">✓</div>
+          <div style="flex: 1; font-size: 14px; color: #fff; text-decoration: line-through; opacity: 0.6;">Deep work block · 90 min</div>
+        </div>
+        <div style="display: flex; align-items: center; gap: 12px; padding: 12px; background: rgba(255,255,255,0.04); border-radius: 12px;">
+          <div style="width: 24px; height: 24px; border-radius: 50%; border: 2px solid rgba(255,255,255,0.3);"></div>
+          <div style="flex: 1; font-size: 14px; color: #fff;">Walk outside</div>
+        </div>
+      </div>
+
+      <!-- Reflection widget - INLINE, the new addition -->
+      <div style="background: linear-gradient(135deg, rgba(139,92,246,0.1), rgba(43,238,121,0.05)); border: 1px solid rgba(139,92,246,0.25); border-radius: 16px; padding: 16px; margin-bottom: 16px;">
+        <div style="font-size: 11px; letter-spacing: 2px; color: rgba(255,255,255,0.5); margin-bottom: 8px;">REFLECT</div>
+        <div style="font-size: 14px; color: #fff; margin-bottom: 12px;">How does today feel so far?</div>
+        <div style="display: flex; gap: 8px; margin-bottom: 12px;">
+          <div style="flex: 1; aspect-ratio: 1; background: rgba(255,255,255,0.06); border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 22px;">😞</div>
+          <div style="flex: 1; aspect-ratio: 1; background: rgba(255,255,255,0.06); border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 22px;">😐</div>
+          <div style="flex: 1; aspect-ratio: 1; background: rgba(43,238,121,0.2); border: 2px solid #2BEE79; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 22px;">🙂</div>
+          <div style="flex: 1; aspect-ratio: 1; background: rgba(255,255,255,0.06); border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 22px;">😊</div>
+          <div style="flex: 1; aspect-ratio: 1; background: rgba(255,255,255,0.06); border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 22px;">🔥</div>
+        </div>
+        <div style="background: rgba(0,0,0,0.3); border-radius: 10px; padding: 10px 12px; font-size: 13px; color: rgba(255,255,255,0.4);">Add a one-line note (optional)…</div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- ===== STATE 2: Narrator milestone card slide-up ===== -->
+<div class="mockup">
+  <div class="mockup-header">Milestone moment (e.g. 14-day streak reached)</div>
+  <div class="mockup-body" style="background: #0B0F1E; padding: 16px; border-radius: 12px; position: relative; min-height: 280px;">
+    <div style="max-width: 360px; margin: 0 auto; font-family: -apple-system, sans-serif; color: #fff; opacity: 0.4;">
+      <div style="font-size: 18px; font-weight: 700;">Tuesday, July 5</div>
+      <div style="font-size: 13px; color: rgba(255,255,255,0.5); margin-top: 4px;">2 habits left today</div>
+    </div>
+    <!-- Card sliding up from bottom, non-blocking -->
+    <div style="position: absolute; bottom: 16px; left: 16px; right: 16px; max-width: 360px; margin: 0 auto; background: linear-gradient(135deg, rgba(139,92,246,0.95), rgba(43,238,121,0.85)); border-radius: 16px; padding: 16px; box-shadow: 0 8px 32px rgba(139,92,246,0.4); animation: slideUp 0.4s ease-out;">
+      <div style="display: flex; align-items: flex-start; gap: 12px;">
+        <div style="width: 36px; height: 36px; border-radius: 50%; background: rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0;">✦</div>
+        <div style="flex: 1;">
+          <div style="font-size: 11px; letter-spacing: 2px; color: rgba(255,255,255,0.8); margin-bottom: 4px;">14-DAY STREAK</div>
+          <div style="font-size: 15px; line-height: 1.4; color: #fff;">Two weeks of showing up. Your Tuesday streak is now your strongest — 6 weeks in a row on this day.</div>
+        </div>
+        <div style="font-size: 11px; color: rgba(255,255,255,0.6); white-space: nowrap;">Swipe ↑</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== STATE 3: Narrator sheet on avatar tap ===== -->
+<div class="mockup">
+  <div class="mockup-header">Avatar tapped → instant narrator sheet (no typewriter)</div>
+  <div class="mockup-body" style="background: #0B0F1E; padding: 16px; border-radius: 12px; position: relative; min-height: 360px;">
+    <div style="max-width: 360px; margin: 0 auto; font-family: -apple-system, sans-serif; color: #fff; opacity: 0.3;">
+      <div style="font-size: 18px; font-weight: 700;">Tuesday, July 5</div>
+    </div>
+    <!-- Centered glassmorphic sheet -->
+    <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 88%; max-width: 340px; background: rgba(255,255,255,0.06); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.12); border-radius: 20px; padding: 20px;">
+      <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 14px;">
+        <div style="width: 28px; height: 28px; border-radius: 50%; background: linear-gradient(135deg, #8E44AD, #2BEE79); display: flex; align-items: center; justify-content: center; font-size: 14px;">✦</div>
+        <div style="font-size: 12px; letter-spacing: 3px; color: #2BEE79; font-weight: 700;">EMERGE</div>
+        <div style="margin-left: auto; font-size: 18px; color: rgba(255,255,255,0.4); cursor: pointer;">✕</div>
+      </div>
+      <div style="font-size: 14px; line-height: 1.6; color: #fff; margin-bottom: 16px;">Tuesday is your strongest day this month — 5 of 6 habits done, 6 weeks running. Want a suggestion for the afternoon slot?</div>
+      <div style="display: flex; gap: 8px;">
+        <button style="flex: 1; padding: 12px; background: rgba(43,238,121,0.15); border: 1px solid rgba(43,238,121,0.4); border-radius: 10px; color: #2BEE79; font-size: 13px; font-weight: 600; cursor: pointer;">Yes, suggest one</button>
+        <button style="flex: 1; padding: 12px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.15); border-radius: 10px; color: #fff; font-size: 13px; font-weight: 600; cursor: pointer;">Not now</button>
+      </div>
+      <div style="margin-top: 14px; padding-top: 12px; border-top: 1px solid rgba(255,255,255,0.08); font-size: 11px; color: rgba(255,255,255,0.4); display: flex; justify-content: space-between;">
+        <span>🔒 Free: generic lines</span>
+        <span style="color: #FFB347;">⚡ Pro: 3 personalized insights/day</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<h3 style="margin-top: 32px;">What changed vs. today</h3>
+<div class="pros-cons">
+  <div class="pros">
+    <h4>Removed (was noise)</h4>
+    <ul>
+      <li>Vote icon / 🗳️ emoji count</li>
+      <li>Standalone narrator summary card</li>
+      <li>Evening reflection indicator card</li>
+      <li>"Watch ad for bonus XP" card (moved to settings)</li>
+      <li>Long fixed header (3 icon buttons → 1 narrator avatar)</li>
+    </ul>
+  </div>
+  <div class="cons">
+    <h4>Added (intentional)</h4>
+    <ul>
+      <li>Persistent narrator avatar (top-right, 44dp)</li>
+      <li>Today's arc — single progress visualization (67% ring)</li>
+      <li>Inline reflection widget with mood emoji + 1-line note</li>
+      <li>Milestone cards slide up from bottom (non-blocking)</li>
+      <li>Free/Pro hint on narrator sheet</li>
+    </ul>
+  </div>
+</div>
+
+<p class="subtitle" style="margin-top: 24px;"><strong>Tap any of these in the browser if you want to refine:</strong> avatar style, the mood emojis, the reflection widget placement, or the milestone card copy. Otherwise, say "looks good" and I'll write the design doc.</p>

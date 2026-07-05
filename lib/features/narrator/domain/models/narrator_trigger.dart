@@ -20,26 +20,17 @@ enum NarratorTrigger {
   /// User leveled up
   levelUp,
 
-  /// Weekly recap trigger
+  /// Weekly recap trigger (Pro only — gated)
   weeklyRecap,
 
   /// User has been absent for several days
   longAbsence,
 
-  /// A new habit was created
-  newHabitCreation,
-
-  /// First visit to a screen
-  screenFirstVisit,
-
-  /// First visit to a world node
-  nodeFirstVisit,
-
   /// Evening reflection prompt
   eveningReflection,
 
-  /// Daily insight from the narrator
-  dailyInsight;
+  /// User explicitly tapped the narrator avatar or "Ask narrator" CTA
+  askNarrator;
 
   /// Maps this trigger to the corresponding [NarratorNoteType] for persistence.
   NarratorNoteType toNoteType() {
@@ -54,12 +45,9 @@ enum NarratorTrigger {
       NarratorTrigger.levelUp => NarratorNoteType.levelUp,
       NarratorTrigger.weeklyRecap => NarratorNoteType.weeklyRecap,
       NarratorTrigger.longAbsence => NarratorNoteType.absenceDetected,
-      NarratorTrigger.newHabitCreation => NarratorNoteType.habitCompleted,
-      NarratorTrigger.screenFirstVisit => NarratorNoteType.screenVisit,
-      NarratorTrigger.nodeFirstVisit => NarratorNoteType.screenVisit,
       NarratorTrigger.eveningReflection =>
         NarratorNoteType.reflectionLogged,
-      NarratorTrigger.dailyInsight => NarratorNoteType.aiInsight,
+      NarratorTrigger.askNarrator => NarratorNoteType.aiInsight,
     };
   }
 }

@@ -103,9 +103,9 @@ class NarratorSummaryCard extends ConsumerWidget {
                   color: EmergeColors.teal,
                   onTap: () {
                     final appearance = NarratorAppearance(
-                      trigger: NarratorTrigger.dailyInsight,
+                      trigger: NarratorTrigger.askNarrator,
                       shellText:
-                          'Here\'s your daily insight. Keep building your identity, one habit at a time.',
+                          'You asked for more. Tell me what you\'re noticing, or what you want to understand better.',
                       buttonA: 'Got it',
                       buttonB: 'Tell me more',
                     );

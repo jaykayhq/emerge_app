@@ -12,9 +12,7 @@ import 'package:emerge_app/features/social/presentation/widgets/quest_card_stitc
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
-import 'package:emerge_app/features/narrator/domain/models/narrator_appearance.dart';
-import 'package:emerge_app/features/narrator/domain/models/narrator_trigger.dart';
-import 'package:emerge_app/features/narrator/presentation/widgets/narrator_sheet.dart';
+
 
 /// Challenges Screen - Optimized with bundle provider to prevent double refresh
 /// Uses single consolidated data fetch instead of multiple independent providers
@@ -65,18 +63,6 @@ class _ChallengesScreenState extends ConsumerState<ChallengesScreen> {
     final hasSeen = await repo.getHasSeenNodeGuide('/challenges');
     if (!hasSeen && mounted && !_disposed) {
       await repo.setHasSeenNodeGuide('/challenges');
-      if (!_disposed && mounted) {
-        NarratorSheet.show(
-          context,
-          const NarratorAppearance(
-            trigger: NarratorTrigger.screenFirstVisit,
-            shellText:
-                'Quests are time-boxed identity sprints... Each one you complete is a chapter in your story.',
-            buttonA: "Show me what's available",
-            buttonB: 'What do I earn',
-          ),
-        );
-      }
     }
   }
 

@@ -19,10 +19,7 @@ import 'package:emerge_app/features/profile/presentation/widgets/emerge_splash_r
 import 'package:emerge_app/features/monetization/presentation/providers/subscription_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:emerge_app/features/narrator/domain/models/narrator_appearance.dart';
-import 'package:emerge_app/features/narrator/domain/models/narrator_trigger.dart';
-import 'package:emerge_app/features/narrator/domain/services/narrator_trigger_engine.dart';
-import 'package:emerge_app/features/narrator/presentation/widgets/narrator_sheet.dart';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
@@ -68,18 +65,6 @@ class _FutureSelfStudioScreenState
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _checkScreenFirstVisit(
-        '/profile/future-self',
-        const NarratorAppearance(
-          trigger: NarratorTrigger.screenFirstVisit,
-          shellText:
-              'This is where you decide who you\'re becoming... Every identity tag you set here shapes what your Narrator says...',
-          buttonA: "I'm ready to define it",
-          buttonB: 'What happens if I change this later',
-        ),
-      );
-    });
   }
 
   @override
@@ -651,38 +636,7 @@ class _FutureSelfStudioScreenState
     }
   }
 
-  void _checkScreenFirstVisit(String route, NarratorAppearance appearance) {
-    final trigger = NarratorTriggerEngine.shouldTrigger(
-      stats: const NarratorUserStats(
-        momentumScore: 0.5,
-        consecutiveActiveDays: 1,
-        totalHabitsToday: 0,
-        completedHabitsToday: 0,
-        currentLevel: 1,
-        previousLevel: 1,
-        hasStreakBreak: false,
-        currentStreak: 0,
-        longestStreak: 0,
-        consecutiveMisses: 0,
-        isFirstVisitToRoute: true,
-        isFirstVisitToNode: false,
-        hasCompletedEveningReflectionToday: false,
-        hasCompletedOnboarding: true,
-        archetypeSelected: true,
-      ),
-      context: AppOpenContext(
-        currentRoute: route,
-        now: DateTime.now(),
-        isFirstAppOpen: false,
-        daysSinceInstall: 10,
-        daysSinceLastOpen: 0,
-      ),
-      recentTriggers: const {},
-    );
-    if (trigger == NarratorTrigger.screenFirstVisit && mounted) {
-      NarratorSheet.show(context, appearance);
-    }
-  }
+
 
   /// Calculate habit votes from user XP stats for artifact unlocking
   Map<String, int> _calculateHabitVotes(UserAvatarStats stats) {

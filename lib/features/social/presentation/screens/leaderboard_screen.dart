@@ -2,19 +2,13 @@ import 'package:emerge_app/core/presentation/widgets/app_error_widget.dart';
 import 'package:emerge_app/core/presentation/widgets/emerge_loading_skeleton.dart';
 import 'package:emerge_app/core/theme/app_theme.dart';
 import 'package:emerge_app/features/gamification/presentation/providers/user_stats_providers.dart';
-import 'package:emerge_app/features/social/presentation/providers/friends_leaderboard_provider.dart';
 import 'package:emerge_app/features/social/presentation/providers/leaderboard_provider.dart';
 import 'package:emerge_app/features/social/presentation/providers/tribes_provider.dart';
-import 'package:emerge_app/features/social/presentation/widgets/friends_leaderboard.dart';
 import 'package:emerge_app/features/auth/domain/entities/user_extension.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
 import 'package:go_router/go_router.dart';
-import 'package:emerge_app/features/narrator/domain/models/narrator_appearance.dart';
-import 'package:emerge_app/features/narrator/domain/models/narrator_trigger.dart';
-import 'package:emerge_app/features/narrator/domain/services/narrator_trigger_engine.dart';
-import 'package:emerge_app/features/narrator/presentation/widgets/narrator_sheet.dart';
 
 export 'package:emerge_app/features/social/presentation/providers/tribes_provider.dart'
     show TribeStats;
@@ -40,18 +34,6 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen>
       vsync: this,
       initialIndex: widget.initialTabIndex,
     );
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _checkScreenFirstVisit(
-        '/social/leaderboard',
-        const NarratorAppearance(
-          trigger: NarratorTrigger.screenFirstVisit,
-          shellText:
-              'This is the scoreboard for... this week. Momentum is the metric — not perfection.',
-          buttonA: 'I understand',
-          buttonB: 'How is the score calculated',
-        ),
-      );
-    });
   }
 
   @override
@@ -122,76 +104,12 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen>
             child: TabBarView(
               controller: _tabController,
               children: [
-                _FriendsLeaderboardTab(),
                 _TribeLeaderboardTab(),
                 _WorldLeaderboardTab(),
               ],
             ),
           ),
         ],
-      ),
-    );
-  }
-
-  void _checkScreenFirstVisit(String route, NarratorAppearance appearance) {
-    final trigger = NarratorTriggerEngine.shouldTrigger(
-      stats: const NarratorUserStats(
-        momentumScore: 0.5,
-        consecutiveActiveDays: 1,
-        totalHabitsToday: 0,
-        completedHabitsToday: 0,
-        currentLevel: 1,
-        previousLevel: 1,
-        hasStreakBreak: false,
-        currentStreak: 0,
-        longestStreak: 0,
-        consecutiveMisses: 0,
-        isFirstVisitToRoute: true,
-        isFirstVisitToNode: false,
-        hasCompletedEveningReflectionToday: false,
-        hasCompletedOnboarding: true,
-        archetypeSelected: true,
-      ),
-      context: AppOpenContext(
-        currentRoute: route,
-        now: DateTime.now(),
-        isFirstAppOpen: false,
-        daysSinceInstall: 10,
-        daysSinceLastOpen: 0,
-      ),
-      recentTriggers: const {},
-    );
-    if (trigger == NarratorTrigger.screenFirstVisit && mounted) {
-      NarratorSheet.show(context, appearance);
-    }
-  }
-}
-
-class _FriendsLeaderboardTab extends ConsumerWidget {
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final friendsAsync = ref.watch(friendsLeaderboardProvider);
-
-    return friendsAsync.when(
-      data: (entries) {
-        if (entries.isEmpty) {
-          return const Center(
-            child: Text(
-              'No friends yet',
-              style: TextStyle(color: Colors.white),
-            ),
-          );
-        }
-
-        return SingleChildScrollView(
-          child: FriendsLeaderboard(friends: entries),
-        );
-      },
-      loading: () =>
-          const EmergeLoadingSkeleton(itemCount: 5, showAvatar: true),
-      error: (err, _) => AppErrorWidget(
-        message: 'Could not load friends leaderboard',
-        onRetry: () => ref.invalidate(friendsLeaderboardProvider),
       ),
     );
   }

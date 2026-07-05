@@ -6,10 +6,6 @@ import 'package:go_router/go_router.dart';
 import 'package:emerge_app/core/theme/emerge_colors.dart';
 import 'package:emerge_app/features/social/presentation/providers/partner_activity_provider.dart';
 import 'package:emerge_app/features/social/presentation/providers/tribes_provider.dart';
-import 'package:emerge_app/features/narrator/domain/models/narrator_appearance.dart';
-import 'package:emerge_app/features/narrator/domain/models/narrator_trigger.dart';
-import 'package:emerge_app/features/narrator/domain/services/narrator_trigger_engine.dart';
-import 'package:emerge_app/features/narrator/presentation/widgets/narrator_sheet.dart';
 
 /// Honest destination for the live feed. Two tabs:
 /// - Tribe:    full club activity feed (club-scoped)
@@ -28,23 +24,6 @@ class SocialActivityScreen extends ConsumerStatefulWidget {
 
 class _SocialActivityScreenState extends ConsumerState<SocialActivityScreen> {
   int _tab = 0;
-
-  @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _checkScreenFirstVisit(
-        '/social/activity',
-        const NarratorAppearance(
-          trigger: NarratorTrigger.screenFirstVisit,
-          shellText:
-              'This is what movement looks like in real-time... You\'re part of this.',
-          buttonA: "Let's go",
-          buttonB: 'Tell me more',
-        ),
-      );
-    });
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -74,39 +53,6 @@ class _SocialActivityScreenState extends ConsumerState<SocialActivityScreen> {
         ],
       ),
     );
-  }
-
-  void _checkScreenFirstVisit(String route, NarratorAppearance appearance) {
-    final trigger = NarratorTriggerEngine.shouldTrigger(
-      stats: const NarratorUserStats(
-        momentumScore: 0.5,
-        consecutiveActiveDays: 1,
-        totalHabitsToday: 0,
-        completedHabitsToday: 0,
-        currentLevel: 1,
-        previousLevel: 1,
-        hasStreakBreak: false,
-        currentStreak: 0,
-        longestStreak: 0,
-        consecutiveMisses: 0,
-        isFirstVisitToRoute: true,
-        isFirstVisitToNode: false,
-        hasCompletedEveningReflectionToday: false,
-        hasCompletedOnboarding: true,
-        archetypeSelected: true,
-      ),
-      context: AppOpenContext(
-        currentRoute: route,
-        now: DateTime.now(),
-        isFirstAppOpen: false,
-        daysSinceInstall: 10,
-        daysSinceLastOpen: 0,
-      ),
-      recentTriggers: const {},
-    );
-    if (trigger == NarratorTrigger.screenFirstVisit && mounted) {
-      NarratorSheet.show(context, appearance);
-    }
   }
 }
 

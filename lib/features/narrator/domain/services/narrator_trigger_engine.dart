@@ -58,12 +58,6 @@ class NarratorUserStats {
   /// Number of consecutive misses.
   final int consecutiveMisses;
 
-  /// Whether this is the user's first visit to the current route.
-  final bool isFirstVisitToRoute;
-
-  /// Whether this is the user's first visit to the current node.
-  final bool isFirstVisitToNode;
-
   /// Whether the user has already completed their evening reflection today.
   final bool hasCompletedEveningReflectionToday;
 
@@ -84,8 +78,6 @@ class NarratorUserStats {
     required this.currentStreak,
     required this.longestStreak,
     required this.consecutiveMisses,
-    required this.isFirstVisitToRoute,
-    required this.isFirstVisitToNode,
     required this.hasCompletedEveningReflectionToday,
     required this.hasCompletedOnboarding,
     required this.archetypeSelected,
@@ -103,8 +95,6 @@ class NarratorUserStats {
     int? currentStreak,
     int? longestStreak,
     int? consecutiveMisses,
-    bool? isFirstVisitToRoute,
-    bool? isFirstVisitToNode,
     bool? hasCompletedEveningReflectionToday,
     bool? hasCompletedOnboarding,
     bool? archetypeSelected,
@@ -121,8 +111,6 @@ class NarratorUserStats {
       currentStreak: currentStreak ?? this.currentStreak,
       longestStreak: longestStreak ?? this.longestStreak,
       consecutiveMisses: consecutiveMisses ?? this.consecutiveMisses,
-      isFirstVisitToRoute: isFirstVisitToRoute ?? this.isFirstVisitToRoute,
-      isFirstVisitToNode: isFirstVisitToNode ?? this.isFirstVisitToNode,
       hasCompletedEveningReflectionToday:
           hasCompletedEveningReflectionToday ??
               this.hasCompletedEveningReflectionToday,
@@ -140,25 +128,12 @@ class NarratorTriggerEngine {
   /// Cooldown duration for most triggers (4 hours).
   static const Duration _cooldown = Duration(hours: 4);
 
-  /// Routes excluded from [NarratorTrigger.screenFirstVisit].
-  static const List<String> _excludedScreenFirstVisitRoutes = [
-    '/timeline',
-    '/',
-  ];
-
-  /// Triggers exempt from cooldown.
-  static const List<NarratorTrigger> _cooldownExemptTriggers = [
-    NarratorTrigger.screenFirstVisit,
-    NarratorTrigger.nodeFirstVisit,
-  ];
-
   /// Determines whether the Narrator should trigger and returns the
   /// highest-priority trigger that matches, or `null` if none match.
   ///
   /// Priority ordering (highest first):
   ///   longAbsence > levelUp > streakBreakFirstMiss > onFireState >
-  ///   weeklyRecap > morningBriefEarlyDays > screenFirstVisit >
-  ///   nodeFirstVisit > eveningReflection
+  ///   weeklyRecap > morningBriefEarlyDays > eveningReflection
   static NarratorTrigger? shouldTrigger({
     required AppOpenContext context,
     required NarratorUserStats stats,
@@ -173,8 +148,6 @@ class NarratorTriggerEngine {
       _checkOnFireState(stats, now, recentTriggers),
       _checkWeeklyRecap(context, recentTriggers),
       _checkMorningBriefEarlyDays(context, stats, recentTriggers),
-      _checkScreenFirstVisit(context, stats, recentTriggers),
-      _checkNodeFirstVisit(stats, recentTriggers),
       _checkEveningReflection(context, stats, recentTriggers),
     ];
 
@@ -183,6 +156,10 @@ class NarratorTriggerEngine {
     }
     return null;
   }
+
+  /// Returns the askNarrator trigger for explicit user-initiated opens.
+  /// No cooldown applies (user-driven).
+  static NarratorTrigger resolveAskNarratorTrigger() => NarratorTrigger.askNarrator;
 
   /// Helper to detect if a streak break should trigger.
   static bool shouldTriggerOnStreakBreak({required int consecutiveMisses}) {
@@ -269,30 +246,6 @@ class NarratorTriggerEngine {
     return null;
   }
 
-  static NarratorTrigger? _checkScreenFirstVisit(
-    AppOpenContext context,
-    NarratorUserStats stats,
-    Map<NarratorTrigger, DateTime> recentTriggers,
-  ) {
-    if (stats.isFirstVisitToRoute &&
-        !_excludedScreenFirstVisitRoutes.contains(context.currentRoute)) {
-      // screenFirstVisit is exempt from cooldown
-      return NarratorTrigger.screenFirstVisit;
-    }
-    return null;
-  }
-
-  static NarratorTrigger? _checkNodeFirstVisit(
-    NarratorUserStats stats,
-    Map<NarratorTrigger, DateTime> recentTriggers,
-  ) {
-    if (stats.isFirstVisitToNode) {
-      // nodeFirstVisit is exempt from cooldown
-      return NarratorTrigger.nodeFirstVisit;
-    }
-    return null;
-  }
-
   static NarratorTrigger? _checkEveningReflection(
     AppOpenContext context,
     NarratorUserStats stats,
@@ -311,16 +264,11 @@ class NarratorTriggerEngine {
   // ---------------------------------------------------------------------------
 
   /// Checks whether the given trigger is on cooldown.
-  ///
-  /// Some triggers ([NarratorTrigger.screenFirstVisit],
-  /// [NarratorTrigger.nodeFirstVisit]) are exempt from cooldown.
   static bool _isOnCooldown(
     NarratorTrigger trigger,
     DateTime now,
     Map<NarratorTrigger, DateTime> recentTriggers,
   ) {
-    if (_cooldownExemptTriggers.contains(trigger)) return false;
-
     final lastTriggered = recentTriggers[trigger];
     if (lastTriggered == null) return false;
 

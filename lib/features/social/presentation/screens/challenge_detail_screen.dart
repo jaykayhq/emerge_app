@@ -7,9 +7,7 @@ import 'package:emerge_app/core/theme/app_theme.dart';
 import 'package:emerge_app/core/theme/emerge_colors.dart';
 import 'package:emerge_app/features/auth/presentation/providers/auth_providers.dart';
 import 'package:emerge_app/features/gamification/presentation/providers/user_stats_providers.dart';
-import 'package:emerge_app/features/narrator/domain/models/narrator_appearance.dart';
-import 'package:emerge_app/features/narrator/domain/models/narrator_trigger.dart';
-import 'package:emerge_app/features/narrator/presentation/widgets/narrator_sheet.dart';
+
 import 'package:emerge_app/features/gamification/presentation/providers/recap_hub_provider.dart';
 import 'package:emerge_app/features/onboarding/data/repositories/local_settings_repository.dart';
 import 'package:emerge_app/features/social/domain/models/challenge.dart';
@@ -59,18 +57,6 @@ class _ChallengeDetailScreenState extends ConsumerState<ChallengeDetailScreen> {
     final hasSeen = await repo.getHasSeenNodeGuide('/social/challenge');
     if (!hasSeen && mounted && !_disposed) {
       await repo.setHasSeenNodeGuide('/social/challenge');
-      if (!_disposed && mounted) {
-        NarratorSheet.show(
-          context,
-          const NarratorAppearance(
-            trigger: NarratorTrigger.screenFirstVisit,
-            shellText:
-                'This challenge is a concentrated test... Finish it and your world shifts.',
-            buttonA: "I'm in",
-            buttonB: "Tell me what's at stake",
-          ),
-        );
-      }
     }
   }
 

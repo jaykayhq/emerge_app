@@ -1,4 +1,3 @@
-import 'dart:async';
 import 'dart:ui';
 
 import 'package:emerge_app/core/constants/gamification_constants.dart';
@@ -13,10 +12,6 @@ import 'package:emerge_app/core/presentation/widgets/world_background.dart';
 import 'package:emerge_app/features/world_map/presentation/widgets/node_quest_dialog.dart';
 import 'package:emerge_app/features/world_map/presentation/screens/level_immersive_screen.dart';
 import 'package:emerge_app/features/world_map/presentation/widgets/curved_map_layout.dart';
-import 'package:emerge_app/features/narrator/domain/models/narrator_appearance.dart';
-import 'package:emerge_app/features/narrator/domain/models/narrator_trigger.dart';
-import 'package:emerge_app/features/narrator/presentation/widgets/narrator_sheet.dart';
-import 'package:emerge_app/features/onboarding/data/repositories/local_settings_repository.dart';
 import 'package:emerge_app/features/monetization/presentation/providers/subscription_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -43,7 +38,6 @@ class _WorldMapScreenState extends ConsumerState<WorldMapScreen> {
   @override
   void initState() {
     super.initState();
-    _checkFirstWorldMapVisit();
   }
 
   @override
@@ -286,37 +280,6 @@ class _WorldMapScreenState extends ConsumerState<WorldMapScreen> {
           builder: (_) => LevelImmersiveScreen(node: node, config: config),
         ),
       );
-    }
-  }
-
-  Future<void> _checkFirstWorldMapVisit() async {
-    await Future<void>.delayed(const Duration(milliseconds: 500));
-    if (!mounted || _disposed) return;
-
-    final repo = LocalSettingsRepository();
-    if (repo.isFirstLaunch) return;
-    if (!repo.isTutorialsEnabled()) return;
-
-    final hasSeen = await repo.getHasSeenNodeGuide('world-map');
-    if (!hasSeen && mounted && !_disposed) {
-      await repo.setHasSeenNodeGuide('world-map');
-      if (!_disposed && mounted) {
-        await NarratorSheet.show(
-          context,
-          NarratorAppearance(
-            trigger: NarratorTrigger.screenFirstVisit,
-            shellText:
-                'Welcome to your World Map. '
-                'Each node represents a challenge area. '
-                'Tap a node to begin your mission.',
-            buttonA: 'Explore',
-            buttonB: 'Got it',
-            context: {
-              'route': '/world-map',
-            },
-          ),
-        );
-      }
     }
   }
 }

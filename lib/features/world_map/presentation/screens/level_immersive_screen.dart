@@ -3,8 +3,6 @@ import 'dart:io';
 import 'dart:ui';
 
 import 'package:emerge_app/core/utils/app_logger.dart';
-import 'package:emerge_app/features/onboarding/data/repositories/local_settings_repository.dart';
-import 'package:emerge_app/features/onboarding/presentation/providers/onboarding_provider.dart';
 import 'package:emerge_app/features/auth/domain/entities/user_extension.dart';
 import 'package:emerge_app/features/auth/presentation/providers/auth_providers.dart';
 import 'package:emerge_app/features/habits/domain/entities/habit.dart';
@@ -22,9 +20,6 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:emerge_app/core/theme/emerge_colors.dart';
-import 'package:emerge_app/features/narrator/domain/models/narrator_appearance.dart';
-import 'package:emerge_app/features/narrator/domain/models/narrator_trigger.dart';
-import 'package:emerge_app/features/narrator/presentation/widgets/narrator_sheet.dart';
 
 /// Full-screen immersive level view with AI-generated background
 /// Shows habits, stats, health bar, and mission controls
@@ -57,51 +52,6 @@ class _LevelImmersiveScreenState extends ConsumerState<LevelImmersiveScreen> {
   @override
   void initState() {
     super.initState();
-    _checkFirstNodeVisit();
-  }
-
-  Future<void> _checkFirstNodeVisit() async {
-    await Future<void>.delayed(const Duration(milliseconds: 300));
-    if (!mounted || _disposed) return;
-
-    final repo = LocalSettingsRepository();
-    if (repo.isFirstLaunch) return;
-    if (!repo.isTutorialsEnabled()) return;
-
-    final hasSeen = await repo.getHasSeenNodeGuide(widget.node.id);
-    if (!hasSeen && mounted && !_disposed) {
-      await repo.setHasSeenNodeGuide(widget.node.id);
-      if (!_disposed && mounted) {
-        final region = widget.config.mapName.isNotEmpty
-            ? widget.config.mapName
-            : 'the map';
-        final attrs = widget.node.targetedAttributes
-            .map((a) => a.name)
-            .join(', ');
-
-        await NarratorSheet.show(
-          context,
-          NarratorAppearance(
-            trigger: NarratorTrigger.nodeFirstVisit,
-            shellText:
-                'You\'ve reached the ${widget.node.name}. '
-                'Directives here build $attrs. '
-                'Every one you complete shifts $region. '
-                'Complete the missions. Conquer the node. '
-                'What happens after that is worth seeing.',
-            buttonA: 'Begin the node',
-            buttonB: 'What unlocks next?',
-            slotKeys: [widget.node.id],
-            context: {
-              'nodeId': widget.node.id,
-              'nodeTitle': widget.node.name,
-              'primaryAttribute': widget.node.targetedAttributes.first.name,
-              'userLevel': 1,
-            },
-          ),
-        );
-      }
-    }
   }
 
   @override
@@ -112,14 +62,6 @@ class _LevelImmersiveScreenState extends ConsumerState<LevelImmersiveScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // Reactive: when the user enables node guides in settings while this
-    // screen is alive, show the guide immediately.
-    ref.listen(tutorialSettingProvider, (bool? prev, bool next) {
-      if (next && !(prev ?? false) && !_disposed) {
-        _checkFirstNodeVisit();
-      }
-    });
-
     final statsAsync = ref.watch(userStatsStreamProvider);
     final worldHealthAsync = ref.watch(worldHealthStreamProvider);
 
