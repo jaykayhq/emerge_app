@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
 
 import 'package:emerge_app/core/presentation/widgets/app_back_handler.dart';
+import 'package:emerge_app/core/presentation/widgets/app_error_widget.dart';
 import 'package:emerge_app/core/presentation/widgets/emerge_loading_skeleton.dart';
 import 'package:emerge_app/features/pulse_feed/domain/models/pulse_feed_card.dart';
 import 'package:emerge_app/features/pulse_feed/presentation/providers/pulse_feed_providers.dart';
@@ -31,7 +32,12 @@ class PulseFeedScreen extends ConsumerWidget {
           child: feedAsync.when(
             data: (cards) => _FeedContent(cards: cards),
             loading: () => const _FeedLoading(),
-            error: (e, _) => _ErrorState(message: 'Could not load feed: $e'),
+            error: (e, _) => Center(
+              child: AppErrorWidget(
+                message: 'Could not load feed',
+                onRetry: () => ref.invalidate(pulseFeedProvider),
+              ),
+            ),
           ),
         ),
       ),
@@ -203,24 +209,3 @@ class _FeedLoading extends StatelessWidget {
   }
 }
 
-// ── Error State ─────────────────────────────────────────────────────────────
-
-class _ErrorState extends StatelessWidget {
-  final String message;
-
-  const _ErrorState({required this.message});
-
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(40),
-        child: Text(
-          message,
-          textAlign: TextAlign.center,
-          style: const TextStyle(color: Colors.white54),
-        ),
-      ),
-    );
-  }
-}

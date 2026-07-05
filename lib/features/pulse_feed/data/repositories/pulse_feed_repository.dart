@@ -1,8 +1,8 @@
 import 'dart:async';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:flutter/foundation.dart';
 
+import 'package:emerge_app/core/utils/app_logger.dart';
 import 'package:emerge_app/features/pulse_feed/domain/models/pulse_feed_card.dart';
 
 /// Repository for Pulse Feed cards stored in Firestore.
@@ -36,7 +36,7 @@ class PulseFeedRepository {
         return PulseFeedCard.fromJson(data);
       }).toList();
     } catch (e) {
-      debugPrint('PulseFeedRepository.getPulseFeed error: $e');
+      AppLogger.e('PulseFeedRepository.getPulseFeed error', e);
       return [];
     }
   }
@@ -56,7 +56,7 @@ class PulseFeedRepository {
         }).toList();
       });
     } catch (e) {
-      debugPrint('PulseFeedRepository.watchPulseFeed error: $e');
+      AppLogger.e('PulseFeedRepository.watchPulseFeed error', e);
       return Stream.value([]);
     }
   }

@@ -488,5 +488,15 @@ service cloud.firestore {
       // Extension manages writing to this collection
       allow write: if false;
     }
+
+    // Pulse Feed — per-user activity cards (read/write own)
+    match /pulse_feed_cards/{userId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+
+      match /cards/{cardId} {
+        allow read: if request.auth != null;
+        allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;
+      }
+    }
   }
 }

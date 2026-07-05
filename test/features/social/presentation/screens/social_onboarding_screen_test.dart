@@ -21,6 +21,6 @@ void main() {
 
     expect(find.text('YOUR TRIBE AWAITS'), findsOneWidget);
     expect(find.text('ARCHETYPE COLLECTIVE'), findsOneWidget);
-    expect(find.text('VANGUARD COMMANDER'), findsOneWidget);
+    expect(find.text('CREATOR CIRCLE'), findsOneWidget);
   });
 }
