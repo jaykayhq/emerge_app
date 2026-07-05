@@ -31,6 +31,7 @@ import 'package:emerge_app/features/narrator/presentation/widgets/narrator_summa
 import 'package:emerge_app/features/narrator/presentation/widgets/narrator_sheet.dart';
 import 'package:emerge_app/features/narrator/domain/models/narrator_appearance.dart';
 import 'package:emerge_app/features/narrator/domain/models/narrator_trigger.dart';
+import 'package:emerge_app/features/timeline/presentation/widgets/timeline_reflection_card.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 /// Main Timeline screen - the daily command center
@@ -47,7 +48,6 @@ class _TimelineScreenState extends ConsumerState<TimelineScreen> {
   DateTime _selectedDate = DateTime.now();
   final GlobalKey _calendarKey = GlobalKey();
   bool _hasCheckedMisses = false;
-  bool _hasTriggeredEveningReflection = false;
   bool _showOverlay = false;
   NarratorLine? _pendingOverlayLine;
 
@@ -120,7 +120,6 @@ class _TimelineScreenState extends ConsumerState<TimelineScreen> {
 
       await prefs.setBool(key, true);
       if (!mounted) return;
-      setState(() => _hasTriggeredEveningReflection = true);
 
       NarratorSheet.show(
         context,
@@ -447,120 +446,18 @@ class _TimelineScreenState extends ConsumerState<TimelineScreen> {
 
         const SliverToBoxAdapter(child: SizedBox(height: 16)),
 
+        // Daily reflection card
         SliverToBoxAdapter(
-          child: _buildEveningReflectionIndicator(),
-        ),
-
-        const SliverToBoxAdapter(child: SizedBox(height: 16)),
-
-        // Rewarded ad: Watch ad for bonus XP
-        SliverToBoxAdapter(
-          child: Consumer(
-            builder: (context, ref, _) {
-              final isPremium = ref.watch(isPremiumProvider).value ?? false;
-              if (isPremium) return const SizedBox.shrink();
-
-              return Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: GlassmorphismCard(
-                  glowColor: EmergeColors.warmGold,
-                  child: Padding(
-                    padding: const EdgeInsets.all(20),
-                    child: Row(
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.all(10),
-                          decoration: BoxDecoration(
-                            color: EmergeColors.warmGold.withValues(
-                              alpha: 0.15,
-                            ),
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: const Icon(
-                            Icons.play_circle_outline,
-                            color: EmergeColors.warmGold,
-                            size: 28,
-                          ),
-                        ),
-                        const SizedBox(width: 14),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              const Text(
-                                'BONUS XP BOOST',
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 14,
-                                ),
-                              ),
-                              const SizedBox(height: 2),
-                              Text(
-                                'WATCH A SHORT AD TO EARN BONUS XP',
-                                style: TextStyle(
-                                  color: Colors.white.withValues(alpha: 0.6),
-                                  fontSize: 12,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        TextButton(
-                          onPressed: () {
-                            ref
-                                .read(adManagerProvider)
-                                .showRewardedAd(
-                                  onRewarded: () {
-                                    if (context.mounted) {
-                                      ScaffoldMessenger.of(
-                                        context,
-                                      ).showSnackBar(
-                                        const SnackBar(
-                                          content: Text('+25 Bonus XP earned!'),
-                                          backgroundColor:
-                                              EmergeColors.warmGold,
-                                          behavior: SnackBarBehavior.floating,
-                                        ),
-                                      );
-                                    }
-                                  },
-                                  onFailed: () {
-                                    if (context.mounted) {
-                                      ScaffoldMessenger.of(
-                                        context,
-                                      ).showSnackBar(
-                                        const SnackBar(
-                                          content: Text(
-                                            'Ad not available. Try again later.',
-                                          ),
-                                          backgroundColor: Colors.grey,
-                                          behavior: SnackBarBehavior.floating,
-                                        ),
-                                      );
-                                    }
-                                  },
-                                );
-                          },
-                          child: const Text(
-                            'WATCH',
-                            style: TextStyle(
-                              color: EmergeColors.warmGold,
-                              fontWeight: FontWeight.bold,
-                              fontSize: 12,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              );
-            },
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: TimelineReflectionCard(
+              userId: statsAsync.value?.uid ?? '',
+              date: _selectedDate,
+            ),
           ),
         ),
 
-        const SliverToBoxAdapter(child: SizedBox(height: 32)),
+        const SliverToBoxAdapter(child: SizedBox(height: 24)),
       ],
     );
   }
@@ -730,74 +627,6 @@ class _TimelineScreenState extends ConsumerState<TimelineScreen> {
       builder: (context) => MissRecoverySheet(missedHabits: missedHabits),
     );
   }
-
-  Widget _buildEveningReflectionIndicator() {
-    final now = DateTime.now();
-    final isEvening = now.hour >= 18;
-
-    return _BreathingWrapper(
-      child: GlassmorphismCard(
-        glowColor: EmergeColors.yellow,
-        child: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: EmergeColors.yellow.withValues(alpha: 0.2),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Icon(
-                isEvening ? Icons.nightlight_round : Icons.wb_sunny,
-                color: EmergeColors.yellow,
-                size: 20,
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Evening Reflection',
-                    style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  Text(
-                    isEvening
-                        ? 'The Narrator has a reflection prompt for you'
-                        : 'Check in this evening for a reflection prompt',
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: EmergeColors.tealMuted.withValues(alpha: 0.7),
-                      fontSize: 11,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            if (isEvening && !_hasTriggeredEveningReflection)
-              TextButton(
-                onPressed: () {
-                  NarratorSheet.show(context, _eveningAppearance);
-                  setState(() => _hasTriggeredEveningReflection = true);
-                },
-                child: const Text(
-                  'OPEN',
-                  style: TextStyle(
-                    color: EmergeColors.yellow,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 12,
-                  ),
-                ),
-              ),
-          ],
-        ),
-      ),
-    );
-  }
-
-
 
   void _shareTimelineProgress() {
     final habits = ref.read(dashboardStateProvider).habits;

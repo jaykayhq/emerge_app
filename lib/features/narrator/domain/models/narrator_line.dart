@@ -10,11 +10,13 @@ sealed class NarratorLine {
 }
 
 class GenericLine extends NarratorLine {
+  @override
   final String text;
   const GenericLine(this.text);
 }
 
 class PersonalLine extends NarratorLine {
+  @override
   final String text;
   final String dataBasis;
 
