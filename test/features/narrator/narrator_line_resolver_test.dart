@@ -39,8 +39,6 @@ NarratorUserStats _stats() => const NarratorUserStats(
       currentStreak: 5,
       longestStreak: 5,
       consecutiveMisses: 0,
-      isFirstVisitToRoute: false,
-      isFirstVisitToNode: false,
       hasCompletedEveningReflectionToday: false,
       hasCompletedOnboarding: true,
       archetypeSelected: true,
@@ -77,13 +75,13 @@ void main() {
       expect(result, isA<WeeklyRecapGated>());
     });
 
-    test('weeklyRecap returns line for pro user', () async {
+    test('weeklyRecap returns WeeklyRecapLine for pro user', () async {
       final r = _FakeResolver(isPremium: true);
       final result = await r.resolveGated(
         trigger: NarratorTrigger.weeklyRecap,
         stats: _stats(),
       );
-      expect(result, isA<PersonalLine>());
+      expect(result, isA<WeeklyRecapLine>());
     });
   });
 }

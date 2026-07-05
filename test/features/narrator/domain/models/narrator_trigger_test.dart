@@ -3,8 +3,8 @@ import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   group('NarratorTrigger', () {
-    test('has exactly 12 values', () {
-      expect(NarratorTrigger.values.length, 12);
+    test('has exactly 9 values', () {
+      expect(NarratorTrigger.values.length, 9);
     });
 
     test('contains onboardingPostArchetype', () {
@@ -44,22 +44,8 @@ void main() {
       expect(NarratorTrigger.values, contains(NarratorTrigger.longAbsence));
     });
 
-    test('contains newHabitCreation', () {
-      expect(
-        NarratorTrigger.values,
-        contains(NarratorTrigger.newHabitCreation),
-      );
-    });
-
-    test('contains screenFirstVisit', () {
-      expect(
-        NarratorTrigger.values,
-        contains(NarratorTrigger.screenFirstVisit),
-      );
-    });
-
-    test('contains nodeFirstVisit', () {
-      expect(NarratorTrigger.values, contains(NarratorTrigger.nodeFirstVisit));
+    test('contains askNarrator', () {
+      expect(NarratorTrigger.values, contains(NarratorTrigger.askNarrator));
     });
 
     test('contains eveningReflection', () {
@@ -69,8 +55,7 @@ void main() {
       );
     });
 
-    test('contains dailyInsight', () {
-      expect(NarratorTrigger.values, contains(NarratorTrigger.dailyInsight));
-    });
+
   });
 }
+

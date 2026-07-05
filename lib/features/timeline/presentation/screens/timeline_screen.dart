@@ -1,5 +1,4 @@
 import 'package:emerge_app/core/presentation/widgets/glassmorphism_card.dart';
-import 'package:emerge_app/core/theme/emerge_earthy_theme.dart';
 import 'package:emerge_app/features/habits/domain/entities/habit.dart';
 import 'package:emerge_app/features/habits/presentation/providers/dashboard_state_provider.dart';
 import 'package:emerge_app/features/habits/presentation/providers/habit_providers.dart';
@@ -9,10 +8,9 @@ import 'package:emerge_app/features/monetization/domain/services/ad_manager_serv
 import 'package:emerge_app/features/monetization/presentation/providers/subscription_provider.dart';
 import 'package:emerge_app/features/monetization/presentation/widgets/ad_banner_widget.dart';
 import 'package:emerge_app/features/timeline/presentation/widgets/month_calendar_strip.dart';
-import 'package:emerge_app/features/timeline/presentation/widgets/current_mission_banner.dart';
+import 'package:emerge_app/features/timeline/presentation/widgets/today_arc_card.dart';
 import 'package:emerge_app/features/timeline/presentation/widgets/habit_timeline_section.dart';
 import 'package:emerge_app/features/timeline/presentation/widgets/timeline_share_preview.dart';
-import 'package:emerge_app/features/timeline/presentation/widgets/streak_flame_widget.dart';
 import 'package:emerge_app/features/timeline/presentation/widgets/completion_celebration.dart';
 import 'package:emerge_app/features/auth/domain/entities/user_extension.dart';
 import 'package:emerge_app/features/gamification/presentation/providers/user_stats_providers.dart';
@@ -27,6 +25,8 @@ import 'package:emerge_app/core/theme/emerge_colors.dart';
 import 'package:emerge_app/features/narrator/domain/models/narrator_line.dart';
 import 'package:emerge_app/features/narrator/domain/models/narrator_note.dart';
 import 'package:emerge_app/features/narrator/presentation/providers/narrator_providers.dart';
+import 'package:emerge_app/features/narrator/presentation/widgets/narrator_avatar.dart';
+import 'package:emerge_app/features/narrator/presentation/widgets/narrator_milestone_card.dart';
 import 'package:emerge_app/features/narrator/presentation/widgets/narrator_summary_card.dart';
 import 'package:emerge_app/features/narrator/presentation/widgets/narrator_sheet.dart';
 import 'package:emerge_app/features/narrator/domain/models/narrator_appearance.dart';
@@ -46,9 +46,10 @@ class TimelineScreen extends ConsumerStatefulWidget {
 class _TimelineScreenState extends ConsumerState<TimelineScreen> {
   DateTime _selectedDate = DateTime.now();
   final GlobalKey _calendarKey = GlobalKey();
-  final GlobalKey _missionKey = GlobalKey();
   bool _hasCheckedMisses = false;
   bool _hasTriggeredEveningReflection = false;
+  bool _showOverlay = false;
+  NarratorLine? _pendingOverlayLine;
 
   static const _eveningAppearance = NarratorAppearance(
     trigger: NarratorTrigger.eveningReflection,
@@ -65,6 +66,30 @@ class _TimelineScreenState extends ConsumerState<TimelineScreen> {
   void initState() {
     super.initState();
     _checkEveningReflection();
+  }
+
+  int _bestStreak(List<Habit> habits) {
+    int max = 0;
+    for (final h in habits) {
+      if (h.currentStreak > max) max = h.currentStreak;
+    }
+    return max;
+  }
+
+  void _onNarratorAvatarTap() {
+    // If there's a pending line, clear it without showing the sheet.
+    // The avatar tap can later open an askNarrator sheet.
+    ref.read(pendingMilestoneProvider.notifier).clear();
+    // For now: no-op; future: open askNarrator sheet
+  }
+
+  void _onPendingMilestoneChange(NarratorLine? prev, NarratorLine? next) {
+    if (prev == null && next != null) {
+      setState(() {
+        _pendingOverlayLine = next;
+        _showOverlay = true;
+      });
+    }
   }
 
   @override
@@ -153,6 +178,8 @@ class _TimelineScreenState extends ConsumerState<TimelineScreen> {
       }
     });
 
+    ref.listen<NarratorLine?>(pendingMilestoneProvider, _onPendingMilestoneChange);
+
     return WorldBackground(
       useSafeArea: false,
       themeOverride: AppWorldTheme.nebula,
@@ -187,6 +214,24 @@ class _TimelineScreenState extends ConsumerState<TimelineScreen> {
               ),
             ),
           ),
+          // Milestone slide-up overlay
+          if (_showOverlay && _pendingOverlayLine != null)
+            Positioned(
+              left: 0,
+              right: 0,
+              bottom: 100 + MediaQuery.paddingOf(context).bottom,
+              child: NarratorMilestoneCard(
+                line: _pendingOverlayLine!,
+                trigger: NarratorTrigger.askNarrator,
+                onDismissed: () {
+                  setState(() {
+                    _showOverlay = false;
+                    _pendingOverlayLine = null;
+                  });
+                  ref.read(pendingMilestoneProvider.notifier).clear();
+                },
+              ),
+            ),
         ],
       ),
     );
@@ -229,20 +274,27 @@ class _TimelineScreenState extends ConsumerState<TimelineScreen> {
             },
           ),
           actions: [
-            IconButton(
-              icon: const Icon(Icons.ios_share, color: Colors.white),
-              onPressed: () => _shareTimelineProgress(),
-              tooltip: 'Share Progress',
+            PopupMenuButton<String>(
+              icon: const Icon(Icons.more_vert, color: Colors.white),
+              onSelected: (v) {
+                switch (v) {
+                  case 'share':
+                    _shareTimelineProgress();
+                  case 'recap':
+                    context.push('/recap');
+                  case 'profile':
+                    context.push('/profile');
+                }
+              },
+              itemBuilder: (_) => [
+                const PopupMenuItem(value: 'share', child: Text('Share progress')),
+                const PopupMenuItem(value: 'recap', child: Text('Weekly recap')),
+                const PopupMenuItem(value: 'profile', child: Text('Future Self Studio')),
+              ],
             ),
-            IconButton(
-              icon: const Icon(Icons.analytics_outlined, color: Colors.white),
-              onPressed: () => context.push('/recap'),
-              tooltip: 'Weekly Recap',
-            ),
-            IconButton(
-              icon: const Icon(Icons.person_outline, color: Colors.white),
-              onPressed: () => context.push('/profile'),
-              tooltip: 'Future Self Studio',
+            Padding(
+              padding: const EdgeInsets.only(right: 8),
+              child: NarratorAvatar(onTap: () => _onNarratorAvatarTap()),
             ),
           ],
         ),
@@ -262,18 +314,19 @@ class _TimelineScreenState extends ConsumerState<TimelineScreen> {
         SliverToBoxAdapter(
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16.0),
-            child: Column(
-              children: [
-                CurrentMissionBanner(key: _missionKey),
-                const SizedBox(height: 12),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    _buildBestStreakWidget(habits),
-                    _buildVoteIcon(habits),
-                  ],
-                ),
-              ],
+            child: TodayArcCard(
+              completed: completedCount,
+              total: habits.length,
+              streakDays: _bestStreak(habits),
+              onTap: () {
+                // Jump to first incomplete habit
+                final firstIncomplete = habits.where(
+                  (h) => !h.isCompletedOn(_selectedDate),
+                ).firstOrNull;
+                if (firstIncomplete != null) {
+                  // Scroll to habit — TimelineScreen can add scroll-to later
+                }
+              },
             ),
           ),
         ),
@@ -744,71 +797,7 @@ class _TimelineScreenState extends ConsumerState<TimelineScreen> {
     );
   }
 
-  Widget _buildVoteIcon(List<Habit> habits) {
-    final now = DateTime.now();
-    final completedToday = habits.where((h) => h.isCompletedOn(now)).length;
 
-    return Tooltip(
-      message: 'Completed Habits: $completedToday',
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Text('🗳️', style: TextStyle(fontSize: 16)),
-            const SizedBox(width: 8),
-            Text(
-              '$completedToday',
-              style: TextStyle(
-                color: EmergeEarthyColors.terracotta,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildBestStreakWidget(List<Habit> habits) {
-    int maxStreak = 0;
-    for (final habit in habits) {
-      if (habit.currentStreak > maxStreak) {
-        maxStreak = habit.currentStreak;
-      }
-    }
-
-    return Row(
-      children: [
-        StreakFlameWidget(
-          streakCount: maxStreak,
-          isActive: maxStreak > 0,
-          size: 40,
-        ),
-        const SizedBox(width: 12),
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              maxStreak > 0 ? 'Best Streak' : 'Start Streak',
-              style: TextStyle(
-                color: Colors.white.withValues(alpha: 0.5),
-                fontSize: 10,
-              ),
-            ),
-            Text(
-              '$maxStreak days',
-              style: const TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.bold,
-                fontSize: 14,
-              ),
-            ),
-          ],
-        ),
-      ],
-    );
-  }
 
   void _shareTimelineProgress() {
     final habits = ref.read(dashboardStateProvider).habits;

@@ -1,7 +1,6 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:emerge_app/features/narrator/domain/models/narrator_line.dart';
 import 'package:emerge_app/features/narrator/domain/services/narrator_line_resolver.dart';
-import 'package:emerge_app/features/narrator/domain/services/narrator_trigger_engine.dart';
 
 import 'package:emerge_app/core/drift/database.dart';
 import 'package:emerge_app/features/monetization/presentation/providers/subscription_provider.dart';

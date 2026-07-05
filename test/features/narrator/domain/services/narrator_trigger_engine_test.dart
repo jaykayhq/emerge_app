@@ -17,7 +17,7 @@ void main() {
       daysSinceInstall: 30,
       daysSinceLastOpen: 0, // opened today
     );
-    defaultStats = NarratorUserStats(
+    defaultStats = const NarratorUserStats(
       momentumScore: 0.5,
       consecutiveActiveDays: 3,
       totalHabitsToday: 5,
@@ -28,8 +28,6 @@ void main() {
       currentStreak: 5,
       longestStreak: 10,
       consecutiveMisses: 0,
-      isFirstVisitToRoute: false,
-      isFirstVisitToNode: false,
       hasCompletedEveningReflectionToday: false,
       hasCompletedOnboarding: true,
       archetypeSelected: true,
@@ -54,7 +52,7 @@ void main() {
 
   group('NarratorUserStats', () {
     test('can be created with all fields', () {
-      final stats = NarratorUserStats(
+      const stats = NarratorUserStats(
         momentumScore: 0.8,
         consecutiveActiveDays: 10,
         totalHabitsToday: 3,
@@ -65,8 +63,6 @@ void main() {
         currentStreak: 15,
         longestStreak: 20,
         consecutiveMisses: 0,
-        isFirstVisitToRoute: false,
-        isFirstVisitToNode: false,
         hasCompletedEveningReflectionToday: false,
         hasCompletedOnboarding: true,
         archetypeSelected: true,
@@ -199,76 +195,8 @@ void main() {
       expect(result, NarratorTrigger.morningBriefEarlyDays);
     });
 
-    test('returns screenFirstVisit for first visit to route', () {
-      final stats = defaultStats.copyWith(
-        isFirstVisitToRoute: true,
-      );
-
-      final result = NarratorTriggerEngine.shouldTrigger(
-        context: AppOpenContext(
-          currentRoute: '/profile',
-          now: now,
-          isFirstAppOpen: false,
-          daysSinceInstall: 30,
-          daysSinceLastOpen: 1,
-        ),
-        stats: stats,
-        recentTriggers: emptyCooldown,
-      );
-
-      expect(result, NarratorTrigger.screenFirstVisit);
-    });
-
-    test('screenFirstVisit excluded for /timeline route', () {
-      final stats = defaultStats.copyWith(
-        isFirstVisitToRoute: true,
-      );
-
-      final result = NarratorTriggerEngine.shouldTrigger(
-        context: defaultContext, // route is /timeline
-        stats: stats,
-        recentTriggers: emptyCooldown,
-      );
-
-      // Should not be screenFirstVisit for /timeline
-      expect(result, isNot(NarratorTrigger.screenFirstVisit));
-    });
-
-    test('screenFirstVisit excluded for / route', () {
-      final stats = defaultStats.copyWith(
-        isFirstVisitToRoute: true,
-      );
-
-      final result = NarratorTriggerEngine.shouldTrigger(
-        context: AppOpenContext(
-          currentRoute: '/',
-          now: now,
-          isFirstAppOpen: false,
-          daysSinceInstall: 30,
-          daysSinceLastOpen: 1,
-        ),
-        stats: stats,
-        recentTriggers: emptyCooldown,
-      );
-
-      expect(result, isNot(NarratorTrigger.screenFirstVisit));
-    });
-
-    test('returns nodeFirstVisit for first visit to node', () {
-      final stats = defaultStats.copyWith(
-        isFirstVisitToNode: true,
-      );
-
-      final result = NarratorTriggerEngine.shouldTrigger(
-        context: defaultContext,
-        stats: stats,
-        recentTriggers: emptyCooldown,
-      );
-
-      expect(result, NarratorTrigger.nodeFirstVisit);
-    });
-
-    test('returns eveningReflection when reflection not completed and evening', () {
+    test('returns eveningReflection when reflection not completed and evening',
+        () {
       final eveningCtx = AppOpenContext(
         currentRoute: '/timeline',
         now: DateTime(2026, 7, 2, 20, 0), // 8 PM
@@ -326,7 +254,7 @@ void main() {
         previousLevel: 3,
       );
 
-      final cooldown = {
+      final cooldown = <NarratorTrigger, DateTime>{
         NarratorTrigger.levelUp: now.subtract(const Duration(hours: 1)),
       };
 
@@ -339,46 +267,20 @@ void main() {
       expect(result, isNull);
     });
 
-    test('screenFirstVisit exempt from cooldown', () {
-      final stats = defaultStats.copyWith(
-        isFirstVisitToRoute: true,
-      );
-
-      final cooldown = {
-        NarratorTrigger.screenFirstVisit: now.subtract(const Duration(hours: 1)),
-      };
-
-      final result = NarratorTriggerEngine.shouldTrigger(
-        context: AppOpenContext(
-          currentRoute: '/world',
-          now: now,
-          isFirstAppOpen: false,
-          daysSinceInstall: 30,
-          daysSinceLastOpen: 1,
-        ),
-        stats: stats,
-        recentTriggers: cooldown,
-      );
-
-      expect(result, NarratorTrigger.screenFirstVisit);
-    });
-
-    test('nodeFirstVisit exempt from cooldown', () {
-      final stats = defaultStats.copyWith(
-        isFirstVisitToNode: true,
-      );
-
-      final cooldown = {
-        NarratorTrigger.nodeFirstVisit: now.subtract(const Duration(hours: 1)),
-      };
-
+    test('removed triggers never fire', () {
+      // The engine no longer checks for screenFirstVisit, nodeFirstVisit,
+      // dailyInsight, or newHabitCreation (removed in Task 5).
+      // We can't reference the removed enum values since they're gone,
+      // so we just verify the engine returns null for neutral stats
+      // (none of the remaining triggers should fire).
       final result = NarratorTriggerEngine.shouldTrigger(
         context: defaultContext,
-        stats: stats,
-        recentTriggers: cooldown,
+        stats: defaultStats,
+        recentTriggers: emptyCooldown,
       );
 
-      expect(result, NarratorTrigger.nodeFirstVisit);
+      // None of the remaining triggers match neutral stats
+      expect(result, isNull);
     });
 
     test('does not trigger morningBrief if onboarding not complete', () {
@@ -411,20 +313,28 @@ void main() {
       expect(result, isNull);
     });
 
-    test('shouldTriggerOnStreakBreak returns true when consecutiveMisses > 0', () {
+    test('shouldTriggerOnStreakBreak returns true when consecutiveMisses > 0',
+        () {
       expect(
-        NarratorTriggerEngine.shouldTriggerOnStreakBreak(consecutiveMisses: 1),
+        NarratorTriggerEngine.shouldTriggerOnStreakBreak(
+          consecutiveMisses: 1,
+        ),
         true,
       );
       expect(
-        NarratorTriggerEngine.shouldTriggerOnStreakBreak(consecutiveMisses: 5),
+        NarratorTriggerEngine.shouldTriggerOnStreakBreak(
+          consecutiveMisses: 5,
+        ),
         true,
       );
     });
 
-    test('shouldTriggerOnStreakBreak returns false when no consecutive misses', () {
+    test('shouldTriggerOnStreakBreak returns false when no consecutive misses',
+        () {
       expect(
-        NarratorTriggerEngine.shouldTriggerOnStreakBreak(consecutiveMisses: 0),
+        NarratorTriggerEngine.shouldTriggerOnStreakBreak(
+          consecutiveMisses: 0,
+        ),
         false,
       );
     });
@@ -435,7 +345,7 @@ void main() {
         consecutiveActiveDays: 10,
       );
 
-      final cooldown = {
+      final cooldown = <NarratorTrigger, DateTime>{
         NarratorTrigger.onFireState: now.subtract(const Duration(hours: 5)),
       };
 
