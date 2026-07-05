@@ -2,6 +2,7 @@ import 'package:emerge_app/core/theme/archetype_theme.dart';
 import 'package:emerge_app/core/utils/app_logger.dart';
 import 'package:emerge_app/features/auth/domain/entities/user_extension.dart';
 import 'package:emerge_app/features/narrator/domain/models/narrator_appearance.dart';
+import 'package:emerge_app/features/narrator/domain/models/narrator_line.dart';
 import 'package:emerge_app/features/narrator/domain/models/narrator_note.dart';
 import 'package:emerge_app/features/narrator/domain/models/narrator_trigger.dart';
 import 'package:emerge_app/features/narrator/presentation/widgets/narrator_sheet.dart';
@@ -63,6 +64,9 @@ class _IdentityStudioScreenState extends ConsumerState<IdentityStudioScreen> {
                 'Ah, the $archetypeName. An interesting choice. Tell me... why does this path call to you?',
             buttonA: 'I want to evolve',
             buttonB: 'I have something to prove',
+            line: GenericLine(
+              'Ah, the $archetypeName. An interesting choice. Tell me... why does this path call to you?',
+            ),
           ),
           onResponse: (buttonLabel, _) {
             ref.read(narratorLocalDatasourceProvider).recordNote(

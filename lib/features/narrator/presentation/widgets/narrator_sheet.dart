@@ -1,17 +1,17 @@
 import 'dart:ui';
 
-import 'package:emerge_app/core/utils/app_logger.dart';
 import 'package:emerge_app/core/theme/emerge_colors.dart';
 import 'package:emerge_app/features/narrator/domain/models/narrator_appearance.dart';
+import 'package:emerge_app/features/narrator/domain/models/narrator_line.dart';
 import 'package:emerge_app/features/narrator/presentation/providers/narrator_providers.dart';
 import 'package:emerge_app/features/narrator/presentation/widgets/narrator_pulse_indicator.dart';
-import 'package:emerge_app/features/narrator/presentation/widgets/narrator_typewriter.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 /// Shows the Narrator as a centered glassmorphic dialog.
 ///
 /// Callers should use [NarratorSheet.show] to display it.
+/// Renders instant text — no typewriter.
 class NarratorSheet extends ConsumerStatefulWidget {
   final NarratorAppearance appearance;
   final void Function(String buttonLabel, String? typedText)? onResponse;
@@ -49,12 +49,6 @@ class _NarratorSheetState extends ConsumerState<NarratorSheet>
   late final Animation<double> _fadeAnim;
   late final Animation<double> _scaleAnim;
 
-  final _typewriterKey = GlobalKey<NarratorTypewriterState>();
-  bool _textComplete = false;
-  final _noteController = TextEditingController();
-  bool _actionButtonADone = false;
-  bool _actionButtonBDone = false;
-
   @override
   void initState() {
     super.initState();
@@ -75,17 +69,13 @@ class _NarratorSheetState extends ConsumerState<NarratorSheet>
   @override
   void dispose() {
     _entryController.dispose();
-    _noteController.dispose();
     super.dispose();
-  }
-
-  void _skipTyping() {
-    _typewriterKey.currentState?.skipToEnd();
   }
 
   @override
   Widget build(BuildContext context) {
     final appearance = widget.appearance;
+    final isPersonal = appearance.line is PersonalLine;
     final screenWidth = MediaQuery.of(context).size.width;
     final cardWidth = (screenWidth * 0.85).clamp(0.0, 400.0);
 
@@ -126,161 +116,99 @@ class _NarratorSheetState extends ConsumerState<NarratorSheet>
                           width: 1,
                         ),
                       ),
-                      child: Stack(
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          // Main content
-                          AnimatedSize(
-                            duration: const Duration(milliseconds: 300),
-                            curve: Curves.easeOut,
-                            alignment: Alignment.topCenter,
-                            child: Column(
-                              mainAxisSize: MainAxisSize.min,
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                // Header
-                                Row(
-                                  children: [
-                                    NarratorPulseIndicator(
+                          // Header
+                          Row(
+                            children: [
+                              NarratorPulseIndicator(
+                                color: EmergeColors.teal,
+                                size: 20,
+                              ),
+                              const SizedBox(width: 10),
+                              Text(
+                                'EMERGE',
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .titleSmall
+                                    ?.copyWith(
                                       color: EmergeColors.teal,
-                                      size: 20,
+                                      fontWeight: FontWeight.bold,
+                                      letterSpacing: 3,
                                     ),
-                                    const SizedBox(width: 10),
-                                    Text(
-                                      'EMERGE',
-                                      style: Theme.of(context)
-                                          .textTheme
-                                          .titleSmall
-                                          ?.copyWith(
-                                            color: EmergeColors.teal,
-                                            fontWeight: FontWeight.bold,
-                                            letterSpacing: 3,
-                                          ),
-                                    ),
-                                  ],
-                                ),
-                                const SizedBox(height: 16),
-
-                                // Typewriter text
-                                NarratorTypewriter(
-                                  key: _typewriterKey,
-                                  text: appearance.shellText,
-                                  baseDelayMs: 28,
-                                  pauseDurations: const {
-                                    '.': 250,
-                                    '?': 300,
-                                    '!': 300,
-                                    ',': 150,
-                                  },
-                                  style: Theme.of(context)
-                                      .textTheme
-                                      .bodyLarge
-                                      ?.copyWith(
-                                        color: Colors.white,
-                                        height: 1.6,
-                                      ),
-                                  onComplete: () {
-                                    if (mounted) {
-                                      setState(() => _textComplete = true);
-                                    }
-                                  },
-                                ),
-
-                                // Optional text field (eveningReflection only)
-                                if (appearance.hasTextField) ...[
-                                  const SizedBox(height: 16),
-                                  TextField(
-                                    controller: _noteController,
-                                    maxLines: 3,
-                                    style: const TextStyle(color: Colors.white),
-                                    decoration: InputDecoration(
-                                      hintText: 'How was your day?',
-                                      hintStyle: TextStyle(
-                                        color:
-                                            Colors.white.withValues(alpha: 0.4),
-                                      ),
-                                      filled: true,
-                                      fillColor:
-                                          Colors.white.withValues(alpha: 0.08),
-                                      border: OutlineInputBorder(
-                                        borderRadius:
-                                            BorderRadius.circular(12),
-                                        borderSide: BorderSide.none,
-                                      ),
-                                      focusedBorder: OutlineInputBorder(
-                                        borderRadius:
-                                            BorderRadius.circular(12),
-                                        borderSide: BorderSide(
-                                          color: EmergeColors.teal,
-                                        ),
-                                      ),
-                                    ),
+                              ),
+                              const Spacer(),
+                              if (isPersonal)
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 8,
+                                    vertical: 3,
                                   ),
-                                ],
-
-                                const SizedBox(height: 20),
-
-                                // Action buttons (fade in after text completes)
-                                AnimatedOpacity(
-                                  opacity: _textComplete ? 1.0 : 0.0,
-                                  duration: const Duration(milliseconds: 500),
-                                  child: Row(
-                                    children: [
-                                      Expanded(
-                                        child: _ActionButton(
-                                          label: appearance.buttonA,
-                                          color: EmergeColors.teal,
-                                          isSelected: _actionButtonADone,
-                                          onTap: () {
-                                            setState(() =>
-                                                _actionButtonADone = true);
-                                            _onButtonTap(appearance.buttonA);
-                                          },
-                                        ),
-                                      ),
-                                      const SizedBox(width: 12),
-                                      Expanded(
-                                        child: _ActionButton(
-                                          label: appearance.buttonB,
-                                          color: EmergeColors.violet,
-                                          isSelected: _actionButtonBDone,
-                                          onTap: () {
-                                            setState(() =>
-                                                _actionButtonBDone = true);
-                                            _onButtonTap(appearance.buttonB);
-                                          },
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-
-                          // Skip button (top-right, only visible during typing)
-                          if (!_textComplete)
-                            Positioned(
-                              top: 4,
-                              right: 4,
-                              child: GestureDetector(
-                                onTap: _skipTyping,
-                                child: Container(
-                                  padding: const EdgeInsets.all(6),
                                   decoration: BoxDecoration(
-                                    color: Colors.white.withValues(alpha: 0.05),
-                                    shape: BoxShape.circle,
+                                    color: EmergeColors.warmGold
+                                        .withValues(alpha: 0.15),
+                                    borderRadius: BorderRadius.circular(8),
                                   ),
-                                  child: Text(
-                                    '✕',
+                                  child: const Text(
+                                    'DATA-GROUNDED',
                                     style: TextStyle(
-                                      color:
-                                          Colors.white.withValues(alpha: 0.3),
-                                      fontSize: 16,
+                                      fontSize: 9,
+                                      color: EmergeColors.warmGold,
+                                      letterSpacing: 1.5,
                                     ),
                                   ),
+                                ),
+                              IconButton(
+                                onPressed: () => Navigator.of(context).pop(),
+                                icon: const Icon(
+                                  Icons.close,
+                                  color: Colors.white54,
                                 ),
                               ),
-                            ),
+                            ],
+                          ),
+                          const SizedBox(height: 16),
+
+                          // Instant text (no typewriter)
+                          Text(
+                            appearance.line.text,
+                            style: Theme.of(context)
+                                .textTheme
+                                .bodyLarge
+                                ?.copyWith(
+                                  color: Colors.white,
+                                  height: 1.6,
+                                ),
+                          ),
+
+                          const SizedBox(height: 20),
+
+                          // Action buttons (always visible)
+                          Row(
+                            children: [
+                              Expanded(
+                                child: _ActionButton(
+                                  label: appearance.buttonA,
+                                  color: EmergeColors.teal,
+                                  onTap: () {
+                                    _onButtonTap(appearance.buttonA);
+                                  },
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: _ActionButton(
+                                  label: appearance.buttonB,
+                                  color: EmergeColors.violet,
+                                  onTap: () {
+                                    _onButtonTap(appearance.buttonB);
+                                  },
+                                ),
+                              ),
+                            ],
+                          ),
                         ],
                       ),
                     ),
@@ -295,15 +223,11 @@ class _NarratorSheetState extends ConsumerState<NarratorSheet>
   }
 
   void _onButtonTap(String buttonLabel) {
-    widget.onResponse?.call(
-      buttonLabel,
-      _noteController.text.isEmpty ? null : _noteController.text,
-    );
+    widget.onResponse?.call(buttonLabel, null);
     try {
       ref.read(narratorStateProvider.notifier).dismiss();
     } catch (e) {
       // Provider might not be available in test context
-      AppLogger.e('NarratorSheet: failed to dismiss provider state', e);
     }
     Navigator.of(context).pop();
   }
@@ -312,39 +236,32 @@ class _NarratorSheetState extends ConsumerState<NarratorSheet>
 class _ActionButton extends StatelessWidget {
   final String label;
   final Color color;
-  final bool isSelected;
   final VoidCallback onTap;
 
   const _ActionButton({
     required this.label,
     required this.color,
-    required this.isSelected,
     required this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: isSelected ? null : onTap,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 300),
+      onTap: onTap,
+      child: Container(
         padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
         decoration: BoxDecoration(
-          color: isSelected
-              ? color.withValues(alpha: 0.3)
-              : color.withValues(alpha: 0.15),
+          color: color.withValues(alpha: 0.15),
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
-            color: isSelected
-                ? color.withValues(alpha: 0.6)
-                : color.withValues(alpha: 0.3),
+            color: color.withValues(alpha: 0.3),
           ),
         ),
         child: Center(
           child: Text(
-            isSelected ? '✓ $label' : label,
-            style: TextStyle(
-              color: isSelected ? color : Colors.white,
+            label,
+            style: const TextStyle(
+              color: Colors.white,
               fontWeight: FontWeight.bold,
               fontSize: 14,
             ),

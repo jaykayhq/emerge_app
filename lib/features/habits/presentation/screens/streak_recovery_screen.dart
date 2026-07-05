@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:emerge_app/features/habits/domain/entities/habit.dart';
 import 'package:emerge_app/core/theme/app_theme.dart';
 import 'package:emerge_app/features/narrator/domain/models/narrator_appearance.dart';
+import 'package:emerge_app/features/narrator/domain/models/narrator_line.dart';
 import 'package:emerge_app/features/narrator/domain/models/narrator_trigger.dart';
 import 'package:emerge_app/features/narrator/presentation/widgets/narrator_sheet.dart';
 
@@ -46,6 +47,9 @@ class _StreakRecoveryScreenState extends ConsumerState<StreakRecoveryScreen> {
         buttonA: 'I will not stop',
         buttonB: 'Let\'s keep going',
         slotKeys: [widget.habit.id],
+        line: const GenericLine(
+          'You missed a step. But you did not stop. That is what separates the dedicated from the dreamers.',
+        ),
       ),
     );
   }

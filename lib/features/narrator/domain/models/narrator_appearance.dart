@@ -1,3 +1,4 @@
+import 'package:emerge_app/features/narrator/domain/models/narrator_line.dart';
 import 'package:emerge_app/features/narrator/domain/models/narrator_trigger.dart';
 import 'package:equatable/equatable.dart';
 
@@ -21,9 +22,8 @@ class NarratorAppearance extends Equatable {
   /// Optional slot keys (habit IDs, node IDs, etc.) for contextual actions
   final List<String>? slotKeys;
 
-  /// Whether this appearance includes a text input field
-  /// (only used by eveningReflection)
-  final bool hasTextField;
+  /// The line of text the Narrator will display.
+  final NarratorLine line;
 
   /// Optional contextual data map (XP amounts, streak counts, etc.)
   final Map<String, dynamic>? context;
@@ -33,8 +33,8 @@ class NarratorAppearance extends Equatable {
     required this.shellText,
     required this.buttonA,
     required this.buttonB,
+    required this.line,
     this.slotKeys,
-    this.hasTextField = false,
     this.context,
   });
 
@@ -44,8 +44,8 @@ class NarratorAppearance extends Equatable {
         shellText,
         buttonA,
         buttonB,
+        line,
         slotKeys,
-        hasTextField,
         context,
       ];
 
@@ -55,8 +55,8 @@ class NarratorAppearance extends Equatable {
     String? shellText,
     String? buttonA,
     String? buttonB,
+    NarratorLine? line,
     List<String>? slotKeys,
-    bool? hasTextField,
     Map<String, dynamic>? context,
   }) {
     return NarratorAppearance(
@@ -64,8 +64,8 @@ class NarratorAppearance extends Equatable {
       shellText: shellText ?? this.shellText,
       buttonA: buttonA ?? this.buttonA,
       buttonB: buttonB ?? this.buttonB,
+      line: line ?? this.line,
       slotKeys: slotKeys ?? this.slotKeys,
-      hasTextField: hasTextField ?? this.hasTextField,
       context: context ?? this.context,
     );
   }

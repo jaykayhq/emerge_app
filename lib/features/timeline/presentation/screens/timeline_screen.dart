@@ -24,6 +24,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:emerge_app/core/services/notification_service.dart';
 import 'package:emerge_app/core/theme/emerge_colors.dart';
+import 'package:emerge_app/features/narrator/domain/models/narrator_line.dart';
 import 'package:emerge_app/features/narrator/domain/models/narrator_note.dart';
 import 'package:emerge_app/features/narrator/presentation/providers/narrator_providers.dart';
 import 'package:emerge_app/features/narrator/presentation/widgets/narrator_summary_card.dart';
@@ -55,7 +56,9 @@ class _TimelineScreenState extends ConsumerState<TimelineScreen> {
         'Evening check-in. How did your habits serve you today? Take a moment to reflect on what worked and what you\'ll adjust tomorrow.',
     buttonA: 'Log Reflection',
     buttonB: 'Skip',
-    hasTextField: true,
+    line: GenericLine(
+      'Evening check-in. How did your habits serve you today? Take a moment to reflect on what worked and what you\'ll adjust tomorrow.',
+    ),
   );
 
   @override

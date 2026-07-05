@@ -1,6 +1,7 @@
 import 'package:emerge_app/core/presentation/widgets/glassmorphism_card.dart';
 import 'package:emerge_app/core/theme/emerge_colors.dart';
 import 'package:emerge_app/features/narrator/domain/models/narrator_appearance.dart';
+import 'package:emerge_app/features/narrator/domain/models/narrator_line.dart';
 import 'package:emerge_app/features/narrator/domain/models/narrator_note.dart';
 import 'package:emerge_app/features/narrator/domain/models/narrator_trigger.dart';
 import 'package:emerge_app/features/narrator/presentation/providers/narrator_providers.dart';
@@ -108,6 +109,9 @@ class NarratorSummaryCard extends ConsumerWidget {
                           'You asked for more. Tell me what you\'re noticing, or what you want to understand better.',
                       buttonA: 'Got it',
                       buttonB: 'Tell me more',
+                      line: const GenericLine(
+                        'You asked for more. Tell me what you\'re noticing, or what you want to understand better.',
+                      ),
                     );
                     NarratorSheet.show(context, appearance);
                   },

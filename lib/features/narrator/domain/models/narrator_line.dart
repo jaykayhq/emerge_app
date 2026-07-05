@@ -4,6 +4,9 @@
 /// [PersonalLine] is data-grounded copy shown to Pro users.
 sealed class NarratorLine {
   const NarratorLine();
+
+  /// The display text — both [GenericLine] and [PersonalLine] carry this.
+  String get text;
 }
 
 class GenericLine extends NarratorLine {
