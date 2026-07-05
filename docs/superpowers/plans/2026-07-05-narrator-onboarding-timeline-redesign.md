@@ -14,6 +14,147 @@
 
 ---
 
+## ⚠️ HANDOFF NOTE — Last updated: 2026-07-05
+
+**Status of implementation (read this first if you're picking this up):**
+
+### Committed to `main`
+
+| SHA | Task | What |
+|-----|------|------|
+| `f728e46` | 1 | `NarratorLine` sealed class (`GenericLine` / `PersonalLine`) |
+| `45c3f99` | 2 | `Mood` enum + `DailyReflection` entity + 4 tests pass |
+| `6078b5a` | 3 | `daily_reflections` drift table + schema v7 migration |
+| `af82b32` | 4 | `DailyReflectionsDao` (`upsert` + `getByDate`) + 4 tests pass |
+
+### Written to disk but **NOT yet committed** (Task 5 work)
+
+- `lib/features/narrator/domain/models/narrator_trigger.dart` — enum slimmed 12 → 9 values, added `askNarrator`
+- `lib/features/narrator/domain/services/narrator_trigger_engine.dart` — removed `_checkScreenFirstVisit` / `_checkNodeFirstVisit` methods + `isFirstVisitToRoute/Node` fields + related constants
+- `lib/features/narrator/domain/models/narrator_line.dart` — new file (sealed class, 2 subclasses)
+- `test/features/narrator/narrator_trigger_engine_test.dart` — new test file (covers removed-trigger-never-fires + priority order)
+
+These 4 files are ready to commit. The only blocker is Task 9's call-site cleanup (see below).
+
+### Task 9 status: 9 of 13 call-site files cleanly fixed
+
+**Cleanly fixed and analyzed-clean (9 files):**
+- `lib/features/social/presentation/screens/leaderboard_screen.dart`
+- `lib/features/world_map/presentation/screens/level_immersive_screen.dart`
+- `lib/features/world_map/presentation/screens/world_map_screen.dart`
+- `lib/features/social/presentation/screens/friends_screen.dart`
+- `lib/features/social/presentation/screens/all_tribes_screen.dart`
+- `lib/features/social/presentation/screens/ai_reflections_screen.dart` (initState edit only — method body removal pending)
+- `lib/features/narrator/presentation/widgets/narrator_summary_card.dart`
+- `lib/features/habits/data/services/habit_completion_service.dart`
+- `lib/features/habits/presentation/screens/advanced_create_habit_dialog.dart` (initState edit only — method body removal pending)
+
+**5 files remain at HEAD with broken references — MUST be fixed before Task 5+9 can be committed and tested:**
+
+| File | Pattern | Error lines | What to delete |
+|------|---------|-------------|----------------|
+| `lib/features/gamification/presentation/screens/leveling_screen.dart` | `addPostFrameCallback` + `_checkScreenFirstVisit` method (lines 24–253) | 30, 234, 235, 249 | Lines ~24–38 (initState body) + lines ~221–253 (entire `_checkScreenFirstVisit` method) |
+| `lib/features/habits/presentation/screens/advanced_create_habit_dialog.dart` | `addPostFrameCallback` + `_checkScreenFirstVisit` method (lines 56–124) | 64, 95, 96, 110 | Lines ~56–70 (initState body) + lines ~82–124 (entire `_checkScreenFirstVisit` method) |
+| `lib/features/profile/presentation/screens/future_self_studio_screen.dart` | `addPostFrameCallback` + `_checkScreenFirstVisit` method (lines 68–692) | 75, 667, 668, 682 | Lines ~68–82 (initState body) + lines ~654–692 (entire `_checkScreenFirstVisit` method) |
+| `lib/features/social/presentation/screens/challenge_detail_screen.dart` | `addPostFrameCallback` + `_checkScreenFirstVisit` method (lines 60–78) | 66 | Lines ~60–78 (initState body + entire `_checkScreenFirstVisit` method) |
+| `lib/features/social/presentation/screens/challenges_screen.dart` | `addPostFrameCallback` + `_checkScreenFirstVisit` method (lines 66–80) | 72 | Lines ~66–80 (initState body + entire `_checkScreenFirstVisit` method) |
+
+**What was removed (the pattern in each file):**
+```dart
+// In initState():
+WidgetsBinding.instance.addPostFrameCallback((_) {
+  _checkScreenFirstVisit(
+    '/<route>',
+    const NarratorAppearance(
+      trigger: NarratorTrigger.screenFirstVisit,
+      shellText: '...',
+      buttonA: '...',
+      buttonB: '...',
+    ),
+  );
+});
+
+// And the helper method itself:
+void _checkScreenFirstVisit(String route, NarratorAppearance appearance) {
+  final trigger = NarratorTriggerEngine.shouldTrigger(
+    stats: const NarratorUserStats(
+      ...
+      isFirstVisitToRoute: true,  // <-- removed field
+      isFirstVisitToNode: false,   // <-- removed field
+      ...
+    ),
+    context: AppOpenContext(...),
+    recentTriggers: const {},
+  );
+  if (trigger == NarratorTrigger.screenFirstVisit && mounted) {
+    NarratorSheet.show(context, appearance);
+  }
+}
+```
+
+Plus all `narrator_appearance.dart`, `narrator_trigger.dart`, `narrator_trigger_engine.dart`, `narrator_sheet.dart` imports become unused and should be removed from each file.
+
+**⚠️ KNOWN ISSUE: the `edit` tool in this session repeatedly failed on these 5 files due to whitespace mismatches in multi-line edits.** If you're picking this up, **use the `write` tool to rewrite the affected method block, or use bash + python** for precise text manipulation. Don't try the `edit` tool with large multi-line oldText — it will fail on subtle whitespace differences.
+
+**Recommended approach for each of the 5 files:**
+1. Read the file from the start of `initState` through the end of the `_checkScreenFirstVisit` method
+2. Use `write` to replace the whole `initState` + `_checkScreenFirstVisit` block with the correct empty `initState` and removed method
+3. Clean up the now-unused imports
+
+### Tasks 6–20 (NOT started)
+
+15 tasks remain after Task 5+9 is done:
+- **Phase 1** (Tasks 6–8): `NarratorLineResolver` + provider wiring + `NarratorSheet` refactor
+- **Phase 2** (Tasks 9 already in progress + Tasks 10–13): Narrator UI widgets (avatar, milestone card, today arc, integration)
+- **Phase 3** (Tasks 14–17): Reflection feature (repo, providers, widget, integration)
+- **Phase 4** (Tasks 18–20): Onboarding tweaks + Future Self Studio perf + manual QA
+
+---
+
+### Quick-start for the next agent
+
+```bash
+# 1. Verify you're on main with the 4 commits
+git log --oneline | head -6
+
+# 2. Confirm the broken state
+dart analyze lib 2>&1 | grep "^  error" | wc -l   # should show 19
+
+# 3. Fix the 5 remaining files (see table above)
+#    Recommended: use write tool or bash + python
+#    Pattern: delete addPostFrameCallback block + delete _checkScreenFirstVisit method
+
+# 4. Verify
+dart analyze lib 2>&1 | grep "^  error" | wc -l   # should show 0
+
+# 5. Run tests
+flutter test test/features/narrator
+flutter test test/features/reflections
+
+# 6. Commit Task 5+9 as one commit
+git add <specific files>  # don't sweep up the 859 pre-existing dirty files
+git commit -m "refactor(narrator): Task 5+9 — slim trigger enum + remove 13 call-sites
+
+- NarratorTrigger: 12 -> 9 values (removed dailyInsight, newHabitCreation,
+  screenFirstVisit, nodeFirstVisit); added askNarrator
+- NarratorUserStats: removed isFirstVisitToRoute + isFirstVisitToNode
+- NarratorTriggerEngine: removed _checkScreenFirstVisit/_checkNodeFirstVisit
+- NarratorLine sealed class (GenericLine | PersonalLine) — was part of Task 1 but
+  used here as the return type for the resolver
+- 13 call-site files cleaned: addPostFrameCallback + helper method removed
+- Engine tests cover removed-trigger-never-fires + priority order"
+
+# 7. Continue with Tasks 6–20 per the plan body below
+```
+
+---
+
+**Spec:** `docs/superpowers/specs/2026-07-05-narrator-onboarding-timeline-redesign-design.md`
+
+**Plan structure:** 4 phases. Each phase produces working, testable software and can be executed standalone.
+
+---
+
 ## File structure
 
 ### New files
