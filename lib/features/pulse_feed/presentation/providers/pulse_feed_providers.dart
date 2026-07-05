@@ -1,8 +1,9 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
+import 'package:emerge_app/core/drift/database.dart';
 import 'package:emerge_app/features/auth/presentation/providers/auth_providers.dart';
-import 'package:emerge_app/features/pulse_feed/data/repositories/pulse_feed_repository.dart';
+import 'package:emerge_app/features/pulse_feed/data/repositories/drift_pulse_feed_repository.dart';
 import 'package:emerge_app/features/pulse_feed/domain/models/pulse_feed_card.dart';
 
 part 'pulse_feed_providers.g.dart';
@@ -12,15 +13,21 @@ part 'pulse_feed_providers.g.dart';
 // ---------------------------------------------------------------------------
 
 @Riverpod(keepAlive: true)
-PulseFeedRepository pulseFeedRepository(Ref ref) {
-  return PulseFeedRepository(FirebaseFirestore.instance);
+DriftPulseFeedRepository pulseFeedRepository(Ref ref) {
+  final userId = ref.watch(authStateChangesProvider).value?.id ?? '';
+  final dao = ref.watch(pulseFeedDaoProvider);
+  return DriftPulseFeedRepository(
+    dao: dao,
+    firestore: FirebaseFirestore.instance,
+    userId: userId,
+  );
 }
 
 // ---------------------------------------------------------------------------
 // Pulse feed stream (auto-dispose)
 // ---------------------------------------------------------------------------
 
-/// Streams the latest pulse-feed cards for the currently authenticated user.
+/// Streams pulse-feed cards — local first, Firestore in background.
 ///
 /// Automatically disposes when no longer watched. Returns an empty stream
 /// when the user is not signed in.
@@ -33,5 +40,5 @@ Stream<List<PulseFeedCard>> pulseFeed(Ref ref) {
   }
 
   final repository = ref.watch(pulseFeedRepositoryProvider);
-  return repository.watchPulseFeed(userId);
+  return repository.watchPulseFeed();
 }

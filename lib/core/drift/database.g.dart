@@ -454,3 +454,44 @@ final class NarratorNotesDaoProvider
 }
 
 String _$narratorNotesDaoHash() => r'076d0026ab8fc2ab6824c63e4ffed8f17512ebb9';
+
+@ProviderFor(pulseFeedDao)
+final pulseFeedDaoProvider = PulseFeedDaoProvider._();
+
+final class PulseFeedDaoProvider
+    extends $FunctionalProvider<PulseFeedDao, PulseFeedDao, PulseFeedDao>
+    with $Provider<PulseFeedDao> {
+  PulseFeedDaoProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'pulseFeedDaoProvider',
+        isAutoDispose: false,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$pulseFeedDaoHash();
+
+  @$internal
+  @override
+  $ProviderElement<PulseFeedDao> $createElement($ProviderPointer pointer) =>
+      $ProviderElement(pointer);
+
+  @override
+  PulseFeedDao create(Ref ref) {
+    return pulseFeedDao(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(PulseFeedDao value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<PulseFeedDao>(value),
+    );
+  }
+}
+
+String _$pulseFeedDaoHash() => r'599b0b77b9efba88f371665864f3d63462de60bd';

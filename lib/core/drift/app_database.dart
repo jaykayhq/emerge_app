@@ -11,6 +11,7 @@ import 'tables/leaderboard_entries_table.dart';
 import 'tables/mutation_queue_table.dart';
 import 'tables/tribe_activity_table.dart';
 import 'tables/narrator_notes_table.dart';
+import 'tables/pulse_feed_cards_table.dart';
 
 import 'daos/user_stats_dao.dart';
 import 'daos/habits_dao.dart';
@@ -21,6 +22,7 @@ import 'daos/leaderboard_entries_dao.dart';
 import 'daos/mutation_queue_dao.dart';
 import 'daos/tribe_activity_dao.dart';
 import 'daos/narrator_notes_dao.dart';
+import 'daos/pulse_feed_dao.dart';
 
 part 'app_database.g.dart';
 
@@ -35,6 +37,7 @@ part 'app_database.g.dart';
     MutationQueueTable,
     TribeActivityTable,
     NarratorNotesTable,
+    PulseFeedCardsTable,
   ],
   daos: [
     UserStatsDao,
@@ -46,6 +49,7 @@ part 'app_database.g.dart';
     MutationQueueDao,
     TribeActivityDao,
     NarratorNotesDao,
+    PulseFeedDao,
   ],
 )
 class AppDatabase extends _$AppDatabase {
@@ -54,7 +58,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.withExecutor(super.executor);
 
   @override
-  int get schemaVersion => 5;
+  int get schemaVersion => 6;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -85,6 +89,9 @@ class AppDatabase extends _$AppDatabase {
       }
       if (from < 5) {
         await m.createTable(narratorNotesTable);
+      }
+      if (from < 6) {
+        await m.createTable(pulseFeedCardsTable);
       }
     },
     beforeOpen: (details) async {

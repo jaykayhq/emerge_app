@@ -7100,6 +7100,618 @@ class NarratorNotesTableCompanion
   }
 }
 
+class $PulseFeedCardsTableTable extends PulseFeedCardsTable
+    with TableInfo<$PulseFeedCardsTableTable, PulseFeedCardsTableData> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $PulseFeedCardsTableTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _userIdMeta = const VerificationMeta('userId');
+  @override
+  late final GeneratedColumn<String> userId = GeneratedColumn<String>(
+    'user_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _cardTypeMeta = const VerificationMeta(
+    'cardType',
+  );
+  @override
+  late final GeneratedColumn<String> cardType = GeneratedColumn<String>(
+    'card_type',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _titleMeta = const VerificationMeta('title');
+  @override
+  late final GeneratedColumn<String> title = GeneratedColumn<String>(
+    'title',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _subtitleMeta = const VerificationMeta(
+    'subtitle',
+  );
+  @override
+  late final GeneratedColumn<String> subtitle = GeneratedColumn<String>(
+    'subtitle',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _bodyMeta = const VerificationMeta('body');
+  @override
+  late final GeneratedColumn<String> body = GeneratedColumn<String>(
+    'body',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _metadataJsonMeta = const VerificationMeta(
+    'metadataJson',
+  );
+  @override
+  late final GeneratedColumn<String> metadataJson = GeneratedColumn<String>(
+    'metadata_json',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _priorityMeta = const VerificationMeta(
+    'priority',
+  );
+  @override
+  late final GeneratedColumn<int> priority = GeneratedColumn<int>(
+    'priority',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  @override
+  late final GeneratedColumn<String> createdAt = GeneratedColumn<String>(
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _syncedAtMeta = const VerificationMeta(
+    'syncedAt',
+  );
+  @override
+  late final GeneratedColumn<String> syncedAt = GeneratedColumn<String>(
+    'synced_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    userId,
+    cardType,
+    title,
+    subtitle,
+    body,
+    metadataJson,
+    priority,
+    createdAt,
+    syncedAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'pulse_feed_cards_table';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<PulseFeedCardsTableData> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('user_id')) {
+      context.handle(
+        _userIdMeta,
+        userId.isAcceptableOrUnknown(data['user_id']!, _userIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_userIdMeta);
+    }
+    if (data.containsKey('card_type')) {
+      context.handle(
+        _cardTypeMeta,
+        cardType.isAcceptableOrUnknown(data['card_type']!, _cardTypeMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_cardTypeMeta);
+    }
+    if (data.containsKey('title')) {
+      context.handle(
+        _titleMeta,
+        title.isAcceptableOrUnknown(data['title']!, _titleMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_titleMeta);
+    }
+    if (data.containsKey('subtitle')) {
+      context.handle(
+        _subtitleMeta,
+        subtitle.isAcceptableOrUnknown(data['subtitle']!, _subtitleMeta),
+      );
+    }
+    if (data.containsKey('body')) {
+      context.handle(
+        _bodyMeta,
+        body.isAcceptableOrUnknown(data['body']!, _bodyMeta),
+      );
+    }
+    if (data.containsKey('metadata_json')) {
+      context.handle(
+        _metadataJsonMeta,
+        metadataJson.isAcceptableOrUnknown(
+          data['metadata_json']!,
+          _metadataJsonMeta,
+        ),
+      );
+    }
+    if (data.containsKey('priority')) {
+      context.handle(
+        _priorityMeta,
+        priority.isAcceptableOrUnknown(data['priority']!, _priorityMeta),
+      );
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_createdAtMeta);
+    }
+    if (data.containsKey('synced_at')) {
+      context.handle(
+        _syncedAtMeta,
+        syncedAt.isAcceptableOrUnknown(data['synced_at']!, _syncedAtMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  PulseFeedCardsTableData map(
+    Map<String, dynamic> data, {
+    String? tablePrefix,
+  }) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return PulseFeedCardsTableData(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      userId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}user_id'],
+      )!,
+      cardType: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}card_type'],
+      )!,
+      title: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}title'],
+      )!,
+      subtitle: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}subtitle'],
+      ),
+      body: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}body'],
+      ),
+      metadataJson: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}metadata_json'],
+      ),
+      priority: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}priority'],
+      )!,
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}created_at'],
+      )!,
+      syncedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}synced_at'],
+      ),
+    );
+  }
+
+  @override
+  $PulseFeedCardsTableTable createAlias(String alias) {
+    return $PulseFeedCardsTableTable(attachedDatabase, alias);
+  }
+}
+
+class PulseFeedCardsTableData extends DataClass
+    implements Insertable<PulseFeedCardsTableData> {
+  final String id;
+  final String userId;
+  final String cardType;
+  final String title;
+  final String? subtitle;
+  final String? body;
+  final String? metadataJson;
+  final int priority;
+  final String createdAt;
+  final String? syncedAt;
+  const PulseFeedCardsTableData({
+    required this.id,
+    required this.userId,
+    required this.cardType,
+    required this.title,
+    this.subtitle,
+    this.body,
+    this.metadataJson,
+    required this.priority,
+    required this.createdAt,
+    this.syncedAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['user_id'] = Variable<String>(userId);
+    map['card_type'] = Variable<String>(cardType);
+    map['title'] = Variable<String>(title);
+    if (!nullToAbsent || subtitle != null) {
+      map['subtitle'] = Variable<String>(subtitle);
+    }
+    if (!nullToAbsent || body != null) {
+      map['body'] = Variable<String>(body);
+    }
+    if (!nullToAbsent || metadataJson != null) {
+      map['metadata_json'] = Variable<String>(metadataJson);
+    }
+    map['priority'] = Variable<int>(priority);
+    map['created_at'] = Variable<String>(createdAt);
+    if (!nullToAbsent || syncedAt != null) {
+      map['synced_at'] = Variable<String>(syncedAt);
+    }
+    return map;
+  }
+
+  PulseFeedCardsTableCompanion toCompanion(bool nullToAbsent) {
+    return PulseFeedCardsTableCompanion(
+      id: Value(id),
+      userId: Value(userId),
+      cardType: Value(cardType),
+      title: Value(title),
+      subtitle: subtitle == null && nullToAbsent
+          ? const Value.absent()
+          : Value(subtitle),
+      body: body == null && nullToAbsent ? const Value.absent() : Value(body),
+      metadataJson: metadataJson == null && nullToAbsent
+          ? const Value.absent()
+          : Value(metadataJson),
+      priority: Value(priority),
+      createdAt: Value(createdAt),
+      syncedAt: syncedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(syncedAt),
+    );
+  }
+
+  factory PulseFeedCardsTableData.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return PulseFeedCardsTableData(
+      id: serializer.fromJson<String>(json['id']),
+      userId: serializer.fromJson<String>(json['userId']),
+      cardType: serializer.fromJson<String>(json['cardType']),
+      title: serializer.fromJson<String>(json['title']),
+      subtitle: serializer.fromJson<String?>(json['subtitle']),
+      body: serializer.fromJson<String?>(json['body']),
+      metadataJson: serializer.fromJson<String?>(json['metadataJson']),
+      priority: serializer.fromJson<int>(json['priority']),
+      createdAt: serializer.fromJson<String>(json['createdAt']),
+      syncedAt: serializer.fromJson<String?>(json['syncedAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'userId': serializer.toJson<String>(userId),
+      'cardType': serializer.toJson<String>(cardType),
+      'title': serializer.toJson<String>(title),
+      'subtitle': serializer.toJson<String?>(subtitle),
+      'body': serializer.toJson<String?>(body),
+      'metadataJson': serializer.toJson<String?>(metadataJson),
+      'priority': serializer.toJson<int>(priority),
+      'createdAt': serializer.toJson<String>(createdAt),
+      'syncedAt': serializer.toJson<String?>(syncedAt),
+    };
+  }
+
+  PulseFeedCardsTableData copyWith({
+    String? id,
+    String? userId,
+    String? cardType,
+    String? title,
+    Value<String?> subtitle = const Value.absent(),
+    Value<String?> body = const Value.absent(),
+    Value<String?> metadataJson = const Value.absent(),
+    int? priority,
+    String? createdAt,
+    Value<String?> syncedAt = const Value.absent(),
+  }) => PulseFeedCardsTableData(
+    id: id ?? this.id,
+    userId: userId ?? this.userId,
+    cardType: cardType ?? this.cardType,
+    title: title ?? this.title,
+    subtitle: subtitle.present ? subtitle.value : this.subtitle,
+    body: body.present ? body.value : this.body,
+    metadataJson: metadataJson.present ? metadataJson.value : this.metadataJson,
+    priority: priority ?? this.priority,
+    createdAt: createdAt ?? this.createdAt,
+    syncedAt: syncedAt.present ? syncedAt.value : this.syncedAt,
+  );
+  PulseFeedCardsTableData copyWithCompanion(PulseFeedCardsTableCompanion data) {
+    return PulseFeedCardsTableData(
+      id: data.id.present ? data.id.value : this.id,
+      userId: data.userId.present ? data.userId.value : this.userId,
+      cardType: data.cardType.present ? data.cardType.value : this.cardType,
+      title: data.title.present ? data.title.value : this.title,
+      subtitle: data.subtitle.present ? data.subtitle.value : this.subtitle,
+      body: data.body.present ? data.body.value : this.body,
+      metadataJson: data.metadataJson.present
+          ? data.metadataJson.value
+          : this.metadataJson,
+      priority: data.priority.present ? data.priority.value : this.priority,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      syncedAt: data.syncedAt.present ? data.syncedAt.value : this.syncedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('PulseFeedCardsTableData(')
+          ..write('id: $id, ')
+          ..write('userId: $userId, ')
+          ..write('cardType: $cardType, ')
+          ..write('title: $title, ')
+          ..write('subtitle: $subtitle, ')
+          ..write('body: $body, ')
+          ..write('metadataJson: $metadataJson, ')
+          ..write('priority: $priority, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('syncedAt: $syncedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    userId,
+    cardType,
+    title,
+    subtitle,
+    body,
+    metadataJson,
+    priority,
+    createdAt,
+    syncedAt,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is PulseFeedCardsTableData &&
+          other.id == this.id &&
+          other.userId == this.userId &&
+          other.cardType == this.cardType &&
+          other.title == this.title &&
+          other.subtitle == this.subtitle &&
+          other.body == this.body &&
+          other.metadataJson == this.metadataJson &&
+          other.priority == this.priority &&
+          other.createdAt == this.createdAt &&
+          other.syncedAt == this.syncedAt);
+}
+
+class PulseFeedCardsTableCompanion
+    extends UpdateCompanion<PulseFeedCardsTableData> {
+  final Value<String> id;
+  final Value<String> userId;
+  final Value<String> cardType;
+  final Value<String> title;
+  final Value<String?> subtitle;
+  final Value<String?> body;
+  final Value<String?> metadataJson;
+  final Value<int> priority;
+  final Value<String> createdAt;
+  final Value<String?> syncedAt;
+  final Value<int> rowid;
+  const PulseFeedCardsTableCompanion({
+    this.id = const Value.absent(),
+    this.userId = const Value.absent(),
+    this.cardType = const Value.absent(),
+    this.title = const Value.absent(),
+    this.subtitle = const Value.absent(),
+    this.body = const Value.absent(),
+    this.metadataJson = const Value.absent(),
+    this.priority = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.syncedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  PulseFeedCardsTableCompanion.insert({
+    required String id,
+    required String userId,
+    required String cardType,
+    required String title,
+    this.subtitle = const Value.absent(),
+    this.body = const Value.absent(),
+    this.metadataJson = const Value.absent(),
+    this.priority = const Value.absent(),
+    required String createdAt,
+    this.syncedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       userId = Value(userId),
+       cardType = Value(cardType),
+       title = Value(title),
+       createdAt = Value(createdAt);
+  static Insertable<PulseFeedCardsTableData> custom({
+    Expression<String>? id,
+    Expression<String>? userId,
+    Expression<String>? cardType,
+    Expression<String>? title,
+    Expression<String>? subtitle,
+    Expression<String>? body,
+    Expression<String>? metadataJson,
+    Expression<int>? priority,
+    Expression<String>? createdAt,
+    Expression<String>? syncedAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (userId != null) 'user_id': userId,
+      if (cardType != null) 'card_type': cardType,
+      if (title != null) 'title': title,
+      if (subtitle != null) 'subtitle': subtitle,
+      if (body != null) 'body': body,
+      if (metadataJson != null) 'metadata_json': metadataJson,
+      if (priority != null) 'priority': priority,
+      if (createdAt != null) 'created_at': createdAt,
+      if (syncedAt != null) 'synced_at': syncedAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  PulseFeedCardsTableCompanion copyWith({
+    Value<String>? id,
+    Value<String>? userId,
+    Value<String>? cardType,
+    Value<String>? title,
+    Value<String?>? subtitle,
+    Value<String?>? body,
+    Value<String?>? metadataJson,
+    Value<int>? priority,
+    Value<String>? createdAt,
+    Value<String?>? syncedAt,
+    Value<int>? rowid,
+  }) {
+    return PulseFeedCardsTableCompanion(
+      id: id ?? this.id,
+      userId: userId ?? this.userId,
+      cardType: cardType ?? this.cardType,
+      title: title ?? this.title,
+      subtitle: subtitle ?? this.subtitle,
+      body: body ?? this.body,
+      metadataJson: metadataJson ?? this.metadataJson,
+      priority: priority ?? this.priority,
+      createdAt: createdAt ?? this.createdAt,
+      syncedAt: syncedAt ?? this.syncedAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (userId.present) {
+      map['user_id'] = Variable<String>(userId.value);
+    }
+    if (cardType.present) {
+      map['card_type'] = Variable<String>(cardType.value);
+    }
+    if (title.present) {
+      map['title'] = Variable<String>(title.value);
+    }
+    if (subtitle.present) {
+      map['subtitle'] = Variable<String>(subtitle.value);
+    }
+    if (body.present) {
+      map['body'] = Variable<String>(body.value);
+    }
+    if (metadataJson.present) {
+      map['metadata_json'] = Variable<String>(metadataJson.value);
+    }
+    if (priority.present) {
+      map['priority'] = Variable<int>(priority.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<String>(createdAt.value);
+    }
+    if (syncedAt.present) {
+      map['synced_at'] = Variable<String>(syncedAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('PulseFeedCardsTableCompanion(')
+          ..write('id: $id, ')
+          ..write('userId: $userId, ')
+          ..write('cardType: $cardType, ')
+          ..write('title: $title, ')
+          ..write('subtitle: $subtitle, ')
+          ..write('body: $body, ')
+          ..write('metadataJson: $metadataJson, ')
+          ..write('priority: $priority, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('syncedAt: $syncedAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
@@ -7120,6 +7732,8 @@ abstract class _$AppDatabase extends GeneratedDatabase {
       $TribeActivityTableTable(this);
   late final $NarratorNotesTableTable narratorNotesTable =
       $NarratorNotesTableTable(this);
+  late final $PulseFeedCardsTableTable pulseFeedCardsTable =
+      $PulseFeedCardsTableTable(this);
   late final UserStatsDao userStatsDao = UserStatsDao(this as AppDatabase);
   late final HabitsDao habitsDao = HabitsDao(this as AppDatabase);
   late final HabitCompletionsDao habitCompletionsDao = HabitCompletionsDao(
@@ -7140,6 +7754,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final NarratorNotesDao narratorNotesDao = NarratorNotesDao(
     this as AppDatabase,
   );
+  late final PulseFeedDao pulseFeedDao = PulseFeedDao(this as AppDatabase);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -7154,6 +7769,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     mutationQueueTable,
     tribeActivityTable,
     narratorNotesTable,
+    pulseFeedCardsTable,
   ];
 }
 
@@ -10569,6 +11185,319 @@ typedef $$NarratorNotesTableTableProcessedTableManager =
       NarratorNotesTableData,
       PrefetchHooks Function()
     >;
+typedef $$PulseFeedCardsTableTableCreateCompanionBuilder =
+    PulseFeedCardsTableCompanion Function({
+      required String id,
+      required String userId,
+      required String cardType,
+      required String title,
+      Value<String?> subtitle,
+      Value<String?> body,
+      Value<String?> metadataJson,
+      Value<int> priority,
+      required String createdAt,
+      Value<String?> syncedAt,
+      Value<int> rowid,
+    });
+typedef $$PulseFeedCardsTableTableUpdateCompanionBuilder =
+    PulseFeedCardsTableCompanion Function({
+      Value<String> id,
+      Value<String> userId,
+      Value<String> cardType,
+      Value<String> title,
+      Value<String?> subtitle,
+      Value<String?> body,
+      Value<String?> metadataJson,
+      Value<int> priority,
+      Value<String> createdAt,
+      Value<String?> syncedAt,
+      Value<int> rowid,
+    });
+
+class $$PulseFeedCardsTableTableFilterComposer
+    extends Composer<_$AppDatabase, $PulseFeedCardsTableTable> {
+  $$PulseFeedCardsTableTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get userId => $composableBuilder(
+    column: $table.userId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get cardType => $composableBuilder(
+    column: $table.cardType,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get title => $composableBuilder(
+    column: $table.title,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get subtitle => $composableBuilder(
+    column: $table.subtitle,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get body => $composableBuilder(
+    column: $table.body,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get metadataJson => $composableBuilder(
+    column: $table.metadataJson,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get priority => $composableBuilder(
+    column: $table.priority,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get syncedAt => $composableBuilder(
+    column: $table.syncedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$PulseFeedCardsTableTableOrderingComposer
+    extends Composer<_$AppDatabase, $PulseFeedCardsTableTable> {
+  $$PulseFeedCardsTableTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get userId => $composableBuilder(
+    column: $table.userId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get cardType => $composableBuilder(
+    column: $table.cardType,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get title => $composableBuilder(
+    column: $table.title,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get subtitle => $composableBuilder(
+    column: $table.subtitle,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get body => $composableBuilder(
+    column: $table.body,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get metadataJson => $composableBuilder(
+    column: $table.metadataJson,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get priority => $composableBuilder(
+    column: $table.priority,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get syncedAt => $composableBuilder(
+    column: $table.syncedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$PulseFeedCardsTableTableAnnotationComposer
+    extends Composer<_$AppDatabase, $PulseFeedCardsTableTable> {
+  $$PulseFeedCardsTableTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get userId =>
+      $composableBuilder(column: $table.userId, builder: (column) => column);
+
+  GeneratedColumn<String> get cardType =>
+      $composableBuilder(column: $table.cardType, builder: (column) => column);
+
+  GeneratedColumn<String> get title =>
+      $composableBuilder(column: $table.title, builder: (column) => column);
+
+  GeneratedColumn<String> get subtitle =>
+      $composableBuilder(column: $table.subtitle, builder: (column) => column);
+
+  GeneratedColumn<String> get body =>
+      $composableBuilder(column: $table.body, builder: (column) => column);
+
+  GeneratedColumn<String> get metadataJson => $composableBuilder(
+    column: $table.metadataJson,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get priority =>
+      $composableBuilder(column: $table.priority, builder: (column) => column);
+
+  GeneratedColumn<String> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<String> get syncedAt =>
+      $composableBuilder(column: $table.syncedAt, builder: (column) => column);
+}
+
+class $$PulseFeedCardsTableTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $PulseFeedCardsTableTable,
+          PulseFeedCardsTableData,
+          $$PulseFeedCardsTableTableFilterComposer,
+          $$PulseFeedCardsTableTableOrderingComposer,
+          $$PulseFeedCardsTableTableAnnotationComposer,
+          $$PulseFeedCardsTableTableCreateCompanionBuilder,
+          $$PulseFeedCardsTableTableUpdateCompanionBuilder,
+          (
+            PulseFeedCardsTableData,
+            BaseReferences<
+              _$AppDatabase,
+              $PulseFeedCardsTableTable,
+              PulseFeedCardsTableData
+            >,
+          ),
+          PulseFeedCardsTableData,
+          PrefetchHooks Function()
+        > {
+  $$PulseFeedCardsTableTableTableManager(
+    _$AppDatabase db,
+    $PulseFeedCardsTableTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$PulseFeedCardsTableTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$PulseFeedCardsTableTableOrderingComposer(
+                $db: db,
+                $table: table,
+              ),
+          createComputedFieldComposer: () =>
+              $$PulseFeedCardsTableTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> userId = const Value.absent(),
+                Value<String> cardType = const Value.absent(),
+                Value<String> title = const Value.absent(),
+                Value<String?> subtitle = const Value.absent(),
+                Value<String?> body = const Value.absent(),
+                Value<String?> metadataJson = const Value.absent(),
+                Value<int> priority = const Value.absent(),
+                Value<String> createdAt = const Value.absent(),
+                Value<String?> syncedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => PulseFeedCardsTableCompanion(
+                id: id,
+                userId: userId,
+                cardType: cardType,
+                title: title,
+                subtitle: subtitle,
+                body: body,
+                metadataJson: metadataJson,
+                priority: priority,
+                createdAt: createdAt,
+                syncedAt: syncedAt,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required String userId,
+                required String cardType,
+                required String title,
+                Value<String?> subtitle = const Value.absent(),
+                Value<String?> body = const Value.absent(),
+                Value<String?> metadataJson = const Value.absent(),
+                Value<int> priority = const Value.absent(),
+                required String createdAt,
+                Value<String?> syncedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => PulseFeedCardsTableCompanion.insert(
+                id: id,
+                userId: userId,
+                cardType: cardType,
+                title: title,
+                subtitle: subtitle,
+                body: body,
+                metadataJson: metadataJson,
+                priority: priority,
+                createdAt: createdAt,
+                syncedAt: syncedAt,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$PulseFeedCardsTableTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $PulseFeedCardsTableTable,
+      PulseFeedCardsTableData,
+      $$PulseFeedCardsTableTableFilterComposer,
+      $$PulseFeedCardsTableTableOrderingComposer,
+      $$PulseFeedCardsTableTableAnnotationComposer,
+      $$PulseFeedCardsTableTableCreateCompanionBuilder,
+      $$PulseFeedCardsTableTableUpdateCompanionBuilder,
+      (
+        PulseFeedCardsTableData,
+        BaseReferences<
+          _$AppDatabase,
+          $PulseFeedCardsTableTable,
+          PulseFeedCardsTableData
+        >,
+      ),
+      PulseFeedCardsTableData,
+      PrefetchHooks Function()
+    >;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -10597,4 +11526,6 @@ class $AppDatabaseManager {
       $$TribeActivityTableTableTableManager(_db, _db.tribeActivityTable);
   $$NarratorNotesTableTableTableManager get narratorNotesTable =>
       $$NarratorNotesTableTableTableManager(_db, _db.narratorNotesTable);
+  $$PulseFeedCardsTableTableTableManager get pulseFeedCardsTable =>
+      $$PulseFeedCardsTableTableTableManager(_db, _db.pulseFeedCardsTable);
 }

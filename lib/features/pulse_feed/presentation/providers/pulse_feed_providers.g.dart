@@ -15,11 +15,11 @@ final pulseFeedRepositoryProvider = PulseFeedRepositoryProvider._();
 final class PulseFeedRepositoryProvider
     extends
         $FunctionalProvider<
-          PulseFeedRepository,
-          PulseFeedRepository,
-          PulseFeedRepository
+          DriftPulseFeedRepository,
+          DriftPulseFeedRepository,
+          DriftPulseFeedRepository
         >
-    with $Provider<PulseFeedRepository> {
+    with $Provider<DriftPulseFeedRepository> {
   PulseFeedRepositoryProvider._()
     : super(
         from: null,
@@ -36,28 +36,28 @@ final class PulseFeedRepositoryProvider
 
   @$internal
   @override
-  $ProviderElement<PulseFeedRepository> $createElement(
+  $ProviderElement<DriftPulseFeedRepository> $createElement(
     $ProviderPointer pointer,
   ) => $ProviderElement(pointer);
 
   @override
-  PulseFeedRepository create(Ref ref) {
+  DriftPulseFeedRepository create(Ref ref) {
     return pulseFeedRepository(ref);
   }
 
   /// {@macro riverpod.override_with_value}
-  Override overrideWithValue(PulseFeedRepository value) {
+  Override overrideWithValue(DriftPulseFeedRepository value) {
     return $ProviderOverride(
       origin: this,
-      providerOverride: $SyncValueProvider<PulseFeedRepository>(value),
+      providerOverride: $SyncValueProvider<DriftPulseFeedRepository>(value),
     );
   }
 }
 
 String _$pulseFeedRepositoryHash() =>
-    r'66aa0e6d230df70bcbea4a39099f070ecec1f44d';
+    r'b96763d0d34ca9e34db49ab368271b5015fd969f';
 
-/// Streams the latest pulse-feed cards for the currently authenticated user.
+/// Streams pulse-feed cards — local first, Firestore in background.
 ///
 /// Automatically disposes when no longer watched. Returns an empty stream
 /// when the user is not signed in.
@@ -65,7 +65,7 @@ String _$pulseFeedRepositoryHash() =>
 @ProviderFor(pulseFeed)
 final pulseFeedProvider = PulseFeedProvider._();
 
-/// Streams the latest pulse-feed cards for the currently authenticated user.
+/// Streams pulse-feed cards — local first, Firestore in background.
 ///
 /// Automatically disposes when no longer watched. Returns an empty stream
 /// when the user is not signed in.
@@ -80,7 +80,7 @@ final class PulseFeedProvider
     with
         $FutureModifier<List<PulseFeedCard>>,
         $StreamProvider<List<PulseFeedCard>> {
-  /// Streams the latest pulse-feed cards for the currently authenticated user.
+  /// Streams pulse-feed cards — local first, Firestore in background.
   ///
   /// Automatically disposes when no longer watched. Returns an empty stream
   /// when the user is not signed in.
@@ -110,4 +110,4 @@ final class PulseFeedProvider
   }
 }
 
-String _$pulseFeedHash() => r'25d489c677555d966866a08a72d12b14b9a83cfb';
+String _$pulseFeedHash() => r'c6060cf57aee268dc400d37cd6907871b85e8f4a';
