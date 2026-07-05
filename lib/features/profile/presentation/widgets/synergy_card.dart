@@ -38,7 +38,7 @@ class _SynergyCardState extends State<SynergyCard>
     super.initState();
     _shimmerController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 2500),
+      duration: const Duration(milliseconds: 550),
     )..repeat();
   }
 

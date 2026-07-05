@@ -800,7 +800,7 @@ class _EmergeButtonState extends State<_EmergeButton>
     super.initState();
     _shimmerController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 2000),
+      duration: const Duration(milliseconds: 550),
     );
     // Only animate shimmer when unlocked
     if (!widget.isLocked) {
@@ -979,7 +979,7 @@ class _EmergedStateCardState extends State<_EmergedStateCard>
     super.initState();
     _glowController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 2000),
+      duration: const Duration(milliseconds: 550),
     )..repeat(reverse: true);
     _glowAnim = Tween<double>(begin: 0.4, end: 0.8).animate(
       CurvedAnimation(parent: _glowController, curve: Curves.easeInOut),

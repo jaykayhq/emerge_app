@@ -1,12 +1,6 @@
 import 'package:emerge_app/core/theme/archetype_theme.dart';
 import 'package:emerge_app/core/utils/app_logger.dart';
 import 'package:emerge_app/features/auth/domain/entities/user_extension.dart';
-import 'package:emerge_app/features/narrator/domain/models/narrator_appearance.dart';
-import 'package:emerge_app/features/narrator/domain/models/narrator_line.dart';
-import 'package:emerge_app/features/narrator/domain/models/narrator_note.dart';
-import 'package:emerge_app/features/narrator/domain/models/narrator_trigger.dart';
-import 'package:emerge_app/features/narrator/presentation/widgets/narrator_sheet.dart';
-import 'package:emerge_app/features/narrator/presentation/providers/narrator_providers.dart';
 import 'package:emerge_app/features/onboarding/presentation/providers/onboarding_state_notifier.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -55,35 +49,13 @@ class _IdentityStudioScreenState extends ConsumerState<IdentityStudioScreen> {
   void _nextStep() async {
     if (_currentStep == 0) {
       if (_selectedArchetype != null) {
-        final archetypeName = _themes[_focusedArchetypeIndex].archetypeName;
-        await NarratorSheet.show(
-          context,
-          NarratorAppearance(
-            trigger: NarratorTrigger.onboardingPostArchetype,
-            shellText:
-                'Ah, the $archetypeName. An interesting choice. Tell me... why does this path call to you?',
-            buttonA: 'I want to evolve',
-            buttonB: 'I have something to prove',
-            line: GenericLine(
-              'Ah, the $archetypeName. An interesting choice. Tell me... why does this path call to you?',
-            ),
-          ),
-          onResponse: (buttonLabel, _) {
-            ref.read(narratorLocalDatasourceProvider).recordNote(
-              type: NarratorNoteType.onboardingStep,
-              data: {
-                'archetype': archetypeName,
-                'response': buttonLabel,
-              },
-            );
-          },
-        );
-
+        // Narrator greeting removed per redesign: the onboarding flow
+        // now uses the quiet-companion pattern (Phase 4 Task 18).
         if (!mounted) return;
 
         _stepController.nextPage(
           duration: const Duration(milliseconds: 600),
-          curve: Curves.easeInOutCubic, // Ultra-smooth curve
+          curve: Curves.easeInOutCubic,
         );
         setState(() => _currentStep = 1);
       }
