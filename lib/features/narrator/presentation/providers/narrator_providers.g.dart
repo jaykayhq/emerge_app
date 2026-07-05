@@ -245,3 +245,108 @@ abstract class _$NarratorStateNotifier extends $Notifier<NarratorState> {
     return element.handleCreate(ref, build);
   }
 }
+
+@ProviderFor(lineResolver)
+final lineResolverProvider = LineResolverProvider._();
+
+final class LineResolverProvider
+    extends
+        $FunctionalProvider<
+          NarratorLineResolver,
+          NarratorLineResolver,
+          NarratorLineResolver
+        >
+    with $Provider<NarratorLineResolver> {
+  LineResolverProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'lineResolverProvider',
+        isAutoDispose: false,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$lineResolverHash();
+
+  @$internal
+  @override
+  $ProviderElement<NarratorLineResolver> $createElement(
+    $ProviderPointer pointer,
+  ) => $ProviderElement(pointer);
+
+  @override
+  NarratorLineResolver create(Ref ref) {
+    return lineResolver(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(NarratorLineResolver value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<NarratorLineResolver>(value),
+    );
+  }
+}
+
+String _$lineResolverHash() => r'bb55b4e5717e98895a297a758a17d5d2483dca58';
+
+/// Pending narrator line awaiting display in the slide-up card.
+
+@ProviderFor(PendingMilestone)
+final pendingMilestoneProvider = PendingMilestoneProvider._();
+
+/// Pending narrator line awaiting display in the slide-up card.
+final class PendingMilestoneProvider
+    extends $NotifierProvider<PendingMilestone, NarratorLine?> {
+  /// Pending narrator line awaiting display in the slide-up card.
+  PendingMilestoneProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'pendingMilestoneProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$pendingMilestoneHash();
+
+  @$internal
+  @override
+  PendingMilestone create() => PendingMilestone();
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(NarratorLine? value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<NarratorLine?>(value),
+    );
+  }
+}
+
+String _$pendingMilestoneHash() => r'daaba9b289c88ae413ad2a0a1b8e81df72a55622';
+
+/// Pending narrator line awaiting display in the slide-up card.
+
+abstract class _$PendingMilestone extends $Notifier<NarratorLine?> {
+  NarratorLine? build();
+  @$mustCallSuper
+  @override
+  WhenComplete runBuild() {
+    final ref = this.ref as $Ref<NarratorLine?, NarratorLine?>;
+    final element =
+        ref.element
+            as $ClassProviderElement<
+              AnyNotifier<NarratorLine?, NarratorLine?>,
+              NarratorLine?,
+              Object?,
+              Object?
+            >;
+    return element.handleCreate(ref, build);
+  }
+}

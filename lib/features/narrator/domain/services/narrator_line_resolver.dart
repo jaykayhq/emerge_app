@@ -56,7 +56,7 @@ abstract class NarratorLineResolver {
 }
 
 /// Concrete resolver implementation backed by [isPremium] and the LLM.
-class LlmNarratorLineResolver implements NarratorLineResolver {
+class LlmNarratorLineResolver extends NarratorLineResolver {
   LlmNarratorLineResolver({
     required this.isPro,
     required this.llmGeneratePersonal,
@@ -65,9 +65,6 @@ class LlmNarratorLineResolver implements NarratorLineResolver {
   final bool isPro;
   final Future<PersonalLine> Function(NarratorTrigger, NarratorUserStats)
       llmGeneratePersonal;
-
-  @override
-  bool get isPremium => isPro;
 
   @override
   Future<PersonalLine> generatePersonal({

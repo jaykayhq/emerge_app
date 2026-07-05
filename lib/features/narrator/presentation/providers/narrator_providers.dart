@@ -1,6 +1,10 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
+import 'package:emerge_app/features/narrator/domain/models/narrator_line.dart';
+import 'package:emerge_app/features/narrator/domain/services/narrator_line_resolver.dart';
+import 'package:emerge_app/features/narrator/domain/services/narrator_trigger_engine.dart';
 
 import 'package:emerge_app/core/drift/database.dart';
+import 'package:emerge_app/features/monetization/presentation/providers/subscription_provider.dart';
 import 'package:emerge_app/features/narrator/data/datasources/narrator_local_datasource.dart';
 import 'package:emerge_app/features/narrator/data/repositories/narrator_repository.dart';
 import 'package:emerge_app/features/narrator/domain/models/narrator_appearance.dart';
@@ -70,3 +74,33 @@ class NarratorStateNotifier extends _$NarratorStateNotifier {
   /// Dismisses the Narrator.
   void dismiss() => state = const NarratorState();
 }
+
+// ---------------------------------------------------------------------------
+// Line resolver provider (keep-alive singleton)
+// ---------------------------------------------------------------------------
+
+@Riverpod(keepAlive: true)
+NarratorLineResolver lineResolver(Ref ref) {
+  final isPremium = ref.watch(isPremiumProvider).value ?? false;
+  return LlmNarratorLineResolver(
+    isPro: isPremium,
+    llmGeneratePersonal: (trigger, stats) async {
+      // TODO(task-22): swap stub for real Groq call
+      return PersonalLine(
+        text: '${trigger.name} personal line for momentum=${stats.momentumScore.toStringAsFixed(2)}',
+        dataBasis: 'momentumScore',
+      );
+    },
+  );
+}
+
+/// Pending narrator line awaiting display in the slide-up card.
+@riverpod
+class PendingMilestone extends _$PendingMilestone {
+  @override
+  NarratorLine? build() => null;
+
+  void set(NarratorLine line) => state = line;
+  void clear() => state = null;
+}
+
