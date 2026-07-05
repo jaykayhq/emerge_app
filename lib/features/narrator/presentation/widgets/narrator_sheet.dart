@@ -224,11 +224,7 @@ class _NarratorSheetState extends ConsumerState<NarratorSheet>
 
   void _onButtonTap(String buttonLabel) {
     widget.onResponse?.call(buttonLabel, null);
-    try {
-      ref.read(narratorStateProvider.notifier).dismiss();
-    } catch (e) {
-      // Provider might not be available in test context
-    }
+    ref.read(narratorStateProvider.notifier).dismiss();
     Navigator.of(context).pop();
   }
 }
