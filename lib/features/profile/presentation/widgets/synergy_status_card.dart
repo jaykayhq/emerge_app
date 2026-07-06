@@ -1,4 +1,3 @@
-import 'dart:ui';
 import 'package:emerge_app/core/theme/app_theme.dart';
 import 'package:emerge_app/features/auth/domain/entities/user_extension.dart';
 import 'package:emerge_app/features/gamification/presentation/providers/attribute_progress_provider.dart';
@@ -63,13 +62,9 @@ class SynergyStatusCard extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(20),
-        child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
-          child: Container(
-            padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(
+      child: Container(
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
               gradient: LinearGradient(
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
@@ -115,8 +110,6 @@ class SynergyStatusCard extends ConsumerWidget {
                 // Content
                 _buildCardContent(context, ref),
               ],
-            ),
-          ),
         ),
       ),
     );

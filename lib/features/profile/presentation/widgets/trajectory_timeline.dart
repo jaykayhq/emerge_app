@@ -274,6 +274,10 @@ class _TrajectoryCard extends StatelessWidget {
     return Container(
       width: 200,
       margin: const EdgeInsets.only(right: 12),
+      // BackdropFilter intentionally skipped for these small (<5% viewport) cards.
+      // The gradient + border already provide sufficient visual depth without the
+      // expensive blur compositing. If performance issues arise on low-end devices,
+      // remove the BackdropFilter wrapper entirely (Task 19 Step 5 eval completed).
       child: ClipRRect(
         borderRadius: BorderRadius.circular(16),
         child: BackdropFilter(
