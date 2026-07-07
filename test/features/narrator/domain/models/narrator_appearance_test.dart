@@ -1,4 +1,5 @@
 import 'package:emerge_app/features/narrator/domain/models/narrator_appearance.dart';
+import 'package:emerge_app/features/narrator/domain/models/narrator_line.dart';
 import 'package:emerge_app/features/narrator/domain/models/narrator_trigger.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -10,6 +11,7 @@ void main() {
         shellText: 'You leveled up! Keep going!',
         buttonA: 'Awesome!',
         buttonB: 'Show Stats',
+        line: const GenericLine('You leveled up! Keep going!'),
       );
 
       expect(appearance.trigger, NarratorTrigger.levelUp);
@@ -17,7 +19,8 @@ void main() {
       expect(appearance.buttonA, 'Awesome!');
       expect(appearance.buttonB, 'Show Stats');
       expect(appearance.slotKeys, isNull);
-      expect(appearance.hasTextField, false);
+      expect(appearance.line, isA<GenericLine>());
+      expect(appearance.line.text, 'You leveled up! Keep going!');
       expect(appearance.context, isNull);
     });
 
@@ -27,30 +30,36 @@ void main() {
         shellText: 'Good morning!',
         buttonA: 'Start Day',
         buttonB: 'Dismiss',
+        line: const GenericLine('Good morning!'),
         slotKeys: ['habit_1', 'habit_2'],
       );
 
       expect(appearance.slotKeys, ['habit_1', 'habit_2']);
     });
 
-    test('can be created with hasTextField true', () {
+    test('can carry a PersonalLine', () {
       final appearance = NarratorAppearance(
-        trigger: NarratorTrigger.eveningReflection,
-        shellText: 'How was your day?',
-        buttonA: 'Save',
-        buttonB: 'Skip',
-        hasTextField: true,
+        trigger: NarratorTrigger.weeklyRecap,
+        shellText: 'Your week in numbers.',
+        buttonA: 'Show me',
+        buttonB: 'Later',
+        line: const PersonalLine(
+          text: 'Your week in numbers — Tuesday strongest.',
+          dataBasis: 'Tuesday 6-week streak',
+        ),
       );
 
-      expect(appearance.hasTextField, true);
+      expect(appearance.line, isA<PersonalLine>());
+      expect(appearance.line.text, contains('Tuesday'));
     });
 
     test('can be created with context map', () {
       final appearance = NarratorAppearance(
-        trigger: NarratorTrigger.dailyInsight,
-        shellText: 'Here is your daily insight.',
+        trigger: NarratorTrigger.levelUp,
+        shellText: 'Here is your insight.',
         buttonA: 'Tell Me More',
         buttonB: 'Dismiss',
+        line: const GenericLine('Here is your insight.'),
         context: {'xp': 50, 'streak': 3},
       );
 
@@ -63,12 +72,14 @@ void main() {
         shellText: 'You leveled up!',
         buttonA: 'Awesome!',
         buttonB: 'Show Stats',
+        line: const GenericLine('You leveled up!'),
       );
       final appearance2 = NarratorAppearance(
         trigger: NarratorTrigger.levelUp,
         shellText: 'You leveled up!',
         buttonA: 'Awesome!',
         buttonB: 'Show Stats',
+        line: const GenericLine('You leveled up!'),
       );
 
       expect(appearance1, equals(appearance2));
@@ -80,12 +91,14 @@ void main() {
         shellText: 'You leveled up!',
         buttonA: 'Awesome!',
         buttonB: 'Show Stats',
+        line: const GenericLine('You leveled up!'),
       );
       final appearance2 = NarratorAppearance(
         trigger: NarratorTrigger.onFireState,
         shellText: 'You leveled up!',
         buttonA: 'Awesome!',
         buttonB: 'Show Stats',
+        line: const GenericLine('You leveled up!'),
       );
 
       expect(appearance1, isNot(equals(appearance2)));
@@ -97,16 +110,17 @@ void main() {
         shellText: 'You leveled up!',
         buttonA: 'Awesome!',
         buttonB: 'Show Stats',
+        line: const GenericLine('You leveled up!'),
       );
 
       final updated = appearance.copyWith(
         shellText: 'New text!',
-        hasTextField: true,
+        line: const PersonalLine(text: 'New text!', dataBasis: 'copyWith'),
       );
 
       expect(updated.trigger, NarratorTrigger.levelUp);
       expect(updated.shellText, 'New text!');
-      expect(updated.hasTextField, true);
+      expect(updated.line, isA<PersonalLine>());
       expect(updated.buttonA, 'Awesome!');
     });
   });

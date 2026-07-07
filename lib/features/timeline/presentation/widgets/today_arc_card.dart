@@ -72,7 +72,7 @@ class TodayArcCard extends StatelessWidget {
                         ? 'All done · $streakDays-day streak'
                         : (total == 0
                             ? 'Start your streak'
-                            : '${remaining} habit${remaining == 1 ? '' : 's'} left today'),
+                            : '$remaining habit${remaining == 1 ? '' : 's'} left today'),
                     style: const TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w600,

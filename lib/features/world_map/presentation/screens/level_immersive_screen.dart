@@ -47,8 +47,6 @@ class _LevelImmersiveScreenState extends ConsumerState<LevelImmersiveScreen> {
   // starting a mission without waiting for the database stream.
   NodeState? _overriddenNodeState;
 
-  bool _disposed = false;
-
   @override
   void initState() {
     super.initState();
@@ -56,7 +54,6 @@ class _LevelImmersiveScreenState extends ConsumerState<LevelImmersiveScreen> {
 
   @override
   void dispose() {
-    _disposed = true;
     super.dispose();
   }
 

@@ -1,7 +1,7 @@
 import 'package:emerge_app/features/narrator/domain/models/narrator_appearance.dart';
+import 'package:emerge_app/features/narrator/domain/models/narrator_line.dart';
 import 'package:emerge_app/features/narrator/domain/models/narrator_trigger.dart';
 import 'package:emerge_app/features/narrator/presentation/widgets/narrator_sheet.dart';
-import 'package:emerge_app/features/narrator/presentation/widgets/narrator_typewriter.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -18,10 +18,11 @@ void main() {
                 onPressed: () => NarratorSheet.show(
                   context,
                   const NarratorAppearance(
-                    trigger: NarratorTrigger.screenFirstVisit,
+                    trigger: NarratorTrigger.levelUp,
                     shellText: 'Welcome test text.',
                     buttonA: 'Action A',
                     buttonB: 'Action B',
+                    line: GenericLine('Welcome test text.'),
                   ),
                 ),
                 child: const Text('Show'),
@@ -40,11 +41,11 @@ void main() {
     // Header should be visible
     expect(find.text('EMERGE'), findsOneWidget);
 
-    // Typewriter should be rendering text
-    expect(find.byType(NarratorTypewriter), findsOneWidget);
+    // Instant text should be visible (no typewriter)
+    expect(find.text('Welcome test text.'), findsOneWidget);
   });
 
-  testWidgets('NarratorSheet shows action buttons after text completes',
+  testWidgets('NarratorSheet shows action buttons immediately with text',
       (tester) async {
     await tester.pumpWidget(
       ProviderScope(
@@ -55,10 +56,11 @@ void main() {
                 onPressed: () => NarratorSheet.show(
                   context,
                   const NarratorAppearance(
-                    trigger: NarratorTrigger.screenFirstVisit,
+                    trigger: NarratorTrigger.levelUp,
                     shellText: 'Short text.',
                     buttonA: 'Action A',
                     buttonB: 'Action B',
+                    line: GenericLine('Short text.'),
                   ),
                 ),
                 child: const Text('Show'),
@@ -74,10 +76,7 @@ void main() {
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 500));
 
-    // Wait for typewriter to finish (short text ~300ms)
-    await tester.pump(const Duration(seconds: 2));
-
-    // After text completes, action buttons should appear
+    // Action buttons should be visible immediately (no typewriter delay)
     expect(find.text('Action A'), findsOneWidget);
     expect(find.text('Action B'), findsOneWidget);
   });
@@ -92,10 +91,11 @@ void main() {
                 onPressed: () => NarratorSheet.show(
                   context,
                   const NarratorAppearance(
-                    trigger: NarratorTrigger.screenFirstVisit,
+                    trigger: NarratorTrigger.levelUp,
                     shellText: 'Dismiss test.',
                     buttonA: 'OK',
                     buttonB: 'Cancel',
+                    line: GenericLine('Dismiss test.'),
                   ),
                 ),
                 child: const Text('Show'),
@@ -115,7 +115,6 @@ void main() {
     expect(find.text('EMERGE'), findsOneWidget);
 
     // Tap outside the dialog (the barrier)
-    // The dialog is centered, so tapping at the top-left corner hits the barrier
     await tester.tapAt(const Offset(10, 10));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 500));
@@ -136,10 +135,11 @@ void main() {
                 onPressed: () => NarratorSheet.show(
                   context,
                   const NarratorAppearance(
-                    trigger: NarratorTrigger.screenFirstVisit,
+                    trigger: NarratorTrigger.levelUp,
                     shellText: 'Button test.',
                     buttonA: 'Confirm',
                     buttonB: 'Skip',
+                    line: GenericLine('Button test.'),
                   ),
                   onResponse: (label, _) => tappedButton = label,
                 ),
@@ -156,10 +156,6 @@ void main() {
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 500));
 
-    // Wait for typewriter to complete
-    await tester.pump(const Duration(seconds: 2));
-    await tester.pump(const Duration(milliseconds: 500));
-
     // Tap the first action button
     await tester.tap(find.text('Confirm'));
     await tester.pump();
@@ -170,11 +166,6 @@ void main() {
     // onResponse should have been called
     expect(tappedButton, 'Confirm');
   });
-
-  // Note: Evening reflection with TextField is not tested here because
-  // test environment's showDialog + SingleChildScrollView + TextField combination
-  // requires Material ancestor context that's not available in widget tests.
-  // The TextField uses standard Flutter patterns that work correctly in-app.
 
   testWidgets('NarratorSheet entry animation plays',
       (tester) async {
@@ -187,10 +178,11 @@ void main() {
                 onPressed: () => NarratorSheet.show(
                   context,
                   const NarratorAppearance(
-                    trigger: NarratorTrigger.screenFirstVisit,
+                    trigger: NarratorTrigger.levelUp,
                     shellText: 'Animation test.',
                     buttonA: 'OK',
                     buttonB: 'Cancel',
+                    line: GenericLine('Animation test.'),
                   ),
                 ),
                 child: const Text('Show'),
@@ -205,7 +197,6 @@ void main() {
     await tester.tap(find.text('Show'));
     await tester.pump();
 
-    // At 0ms the dialog should be rendered (FadeTransition starts at 0)
     // After the animation completes (400ms), content should be visible
     await tester.pump(const Duration(milliseconds: 500));
 

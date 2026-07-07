@@ -93,5 +93,8 @@ SQLite, **fpdart** `Either` for error handling. Tests use `flutter_test`,
 ## Where to look
 
 - Skill rule details: `.agents/skills/` (especially `test-driven-development`, `systematic-debugging`, `verification-before-completion`).
+- Agent memory: `.agents/skills/claude-mem/` — persistent cross-session memory via opencode-mem (SQLite vector DB, http://127.0.0.1:4747). Always search memory before making architecture assumptions.
+- Session observability: `.agents/skills/task-observer/` — records corrections, rework, friction, and patterns during each work session. Run `python .agents/skills/task-observer/scripts/synthesize.py --review-mode` at session-end to surface recommendations for review (never auto-edits).
+- Antigravity setup/refresh: `.agents/skills/firebase-basics/references/setup/` and `references/refresh/` contain guides for installing/updating skills into the Antigravity IDE.
 - Design decisions: `docs/superpowers/specs/` and `docs/superpowers/plans/`.
 - A fine-tuning dataset capturing these rules as examples lives at `scripts/dataset_distillation/` (regenerate with `python build_seeds.py`).

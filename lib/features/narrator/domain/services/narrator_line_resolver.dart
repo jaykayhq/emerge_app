@@ -62,6 +62,7 @@ class LlmNarratorLineResolver extends NarratorLineResolver {
     required this.llmGeneratePersonal,
   });
 
+  @override
   final bool isPro;
   final Future<PersonalLine> Function(NarratorTrigger, NarratorUserStats)
       llmGeneratePersonal;

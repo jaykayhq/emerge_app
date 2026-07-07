@@ -33,8 +33,6 @@ class _WorldMapScreenState extends ConsumerState<WorldMapScreen> {
   final GlobalKey _topBarKey = GlobalKey();
   final GlobalKey _statsBarKey = GlobalKey();
   final GlobalKey _firstNodeKey = GlobalKey();
-  bool _disposed = false;
-
   @override
   void initState() {
     super.initState();
@@ -42,7 +40,6 @@ class _WorldMapScreenState extends ConsumerState<WorldMapScreen> {
 
   @override
   void dispose() {
-    _disposed = true;
     _scrollController.dispose();
     super.dispose();
   }
