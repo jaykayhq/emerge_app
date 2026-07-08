@@ -1,8 +1,8 @@
+import 'dart:async';
 import 'dart:io';
 import 'dart:ui';
 
 import 'package:emerge_app/core/utils/app_logger.dart';
-import 'package:emerge_app/features/onboarding/data/repositories/local_settings_repository.dart';
 import 'package:emerge_app/features/auth/domain/entities/user_extension.dart';
 import 'package:emerge_app/features/auth/presentation/providers/auth_providers.dart';
 import 'package:emerge_app/features/habits/domain/entities/habit.dart';
@@ -15,14 +15,11 @@ import 'package:emerge_app/features/world_map/presentation/providers/world_healt
 import 'package:emerge_app/features/world_map/presentation/widgets/world_health_bar.dart';
 import 'package:emerge_app/features/gamification/presentation/providers/user_stats_providers.dart';
 import 'package:emerge_app/features/gamification/presentation/providers/recap_hub_provider.dart';
-import 'package:emerge_app/features/companion/presentation/providers/companion_providers.dart';
-import 'package:emerge_app/features/companion/domain/enums/companion_enums.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:emerge_app/core/theme/emerge_colors.dart';
-import 'package:emerge_app/core/presentation/widgets/feature_coach_mark.dart';
 
 /// Full-screen immersive level view with AI-generated background
 /// Shows habits, stats, health bar, and mission controls
@@ -50,129 +47,14 @@ class _LevelImmersiveScreenState extends ConsumerState<LevelImmersiveScreen> {
   // starting a mission without waiting for the database stream.
   NodeState? _overriddenNodeState;
 
-  bool _showFirstVisitGuide = false;
-
   @override
   void initState() {
     super.initState();
-    _checkFirstNodeVisit();
-    Future.delayed(const Duration(milliseconds: 500), () {
-      if (!mounted) return;
-      final repo = ref.read(companionRepositoryProvider);
-      if (!repo.hasVisited('/world-map/immersive')) {
-        repo.markVisited('/world-map/immersive');
-        ref
-            .read(companionEngineProvider.notifier)
-            .triggerEvent(
-              eventType: CompanionEventType.firstFeatureVisit,
-              userContext: {'route': '/world-map/immersive'},
-            );
-        setState(() => _showFirstVisitGuide = true);
-      }
-    });
   }
 
-  Future<void> _checkFirstNodeVisit() async {
-    await Future.delayed(const Duration(milliseconds: 300));
-    if (!mounted) return;
-    final repo = LocalSettingsRepository();
-    final hasSeen = await repo.getHasSeenNodeGuide(widget.node.id);
-    if (!hasSeen && mounted) {
-      await repo.setHasSeenNodeGuide(widget.node.id);
-      _showCompanionGuide();
-    }
-  }
-
-  void _showCompanionGuide() {
-    if (!mounted) return;
-    showDialog(
-      context: context,
-      barrierDismissible: true,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: Colors.transparent,
-        insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 80),
-        content: ClipRRect(
-          borderRadius: BorderRadius.circular(16),
-          child: BackdropFilter(
-            filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
-            child: Container(
-              padding: const EdgeInsets.all(24),
-              decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.08),
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: Colors.white.withValues(alpha: 0.15)),
-              ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'NODE GUIDE',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 18,
-                      fontWeight: FontWeight.w900,
-                      letterSpacing: 2,
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  _guideRow('1', 'Complete directives to earn attribute XP'),
-                  const SizedBox(height: 12),
-                  _guideRow('2', 'Check in with quest challenges daily'),
-                  const SizedBox(height: 12),
-                  _guideRow('3', 'Complete missions to conquer the node'),
-                  const SizedBox(height: 24),
-                  Center(
-                    child: TextButton(
-                      onPressed: () => Navigator.pop(ctx),
-                      child: Text(
-                        'GOT IT',
-                        style: TextStyle(
-                          color: Colors.white.withValues(alpha: 0.7),
-                          fontWeight: FontWeight.w700,
-                          letterSpacing: 2,
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _guideRow(String num, String text) {
-    return Row(
-      children: [
-        Container(
-          width: 24,
-          height: 24,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            color: Colors.white.withValues(alpha: 0.15),
-          ),
-          child: Center(
-            child: Text(
-              num,
-              style: const TextStyle(color: Colors.white, fontSize: 12),
-            ),
-          ),
-        ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: Text(
-            text,
-            style: TextStyle(
-              color: Colors.white.withValues(alpha: 0.6),
-              fontSize: 14,
-            ),
-          ),
-        ),
-      ],
-    );
+  @override
+  void dispose() {
+    super.dispose();
   }
 
   @override
@@ -297,24 +179,8 @@ class _LevelImmersiveScreenState extends ConsumerState<LevelImmersiveScreen> {
             ),
           ),
         ),
-        if (_showFirstVisitGuide)
-          FeatureCoachMark(
-            title: "Biome & Node Exploration",
-            primaryColor: EmergeColors.emeraldPrimary,
-            items: const [
-              CoachItemData(
-                icon: Icons.map_outlined,
-                title: "Traversing the Biomes",
-                body: "Explore different parts of the map matching specific archetypes and difficulty levels.",
-              ),
-              CoachItemData(
-                icon: Icons.ads_click,
-                title: "Node Conquests",
-                body: "Tap active nodes to review directives, verify targeted attributes, and launch missions to rebuild the world.",
-              ),
-            ],
-            onDismiss: () => setState(() => _showFirstVisitGuide = false),
-          ),
+        // Node guide is shown via [_checkFirstNodeVisit] when conditions are met.
+        // (onboarding complete + node guide enabled in settings)
       ],
     );
   }
@@ -1498,7 +1364,7 @@ class _LevelImmersiveScreenState extends ConsumerState<LevelImmersiveScreen> {
   /// Show dialog to create a new solo challenge
   void _showCreateChallengeDialog(BuildContext context) {
     // Navigate to challenges screen where user can create solo challenges
-    context.push('/tribes/challenges');
+    context.push('/social/challenges');
   }
 }
 

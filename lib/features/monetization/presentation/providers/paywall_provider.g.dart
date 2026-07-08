@@ -47,7 +47,7 @@ abstract class _$PaywallController extends $Notifier<PaywallState> {
   PaywallState build();
   @$mustCallSuper
   @override
-  void runBuild() {
+  WhenComplete runBuild() {
     final ref = this.ref as $Ref<PaywallState, PaywallState>;
     final element =
         ref.element
@@ -57,6 +57,6 @@ abstract class _$PaywallController extends $Notifier<PaywallState> {
               Object?,
               Object?
             >;
-    element.handleCreate(ref, build);
+    return element.handleCreate(ref, build);
   }
 }

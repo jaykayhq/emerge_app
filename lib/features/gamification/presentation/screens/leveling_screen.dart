@@ -2,13 +2,12 @@ import 'package:emerge_app/core/presentation/widgets/growth_background.dart';
 import 'package:emerge_app/core/theme/app_theme.dart';
 import 'package:emerge_app/features/gamification/presentation/providers/user_stats_providers.dart';
 import 'package:emerge_app/core/constants/gamification_constants.dart';
-import 'package:emerge_app/features/companion/presentation/providers/companion_providers.dart';
-import 'package:emerge_app/features/companion/domain/enums/companion_enums.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
-import 'package:emerge_app/core/presentation/widgets/feature_coach_mark.dart';
+import 'package:go_router/go_router.dart';
+
 
 class LevelingScreen extends ConsumerStatefulWidget {
   const LevelingScreen({super.key});
@@ -18,25 +17,9 @@ class LevelingScreen extends ConsumerStatefulWidget {
 }
 
 class _LevelingScreenState extends ConsumerState<LevelingScreen> {
-  bool _showFirstVisitGuide = false;
-
   @override
   void initState() {
     super.initState();
-    Future.delayed(const Duration(milliseconds: 500), () {
-      if (!mounted) return;
-      final repo = ref.read(companionRepositoryProvider);
-      if (!repo.hasVisited('/gamification')) {
-        repo.markVisited('/gamification');
-        ref
-            .read(companionEngineProvider.notifier)
-            .triggerEvent(
-              eventType: CompanionEventType.firstFeatureVisit,
-              userContext: {'route': '/gamification'},
-            );
-        setState(() => _showFirstVisitGuide = true);
-      }
-    });
   }
 
   @override
@@ -44,14 +27,12 @@ class _LevelingScreenState extends ConsumerState<LevelingScreen> {
     final statsAsync = ref.watch(userStatsStreamProvider);
     final theme = Theme.of(context);
 
-    return Stack(
-      children: [
-        GrowthBackground(
-          appBar: AppBar(
-            title: const Text('Level Progress'),
-            backgroundColor: Colors.transparent,
-          ),
-          child: statsAsync.when(
+    return GrowthBackground(
+      appBar: AppBar(
+        title: const Text('Level Progress'),
+        backgroundColor: Colors.transparent,
+      ),
+      child: statsAsync.when(
             data: (profile) {
               final stats = profile.avatarStats;
               // Calculate XP for next level (standardized: 500 XP per level)
@@ -137,10 +118,35 @@ class _LevelingScreenState extends ConsumerState<LevelingScreen> {
                           ),
                         ),
                       ],
-                    ).animate().fadeIn(delay: 300.ms).slideY(begin: 0.2, end: 0),
-     
-                    const Gap(48),
-     
+                    ).animate().fadeIn(delay: 300.ms).slideY(begin: 0.2, end: 0),                    const Gap(48),
+
+                    // Continue Journey CTA
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton.icon(
+                        onPressed: () => context.go('/'),
+                        icon: const Icon(Icons.map_outlined, size: 20),
+                        label: const Text(
+                          'CONTINUE JOURNEY',
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            letterSpacing: 1,
+                          ),
+                        ),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppTheme.primary,
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          elevation: 0,
+                        ),
+                      ),
+                    ).animate().fadeIn(delay: 450.ms).slideY(begin: 0.2, end: 0),
+
+                    const Gap(24),
+
                     // Rewards Section
                     Container(
                       padding: const EdgeInsets.all(24),
@@ -194,28 +200,10 @@ class _LevelingScreenState extends ConsumerState<LevelingScreen> {
             loading: () => const Center(child: CircularProgressIndicator()),
             error: (e, s) => Center(child: Text('Error: $e')),
           ),
-        ),
-        if (_showFirstVisitGuide)
-          FeatureCoachMark(
-            title: "Archetype Progression & Levels",
-            primaryColor: Colors.amber,
-            items: const [
-              CoachItemData(
-                icon: Icons.star_outline,
-                title: "Level Up Tiers",
-                body: "Earn XP by completing habits. Every 500 XP pushes you to the next tier, unlocking motive badges.",
-              ),
-              CoachItemData(
-                icon: Icons.card_giftcard,
-                title: "Evolving Rewards",
-                body: "Leveling up rewards you with attribute points, new cosmetics, and custom challenges.",
-              ),
-            ],
-            onDismiss: () => setState(() => _showFirstVisitGuide = false),
-          ),
-      ],
-    );
+        );
   }
+
+
 }
 
 class _RewardItem extends StatelessWidget {

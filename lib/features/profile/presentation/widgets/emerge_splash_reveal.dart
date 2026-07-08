@@ -61,7 +61,7 @@ class _EmergeSplashRevealState extends State<EmergeSplashReveal>
     // Continuous pulse animation
     _pulseController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 1200),
+      duration: const Duration(milliseconds: 550),
     )..repeat(reverse: true);
 
     _pulseAnim = Tween<double>(begin: 0.95, end: 1.05).animate(
@@ -71,7 +71,7 @@ class _EmergeSplashRevealState extends State<EmergeSplashReveal>
     // Sequence animation (4 seconds total)
     _sequenceController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 4000),
+      duration: const Duration(milliseconds: 550),
     );
 
     // Phase 1: Logo scales in (0-0.25)

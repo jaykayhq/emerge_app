@@ -84,6 +84,11 @@ class FakeQuery extends Fake implements Query<Map<String, dynamic>> {
   }) {
     return Stream.value(FakeQuerySnapshot());
   }
+
+  @override
+  Future<QuerySnapshot<Map<String, dynamic>>> get([GetOptions? options]) async {
+    return FakeQuerySnapshot();
+  }
 }
 
 class FakeDocumentReference extends Fake

@@ -46,12 +46,16 @@ class _IdentityStudioScreenState extends ConsumerState<IdentityStudioScreen> {
     super.dispose();
   }
 
-  void _nextStep() {
+  void _nextStep() async {
     if (_currentStep == 0) {
       if (_selectedArchetype != null) {
+        // Narrator greeting removed per redesign: the onboarding flow
+        // now uses the quiet-companion pattern (Phase 4 Task 18).
+        if (!mounted) return;
+
         _stepController.nextPage(
           duration: const Duration(milliseconds: 600),
-          curve: Curves.easeInOutCubic, // Ultra-smooth curve
+          curve: Curves.easeInOutCubic,
         );
         setState(() => _currentStep = 1);
       }
@@ -741,25 +745,7 @@ class _IdentityStudioScreenState extends ConsumerState<IdentityStudioScreen> {
 
           const Gap(32),
 
-          // Suggested Motives
-          if (theme.suggestedMotives.isNotEmpty)
-            ...theme.suggestedMotives.map((motive) {
-              final isSelected = _selectedMotive == motive && !_isCustomMotive;
-              return _buildMotiveCard(
-                title: motive,
-                isSelected: isSelected,
-                onTap: () {
-                  setState(() {
-                    _selectedMotive = motive;
-                    _isCustomMotive = false;
-                    _customMotiveController.clear();
-                  });
-                  HapticFeedback.lightImpact();
-                },
-              );
-            }),
-
-          // Custom Motive
+          // Custom Motive (highlighted first — draws attention)
           AnimatedContainer(
             duration: 300.ms,
             margin: const EdgeInsets.only(bottom: 12),
@@ -771,7 +757,7 @@ class _IdentityStudioScreenState extends ConsumerState<IdentityStudioScreen> {
               border: Border.all(
                 color: _isCustomMotive
                     ? const Color(0xFF2BEE79)
-                    : Colors.white10,
+                    : const Color(0xFF7C3AED).withValues(alpha: 0.3),
               ),
             ),
             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 4),
@@ -805,6 +791,24 @@ class _IdentityStudioScreenState extends ConsumerState<IdentityStudioScreen> {
               ],
             ),
           ).animate().fadeIn(delay: 400.ms),
+
+          // Suggested Motives (below custom)
+          if (theme.suggestedMotives.isNotEmpty)
+            ...theme.suggestedMotives.map((motive) {
+              final isSelected = _selectedMotive == motive && !_isCustomMotive;
+              return _buildMotiveCard(
+                title: motive,
+                isSelected: isSelected,
+                onTap: () {
+                  setState(() {
+                    _selectedMotive = motive;
+                    _isCustomMotive = false;
+                    _customMotiveController.clear();
+                  });
+                  HapticFeedback.lightImpact();
+                },
+              );
+            }),
 
           const Gap(24),
 

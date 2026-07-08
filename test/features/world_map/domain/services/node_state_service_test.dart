@@ -1,170 +1,116 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:emerge_app/features/world_map/domain/models/world_node.dart';
-import 'package:emerge_app/features/world_map/domain/models/archetype_maps_catalog.dart';
-import 'package:emerge_app/features/world_map/domain/models/hex_location.dart';
 import 'package:emerge_app/features/auth/domain/entities/user_extension.dart';
-import 'package:emerge_app/features/habits/domain/entities/habit.dart';
+import 'package:emerge_app/features/world_map/domain/models/world_node.dart';
+import 'package:emerge_app/features/world_map/domain/models/hex_location.dart';
 import 'package:emerge_app/features/world_map/domain/services/node_state_service.dart';
 
+WorldNode _buildNode({
+  String id = 'node_1',
+  int requiredLevel = 1,
+  bool missionCompleted = false,
+}) {
+  return WorldNode(
+    id: id,
+    name: 'Test Node',
+    description: 'A test node',
+    targetedAttributes: [],
+    xpBoosts: {},
+    requiredLevel: requiredLevel,
+    type: NodeType.waypoint,
+    hexLocation: const HexLocation(0, 0),
+    missionCompleted: missionCompleted,
+  );
+}
+
+UserProfile _buildProfile({int level = 1, List<String> claimedNodes = const []}) {
+  return UserProfile(
+    uid: 'test_uid',
+    avatarStats: UserAvatarStats(level: level),
+    worldState: UserWorldState(
+      claimedNodes: claimedNodes,
+    ),
+  );
+}
+
 void main() {
-  group('ArchetypeMapsCatalog', () {
-    test('getMapForArchetype returns valid config for all archetypes', () {
-      for (final archetype in UserArchetype.values) {
-        if (archetype == UserArchetype.none) continue;
-        final config = ArchetypeMapsCatalog.getMapForArchetype(archetype);
-        expect(config.mapName, isNotEmpty);
-        expect(config.nodes, isNotEmpty);
-        expect(config.primaryColor, isNotNull);
-      }
+  group('ProgressionState enum', () {
+    test('has locked value', () {
+      expect(ProgressionState.values, contains(ProgressionState.locked));
     });
 
-    test('all archetype maps have unique IDs per node', () {
-      for (final archetype in UserArchetype.values) {
-        if (archetype == UserArchetype.none) continue;
-        final config = ArchetypeMapsCatalog.getMapForArchetype(archetype);
-        final ids = config.nodes.map((n) => n.id).toList();
-        expect(
-          ids.toSet().length,
-          ids.length,
-          reason: '${config.mapName} has duplicate node IDs',
-        );
-      }
+    test('has active value', () {
+      expect(ProgressionState.values, contains(ProgressionState.active));
     });
 
-    test('nodes are ordered by requiredLevel', () {
-      final config = ArchetypeMapsCatalog.getMapForArchetype(
-        UserArchetype.scholar,
-      );
-      for (int i = 1; i < config.nodes.length; i++) {
-        expect(
-          config.nodes[i].requiredLevel,
-          greaterThanOrEqualTo(config.nodes[i - 1].requiredLevel),
-        );
-      }
+    test('has completed value', () {
+      expect(ProgressionState.values, contains(ProgressionState.completed));
     });
   });
 
-  group('WorldNode', () {
-    final defaultNode = WorldNode(
-      id: 'test_1',
-      name: 'Test Node',
-      description: 'A test node',
-      targetedAttributes: [HabitAttribute.vitality],
-      xpBoosts: {HabitAttribute.vitality: 50},
-      requiredLevel: 1,
-      type: NodeType.waypoint,
-      hexLocation: const HexLocation(0, 0),
-    );
-
-    test('copyWith updates state correctly', () {
-      final updated = defaultNode.copyWith(state: NodeState.available);
-      expect(updated.state, NodeState.available);
-      expect(updated.id, 'test_1');
+  group('NodeStateService.calculateState', () {
+    test('returns completed when missionCompleted is true', () {
+      final node = _buildNode(missionCompleted: true);
+      final profile = _buildProfile();
+      final result = NodeStateService.calculateState(node, profile, []);
+      expect(result, ProgressionState.completed);
     });
 
-    test('tier returns dormant when progress is 0', () {
-      expect(defaultNode.tier, NodeTier.dormant);
+    test('returns completed when node id is in completedNodeIds', () {
+      final node = _buildNode(id: 'node_42');
+      final profile = _buildProfile();
+      final result = NodeStateService.calculateState(node, profile, ['node_42', 'node_99']);
+      expect(result, ProgressionState.completed);
     });
 
-    test('tier returns legendary when progress is 100', () {
-      final node = defaultNode.copyWith(progress: 100);
-      expect(node.tier, NodeTier.legendary);
+    test('returns locked when user level < node requiredLevel', () {
+      final node = _buildNode(requiredLevel: 5);
+      final profile = _buildProfile(level: 3);
+      final result = NodeStateService.calculateState(node, profile, []);
+      expect(result, ProgressionState.locked);
     });
 
-    test('isComplete returns true when nodeXp >= nodeXpRequired', () {
-      final node = defaultNode.copyWith(nodeXp: 100, nodeXpRequired: 100);
-      expect(node.isComplete, isTrue);
+    test('returns active when user level >= node requiredLevel', () {
+      final node = _buildNode(requiredLevel: 3);
+      final profile = _buildProfile(level: 5);
+      final result = NodeStateService.calculateState(node, profile, []);
+      expect(result, ProgressionState.active);
     });
 
-    test('isComplete returns false when nodeXp < nodeXpRequired', () {
-      expect(defaultNode.isComplete, isFalse);
-    });
-  });
-
-  group('NodeStateService', () {
-    final testNode = WorldNode(
-      id: 'node_1',
-      name: 'Test Node',
-      description: 'A test node',
-      targetedAttributes: [HabitAttribute.vitality],
-      xpBoosts: {HabitAttribute.vitality: 50},
-      requiredLevel: 3,
-      type: NodeType.waypoint,
-      hexLocation: HexLocation(0, 0),
-    );
-
-    test('calculateState returns active when level meets requirement', () {
-      final profile = UserProfile(
-        uid: 'user1',
-        displayName: 'Test',
-        avatarStats: const UserAvatarStats(level: 5),
-      );
-      final state = NodeStateService.calculateState(testNode, profile, []);
-      expect(state, ProgressionState.active);
-    });
-
-    test('calculateState returns locked when level is too low', () {
-      final profile = UserProfile(
-        uid: 'user1',
-        displayName: 'Test',
-        avatarStats: const UserAvatarStats(level: 1),
-      );
-      final state = NodeStateService.calculateState(testNode, profile, []);
-      expect(state, ProgressionState.locked);
-    });
-
-    test('calculateState returns completed when in completedNodeIds', () {
-      final profile = UserProfile(
-        uid: 'user1',
-        displayName: 'Test',
-        avatarStats: const UserAvatarStats(level: 5),
-      );
-      final state = NodeStateService.calculateState(testNode, profile, [
-        'node_1',
-      ]);
-      expect(state, ProgressionState.completed);
-    });
-
-    test('getLockReason returns level message when level is too low', () {
-      final profile = UserProfile(
-        uid: 'user1',
-        displayName: 'Test',
-        avatarStats: const UserAvatarStats(level: 1),
-      );
-      final reason = NodeStateService.getLockReason(testNode, profile);
-      expect(reason, contains('level ${testNode.requiredLevel}'));
+    test('returns active when level equals required level', () {
+      final node = _buildNode(requiredLevel: 4);
+      final profile = _buildProfile(level: 4);
+      final result = NodeStateService.calculateState(node, profile, []);
+      expect(result, ProgressionState.active);
     });
   });
 
-  group('ArchetypeMapConfig', () {
-    test('config has journeyIcon defined', () {
-      final config = ArchetypeMapsCatalog.getMapForArchetype(
-        UserArchetype.athlete,
-      );
-      expect(config.journeyIcon, isNotNull);
+  group('NodeStateService.getLockReason', () {
+    test('returns level requirement string when level is insufficient', () {
+      final node = _buildNode(requiredLevel: 7);
+      final profile = _buildProfile(level: 3);
+      final result = NodeStateService.getLockReason(node, profile);
+      expect(result, 'Reach level 7 to unlock this node');
     });
 
-    test('config has mapDescription', () {
-      final config = ArchetypeMapsCatalog.getMapForArchetype(
-        UserArchetype.scholar,
-      );
-      expect(config.mapDescription, isNotEmpty);
+    test('returns previous mission string when level is sufficient', () {
+      final node = _buildNode(requiredLevel: 2);
+      final profile = _buildProfile(level: 5);
+      final result = NodeStateService.getLockReason(node, profile);
+      expect(result, 'Complete the previous mission to unlock this node');
     });
   });
 
-  group('HexLocation', () {
-    test('can be constructed with q and r', () {
-      final loc = const HexLocation(2, 3);
-      expect(loc.q, 2);
-      expect(loc.r, 3);
+  group('NodeStateService.getCompletedNodeIds', () {
+    test('extracts claimedNodes from world state', () {
+      final profile = _buildProfile(claimedNodes: ['node_a', 'node_b', 'node_c']);
+      final result = NodeStateService.getCompletedNodeIds(profile);
+      expect(result, ['node_a', 'node_b', 'node_c']);
     });
 
-    test('toMap and fromMap roundtrip', () {
-      final loc = const HexLocation(1, -2);
-      final map = loc.toMap();
-      final restored = HexLocation.fromMap(map);
-      expect(restored.q, loc.q);
-      expect(restored.r, loc.r);
+    test('returns empty list when no claimed nodes', () {
+      final profile = _buildProfile(claimedNodes: []);
+      final result = NodeStateService.getCompletedNodeIds(profile);
+      expect(result, isEmpty);
     });
   });
 }

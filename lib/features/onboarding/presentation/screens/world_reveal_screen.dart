@@ -113,7 +113,7 @@ class _WorldRevealScreenState extends ConsumerState<WorldRevealScreen>
 
       // Navigate to world with a fade transition (handled by router or page transition)
       if (mounted) {
-        context.go('/');
+        context.go('/timeline');
       }
     } catch (e) {
       setState(() => _isCreatingHabits = false);

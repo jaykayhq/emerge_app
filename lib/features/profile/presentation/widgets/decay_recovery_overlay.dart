@@ -39,7 +39,7 @@ class _DecayRecoveryOverlayState extends State<DecayRecoveryOverlay>
     // Flicker animation for decay effect (irregular pulsing)
     _flickerController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 800),
+      duration: const Duration(milliseconds: 550),
     );
 
     _flickerAnim =
@@ -55,7 +55,7 @@ class _DecayRecoveryOverlayState extends State<DecayRecoveryOverlay>
     // Recovery animation (healing pulse)
     _recoveryController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 1500),
+      duration: const Duration(milliseconds: 550),
     );
 
     _recoveryAnim = Tween<double>(begin: 0.0, end: 1.0).animate(

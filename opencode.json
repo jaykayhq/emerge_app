@@ -3,12 +3,9 @@
   "plugin": ["superpowers@git+https://github.com/obra/superpowers.git"],
   "mcp": {
     "stitch": {
-      "type": "remote",
-      "url": "https://stitch.googleapis.com/mcp",
-      "enabled": true,
-      "headers": {
-        "X-Goog-Api-Key": "AQ.Ab8RN6L3dW1ivAfP22nREptYK05IBR2yLMs9aiOlTnYTSMGU9g"
-      }
+      "type": "local",
+      "command": ["node", "stitch_proxy.mjs"],
+      "enabled": false
     },
     "sequential-thinking": {
       "type": "local",

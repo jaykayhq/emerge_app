@@ -33,9 +33,17 @@ class GamificationConstants {
   static const int maxEvolutionLevel = 50;
 
   /// Phase thresholds (levels)
+  /// Matches SilhouetteEvolutionState.phaseFromLevel() logic:
+  ///   Phantom  1-5   (levels 1-5)
+  ///   Construct  6-15
+  ///   Incarnate 16-30
+  ///   Radiant   31-50
+  ///   Ascended  51+
   static const int phasePhantomMaxLevel = 5;
   static const int phaseConstructMaxLevel = 15;
   static const int phaseIncarnateMaxLevel = 30;
-  static const int phaseRadiantMaxLevel = 45;
-  // level 45+ is Ascended
+  /// Radiant spans 31-50. At level 50, progressInPhase returns 1.0
+  /// and phaseFromLevel transitions to Ascended at level 50.
+  static const int phaseRadiantMaxLevel = 50;
+  // level 50+ is Ascended
 }

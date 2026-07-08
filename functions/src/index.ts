@@ -14,6 +14,7 @@ import { setGlobalOptions } from "firebase-functions/v2";
 import * as admin from "firebase-admin";
 
 import { recalcTribesInternal } from "./recalcTribes";
+export { fillNarratorSlots } from "./narrator";
 
 // Global configuration for all v2 functions
 setGlobalOptions({
@@ -261,3 +262,5 @@ export * from "./rateLimiter";
 export * from "./ai_recap";
 export * from "./revenuecat_events";
 export * from "./payments/paystack";
+export { setUserRole } from "./setUserRole";
+export { purgeOrphanedUserData } from "./purgeOrphanedUserData";

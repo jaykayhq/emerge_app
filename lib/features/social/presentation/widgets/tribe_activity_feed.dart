@@ -28,10 +28,12 @@ class TribeActivitySection extends ConsumerWidget {
           );
         }
 
-        return Column(
-          children: activities.map((activity) {
-            return TribeActivityTile(activity: activity);
-          }).toList(),
+        return SingleChildScrollView(
+          child: Column(
+            children: activities.map((activity) {
+              return TribeActivityTile(activity: activity);
+            }).toList(),
+          ),
         );
       },
       loading: () => const EmergeLoadingSkeleton(itemCount: 5),

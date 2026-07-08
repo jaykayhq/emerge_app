@@ -5,11 +5,21 @@ import 'package:emerge_app/core/presentation/widgets/emerge_loading_skeleton.dar
 import 'package:emerge_app/features/social/presentation/providers/tribes_provider.dart';
 import 'package:emerge_app/features/social/presentation/widgets/tribe_card.dart';
 
-class AllTribesScreen extends ConsumerWidget {
+class AllTribesScreen extends ConsumerStatefulWidget {
   const AllTribesScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<AllTribesScreen> createState() => _AllTribesScreenState();
+}
+
+class _AllTribesScreenState extends ConsumerState<AllTribesScreen> {
+  @override
+  void initState() {
+    super.initState();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final tribesAsync = ref.watch(allArchetypeClubsProvider);
 
     return Scaffold(
@@ -58,7 +68,8 @@ class AllTribesScreen extends ConsumerWidget {
             ),
           );
         },
-        loading: () => const Center(child: EmergeLoadingSkeleton(itemCount: 5)),
+        loading: () =>
+            const Center(child: EmergeLoadingSkeleton(itemCount: 5)),
         error: (error, stack) => Center(
           child: AppErrorWidget(
             message: 'Could not load tribes',
@@ -68,4 +79,5 @@ class AllTribesScreen extends ConsumerWidget {
       ),
     );
   }
+
 }

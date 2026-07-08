@@ -4,13 +4,13 @@ plugins {
     id("com.google.gms.google-services")
     id("com.google.firebase.crashlytics")
     // END: FlutterFire Configuration
-    id("kotlin-android")
     // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
     id("dev.flutter.flutter-gradle-plugin")
 }
 
 import java.util.Properties
 import java.io.FileInputStream
+import com.google.firebase.crashlytics.buildtools.gradle.CrashlyticsExtension
 
 val keystoreProperties = Properties()
 val keystorePropertiesFile = rootProject.file("key.properties")
@@ -29,20 +29,10 @@ android {
         targetCompatibility = JavaVersion.VERSION_17
     }
 
-    kotlinOptions {
-        jvmTarget = JavaVersion.VERSION_17.toString()
-    }
-
     buildFeatures {
         buildConfig = true
     }
 
-    // Memory optimization for 4GB RAM systems
-    dexOptions {
-        javaMaxHeapSize = "1g"
-        preDexLibraries = false
-        jumboMode = true
-    }
 
     // splits {
     //     abi {
@@ -74,6 +64,9 @@ android {
 
     buildTypes {
         release {
+            configure<CrashlyticsExtension> {
+                mappingFileUploadEnabled = false
+            }
             // IMPORTANT: Use production signing keys for release builds
             signingConfig = signingConfigs.getByName("release")
 
@@ -118,6 +111,12 @@ android {
             buildConfigField("boolean", "DEBUG_MODE", "false")
             buildConfigField("String", "BUILD_TYPE", "\"profile\"")
         }
+    }
+}
+
+kotlin {
+    compilerOptions {
+        jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17)
     }
 }
 

@@ -1,9 +1,9 @@
 import 'package:emerge_app/features/auth/domain/entities/user_extension.dart';
+import 'package:emerge_app/features/gamification/data/repositories/user_stats_repository.dart';
 import 'package:emerge_app/features/gamification/presentation/providers/user_stats_providers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 class LevelUpListener extends ConsumerStatefulWidget {
   final Widget child;
@@ -17,18 +17,6 @@ class LevelUpListener extends ConsumerStatefulWidget {
 class _LevelUpListenerState extends ConsumerState<LevelUpListener> {
   int? _previousLevel;
   bool _isShowingReward = false;
-  SharedPreferences? _prefs;
-  static const String _lastCelebratedLevelKey = 'last_celebrated_level';
-
-  @override
-  void initState() {
-    super.initState();
-    _initPrefs();
-  }
-
-  Future<void> _initPrefs() async {
-    _prefs = await SharedPreferences.getInstance();
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -61,11 +49,8 @@ class _LevelUpListenerState extends ConsumerState<LevelUpListener> {
 
   /// Check for level-ups and trigger reward screen for each level gained
   void _checkForLevelUp(UserProfile userProfile) {
-    if (_prefs == null) return;
-
     final currentLevel = userProfile.effectiveLevel;
-    final lastCelebrated =
-        _prefs!.getInt(_lastCelebratedLevelKey) ?? _previousLevel ?? 0;
+    final lastCelebrated = userProfile.avatarStats.lastCelebratedLevel;
 
     // Check if we've gained any levels since last celebration
     // Only celebrate level 2+ (level 1 is the starting level)
@@ -76,8 +61,25 @@ class _LevelUpListenerState extends ConsumerState<LevelUpListener> {
         _showLevelUpRewardScreen(context, level);
       }
 
-      // Store the new celebrated level
-      _prefs!.setInt(_lastCelebratedLevelKey, currentLevel);
+      // Persist the new celebrated level via repository
+      _persistCelebratedLevel(currentLevel, userProfile.uid);
+    }
+  }
+
+  Future<void> _persistCelebratedLevel(int level, String uid) async {
+    if (uid.isEmpty) return;
+    try {
+      final repository = ref.read(userStatsRepositoryProvider);
+      final currentProfile = await repository.getUserStats(uid);
+      final updatedStats = currentProfile.avatarStats.copyWith(
+        lastCelebratedLevel: level,
+      );
+      final updatedProfile = currentProfile.copyWith(
+        avatarStats: updatedStats,
+      );
+      await repository.saveUserStats(updatedProfile);
+    } catch (e) {
+      // Log error but don't block the user experience
     }
   }
 

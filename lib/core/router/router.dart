@@ -2,6 +2,7 @@ import 'package:emerge_app/core/presentation/screens/splash_screen.dart';
 import 'package:emerge_app/core/presentation/screens/world_splash_screen.dart';
 import 'package:emerge_app/core/presentation/widgets/scaffold_with_nav_bar.dart';
 import 'package:emerge_app/features/auth/presentation/providers/auth_providers.dart';
+import 'package:emerge_app/features/auth/presentation/providers/role_provider.dart';
 import 'package:emerge_app/features/auth/presentation/screens/login_screen.dart';
 import 'package:emerge_app/features/auth/presentation/screens/signup_screen.dart';
 import 'package:emerge_app/features/gamification/presentation/providers/user_stats_providers.dart';
@@ -33,15 +34,26 @@ import 'package:emerge_app/features/settings/presentation/screens/settings_scree
 import 'package:emerge_app/features/settings/presentation/screens/notification_settings_screen.dart';
 import 'package:emerge_app/features/monetization/presentation/screens/paywall_screen.dart';
 
-import 'package:emerge_app/features/social/presentation/screens/social_screen.dart';
-import 'package:emerge_app/features/social/presentation/screens/social_discover_tab.dart';
 import 'package:emerge_app/features/social/presentation/screens/challenges_screen.dart';
 import 'package:emerge_app/features/social/presentation/screens/challenge_detail_screen.dart';
 import 'package:emerge_app/features/social/presentation/screens/friends_screen.dart';
+import 'package:emerge_app/features/social/presentation/screens/social_activity_screen.dart';
+import 'package:emerge_app/features/social/presentation/screens/social_contacts_screen.dart';
 import 'package:emerge_app/features/social/presentation/screens/all_tribes_screen.dart';
 import 'package:emerge_app/features/monetization/presentation/screens/habit_contract_screen.dart';
+import 'package:emerge_app/features/social/presentation/screens/social_onboarding_screen.dart';
+import 'package:emerge_app/features/social/presentation/screens/creator_profile_screen.dart';
+import 'package:emerge_app/features/social/presentation/screens/blueprint_detail_screen.dart';
+import 'package:emerge_app/features/social/presentation/screens/creators_browse_screen.dart';
+import 'package:emerge_app/features/social/presentation/providers/social_onboarding_provider.dart';
+import 'package:emerge_app/core/router/creator_routes.dart';
+import 'package:emerge_app/features/blueprints/data/repositories/blueprint_repository.dart';
+import 'package:emerge_app/features/blueprints/domain/models/blueprint.dart';
+import 'package:emerge_app/core/presentation/widgets/app_error_widget.dart';
+import 'package:emerge_app/features/pulse_feed/presentation/screens/pulse_feed_screen.dart';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
@@ -50,14 +62,185 @@ part 'router.g.dart';
 // Global navigator key - must be defined outside the provider to prevent duplication
 final _rootNavigatorKey = GlobalKey<NavigatorState>(debugLabel: 'root');
 
+/// Snapshot of everything the redirect decision needs.
+///
+/// This is a pure data struct so the redirect logic can be unit-tested
+/// without spinning up GoRouter, Riverpod, or Firebase. Production code
+/// builds it from providers; tests construct it directly.
+class RedirectContext {
+  final bool isLoggedIn;
+  final UserRole? role; // null = unknown / still resolving
+  final bool isFirstLaunch;
+  final int? userOnboardingProgress; // null = no user_stats doc yet
+  final DateTime? userOnboardingCompletedAt;
+  final CreatorOnboardingState? creatorOnboarding; // null = not a creator
+
+  const RedirectContext({
+    required this.isLoggedIn,
+    required this.role,
+    required this.isFirstLaunch,
+    required this.userOnboardingProgress,
+    required this.userOnboardingCompletedAt,
+    required this.creatorOnboarding,
+  });
+}
+
+/// Pure redirect decision. Returns:
+///   - null  : stay on the current path
+///   - path  : redirect to that path
+///
+/// The decision is driven by the `role` enum, which is the canonical
+/// source of truth (Firebase Auth custom claim, with Firestore fallback
+/// inside `currentUserRoleProvider`). This eliminates the
+/// collection-existence race that previously sent creators into the
+/// normal-user onboarding flow.
+String? decideRedirect({
+  required String currentPath,
+  required RedirectContext ctx,
+}) {
+  // 1. Always allow splash.
+  if (currentPath == '/splash') return null;
+
+  // 2. Public auth paths available to anyone (logged in or not).
+  const authPaths = {
+    '/welcome',
+    '/login',
+    '/signup',
+    '/creator/login',
+    '/creator/signup',
+  };
+
+  final isOnAuthPath = authPaths.contains(currentPath);
+  final isOnCreatorOnboardingPath =
+      currentPath.startsWith('/onboarding/creator/');
+  final isOnNormalOnboardingPath =
+      currentPath.startsWith('/onboarding/') && !isOnCreatorOnboardingPath;
+  final isOnCreatorPath = currentPath.startsWith('/creator');
+
+  // 3. Unauthenticated: bounce into the right login surface.
+  if (!ctx.isLoggedIn) {
+    if (isOnAuthPath) return null;
+    if (isOnCreatorPath || isOnCreatorOnboardingPath) return '/creator/login';
+    return ctx.isFirstLaunch ? '/welcome' : '/login';
+  }
+
+  // 4. Authenticated but role still resolving — hold the current path
+  //    so the router doesn't yank the user mid-signup. This is the
+  //    fix for the race window between Firebase Auth user creation
+  //    and the setUserRole Cloud Function returning.
+  //
+  //    We DO redirect away from clearly-stale paths (e.g. /welcome) to
+  //    avoid leaving a logged-in user on the welcome screen forever.
+  if (ctx.role == null || ctx.role == UserRole.unknown) {
+    if (isOnAuthPath && currentPath != '/welcome') return null;
+    if (isOnCreatorPath) return null;
+    if (isOnCreatorOnboardingPath) return null;
+    if (isOnNormalOnboardingPath) return null;
+    if (currentPath == '/welcome') {
+      // No role known yet — assume normal user and route to onboarding.
+      // Will be re-evaluated as soon as the role provider settles.
+      return '/onboarding/identity-studio';
+    }
+    return null;
+  }
+
+  // 5. Creator branch.
+  if (ctx.role == UserRole.creator) {
+    final onboarding = ctx.creatorOnboarding;
+    if (onboarding == null || !onboarding.isComplete) {
+      // Allow creator-onboarding screens through.
+      if (isOnCreatorOnboardingPath) return null;
+      // If the user somehow landed on a normal-user onboarding screen,
+      // push them to the corresponding creator step.
+      if (isOnNormalOnboardingPath) {
+        final progress = onboarding?.progress ?? 0;
+        switch (progress) {
+          case 0:
+            return '/onboarding/creator/archetype';
+          case 1:
+            return '/onboarding/creator/profile';
+          case 2:
+          default:
+            return '/onboarding/creator/reveal';
+        }
+      }
+      // Push the user to the next onboarding step.
+      final progress = onboarding?.progress ?? 0;
+      switch (progress) {
+        case 0:
+          return '/onboarding/creator/archetype';
+        case 1:
+          return '/onboarding/creator/profile';
+        case 2:
+          return '/onboarding/creator/reveal';
+        default:
+          return '/onboarding/creator/reveal';
+      }
+    }
+
+    // Onboarding complete: keep creators on creator surfaces only.
+    if (isOnCreatorOnboardingPath || isOnNormalOnboardingPath || isOnAuthPath) {
+      return '/creator/dashboard';
+    }
+    if (!isOnCreatorPath) return '/creator/dashboard';
+    return null;
+  }
+
+  // 6. Normal user branch.
+  if (ctx.role == UserRole.user) {
+    // Creators-only paths are forbidden here.
+    if (isOnCreatorPath || isOnCreatorOnboardingPath) {
+      return '/onboarding/identity-studio';
+    }
+
+    final progress = ctx.userOnboardingProgress;
+    final isUserOnboardingComplete = ctx.userOnboardingCompletedAt != null ||
+        (progress != null && progress >= 3);
+
+    if (!isUserOnboardingComplete) {
+      if (isOnNormalOnboardingPath) return null;
+      if (isOnAuthPath) return null;
+      // No stats doc yet OR progress < 3.
+      final effectiveProgress = progress ?? 0;
+      switch (effectiveProgress) {
+        case 0:
+        case 1:
+          return '/onboarding/identity-studio';
+        case 2:
+          return '/onboarding/first-habit';
+        default:
+          return '/onboarding/world-reveal';
+      }
+    }
+
+    // Onboarding complete.
+    if (isOnAuthPath) return '/timeline';
+    return null;
+  }
+
+  // Unreachable.
+  return null;
+}
+
 @riverpod
 GoRouter router(Ref ref) {
-  // Watch auth state to rebuild router only on login/logout
+  // Watch ONLY auth state. Rebuilding the GoRouter on any other data
+  // change resets initialLocation to /splash, re-mounting the splash
+  // screen and creating an infinite loop.
   final authState = ref.watch(authStateChangesProvider);
 
-  // Create a refresh notifier for onboarding completion only
+  // Single refresh notifier — fires only on auth login/logout and social onboarding state changes.
   final refreshNotifier = ValueNotifier<int>(0);
-  ref.listen(onboardingControllerProvider, (_, _) => refreshNotifier.value++);
+  ref.listen(authStateChangesProvider, (_, _) => refreshNotifier.value++);
+  ref.listen(socialOnboardingCompletedProvider, (_, _) => refreshNotifier.value++);
+  
+  // Listen to redirect-dependencies so they are initialized *before* GoRouter 
+  // is built, preventing ref.read inside redirect from triggering initialization
+  // and throwing setState-during-build errors on web. 
+  // When they change, we just ask GoRouter to re-evaluate redirect.
+  ref.listen(currentUserRoleProvider, (_, _) => refreshNotifier.value++);
+  ref.listen(currentCreatorOnboardingProvider, (_, _) => refreshNotifier.value++);
+  ref.listen(userStatsStreamProvider, (_, _) => refreshNotifier.value++);
 
   return GoRouter(
     navigatorKey: _rootNavigatorKey,
@@ -66,56 +249,36 @@ GoRouter router(Ref ref) {
     redirect: (context, state) {
       final path = state.uri.path;
 
-      // 1. Always allow splash screen
-      if (path == '/splash') return null;
-
-      // 2. Wait for auth state to initialize
+      // Wait for auth to initialize before making any routing decision.
       if (authState.isLoading) return null;
 
       final isLoggedIn = authState.value?.isNotEmpty ?? false;
       final isFirstLaunch = ref.read(onboardingControllerProvider);
 
-      // Define path guards
-      final isWelcome = path == '/welcome';
-      final isLogin = path == '/login';
-      final isSignup = path == '/signup';
-      final isAuthScreen = isWelcome || isLogin || isSignup;
-      final isOnboardingPath = path.startsWith('/onboarding');
+      // Read synchronously inside redirect — ref.read gives the latest
+      // value at navigation time. Because we listened to them above, 
+      // they are already initialized and won't throw on web.
+      final roleAsync = ref.read(currentUserRoleProvider);
+      final creatorOnboardingAsync = ref.read(currentCreatorOnboardingProvider);
+      final userStatsAsync = ref.read(userStatsStreamProvider);
 
-      // 3. Handle Unauthenticated Users
-      if (!isLoggedIn) {
-        if (isAuthScreen) return null;
-        return isFirstLaunch ? '/welcome' : '/login';
-      }
+      final role = roleAsync is AsyncData ? roleAsync.value : null;
+      final creatorOnboarding = creatorOnboardingAsync is AsyncData
+          ? creatorOnboardingAsync.value
+          : null;
+      final userStats = userStatsAsync is AsyncData ? userStatsAsync.value : null;
 
-      // 4. Handle Authenticated Users
-
-      // Use ref.read for stats to avoid redundant rebuilds
-      final statsAsync = ref.read(userStatsStreamProvider);
-
-      // If stats are loading or in error state, allow current path to continue
-      if (statsAsync.isLoading || statsAsync.hasError) return null;
-
-      final userStats = statsAsync.value;
-      if (userStats == null) return null;
-
-      final onboardingProgress = userStats.onboardingProgress;
-      // Onboarding is complete if progress >= 3 OR we have a completion timestamp
-      // Threshold is 3 because the final step (World Reveal) marks the start of the app
-      final isOnboardingComplete =
-          onboardingProgress >= 3 || userStats.onboardingCompletedAt != null;
-
-      // If onboarding is incomplete, restrict to onboarding flow
-      if (!isOnboardingComplete) {
-        if (isOnboardingPath) return null;
-        return _getOnboardingRouteForProgress(onboardingProgress);
-      }
-
-      // Onboarding is complete:
-      // Redirect auth screens to home, otherwise allow all paths (unblocks bottom nav)
-      if (isAuthScreen) return '/';
-
-      return null;
+      return decideRedirect(
+        currentPath: path,
+        ctx: RedirectContext(
+          isLoggedIn: isLoggedIn,
+          role: role,
+          isFirstLaunch: isFirstLaunch,
+          userOnboardingProgress: userStats?.onboardingProgress,
+          userOnboardingCompletedAt: userStats?.onboardingCompletedAt,
+          creatorOnboarding: creatorOnboarding,
+        ),
+      );
     },
     routes: [
       GoRoute(
@@ -130,16 +293,17 @@ GoRouter router(Ref ref) {
         path: '/world-splash',
         builder: (context, state) => const WorldSplashScreen(),
       ),
+      // All creator routes (login, signup, onboarding, dashboard)
+      ...creatorRoutes,
       GoRoute(
         path: '/welcome',
         builder: (context, state) => const WelcomeScreen(),
       ),
-      // Onboarding routes - removed the old OnboardingScreen
+      // Normal-user onboarding routes.
       GoRoute(
         path: '/onboarding/identity-studio',
         builder: (context, state) => const IdentityStudioScreen(),
       ),
-
       GoRoute(
         path: '/onboarding/first-habit',
         builder: (context, state) => const FirstHabitScreen(),
@@ -153,45 +317,36 @@ GoRouter router(Ref ref) {
         path: '/signup',
         builder: (context, state) => const SignUpScreen(),
       ),
+
+      // ISSUE-13: Top-level /creators/:id alias for deep linking, share links, notifications
+      GoRoute(
+        path: '/creators/:id',
+        parentNavigatorKey: _rootNavigatorKey,
+        builder: (context, state) => CreatorProfileScreen(
+          creatorId: state.pathParameters['id']!,
+        ),
+      ),
+      // /blueprint/:id — deep-link entry point for any blueprint by id
+      // (push sites may also pass the resolved Blueprint via `extra` to skip the fetch).
+      GoRoute(
+        path: '/blueprint/:id',
+        parentNavigatorKey: _rootNavigatorKey,
+        builder: (context, state) {
+          final id = state.pathParameters['id']!;
+          final extra = state.extra;
+          if (extra is Blueprint) return BlueprintDetailScreen(blueprint: extra);
+          return _BlueprintByIdLoader(blueprintId: id);
+        },
+      ),
+      // /creators — browse all verified creators
+      GoRoute(
+        path: '/creators',
+        parentNavigatorKey: _rootNavigatorKey,
+        builder: (context, state) => const CreatorsBrowseScreen(),
+      ),
       GoRoute(
         path: '/challenges',
         builder: (context, state) => const ChallengesScreen(showAppBar: true),
-      ),
-      GoRoute(
-        path: '/profile',
-        builder: (context, state) => const FutureSelfStudioScreen(),
-        routes: [
-          GoRoute(
-            path: 'settings',
-            builder: (context, state) => const SettingsScreen(),
-          ),
-          GoRoute(
-            path: 'notifications',
-            builder: (context, state) =>
-                const NotificationSettingsScreen(),
-          ),
-          GoRoute(
-            path: 'reflections',
-            builder: (context, state) => const AiReflectionsScreen(),
-          ),
-          GoRoute(
-            path: 'leveling',
-            builder: (context, state) => const LevelingScreen(),
-          ),
-          GoRoute(
-            path: 'goldilocks',
-            builder: (context, state) => const GoldilocksScreen(),
-          ),
-          GoRoute(
-            path: 'level-up-reward/:level',
-            parentNavigatorKey: _rootNavigatorKey,
-            builder: (context, state) {
-              final levelStr = state.pathParameters['level'];
-              final level = int.tryParse(levelStr ?? '1') ?? 1;
-              return LevelUpRewardScreen(celebratedLevel: level);
-            },
-          ),
-        ],
       ),
       // ShellRoute for Bottom Navigation
       StatefulShellRoute.indexedStack(
@@ -201,7 +356,30 @@ GoRouter router(Ref ref) {
           );
         },
         branches: [
-          // Branch 1: World (Gamification) - NEW HOME
+          // Branch 0: Timeline (Home) - Daily Command Center
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/timeline',
+                builder: (context, state) => const TimelineScreen(),
+                routes: [
+                  GoRoute(
+                    path: 'create-habit',
+                    builder: (context, state) =>
+                        const AdvancedCreateHabitDialog(),
+                  ),
+                  GoRoute(
+                    path: 'detail/:habitId',
+                    builder: (context, state) {
+                      final habitId = state.pathParameters['habitId']!;
+                      return HabitDetailScreen(habitId: habitId);
+                    },
+                  ),
+                ],
+              ),
+            ],
+          ),
+          // Branch 1: World (Gamification)
           StatefulShellBranch(
             routes: [
               GoRoute(
@@ -256,50 +434,33 @@ GoRouter router(Ref ref) {
               ),
             ],
           ),
-          // Branch 2: Timeline (NEW)
+          // Branch 2: Social (Pulse Feed)
           StatefulShellBranch(
             routes: [
               GoRoute(
-                path: '/timeline',
-                builder: (context, state) => const TimelineScreen(),
+                path: '/social',
+                builder: (context, state) => const PulseFeedScreen(),
+                redirect: (context, state) {
+                  final asyncComplete = ref.read(socialOnboardingCompletedProvider);
+                  if (asyncComplete.isLoading) return null; // Don't redirect while checking
+                  
+                  final isComplete = asyncComplete.value ?? false;
+                  if (!isComplete && !state.uri.path.startsWith('/social/onboarding')) {
+                    return '/social/onboarding';
+                  }
+                  return null;
+                },
                 routes: [
                   GoRoute(
-                    path: 'create-habit',
-                    builder: (context, state) =>
-                        const AdvancedCreateHabitDialog(),
+                    path: 'onboarding',
+                    parentNavigatorKey: _rootNavigatorKey,
+                    builder: (context, state) => const SocialOnboardingScreen(),
                   ),
-                  GoRoute(
-                    path: 'detail/:habitId',
-                    builder: (context, state) {
-                      final habitId = state.pathParameters['habitId']!;
-                      return HabitDetailScreen(habitId: habitId);
-                    },
-                  ),
-                ],
-              ),
-            ],
-          ),
-          // Branch 3: Discover (NEW ROOT TAB)
-          StatefulShellBranch(
-            routes: [
-              GoRoute(
-                path: '/discover',
-                builder: (context, state) => const SocialDiscoverTab(showAsRoot: true),
-              ),
-            ],
-          ),
-          // Branch 4: Social (Tribe & Challenges)
-          StatefulShellBranch(
-            routes: [
-              GoRoute(
-                path: '/tribes',
-                builder: (context, state) =>
-                    const SocialScreen(initialIndex: 0),
-                routes: [
+
                   GoRoute(
                     path: 'challenges',
                     builder: (context, state) =>
-                        const SocialScreen(initialIndex: 1),
+                        const ChallengesScreen(showAppBar: true),
                   ),
                   GoRoute(
                     path: 'challenge/:challengeId',
@@ -313,6 +474,21 @@ GoRouter router(Ref ref) {
                     path: 'accountability',
                     parentNavigatorKey: _rootNavigatorKey,
                     builder: (context, state) => const FriendsScreen(),
+                  ),
+                  GoRoute(
+                    path: 'activity',
+                    parentNavigatorKey: _rootNavigatorKey,
+                    builder: (context, state) {
+                      final tribeId =
+                          state.uri.queryParameters['tribeId'] ?? '';
+                      return SocialActivityScreen(tribeId: tribeId);
+                    },
+                  ),
+                  GoRoute(
+                    path: 'contacts',
+                    parentNavigatorKey: _rootNavigatorKey,
+                    builder: (context, state) =>
+                        const SocialContactsScreen(),
                   ),
                   GoRoute(
                     path: 'contracts',
@@ -333,6 +509,73 @@ GoRouter router(Ref ref) {
                     parentNavigatorKey: _rootNavigatorKey,
                     builder: (context, state) => const AllTribesScreen(),
                   ),
+                  GoRoute(
+                    path: 'creator/:id',
+                    parentNavigatorKey: _rootNavigatorKey,
+                    builder: (context, state) => CreatorProfileScreen(
+                      creatorId: state.pathParameters['id']!,
+                    ),
+                  ),
+                  // /social/discover — re-uses CreatorsBrowseScreen (avoids duplicate)
+                  GoRoute(
+                    path: 'discover',
+                    parentNavigatorKey: _rootNavigatorKey,
+                    builder: (context, state) => const CreatorsBrowseScreen(),
+                  ),
+                  // /social/blueprint/:id — branch-local alias of /blueprint/:id
+                  GoRoute(
+                    path: 'blueprint/:id',
+                    parentNavigatorKey: _rootNavigatorKey,
+                    builder: (context, state) {
+                      final id = state.pathParameters['id']!;
+                      final extra = state.extra;
+                      if (extra is Blueprint) {
+                        return BlueprintDetailScreen(blueprint: extra);
+                      }
+                      return _BlueprintByIdLoader(blueprintId: id);
+                    },
+                  ),
+                ],
+              ),
+            ],
+          ),
+          // Branch 3: Profile (Identity)
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/profile',
+                builder: (context, state) => const FutureSelfStudioScreen(),
+                routes: [
+                  GoRoute(
+                    path: 'settings',
+                    builder: (context, state) => const SettingsScreen(),
+                  ),
+                  GoRoute(
+                    path: 'notifications',
+                    builder: (context, state) =>
+                        const NotificationSettingsScreen(),
+                  ),
+                  GoRoute(
+                    path: 'reflections',
+                    builder: (context, state) => const AiReflectionsScreen(),
+                  ),
+                  GoRoute(
+                    path: 'leveling',
+                    builder: (context, state) => const LevelingScreen(),
+                  ),
+                  GoRoute(
+                    path: 'goldilocks',
+                    builder: (context, state) => const GoldilocksScreen(),
+                  ),
+                  GoRoute(
+                    path: 'level-up-reward/:level',
+                    parentNavigatorKey: _rootNavigatorKey,
+                    builder: (context, state) {
+                      final levelStr = state.pathParameters['level'];
+                      final level = int.tryParse(levelStr ?? '1') ?? 1;
+                      return LevelUpRewardScreen(celebratedLevel: level);
+                    },
+                  ),
                 ],
               ),
             ],
@@ -343,18 +586,52 @@ GoRouter router(Ref ref) {
   );
 }
 
-/// Helper function to get the onboarding route for a given progress level
-/// Flow: 0-1 = identity-studio, 2 = first-habit, 3 = world-reveal, 4+ = complete
-String _getOnboardingRouteForProgress(int progress) {
-  switch (progress) {
-    case 0:
-    case 1:
-      return '/onboarding/identity-studio';
-    case 2:
-      return '/onboarding/first-habit';
-    case 3:
-      return '/onboarding/world-reveal';
-    default:
-      return '/'; // Should reach this case only briefly before isOnboardingComplete takes over
+/// Resolves a blueprint by id when the caller doesn't pass one via `extra`.
+/// Uses [blueprintByIdProvider] (single-doc fetch, not a full collection
+/// stream) so deep-link navigation is cheap even when the `blueprints`
+/// collection is large. On miss or error, shows [AppErrorWidget] with a
+/// retry that invalidates the provider.
+class _BlueprintByIdLoader extends ConsumerWidget {
+  final String blueprintId;
+  const _BlueprintByIdLoader({required this.blueprintId});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final blueprintAsync = ref.watch(blueprintByIdProvider(blueprintId));
+
+    return blueprintAsync.when(
+      loading: () => const Scaffold(
+        backgroundColor: Colors.transparent,
+        body: Center(child: CircularProgressIndicator()),
+      ),
+      error: (e, _) => Scaffold(
+        backgroundColor: Colors.transparent,
+        body: AppErrorWidget(
+          message: 'Failed to load blueprint: $e',
+          onRetry: () => ref.invalidate(blueprintByIdProvider(blueprintId)),
+        ),
+      ),
+      data: (blueprint) {
+        if (blueprint == null) {
+          return Scaffold(
+            backgroundColor: Colors.transparent,
+            appBar: AppBar(
+              backgroundColor: Colors.transparent,
+              elevation: 0,
+              leading: IconButton(
+                icon: const Icon(Icons.arrow_back, color: Colors.white),
+                onPressed: () => Navigator.of(context).pop(),
+              ),
+            ),
+            body: AppErrorWidget(
+              message: 'Blueprint not found',
+              onRetry: () =>
+                  ref.invalidate(blueprintByIdProvider(blueprintId)),
+            ),
+          );
+        }
+        return BlueprintDetailScreen(blueprint: blueprint);
+      },
+    );
   }
 }

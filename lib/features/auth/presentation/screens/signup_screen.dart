@@ -525,8 +525,9 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
                       const Gap(24),
 
                       // Login Link
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
+                      Wrap(
+                        alignment: WrapAlignment.center,
+                        crossAxisAlignment: WrapCrossAlignment.center,
                         children: [
                           Text(
                             'Already have an account?',
@@ -544,10 +545,23 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
                           ),
                         ],
                       ),
+                      const Gap(16),
+                      // Creator Login Link
+                      TextButton(
+                        onPressed: () => context.push('/creator/login'),
+                        child: const Text(
+                          'Creator Login',
+                          style: TextStyle(
+                            color: Colors.white54,
+                            decoration: TextDecoration.underline,
+                          ),
+                        ),
+                      ),
                       const Gap(8),
                       // Legal Links
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
+                      Wrap(
+                        alignment: WrapAlignment.center,
+                        crossAxisAlignment: WrapCrossAlignment.center,
                         children: [
                           GestureDetector(
                             onTap: () => launchUrl(
@@ -957,6 +971,18 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
                                         ),
                                       ),
                                     ],
+                                  ),
+                                  const Gap(16),
+                                  // Creator Login Link
+                                  TextButton(
+                                    onPressed: () => context.push('/creator/login'),
+                                    child: const Text(
+                                      'Creator Login',
+                                      style: TextStyle(
+                                        color: Colors.white54,
+                                        decoration: TextDecoration.underline,
+                                      ),
+                                    ),
                                   ),
                                 ],
                               ),

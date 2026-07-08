@@ -13,7 +13,11 @@ abstract class HabitRepository {
 
   Future<Either<Failure, Unit>> deleteHabit(String habitId);
 
-  Future<Either<Failure, bool>> completeHabit(String habitId, DateTime date);
+  Future<Either<Failure, bool>> completeHabit(
+    String habitId,
+    DateTime date, {
+    String? activeTribeId,
+  });
 
   Future<Habit?> getHabit(String habitId);
 

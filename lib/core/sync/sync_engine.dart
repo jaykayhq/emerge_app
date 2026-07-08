@@ -38,7 +38,10 @@ class EnhancedSyncEngine {
             );
             await _mutationQueue.deleteProcessed(mutation.id);
           }
-          break;
+          AppLogger.d(
+            'SyncEngine: Mutation ${mutation.id} failed, continuing to next',
+          );
+          continue;
         }
       }
     } finally {

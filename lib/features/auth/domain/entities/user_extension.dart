@@ -88,6 +88,10 @@ class UserAvatarStats {
   final int momentumScore; // 0-100
   final Map<String, int> attributeXp; // ADD THIS
 
+  /// Highest level for which the level-up celebration has been shown.
+  /// Persisted to prevent re-showing celebrations across devices/sessions.
+  final int lastCelebratedLevel;
+
   const UserAvatarStats({
     this.strengthXp = 0,
     this.intellectXp = 0,
@@ -100,6 +104,7 @@ class UserAvatarStats {
     this.streak = 0,
     this.momentumScore = 0,
     this.attributeXp = const {}, // ADD THIS
+    this.lastCelebratedLevel = 0,
   });
 
   Map<String, dynamic> toMap() {
@@ -115,6 +120,7 @@ class UserAvatarStats {
       'streak': streak,
       'momentumScore': momentumScore,
       'attributeXp': attributeXp,
+      'lastCelebratedLevel': lastCelebratedLevel,
     };
   }
 
@@ -136,6 +142,7 @@ class UserAvatarStats {
             ) ??
             {},
       ),
+      lastCelebratedLevel: map['lastCelebratedLevel'] as int? ?? 0,
     );
   }
   int get totalXp =>
@@ -162,6 +169,7 @@ class UserAvatarStats {
     int? streak,
     int? momentumScore,
     Map<String, int>? attributeXp,
+    int? lastCelebratedLevel,
   }) {
     return UserAvatarStats(
       strengthXp: strengthXp ?? this.strengthXp,
@@ -175,6 +183,7 @@ class UserAvatarStats {
       streak: streak ?? this.streak,
       momentumScore: momentumScore ?? this.momentumScore,
       attributeXp: attributeXp ?? this.attributeXp,
+      lastCelebratedLevel: lastCelebratedLevel ?? this.lastCelebratedLevel,
     );
   }
 
@@ -472,6 +481,13 @@ class HabitStack {
 
 class UserProfile {
   final String uid;
+
+  /// Canonical user role. Mirrors the Firebase Auth custom claim and is
+  /// the source of truth for router redirects.
+  ///   - null  : role unknown (e.g. legacy user before this field existed)
+  ///   - 'user'    : normal user (must complete identity-studio onboarding)
+  ///   - 'creator' : creator account (separate onboarding flow + email verify)
+  final String? role;
   final String? displayName;
   final String? photoUrl;
   final UserArchetype archetype;
@@ -515,6 +531,7 @@ class UserProfile {
 
   const UserProfile({
     required this.uid,
+    this.role,
     this.displayName,
     this.photoUrl,
     this.archetype = UserArchetype.none,
@@ -547,6 +564,7 @@ class UserProfile {
   Map<String, dynamic> toMap() {
     return {
       'uid': uid,
+      'role': role,
       'displayName': displayName,
       'photoUrl': photoUrl,
       'archetype': archetype.name,
@@ -601,8 +619,13 @@ class UserProfile {
   }
 
   factory UserProfile.fromMap(Map<String, dynamic> map) {
+    // Only accept the canonical 'user' or 'creator' values; anything else
+    // is treated as unknown so we never route on garbage data.
+    final rawRole = map['role'] as String?;
+    final role = (rawRole == 'user' || rawRole == 'creator') ? rawRole : null;
     return UserProfile(
       uid: map['uid'] as String? ?? '',
+      role: role,
       displayName: map['displayName'] as String?,
       photoUrl: map['photoUrl'] as String?,
       archetype: UserArchetype.values.firstWhere(
@@ -650,6 +673,7 @@ class UserProfile {
 
   UserProfile copyWith({
     String? uid,
+    String? role,
     String? displayName,
     String? photoUrl,
     UserArchetype? archetype,
@@ -680,6 +704,7 @@ class UserProfile {
   }) {
     return UserProfile(
       uid: uid ?? this.uid,
+      role: role ?? this.role,
       displayName: displayName ?? this.displayName,
       photoUrl: photoUrl ?? this.photoUrl,
       archetype: archetype ?? this.archetype,

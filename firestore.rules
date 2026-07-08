@@ -40,8 +40,14 @@ service cloud.firestore {
              (!user.keys().hasAny(['email']) || isValidEmail(user.email)) &&
              (!user.keys().hasAny(['displayName']) || (sanitizeString(user.displayName) && user.displayName.size() <= 50)) &&
              (!user.keys().hasAny(['createdAt']) || user.createdAt is timestamp) &&
-             // Prevent privilege escalation
-             !user.keys().hasAny(['isAdmin', 'role', 'permissions', 'isPremium', 'premium_since']) &&
+             // `role` is a routing field, NOT a privilege. We allow it
+             // here but restrict the value to one of two canonical
+             // strings so a client can never self-promote to anything
+             // privileged. The canonical role is also set as a Firebase
+             // Auth custom claim by the setUserRole Cloud Function.
+             (!user.keys().hasAny(['role']) || user.role in ['user', 'creator']) &&
+             // Prevent privilege escalation for everything else.
+             !user.keys().hasAny(['isAdmin', 'permissions', 'isPremium', 'premium_since']) &&
              // Ensure nested structures are valid if present
              (!user.keys().hasAny(['avatarStats']) || (
                user.avatarStats is map &&
@@ -51,6 +57,34 @@ service cloud.firestore {
                user.worldState is map &&
                user.worldState.keys().hasAll(['entropy', 'cityLevel', 'forestLevel'])
              ));
+    }
+
+    // Helper function to validate creator-profile data.
+    // `role` is constrained to 'user' or 'creator' for the same reason
+    // as in isValidUser: it's a routing field, not a privilege.
+    // `creatorOnboardingProgress` is an integer 0-3 written by the
+    // client during onboarding; nothing privileged about it.
+    // `creatorOnboardingCompletedAt` is a timestamp.
+    function isValidCreatorProfile(profile) {
+      return profile.keys().hasAll(['userId']) &&
+             sanitizeString(profile.userId) &&
+             (!profile.keys().hasAny(['displayName']) || (sanitizeString(profile.displayName) && profile.displayName.size() <= 50)) &&
+             (!profile.keys().hasAny(['bio']) || (profile.bio is string && profile.bio.size() <= 500)) &&
+             (!profile.keys().hasAny(['specialityTags']) || (profile.specialityTags is list)) &&
+             (!profile.keys().hasAny(['avatarUrl']) || profile.avatarUrl == null || profile.avatarUrl is string) &&
+             (!profile.keys().hasAny(['heroImageUrl']) || profile.heroImageUrl == null || profile.heroImageUrl is string) &&
+             (!profile.keys().hasAny(['isVerifiedCreator']) || profile.isVerifiedCreator is bool) &&
+             (!profile.keys().hasAny(['blueprintCount']) || profile.blueprintCount is number) &&
+             (!profile.keys().hasAny(['blueprintId']) || profile.blueprintId == null || profile.blueprintId is string) &&
+             (!profile.keys().hasAny(['tribeId']) || profile.tribeId == null || profile.tribeId is string) &&
+             (!profile.keys().hasAny(['archetype']) || profile.archetype is string) &&
+             (!profile.keys().hasAny(['role']) || profile.role in ['user', 'creator']) &&
+             (!profile.keys().hasAny(['creatorOnboardingProgress']) ||
+                (profile.creatorOnboardingProgress is number &&
+                 profile.creatorOnboardingProgress >= 0 &&
+                 profile.creatorOnboardingProgress <= 3)) &&
+             (!profile.keys().hasAny(['creatorOnboardingCompletedAt']) ||
+                profile.creatorOnboardingCompletedAt is timestamp);
     }
 
     // Helper function to validate habit data with enhanced security
@@ -84,7 +118,11 @@ service cloud.firestore {
              (!habit.keys().hasAny(['consecutiveMisses']) || (habit.consecutiveMisses is number && habit.consecutiveMisses >= 0)) &&
              // New fields for scheduling
              (!habit.keys().hasAny(['reminderTime']) || habit.reminderTime == null || (habit.reminderTime is string && habit.reminderTime.matches('^([01]\\d|2[0-3]):([0-5]\\d)$'))) &&
-             (!habit.keys().hasAny(['timeOfDayPreference']) || habit.timeOfDayPreference == null || (habit.timeOfDayPreference is string && habit.timeOfDayPreference in ['morning', 'afternoon', 'evening', 'anytime']));
+             (!habit.keys().hasAny(['timeOfDayPreference']) || habit.timeOfDayPreference == null || (habit.timeOfDayPreference is string && habit.timeOfDayPreference in ['morning', 'afternoon', 'evening', 'anytime'])) &&
+             // Timer & health integration fields
+             (!habit.keys().hasAny(['timerDurationMinutes']) || (habit.timerDurationMinutes is number && habit.timerDurationMinutes >= 0)) &&
+             (!habit.keys().hasAny(['integrationType']) || habit.integrationType in ['none', 'healthSteps', 'screenTimeLimit']) &&
+             (!habit.keys().hasAny(['integrationTarget']) || habit.integrationTarget == null || (habit.integrationTarget is number && habit.integrationTarget >= 0));
     }
 
     // Helper function to validate post content
@@ -104,7 +142,7 @@ service cloud.firestore {
              (!data.keys().hasAny(['userId']) || data.userId is string) &&
              (!data.keys().hasAny(['displayName']) || (sanitizeString(data.displayName) && data.displayName.size() <= 100)) &&
              (!data.keys().hasAny(['email']) || data.email is string) &&
-             (!data.keys().hasAny(['photoUrl']) || data.photoUrl is string) &&
+             (!data.keys().hasAny(['photoUrl']) || data.photoUrl is string || data.photoUrl == null) &&
              (!data.keys().hasAny(['archetype']) || data.archetype is string) &&
              (!data.keys().hasAny(['lastUpdated']) || data.lastUpdated is timestamp) &&
 
@@ -389,6 +427,20 @@ service cloud.firestore {
       allow delete: if request.auth != null && request.auth.token.admin == true;
     }
 
+    // Creator Profiles (verified creators)
+    // Docs whose ID starts with "creator_" are system-seeded official profiles
+    // and may be written by any authenticated user (seeder runs on-device).
+    // Real user-owned creator profiles are restricted to their owner only and
+    // must validate against isValidCreatorProfile (which allows role +
+    // creator onboarding progress but blocks privileged fields).
+    match /creator_profiles/{profileId} {
+      allow read: if isAuthenticated();
+      allow create, update: if isAuthenticated() &&
+        (profileId.matches('^creator_.*') ||
+         (isOwner(profileId) && isValidCreatorProfile(request.resource.data)));
+      allow delete: if false;
+    }
+
     // Challenge Templates (Read-only, Write by Admin)
     match /challengeTemplates/{templateId} {
       allow read: if isAuthenticated();
@@ -435,6 +487,16 @@ service cloud.firestore {
       allow read: if request.auth.uid == resource.data.app_user_id;
       // Extension manages writing to this collection
       allow write: if false;
+    }
+
+    // Pulse Feed — per-user activity cards (read/write own)
+    match /pulse_feed_cards/{userId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+
+      match /cards/{cardId} {
+        allow read: if request.auth != null;
+        allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;
+      }
     }
   }
 }

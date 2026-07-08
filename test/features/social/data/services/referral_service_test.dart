@@ -195,6 +195,41 @@ void main() {
         ).called(1);
       },
     );
+
+    test('trackReferral handles non-existent referral code', () async {
+      when(() => mockSnapshot.exists).thenReturn(false);
+
+      await service.trackReferral('EMERGE_INVALID', 'user123');
+
+      verifyNever(
+        () => mockSyncEngine.enqueueSet(
+          collectionPath: any(named: 'collectionPath'),
+          documentId: any(named: 'documentId'),
+          data: any(named: 'data'),
+        ),
+      );
+    });
+
+    test(
+      'generateReferralCode returns existing code without enqueuing',
+      () async {
+        when(() => mockSnapshot.exists).thenReturn(true);
+        when(() => mockSnapshot.data()).thenReturn({
+          'referralCode': 'EXISTING',
+        });
+
+        final code = await service.generateReferralCode('user123');
+
+        expect(code, 'EXISTING');
+        verifyNever(
+          () => mockSyncEngine.enqueueSet(
+            collectionPath: any(named: 'collectionPath'),
+            documentId: any(named: 'documentId'),
+            data: any(named: 'data'),
+          ),
+        );
+      },
+    );
   });
 }
 

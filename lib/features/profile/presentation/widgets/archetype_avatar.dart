@@ -37,13 +37,13 @@ class _ArchetypeAvatarState extends State<ArchetypeAvatar>
     // Slow breathing animation - 4 second cycle
     _breathingController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 4000),
+      duration: const Duration(milliseconds: 550),
     )..repeat(reverse: true);
 
     // Aura pulse animation - 3 second cycle
     _auraController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 3000),
+      duration: const Duration(milliseconds: 550),
     )..repeat(reverse: true);
   }
 

@@ -35,9 +35,14 @@ class WeeklyRecapService {
       }
     }
 
+    DateTime startOfWeek(DateTime date) {
+      final daysSinceSunday = date.weekday % 7;
+      return DateTime(date.year, date.month, date.day - daysSinceSunday);
+    }
+
     final now = DateTime.now();
     final end = endDate ?? now;
-    final start = startDate ?? end.subtract(const Duration(days: 7));
+    final start = startDate ?? startOfWeek(end);
 
     final isPremium = _ref.read(isPremiumProvider).value ?? false;
 

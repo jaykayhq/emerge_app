@@ -58,6 +58,9 @@ class DriftHabitRepository implements HabitRepository {
         reminderTime: habit.reminderTime != null
             ? '${habit.reminderTime!.hour}:${habit.reminderTime!.minute.toString().padLeft(2, '0')}'
             : null,
+        timerDurationMinutes: habit.timerDurationMinutes,
+        integrationType: habit.integrationType.name,
+        integrationTarget: habit.integrationTarget,
       );
 
       await _syncEngine.enqueueSet(
@@ -96,6 +99,9 @@ class DriftHabitRepository implements HabitRepository {
         reminderTime: habit.reminderTime != null
             ? '${habit.reminderTime!.hour}:${habit.reminderTime!.minute.toString().padLeft(2, '0')}'
             : null,
+        timerDurationMinutes: habit.timerDurationMinutes,
+        integrationType: habit.integrationType.name,
+        integrationTarget: habit.integrationTarget,
       );
 
       await _syncEngine.enqueueUpdate(
@@ -140,8 +146,9 @@ class DriftHabitRepository implements HabitRepository {
   @override
   Future<Either<Failure, bool>> completeHabit(
     String habitId,
-    DateTime date,
-  ) async {
+    DateTime date, {
+    String? activeTribeId,
+  }) async {
     try {
       final habitRow = await _db.habitsDao.getHabit(habitId);
       if (habitRow == null) return Left(ServerFailure('Habit not found'));
@@ -188,9 +195,18 @@ class DriftHabitRepository implements HabitRepository {
         return const Right(false);
       }
 
-      final newTotalXp = statsRow.totalXp + result.xpGained;
-      final newLevel = _engine.computeLevel(newTotalXp);
       final attr = result.attribute;
+
+      int challengeXpEarned = 0;
+      for (final update in result.challengeUpdates.values) {
+        if (update.isCompleted && update.xpReward != null) {
+          challengeXpEarned += update.xpReward!;
+        }
+      }
+
+      final totalXpGained = result.xpGained + challengeXpEarned;
+      final newTotalXp = statsRow.totalXp + totalXpGained;
+      final newLevel = _engine.computeLevel(newTotalXp);
 
       final now = DateTime.now();
       String? tribeId;
@@ -215,6 +231,15 @@ class DriftHabitRepository implements HabitRepository {
           newLevel,
           newTotalXp,
         );
+        if (challengeXpEarned > 0) {
+          await _db.userStatsDao.updateAttributeXp(
+            statsRow.userId,
+            'vitality',
+            challengeXpEarned,
+            newLevel,
+            newTotalXp,
+          );
+        }
         await _db.userStatsDao.updateStreak(statsRow.userId, result.newStreak);
         await _db.userStatsDao.updateWorldHealth(
           statsRow.userId,
@@ -258,7 +283,18 @@ class DriftHabitRepository implements HabitRepository {
         }
 
         // Update tribe contribution stats
-        if (statsRow.archetype != null && statsRow.archetype != 'none') {
+        if (activeTribeId != null) {
+          final userTribe = await _db.tribeStatsDao.getStats(activeTribeId);
+          if (userTribe != null) {
+            tribeId = userTribe.tribeId;
+            await _db.tribeStatsDao.incrementContribution(
+              userTribe.tribeId,
+              xp: result.xpGained,
+              habits: 1,
+              challenges: 0,
+            );
+          }
+        } else if (statsRow.archetype != null && statsRow.archetype != 'none') {
           final tribeRows = await _db.tribeStatsDao.getAll();
           final userTribe = tribeRows
               .where((t) => t.archetypeId == statsRow.archetype)
@@ -292,6 +328,21 @@ class DriftHabitRepository implements HabitRepository {
       );
 
       // Enqueue user stats sync via update to preserve other fields (markers ensure atomic changes)
+      // Sync to user_activity collection for weekly recap
+      await _syncEngine.enqueueSet(
+        collectionPath: 'user_activity',
+        documentId: '${habitId}_${now.millisecondsSinceEpoch}',
+        data: {
+          'userId': statsRow.userId,
+          'type': 'habit_completion',
+          'date': date.toIso8601String(),
+          'xpEarned': result.xpGained,
+          'habitId': habitId,
+          'attribute': attr,
+          'streakDay': result.newStreak,
+        },
+      );
+
       await _syncEngine.enqueueUpdate(
         collectionPath: 'user_stats',
         documentId: statsRow.userId,
@@ -399,26 +450,60 @@ class DriftHabitRepository implements HabitRepository {
         final h = habits[i];
         final habitId =
             '${blueprint.id}_${i}_${DateTime.now().millisecondsSinceEpoch}';
-        await _db.habitsDao.insertFromData(
+
+        // Generate a Habit with timer and integration fields from blueprint
+        final habit = Habit(
           id: habitId,
           userId: userId,
           title: h.title,
-          attribute: h.attribute.name,
-          createdAt: DateTime.now().toIso8601String(),
-          updatedAt: DateTime.now().toIso8601String(),
+          frequency: h.frequency.toLowerCase() == 'weekly'
+              ? HabitFrequency.weekly
+              : HabitFrequency.daily,
+          attribute: h.attribute,
+          timerDurationMinutes: h.timerDurationMinutes,
+          integrationType: h.integrationType,
+          integrationTarget: h.integrationTarget,
+          reminderTime: reminderTime != null
+              ? _parseReminderTime(reminderTime)
+              : null,
+          createdAt: DateTime.now(),
         );
 
+        await _db.habitsDao.insertFromData(
+          id: habit.id,
+          userId: habit.userId,
+          title: habit.title,
+          frequency: habit.frequency.name,
+          attribute: habit.attribute.name,
+          createdAt: habit.createdAt.toIso8601String(),
+          updatedAt: DateTime.now().toIso8601String(),
+          reminderTime: habit.reminderTime != null
+              ? '${habit.reminderTime!.hour}:${habit.reminderTime!.minute.toString().padLeft(2, '0')}'
+              : null,
+          timerDurationMinutes: habit.timerDurationMinutes,
+          integrationType: habit.integrationType.name,
+          integrationTarget: habit.integrationTarget,
+        );
+
+        // Sync to Firestore with all fields
         await _syncEngine.enqueueSet(
           collectionPath: 'habits',
           documentId: habitId,
-          data: {
-            'userId': userId,
-            'title': h.title,
-            'attribute': h.attribute.name,
-            'createdAt': DateTime.now().toIso8601String(),
-          },
+          data: habit.toMap(),
         );
       }
+
+      _socialService.logActivity(
+        type: 'blueprint_adopted',
+        userId: userId,
+        data: {
+          'blueprintTitle': blueprint.title,
+          'blueprintId': blueprint.id,
+          'category': blueprint.category,
+          'habitCount': blueprint.habits.length,
+        },
+      );
+
       return const Right(unit);
     } catch (e, _) {
       return Left(ServerFailure(e.toString()));
@@ -476,6 +561,12 @@ class DriftHabitRepository implements HabitRepository {
       consecutiveMisses: row.consecutiveMisses,
       timeOfDayPreference: timePref,
       reminderTime: remTime,
+      timerDurationMinutes: row.timerDurationMinutes,
+      integrationType: HabitIntegrationType.values.firstWhere(
+        (e) => e.name == row.integrationType,
+        orElse: () => HabitIntegrationType.none,
+      ),
+      integrationTarget: row.integrationTarget,
     );
   }
 
@@ -494,7 +585,22 @@ class DriftHabitRepository implements HabitRepository {
       'reminderTime': habit.reminderTime != null
           ? '${habit.reminderTime!.hour}:${habit.reminderTime!.minute.toString().padLeft(2, '0')}'
           : null,
+      'timerDurationMinutes': habit.timerDurationMinutes,
+      'integrationType': habit.integrationType.name,
+      'integrationTarget': habit.integrationTarget,
     };
+  }
+
+  TimeOfDay? _parseReminderTime(String reminderTime) {
+    final parts = reminderTime.split(':');
+    if (parts.length == 2) {
+      final hour = int.tryParse(parts[0]);
+      final minute = int.tryParse(parts[1]);
+      if (hour != null && minute != null) {
+        return TimeOfDay(hour: hour, minute: minute);
+      }
+    }
+    return null;
   }
 
   double _difficultyMultiplier(String? difficulty) {

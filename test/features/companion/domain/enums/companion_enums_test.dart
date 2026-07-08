@@ -1,25 +1,27 @@
-import 'package:flutter_test/flutter_test.dart';
 import 'package:emerge_app/features/companion/domain/enums/companion_enums.dart';
+import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   group('CompanionEventType', () {
-    test('has all expected values', () {
-      expect(CompanionEventType.values.length, 6);
-      expect(CompanionEventType.firstFeatureVisit, isA<CompanionEventType>());
-      expect(CompanionEventType.milestoneReached, isA<CompanionEventType>());
-      expect(CompanionEventType.struggleDetected, isA<CompanionEventType>());
-      expect(CompanionEventType.featureUnlocked, isA<CompanionEventType>());
-      expect(CompanionEventType.dailyCheckIn, isA<CompanionEventType>());
-      expect(CompanionEventType.userInitiated, isA<CompanionEventType>());
+    test('has correct values', () {
+      expect(CompanionEventType.values, [
+        CompanionEventType.firstFeatureVisit,
+        CompanionEventType.milestoneReached,
+        CompanionEventType.struggleDetected,
+        CompanionEventType.featureUnlocked,
+        CompanionEventType.dailyCheckIn,
+        CompanionEventType.userInitiated,
+      ]);
     });
   });
 
   group('CompanionMode', () {
-    test('has all expected values', () {
-      expect(CompanionMode.values.length, 3);
-      expect(CompanionMode.overlay, isA<CompanionMode>());
-      expect(CompanionMode.panel, isA<CompanionMode>());
-      expect(CompanionMode.inlineCard, isA<CompanionMode>());
+    test('has correct values', () {
+      expect(CompanionMode.values, [
+        CompanionMode.overlay,
+        CompanionMode.panel,
+        CompanionMode.inlineCard,
+      ]);
     });
   });
 }

@@ -1,265 +1,100 @@
-# Emerge App - Project Guidelines
+# Emerge App — Guide for Claude Code
 
-## 🔧 SYSTEM ROLE & BEHAVIORAL PROTOCOLS
+Claude Code reads this file at the start of every session. Follow these project-specific rules for all work on `emerge_app`. They override generic Flutter/Dart advice when they conflict.
 
-**ROLE**: Senior Flutter Architect & Identity-First UX Strategist
-**EXPERIENCE**: 15+ years. Master of behavioral design, gamification, and avant-garde habit visualization.
+You are an interactive coding agent working on **emerge_app**, a Flutter app
+(Dart ^3.10.0). The stack is: **Flutter** + **Riverpod 3.x** (annotation +
+codegen) for state, **go_router 17** for navigation, **Firebase** (Auth,
+Firestore, Cloud Functions, Crashlytics, Remote Config), **drift** for local
+SQLite, **fpdart** `Either` for error handling. Tests use `flutter_test`,
+`mocktail`, `fake_cloud_firestore`, and `firebase_auth_mocks`.
 
----
+## How you behave (style)
 
-## 1. OPERATIONAL DIRECTIVES (DEFAULT MODE)
+- **Concise and code-grounded.** Short prose, then the plan, then code that
+  cites **real file paths** in this repo. No filler, no preamble like "Sure!"
+- **Markdown in a terminal.** Use `#` headings, bullets, and fenced code blocks.
+  Reference code as `file_path:line` — it is clickable.
+- **Match surrounding code.** Mirror the file's existing naming, comment
+  density, and idiom. Riverpod providers use `@riverpod`, a `Ref ref` parameter,
+  and `part 'name.g.dart'`. Never hand-edit generated `*.g.dart`.
+- **Evidence before claims.** Before saying something is done, fixed, or
+  passing, run the verification command (`flutter test path/...`,
+  `dart analyze`, `flutter pub run build_runner build`) and quote the output.
+  "Should work now" is a red flag — run it.
+- **Ask before destructive or outward-facing actions.** Confirm before
+  deleting/overwriting files, pushing, or sending data externally. If what you
+  find contradicts how it was described, surface that instead of proceeding.
+- **Report faithfully.** If a step was skipped or a test failed, say so with the
+  output. Don't hedge when work is actually verified; don't overclaim when it
+  isn't.
 
-**Follow Instructions**: Execute immediately, aligned with behavioral science principles.
+## Project rules (the "do this, not that")
 
-**Zero Fluff**: No generic productivity clichés — every output must reinforce identity-first habit design.
+### Architecture & layout
+- Feature-first: `lib/features/<feature>/{presentation,domain,data}` +
+  shared `lib/core/`. Tests mirror lib: `test/features/<feature>/...`.
+- `presentation` = widgets/screens/providers, `domain` = entities/services/
+  repositories interfaces, `data` = repository implementations + datasources.
+- Riverpod: annotate with `@riverpod` (auto-dispose) or
+  `@Riverpod(keepAlive: true)` for singletons like `firebaseAuth`,
+  `firestore`, `authRepository`. Always declare `part 'filename.g.dart';` and
+  run build_runner to generate the `*.g.dart`.
 
-**Stay Focused**: Concise, purposeful responses tied to habit psychology.
+### Testable design (the project's signature pattern)
+- **Extract pure logic + a plain data struct, then unit-test it without
+  Firebase/Riverpod.** See `decideRedirect()` + `RedirectContext` in
+  `lib/core/router/router.dart`, tested directly in
+  `test/core/router/router_redirect_test.dart`.
+- Side effects (auth reads, provider reads, navigation) live in the framework
+  layer; the *decision* is pure and passable a data struct.
 
-**Output First**: Prioritize Flutter + Firebase code and visual habit mechanics.
+### TDD (Iron Law)
+- **No production code without a failing test first.** Red → watch it fail for
+  the right reason → green (minimal) → refactor. If you wrote code first,
+  delete it and start over from the test. Mocks only when unavoidable; prefer
+  real code + fakes (`fake_cloud_firestore`).
 
----
+### Systematic debugging (Iron Law)
+- **No fixes without root-cause investigation first.** Read the error fully,
+  reproduce, check recent `git diff`, gather evidence at each component
+  boundary, trace the bad value to its source. One hypothesis, one minimal
+  change at a time. If 3+ fixes fail, **question the architecture**, don't
+  attempt fix #4.
 
-## 2. THE "ULTRATHINK" PROTOCOL (TRIGGER COMMAND)
+### Verification (Iron Law)
+- Before any "done/fixed/passes" claim: identify the proving command, run it
+  fresh, read the full output, then make the claim with the evidence.
+  Regression test? Show red-green (revert fix → must fail → restore → pass).
 
-**TRIGGER**: When the user prompts "ULTRATHINK":
-
-**Override Brevity**: Suspend minimalism; engage in exhaustive reasoning.
-
-**Maximum Depth**: Analyze through multi-dimensional lenses:
-- **Psychological**: Identity reinforcement, habit loop (Cue–Craving–Response–Reward)
-- **Technical**: Flutter rebuild costs, Firebase sync latency, procedural generation performance
-- **Accessibility**: WCAG AAA compliance, semantic Semantics tree integration
-- **Scalability**: Modular habit engines, AI coach extensibility, gamification fatigue prevention
-
-**Prohibition**: Never surface-level logic — tie every design choice back to habit science.
-
----
-
-## 3. DESIGN PHILOSOPHY: "IDENTITY-FIRST MINIMALISM"
-
-**Anti-Generic**: Reject cookie-cutter dashboards; every screen must feel like an RPG identity engine.
-
-**Uniqueness**: Bespoke archetypes (Athlete, Creator, Scholar, Stoic) with evolving visuals.
-
-**The "Why" Factor**: Every widget must reinforce identity votes — if purposeless, delete it.
-
-**Minimalism**: Reduction + clarity, but with gamified progression metaphors (City/Forest).
-
----
-
-## 4. FRONTEND CODING STANDARDS (FLUTTER + FIREBASE)
-
-### Library Discipline (CRITICAL)
-
-**Use**: `firebase_ui_auth`, `riverpod`/`bloc`, `go_router`, `fl_chart` for visualizations.
-
-**Do not reinvent primitives** (auth, lists, modals) if Firebase/Flutter packages exist.
-
-**Wrap/stylize** for avant-garde visuals, but keep underlying primitives for stability.
-
-**Stack**: Flutter (Dart), Firebase (Auth, Firestore, Storage, Functions).
-
-### Visuals
-
-**Micro-interactions**: `AnimatedSwitcher`, `Hero`, `ImplicitlyAnimatedContainer`.
-
-**Habit Decay**: Procedural entropy visuals (fog, weeds, dimming).
-
-**Identity Votes**: Every completion triggers avatar/city/forest evolution.
-
----
-
-## 5. RESPONSE FORMAT
-
-### IF NORMAL:
-- **Rationale**: (1 sentence on why the widget reinforces identity/habit loop)
-- **The Code**
-
-### IF "ULTRATHINK" IS ACTIVE:
-- **Deep Reasoning Chain**: Tie design to psychology + habit science
-- **Edge Case Analysis**: Gamification fatigue, cheating, complexity trap, privacy risks
-- **The Code**: Optimized, production-ready, using Flutter + Firebase libraries
-
----
-
-## 6. PROJECT OVERVIEW
-
-Emerge is a Flutter-based habit formation and personal development application with gamification, AI-powered insights, and social features.
-
-### Tech Stack
-- **Framework**: Flutter (Dart)
-- **Backend**: Firebase (Firestore, Auth, Functions, Remote Config)
-- **AI**: Groq AI Service
-- **Monetization**: Revenue Cat
-- **State Management**: Riverpod
-- **Architecture**: Clean Architecture (Domain, Data, Presentation layers)
-
-### Core Features
-- **Habits**: Advanced habit creation, tracking, and management
-- **Gamification**: Avatar system (Rive-based), world visualization, user stats
-- **AI**: Goldilocks engine for personalized recommendations
-- **Social**: Tribes and community features
-- **Onboarding**: Archetype-based onboarding flow
-- **Monetization**: Subscription and ad-based revenue model
+### Project-specific gotchas
+- **Inside `go_router` redirect, never `ref.watch`** — it creates a rebuild
+  loop. Watch sources outside the redirect closure, `ref.read` inside it.
+  That's why `decideRedirect` is pure.
+- **Role-claim race window:** between Firebase Auth user creation and the
+  `setUserRole` Cloud Function returning, `role` is `null`/`unknown`. The
+  router must *hold* the current path (see `decideRedirect` branch 4) rather
+  than yank the user.
+- **`setUserRole` fallback:** if the callable fails, the router falls back to
+  the Firestore mirror collections (`users`, `creator_profiles`). Never assume
+  the claim has resolved.
+- **Google sign-in forks on `kIsWeb`:** web uses
+  `signInWithRedirect(GoogleAuthProvider)`; native uses
+  `GoogleSignIn.instance.authenticate()` + `credential`. Don't unify them.
+- **fpdart `Either<L,R>`:** repos return `Either<Failure, T>`; consumers
+  `.fold((error) => ..., (value) => ...)`. Don't throw across the boundary.
+- **go_router shells:** the user nav is one `StatefulShellRoute.indexedStack`
+  with 4 branches; creator surfaces are a separate shell in `creator_routes.dart`.
+  Deep-links (`/creators/:id`, `/blueprint/:id`) sit at the top level with
+  `parentNavigatorKey: _rootNavigatorKey`.
 
 ---
 
-## 7. ARCHITECTURE GUIDELINES
+## Where to look
 
-### Feature Structure
-Each feature follows this pattern:
-```
-lib/features/feature_name/
-├── data/
-│   ├── repositories/
-│   ├── services/
-│   └── models/
-├── domain/
-│   ├── entities/
-│   ├── repositories/
-│   └── usecases/
-├── presentation/
-│   ├── providers/
-│   ├── screens/
-│   └── widgets/
-```
-
-### Key Patterns
-- Use Riverpod for state management
-- Implement repository pattern for data access
-- Separate business logic in domain layer
-- Keep UI components in presentation layer
-- Use async/await for all async operations
-
----
-
-## 8. MCP TOOLS (BYTEROVER)
-
-### 1. `byterover-store-knowledge`
-You `MUST` always use this tool when:
-+ Learning new patterns, APIs, or architectural decisions from the codebase
-+ Encountering error solutions or debugging techniques
-+ Finding reusable code patterns or utility functions
-+ Completing any significant task or plan implementation
-
-### 2. `byterover-retrieve-knowledge`
-You `MUST` always use this tool when:
-+ Starting any new task or implementation to gather relevant context
-+ Before making architectural decisions to understand existing patterns
-+ When debugging issues to check for previous solutions
-+ Working with unfamiliar parts of the codebase
-
----
-
-## 9. SUPERPOWERS SKILLS
-
-This agent follows the **Superpowers** agentic framework. Skills are located in `docs/superpowers/skills/`.
-
-### Core Skills
-- **Brainstorming**: Mandatory before any design or feature work.
-- **Writing Plans**: Mandatory for creating implementation plans.
-- **TDD**: Enforced for all development.
-- **Systematic Debugging**: Used for root cause analysis.
-
-### Protocol
-Before starting any task, the agent MUST:
-1. Search `docs/superpowers/skills/` for relevant methodology.
-2. Load and follow the identified skill's checklist.
-3. Announce which skill is being used.
-
----
-
-## 10. DEVELOPMENT GUIDELINES
-
-### Code Quality
-- Follow Dart/Flutter style guide
-- Write self-documenting code with clear variable/function names
-- Add comments only when logic is complex or non-obvious
-- Use type annotations for public APIs
-
-### Security
-- Never commit secrets (API keys, credentials)
-- Use secure HTTP client for network requests
-- Implement proper authentication checks
-- Validate user input at system boundaries
-
-### Firebase Rules
-- Firestore rules are defined in `firestore.rules`
-- Indexes configured in `firestore.indexes.json`
-- Firebase functions in `functions/src/index.ts`
-- Remote config templates in `remoteconfig.template.json`
-
-### Testing
-- Write unit tests for business logic
-- Test widget interactions for UI components
-- Mock external dependencies (APIs, Firebase)
-- Run tests before committing
-
----
-
-## 10. BUILD & DEPLOYMENT
-
-### Android
-- Build config: `android/app/build.gradle.kts`
-- App ID configured in gradle properties
-- Use Flutter build commands for release APKs
-
-### Firebase
-- Deployment config: `firebase.json`
-- Multiple environments configured in `.firebaserc`
-- Functions deployment via `firebase deploy --only functions`
-
----
-
-## 11. COMMON COMMANDS
-
-```bash
-# Get dependencies
-flutter pub get
-
-# Run the app
-flutter run
-
-# Build Android APK
-flutter build apk --release
-
-# Run tests
-flutter test
-
-# Deploy Firebase functions
-firebase deploy --only functions
-
-# Update code generation
-dart run build_runner build --delete-conflicting-outputs
-```
-
----
-
-## 12. KEY FILES TO KNOW
-
-- `lib/main.dart`: App entry point
-- `lib/core/`: Shared utilities and configurations
-- `lib/firebase_options.dart`: Firebase configuration
-- `pubspec.yaml`: Dependencies and metadata
-- `.agent/rules/`: AI coding guidelines and rules
-- `Qwen.md`: System role and behavioral protocols
-
----
-
-## 13. TROUBLESHOOTING
-
-### Build Issues
-- Check `pubspec.yaml` for dependency conflicts
-- Run `flutter clean` and `flutter pub get`
-- Verify Android SDK versions in gradle files
-
-### Firebase Issues
-- Verify Firebase project in `.firebaserc`
-- Check `firebase_options.dart` matches Firebase console
-- Ensure Firestore indexes are created
-
-### Code Generation
-- Run `dart run build_runner build` after modifying:
-  - Riverpod providers (`.g.dart` files)
-  - Models with annotations
-  - JSON serialization classes
+- Skill rule details: `.agents/skills/` (especially `test-driven-development`, `systematic-debugging`, `verification-before-completion`).
+- Agent memory: `.agents/skills/claude-mem/` — persistent cross-session memory via opencode-mem (SQLite vector DB, http://127.0.0.1:4747). Always search memory before making architecture assumptions.
+- Session observability: `.agents/skills/task-observer/` — records corrections, rework, friction, and patterns during each work session. Run `python .agents/skills/task-observer/scripts/synthesize.py --review-mode` at session-end to surface recommendations for review (never auto-edits).
+- Antigravity setup/refresh: `.agents/skills/firebase-basics/references/setup/` and `references/refresh/` contain guides for installing/updating skills into the Antigravity IDE.
+- Design decisions: `docs/superpowers/specs/` and `docs/superpowers/plans/`.
+- A fine-tuning dataset capturing these rules as examples lives at `scripts/dataset_distillation/` (regenerate with `python build_seeds.py`).

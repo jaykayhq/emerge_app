@@ -8,9 +8,11 @@ import 'tables/habit_completions_table.dart';
 import 'tables/challenge_progress_table.dart';
 import 'tables/tribe_stats_table.dart';
 import 'tables/leaderboard_entries_table.dart';
-import 'tables/blueprints_table.dart';
 import 'tables/mutation_queue_table.dart';
 import 'tables/tribe_activity_table.dart';
+import 'tables/narrator_notes_table.dart';
+import 'tables/pulse_feed_cards_table.dart';
+import 'tables/daily_reflections_table.dart';
 
 import 'daos/user_stats_dao.dart';
 import 'daos/habits_dao.dart';
@@ -18,9 +20,11 @@ import 'daos/habit_completions_dao.dart';
 import 'daos/challenge_progress_dao.dart';
 import 'daos/tribe_stats_dao.dart';
 import 'daos/leaderboard_entries_dao.dart';
-import 'daos/blueprints_dao.dart';
 import 'daos/mutation_queue_dao.dart';
 import 'daos/tribe_activity_dao.dart';
+import 'daos/narrator_notes_dao.dart';
+import 'daos/pulse_feed_dao.dart';
+import 'daos/daily_reflections_dao.dart';
 
 part 'app_database.g.dart';
 
@@ -32,9 +36,11 @@ part 'app_database.g.dart';
     ChallengeProgressTable,
     TribeStatsTable,
     LeaderboardEntriesTable,
-    BlueprintsTable,
     MutationQueueTable,
     TribeActivityTable,
+    NarratorNotesTable,
+    PulseFeedCardsTable,
+    DailyReflectionsTable,
   ],
   daos: [
     UserStatsDao,
@@ -43,9 +49,11 @@ part 'app_database.g.dart';
     ChallengeProgressDao,
     TribeStatsDao,
     LeaderboardEntriesDao,
-    BlueprintsDao,
     MutationQueueDao,
     TribeActivityDao,
+    NarratorNotesDao,
+    PulseFeedDao,
+    DailyReflectionsDao,
   ],
 )
 class AppDatabase extends _$AppDatabase {
@@ -54,7 +62,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.withExecutor(super.executor);
 
   @override
-  int get schemaVersion => 2;
+  int get schemaVersion => 7;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -62,6 +70,35 @@ class AppDatabase extends _$AppDatabase {
       if (from < 2) {
         await m.deleteTable(userStatsTable.actualTableName);
         await m.createTable(userStatsTable);
+      }
+      if (from < 3) {
+        await m.addColumn(
+          userStatsTable,
+          userStatsTable.lastCelebratedLevel,
+        );
+      }
+      if (from < 4) {
+        await m.addColumn(
+          habitsTable,
+          habitsTable.timerDurationMinutes,
+        );
+        await m.addColumn(
+          habitsTable,
+          habitsTable.integrationType,
+        );
+        await m.addColumn(
+          habitsTable,
+          habitsTable.integrationTarget,
+        );
+      }
+      if (from < 5) {
+        await m.createTable(narratorNotesTable);
+      }
+      if (from < 6) {
+        await m.createTable(pulseFeedCardsTable);
+      }
+      if (from < 7) {
+        await m.createTable(dailyReflectionsTable);
       }
     },
     beforeOpen: (details) async {

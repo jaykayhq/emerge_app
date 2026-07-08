@@ -22,6 +22,9 @@ class HabitTemplate {
   final HabitAttribute attribute;
   final TimeOfDay? defaultTime;
   final TimeOfDayPreference? timeOfDayPreference;
+  final int timerDurationMinutes; // 0 = no timer
+  final HabitIntegrationType integrationType;
+  final int? integrationTarget;
 
   const HabitTemplate({
     required this.title,
@@ -34,10 +37,20 @@ class HabitTemplate {
     this.attribute = HabitAttribute.vitality,
     this.defaultTime,
     this.timeOfDayPreference,
+    this.timerDurationMinutes = 0,
+    this.integrationType = HabitIntegrationType.none,
+    this.integrationTarget,
   });
 
   /// Get the identity color for this template's attribute
   Color get color => attributeColor(attribute);
+
+  /// Whether this template has a timer
+  bool get hasTimer => timerDurationMinutes > 0;
+
+  /// Whether this template has health integration
+  bool get hasHealthIntegration =>
+      integrationType != HabitIntegrationType.none;
 
   /// Convert from ArchetypeHabitSuggestion
   factory HabitTemplate.fromSuggestion(
@@ -386,6 +399,7 @@ class _HabitTemplateSheetState extends State<HabitTemplateSheet> {
       category: 'Strength',
       emoji: '💪',
       attribute: HabitAttribute.strength,
+      timerDurationMinutes: 5,
     ),
     const HabitTemplate(
       title: 'Pull-up Practice',
@@ -418,6 +432,7 @@ class _HabitTemplateSheetState extends State<HabitTemplateSheet> {
       category: 'Strength',
       emoji: '🧱',
       attribute: HabitAttribute.strength,
+      timerDurationMinutes: 2,
     ),
     const HabitTemplate(
       title: 'Deadlift Form',
@@ -434,6 +449,7 @@ class _HabitTemplateSheetState extends State<HabitTemplateSheet> {
       category: 'Strength',
       emoji: '🛡️',
       attribute: HabitAttribute.strength,
+      timerDurationMinutes: 5,
     ),
     const HabitTemplate(
       title: 'Grip Strength',
@@ -442,6 +458,7 @@ class _HabitTemplateSheetState extends State<HabitTemplateSheet> {
       category: 'Strength',
       emoji: '✊',
       attribute: HabitAttribute.strength,
+      timerDurationMinutes: 5,
     ),
     const HabitTemplate(
       title: 'Resistance Work',
@@ -458,6 +475,7 @@ class _HabitTemplateSheetState extends State<HabitTemplateSheet> {
       category: 'Strength',
       emoji: '⚡',
       attribute: HabitAttribute.strength,
+      timerDurationMinutes: 5,
     ),
     const HabitTemplate(
       title: 'Burpee Burn',
@@ -474,6 +492,7 @@ class _HabitTemplateSheetState extends State<HabitTemplateSheet> {
       category: 'Strength',
       emoji: '📦',
       attribute: HabitAttribute.strength,
+      timerDurationMinutes: 2,
     ),
     const HabitTemplate(
       title: 'Leg Day Ritual',
@@ -490,6 +509,7 @@ class _HabitTemplateSheetState extends State<HabitTemplateSheet> {
       category: 'Strength',
       emoji: '💪',
       attribute: HabitAttribute.strength,
+      timerDurationMinutes: 10,
     ),
     const HabitTemplate(
       title: 'Explosive Jumps',
@@ -508,6 +528,7 @@ class _HabitTemplateSheetState extends State<HabitTemplateSheet> {
       category: 'Vitality',
       emoji: '❄️',
       attribute: HabitAttribute.vitality,
+      timerDurationMinutes: 2,
     ),
     const HabitTemplate(
       title: 'Sunlight Intake',
@@ -516,6 +537,7 @@ class _HabitTemplateSheetState extends State<HabitTemplateSheet> {
       category: 'Vitality',
       emoji: '☀️',
       attribute: HabitAttribute.vitality,
+      timerDurationMinutes: 10,
     ),
     const HabitTemplate(
       title: 'Protein Fuel',
@@ -548,6 +570,7 @@ class _HabitTemplateSheetState extends State<HabitTemplateSheet> {
       category: 'Vitality',
       emoji: '🧘',
       attribute: HabitAttribute.vitality,
+      timerDurationMinutes: 10,
     ),
     const HabitTemplate(
       title: 'Zone 2 Cardio',
@@ -556,6 +579,7 @@ class _HabitTemplateSheetState extends State<HabitTemplateSheet> {
       category: 'Vitality',
       emoji: '🏃',
       attribute: HabitAttribute.vitality,
+      timerDurationMinutes: 20,
     ),
     const HabitTemplate(
       title: 'Standing Desk',
@@ -588,6 +612,7 @@ class _HabitTemplateSheetState extends State<HabitTemplateSheet> {
       category: 'Vitality',
       emoji: '🌳',
       attribute: HabitAttribute.vitality,
+      timerDurationMinutes: 15,
     ),
     const HabitTemplate(
       title: 'Hydration Anchor',
@@ -630,6 +655,7 @@ class _HabitTemplateSheetState extends State<HabitTemplateSheet> {
       category: 'Spirit',
       emoji: '💖',
       attribute: HabitAttribute.spirit,
+      timerDurationMinutes: 5,
     ),
     const HabitTemplate(
       title: 'Silence Practice',
@@ -638,6 +664,7 @@ class _HabitTemplateSheetState extends State<HabitTemplateSheet> {
       category: 'Spirit',
       emoji: '🤫',
       attribute: HabitAttribute.spirit,
+      timerDurationMinutes: 10,
     ),
     const HabitTemplate(
       title: 'Random Kindness',
@@ -670,6 +697,7 @@ class _HabitTemplateSheetState extends State<HabitTemplateSheet> {
       category: 'Spirit',
       emoji: '🌬️',
       attribute: HabitAttribute.spirit,
+      timerDurationMinutes: 3,
     ),
     const HabitTemplate(
       title: 'Purpose Review',
@@ -702,6 +730,7 @@ class _HabitTemplateSheetState extends State<HabitTemplateSheet> {
       category: 'Spirit',
       emoji: '📵',
       attribute: HabitAttribute.spirit,
+      timerDurationMinutes: 30,
     ),
     const HabitTemplate(
       title: 'Community Check',
@@ -718,6 +747,7 @@ class _HabitTemplateSheetState extends State<HabitTemplateSheet> {
       category: 'Spirit',
       emoji: '🙏',
       attribute: HabitAttribute.spirit,
+      timerDurationMinutes: 5,
     ),
     const HabitTemplate(
       title: 'Nature Connect',
@@ -752,6 +782,7 @@ class _HabitTemplateSheetState extends State<HabitTemplateSheet> {
       category: 'Intellect',
       emoji: '⚡',
       attribute: HabitAttribute.intellect,
+      timerDurationMinutes: 5,
     ),
     const HabitTemplate(
       title: 'Summary Writing',
@@ -784,6 +815,7 @@ class _HabitTemplateSheetState extends State<HabitTemplateSheet> {
       category: 'Intellect',
       emoji: '♟️',
       attribute: HabitAttribute.intellect,
+      timerDurationMinutes: 5,
     ),
     const HabitTemplate(
       title: 'Non-fiction Chapter',
@@ -792,6 +824,7 @@ class _HabitTemplateSheetState extends State<HabitTemplateSheet> {
       category: 'Intellect',
       emoji: '📖',
       attribute: HabitAttribute.intellect,
+      timerDurationMinutes: 15,
     ),
     const HabitTemplate(
       title: 'Documentary Clip',
@@ -800,6 +833,7 @@ class _HabitTemplateSheetState extends State<HabitTemplateSheet> {
       category: 'Intellect',
       emoji: '📺',
       attribute: HabitAttribute.intellect,
+      timerDurationMinutes: 15,
     ),
     const HabitTemplate(
       title: 'Note Taking',
@@ -856,6 +890,7 @@ class _HabitTemplateSheetState extends State<HabitTemplateSheet> {
       category: 'Intellect',
       emoji: '🛠️',
       attribute: HabitAttribute.intellect,
+      timerDurationMinutes: 15,
     ),
     const HabitTemplate(
       title: 'Philosophy Read',
@@ -874,6 +909,7 @@ class _HabitTemplateSheetState extends State<HabitTemplateSheet> {
       category: 'Focus',
       emoji: '🍅',
       attribute: HabitAttribute.focus,
+      timerDurationMinutes: 25,
     ),
     const HabitTemplate(
       title: 'Task Batching',
@@ -922,6 +958,7 @@ class _HabitTemplateSheetState extends State<HabitTemplateSheet> {
       category: 'Focus',
       emoji: '⏱️',
       attribute: HabitAttribute.focus,
+      timerDurationMinutes: 5,
     ),
     const HabitTemplate(
       title: 'Meeting Prep',
@@ -996,6 +1033,7 @@ class _HabitTemplateSheetState extends State<HabitTemplateSheet> {
       category: 'Creativity',
       emoji: '✍️',
       attribute: HabitAttribute.creativity,
+      timerDurationMinutes: 10,
     ),
     const HabitTemplate(
       title: 'Sketching Break',
@@ -1004,6 +1042,7 @@ class _HabitTemplateSheetState extends State<HabitTemplateSheet> {
       category: 'Creativity',
       emoji: '🎨',
       attribute: HabitAttribute.creativity,
+      timerDurationMinutes: 10,
     ),
     const HabitTemplate(
       title: 'Musical Improv',
@@ -1012,6 +1051,7 @@ class _HabitTemplateSheetState extends State<HabitTemplateSheet> {
       category: 'Creativity',
       emoji: '🎸',
       attribute: HabitAttribute.creativity,
+      timerDurationMinutes: 5,
     ),
     const HabitTemplate(
       title: 'Mood Boarding',
@@ -1036,6 +1076,7 @@ class _HabitTemplateSheetState extends State<HabitTemplateSheet> {
       category: 'Creativity',
       emoji: '✒️',
       attribute: HabitAttribute.creativity,
+      timerDurationMinutes: 15,
     ),
     const HabitTemplate(
       title: 'Photography Walk',
@@ -1044,6 +1085,7 @@ class _HabitTemplateSheetState extends State<HabitTemplateSheet> {
       category: 'Creativity',
       emoji: '📸',
       attribute: HabitAttribute.creativity,
+      timerDurationMinutes: 15,
     ),
     const HabitTemplate(
       title: 'DIY Project',

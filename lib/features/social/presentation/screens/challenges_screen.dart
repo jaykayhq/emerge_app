@@ -1,5 +1,7 @@
+import 'package:emerge_app/core/presentation/widgets/app_error_widget.dart';
 import 'package:emerge_app/core/theme/app_theme.dart';
 import 'package:emerge_app/core/theme/emerge_colors.dart';
+import 'package:emerge_app/features/onboarding/data/repositories/local_settings_repository.dart';
 import 'package:emerge_app/features/social/domain/models/challenge.dart';
 import 'package:emerge_app/features/social/domain/models/challenge_bundle.dart';
 import 'package:emerge_app/features/social/presentation/providers/challenge_bundle_provider.dart';
@@ -7,12 +9,11 @@ import 'package:emerge_app/features/social/presentation/screens/challenge_detail
 import 'package:emerge_app/features/social/presentation/screens/create_solo_challenge_dialog.dart';
 import 'package:emerge_app/features/social/presentation/widgets/challenges_skeleton.dart';
 import 'package:emerge_app/features/social/presentation/widgets/quest_card_stitch.dart';
-import 'package:emerge_app/features/companion/presentation/providers/companion_providers.dart';
-import 'package:emerge_app/features/companion/domain/enums/companion_enums.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
 import 'package:emerge_app/core/presentation/widgets/feature_coach_mark.dart';
+
 
 /// Challenges Screen - Optimized with bundle provider to prevent double refresh
 /// Uses single consolidated data fetch instead of multiple independent providers
@@ -38,31 +39,61 @@ class _ChallengesScreenState extends ConsumerState<ChallengesScreen> {
   final GlobalKey _filterKey = GlobalKey();
   final GlobalKey _createKey = GlobalKey();
 
-  bool _showFirstVisitGuide = false;
+  bool _disposed = false;
 
   @override
   void initState() {
     super.initState();
-    Future.delayed(const Duration(milliseconds: 500), () {
-      if (!mounted) return;
-      final repo = ref.read(companionRepositoryProvider);
-      if (!repo.hasVisited('/challenges')) {
-        repo.markVisited('/challenges');
-        ref
-            .read(companionEngineProvider.notifier)
-            .triggerEvent(
-              eventType: CompanionEventType.firstFeatureVisit,
-              userContext: {'route': '/challenges'},
-            );
-        setState(() => _showFirstVisitGuide = true);
-      }
-    });
+    _checkFirstVisit();
+  }
+
+  @override
+  void dispose() {
+    _disposed = true;
+    super.dispose();
+  }
+
+  Future<void> _checkFirstVisit() async {
+    await Future<void>.delayed(const Duration(milliseconds: 500));
+    if (!mounted || _disposed) return;
+
+    final repo = LocalSettingsRepository();
+    if (repo.isFirstLaunch) return;
+    if (!repo.isTutorialsEnabled()) return;
+
+    final hasSeen = await repo.getHasSeenNodeGuide('/challenges');
+    if (!hasSeen && mounted && !_disposed) {
+      await repo.setHasSeenNodeGuide('/challenges');
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     // Watch the consolidated bundle - single async operation
     final bundleAsync = ref.watch(challengeBundleProvider);
+
+    // Handle error state with retry
+    if (bundleAsync.hasError && !bundleAsync.isLoading) {
+      final errorBody = Center(
+        child: AppErrorWidget(
+          message: 'Could not load challenges',
+          onRetry: () => ref.invalidate(challengeBundleProvider),
+        ),
+      );
+      if (!widget.showAppBar) {
+        return Container(
+          decoration: const BoxDecoration(gradient: AppTheme.cosmicGradient),
+          child: SafeArea(child: errorBody),
+        );
+      }
+      return Scaffold(
+        backgroundColor: EmergeColors.background,
+        body: Container(
+          decoration: const BoxDecoration(gradient: AppTheme.cosmicGradient),
+          child: SafeArea(child: errorBody),
+        ),
+      );
+    }
 
     final content = Container(
       decoration: widget.showAppBar
@@ -82,24 +113,6 @@ class _ChallengesScreenState extends ConsumerState<ChallengesScreen> {
             ),
             // Unified skeleton loader during initial load
             if (bundleAsync.isLoading) const ChallengesSkeletonLoader(),
-            if (_showFirstVisitGuide)
-              FeatureCoachMark(
-                title: "Active Quests & Challenges",
-                primaryColor: EmergeColors.teal,
-                items: const [
-                  CoachItemData(
-                    icon: Icons.emoji_events,
-                    title: "Spotlight & Daily Quests",
-                    body: "Embark on community-wide spotlight challenges and quick daily quests to boost consistency.",
-                  ),
-                  CoachItemData(
-                    icon: Icons.person_add_alt_outlined,
-                    title: "Solo Quests",
-                    body: "Tap the floating action button to construct custom, personal challenges aligned with your values.",
-                  ),
-                ],
-                onDismiss: () => setState(() => _showFirstVisitGuide = false),
-              ),
           ],
         ),
       ),
@@ -856,9 +869,9 @@ class _ChallengesTabContentState extends ConsumerState<ChallengesTabContent> {
           const SliverToBoxAdapter(child: Gap(16)),
           SliverFillRemaining(
             child: Center(
-              child: Text(
-                'Error loading challenges',
-                style: TextStyle(color: Colors.white),
+              child: AppErrorWidget(
+                message: 'Error loading challenges',
+                onRetry: () => ref.invalidate(challengeBundleProvider),
               ),
             ),
           ),

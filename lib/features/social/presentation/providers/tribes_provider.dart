@@ -3,6 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:emerge_app/core/drift/database.dart';
 import 'package:emerge_app/core/drift_repositories/repositories_barrel.dart';
 import 'package:emerge_app/core/sync/sync_providers.dart';
+import 'package:emerge_app/core/utils/app_logger.dart';
 import 'package:emerge_app/features/social/data/repositories/tribe_repository.dart'
     show TribeRepository;
 import 'package:emerge_app/features/social/domain/models/tribe.dart';
@@ -26,8 +27,31 @@ final socialActivityServiceProvider = Provider<SocialActivityService>((ref) {
     syncEngine: syncEngine,
     activityDao: activityDao,
     leaderboardRepo: leaderboardRepo,
+    // Partner lookup: read the actor's friends subcollection directly via
+    // Firestore. We avoid depending on the friend repository here to break
+    // a potential dependency cycle (the friend repo depends on this service).
+    getPartnerIds: (userId) async {
+      final snapshot = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(userId)
+          .collection('friends')
+          .get();
+      return snapshot.docs.map((d) => d.id).toList();
+    },
   );
 });
+
+/// Active tribe override — when set, habit completions and XP contribute
+/// to this tribe instead of the archetype-matched one. Null = auto-detect
+/// by archetype.
+class ActiveTribeId extends Notifier<String?> {
+  @override
+  String? build() => null;
+
+  void select(String? tribeId) => state = tribeId;
+}
+
+final activeTribeIdProvider = NotifierProvider<ActiveTribeId, String?>(ActiveTribeId.new);
 
 /// The user's archetype club — auto-joined based on their archetype.
 final userClubProvider = FutureProvider.family<Tribe?, String>((
@@ -193,11 +217,8 @@ final worldLeaderboardProvider =
       // Index local rows by tribeId for O(1) merge
       var localIndex = <String, TribeStatsTableData>{};
       var remoteDocs = <String, Map<String, dynamic>>{};
-      var remoteReady = false;
 
       void emitMerged() {
-        // Emit as soon as remote is ready so world leaderboard works on fresh installs
-        if (!remoteReady) return;
 
         // Build entries from Firestore (source of truth for cross-user data).
         // Merge local increments for the current user's own tribe.
@@ -277,13 +298,10 @@ final worldLeaderboardProvider =
           .listen(
             (snap) {
               remoteDocs = {for (final doc in snap.docs) doc.id: doc.data()};
-              remoteReady = true;
               emitMerged();
             },
             onError: (Object err) {
-              // If Firestore fails, fall back to local-only
-              remoteReady = true;
-              emitMerged();
+              AppLogger.e('Firestore leaderboard sync failed', err);
             },
           );
 

@@ -1,10 +1,15 @@
-import 'package:emerge_app/core/theme/app_theme.dart';
-import 'package:emerge_app/core/theme/emerge_colors.dart';
+import 'dart:ui';
+
+import 'package:emerge_app/core/presentation/widgets/app_error_widget.dart';
 import 'package:emerge_app/core/presentation/widgets/world_background.dart';
 import 'package:emerge_app/core/domain/models/app_world_theme.dart';
+import 'package:emerge_app/core/theme/app_theme.dart';
+import 'package:emerge_app/core/theme/emerge_colors.dart';
 import 'package:emerge_app/features/auth/presentation/providers/auth_providers.dart';
 import 'package:emerge_app/features/gamification/presentation/providers/user_stats_providers.dart';
+
 import 'package:emerge_app/features/gamification/presentation/providers/recap_hub_provider.dart';
+import 'package:emerge_app/features/onboarding/data/repositories/local_settings_repository.dart';
 import 'package:emerge_app/features/social/domain/models/challenge.dart';
 import 'package:emerge_app/features/social/presentation/providers/challenge_provider.dart';
 import 'package:emerge_app/features/social/presentation/providers/challenge_bundle_provider.dart';
@@ -16,16 +21,52 @@ import 'package:gap/gap.dart';
 import 'package:go_router/go_router.dart';
 import 'dart:ui';
 
-class ChallengeDetailScreen extends ConsumerWidget {
+class ChallengeDetailScreen extends ConsumerStatefulWidget {
   final Challenge? challenge;
   final String? challengeId;
 
   const ChallengeDetailScreen({super.key, this.challenge, this.challengeId});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<ChallengeDetailScreen> createState() =>
+      _ChallengeDetailScreenState();
+}
+
+class _ChallengeDetailScreenState extends ConsumerState<ChallengeDetailScreen> {
+  bool _disposed = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _checkFirstVisit();
+  }
+
+  @override
+  void dispose() {
+    _disposed = true;
+    super.dispose();
+  }
+
+  Future<void> _checkFirstVisit() async {
+    await Future<void>.delayed(const Duration(milliseconds: 500));
+    if (!mounted || _disposed) return;
+
+    final repo = LocalSettingsRepository();
+    if (repo.isFirstLaunch) return;
+    if (!repo.isTutorialsEnabled()) return;
+
+    final hasSeen = await repo.getHasSeenNodeGuide('/social/challenge');
+    if (!hasSeen && mounted && !_disposed) {
+      await repo.setHasSeenNodeGuide('/social/challenge');
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final challenge = widget.challenge;
+    final challengeId = widget.challengeId;
     final challengeAsync = challenge != null
-        ? AsyncValue.data(challenge!)
+        ? AsyncValue.data(challenge)
         : ref.watch(challengeByIdProvider(challengeId ?? ''));
 
     return challengeAsync.when(
@@ -38,9 +79,10 @@ class ChallengeDetailScreen extends ConsumerWidget {
       error: (err, stack) => Scaffold(
         backgroundColor: EmergeColors.background,
         body: Center(
-          child: Text(
-            'Error loading challenge: $err',
-            style: const TextStyle(color: Colors.white),
+          child: AppErrorWidget(
+            message: 'Error loading challenge: $err',
+            onRetry: () =>
+                ref.invalidate(challengeByIdProvider(challengeId ?? '')),
           ),
         ),
       ),
@@ -604,7 +646,7 @@ class ChallengeDetailScreen extends ConsumerWidget {
             ref.invalidate(challengeBundleProvider);
             if (screenContext.mounted) {
               _showSuccess(screenContext, 'QUEST STARTED! (+25 XP)');
-              screenContext.go('/tribes/challenges');
+              screenContext.go('/social/challenges');
             }
           });
         },

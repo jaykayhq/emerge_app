@@ -26,6 +26,11 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen> {
   final _searchController = TextEditingController();
 
   @override
+  void initState() {
+    super.initState();
+  }
+
+  @override
   void dispose() {
     _searchController.dispose();
     super.dispose();
@@ -141,6 +146,29 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen> {
               ),
 
               const SliverToBoxAdapter(child: Gap(24)),
+
+              // Add from contacts entry
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                  child: OutlinedButton.icon(
+                    icon: const Icon(Icons.contact_page_outlined, size: 16),
+                    label: const Text('ADD FROM CONTACTS'),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: Colors.white70,
+                      side: const BorderSide(color: Colors.white24),
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(28),
+                      ),
+                    ),
+                    onPressed: () => context.push('/social/contacts'),
+                  ),
+                ),
+              ),
+
+              const SliverToBoxAdapter(child: Gap(16)),
 
               // Active Partners Section
               SliverToBoxAdapter(child: _ActivePartnersSection()),
@@ -1101,254 +1129,3 @@ class _PartnerCard extends StatelessWidget {
   }
 }
 
-// ============ TAB CONTENT WRAPPER (for embedding in TabBarView) ============
-
-class FriendsTabContent extends ConsumerStatefulWidget {
-  const FriendsTabContent({super.key});
-
-  @override
-  ConsumerState<FriendsTabContent> createState() => _FriendsTabContentState();
-}
-
-class _FriendsTabContentState extends ConsumerState<FriendsTabContent> {
-  final _searchController = TextEditingController();
-
-  @override
-  void dispose() {
-    _searchController.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final friendsAsync = ref.watch(partnersListStreamProvider);
-
-    return CustomScrollView(
-      slivers: [
-        // Header with Invite Button
-        SliverToBoxAdapter(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                const Text(
-                  'PARTNERS',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                    letterSpacing: 1,
-                  ),
-                ),
-                Row(
-                  children: [
-                    TextButton(
-                      onPressed: () =>
-                          context.push('/tribes/leaderboard?tab=friends'),
-                      child: const Text(
-                        'View Rankings',
-                        style: TextStyle(
-                          color: EmergeColors.teal,
-                          fontSize: 13,
-                        ),
-                      ),
-                    ),
-                    const Gap(8),
-                    GestureDetector(
-                      onTap: () => _showInviteSheet(context),
-                      child: Container(
-                        width: 36,
-                        height: 36,
-                        decoration: const BoxDecoration(
-                          color: EmergeColors.teal,
-                          shape: BoxShape.circle,
-                        ),
-                        child: const Icon(
-                          Icons.add,
-                          color: Colors.white,
-                          size: 20,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-        ),
-
-        const SliverToBoxAdapter(child: Gap(16)),
-
-        // Search Bar
-        SliverToBoxAdapter(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-              decoration: BoxDecoration(
-                color: EmergeColors.glassWhite,
-                borderRadius: BorderRadius.circular(30),
-                border: Border.all(color: EmergeColors.glassBorder),
-              ),
-              child: Row(
-                children: [
-                  Icon(
-                    Icons.search,
-                    color: AppTheme.textSecondaryDark,
-                    size: 20,
-                  ),
-                  const Gap(10),
-                  Expanded(
-                    child: TextField(
-                      controller: _searchController,
-                      style: const TextStyle(color: Colors.white, fontSize: 14),
-                      decoration: InputDecoration(
-                        hintText: 'Find a partner...',
-                        hintStyle: TextStyle(
-                          color: AppTheme.textSecondaryDark,
-                          fontSize: 14,
-                        ),
-                        border: InputBorder.none,
-                        isDense: true,
-                        contentPadding: const EdgeInsets.symmetric(
-                          vertical: 10,
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ),
-
-        const SliverToBoxAdapter(child: Gap(24)),
-
-        // Active Partners Section
-        SliverToBoxAdapter(child: _ActivePartnersSection()),
-
-        const SliverToBoxAdapter(child: Gap(24)),
-
-        // Partner Requests Section
-        SliverToBoxAdapter(child: _PartnerRequestsSection()),
-
-        const SliverToBoxAdapter(child: Gap(24)),
-
-        // Active Contracts Section
-        SliverToBoxAdapter(child: _ActiveContractsSection()),
-
-        const SliverToBoxAdapter(child: Gap(24)),
-
-        // Your Accountability Circle Section
-        SliverToBoxAdapter(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                const Text(
-                  'Your Accountability Circle',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                  ),
-                ),
-                Text(
-                  'Sort by Streak',
-                  style: TextStyle(fontSize: 12, color: EmergeColors.teal),
-                ),
-              ],
-            ),
-          ),
-        ),
-
-        const SliverToBoxAdapter(child: Gap(16)),
-
-        // Partners List
-        friendsAsync.when(
-          data: (friends) => friends.isEmpty
-              ? SliverToBoxAdapter(
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    child: Container(
-                      padding: const EdgeInsets.all(32),
-                      decoration: BoxDecoration(
-                        color: EmergeColors.glassWhite,
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(color: EmergeColors.glassBorder),
-                      ),
-                      child: Column(
-                        children: [
-                          Icon(
-                            Icons.people_outline,
-                            size: 48,
-                            color: AppTheme.textSecondaryDark.withValues(
-                              alpha: 0.5,
-                            ),
-                          ),
-                          const Gap(16),
-                          Text(
-                            'No accountability partners yet',
-                            style: TextStyle(
-                              color: AppTheme.textSecondaryDark,
-                              fontSize: 14,
-                            ),
-                          ),
-                          const Gap(4),
-                          Text(
-                            'Invite someone to hold you accountable!',
-                            style: TextStyle(
-                              color: AppTheme.textSecondaryDark.withValues(
-                                alpha: 0.5,
-                              ),
-                              fontSize: 12,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                )
-              : SliverList(
-                  delegate: SliverChildBuilderDelegate(
-                    (context, index) => _PartnerCard(friend: friends[index]),
-                    childCount: friends.length,
-                  ),
-                ),
-          loading: () => const SliverToBoxAdapter(
-            child: EmergeLoadingSkeleton(itemCount: 3, showAvatar: true),
-          ),
-          error: (error, _) => SliverToBoxAdapter(
-            child: AppErrorWidget(
-              message: 'Could not load partners',
-              onRetry: () => ref.invalidate(partnersListStreamProvider),
-            ),
-          ),
-        ),
-
-        const SliverToBoxAdapter(child: Gap(80)),
-      ],
-    );
-  }
-
-  void _showInviteSheet(BuildContext context) {
-    final authState = ref.read(authStateChangesProvider);
-    final user = authState.value;
-
-    if (user == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please sign in to invite partners')),
-      );
-      return;
-    }
-
-    showDialog(
-      context: context,
-      barrierDismissible: true,
-      barrierColor: Colors.black.withValues(alpha: 0.6),
-      builder: (context) => const InviteCodeDialog(),
-    );
-  }
-}

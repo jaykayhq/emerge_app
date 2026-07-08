@@ -282,7 +282,7 @@ class ContributorsSection extends ConsumerWidget {
                   ),
                 ),
                 GestureDetector(
-                  onTap: () => context.push('/tribes/leaderboard?tab=tribe'),
+                  onTap: () => context.push('/social/leaderboard?tab=tribe'),
                   child: const Text(
                     'View All >',
                     style: TextStyle(fontSize: 12, color: EmergeColors.teal),

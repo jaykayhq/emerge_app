@@ -10,6 +10,7 @@ import 'package:emerge_app/features/auth/presentation/providers/auth_providers.d
 
 import 'package:emerge_app/features/habits/domain/entities/habit.dart';
 import 'package:emerge_app/features/habits/domain/models/habit_activity.dart';
+import 'package:emerge_app/features/habits/domain/models/habit_completion_result.dart';
 import 'package:emerge_app/features/habits/domain/repositories/habit_repository.dart';
 import 'package:emerge_app/features/habits/domain/services/variable_reward_service.dart';
 import 'package:emerge_app/features/habits/domain/services/momentum_service.dart';
@@ -192,8 +193,13 @@ Future<HabitCompletionResult> completeHabit(Ref ref, String habitId) async {
     final repository = ref.read(habitRepositoryProvider);
     final userAsync = ref.read(authStateChangesProvider);
     final userId = userAsync.value?.id;
+    final activeTribeId = ref.read(activeTribeIdProvider);
 
-    final result = await repository.completeHabit(habitId, DateTime.now());
+    final result = await repository.completeHabit(
+      habitId,
+      DateTime.now(),
+      activeTribeId: activeTribeId,
+    );
 
     return await result.fold(
       (failure) async {
@@ -201,7 +207,7 @@ Future<HabitCompletionResult> completeHabit(Ref ref, String habitId) async {
         if (ref.mounted) {
           throw Exception(failure.message);
         }
-        return const HabitCompletionResult(xpEarned: 0, newStreak: 0);
+        return HabitCompletionResult.empty();
       },
       (isCompleted) async {
         if (isCompleted) {
@@ -220,16 +226,11 @@ Future<HabitCompletionResult> completeHabit(Ref ref, String habitId) async {
                 HabitDifficulty.hard =>
                   GamificationConstants.difficultyHardMultiplier,
               };
-              final baseXp =
-                  (GamificationConstants.baseXpPerHabit * difficultyMultiplier)
-                      .toInt();
-
-              final breakdown = calculateXpBreakdown(
-                habit: habit,
-                baseXp: baseXp,
-                currentStreak: newStreak,
+              final engine = LocalGameLoopEngine();
+              final xpGained = engine.computeXpGain(
+                difficultyMultiplier: difficultyMultiplier,
+                streak: newStreak,
               );
-              final xpGained = breakdown.totalXp;
 
               final isMilestone = VariableRewardService.isStreakMilestone(
                 newStreak,
@@ -239,9 +240,6 @@ Future<HabitCompletionResult> completeHabit(Ref ref, String habitId) async {
                 AppLogger.i(
                   'Streak milestone reached: $newStreak days for habit $habitId',
                 );
-                final milestoneMessage =
-                    VariableRewardService.getMilestoneMessage(newStreak);
-                AppLogger.i('Milestone message: $milestoneMessage');
                 if (ref.mounted) {
                   ref
                       .read(cueNotifierProvider.notifier)
@@ -249,14 +247,16 @@ Future<HabitCompletionResult> completeHabit(Ref ref, String habitId) async {
                 }
               }
 
+              final momentumAfter = habit.momentumScore + 10 > 100
+                  ? 100
+                  : habit.momentumScore + 10;
+
               AppLogger.i(
                 'Habit completed: $habitId. XP: $xpGained, Streak: $newStreak, Milestone: $isMilestone',
               );
 
-              // Invalidate recap cache to refresh stats
               ref.read(recapRefreshCounterProvider.notifier).increment();
 
-              // Recalculate world health after completion
               try {
                 final currentHabits = await repository
                     .watchHabits(userId)
@@ -271,21 +271,16 @@ Future<HabitCompletionResult> completeHabit(Ref ref, String habitId) async {
               }
 
               return HabitCompletionResult(
+                habitId: habitId,
                 xpEarned: xpGained,
                 newStreak: newStreak,
+                newMomentumScore: momentumAfter,
                 isStreakMilestone: isMilestone,
-                breakdown: XpRewardBreakdown(
-                  baseXp: baseXp,
-                  streakBonus: (xpGained - baseXp).toDouble(),
-                  randomBonus: 0,
-                  milestoneBonus: 0,
-                  totalXp: xpGained,
-                ),
                 wasRecovery: wasRecovery,
               );
             }
           }
-          return const HabitCompletionResult(xpEarned: 0, newStreak: 0);
+          return HabitCompletionResult.empty();
         } else {
           AppLogger.i('Habit completion undone: $habitId');
 
@@ -302,9 +297,11 @@ Future<HabitCompletionResult> completeHabit(Ref ref, String habitId) async {
             }
           }
 
-          return const HabitCompletionResult(
+          return HabitCompletionResult(
+            habitId: habitId,
             xpEarned: 0,
             newStreak: 0,
+            newMomentumScore: 0,
             isUndo: true,
           );
         }
@@ -327,22 +324,4 @@ Future<List<HabitActivity>> habitActivity(
   if (user == null) return [];
 
   return repository.getActivity(user.id, start, end);
-}
-
-class HabitCompletionResult {
-  final int xpEarned;
-  final int newStreak;
-  final bool isStreakMilestone;
-  final XpRewardBreakdown? breakdown;
-  final bool isUndo;
-  final bool wasRecovery;
-
-  const HabitCompletionResult({
-    required this.xpEarned,
-    required this.newStreak,
-    this.isStreakMilestone = false,
-    this.breakdown,
-    this.isUndo = false,
-    this.wasRecovery = false,
-  });
 }

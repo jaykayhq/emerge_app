@@ -44,13 +44,13 @@ class _EvolvingSilhouetteWidgetState extends State<EvolvingSilhouetteWidget>
     // Primary animation for breathing/floating (4 second cycle)
     _primaryController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 4000),
+      duration: const Duration(milliseconds: 550),
     )..repeat();
 
     // Secondary animation for particles/energy (6 second cycle)
     _secondaryController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 6000),
+      duration: const Duration(milliseconds: 550),
     )..repeat();
   }
 

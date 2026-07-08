@@ -41,6 +41,8 @@ app.*.map.json
 
 # Security - Sensitive files (NEVER COMMIT THESE)
 .env
+**/service-account-key.json
+scripts/service-account-key.json
 android/key.properties
 *.jks
 *.keystore

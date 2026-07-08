@@ -2,9 +2,11 @@ import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:emerge_app/core/drift/database.dart';
 import 'package:emerge_app/core/sync/sync_engine.dart';
+import 'package:emerge_app/core/utils/app_logger.dart';
 import 'package:emerge_app/features/social/data/repositories/tribe_repository.dart';
 import 'package:emerge_app/features/social/data/seeds/official_clubs_seed.dart';
 import 'package:emerge_app/features/social/domain/models/tribe.dart';
+import 'package:flutter/foundation.dart';
 
 class DriftTribeRepository implements TribeRepository {
   final AppDatabase _db;
@@ -47,17 +49,12 @@ class DriftTribeRepository implements TribeRepository {
     StreamSubscription<List<TribeStatsTableData>>? localSub;
     StreamSubscription<QuerySnapshot>? remoteSub;
 
-    var localRows = <TribeStatsTableData>[];
     var remoteDocs = <String, Map<String, dynamic>>{};
-    var localReady = false;
-    var remoteReady = false;
 
-    void emitMerged() {
-      if (!localReady || !remoteReady) return;
-
+    Future<void> emitMerged() async {
+      final localRows = await _db.tribeStatsDao.getAll();
       final tribes = localRows.map((row) {
         final remote = remoteDocs[row.tribeId];
-        // Remote is authoritative for cross-user stats; fall back to local
         final memberCount =
             (remote?['memberCount'] as num?)?.toInt() ?? row.memberCount;
         final totalXp = (remote?['totalXp'] as num?)?.toInt() ?? row.totalXp;
@@ -100,12 +97,16 @@ class DriftTribeRepository implements TribeRepository {
         .then((rows) async {
           if (rows.isEmpty) await _seedLocalClubs();
 
-          localSub = _db.tribeStatsDao.watchAll().listen((updatedRows) {
-            localRows = updatedRows;
-            localReady = true;
-            emitMerged();
-          }, onError: controller.addError);
+          // Emit local data immediately
+          await emitMerged();
 
+          // Listen to local changes
+          localSub = _db.tribeStatsDao.watchAll().listen(
+            (_) => emitMerged(),
+            onError: controller.addError,
+          );
+
+          // Remote: background sync, never blocks
           remoteSub = _firestore
               .collection('tribes')
               .where('type', isEqualTo: TribeType.official.name)
@@ -115,13 +116,10 @@ class DriftTribeRepository implements TribeRepository {
                   remoteDocs = {
                     for (final doc in snapshot.docs) doc.id: doc.data(),
                   };
-                  remoteReady = true;
                   emitMerged();
                 },
                 onError: (Object err) {
-                  // Remote failure: emit local-only so the UI still works
-                  remoteReady = true;
-                  emitMerged();
+                  AppLogger.e('Firestore tribe sync failed', err);
                 },
               );
         })
@@ -452,8 +450,25 @@ class DriftTribeRepository implements TribeRepository {
 
   @override
   Future<List<Tribe>> getUserTribes(String userId) async {
-    final rows = await _db.tribeStatsDao.getAll();
-    return rows.map(_rowToTribe).toList();
+    try {
+      final tribeDocs = await _firestore
+          .collection('tribes')
+          .where('members', arrayContains: userId)
+          .get();
+
+      if (tribeDocs.docs.isEmpty) return [];
+
+      final tribeIds = tribeDocs.docs.map((doc) => doc.id).toSet();
+      final rows = await _db.tribeStatsDao.getAll();
+
+      return rows
+          .where((row) => tribeIds.contains(row.tribeId))
+          .map(_rowToTribe)
+          .toList();
+    } catch (e) {
+      debugPrint('Error getting user tribes for $userId: $e');
+      return [];
+    }
   }
 
   @override

@@ -57,11 +57,6 @@ LeaderboardEntriesDao leaderboardEntriesDao(Ref ref) {
 }
 
 @Riverpod(keepAlive: true)
-BlueprintsDao blueprintsDao(Ref ref) {
-  return ref.watch(appDatabaseProvider).blueprintsDao;
-}
-
-@Riverpod(keepAlive: true)
 MutationQueueDao mutationQueueDao(Ref ref) {
   return ref.watch(appDatabaseProvider).mutationQueueDao;
 }
@@ -69,4 +64,14 @@ MutationQueueDao mutationQueueDao(Ref ref) {
 @Riverpod(keepAlive: true)
 TribeActivityDao tribeActivityDao(Ref ref) {
   return ref.watch(appDatabaseProvider).tribeActivityDao;
+}
+
+@Riverpod(keepAlive: true)
+NarratorNotesDao narratorNotesDao(Ref ref) {
+  return ref.watch(appDatabaseProvider).narratorNotesDao;
+}
+
+@Riverpod(keepAlive: true)
+PulseFeedDao pulseFeedDao(Ref ref) {
+  return ref.watch(appDatabaseProvider).pulseFeedDao;
 }

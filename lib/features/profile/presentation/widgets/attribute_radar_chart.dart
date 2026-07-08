@@ -57,7 +57,7 @@ class _AttributeRadarChartState extends State<AttributeRadarChart>
   void initState() {
     super.initState();
     _controller = AnimationController(
-      duration: const Duration(milliseconds: 1200),
+      duration: const Duration(milliseconds: 550),
       vsync: this,
     );
     _fillAnimation = CurvedAnimation(

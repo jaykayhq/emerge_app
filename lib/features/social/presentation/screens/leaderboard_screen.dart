@@ -2,10 +2,8 @@ import 'package:emerge_app/core/presentation/widgets/app_error_widget.dart';
 import 'package:emerge_app/core/presentation/widgets/emerge_loading_skeleton.dart';
 import 'package:emerge_app/core/theme/app_theme.dart';
 import 'package:emerge_app/features/gamification/presentation/providers/user_stats_providers.dart';
-import 'package:emerge_app/features/social/presentation/providers/friends_leaderboard_provider.dart';
 import 'package:emerge_app/features/social/presentation/providers/leaderboard_provider.dart';
 import 'package:emerge_app/features/social/presentation/providers/tribes_provider.dart';
-import 'package:emerge_app/features/social/presentation/widgets/friends_leaderboard.dart';
 import 'package:emerge_app/features/auth/domain/entities/user_extension.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -106,43 +104,12 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen>
             child: TabBarView(
               controller: _tabController,
               children: [
-                _FriendsLeaderboardTab(),
                 _TribeLeaderboardTab(),
                 _WorldLeaderboardTab(),
               ],
             ),
           ),
         ],
-      ),
-    );
-  }
-}
-
-class _FriendsLeaderboardTab extends ConsumerWidget {
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final friendsAsync = ref.watch(friendsLeaderboardProvider);
-
-    return friendsAsync.when(
-      data: (entries) {
-        if (entries.isEmpty) {
-          return const Center(
-            child: Text(
-              'No friends yet',
-              style: TextStyle(color: Colors.white),
-            ),
-          );
-        }
-
-        return SingleChildScrollView(
-          child: FriendsLeaderboard(friends: entries),
-        );
-      },
-      loading: () =>
-          const EmergeLoadingSkeleton(itemCount: 5, showAvatar: true),
-      error: (err, _) => AppErrorWidget(
-        message: 'Could not load friends leaderboard',
-        onRetry: () => ref.invalidate(friendsLeaderboardProvider),
       ),
     );
   }

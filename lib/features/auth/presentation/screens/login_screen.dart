@@ -40,12 +40,20 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
     setState(() => _isLoading = true);
     try {
-      await ref.read(
-        signInProvider(
-          _emailController.text.trim(),
-          _passwordController.text.trim(),
-        ).future,
-      );
+      final email = _emailController.text.trim();
+      final password = _passwordController.text.trim();
+      await ref.read(signInProvider(email, password).future);
+
+      final user = ref.read(firebaseAuthProvider).currentUser;
+      if (user == null) {
+        throw Exception('User not found');
+      }
+
+      final isNormal = await ref.read(isNormalUserProvider(user.uid).future);
+      if (!isNormal) {
+        await ref.read(authRepositoryProvider).signOut();
+        throw Exception('This is a creator account. Please log in through the Creator Hub or switch accounts.');
+      }
       // Navigation is handled by the router's redirect
     } catch (e) {
       if (mounted) {
@@ -61,7 +69,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   Future<void> _loginWithGoogle() async {
     setState(() => _isLoading = true);
     try {
-      final result = await ref.read(authRepositoryProvider).signInWithGoogle();
+      final result = await ref.read(authRepositoryProvider).signInWithGoogle(isLogin: true);
+      
+      bool proceed = false;
       result.fold(
         (error) {
           // 'redirect_initiated' is not a real error — on web the page
@@ -73,8 +83,21 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
             ).showSnackBar(SnackBar(content: Text(error.message)));
           }
         },
-        (_) => null, // Navigation handled by router via auth stream
+        (_) => proceed = true, // Navigation handled by router via auth stream
       );
+
+      if (proceed) {
+        final user = ref.read(firebaseAuthProvider).currentUser;
+        if (user == null) {
+          throw Exception('User not found');
+        }
+
+        final isNormal = await ref.read(isNormalUserProvider(user.uid).future);
+        if (!isNormal) {
+          await ref.read(authRepositoryProvider).signOut();
+          throw Exception('This is a creator account. Please log in through the Creator Hub or switch accounts.');
+        }
+      }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -351,8 +374,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       const Gap(24),
 
                       // Sign Up Link
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
+                      Wrap(
+                        alignment: WrapAlignment.center,
+                        crossAxisAlignment: WrapCrossAlignment.center,
                         children: [
                           const Text(
                             "Don't have an account? ",
@@ -371,9 +395,22 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         ],
                       ),
                       const Gap(16),
+                      // Creator Login Link
+                      TextButton(
+                        onPressed: () => context.push('/creator/login'),
+                        child: const Text(
+                          'Creator Login',
+                          style: TextStyle(
+                            color: Colors.white54,
+                            decoration: TextDecoration.underline,
+                          ),
+                        ),
+                      ),
+                      const Gap(16),
                       // Legal Links
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
+                      Wrap(
+                        alignment: WrapAlignment.center,
+                        crossAxisAlignment: WrapCrossAlignment.center,
                         children: [
                           GestureDetector(
                             onTap: () => launchUrl(
@@ -689,8 +726,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                   const Gap(16),
 
                                   // Sign Up Link
-                                  Row(
-                                    mainAxisAlignment: MainAxisAlignment.center,
+                                  Wrap(
+                                    alignment: WrapAlignment.center,
+                                    crossAxisAlignment: WrapCrossAlignment.center,
                                     children: [
                                       const Text(
                                         "Don't have an account? ",
@@ -708,6 +746,18 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                         ),
                                       ),
                                     ],
+                                  ),
+                                  const Gap(16),
+                                  // Creator Login Link
+                                  TextButton(
+                                    onPressed: () => context.push('/creator/login'),
+                                    child: const Text(
+                                      'Creator Login',
+                                      style: TextStyle(
+                                        color: Colors.white54,
+                                        decoration: TextDecoration.underline,
+                                      ),
+                                    ),
                                   ),
                                 ],
                               ),

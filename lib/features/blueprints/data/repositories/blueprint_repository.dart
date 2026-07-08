@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:emerge_app/core/utils/app_logger.dart';
 import 'package:emerge_app/features/blueprints/domain/models/blueprint.dart';
+import 'package:emerge_app/features/habits/domain/entities/habit.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 class BlueprintRepository {
@@ -21,9 +22,35 @@ class BlueprintRepository {
     );
   }
 
-  Future<void> adoptBlueprint(String blueprintId) async {
+  /// Single-doc fetch for deep-link navigation (e.g. notifications or shared
+  /// URLs that arrive without a pre-resolved Blueprint object).
+  /// Prefer this over [getBlueprints] when you only need one row — it avoids
+  /// streaming the entire `blueprints` collection.
+  Future<Blueprint?> getBlueprintById(String id) async {
+    final snap = await _firestore.collection('blueprints').doc(id).get();
+    if (!snap.exists) return null;
+    return Blueprint.fromMap(snap.id, snap.data()!);
+  }
+
+  Future<void> incrementAdoptionCount(String blueprintId) async {
     final docRef = _firestore.collection('blueprints').doc(blueprintId);
     await docRef.update({'adoptionCount': FieldValue.increment(1)});
+  }
+
+  Future<String> createBlueprint(Blueprint blueprint) async {
+    try {
+      final collectionRef = _firestore.collection('blueprints');
+      final docRef = blueprint.id.isNotEmpty ? collectionRef.doc(blueprint.id) : collectionRef.doc();
+      
+      final blueprintToSave = blueprint.copyWith(id: docRef.id);
+      await docRef.set(blueprintToSave.toMap());
+      
+      AppLogger.i('BlueprintRepository: Created blueprint ${docRef.id}');
+      return docRef.id;
+    } catch (e) {
+      AppLogger.e('BlueprintRepository: Failed to create blueprint', e);
+      rethrow;
+    }
   }
 
   /// Current seed version — bump when seed data changes to force re-seed
@@ -376,6 +403,261 @@ class BlueprintRepository {
       difficulty: difficulty,
     );
   }
+
+  /// Seeds 6 creator-authored blueprints (one per creator seeded by
+  /// [CreatorRepository.seedCreatorsIfEmpty]). Each blueprint references
+  /// its creator's userId and is flagged `isCreatorBlueprint: true`.
+  ///
+  /// Safe to call multiple times: it short-circuits when any creator
+  /// blueprint already exists.
+  Future<void> seedCreatorBlueprintsIfEmpty() async {
+    try {
+      final existing = await _firestore
+          .collection('blueprints')
+          .where('isCreatorBlueprint', isEqualTo: true)
+          .limit(1)
+          .get();
+      if (existing.docs.isNotEmpty) {
+        AppLogger.i(
+          'BlueprintRepository: creator blueprints already seeded.',
+        );
+        return;
+      }
+
+      final List<Blueprint> seedData = [
+        Blueprint(
+          id: 'cb_aria_deep_work',
+          creatorUserId: 'creator_aria_chen',
+          creatorName: 'Aria Chen',
+          creatorArchetype: 'Scholar',
+          title: 'Scholar\'s Deep Work Stack',
+          description:
+              'Three habits for entering a focused, low-friction work block. '
+              'Designed for knowledge workers who want depth without burning '
+              'out before noon.',
+          habits: const [
+            BlueprintHabit(
+              title: 'Morning Pages',
+              timeOfDay: 'Morning',
+              attribute: HabitAttribute.intellect,
+            ),
+            BlueprintHabit(
+              title: '90 Min Deep Work Block',
+              timeOfDay: 'Morning',
+              attribute: HabitAttribute.focus,
+            ),
+            BlueprintHabit(
+              title: 'Evening Reading Session',
+              timeOfDay: 'Evening',
+              attribute: HabitAttribute.intellect,
+            ),
+          ],
+          createdAt: DateTime.now(),
+          category: 'Productivity',
+          difficulty: BlueprintDifficulty.intermediate,
+          isCreatorBlueprint: true,
+          specialityTags: const ['Deep Work', 'Reading', 'Note Systems'],
+        ),
+        Blueprint(
+          id: 'cb_marcus_morning',
+          creatorUserId: 'creator_marcus_okafor',
+          creatorName: 'Marcus Okafor',
+          creatorArchetype: 'Athlete',
+          title: 'Athlete\'s Morning Prep',
+          description:
+              'A short, repeatable morning stack that primes your nervous '
+              'system for the day. Built for athletes, parents, and anyone '
+              'who needs to feel capable before 9am.',
+          habits: const [
+            BlueprintHabit(
+              title: '10 Min Mobility Flow',
+              timeOfDay: 'Morning',
+              attribute: HabitAttribute.vitality,
+            ),
+            BlueprintHabit(
+              title: '20 Min Strength Block',
+              timeOfDay: 'Morning',
+              attribute: HabitAttribute.strength,
+            ),
+            BlueprintHabit(
+              title: 'Protein-First Breakfast',
+              timeOfDay: 'Morning',
+              attribute: HabitAttribute.vitality,
+            ),
+          ],
+          createdAt: DateTime.now(),
+          category: 'Fitness',
+          difficulty: BlueprintDifficulty.intermediate,
+          isCreatorBlueprint: true,
+          specialityTags: const ['Strength', 'Mobility', 'Recovery'],
+        ),
+        Blueprint(
+          id: 'cb_sora_creative',
+          creatorUserId: 'creator_sora_tanaka',
+          creatorName: 'Sora Tanaka',
+          creatorArchetype: 'Creator',
+          title: 'Creator\'s Studio Ritual',
+          description:
+              'A studio-ready ritual for designers, writers, and makers. '
+              'Each habit is small enough to survive a bad day and '
+              'structured enough to compound into real output.',
+          habits: const [
+            BlueprintHabit(
+              title: '30 Min Sketch Block',
+              timeOfDay: 'Morning',
+              attribute: HabitAttribute.creativity,
+            ),
+            BlueprintHabit(
+              title: 'Idea Capture (3 Notes)',
+              timeOfDay: 'Afternoon',
+              attribute: HabitAttribute.creativity,
+            ),
+            BlueprintHabit(
+              title: 'Studio Reset',
+              timeOfDay: 'Evening',
+              attribute: HabitAttribute.focus,
+            ),
+          ],
+          createdAt: DateTime.now(),
+          category: 'Creativity',
+          difficulty: BlueprintDifficulty.beginner,
+          isCreatorBlueprint: true,
+          specialityTags: const ['Creative', 'Studio', 'Constraints'],
+        ),
+        Blueprint(
+          id: 'cb_julian_calm',
+          creatorUserId: 'creator_julian_cross',
+          creatorName: 'Julian Cross',
+          creatorArchetype: 'Stoic',
+          title: 'Stoic Anchor Day',
+          description:
+              'Three drop-in habits to build a calmer baseline: a short '
+              'morning reflection, a midday control check, and a brief '
+              'evening review. Works alongside any workload.',
+          habits: const [
+            BlueprintHabit(
+              title: 'Morning Reflection',
+              timeOfDay: 'Morning',
+              attribute: HabitAttribute.spirit,
+            ),
+            BlueprintHabit(
+              title: 'Midday Control Check',
+              timeOfDay: 'Afternoon',
+              attribute: HabitAttribute.focus,
+            ),
+            BlueprintHabit(
+              title: 'Evening Review',
+              timeOfDay: 'Evening',
+              attribute: HabitAttribute.spirit,
+            ),
+          ],
+          createdAt: DateTime.now(),
+          category: 'Mindfulness',
+          difficulty: BlueprintDifficulty.beginner,
+          isCreatorBlueprint: true,
+          specialityTags: const ['Mindfulness', 'Journaling', 'Equanimity'],
+        ),
+        Blueprint(
+          id: 'cb_naia_devotion',
+          creatorUserId: 'creator_naia_singh',
+          creatorName: 'Naia Singh',
+          creatorArchetype: 'Zealot',
+          title: 'Devoted Day',
+          description:
+              'A sacred-ritual stack for practitioners who want their '
+              'beliefs to show up in their calendar. Combines prayer, '
+              'mission-aligned work, and a daily act of service.',
+          habits: const [
+            BlueprintHabit(
+              title: 'Sacred Morning Ritual',
+              timeOfDay: 'Morning',
+              attribute: HabitAttribute.spirit,
+            ),
+            BlueprintHabit(
+              title: 'Mission-Aligned Work Block',
+              timeOfDay: 'Morning',
+              attribute: HabitAttribute.focus,
+            ),
+            BlueprintHabit(
+              title: 'Act of Service',
+              timeOfDay: 'Afternoon',
+              attribute: HabitAttribute.spirit,
+            ),
+          ],
+          createdAt: DateTime.now(),
+          category: 'Faith',
+          difficulty: BlueprintDifficulty.intermediate,
+          isCreatorBlueprint: true,
+          specialityTags: const ['Devotion', 'Discipline', 'Service'],
+        ),
+        Blueprint(
+          id: 'cb_elias_studio',
+          creatorUserId: 'creator_elias_vance',
+          creatorName: 'Elias Vance',
+          creatorArchetype: 'Creator',
+          title: 'Daily Sketch Studio',
+          description:
+              'For people who insist they "aren\'t creative." Twenty minutes '
+              'of sketching, one photo, one written reflection. '
+              'Compounds into a real art practice in 30 days.',
+          habits: const [
+            BlueprintHabit(
+              title: '20 Min Sketch',
+              timeOfDay: 'Morning',
+              attribute: HabitAttribute.creativity,
+            ),
+            BlueprintHabit(
+              title: 'Visual Journal Capture',
+              timeOfDay: 'Afternoon',
+              attribute: HabitAttribute.creativity,
+            ),
+            BlueprintHabit(
+              title: 'Written Reflection',
+              timeOfDay: 'Evening',
+              attribute: HabitAttribute.intellect,
+            ),
+          ],
+          createdAt: DateTime.now(),
+          category: 'Creativity',
+          difficulty: BlueprintDifficulty.beginner,
+          isCreatorBlueprint: true,
+          specialityTags: const ['Sketching', 'Visual', 'Practice'],
+        ),
+      ];
+
+      final batch = _firestore.batch();
+      for (final bp in seedData) {
+        final docRef = _firestore.collection('blueprints').doc(bp.id);
+        batch.set(docRef, bp.toMap());
+      }
+      await batch.commit();
+
+      // Bump each creator's blueprintCount so the leaderboard strip
+      // reflects the freshly-seeded blueprints. A second batch is used
+      // because the first was already committed.
+      final countBatch = _firestore.batch();
+      for (final bp in seedData) {
+        final creatorRef = _firestore
+            .collection('creator_profiles')
+            .doc(bp.creatorUserId);
+        countBatch.set(creatorRef, {
+          'userId': bp.creatorUserId,
+          'blueprintCount': FieldValue.increment(1),
+        }, SetOptions(merge: true));
+      }
+      await countBatch.commit();
+
+      AppLogger.i(
+        'BlueprintRepository: seeded ${seedData.length} creator blueprints.',
+      );
+    } catch (e, st) {
+      AppLogger.e(
+        'BlueprintRepository: seeding creator blueprints failed',
+        e,
+        st,
+      );
+    }
+  }
 }
 
 final blueprintRepositoryProvider = Provider<BlueprintRepository>((ref) {
@@ -383,12 +665,20 @@ final blueprintRepositoryProvider = Provider<BlueprintRepository>((ref) {
 });
 
 final blueprintsStreamProvider =
-    StreamProvider.family<List<Blueprint>, String?>((ref, category) {
+    StreamProvider.autoDispose.family<List<Blueprint>, String?>((ref, category) {
       final repo = ref.watch(blueprintRepositoryProvider);
       return repo.getBlueprints(category: category);
     });
 
-final allBlueprintsStreamProvider = StreamProvider<List<Blueprint>>((ref) {
+final allBlueprintsStreamProvider = StreamProvider.autoDispose<List<Blueprint>>((ref) {
   final repo = ref.watch(blueprintRepositoryProvider);
   return repo.getBlueprints();
+});
+
+/// Single-doc fetch for deep-link navigation (notifications, shared URLs).
+/// Returns null when the doc doesn't exist.
+final blueprintByIdProvider =
+    FutureProvider.autoDispose.family<Blueprint?, String>((ref, id) {
+  final repo = ref.watch(blueprintRepositoryProvider);
+  return repo.getBlueprintById(id);
 });

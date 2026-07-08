@@ -317,47 +317,6 @@ final class LeaderboardEntriesDaoProvider
 String _$leaderboardEntriesDaoHash() =>
     r'749b485219bc1d452d30f40c595e0852fe37717c';
 
-@ProviderFor(blueprintsDao)
-final blueprintsDaoProvider = BlueprintsDaoProvider._();
-
-final class BlueprintsDaoProvider
-    extends $FunctionalProvider<BlueprintsDao, BlueprintsDao, BlueprintsDao>
-    with $Provider<BlueprintsDao> {
-  BlueprintsDaoProvider._()
-    : super(
-        from: null,
-        argument: null,
-        retry: null,
-        name: r'blueprintsDaoProvider',
-        isAutoDispose: false,
-        dependencies: null,
-        $allTransitiveDependencies: null,
-      );
-
-  @override
-  String debugGetCreateSourceHash() => _$blueprintsDaoHash();
-
-  @$internal
-  @override
-  $ProviderElement<BlueprintsDao> $createElement($ProviderPointer pointer) =>
-      $ProviderElement(pointer);
-
-  @override
-  BlueprintsDao create(Ref ref) {
-    return blueprintsDao(ref);
-  }
-
-  /// {@macro riverpod.override_with_value}
-  Override overrideWithValue(BlueprintsDao value) {
-    return $ProviderOverride(
-      origin: this,
-      providerOverride: $SyncValueProvider<BlueprintsDao>(value),
-    );
-  }
-}
-
-String _$blueprintsDaoHash() => r'2e59c3ee060534b6e13c9e37b996af967d97e2e4';
-
 @ProviderFor(mutationQueueDao)
 final mutationQueueDaoProvider = MutationQueueDaoProvider._();
 
@@ -449,3 +408,90 @@ final class TribeActivityDaoProvider
 }
 
 String _$tribeActivityDaoHash() => r'de601102a250401a43f7f6d392941bf457d5c6ce';
+
+@ProviderFor(narratorNotesDao)
+final narratorNotesDaoProvider = NarratorNotesDaoProvider._();
+
+final class NarratorNotesDaoProvider
+    extends
+        $FunctionalProvider<
+          NarratorNotesDao,
+          NarratorNotesDao,
+          NarratorNotesDao
+        >
+    with $Provider<NarratorNotesDao> {
+  NarratorNotesDaoProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'narratorNotesDaoProvider',
+        isAutoDispose: false,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$narratorNotesDaoHash();
+
+  @$internal
+  @override
+  $ProviderElement<NarratorNotesDao> $createElement($ProviderPointer pointer) =>
+      $ProviderElement(pointer);
+
+  @override
+  NarratorNotesDao create(Ref ref) {
+    return narratorNotesDao(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(NarratorNotesDao value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<NarratorNotesDao>(value),
+    );
+  }
+}
+
+String _$narratorNotesDaoHash() => r'076d0026ab8fc2ab6824c63e4ffed8f17512ebb9';
+
+@ProviderFor(pulseFeedDao)
+final pulseFeedDaoProvider = PulseFeedDaoProvider._();
+
+final class PulseFeedDaoProvider
+    extends $FunctionalProvider<PulseFeedDao, PulseFeedDao, PulseFeedDao>
+    with $Provider<PulseFeedDao> {
+  PulseFeedDaoProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'pulseFeedDaoProvider',
+        isAutoDispose: false,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$pulseFeedDaoHash();
+
+  @$internal
+  @override
+  $ProviderElement<PulseFeedDao> $createElement($ProviderPointer pointer) =>
+      $ProviderElement(pointer);
+
+  @override
+  PulseFeedDao create(Ref ref) {
+    return pulseFeedDao(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(PulseFeedDao value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<PulseFeedDao>(value),
+    );
+  }
+}
+
+String _$pulseFeedDaoHash() => r'599b0b77b9efba88f371665864f3d63462de60bd';

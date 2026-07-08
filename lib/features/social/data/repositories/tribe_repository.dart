@@ -1,7 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:emerge_app/core/utils/app_logger.dart';
 import 'package:emerge_app/features/social/domain/models/tribe.dart';
 import 'package:emerge_app/features/social/data/seeds/official_clubs_seed.dart';
-import 'package:flutter/foundation.dart';
 
 /// Repository for archetype-based clubs (tribes).
 /// Users are auto-assigned to their archetype club — no user creation.
@@ -66,7 +66,7 @@ class FirestoreTribeRepository implements TribeRepository {
       batch.set(docRef, entry.value);
     }
     await batch.commit();
-    debugPrint('Seeded official tribes');
+    AppLogger.i('Seeded official tribes');
   }
 
   @override
@@ -170,7 +170,7 @@ class FirestoreTribeRepository implements TribeRepository {
       // Verify the club exists before joining
       final snapshot = await tribeRef.get();
       if (!snapshot.exists) {
-        debugPrint('❌ Tribe $tribeId does not exist!');
+        AppLogger.e('Tribe $tribeId does not exist!');
         throw Exception('Club does not exist!');
       }
 
@@ -205,9 +205,9 @@ class FirestoreTribeRepository implements TribeRepository {
       });
 
       await batch.commit();
-      debugPrint('✅ User $userId joined tribe $tribeId successfully');
+      AppLogger.i('User $userId joined tribe $tribeId successfully');
     } catch (e) {
-      debugPrint('❌ Error joining tribe $tribeId: $e');
+      AppLogger.e('Error joining tribe $tribeId', e);
       rethrow;
     }
   }

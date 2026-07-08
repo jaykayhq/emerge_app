@@ -10,6 +10,7 @@ export 'daos/habit_completions_dao.dart';
 export 'daos/challenge_progress_dao.dart';
 export 'daos/tribe_stats_dao.dart';
 export 'daos/leaderboard_entries_dao.dart';
-export 'daos/blueprints_dao.dart';
 export 'daos/mutation_queue_dao.dart';
 export 'daos/tribe_activity_dao.dart';
+export 'daos/narrator_notes_dao.dart';
+export 'daos/pulse_feed_dao.dart';

@@ -2,8 +2,8 @@ import 'package:emerge_app/core/constants/gamification_constants.dart';
 import 'package:emerge_app/core/theme/app_theme.dart';
 import 'package:emerge_app/core/theme/archetype_theme.dart';
 import 'package:emerge_app/features/auth/domain/entities/user_extension.dart';
-import 'package:emerge_app/features/avatar/domain/models/avatar_config.dart';
-import 'package:emerge_app/features/avatar/presentation/widgets/avatar_renderer.dart';
+import 'package:emerge_app/features/avatar/domain/models/avatar_data.dart';
+import 'package:emerge_app/features/avatar/presentation/widgets/stickman_avatar.dart';
 import 'package:emerge_app/features/gamification/presentation/providers/gamification_providers.dart';
 import 'package:emerge_app/features/gamification/presentation/providers/user_stats_providers.dart';
 import 'package:emerge_app/features/habits/presentation/providers/habit_providers.dart';
@@ -16,16 +16,15 @@ import 'package:emerge_app/features/profile/presentation/widgets/trajectory_time
 import 'package:emerge_app/features/profile/presentation/widgets/synergy_status_card.dart';
 import 'package:emerge_app/features/profile/presentation/widgets/synergy_card.dart';
 import 'package:emerge_app/features/profile/presentation/widgets/emerge_splash_reveal.dart';
-import 'package:emerge_app/features/companion/presentation/providers/companion_providers.dart';
-import 'package:emerge_app/features/companion/domain/enums/companion_enums.dart';
 import 'package:emerge_app/features/monetization/presentation/providers/subscription_provider.dart';
 import 'package:flutter/material.dart';
-import 'package:emerge_app/core/presentation/widgets/feature_coach_mark.dart';
 import 'package:flutter/services.dart';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:emerge_app/core/theme/emerge_colors.dart';
+import 'package:emerge_app/features/social/presentation/providers/creator_provider.dart';
 
 part 'future_self_studio_screen.g.dart';
 
@@ -62,25 +61,10 @@ class FutureSelfStudioScreen extends ConsumerStatefulWidget {
 class _FutureSelfStudioScreenState
     extends ConsumerState<FutureSelfStudioScreen> {
   int? _previousStreak;
-  bool _showFirstVisitGuide = false;
 
   @override
   void initState() {
     super.initState();
-    Future.delayed(const Duration(milliseconds: 500), () {
-      if (!mounted) return;
-      final repo = ref.read(companionRepositoryProvider);
-      if (!repo.hasVisited('/profile/future-self')) {
-        repo.markVisited('/profile/future-self');
-        ref
-            .read(companionEngineProvider.notifier)
-            .triggerEvent(
-              eventType: CompanionEventType.firstFeatureVisit,
-              userContext: {'route': '/profile/future-self'},
-            );
-        setState(() => _showFirstVisitGuide = true);
-      }
-    });
   }
 
   @override
@@ -129,9 +113,7 @@ class _FutureSelfStudioScreenState
         final accentColor = archetypeTheme.primaryColor;
 
         return WorldBackground(
-          child: Stack(
-            children: [
-              CustomScrollView(
+          child: CustomScrollView(
                 slivers: [
                   // App Bar
                   SliverAppBar(
@@ -528,29 +510,33 @@ class _FutureSelfStudioScreenState
                 ),
               ),
 
+              // Creator Hub entry — only for verified creators
+              SliverToBoxAdapter(
+                child: ref.watch(isVerifiedCreatorProvider).when(
+                  data: (verified) {
+                    if (verified) {
+                      return Padding(
+                        padding: const EdgeInsets.all(16),
+                        child: ElevatedButton.icon(
+                          onPressed: () => context.push('/creator/dashboard'),
+                          icon: const Icon(Icons.dashboard_customize),
+                          label: const Text('Creator Hub'),
+                          style: ElevatedButton.styleFrom(
+                            minimumSize: const Size(double.infinity, 48),
+                          ),
+                        ),
+                      );
+                    }
+                    return const SizedBox.shrink();
+                  },
+                  loading: () => const SizedBox.shrink(),
+                  error: (error, stack) => const SizedBox.shrink(),
+                ),
+              ),
+
                   const SliverToBoxAdapter(child: SizedBox(height: 40)),
                 ],
               ),
-              if (_showFirstVisitGuide)
-                FeatureCoachMark(
-                  title: "Future Self Studio",
-                  primaryColor: accentColor,
-                  items: const [
-                    CoachItemData(
-                      icon: Icons.person_outline,
-                      title: "Archetype Silhouette",
-                      body: "Cast identity votes by completing daily habits to evolve your silhouette through the 5 evolution phases.",
-                    ),
-                    CoachItemData(
-                      icon: Icons.bubble_chart_outlined,
-                      title: "Synergy & Multipliers",
-                      body: "Boost specific attributes to unlock special status synergies, increasing daily momentum growth.",
-                    ),
-                  ],
-                  onDismiss: () => setState(() => _showFirstVisitGuide = false),
-                ),
-            ],
-          ),
         );
       },
       loading: () => const Scaffold(
@@ -650,6 +636,8 @@ class _FutureSelfStudioScreenState
     }
   }
 
+
+
   /// Calculate habit votes from user XP stats for artifact unlocking
   Map<String, int> _calculateHabitVotes(UserAvatarStats stats) {
     // Convert XP to vote counts (every 50 XP = 1 vote)
@@ -747,7 +735,7 @@ class _FutureSelfStudioScreenState
     );
   }
 
-  /// Build the new 2D isometric avatar renderer
+  /// Build the new procedural avatar figure
   Widget _buildAvatarRenderer(
     BuildContext context,
     UserArchetype archetype,
@@ -757,8 +745,8 @@ class _FutureSelfStudioScreenState
     WidgetRef ref,
     bool isRecovering,
   ) {
-    final avatarConfig = AvatarConfig.fromUserStats(
-      archetype: archetype,
+    final avatarData = AvatarData.defaultAvatar().copyWith(
+      archetype: archetype.name,
       level: level,
     );
 
@@ -775,10 +763,9 @@ class _FutureSelfStudioScreenState
           HapticFeedback.lightImpact();
           _showEvolutionInfo(context, level, accentColor);
         },
-        child: AvatarRenderer(
-          config: avatarConfig,
-          size: 280,
-          showPhaseLabel: true,
+        child: StickmanAvatar(
+          avatarData: avatarData,
+          size: 140,
         ),
       ),
     );
@@ -813,7 +800,7 @@ class _EmergeButtonState extends State<_EmergeButton>
     super.initState();
     _shimmerController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 2000),
+      duration: const Duration(milliseconds: 550),
     );
     // Only animate shimmer when unlocked
     if (!widget.isLocked) {
@@ -992,7 +979,7 @@ class _EmergedStateCardState extends State<_EmergedStateCard>
     super.initState();
     _glowController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 2000),
+      duration: const Duration(milliseconds: 550),
     )..repeat(reverse: true);
     _glowAnim = Tween<double>(begin: 0.4, end: 0.8).animate(
       CurvedAnimation(parent: _glowController, curve: Curves.easeInOut),

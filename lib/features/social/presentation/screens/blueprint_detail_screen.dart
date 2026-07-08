@@ -1,9 +1,9 @@
 import 'package:emerge_app/core/theme/emerge_colors.dart';
 import 'package:emerge_app/features/auth/presentation/providers/auth_providers.dart';
-import 'package:emerge_app/features/habits/presentation/providers/habit_providers.dart';
 import 'package:emerge_app/core/presentation/widgets/world_background.dart';
 import 'package:emerge_app/core/domain/models/app_world_theme.dart';
 import 'package:emerge_app/features/blueprints/domain/models/blueprint.dart';
+import 'package:emerge_app/features/habits/domain/entities/habit.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
@@ -11,7 +11,8 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:emerge_app/features/monetization/presentation/providers/subscription_provider.dart';
 import 'package:go_router/go_router.dart';
 import 'package:emerge_app/features/social/presentation/widgets/blueprint_adopt_dialog.dart';
-
+import 'package:cached_network_image/cached_network_image.dart';
+import 'package:emerge_app/features/blueprints/presentation/providers/blueprint_detail_controller.dart';
 class BlueprintDetailScreen extends ConsumerWidget {
   final Blueprint blueprint;
 
@@ -35,6 +36,19 @@ class BlueprintDetailScreen extends ConsumerWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     _buildCreatorInfo(),
+                    if (blueprint.isCreatorBlueprint && blueprint.creatorUserId.isNotEmpty)
+                      Card(
+                        margin: const EdgeInsets.symmetric(vertical: 16),
+                        child: ListTile(
+                          leading: const CircleAvatar(child: Icon(Icons.person)),
+                          title: Text(blueprint.creatorName.isNotEmpty ? blueprint.creatorName : 'Creator'),
+                          subtitle: Text('${blueprint.tribeMemberCount} tribe members'),
+                          trailing: const Icon(Icons.chevron_right),
+                          onTap: () {
+                            context.push('/social/creator/${blueprint.creatorUserId}');
+                          },
+                        ),
+                      ),
                     const Gap(24),
                     _buildDescription(),
                     const Gap(32),
@@ -64,7 +78,12 @@ class BlueprintDetailScreen extends ConsumerWidget {
             if (blueprint.imageUrl != null)
               blueprint.imageUrl!.startsWith('images/')
                   ? Image.asset(blueprint.imageUrl!, fit: BoxFit.cover)
-                  : Image.network(blueprint.imageUrl!, fit: BoxFit.cover)
+                  : CachedNetworkImage(
+                      imageUrl: blueprint.imageUrl!,
+                      fit: BoxFit.cover,
+                      placeholder: (context, url) => const Center(child: CircularProgressIndicator()),
+                      errorWidget: (context, url, error) => const Icon(Icons.error),
+                    )
             else
               Container(
                 decoration: const BoxDecoration(
@@ -199,13 +218,19 @@ class BlueprintDetailScreen extends ConsumerWidget {
         ...blueprint.habits.asMap().entries.map((entry) {
           final index = entry.key;
           final habit = entry.value;
-          return Padding(
-            padding: const EdgeInsets.only(bottom: 12),
+          return Container(
+            margin: const EdgeInsets.only(bottom: 12),
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.04),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+            ),
             child: Row(
               children: [
                 Container(
-                  width: 24,
-                  height: 24,
+                  width: 28,
+                  height: 28,
                   decoration: BoxDecoration(
                     color: EmergeColors.teal.withValues(alpha: 0.2),
                     shape: BoxShape.circle,
@@ -221,10 +246,48 @@ class BlueprintDetailScreen extends ConsumerWidget {
                     ),
                   ),
                 ),
-                const Gap(16),
-                Text(
-                  habit.title,
-                  style: const TextStyle(color: Colors.white, fontSize: 16),
+                const Gap(12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        habit.title,
+                        style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w600),
+                      ),
+                      const SizedBox(height: 4),
+                      Wrap(
+                        spacing: 8,
+                        runSpacing: 4,
+                        children: [
+                          _StatBadge(
+                            icon: Icons.schedule,
+                            label: habit.frequency,
+                          ),
+                          if (habit.timeOfDay != null)
+                            _StatBadge(
+                              icon: Icons.wb_sunny,
+                              label: habit.timeOfDay!,
+                            ),
+                          if (habit.timerDurationMinutes > 0)
+                            _StatBadge(
+                              icon: Icons.timer_outlined,
+                              label: '${habit.timerDurationMinutes}M',
+                            ),
+                          if (habit.integrationType == HabitIntegrationType.healthSteps)
+                            _StatBadge(
+                              icon: Icons.directions_walk,
+                              label: 'Steps',
+                            ),
+                          if (habit.integrationType == HabitIntegrationType.screenTimeLimit)
+                            _StatBadge(
+                              icon: Icons.phone_android,
+                              label: 'Screen Time',
+                            ),
+                        ],
+                      ),
+                    ],
+                  ),
                 ),
               ],
             ),
@@ -241,87 +304,70 @@ class BlueprintDetailScreen extends ConsumerWidget {
   ) {
     final isPremiumAsync = ref.watch(isPremiumProvider);
     final isPremium = isPremiumAsync.value ?? false;
+    final isLoading = ref.watch(blueprintDetailControllerProvider).isLoading;
 
     return SizedBox(
       width: double.infinity,
       height: 56,
       child: ElevatedButton(
-        onPressed: () async {
-          if (userId == null) return;
+        onPressed: isLoading
+            ? null
+              : () async {
+                if (userId == null) return;
 
-          // GATING: Check if blueprint is premium and user is not
-          if (blueprint.isPremium && !isPremium) {
-            context.push('/paywall');
-            return;
-          }
-
-          // Check for duplicate adoption
-          final existingHabits = ref.read(habitsProvider).value ?? [];
-          final blueprintTitles = blueprint.habits.map((h) => h.title).toSet();
-          if (existingHabits.any((h) => blueprintTitles.contains(h.title))) {
-            if (context.mounted) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Blueprint already adopted'),
-                  backgroundColor: Colors.orange,
-                ),
-              );
-            }
-            return;
-          }
-
-          final screenContext = context;
-
-          showDialog(
-            context: screenContext,
-            builder: (_) => BlueprintAdoptDialog(
-              blueprint: blueprint,
-              onAdopt: (reminderTime) async {
-                try {
-                  final repository = ref.read(habitRepositoryProvider);
-                  final result = await repository.createHabitsFromBlueprint(
-                    userId: userId,
+                var didAdopt = false;
+                String? reminderTimeString;
+                await showDialog(
+                  context: context,
+                  builder: (ctx) => BlueprintAdoptDialog(
                     blueprint: blueprint,
-                    reminderTime: reminderTime,
-                  );
+                    onAdopt: (time) {
+                      didAdopt = true;
+                      reminderTimeString = time;
+                    },
+                  ),
+                );
 
-                  result.fold(
-                    (failure) {
-                      if (screenContext.mounted) {
-                        ScaffoldMessenger.of(screenContext).showSnackBar(
-                          SnackBar(
-                            content: Text('Error: ${failure.message}'),
-                            backgroundColor: Colors.red,
-                          ),
-                        );
-                      }
-                    },
-                    (_) async {
-                      if (screenContext.mounted) {
-                        ScaffoldMessenger.of(screenContext).showSnackBar(
-                          const SnackBar(
-                            content: Text('Adopted successfully'),
-                            backgroundColor: EmergeColors.teal,
-                          ),
-                        );
-                        screenContext.go('/timeline');
-                      }
-                    },
-                  );
-                } catch (e) {
-                  if (screenContext.mounted) {
-                    ScaffoldMessenger.of(screenContext).showSnackBar(
-                      SnackBar(
-                        content: Text('Error: $e'),
-                        backgroundColor: Colors.red,
+                if (!didAdopt || !context.mounted) return;
+
+                try {
+                  TimeOfDay? reminderTime;
+                  if (reminderTimeString != null) {
+                    final parts = reminderTimeString!.split(':');
+                    reminderTime = TimeOfDay(
+                      hour: int.parse(parts[0]),
+                      minute: int.parse(parts[1]),
+                    );
+                  }
+                  await ref
+                      .read(blueprintDetailControllerProvider.notifier)
+                      .adoptBlueprint(blueprint, reminderTime: reminderTime);
+
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Adopted successfully'),
+                        backgroundColor: EmergeColors.teal,
                       ),
                     );
+                    context.go('/timeline');
+                  }
+                } catch (e) {
+                  if (context.mounted) {
+                    final errorMsg = e.toString().replaceAll('Exception: ', '');
+                    if (errorMsg == 'Premium required') {
+                      context.push('/paywall');
+                    } else {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(errorMsg),
+                          backgroundColor: Colors.orange,
+                        ),
+                      );
+                    }
                   }
                 }
               },
-            ),
-          );
-        },
         style: ElevatedButton.styleFrom(
           backgroundColor: blueprint.isPremium
               ? EmergeColors.yellow
@@ -332,12 +378,21 @@ class BlueprintDetailScreen extends ConsumerWidget {
           ),
           elevation: 0,
         ),
-        child: Text(
-          blueprint.isPremium && !isPremium
-              ? 'UNLOCK PREMIUM STACK'
-              : 'ADOPT BLUEPRINT',
-          style: const TextStyle(fontWeight: FontWeight.bold, letterSpacing: 1),
-        ),
+        child: isLoading
+            ? const SizedBox(
+                width: 24,
+                height: 24,
+                child: CircularProgressIndicator(
+                  color: Colors.black,
+                  strokeWidth: 2,
+                ),
+              )
+            : Text(
+                blueprint.isPremium && !isPremium
+                    ? 'UNLOCK PREMIUM STACK'
+                    : 'ADOPT BLUEPRINT',
+                style: const TextStyle(fontWeight: FontWeight.bold, letterSpacing: 1),
+              ),
       ),
     );
   }

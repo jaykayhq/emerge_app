@@ -1,25 +1,39 @@
-import 'package:flutter_test/flutter_test.dart';
 import 'package:emerge_app/features/companion/domain/entities/companion_message.dart';
+import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   group('CompanionMessage', () {
-    test('can be constructed with required fields', () {
-      final msg = CompanionMessage(
-        message: 'Great job on your streak!',
-        tone: 'energetic',
+    test('constructor sets message and tone', () {
+      const message = CompanionMessage(
+        message: 'Hello!',
+        tone: 'encouraging',
       );
-      expect(msg.message, 'Great job on your streak!');
-      expect(msg.tone, 'energetic');
-      expect(msg.suggestions, isNull);
+
+      expect(message.message, 'Hello!');
+      expect(message.tone, 'encouraging');
+      expect(message.suggestions, isNull);
     });
 
-    test('can be constructed with optional suggestions', () {
-      final msg = CompanionMessage(
-        message: 'Keep going!',
-        tone: 'encouraging',
-        suggestions: ['Try increasing difficulty', 'Add a new habit'],
+    test('constructor with non-null suggestions', () {
+      const message = CompanionMessage(
+        message: 'Try these:',
+        tone: 'suggestive',
+        suggestions: ['Drink water', 'Take a walk'],
       );
-      expect(msg.suggestions, hasLength(2));
+
+      expect(message.message, 'Try these:');
+      expect(message.tone, 'suggestive');
+      expect(message.suggestions, ['Drink water', 'Take a walk']);
+    });
+
+    test('constructor with null suggestions defaults to null', () {
+      const message = CompanionMessage(
+        message: 'Hello!',
+        tone: 'friendly',
+        suggestions: null,
+      );
+
+      expect(message.suggestions, isNull);
     });
   });
 }

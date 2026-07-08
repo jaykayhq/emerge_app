@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:emerge_app/core/drift/database.dart' hide Column;
 import 'package:emerge_app/features/monetization/presentation/providers/subscription_provider.dart';
 import 'package:emerge_app/core/presentation/widgets/world_background.dart';
@@ -16,6 +15,7 @@ import 'package:emerge_app/features/settings/presentation/screens/notification_s
 import 'package:emerge_app/core/domain/models/app_world_theme.dart';
 import 'package:emerge_app/core/presentation/providers/world_theme_provider.dart';
 import 'package:emerge_app/features/companion/presentation/providers/companion_providers.dart';
+import 'package:emerge_app/features/onboarding/presentation/providers/onboarding_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -39,6 +39,7 @@ class SettingsScreen extends ConsumerWidget {
     final companionEnabled = ref.watch(
       companionEngineProvider.select((s) => s.companionEnabled),
     );
+    final tutorialsEnabled = ref.watch(tutorialSettingProvider);
 
     final userSettings = userProfile?.settings ?? const UserSettings();
     final selectedAppTheme = ref.watch(worldThemeProvider);
@@ -221,75 +222,45 @@ class SettingsScreen extends ConsumerWidget {
                   );
                 },
               ),
-              // Health Connect and Screen Time are stubbed/non-functional
-              // in production. Hide them in release builds.
-              if (kDebugMode) ...[
-                HealthConnectTile(
-                  isConnected: userSettings.healthKitConnected,
-                  onTap: () => _connectHealthData(
-                    context,
-                    ref,
-                    userProfile,
-                    userSettings,
-                  ),
-                ),
-                ScreenTimeTile(
-                  isConnected: userSettings.screenTimeConnected,
-                  onTap: () => _connectScreenTime(
-                    context,
-                    ref,
-                    userProfile,
-                    userSettings,
-                  ),
-                ),
-                if (userSettings.healthKitConnected ||
-                    userSettings.screenTimeConnected) ...[
-                  SwitchListTile(
-                    secondary: Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                        color: EmergeColors.teal.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Icon(
-                        Icons.sync_outlined,
-                        color: EmergeColors.teal,
-                      ),
+              HealthConnectTile(
+                isConnected: userSettings.healthKitConnected,
+                onTap: () =>
+                    _connectHealthData(context, ref, userProfile, userSettings),
+              ),
+              ScreenTimeTile(
+                isConnected: userSettings.screenTimeConnected,
+                onTap: () =>
+                    _connectScreenTime(context, ref, userProfile, userSettings),
+              ),
+              if (userSettings.healthKitConnected ||
+                  userSettings.screenTimeConnected) ...[
+                SwitchListTile(
+                  secondary: Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: EmergeColors.teal.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(8),
                     ),
-                    title: Text(
-                      'Auto-Complete Habits',
-                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        fontWeight: FontWeight.w500,
-                        color: AppTheme.textMainDark,
-                      ),
-                    ),
-                    subtitle: Text(
-                      'Health data automatically completes linked habits',
-                      style: TextStyle(
-                        color: AppTheme.textSecondaryDark,
-                        fontSize: 12,
-                      ),
-                    ),
-                    value: false,
-                    onChanged: (value) {},
-                    activeThumbColor: EmergeColors.teal,
-                    activeTrackColor: EmergeColors.teal.withValues(alpha: 0.5),
+                    child: Icon(Icons.sync_outlined, color: EmergeColors.teal),
                   ),
-                ],
-              ] else ...[
-                _buildListTile(
-                  context,
-                  Icons.favorite_outline,
-                  'Health Connect',
-                  subtitle: 'Coming soon',
-                  onTap: null,
-                ),
-                _buildListTile(
-                  context,
-                  Icons.phone_android_outlined,
-                  'Screen Time Sync',
-                  subtitle: 'Coming soon',
-                  onTap: null,
+                  title: Text(
+                    'Auto-Complete Habits',
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      fontWeight: FontWeight.w500,
+                      color: AppTheme.textMainDark,
+                    ),
+                  ),
+                  subtitle: Text(
+                    'Health data automatically completes linked habits',
+                    style: TextStyle(
+                      color: AppTheme.textSecondaryDark,
+                      fontSize: 12,
+                    ),
+                  ),
+                  value: false,
+                  onChanged: (value) {},
+                  activeThumbColor: EmergeColors.teal,
+                  activeTrackColor: EmergeColors.teal.withValues(alpha: 0.5),
                 ),
               ],
             ]),
@@ -385,6 +356,39 @@ class SettingsScreen extends ConsumerWidget {
                 activeThumbColor: EmergeColors.teal,
                 activeTrackColor: EmergeColors.teal.withValues(alpha: 0.5),
               ),
+              SwitchListTile(
+                secondary: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: EmergeColors.teal.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Icon(Icons.explore_outlined, color: EmergeColors.teal),
+                ),
+                title: Text(
+                  'Show Node Guides',
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    fontWeight: FontWeight.w500,
+                    color: AppTheme.textMainDark,
+                  ),
+                ),
+                subtitle: Text(
+                  tutorialsEnabled
+                      ? 'Node guide shown on first node visit'
+                      : 'Node guide hidden',
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: AppTheme.textSecondaryDark,
+                  ),
+                ),
+                value: tutorialsEnabled,
+                onChanged: (value) async {
+                  await ref
+                      .read(tutorialSettingProvider.notifier)
+                      .setEnabled(value);
+                },
+                activeThumbColor: EmergeColors.teal,
+                activeTrackColor: EmergeColors.teal.withValues(alpha: 0.5),
+              ),
             ]),
             const SizedBox(height: 24),
 
@@ -397,6 +401,15 @@ class SettingsScreen extends ConsumerWidget {
                 'Reset Companion Tips',
                 onTap: () {
                   _showResetCompanionDialog(context, ref);
+                },
+              ),
+              _buildListTile(
+                context,
+                Icons.replay_outlined,
+                'Reset Node Guides',
+                subtitle: 'Makes node guides appear again on next node visit',
+                onTap: () {
+                  _showResetTutorialsDialog(context, ref);
                 },
               ),
               _buildListTile(
@@ -486,7 +499,7 @@ class SettingsScreen extends ConsumerWidget {
             const SizedBox(height: 16),
             Center(
               child: Text(
-                'Version 1.0.5+9',
+                'Version 1.0.6+10',
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
                   color: AppTheme.textSecondaryDark,
                   fontSize: 12,
@@ -686,7 +699,10 @@ class SettingsScreen extends ConsumerWidget {
             borderRadius: BorderRadius.circular(16),
             border: Border.all(color: Colors.white.withValues(alpha: 0.15)),
           ),
-          child: Column(children: children),
+          child: Material(
+            type: MaterialType.transparency,
+            child: Column(children: children),
+          ),
         ),
       ),
     );
@@ -938,6 +954,54 @@ class SettingsScreen extends ConsumerWidget {
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(
                   content: Text('Companion tips reset successfully!'),
+                ),
+              );
+            },
+            style: ElevatedButton.styleFrom(backgroundColor: EmergeColors.teal),
+            child: const Text(
+              'RESET',
+              style: TextStyle(
+                color: Colors.black,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showResetTutorialsDialog(BuildContext context, WidgetRef ref) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: AppTheme.surfaceDark,
+        title: const Text(
+          'Reset Tutorials?',
+          style: TextStyle(color: Colors.white),
+        ),
+        content: const Text(
+          'This will reset node tutorials. They will show once the next time you visit a node.',
+          style: TextStyle(color: Colors.white70),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text(
+              'CANCEL',
+              style: TextStyle(color: Colors.white54),
+            ),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              await ref
+                  .read(tutorialSettingProvider.notifier)
+                  .resetTutorials();
+              if (!context.mounted) return;
+              Navigator.pop(context);
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('Tutorials reset successfully!'),
                 ),
               );
             },

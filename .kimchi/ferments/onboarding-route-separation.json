@@ -1,0 +1,64 @@
+{
+  "id": "onboarding-route-separation",
+  "title": "Separate Onboarding Routes",
+  "status": "draft",
+  "goal": "Stop creators from being routed into normal-user onboarding by introducing a role custom claim (creator|user) set via Cloud Function, mirroring it to Firestore, and rewriting the GoRouter redirect to read the role rather than infer it from collection existence races.",
+  "success_criteria": [
+    "Creator signup (/creator/signup -> /creator/verify-email -> /creator/dashboard) never visits any /onboarding/* route at any point, including during the Firestore-write race window.",
+    "Normal-user signup still reaches /onboarding/identity-studio exactly as today.",
+    "Router decision is driven by the role custom claim on the Firebase Auth user; collection-existence checks (isCreatorProvider/isNormalUserProvider) are no longer used in the redirect hot path.",
+    "Firestore rules accept a role field on users/{uid} and creator_profiles/{uid} without privilege escalation (other forbidden fields remain blocked).",
+    "Cloud Function setUserRole callable writes the role custom claim and mirrors it to the user doc.",
+    "Unit tests cover router redirect decisions for: unauthenticated, normal user mid-onboarding, normal user post-onboarding, creator with unverified email, creator with verified email, creator signup in flight, stale claim during creator signup."
+  ],
+  "constraints": [
+    "No new third-party dependencies.",
+    "Must compile on current Flutter stable baseline.",
+    "Existing creator and normal-user visual designs are preserved.",
+    "Role field can be written by client during signup; the custom claim itself must be set by Cloud Function (Admin SDK only).",
+    "Firestore rules must continue to block privilege escalation for isAdmin, isPremium, permissions, and other privileged fields.",
+    "Existing isVerifiedCreator flag and creator_profiles collection stay untouched - role is orthogonal to verification."
+  ],
+  "assumptions": "Firebase Functions are deployed to the same project as Firestore (verified via .firebaserc and functions/src/index.ts). The user accepts adding role as a non-privileged, self-writable field on users/{uid} - rules currently forbid role to prevent privilege escalation; we relax only this single restriction and keep all others. Custom claims propagate within ~1s after the Cloud Function returns; client forces refresh via user.getIdToken(true). Existing users without a role claim retain current routing until their next sign-in, at which point the new flow takes over and writes their role claim. No production data is touched outside users/{uid}.role, creator_profiles/{uid}.role, and Firebase Auth custom claims. We do NOT add a creator-specific onboarding screen beyond the existing verify-email step - the user did not ask for that, and the current creator flow goes from verify-email straight to the dashboard, which matches the existing design.",
+  "phases": [
+    {
+      "name": "Fix routing for creator vs normal user",
+      "goal": "Close the routing hole end-to-end so creators can never be sent to normal-user onboarding, by adding a role custom claim, a Cloud Function that sets it, mirror writes to Firestore, Firestore rules updates, entity field updates, and a router rewrite that reads the role claim.",
+      "steps": [
+        {
+          "description": "Add setUserRole callable Cloud Function in functions/src/setUserRole.ts that sets the role custom claim via Admin SDK and mirrors it to users/{uid} and creator_profiles/{uid}. Export from functions/src/index.ts.",
+          "verify": "cd functions && npx tsc --noEmit"
+        },
+        {
+          "description": "Add role field to UserProfile (lib/features/auth/domain/entities/user_extension.dart) and CreatorProfile (lib/features/social/domain/entities/creator_profile.dart); update toMap/fromMap/copyWith and regenerate .g.dart files.",
+          "verify": "dart run build_runner build --delete-conflicting-outputs"
+        },
+        {
+          "description": "Update FirestoreAuthRepository.signUpWithEmailAndPassword and signInWithGoogle to call setUserRole('user') after creating the auth user, then getIdToken(true) to refresh claims. Also call setUserRole('user') in signInWithEmailAndPassword and signInWithGoogle paths to heal existing users on next login.",
+          "verify": "flutter test test/features/auth/"
+        },
+        {
+          "description": "Update signUpCreatorProvider and signUpCreatorWithGoogleProvider in lib/features/auth/presentation/providers/auth_providers.dart to call setUserRole('creator') after writing the creator profile, then getIdToken(true).",
+          "verify": "flutter test test/features/auth/"
+        },
+        {
+          "description": "Add currentUserRoleProvider in auth_providers.dart that reads FirebaseAuth.instance.currentUser?.getIdTokenResult()?.claims?['role'] and exposes null|user|creator. Auto-refresh on idTokenChanges. Add Firestore fallback (users/{uid}.role) for stale-claim scenarios.",
+          "verify": "flutter test test/features/auth/auth_role_provider_test.dart"
+        },
+        {
+          "description": "Rewrite redirect logic in lib/core/router/router.dart: branch on role from currentUserRoleProvider (with Firestore fallback); add /creator/verify-email to the creator-branch allowlist so the race window cannot redirect mid-signup; remove isCreatorProvider/isNormalUserProvider collection checks from the hot path; route by role to creator (verify-email or dashboard), normal user (onboarding or /), or hold during in-flight signup.",
+          "verify": "flutter test test/core/router/router_redirect_test.dart"
+        },
+        {
+          "description": "Update firestore.rules: allow role field on users/{uid} (restricted to 'user' or 'creator') and on creator_profiles/{uid} (same restriction). Keep all other privilege-escalation blocks intact.",
+          "verify": "firebase emulators:exec --only firestore 'echo rules-ok'"
+        },
+        {
+          "description": "Add unit tests under test/features/auth/ and test/core/router/: router redirect decisions (table-driven, one case per row of the success criteria), setUserRole callable (mocked Admin SDK), currentUserRoleProvider reads claims and listens to changes. Run full flutter test suite.",
+          "verify": "flutter test"
+        }
+      ]
+    }
+  ],
+  "questions": []
+}

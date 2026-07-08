@@ -7,6 +7,7 @@ import 'package:emerge_app/core/theme/app_theme.dart';
 import 'package:emerge_app/core/theme/theme_provider.dart';
 import 'package:emerge_app/core/services/notification_service.dart';
 import 'package:emerge_app/core/presentation/widgets/offline_banner.dart';
+import 'package:emerge_app/core/presentation/widgets/web_update_banner.dart';
 import 'package:flutter/material.dart';
 import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -168,6 +169,8 @@ class _EmergeAppState extends ConsumerState<EmergeApp> {
             unawaited(seedOfficialClubs());
             unawaited(seedChallenges());
             unawaited(seedBlueprints());
+            unawaited(seedCreators());
+            unawaited(seedCreatorBlueprints());
           } else {
             presenceService.stopHeartbeat();
             unawaited(monetizationRepo.reset());
@@ -206,7 +209,9 @@ class _EmergeAppState extends ConsumerState<EmergeApp> {
       routerConfig: router,
       debugShowCheckedModeBanner: false,
       builder: (context, child) {
-        return OfflineBanner(child: child ?? const SizedBox.shrink());
+        return WebUpdateBanner(
+          child: OfflineBanner(child: child ?? const SizedBox.shrink()),
+        );
       },
     );
   }
