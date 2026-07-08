@@ -87,6 +87,31 @@ SQLite, **fpdart** `Either` for error handling. Tests use `flutter_test`,
   with 4 branches; creator surfaces are a separate shell in `creator_routes.dart`.
   Deep-links (`/creators/:id`, `/blueprint/:id`) sit at the top level with
   `parentNavigatorKey: _rootNavigatorKey`.
+- **Web setState-during-build race in redirect:** Reading uninitialized
+  providers inside `GoRouter`'s `redirect` (using `ref.read`) can trigger
+  provider initialization that calls `setState()` during the build phase, which
+  throws an exception on Flutter Web (DDC). Always wrap `ref.read` blocks
+  in `redirect` with a `try/catch` returning `null` to defer the redirect safely.
+- **Offline-first sync pattern:** Always emit local (Drift) data immediately
+  and trigger Firestore syncs non-blocking in the background. Never `await`
+  a Firestore read before rendering a feed or dashboard.
+- **Drift shared-device data leakage:** `Drift` tables are global to the local
+  SQLite file. Always add a `.where((t) => t.userId.equals(userId))` clause
+  to repository reads (`watchAll`, `getAll`) to prevent cross-pollinating
+  different users' data on the same device.
+- **Singleton Riverpod dependencies:** Never pass mutable auth state (like
+  `userId`) into the constructor of a `@Riverpod(keepAlive: true)` repository.
+  It will permanently cache the first value (e.g. `''` during early boot).
+  Pass `userId` as a parameter to the repository's methods instead.
+- **Firestore Timestamp parsing:** When mapping arbitrary Firestore docs to
+  Dart models, `createdAt` might be a `Timestamp`, not a string or int.
+  Check `createdAtRaw is Timestamp` and use `.toDate()` before assuming it's
+  a string or falling back to `DateTime.now()`.
+- **FutureProvider cache invalidation:** FutureProviders that perform one-off
+  Firestore reads are NOT streams. If you update the underlying Firestore document,
+  you MUST call `ref.invalidate(provider)` so subsequent reads fetch the fresh
+  data. Failing to do this causes redirect loops in the router when it relies
+  on stale cached states (like onboarding progress).
 
 ---
 

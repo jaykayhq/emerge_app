@@ -7,7 +7,6 @@ import 'package:emerge_app/core/presentation/providers/world_theme_provider.dart
 import 'package:emerge_app/features/companion/data/repositories/companion_repository.dart';
 import 'package:emerge_app/features/companion/presentation/providers/companion_providers.dart';
 import 'package:emerge_app/features/gamification/presentation/providers/user_stats_providers.dart';
-import 'package:emerge_app/features/onboarding/data/repositories/local_settings_repository.dart';
 import 'package:emerge_app/features/world_map/presentation/screens/world_map_screen.dart';
 import 'package:emerge_app/features/world_map/presentation/providers/world_health_provider.dart';
 

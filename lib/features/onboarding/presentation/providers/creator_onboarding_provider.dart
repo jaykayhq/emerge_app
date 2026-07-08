@@ -1,6 +1,7 @@
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:emerge_app/core/utils/app_logger.dart';
 import 'package:emerge_app/features/auth/presentation/providers/auth_providers.dart';
+import 'package:emerge_app/features/auth/presentation/providers/role_provider.dart';
 import 'package:emerge_app/features/auth/domain/entities/user_extension.dart';
 import 'package:emerge_app/features/social/data/repositories/creator_repository.dart';
 import 'package:emerge_app/features/social/domain/entities/creator_profile.dart';
@@ -139,5 +140,7 @@ Future<void> saveCreatorOnboardingProgress(
       error: e,
       stackTrace: s,
     );
+  } finally {
+    ref.invalidate(currentCreatorOnboardingProvider);
   }
 }

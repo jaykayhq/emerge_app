@@ -1,6 +1,5 @@
 import 'package:drift/native.dart';
 import 'package:emerge_app/core/drift/app_database.dart';
-import 'package:emerge_app/core/error/failure.dart';
 import 'package:emerge_app/features/reflections/data/datasources/reflection_local_datasource.dart';
 import 'package:emerge_app/features/reflections/data/datasources/reflection_remote_datasource.dart';
 import 'package:emerge_app/features/reflections/data/repositories/reflection_repository.dart';

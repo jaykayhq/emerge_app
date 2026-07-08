@@ -14,12 +14,10 @@ part 'pulse_feed_providers.g.dart';
 
 @Riverpod(keepAlive: true)
 DriftPulseFeedRepository pulseFeedRepository(Ref ref) {
-  final userId = ref.watch(authStateChangesProvider).value?.id ?? '';
   final dao = ref.watch(pulseFeedDaoProvider);
   return DriftPulseFeedRepository(
     dao: dao,
     firestore: FirebaseFirestore.instance,
-    userId: userId,
   );
 }
 
@@ -40,5 +38,5 @@ Stream<List<PulseFeedCard>> pulseFeed(Ref ref) {
   }
 
   final repository = ref.watch(pulseFeedRepositoryProvider);
-  return repository.watchPulseFeed();
+  return repository.watchPulseFeed(userId);
 }

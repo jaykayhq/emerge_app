@@ -14,8 +14,9 @@ class PulseFeedDao extends DatabaseAccessor<AppDatabase>
   PulseFeedDao(super.db);
 
   /// Streams all cards ordered by creation time descending.
-  Stream<List<PulseFeedCardsTableData>> watchAll() {
+  Stream<List<PulseFeedCardsTableData>> watchAll(String userId) {
     return (select(pulseFeedCardsTable)
+          ..where((t) => t.userId.equals(userId))
           ..orderBy([
             (t) =>
                 OrderingTerm(expression: t.createdAt, mode: OrderingMode.desc),
@@ -24,8 +25,9 @@ class PulseFeedDao extends DatabaseAccessor<AppDatabase>
   }
 
   /// Gets all cards (one-shot).
-  Future<List<PulseFeedCardsTableData>> getAll() {
+  Future<List<PulseFeedCardsTableData>> getAll(String userId) {
     return (select(pulseFeedCardsTable)
+          ..where((t) => t.userId.equals(userId))
           ..orderBy([
             (t) =>
                 OrderingTerm(expression: t.createdAt, mode: OrderingMode.desc),

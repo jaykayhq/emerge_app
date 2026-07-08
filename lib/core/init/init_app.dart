@@ -14,6 +14,9 @@ import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:emerge_app/firebase_options.dart';
 
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:cloud_functions/cloud_functions.dart';
+import 'package:emerge_app/features/social/domain/entities/creator_profile.dart';
 
 Future<void> initApp() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -54,23 +57,54 @@ Future<void> initApp() async {
       final user = redirectResult.user;
       if (user != null) {
         debugPrint('✅ Google redirect result captured: ${user.email}');
+        
+        final prefs = await SharedPreferences.getInstance();
+        final isCreatorSignup = prefs.getBool('pending_creator_signup') ?? false;
+        if (isCreatorSignup) {
+          await prefs.remove('pending_creator_signup');
+        }
+
         // Create Firestore profile if this is a first-time sign-in
         final firestore = FirebaseFirestore.instance;
         final userDoc = await firestore.collection('users').doc(user.uid).get();
-        if (!userDoc.exists) {
+        final creatorDoc = await firestore.collection('creator_profiles').doc(user.uid).get();
+
+        if (!userDoc.exists && !creatorDoc.exists) {
           final displayName = user.displayName?.isNotEmpty == true
               ? user.displayName!
               : user.email?.split('@').first ?? 'User';
-          final profile = UserProfile(uid: user.uid, displayName: displayName);
-          final profileMap = profile.toMap();
-          profileMap['email'] = user.email ?? '';
-          profileMap['createdAt'] = FieldValue.serverTimestamp();
-          await firestore.collection('users').doc(user.uid).set(profileMap);
-          await firestore
-              .collection('user_stats')
-              .doc(user.uid)
-              .set(profileMap);
-          debugPrint('✅ Firestore profile created for Google sign-in user');
+
+          if (isCreatorSignup) {
+            final creatorProfile = CreatorProfile(
+              userId: user.uid,
+              role: 'creator',
+              displayName: displayName,
+              avatarUrl: user.photoURL,
+              isVerifiedCreator: false,
+            );
+            await firestore.collection('creator_profiles').doc(user.uid).set(creatorProfile.toMap());
+            try {
+              final functions = FirebaseFunctions.instance;
+              await functions.httpsCallable('setUserRole').call(<String, dynamic>{
+                'role': 'creator',
+              });
+              await user.getIdToken(true);
+            } catch (e) {
+              debugPrint('⚠️ setUserRole failed on redirect: $e');
+            }
+            debugPrint('✅ Creator profile created for Google sign-in user');
+          } else {
+            final profile = UserProfile(uid: user.uid, displayName: displayName);
+            final profileMap = profile.toMap();
+            profileMap['email'] = user.email ?? '';
+            profileMap['createdAt'] = FieldValue.serverTimestamp();
+            await firestore.collection('users').doc(user.uid).set(profileMap);
+            await firestore
+                .collection('user_stats')
+                .doc(user.uid)
+                .set(profileMap);
+            debugPrint('✅ Firestore profile created for Google sign-in user');
+          }
         }
       }
     } catch (e) {

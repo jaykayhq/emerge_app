@@ -229,9 +229,18 @@ GoRouter router(Ref ref) {
   // screen and creating an infinite loop.
   final authState = ref.watch(authStateChangesProvider);
 
-  // Single refresh notifier — fires only on auth login/logout.
+  // Single refresh notifier — fires only on auth login/logout and social onboarding state changes.
   final refreshNotifier = ValueNotifier<int>(0);
   ref.listen(authStateChangesProvider, (_, _) => refreshNotifier.value++);
+  ref.listen(socialOnboardingCompletedProvider, (_, _) => refreshNotifier.value++);
+  
+  // Listen to redirect-dependencies so they are initialized *before* GoRouter 
+  // is built, preventing ref.read inside redirect from triggering initialization
+  // and throwing setState-during-build errors on web. 
+  // When they change, we just ask GoRouter to re-evaluate redirect.
+  ref.listen(currentUserRoleProvider, (_, _) => refreshNotifier.value++);
+  ref.listen(currentCreatorOnboardingProvider, (_, _) => refreshNotifier.value++);
+  ref.listen(userStatsStreamProvider, (_, _) => refreshNotifier.value++);
 
   return GoRouter(
     navigatorKey: _rootNavigatorKey,
@@ -247,38 +256,29 @@ GoRouter router(Ref ref) {
       final isFirstLaunch = ref.read(onboardingControllerProvider);
 
       // Read synchronously inside redirect — ref.read gives the latest
-      // value at navigation time without subscribing to rebuilds.
-      // Wrap in try/catch for web: ref.read can trigger provider
-      // initialization that calls setState() during the build phase,
-      // which throws on Flutter web (DDC). Returning null defers the
-      // redirect — it will re-trigger on the next navigation event.
-      try {
-        final roleAsync = ref.read(currentUserRoleProvider);
-        final creatorOnboardingAsync = ref.read(currentCreatorOnboardingProvider);
-        final userStatsAsync = ref.read(userStatsStreamProvider);
+      // value at navigation time. Because we listened to them above, 
+      // they are already initialized and won't throw on web.
+      final roleAsync = ref.read(currentUserRoleProvider);
+      final creatorOnboardingAsync = ref.read(currentCreatorOnboardingProvider);
+      final userStatsAsync = ref.read(userStatsStreamProvider);
 
-        final role = roleAsync is AsyncData ? roleAsync.value : null;
-        final creatorOnboarding = creatorOnboardingAsync is AsyncData
-            ? creatorOnboardingAsync.value
-            : null;
-        final userStats = userStatsAsync is AsyncData ? userStatsAsync.value : null;
+      final role = roleAsync is AsyncData ? roleAsync.value : null;
+      final creatorOnboarding = creatorOnboardingAsync is AsyncData
+          ? creatorOnboardingAsync.value
+          : null;
+      final userStats = userStatsAsync is AsyncData ? userStatsAsync.value : null;
 
-        return decideRedirect(
-          currentPath: path,
-          ctx: RedirectContext(
-            isLoggedIn: isLoggedIn,
-            role: role,
-            isFirstLaunch: isFirstLaunch,
-            userOnboardingProgress: userStats?.onboardingProgress,
-            userOnboardingCompletedAt: userStats?.onboardingCompletedAt,
-            creatorOnboarding: creatorOnboarding,
-          ),
-        );
-      } catch (_) {
-        // Provider not yet initialized during build phase.
-        // Stay on current path; redirect will re-trigger.
-        return null;
-      }
+      return decideRedirect(
+        currentPath: path,
+        ctx: RedirectContext(
+          isLoggedIn: isLoggedIn,
+          role: role,
+          isFirstLaunch: isFirstLaunch,
+          userOnboardingProgress: userStats?.onboardingProgress,
+          userOnboardingCompletedAt: userStats?.onboardingCompletedAt,
+          creatorOnboarding: creatorOnboarding,
+        ),
+      );
     },
     routes: [
       GoRoute(

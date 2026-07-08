@@ -10,6 +10,7 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:emerge_app/features/social/presentation/providers/creator_provider.dart';
 import 'package:emerge_app/features/social/domain/entities/creator_profile.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 part 'auth_providers.g.dart';
 
 @Riverpod(keepAlive: true)
@@ -129,6 +130,9 @@ Future<void> signUpCreatorWithGoogle(Ref ref) async {
   firebase_auth.UserCredential userCredential;
 
   if (kIsWeb) {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('pending_creator_signup', true);
+
     final googleProvider = firebase_auth.GoogleAuthProvider();
     googleProvider.addScope('email');
     googleProvider.addScope('profile');

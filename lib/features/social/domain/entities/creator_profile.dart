@@ -1,5 +1,6 @@
 // lib/features/social/domain/entities/creator_profile.dart
 import 'package:emerge_app/features/auth/domain/entities/user_extension.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class CreatorProfile {
   final String userId;
@@ -90,23 +91,30 @@ class CreatorProfile {
   }
 
   Map<String, dynamic> toMap() {
-    return {
+    final map = <String, dynamic>{
       'userId': userId,
-      'role': role,
-      'displayName': displayName,
-      'avatarUrl': avatarUrl,
-      'heroImageUrl': heroImageUrl,
       'bio': bio,
       'specialityTags': specialityTags,
       'isVerifiedCreator': isVerifiedCreator,
       'blueprintCount': blueprintCount,
-      'blueprintId': blueprintId,
-      'tribeId': tribeId,
       'creatorOnboardingProgress': creatorOnboardingProgress,
-      'creatorOnboardingCompletedAt':
-          creatorOnboardingCompletedAt?.toIso8601String(),
       'archetype': archetype.name,
     };
+
+    if (role != null) map['role'] = role;
+    if (displayName != null) map['displayName'] = displayName;
+    if (avatarUrl != null) map['avatarUrl'] = avatarUrl;
+    if (heroImageUrl != null) map['heroImageUrl'] = heroImageUrl;
+    if (blueprintId != null) map['blueprintId'] = blueprintId;
+    if (tribeId != null) map['tribeId'] = tribeId;
+    
+    if (creatorOnboardingCompletedAt != null) {
+      // Firestore rule requires this field to be a timestamp, not a string
+      map['creatorOnboardingCompletedAt'] = 
+          Timestamp.fromDate(creatorOnboardingCompletedAt!);
+    }
+
+    return map;
   }
 
   factory CreatorProfile.fromMap(Map<String, dynamic> map) {
