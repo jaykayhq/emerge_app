@@ -4,6 +4,7 @@ import 'package:emerge_app/features/habits/domain/entities/habit.dart';
 import 'package:emerge_app/features/gamification/presentation/providers/attribute_progress_provider.dart';
 import 'package:emerge_app/features/world_map/domain/models/world_type_config.dart';
 import 'package:emerge_app/features/habits/presentation/providers/habit_providers.dart';
+import 'package:emerge_app/features/world_map/presentation/widgets/attribute_heatmap_card.dart';
 
 class AttributeDetailScreen extends ConsumerWidget {
   final HabitAttribute attribute;
@@ -87,6 +88,9 @@ class AttributeDetailScreen extends ConsumerWidget {
                     ),
                   ),
                 ),
+              ),
+              SliverToBoxAdapter(
+                child: AttributeHeatmapCard(attribute: attribute),
               ),
               const SliverToBoxAdapter(
                 child: Padding(
