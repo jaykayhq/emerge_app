@@ -26,6 +26,7 @@ import 'daos/tribe_activity_dao.dart';
 import 'daos/narrator_notes_dao.dart';
 import 'daos/pulse_feed_dao.dart';
 import 'daos/daily_reflections_dao.dart';
+import 'daos/habit_reflections_dao.dart';
 
 part 'app_database.g.dart';
 
@@ -56,7 +57,7 @@ part 'app_database.g.dart';
     NarratorNotesDao,
     PulseFeedDao,
     DailyReflectionsDao,
-    // HabitReflectionsDao, // Re-added in Task 2 once the DAO file exists.
+    HabitReflectionsDao,
   ],
 )
 class AppDatabase extends _$AppDatabase {
