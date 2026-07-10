@@ -30,16 +30,16 @@ class _TwoMinuteTimerDialogState extends State<TwoMinuteTimerDialog>
   late Duration _remaining;
   bool _isComplete = false;
   bool _isPaused = false;
+  bool _hasStarted = false;
 
   @override
   void initState() {
     super.initState();
     _timerDuration = Duration(minutes: widget.durationMinutes);
     _remaining = _timerDuration;
-    _startTimer();
   }
 
-  void _startTimer() {
+  void _beginCountdown() {
     _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
       if (_isPaused) return;
 
@@ -52,6 +52,11 @@ class _TwoMinuteTimerDialogState extends State<TwoMinuteTimerDialog>
         }
       });
     });
+  }
+
+  void _exitAndRunInBackground() {
+    _timer.cancel();
+    Navigator.of(context).pop<int>(widget.durationMinutes);
   }
 
   @override
@@ -210,25 +215,67 @@ class _TwoMinuteTimerDialogState extends State<TwoMinuteTimerDialog>
                       style: TextStyle(color: AppTheme.textSecondaryDark),
                     ),
                   ),
+                ] else if (!_hasStarted) ...[
+                  SizedBox(
+                    width: double.infinity,
+                    child: FilledButton.icon(
+                      onPressed: () {
+                        setState(() => _hasStarted = true);
+                        _beginCountdown();
+                        Navigator.of(context).pop<int>(widget.durationMinutes);
+                      },
+                      icon: const Icon(Icons.play_arrow),
+                      label: Text('Start ${widget.durationMinutes}-Min Timer'),
+                      style: FilledButton.styleFrom(
+                        backgroundColor: widget.neonColor,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                      ),
+                    ),
+                  ),
+                  const Gap(8),
+                  Center(
+                    child: TextButton(
+                      onPressed: () => Navigator.of(context).pop(),
+                      child: Text(
+                        'Cancel',
+                        style: TextStyle(color: AppTheme.textSecondaryDark),
+                      ),
+                    ),
+                  ),
                 ] else ...[
+                  const Gap(8),
+                  SizedBox(
+                    width: double.infinity,
+                    child: OutlinedButton.icon(
+                      onPressed: _exitAndRunInBackground,
+                      icon: const Icon(Icons.keyboard_arrow_right),
+                      label: const Text('Exit & run in background'),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: widget.neonColor,
+                        side: BorderSide(color: widget.neonColor.withValues(alpha: 0.5)),
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                      ),
+                    ),
+                  ),
+                  const Gap(8),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      // Pause/Resume button
                       IconButton.filled(
                         onPressed: () {
                           setState(() => _isPaused = !_isPaused);
                         },
                         icon: Icon(_isPaused ? Icons.play_arrow : Icons.pause),
                         style: IconButton.styleFrom(
-                          backgroundColor: widget.neonColor.withValues(
-                            alpha: 0.2,
-                          ),
+                          backgroundColor: widget.neonColor.withValues(alpha: 0.2),
                           foregroundColor: widget.neonColor,
                         ),
                       ),
                       const Gap(16),
-                      // Cancel button
                       TextButton(
                         onPressed: () => Navigator.of(context).pop(),
                         child: Text(
