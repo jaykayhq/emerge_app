@@ -13,6 +13,7 @@ import 'tables/tribe_activity_table.dart';
 import 'tables/narrator_notes_table.dart';
 import 'tables/pulse_feed_cards_table.dart';
 import 'tables/daily_reflections_table.dart';
+import 'tables/habit_reflections_table.dart';
 
 import 'daos/user_stats_dao.dart';
 import 'daos/habits_dao.dart';
@@ -41,6 +42,7 @@ part 'app_database.g.dart';
     NarratorNotesTable,
     PulseFeedCardsTable,
     DailyReflectionsTable,
+    HabitReflectionsTable,
   ],
   daos: [
     UserStatsDao,
@@ -54,6 +56,7 @@ part 'app_database.g.dart';
     NarratorNotesDao,
     PulseFeedDao,
     DailyReflectionsDao,
+    // HabitReflectionsDao, // Re-added in Task 2 once the DAO file exists.
   ],
 )
 class AppDatabase extends _$AppDatabase {
@@ -62,7 +65,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.withExecutor(super.executor);
 
   @override
-  int get schemaVersion => 7;
+  int get schemaVersion => 8;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -99,6 +102,9 @@ class AppDatabase extends _$AppDatabase {
       }
       if (from < 7) {
         await m.createTable(dailyReflectionsTable);
+      }
+      if (from < 8) {
+        await m.createTable(habitReflectionsTable);
       }
     },
     beforeOpen: (details) async {
