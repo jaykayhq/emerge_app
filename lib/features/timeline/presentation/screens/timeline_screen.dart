@@ -21,7 +21,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:emerge_app/core/theme/emerge_colors.dart';
+import 'package:emerge_app/features/habits/presentation/widgets/habit_timer_dialog.dart';
 import 'package:emerge_app/features/narrator/domain/models/narrator_line.dart';
+// import 'package:emerge_app/features/reflections/presentation/widgets/habit_options_sheet.dart';
+// Uncommented in Task 12
 import 'package:emerge_app/features/narrator/domain/models/narrator_note.dart';
 import 'package:emerge_app/features/narrator/presentation/providers/narrator_providers.dart';
 import 'package:emerge_app/features/narrator/presentation/widgets/narrator_avatar.dart';
@@ -366,16 +369,17 @@ class _TimelineScreenState extends ConsumerState<TimelineScreen> {
             groupedHabits: timelineGroups,
             selectedDate: _selectedDate,
             onHabitTap: (habit) {
-              context.push('/timeline/detail/${habit.id}');
+              context.go('/');
             },
             onHabitToggle: (habit) {
               _toggleHabitCompletion(habit);
             },
             onTimerTap: (habit) {
-              // Timer dialog — placeholder
+              _openTimerDialog(habit);
             },
             onMenuTap: (habit) {
-              // Menu sheet — placeholder
+              // HabitOptionsSheet.show(context, habit, _selectedDate);
+              // Uncommented in Task 12
             },
           ),
         ),
@@ -509,6 +513,32 @@ class _TimelineScreenState extends ConsumerState<TimelineScreen> {
 
     // One-tap completion - no confirmation dialog
     _completeHabitSilently(habit);
+  }
+
+  Future<void> _openTimerDialog(Habit habit) async {
+    final minutes = await showDialog<int>(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => TwoMinuteTimerDialog(
+        habitTitle: habit.title,
+        neonColor: attributeColor(habit.attribute),
+        durationMinutes: habit.timerDurationMinutes,
+        onComplete: () {
+          _toggleHabitCompletion(habit);
+          Navigator.of(context).pop();
+        },
+      ),
+    );
+    if (minutes != null && minutes > 0 && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('${habit.title}: timer set for ${minutes}m'),
+          backgroundColor: EmergeColors.teal,
+          duration: const Duration(seconds: 2),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    }
   }
 
   Future<void> _completeHabitSilently(Habit habit) async {
