@@ -72,7 +72,7 @@ class _HabitOptionsSheetState extends ConsumerState<HabitOptionsSheet> {
   }
 
   Future<void> _startTimer() async {
-    await showDialog<void>(
+    final result = await showDialog<int?>(
       context: context,
       barrierDismissible: false,
       builder: (_) => TwoMinuteTimerDialog(
@@ -82,10 +82,17 @@ class _HabitOptionsSheetState extends ConsumerState<HabitOptionsSheet> {
         onComplete: () {
           ref.read(completeHabitProvider(widget.habit.id));
           Navigator.of(context).pop();
+          if (mounted) Navigator.of(context).pop();
         },
       ),
     );
-    if (mounted) Navigator.of(context).pop();
+    if (mounted) {
+      if (result != null && result > 0) {
+        Navigator.of(context).pop(result);
+      } else {
+        Navigator.of(context).pop();
+      }
+    }
   }
 
   Future<void> _addPriming() async {

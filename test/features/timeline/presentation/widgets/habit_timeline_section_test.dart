@@ -21,13 +21,13 @@ Habit _makeHabit({
   );
 }
 
-Widget _wrap(Widget child) => MaterialApp(home: Scaffold(body: child));
+Widget buildTestApp(Widget child) => MaterialApp(home: Scaffold(body: child));
 
 void main() {
   group('IndentedHabitItem - layout', () {
     testWidgets('renders title, checkbox, timer icon, menu icon', (tester) async {
       await tester.pumpWidget(
-        _wrap(
+        buildTestApp(
           IndentedHabitItem(
             habit: _makeHabit(),
             selectedDate: DateTime.now(),
@@ -47,7 +47,7 @@ void main() {
 
     testWidgets('is NOT a Dismissible', (tester) async {
       await tester.pumpWidget(
-        _wrap(
+        buildTestApp(
           IndentedHabitItem(
             habit: _makeHabit(),
             selectedDate: DateTime.now(),
@@ -66,7 +66,7 @@ void main() {
     testWidgets('tap on title fires onRowBodyTap only', (tester) async {
       var body = 0, checkbox = 0, timer = 0, menu = 0;
       await tester.pumpWidget(
-        _wrap(
+        buildTestApp(
           IndentedHabitItem(
             habit: _makeHabit(),
             selectedDate: DateTime.now(),
@@ -88,7 +88,7 @@ void main() {
     testWidgets('tap on checkbox fires onCheckboxTap only', (tester) async {
       var body = 0, checkbox = 0, timer = 0, menu = 0;
       await tester.pumpWidget(
-        _wrap(
+        buildTestApp(
           IndentedHabitItem(
             habit: _makeHabit(),
             selectedDate: DateTime.now(),
@@ -108,7 +108,7 @@ void main() {
     testWidgets('tap on timer icon fires onTimerTap only', (tester) async {
       var body = 0, checkbox = 0, timer = 0, menu = 0;
       await tester.pumpWidget(
-        _wrap(
+        buildTestApp(
           IndentedHabitItem(
             habit: _makeHabit(),
             selectedDate: DateTime.now(),
@@ -128,7 +128,7 @@ void main() {
     testWidgets('tap on menu icon fires onMenuTap only', (tester) async {
       var body = 0, checkbox = 0, timer = 0, menu = 0;
       await tester.pumpWidget(
-        _wrap(
+        buildTestApp(
           IndentedHabitItem(
             habit: _makeHabit(),
             selectedDate: DateTime.now(),
@@ -149,7 +149,7 @@ void main() {
   group('IndentedHabitItem - completed visual', () {
     testWidgets('shows strike-through title when completed', (tester) async {
       await tester.pumpWidget(
-        _wrap(
+        buildTestApp(
           IndentedHabitItem(
             habit: _makeHabit(completedToday: true),
             selectedDate: DateTime.now(),
@@ -166,7 +166,7 @@ void main() {
 
     testWidgets('shows check_circle and xp badge when completed', (tester) async {
       await tester.pumpWidget(
-        _wrap(
+        buildTestApp(
           IndentedHabitItem(
             habit: _makeHabit(completedToday: true, id: 'h2'),
             selectedDate: DateTime.now(),

@@ -281,7 +281,8 @@ class _IndentedHabitItemState extends State<IndentedHabitItem> {
   void initState() {
     super.initState();
     _resetTimerToHabitDuration();
-    _startTimer();
+    // Timer does NOT auto-start. It only starts when the user taps the timer
+    // dialog's "Start" or "Exit & run in background" button (see startTimerFromDuration).
   }
 
   void _resetTimerToHabitDuration() {
@@ -316,6 +317,18 @@ class _IndentedHabitItemState extends State<IndentedHabitItem> {
       _isTimerRunning = false;
       _remainingSeconds = _totalSeconds;
     });
+  }
+
+  /// Called externally when the user starts a timer via the dialog.
+  /// Resets and begins the countdown for [minutes] duration.
+  void startTimerFromDuration(int minutes) {
+    _countdownTimer?.cancel();
+    setState(() {
+      _totalSeconds = minutes * 60;
+      _remainingSeconds = _totalSeconds;
+      _isTimerRunning = true;
+    });
+    _tick();
   }
 
   @override
@@ -419,6 +432,7 @@ class _IndentedHabitItemState extends State<IndentedHabitItem> {
         const SizedBox(width: 8),
         // Checkbox
         IconButton(
+          tooltip: 'Mark complete',
           icon: const Icon(
             Icons.radio_button_unchecked,
             color: Colors.white70,
