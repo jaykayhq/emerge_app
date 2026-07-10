@@ -128,7 +128,7 @@ void main() {
     reflectionRepo = _FakeReflectionRepo();
   });
 
-  Widget _wrap(Widget child) => ProviderScope(
+  Widget buildTestApp(Widget child) => ProviderScope(
         overrides: [
           habitRepositoryProvider.overrideWithValue(habitRepo),
           habitReflectionRepositoryProvider.overrideWithValue(reflectionRepo),
@@ -158,7 +158,7 @@ void main() {
       addTearDown(() => tester.view.resetPhysicalSize());
 
       await tester.pumpWidget(
-        _wrap(
+        buildTestApp(
           HabitOptionsSheet(habit: habit, selectedDate: DateTime.now()),
         ),
       );
@@ -175,7 +175,7 @@ void main() {
       addTearDown(() => tester.view.resetPhysicalSize());
 
       await tester.pumpWidget(
-        _wrap(
+        buildTestApp(
           HabitOptionsSheet(habit: habit, selectedDate: DateTime.now()),
         ),
       );
@@ -196,7 +196,7 @@ void main() {
       addTearDown(() => tester.view.resetPhysicalSize());
 
       await tester.pumpWidget(
-        _wrap(
+        buildTestApp(
           HabitOptionsSheet(habit: habit, selectedDate: DateTime.now()),
         ),
       );

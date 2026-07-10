@@ -1,7 +1,7 @@
 import 'dart:math' as math;
 
 import 'package:emerge_app/core/domain/models/app_world_theme.dart';
-import 'package:emerge_app/features/world_map/domain/models/archetype_map_config.dart';
+import 'package:emerge_app/features/world_map/domain/models/biome_type.dart';
 import 'package:flutter/material.dart';
 
 /// Animated nebula/space background for the World Map

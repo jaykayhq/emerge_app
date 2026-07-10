@@ -13,11 +13,10 @@ import 'package:emerge_app/features/gamification/presentation/screens/leveling_s
 import 'package:emerge_app/features/profile/presentation/screens/future_self_studio_screen.dart';
 import 'package:emerge_app/features/gamification/presentation/widgets/level_up_listener.dart';
 import 'package:emerge_app/features/habits/presentation/screens/advanced_create_habit_dialog.dart';
-import 'package:emerge_app/features/world_map/presentation/screens/level_immersive_screen.dart';
 import 'package:emerge_app/features/social/presentation/screens/leaderboard_screen.dart';
 import 'package:emerge_app/features/gamification/presentation/screens/level_up_reward_screen.dart';
-import 'package:emerge_app/features/world_map/domain/models/archetype_maps_catalog.dart';
-import 'package:emerge_app/features/auth/domain/entities/user_extension.dart';
+import 'package:emerge_app/features/habits/domain/entities/habit.dart';
+import 'package:emerge_app/features/world_map/presentation/screens/attribute_detail_screen.dart';
 
 import 'package:emerge_app/features/gamification/presentation/screens/weekly_recap_screen.dart';
 import 'package:emerge_app/features/gamification/presentation/screens/recap_hub_screen.dart';
@@ -406,21 +405,15 @@ GoRouter router(Ref ref) {
                     },
                   ),
                   GoRoute(
-                    path: 'node/:nodeId',
+                    path: 'attribute/:attributeName',
                     parentNavigatorKey: _rootNavigatorKey,
                     builder: (context, state) {
-                      final id = state.pathParameters['nodeId']!;
-                      final archetype =
-                          ref.read(userStatsStreamProvider).value?.archetype ??
-                          UserArchetype.scholar;
-                      final config = ArchetypeMapsCatalog.getMapForArchetype(
-                        archetype,
+                      final name = state.pathParameters['attributeName']!;
+                      final attr = HabitAttribute.values.firstWhere(
+                        (a) => a.name == name,
+                        orElse: () => HabitAttribute.vitality,
                       );
-                      final node = config.nodes.firstWhere(
-                        (n) => n.id == id,
-                        orElse: () => config.nodes.first,
-                      );
-                      return LevelImmersiveScreen(node: node, config: config);
+                      return AttributeDetailScreen(attribute: attr);
                     },
                   ),
                 ],
