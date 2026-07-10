@@ -33,7 +33,7 @@ class WorldMapScreen extends ConsumerWidget {
               Center(
                 child: WorldRingLayout(
                   radius: 140,
-                  onNodeTap: (attr) => context.go('/attribute/\${attr.name}'),
+                  onNodeTap: (attr) => context.go('/attribute/${attr.name}'),
                 ),
               ),
               Center(
