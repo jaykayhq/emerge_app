@@ -20,7 +20,6 @@ import 'package:emerge_app/core/presentation/widgets/archetype_sliver_app_bar.da
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:emerge_app/core/services/notification_service.dart';
 import 'package:emerge_app/core/theme/emerge_colors.dart';
 import 'package:emerge_app/features/narrator/domain/models/narrator_line.dart';
 import 'package:emerge_app/features/narrator/domain/models/narrator_note.dart';
@@ -372,8 +371,11 @@ class _TimelineScreenState extends ConsumerState<TimelineScreen> {
             onHabitToggle: (habit) {
               _toggleHabitCompletion(habit);
             },
-            onHabitDelete: (habit) {
-              _deleteHabit(habit);
+            onTimerTap: (habit) {
+              // Timer dialog — placeholder
+            },
+            onMenuTap: (habit) {
+              // Menu sheet — placeholder
             },
           ),
         ),
@@ -540,57 +542,6 @@ class _TimelineScreenState extends ConsumerState<TimelineScreen> {
           const SnackBar(
             content: Text('Could not save. Check your connection and try again.'),
             backgroundColor: Colors.orange,
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
-      }
-    }
-  }
-
-  Future<void> _deleteHabit(Habit habit) async {
-    try {
-      final result = await ref
-          .read(habitRepositoryProvider)
-          .deleteHabit(habit.id);
-      await ref
-          .read(notificationServiceProvider)
-          .cancelHabitNotifications(habit.id);
-      result.fold(
-        (failure) {
-          if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: const Text('Could not delete habit. Please try again.'),
-                backgroundColor: Colors.red,
-                behavior: SnackBarBehavior.floating,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-              ),
-            );
-          }
-        },
-        (_) {
-          if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: const Text('Habit deleted'),
-                backgroundColor: Colors.green,
-                behavior: SnackBarBehavior.floating,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-              ),
-            );
-          }
-        },
-      );
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Error deleting habit'),
-            backgroundColor: Colors.red,
             behavior: SnackBarBehavior.floating,
           ),
         );
