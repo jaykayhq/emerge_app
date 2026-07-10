@@ -50,9 +50,6 @@ class _FakeHabitRepo implements HabitRepository {
   Future<Habit?> getHabit(String habitId) async => null;
 
   @override
-  Future<List<Habit>> getHabits(String userId) async => [];
-
-  @override
   Future<List<Habit>> getHabitsByAnchor(String anchorHabitId) async => [];
 
   @override
