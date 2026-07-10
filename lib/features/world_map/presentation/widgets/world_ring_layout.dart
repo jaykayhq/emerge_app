@@ -22,7 +22,14 @@ class WorldRingLayout extends StatelessWidget {
 
     return LayoutBuilder(
       builder: (context, constraints) {
-        final center = Offset(constraints.maxWidth / 2, constraints.maxHeight / 2);
+        final width = constraints.hasBoundedWidth
+            ? constraints.maxWidth
+            : MediaQuery.of(context).size.width;
+        final height = constraints.hasBoundedHeight
+            ? constraints.maxHeight
+            : MediaQuery.of(context).size.height;
+            
+        final center = Offset(width / 2, height / 2);
 
         return Stack(
           clipBehavior: Clip.none,
@@ -35,11 +42,14 @@ class WorldRingLayout extends StatelessWidget {
             final dy = center.dy + (radius * math.sin(angle));
 
             return Positioned(
-              left: dx - 24, // Center the 48px wide node
-              top: dy - 24,  // Center the 48px high node
-              child: WorldTypeNode(
-                attribute: attr,
-                onTap: () => onNodeTap(attr),
+              left: dx,
+              top: dy,
+              child: FractionalTranslation(
+                translation: const Offset(-0.5, -0.5),
+                child: WorldTypeNode(
+                  attribute: attr,
+                  onTap: () => onNodeTap(attr),
+                ),
               ),
             );
           }),
