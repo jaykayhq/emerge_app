@@ -263,6 +263,14 @@ service cloud.firestore {
         allow read: if isOwner(userId);
         allow update, delete: if false; // Completions are immutable logs
       }
+
+      // Per-Habit Reflections Subcollection (mood + note per habit per day)
+      match /habit_reflections/{dateKey} {
+        allow read: if isOwner(userId);
+        allow write: if isOwner(userId) &&
+          request.resource.data.keys().hasAll(['userId', 'habitId', 'localDate', 'mood', 'updatedAt']) &&
+          request.resource.data.userId == request.auth.uid;
+      }
     }
 
     // Habits (Top-level collection) - Enhanced security
