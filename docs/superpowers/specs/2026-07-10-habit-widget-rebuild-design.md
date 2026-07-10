@@ -11,7 +11,7 @@ We want the habit row to be **simple and icon-driven**, the **detail screen gone
 ## Goals
 
 - Reduce the habit row to four explicit affordances: **body tap → World Map**, **checkbox tap → instant complete**, **⏱️ tap → modal timer**, **⋮ tap → bottom sheet**.
-- Move all habit editing (Environment Priming, Temptation Bundling/Reward, Delete Habit) into a modal bottom sheet.
+- Move all habit editing and per-habit actions into a modal bottom sheet with five sections: **Start Timer, Environment Priming, Set Reward, Log Reflection, Delete Habit**.
 - Add **per-habit reflections** (mood + 140-char note) — one per `(userId, habitId, localDate)` — independent of the existing daily global reflection.
 - Replace the inline 2-minute countdown pill with a **modal timer dialog** (existing `TwoMinuteTimerDialog`) + **card progress fill** that visually represents the timer running.
 - Delete `habit_detail_screen.dart` and the `/timeline/detail/:habitId` route.
@@ -98,7 +98,7 @@ Modal bottom sheet, `isScrollControlled: true`, `DraggableScrollableSheet` so it
 | **Log Reflection** | Reads `habitReflectionProvider(userId, habitId, date)` for initial mood/note. Mood emoji row (5 options from `Mood.values`) + 140-char note + Save button. Save calls `saveHabitReflectionProvider`. Hint text above mood row if habit not completed today: "Habit not yet completed today." |
 | **Delete Habit** | Confirmation `AlertDialog` (reuses `_showDeleteConfirmationDialog` pattern from `habit_detail_screen.dart`). On confirm: `habitRepository.deleteHabit(habit.id)` + `notificationServiceProvider.cancelHabitNotifications(habit.id)`. Sheet closes; `habitsProvider` rebuilds. |
 
-Edits to priming/reward auto-save on sheet close if not already saved (inline-edit affordance).
+Edits to priming and reward auto-save on each mutation (add, remove, field blur) — there is no explicit "Save" button for those sections. The sheet close path (tap outside, drag down, or tap ✕) does **not** need to flush pending changes because each mutation is already persisted.
 
 ---
 
