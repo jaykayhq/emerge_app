@@ -1,0 +1,71 @@
+<h2>Timeline Habit Widget — Current vs Proposed</h2>
+<p class="subtitle">Before we lock in details, here's where we are and where we're going.</p>
+
+<div class="split">
+  <div class="mockup">
+    <div class="mockup-header">CURRENT: <code>_IndentedHabitItem</code></div>
+    <div class="mockup-body" style="background:#0b0b14;padding:18px;border-radius:12px;font-family:monospace;color:#cfd6e4;font-size:12px;line-height:1.6">
+      <div style="display:flex;align-items:center;gap:10px;background:rgba(255,255,255,0.06);padding:10px;border-radius:10px;border:1px solid rgba(255,255,255,0.1)">
+        <div style="width:28px;height:28px;border-radius:50%;border:2px solid #2BEE79;display:flex;align-items:center;justify-content:center;color:#2BEE79;font-size:14px">○</div>
+        <div style="flex:1">
+          <div style="color:#fff;font-weight:500">Morning Meditation</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:4px;background:rgba(255,255,255,0.1);padding:4px 10px;border-radius:20px;color:#fff;font-size:11px">▶ 02:00</div>
+        <div style="background:rgba(43,238,121,0.25);padding:3px 6px;border-radius:4px;color:#fff;font-size:9px">VITALITY</div>
+      </div>
+      <div style="margin-top:8px;color:#888;font-size:11px;padding-left:8px">
+        ⬇ Tap opens <code>/timeline/detail/:id</code> (full screen)
+      </div>
+      <div style="margin-top:6px;color:#888;font-size:11px;padding-left:8px">
+        ⬇ Inline expand shows: 2-min version + environment priming
+      </div>
+      <div style="margin-top:6px;color:#888;font-size:11px;padding-left:8px">
+        ⬇ Temptation bundling (reward) shown below the row
+      </div>
+      <div style="margin-top:6px;color:#888;font-size:11px;padding-left:8px">
+        ⬇ Swipe endToStart = toggle complete; startToEnd = delete dialog
+      </div>
+    </div>
+  </div>
+
+  <div class="mockup">
+    <div class="mockup-header">PROPOSED: collapsed row + three-dot menu</div>
+    <div class="mockup-body" style="background:#0b0b14;padding:18px;border-radius:12px;font-family:monospace;color:#cfd6e4;font-size:12px;line-height:1.6">
+      <div style="display:flex;align-items:center;gap:10px;background:rgba(255,255,255,0.06);padding:10px;border-radius:10px;border:1px solid rgba(255,255,255,0.1)">
+        <div style="width:28px;height:28px;border-radius:50%;border:2px solid #2BEE79;display:flex;align-items:center;justify-content:center;color:#2BEE79;font-size:14px">○</div>
+        <div style="flex:1">
+          <div style="color:#fff;font-weight:500">Morning Meditation</div>
+        </div>
+        <button title="Start timer" style="background:none;border:none;color:#fff;font-size:18px;cursor:pointer;padding:4px 8px">⏱️</button>
+        <button title="Open menu" style="background:none;border:none;color:#fff;font-size:22px;cursor:pointer;padding:4px 4px;line-height:1">⋮</button>
+      </div>
+      <div style="margin-top:8px;color:#888;font-size:11px;padding-left:8px">
+        ⬇ Tap <strong>row body</strong> → navigate to <code>/</code> (World Map)
+      </div>
+      <div style="margin-top:6px;color:#888;font-size:11px;padding-left:8px">
+        ⬇ Tap <strong>checkbox</strong> → toggle complete (no nav)
+      </div>
+      <div style="margin-top:6px;color:#888;font-size:11px;padding-left:8px">
+        ⬇ Tap <strong>⏱️</strong> → open 2-min timer dialog
+      </div>
+      <div style="margin-top:6px;color:#888;font-size:11px;padding-left:8px">
+        ⬇ Tap <strong>⋮</strong> → bottom sheet with: Environment Priming, Log Reflection, Set Reward, Delete Habit
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>What moves where</h3>
+  <ul style="line-height:1.7">
+    <li><strong>Removed:</strong> inline 2-min drawer, inline expand toggle, inline reward chip, swipe-to-delete/complete, attribute badge, rune indicator (kept visible elsewhere if needed)</li>
+    <li><strong>Kept:</strong> checkbox (one-tap completion), habit title</li>
+    <li><strong>Added:</strong> ⏱️ icon (opens timer dialog), ⋮ three-dot icon (opens menu sheet)</li>
+    <li><strong>Navigation change:</strong> tap row → push to World Map (<code>/</code>) instead of <code>/timeline/detail/:id</code></li>
+    <li><strong>Habits detail screen:</strong> deprecated for inline editing — its contents are moved into the ⋮ sheet OR kept for full-screen editing if you prefer</li>
+  </ul>
+</div>
+
+<div class="section">
+  <p class="subtitle">Take a look and let me know what you think. Reply in the terminal — does this direction match your intent?</p>
+</div>

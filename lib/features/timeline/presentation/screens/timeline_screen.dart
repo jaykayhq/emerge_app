@@ -23,8 +23,7 @@ import 'package:go_router/go_router.dart';
 import 'package:emerge_app/core/theme/emerge_colors.dart';
 import 'package:emerge_app/features/habits/presentation/widgets/habit_timer_dialog.dart';
 import 'package:emerge_app/features/narrator/domain/models/narrator_line.dart';
-// import 'package:emerge_app/features/reflections/presentation/widgets/habit_options_sheet.dart';
-// Uncommented in Task 12
+import 'package:emerge_app/features/reflections/presentation/widgets/habit_options_sheet.dart';
 import 'package:emerge_app/features/narrator/domain/models/narrator_note.dart';
 import 'package:emerge_app/features/narrator/presentation/providers/narrator_providers.dart';
 import 'package:emerge_app/features/narrator/presentation/widgets/narrator_avatar.dart';
@@ -378,8 +377,7 @@ class _TimelineScreenState extends ConsumerState<TimelineScreen> {
               _openTimerDialog(habit);
             },
             onMenuTap: (habit) {
-              // HabitOptionsSheet.show(context, habit, _selectedDate);
-              // Uncommented in Task 12
+              HabitOptionsSheet.show(context, habit, _selectedDate);
             },
           ),
         ),

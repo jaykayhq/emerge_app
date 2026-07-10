@@ -55,7 +55,7 @@ final class PulseFeedRepositoryProvider
 }
 
 String _$pulseFeedRepositoryHash() =>
-    r'b96763d0d34ca9e34db49ab368271b5015fd969f';
+    r'fb1a1d319603bb4af9d0f31a13fb3d3684ad4f99';
 
 /// Streams pulse-feed cards — local first, Firestore in background.
 ///
@@ -110,4 +110,4 @@ final class PulseFeedProvider
   }
 }
 
-String _$pulseFeedHash() => r'c6060cf57aee268dc400d37cd6907871b85e8f4a';
+String _$pulseFeedHash() => r'25d489c677555d966866a08a72d12b14b9a83cfb';

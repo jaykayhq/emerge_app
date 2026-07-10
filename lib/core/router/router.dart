@@ -13,7 +13,6 @@ import 'package:emerge_app/features/gamification/presentation/screens/leveling_s
 import 'package:emerge_app/features/profile/presentation/screens/future_self_studio_screen.dart';
 import 'package:emerge_app/features/gamification/presentation/widgets/level_up_listener.dart';
 import 'package:emerge_app/features/habits/presentation/screens/advanced_create_habit_dialog.dart';
-import 'package:emerge_app/features/habits/presentation/screens/habit_detail_screen.dart';
 import 'package:emerge_app/features/world_map/presentation/screens/level_immersive_screen.dart';
 import 'package:emerge_app/features/social/presentation/screens/leaderboard_screen.dart';
 import 'package:emerge_app/features/gamification/presentation/screens/level_up_reward_screen.dart';
@@ -368,13 +367,7 @@ GoRouter router(Ref ref) {
                     builder: (context, state) =>
                         const AdvancedCreateHabitDialog(),
                   ),
-                  GoRoute(
-                    path: 'detail/:habitId',
-                    builder: (context, state) {
-                      final habitId = state.pathParameters['habitId']!;
-                      return HabitDetailScreen(habitId: habitId);
-                    },
-                  ),
+                  // detail/:habitId removed — HabitDetailScreen deleted
                 ],
               ),
             ],

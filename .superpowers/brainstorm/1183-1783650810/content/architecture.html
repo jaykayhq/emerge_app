@@ -1,0 +1,80 @@
+<h2>Proposed UX & Architecture</h2>
+<p class="subtitle">Recap of your decisions so far → concrete shape of the new widget, sheet, and data flow.</p>
+
+<div class="section">
+  <h3>1 · Timeline habit row — Layout B with progress fill</h3>
+  <div style="background:#0b0b14;padding:16px;border-radius:10px;font-family:monospace;color:#cfd6e4;font-size:12px">
+    <div style="display:flex;align-items:center;gap:10px;background:linear-gradient(to right, rgba(43,238,121,0.32) 38%, rgba(255,255,255,0.06) 38%);padding:12px;border-radius:10px;border:1px solid rgba(255,255,255,0.1);position:relative;overflow:hidden">
+      <span style="flex:1;color:#fff;font-weight:500">Morning Meditation</span>
+      <div style="width:22px;height:22px;border-radius:50%;border:2px solid #2BEE79;display:flex;align-items:center;justify-content:center"></div>
+      <button title="Start timer" style="background:none;border:none;color:#fff;font-size:16px;cursor:pointer">⏱️</button>
+      <button title="Open menu" style="background:none;border:none;color:#fff;font-size:20px;cursor:pointer;line-height:1">⋮</button>
+    </div>
+    <div style="margin-top:8px;color:#888">↑ timer running: card fill = 38% complete</div>
+  </div>
+  <ul style="margin-top:10px;line-height:1.7">
+    <li><strong>Tap row body</strong> (anywhere except icons/checkbox) → push to <code>/</code> (World Map)</li>
+    <li><strong>Tap checkbox</strong> → instant complete: card fills to 100%, checkmark drawn, habit marked done (cancels running timer if any)</li>
+    <li><strong>Tap ⏱️</strong> → open modal timer dialog (existing <code>TwoMinuteTimerDialog</code>), set duration, start. On start: modal closes, card progress fills over the duration; on 0: auto-complete</li>
+    <li><strong>Tap ⋮</strong> → bottom sheet with: Environment Priming, Set Reward, Log Reflection, Delete Habit</li>
+  </ul>
+</div>
+
+<div class="section">
+  <h3>2 · Bottom sheet (HabitOptionsSheet)</h3>
+  <div style="background:#0b0b14;padding:16px;border-radius:10px;font-family:monospace;color:#cfd6e4;font-size:12px;line-height:1.5">
+<pre style="margin:0;color:#cfd6e4">┌──────────────────────────────────────┐
+│  Morning Meditation            ✕     │
+├──────────────────────────────────────┤
+│  ▶  Start Timer                      │
+├──────────────────────────────────────┤
+│  ENVIRONMENT PRIMING                 │
+│    □ Lay out gym clothes      ✕      │
+│    □ Pack water bottle        ✕      │
+│    [+ Add step…]                     │
+├──────────────────────────────────────┤
+│  SET REWARD                          │
+│    [ Watch 1 episode ]               │
+│    [Check social] [Coffee] [Podcast] │
+├──────────────────────────────────────┤
+│  LOG REFLECTION                      │
+│    😀 😐 😕 ☹️ 😣                    │
+│    [ Add a note… (140 chars) ]       │
+│                  [ Save Reflection ] │
+├──────────────────────────────────────┤
+│  🗑️  Delete Habit                    │
+└──────────────────────────────────────┘</pre>
+  </div>
+  <ul style="margin-top:10px;line-height:1.7">
+    <li><strong>Environment Priming:</strong> list with remove (✕) + add input. Saves immediately on add/remove.</li>
+    <li><strong>Set Reward:</strong> text field + suggestion chips. Saves on blur.</li>
+    <li><strong>Log Reflection:</strong> mood emoji row + note (140 chars) + Save button. New per-habit reflection row.</li>
+    <li><strong>Delete Habit:</strong> confirmation dialog → calls <code>habitRepository.deleteHabit</code>.</li>
+  </ul>
+</div>
+
+<div class="section">
+  <h3>3 · Data flow & new entities</h3>
+  <ul style="line-height:1.7">
+    <li><strong>Existing:</strong> <code>DailyReflection</code> = one-per-day global. Unchanged.</li>
+    <li><strong>NEW:</strong> <code>HabitReflection</code> = one-per-(userId, habitId, localDate). Mirrors the existing daily reflection schema but adds <code>habitId</code> and scopes reads by habit.</li>
+    <li><strong>NEW table:</strong> <code>habit_reflections</code> in drift, unique index on (userId, habitId, localDate). DAO mirrors <code>DailyReflectionsDao</code>.</li>
+    <li><strong>NEW repo:</strong> <code>HabitReflectionRepository</code> with <code>getForHabit(userId, habitId, date)</code> + <code>save()</code>. Remote mirror: subcollection <code>users/{uid}/habit_reflections/{autoId}</code>.</li>
+    <li><strong>NEW provider:</strong> <code>habitReflectionProvider(userId, habitId, date)</code> for sheet; <code>saveHabitReflectionProvider</code> for write.</li>
+    <li><strong>Habit edits</strong> (priming, reward): already supported via <code>habitRepository.updateHabit</code>; sheet calls it directly.</li>
+  </ul>
+</div>
+
+<div class="section">
+  <h3>4 · Files touched</h3>
+  <ul style="line-height:1.7">
+    <li><strong>New:</strong> <code>lib/features/reflections/data/datasources/habit_reflection_local_datasource.dart</code>, <code>habit_reflection_remote_datasource.dart</code>, <code>habit_reflection_repository.dart</code>; <code>domain/entities/habit_reflection.dart</code>; <code>presentation/widgets/habit_options_sheet.dart</code>; <code>presentation/providers/habit_reflection_providers.dart</code></li>
+    <li><strong>Modified:</strong> <code>lib/features/timeline/presentation/widgets/habit_timeline_section.dart</code> (rewrite <code>_IndentedHabitItem</code>), <code>lib/core/router/router.dart</code> (remove <code>/timeline/detail/:habitId</code> route + import)</li>
+    <li><strong>Deleted:</strong> <code>lib/features/habits/presentation/screens/habit_detail_screen.dart</code></li>
+    <li><strong>Drift:</strong> add <code>habit_reflections</code> table in <code>app_database.dart</code>; new DAO</li>
+  </ul>
+</div>
+
+<div class="section">
+  <p class="subtitle">Take a look — does this match your intent? Tell me what to adjust before I lock the design doc.</p>
+</div>
