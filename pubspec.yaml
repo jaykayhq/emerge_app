@@ -149,6 +149,8 @@ flutter:
     - assets/worlds/focus/
     - assets/worlds/spirit/
 
+  shaders:
+    - shaders/cracked_orb.frag
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images
