@@ -173,7 +173,7 @@ void main() {
           userOnboardingProgress: 3,
           userOnboardingCompletedAt: null,
         ),
-        '/',
+        '/world-map',
       );
     });
 
@@ -256,7 +256,7 @@ void main() {
           userOnboardingProgress: 3,
           userOnboardingCompletedAt: null,
         ),
-        '/',
+        '/world-map',
       );
     });
 
@@ -271,7 +271,7 @@ void main() {
           userOnboardingProgress: 4,
           userOnboardingCompletedAt: DateTime(2026, 1, 1),
         ),
-        '/',
+        '/world-map',
       );
     });
   });

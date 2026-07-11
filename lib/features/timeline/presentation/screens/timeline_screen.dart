@@ -359,12 +359,15 @@ class _TimelineScreenState extends ConsumerState<TimelineScreen> {
                   ),
                 ),
                 const SizedBox(width: 8),
-                GestureDetector(
-                  onTap: _shareTimelineProgress,
-                  child: Icon(
-                    Icons.share_outlined,
-                    color: Colors.white.withValues(alpha: 0.3),
-                    size: 18,
+                Tooltip(
+                  message: 'Share progress',
+                  child: GestureDetector(
+                    onTap: _shareTimelineProgress,
+                    child: Icon(
+                      Icons.share_outlined,
+                      color: Colors.white.withValues(alpha: 0.6),
+                      size: 18,
+                    ),
                   ),
                 ),
               ],

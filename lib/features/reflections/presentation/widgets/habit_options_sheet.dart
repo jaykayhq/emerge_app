@@ -79,8 +79,7 @@ class _HabitOptionsSheetState extends ConsumerState<HabitOptionsSheet> {
         durationMinutes: widget.habit.timerDurationMinutes,
         onComplete: () {
           ref.read(completeHabitProvider(widget.habit.id));
-          Navigator.of(context).pop();
-          if (mounted) Navigator.of(context).pop();
+          Navigator.of(context).pop(); // pop timer dialog only
         },
       ),
     );

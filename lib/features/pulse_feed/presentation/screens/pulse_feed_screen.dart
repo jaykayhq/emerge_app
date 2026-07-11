@@ -27,7 +27,7 @@ class PulseFeedScreen extends ConsumerWidget {
     return Scaffold(
       backgroundColor: Colors.transparent,
       body: AppBackToHome(
-        homeRoute: '/',
+        homeRoute: '/world-map',
         child: SafeArea(
           child: feedAsync.when(
             data: (cards) => _FeedContent(cards: cards),
