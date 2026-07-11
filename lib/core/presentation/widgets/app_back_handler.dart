@@ -14,7 +14,7 @@ class AppBackToHome extends StatelessWidget {
   const AppBackToHome({
     super.key,
     required this.child,
-    this.homeRoute = '/',
+    this.homeRoute = '/world-map',
   });
 
   @override

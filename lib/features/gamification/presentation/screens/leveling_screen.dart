@@ -124,7 +124,7 @@ class _LevelingScreenState extends ConsumerState<LevelingScreen> {
                     SizedBox(
                       width: double.infinity,
                       child: ElevatedButton.icon(
-                        onPressed: () => context.go('/'),
+                        onPressed: () => context.go('/world-map'),
                         icon: const Icon(Icons.map_outlined, size: 20),
                         label: const Text(
                           'CONTINUE JOURNEY',
