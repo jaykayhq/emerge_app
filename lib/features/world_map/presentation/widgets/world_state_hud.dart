@@ -12,9 +12,57 @@ class WorldStateHUD extends ConsumerWidget {
     final healthAsync = ref.watch(worldHealthStreamProvider);
     final entropyAsync = ref.watch(worldEntropyStreamProvider);
 
-    final double health = healthAsync.value ?? 0.5;
-    final double entropy = entropyAsync.value ?? 0.0;
+    // Show loading shimmer while providers are initialising.
+    if (healthAsync.isLoading || entropyAsync.isLoading) {
+      return const _HudShell(child: _HudLoadingContent());
+    }
 
+    // Show dashes when either stream carries an error — visible signal,
+    // no crash, no false data.
+    if (healthAsync.hasError || entropyAsync.hasError) {
+      return const _HudShell(child: _HudErrorContent());
+    }
+
+    final double health = healthAsync.requireValue;
+    final double entropy = entropyAsync.requireValue;
+
+    return _HudShell(
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          _StatColumn(
+            label: 'VITALITY',
+            value: health,
+            color: Colors.cyanAccent,
+            icon: Icons.favorite_border,
+          ),
+          const SizedBox(width: 24),
+          Container(
+            width: 1,
+            height: 30,
+            color: Colors.white.withValues(alpha: 0.2),
+          ),
+          const SizedBox(width: 24),
+          _StatColumn(
+            label: 'ENTROPY',
+            value: entropy,
+            color: Colors.purpleAccent,
+            icon: Icons.blur_on,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Shared glassmorphic container shell used by all HUD states.
+class _HudShell extends StatelessWidget {
+  const _HudShell({required this.child});
+
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
     return ClipRRect(
       borderRadius: BorderRadius.circular(16),
       child: BackdropFilter(
@@ -30,51 +78,118 @@ class WorldStateHUD extends ConsumerWidget {
             ),
             boxShadow: [
               BoxShadow(
-                color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
+                color:
+                    Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
                 blurRadius: 10,
                 spreadRadius: 1,
               ),
             ],
           ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              _buildStatColumn(
-                context,
-                label: 'VITALITY',
-                value: health,
-                color: Colors.cyanAccent,
-                icon: Icons.favorite_border,
-              ),
-              const SizedBox(width: 24),
-              Container(
-                width: 1,
-                height: 30,
-                color: Colors.white.withValues(alpha: 0.2),
-              ),
-              const SizedBox(width: 24),
-              _buildStatColumn(
-                context,
-                label: 'ENTROPY',
-                value: entropy,
-                color: Colors.purpleAccent,
-                icon: Icons.blur_on,
-              ),
-            ],
+          child: child,
+        ),
+      ),
+    );
+  }
+}
+
+/// Shown while providers are still loading.
+class _HudLoadingContent extends StatelessWidget {
+  const _HudLoadingContent();
+
+  @override
+  Widget build(BuildContext context) {
+    return const SizedBox(
+      height: 44,
+      child: Center(
+        child: SizedBox(
+          width: 16,
+          height: 16,
+          child: CircularProgressIndicator(
+            strokeWidth: 2,
+            color: Colors.white54,
           ),
         ),
       ),
     );
   }
+}
 
-  Widget _buildStatColumn(
-    BuildContext context, {
-    required String label,
-    required double value,
-    required Color color,
-    required IconData icon,
-  }) {
-    final percent = (value * 100).toInt();
+/// Shown when one or both providers carry an error.
+class _HudErrorContent extends StatelessWidget {
+  const _HudErrorContent();
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        _DashColumn(label: 'VITALITY', color: Colors.cyanAccent),
+        const SizedBox(width: 24),
+        Container(
+          width: 1,
+          height: 30,
+          color: Colors.white.withValues(alpha: 0.2),
+        ),
+        const SizedBox(width: 24),
+        _DashColumn(label: 'ENTROPY', color: Colors.purpleAccent),
+      ],
+    );
+  }
+}
+
+class _DashColumn extends StatelessWidget {
+  const _DashColumn({required this.label, required this.color});
+
+  final String label;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        Text(
+          label,
+          style: TextStyle(
+            color: Colors.white.withValues(alpha: 0.7),
+            fontSize: 10,
+            letterSpacing: 1.5,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          '--',
+          style: TextStyle(
+            color: color.withValues(alpha: 0.6),
+            fontSize: 20,
+            fontWeight: FontWeight.w900,
+            shadows: [Shadow(color: color, blurRadius: 8)],
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+/// A single stat column showing label + percentage.
+class _StatColumn extends StatelessWidget {
+  const _StatColumn({
+    required this.label,
+    required this.value,
+    required this.color,
+    required this.icon,
+  });
+
+  final String label;
+  final double value;
+  final Color color;
+  final IconData icon;
+
+  @override
+  Widget build(BuildContext context) {
+    final percent = (value.clamp(0.0, 1.0) * 100).round();
     return Column(
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.center,
@@ -102,13 +217,7 @@ class WorldStateHUD extends ConsumerWidget {
             color: Colors.white,
             fontSize: 20,
             fontWeight: FontWeight.w900,
-            fontFamily: 'monospace',
-            shadows: [
-              Shadow(
-                color: color,
-                blurRadius: 8,
-              ),
-            ],
+            shadows: [Shadow(color: color, blurRadius: 8)],
           ),
         ),
       ],
