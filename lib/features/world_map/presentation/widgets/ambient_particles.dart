@@ -1,5 +1,6 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
+import 'package:flutter/scheduler.dart';
 
 class AmbientParticles extends StatefulWidget {
   final int particleCount;
@@ -12,16 +13,18 @@ class AmbientParticles extends StatefulWidget {
 
 class _AmbientParticlesState extends State<AmbientParticles>
     with SingleTickerProviderStateMixin {
-  late AnimationController _controller;
+  late Ticker _ticker;
+  double _time = 0.0;
   late List<_Particle> _particles;
 
   @override
   void initState() {
     super.initState();
-    _controller = AnimationController(
-      vsync: this,
-      duration: const Duration(seconds: 10),
-    )..repeat();
+    _ticker = createTicker((elapsed) {
+      setState(() {
+        _time = elapsed.inMilliseconds / 1000.0;
+      });
+    })..start();
 
     final random = Random();
     _particles = List.generate(
@@ -39,20 +42,15 @@ class _AmbientParticlesState extends State<AmbientParticles>
 
   @override
   void dispose() {
-    _controller.dispose();
+    _ticker.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    return AnimatedBuilder(
-      animation: _controller,
-      builder: (context, child) {
-        return CustomPaint(
-          painter: _ParticlePainter(_particles, _controller.value),
-          size: Size.infinite,
-        );
-      },
+    return CustomPaint(
+      painter: _ParticlePainter(_particles, _time),
+      size: Size.infinite,
     );
   }
 }
@@ -77,25 +75,21 @@ class _Particle {
 
 class _ParticlePainter extends CustomPainter {
   final List<_Particle> particles;
-  final double progress;
+  final double time;
 
-  _ParticlePainter(this.particles, this.progress);
+  _ParticlePainter(this.particles, this.time);
 
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint();
 
     for (var p in particles) {
-      final currentX = (p.x + p.speedX * progress) % 1.0;
-      final currentY = (p.y + p.speedY * progress) % 1.0;
+      final currentX = ((p.x + p.speedX * time) % 1.0 + 1.0) % 1.0;
+      final currentY = ((p.y + p.speedY * time) % 1.0 + 1.0) % 1.0;
       
-      // Handle negative modulo wrapper
-      final px = currentX < 0 ? currentX + 1.0 : currentX;
-      final py = currentY < 0 ? currentY + 1.0 : currentY;
-
       paint.color = Colors.white.withOpacity(p.opacity);
       canvas.drawCircle(
-        Offset(px * size.width, py * size.height),
+        Offset(currentX * size.width, currentY * size.height),
         p.size,
         paint,
       );
@@ -104,6 +98,6 @@ class _ParticlePainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant _ParticlePainter oldDelegate) {
-    return oldDelegate.progress != progress;
+    return oldDelegate.time != time;
   }
 }

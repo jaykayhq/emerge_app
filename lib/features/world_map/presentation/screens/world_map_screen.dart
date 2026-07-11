@@ -10,6 +10,7 @@ import 'package:emerge_app/features/world_map/presentation/widgets/world_ring_la
 import 'package:emerge_app/features/world_map/presentation/widgets/central_health_orb.dart';
 import 'package:emerge_app/features/world_map/presentation/widgets/ambient_particles.dart';
 import 'package:emerge_app/features/world_map/presentation/widgets/constellation_lines.dart';
+import 'package:emerge_app/features/world_map/utils/ring_layout_geometry.dart';
 import 'package:emerge_app/features/habits/domain/entities/habit.dart';
 import 'dart:math' as math;
 
@@ -84,14 +85,11 @@ class _WorldMapScreenState extends ConsumerState<WorldMapScreen> {
               final attributes = HabitAttribute.values;
               final nodeCount = attributes.length;
               const radius = 140.0;
-              final angleStep = (2 * math.pi) / nodeCount;
-              final nodePositions = List.generate(nodeCount, (index) {
-                final angle = -math.pi / 2 + (index * angleStep);
-                return Offset(
-                  center.dx + (radius * math.cos(angle)),
-                  center.dy + (radius * math.sin(angle)),
-                );
-              });
+              final nodePositions = calculateRingNodePositions(
+                size: size,
+                radius: radius,
+                nodeCount: nodeCount,
+              );
 
               return Stack(
                 fit: StackFit.expand,

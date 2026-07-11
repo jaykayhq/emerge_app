@@ -2,6 +2,7 @@
 import 'dart:math' as math;
 import 'package:emerge_app/features/habits/domain/entities/habit.dart';
 import 'package:emerge_app/features/world_map/presentation/widgets/world_type_node.dart';
+import 'package:emerge_app/features/world_map/utils/ring_layout_geometry.dart';
 import 'package:flutter/material.dart';
 
 class WorldRingLayout extends StatelessWidget {
@@ -20,7 +21,6 @@ class WorldRingLayout extends StatelessWidget {
   Widget build(BuildContext context) {
     final attributes = HabitAttribute.values;
     final nodeCount = attributes.length;
-    final angleStep = (2 * math.pi) / nodeCount;
 
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -31,21 +31,22 @@ class WorldRingLayout extends StatelessWidget {
             ? constraints.maxHeight
             : MediaQuery.of(context).size.height;
             
-        final center = Offset(width / 2, height / 2);
+        final size = Size(width, height);
+        final positions = calculateRingNodePositions(
+          size: size,
+          radius: radius,
+          nodeCount: nodeCount,
+        );
 
         return Stack(
           clipBehavior: Clip.none,
           children: List.generate(nodeCount, (index) {
             final attr = attributes[index];
-            // Start at top (-pi/2) and go clockwise
-            final angle = -math.pi / 2 + (index * angleStep);
-            
-            final dx = center.dx + (radius * math.cos(angle));
-            final dy = center.dy + (radius * math.sin(angle));
+            final pos = positions[index];
 
             return Positioned(
-              left: dx,
-              top: dy,
+              left: pos.dx,
+              top: pos.dy,
               child: FractionalTranslation(
                 translation: const Offset(-0.5, -0.5),
                 child: WorldTypeNode(

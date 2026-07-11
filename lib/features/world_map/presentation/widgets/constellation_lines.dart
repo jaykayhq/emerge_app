@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 class ConstellationLines extends StatelessWidget {
@@ -46,6 +47,6 @@ class _ConstellationPainter extends CustomPainter {
   @override
   bool shouldRepaint(covariant _ConstellationPainter oldDelegate) {
     return oldDelegate.center != center ||
-        oldDelegate.nodePositions != nodePositions;
+        !listEquals(oldDelegate.nodePositions, nodePositions);
   }
 }
