@@ -1,10 +1,8 @@
 // lib/features/world_map/presentation/widgets/world_type_node.dart
+import 'package:emerge_app/core/utils/string_extensions.dart';
 import 'package:emerge_app/features/habits/domain/entities/habit.dart';
 import 'package:emerge_app/features/world_map/domain/models/world_type_config.dart';
 import 'package:flutter/material.dart';
-
-// Helper if attribute enum doesn't map cleanly to names directly
-String _capitalize(String s) => s.isNotEmpty ? '${s[0].toUpperCase()}${s.substring(1)}' : s;
 
 class WorldTypeNode extends StatelessWidget {
   final HabitAttribute attribute;
@@ -20,7 +18,7 @@ class WorldTypeNode extends StatelessWidget {
   Widget build(BuildContext context) {
     final config = WorldTypeConfig.forAttribute(attribute);
     final theme = Theme.of(context);
-    final String labelName = _capitalize(attribute.name);
+    final String labelName = attribute.name.capitalize();
 
     return GestureDetector(
       onTap: onTap,

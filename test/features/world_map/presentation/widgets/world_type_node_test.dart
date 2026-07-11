@@ -5,13 +5,27 @@ import 'package:emerge_app/features/world_map/presentation/widgets/world_type_no
 import 'package:emerge_app/features/habits/domain/entities/habit.dart';
 
 void main() {
-  testWidgets('WorldTypeNode displays correct label and styled container', (tester) async {
+  testWidgets('WorldTypeNode displays correct label and responds to taps', (tester) async {
+    bool tapped = false;
+
     await tester.pumpWidget(MaterialApp(
       home: Scaffold(
-        body: WorldTypeNode(attribute: HabitAttribute.strength, onTap: () {}),
+        body: WorldTypeNode(
+          attribute: HabitAttribute.strength,
+          onTap: () {
+            tapped = true;
+          },
+        ),
       ),
     ));
 
     expect(find.text('Strength'), findsOneWidget);
+
+    // Tap the node
+    await tester.tap(find.byType(WorldTypeNode));
+    await tester.pumpAndSettle();
+
+    // Verify it responds to taps
+    expect(tapped, isTrue);
   });
 }
