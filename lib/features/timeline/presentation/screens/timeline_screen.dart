@@ -8,10 +8,10 @@ import 'package:emerge_app/features/monetization/domain/services/ad_manager_serv
 import 'package:emerge_app/features/monetization/presentation/providers/subscription_provider.dart';
 import 'package:emerge_app/features/monetization/presentation/widgets/ad_banner_widget.dart';
 import 'package:emerge_app/features/timeline/presentation/widgets/month_calendar_strip.dart';
-import 'package:emerge_app/features/timeline/presentation/widgets/today_arc_card.dart';
+import 'package:emerge_app/features/timeline/presentation/widgets/recap_summary_card.dart';
 import 'package:emerge_app/features/timeline/presentation/widgets/habit_timeline_section.dart';
-import 'package:emerge_app/features/timeline/presentation/widgets/timeline_share_preview.dart';
 import 'package:emerge_app/features/timeline/presentation/widgets/completion_celebration.dart';
+import 'package:emerge_app/features/timeline/presentation/widgets/timeline_share_preview.dart';
 import 'package:emerge_app/features/auth/domain/entities/user_extension.dart';
 import 'package:emerge_app/features/gamification/presentation/providers/user_stats_providers.dart';
 import 'package:emerge_app/core/presentation/widgets/world_background.dart';
@@ -26,18 +26,16 @@ import 'package:emerge_app/features/narrator/domain/models/narrator_line.dart';
 import 'package:emerge_app/features/reflections/presentation/widgets/habit_options_sheet.dart';
 import 'package:emerge_app/features/narrator/domain/models/narrator_note.dart';
 import 'package:emerge_app/features/narrator/presentation/providers/narrator_providers.dart';
-import 'package:emerge_app/features/narrator/presentation/widgets/narrator_avatar.dart';
 import 'package:emerge_app/features/narrator/presentation/widgets/narrator_milestone_card.dart';
 import 'package:emerge_app/features/narrator/presentation/widgets/narrator_summary_card.dart';
 import 'package:emerge_app/features/narrator/presentation/widgets/narrator_sheet.dart';
 import 'package:emerge_app/features/narrator/domain/models/narrator_appearance.dart';
 import 'package:emerge_app/features/narrator/domain/models/narrator_trigger.dart';
-import 'package:emerge_app/features/timeline/presentation/widgets/timeline_reflection_card.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-/// Main Timeline screen - the daily command center
-/// Shows calendar, daily summary, habit timeline grouped by time-of-day,
-/// AI coach insights, and daily reflection
+/// Main daily screen - the habit command center
+/// Shows calendar, daily summary, habits grouped by time-of-day,
+/// and AI coach insights
 class TimelineScreen extends ConsumerStatefulWidget {
   const TimelineScreen({super.key});
 
@@ -75,13 +73,6 @@ class _TimelineScreenState extends ConsumerState<TimelineScreen> {
       if (h.currentStreak > max) max = h.currentStreak;
     }
     return max;
-  }
-
-  void _onNarratorAvatarTap() {
-    // If there's a pending line, clear it without showing the sheet.
-    // The avatar tap can later open an askNarrator sheet.
-    ref.read(pendingMilestoneProvider.notifier).clear();
-    // For now: no-op; future: open askNarrator sheet
   }
 
   void _onPendingMilestoneChange(NarratorLine? prev, NarratorLine? next) {
@@ -126,16 +117,18 @@ class _TimelineScreenState extends ConsumerState<TimelineScreen> {
         context,
         _eveningAppearance,
         onResponse: (buttonLabel, typedText) {
-          ref.read(narratorLocalDatasourceProvider).recordNote(
-            type: NarratorNoteType.reflectionLogged,
-            data: {
-              'completedCount': completedToday,
-              'totalHabits': totalHabits,
-              'response': buttonLabel,
-              if (typedText != null && typedText.isNotEmpty)
-                'typedNote': typedText,
-            },
-          );
+          ref
+              .read(narratorLocalDatasourceProvider)
+              .recordNote(
+                type: NarratorNoteType.reflectionLogged,
+                data: {
+                  'completedCount': completedToday,
+                  'totalHabits': totalHabits,
+                  'response': buttonLabel,
+                  if (typedText != null && typedText.isNotEmpty)
+                    'typedNote': typedText,
+                },
+              );
         },
       );
     });
@@ -178,7 +171,10 @@ class _TimelineScreenState extends ConsumerState<TimelineScreen> {
       }
     });
 
-    ref.listen<NarratorLine?>(pendingMilestoneProvider, _onPendingMilestoneChange);
+    ref.listen<NarratorLine?>(
+      pendingMilestoneProvider,
+      _onPendingMilestoneChange,
+    );
 
     return WorldBackground(
       useSafeArea: false,
@@ -189,9 +185,12 @@ class _TimelineScreenState extends ConsumerState<TimelineScreen> {
             child: habits.isNotEmpty
                 ? _buildTimelineList(context, habits, statsAsync)
                 : habitsAsync.when(
-                    data: (_) => _buildTimelineList(context, habits, statsAsync),
+                    data: (_) =>
+                        _buildTimelineList(context, habits, statsAsync),
                     loading: () => const Center(
-                      child: CircularProgressIndicator(color: Color(0xFF2BEE79)),
+                      child: CircularProgressIndicator(
+                        color: Color(0xFF2BEE79),
+                      ),
                     ),
                     error: (e, s) => _buildErrorView(context, e),
                   ),
@@ -242,7 +241,9 @@ class _TimelineScreenState extends ConsumerState<TimelineScreen> {
     List<Habit> habits,
     AsyncValue<UserProfile> statsAsync,
   ) {
-    final completedCount = habits.where((h) => h.isCompletedOn(_selectedDate)).length;
+    final completedCount = habits
+        .where((h) => h.isCompletedOn(_selectedDate))
+        .length;
 
     final grouped = _groupHabitsByTimeOfDay(habits);
     final timelineGroups = Map<String, List<Habit>>.from(grouped);
@@ -250,7 +251,7 @@ class _TimelineScreenState extends ConsumerState<TimelineScreen> {
     return CustomScrollView(
       slivers: [
         ArchetypeSliverAppBar(
-          title: 'TIMELINE',
+          title: 'Today',
           syncIndicator: null,
           badge: Consumer(
             builder: (context, ref, _) {
@@ -274,27 +275,36 @@ class _TimelineScreenState extends ConsumerState<TimelineScreen> {
             },
           ),
           actions: [
-            PopupMenuButton<String>(
-              icon: const Icon(Icons.more_vert, color: Colors.white),
-              onSelected: (v) {
-                switch (v) {
-                  case 'share':
-                    _shareTimelineProgress();
-                  case 'recap':
-                    context.push('/recap');
-                  case 'profile':
-                    context.push('/profile');
-                }
-              },
-              itemBuilder: (_) => [
-                const PopupMenuItem(value: 'share', child: Text('Share progress')),
-                const PopupMenuItem(value: 'recap', child: Text('Weekly recap')),
-                const PopupMenuItem(value: 'profile', child: Text('Future Self Studio')),
-              ],
-            ),
+            // Polished profile icon
             Padding(
               padding: const EdgeInsets.only(right: 8),
-              child: NarratorAvatar(onTap: () => _onNarratorAvatarTap()),
+              child: GestureDetector(
+                onTap: () => context.push('/profile'),
+                child: Container(
+                  width: 36,
+                  height: 36,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    gradient: const LinearGradient(
+                      colors: [EmergeColors.violet, EmergeColors.teal],
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: EmergeColors.violet.withValues(alpha: 0.3),
+                        blurRadius: 8,
+                        spreadRadius: 0,
+                      ),
+                    ],
+                  ),
+                  child: const Center(
+                    child: Icon(
+                      Icons.person_rounded,
+                      color: Colors.white,
+                      size: 20,
+                    ),
+                  ),
+                ),
+              ),
             ),
           ],
         ),
@@ -314,19 +324,11 @@ class _TimelineScreenState extends ConsumerState<TimelineScreen> {
         SliverToBoxAdapter(
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16.0),
-            child: TodayArcCard(
-              completed: completedCount,
-              total: habits.length,
-              streakDays: _bestStreak(habits),
-              onTap: () {
-                // Jump to first incomplete habit
-                final firstIncomplete = habits.where(
-                  (h) => !h.isCompletedOn(_selectedDate),
-                ).firstOrNull;
-                if (firstIncomplete != null) {
-                  // Scroll to habit — TimelineScreen can add scroll-to later
-                }
-              },
+            child: RecapSummaryCard(
+              habits: habits,
+              streak: _bestStreak(habits),
+              totalXp: statsAsync.value?.avatarStats.totalXp ?? 0,
+              onTap: () => context.push('/world-map/recap'),
             ),
           ),
         ),
@@ -342,8 +344,8 @@ class _TimelineScreenState extends ConsumerState<TimelineScreen> {
                   _selectedDate.day == DateTime.now().day &&
                           _selectedDate.month == DateTime.now().month &&
                           _selectedDate.year == DateTime.now().year
-                      ? "Today's Timeline"
-                      : "${_selectedDate.month}/${_selectedDate.day} Timeline",
+                      ? "Today's Habits"
+                      : "${_selectedDate.month}/${_selectedDate.day}",
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
                     color: Colors.white,
                     fontWeight: FontWeight.bold,
@@ -354,6 +356,15 @@ class _TimelineScreenState extends ConsumerState<TimelineScreen> {
                   '$completedCount/${habits.length}',
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                     color: EmergeColors.tealMuted,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                GestureDetector(
+                  onTap: _shareTimelineProgress,
+                  child: Icon(
+                    Icons.share_outlined,
+                    color: Colors.white.withValues(alpha: 0.3),
+                    size: 18,
                   ),
                 ),
               ],
@@ -368,7 +379,7 @@ class _TimelineScreenState extends ConsumerState<TimelineScreen> {
             groupedHabits: timelineGroups,
             selectedDate: _selectedDate,
             onHabitTap: (habit) {
-              context.go('/');
+              context.go('/world-map?focus=${habit.attribute.name}');
             },
             onHabitToggle: (habit) {
               _toggleHabitCompletion(habit);
@@ -393,25 +404,28 @@ class _TimelineScreenState extends ConsumerState<TimelineScreen> {
                     padding: const EdgeInsets.all(32),
                     child: Column(
                       children: [
-                        Icon(Icons.add_task, color: EmergeColors.teal, size: 48),
+                        Icon(
+                          Icons.add_task,
+                          color: EmergeColors.teal,
+                          size: 48,
+                        ),
                         const SizedBox(height: 12),
                         Text(
                           'No habits yet',
-                          style: Theme.of(
-                            context,
-                          ).textTheme.titleMedium?.copyWith(color: Colors.white),
+                          style: Theme.of(context).textTheme.titleMedium
+                              ?.copyWith(color: Colors.white),
                         ),
                         const SizedBox(height: 4),
                         Text(
                           'Create your first habit to start your identity journey',
-                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: EmergeColors.tealMuted,
-                          ),
+                          style: Theme.of(context).textTheme.bodySmall
+                              ?.copyWith(color: EmergeColors.tealMuted),
                           textAlign: TextAlign.center,
                         ),
                         const SizedBox(height: 16),
                         ElevatedButton.icon(
-                          onPressed: () => context.push('/timeline/create-habit'),
+                          onPressed: () =>
+                              context.push('/timeline/create-habit'),
                           icon: const Icon(Icons.add),
                           label: const Text('Create Habit'),
                           style: ElevatedButton.styleFrom(
@@ -444,22 +458,7 @@ class _TimelineScreenState extends ConsumerState<TimelineScreen> {
 
         const SliverToBoxAdapter(child: SizedBox(height: 8)),
 
-        const SliverToBoxAdapter(
-          child: NarratorSummaryCard(),
-        ),
-
-        const SliverToBoxAdapter(child: SizedBox(height: 16)),
-
-        // Daily reflection card
-        SliverToBoxAdapter(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: TimelineReflectionCard(
-              userId: statsAsync.value?.uid ?? '',
-              date: _selectedDate,
-            ),
-          ),
-        ),
+        const SliverToBoxAdapter(child: NarratorSummaryCard()),
 
         const SliverToBoxAdapter(child: SizedBox(height: 24)),
       ],
@@ -517,7 +516,7 @@ class _TimelineScreenState extends ConsumerState<TimelineScreen> {
     final minutes = await showDialog<int>(
       context: context,
       barrierDismissible: false,
-      builder: (_) => TwoMinuteTimerDialog(
+      builder: (_) => HabitTimerDialog(
         habitTitle: habit.title,
         neonColor: attributeColor(habit.attribute),
         durationMinutes: habit.timerDurationMinutes,
@@ -568,7 +567,9 @@ class _TimelineScreenState extends ConsumerState<TimelineScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Could not save. Check your connection and try again.'),
+            content: Text(
+              'Could not save. Check your connection and try again.',
+            ),
             backgroundColor: Colors.orange,
             behavior: SnackBarBehavior.floating,
           ),
@@ -652,9 +653,7 @@ class _BreathingWrapperState extends State<_BreathingWrapper>
   late final Animation<double> _scaleAnimation = Tween<double>(
     begin: 0.98,
     end: 1.02,
-  ).animate(
-    CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
-  );
+  ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
 
   @override
   void dispose() {
@@ -664,10 +663,6 @@ class _BreathingWrapperState extends State<_BreathingWrapper>
 
   @override
   Widget build(BuildContext context) {
-    return ScaleTransition(
-      scale: _scaleAnimation,
-      child: widget.child,
-    );
+    return ScaleTransition(scale: _scaleAnimation, child: widget.child);
   }
 }
-

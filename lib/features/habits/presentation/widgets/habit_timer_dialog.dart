@@ -4,14 +4,16 @@ import 'package:emerge_app/core/theme/app_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:gap/gap.dart';
 
-/// Countdown timer dialog with customizable duration
-class TwoMinuteTimerDialog extends StatefulWidget {
+/// Countdown timer dialog with customizable duration.
+/// Opens with the habit's configured duration, but lets the user
+/// pick any common duration before starting.
+class HabitTimerDialog extends StatefulWidget {
   final String habitTitle;
   final Color neonColor;
   final VoidCallback onComplete;
   final int durationMinutes;
 
-  const TwoMinuteTimerDialog({
+  const HabitTimerDialog({
     required this.habitTitle,
     required this.neonColor,
     required this.onComplete,
@@ -20,14 +22,14 @@ class TwoMinuteTimerDialog extends StatefulWidget {
   });
 
   @override
-  State<TwoMinuteTimerDialog> createState() => _TwoMinuteTimerDialogState();
+  State<HabitTimerDialog> createState() => _HabitTimerDialogState();
 }
 
-class _TwoMinuteTimerDialogState extends State<TwoMinuteTimerDialog>
-    with SingleTickerProviderStateMixin {
+class _HabitTimerDialogState extends State<HabitTimerDialog> {
   late Duration _timerDuration;
   late Timer _timer;
   late Duration _remaining;
+  late int _selectedDuration;
   bool _isComplete = false;
   bool _isPaused = false;
   bool _hasStarted = false;
@@ -35,7 +37,8 @@ class _TwoMinuteTimerDialogState extends State<TwoMinuteTimerDialog>
   @override
   void initState() {
     super.initState();
-    _timerDuration = Duration(minutes: widget.durationMinutes);
+    _selectedDuration = widget.durationMinutes;
+    _timerDuration = Duration(minutes: _selectedDuration);
     _remaining = _timerDuration;
   }
 
@@ -56,7 +59,7 @@ class _TwoMinuteTimerDialogState extends State<TwoMinuteTimerDialog>
 
   void _exitAndRunInBackground() {
     _timer.cancel();
-    Navigator.of(context).pop<int>(widget.durationMinutes);
+    Navigator.of(context).pop<int>(_selectedDuration);
   }
 
   @override
@@ -216,16 +219,70 @@ class _TwoMinuteTimerDialogState extends State<TwoMinuteTimerDialog>
                     ),
                   ),
                 ] else if (!_hasStarted) ...[
+                  // Duration picker
+                  const Text(
+                    'DURATION',
+                    style: TextStyle(
+                      color: Colors.white54,
+                      fontSize: 11,
+                      letterSpacing: 1.5,
+                    ),
+                  ),
+                  const Gap(8),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    alignment: WrapAlignment.center,
+                    children: [1, 2, 3, 5, 10, 15, 20, 30].map((m) {
+                      final isSelected = _selectedDuration == m;
+                      return GestureDetector(
+                        onTap: () => setState(() => _selectedDuration = m),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 14,
+                            vertical: 8,
+                          ),
+                          decoration: BoxDecoration(
+                            color: isSelected
+                                ? widget.neonColor.withValues(alpha: 0.25)
+                                : Colors.white.withValues(alpha: 0.06),
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(
+                              color: isSelected
+                                  ? widget.neonColor
+                                  : Colors.white.withValues(alpha: 0.1),
+                              width: 1,
+                            ),
+                          ),
+                          child: Text(
+                            '${m}m',
+                            style: TextStyle(
+                              color: isSelected
+                                  ? widget.neonColor
+                                  : Colors.white70,
+                              fontSize: 13,
+                              fontWeight: isSelected
+                                  ? FontWeight.bold
+                                  : FontWeight.normal,
+                            ),
+                          ),
+                        ),
+                      );
+                    }).toList(),
+                  ),
+                  const Gap(16),
                   SizedBox(
                     width: double.infinity,
                     child: FilledButton.icon(
                       onPressed: () {
+                        _timerDuration = Duration(minutes: _selectedDuration);
+                        _remaining = _timerDuration;
                         setState(() => _hasStarted = true);
                         _beginCountdown();
-                        Navigator.of(context).pop<int>(widget.durationMinutes);
+                        Navigator.of(context).pop<int>(_selectedDuration);
                       },
                       icon: const Icon(Icons.play_arrow),
-                      label: Text('Start ${widget.durationMinutes}-Min Timer'),
+                      label: Text('Start $_selectedDuration-Min Timer'),
                       style: FilledButton.styleFrom(
                         backgroundColor: widget.neonColor,
                         foregroundColor: Colors.white,
@@ -256,7 +313,9 @@ class _TwoMinuteTimerDialogState extends State<TwoMinuteTimerDialog>
                       label: const Text('Exit & run in background'),
                       style: OutlinedButton.styleFrom(
                         foregroundColor: widget.neonColor,
-                        side: BorderSide(color: widget.neonColor.withValues(alpha: 0.5)),
+                        side: BorderSide(
+                          color: widget.neonColor.withValues(alpha: 0.5),
+                        ),
                         padding: const EdgeInsets.symmetric(vertical: 14),
                       ),
                     ),
@@ -271,7 +330,9 @@ class _TwoMinuteTimerDialogState extends State<TwoMinuteTimerDialog>
                         },
                         icon: Icon(_isPaused ? Icons.play_arrow : Icons.pause),
                         style: IconButton.styleFrom(
-                          backgroundColor: widget.neonColor.withValues(alpha: 0.2),
+                          backgroundColor: widget.neonColor.withValues(
+                            alpha: 0.2,
+                          ),
                           foregroundColor: widget.neonColor,
                         ),
                       ),

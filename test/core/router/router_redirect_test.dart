@@ -20,7 +20,7 @@ void main() {
         userOnboardingCompletedAt: null,
         creatorOnboarding: null,
       );
-      expect(decideRedirect(currentPath: '/', ctx: ctx), '/welcome');
+      expect(decideRedirect(currentPath: '/world-map', ctx: ctx), '/welcome');
     });
 
     test('unauthenticated, returning user, on / -> /login', () {
@@ -32,7 +32,7 @@ void main() {
         userOnboardingCompletedAt: null,
         creatorOnboarding: null,
       );
-      expect(decideRedirect(currentPath: '/', ctx: ctx), '/login');
+      expect(decideRedirect(currentPath: '/world-map', ctx: ctx), '/login');
     });
 
     test('unauthenticated, on /creator/signup -> stays (open signup form)', () {
@@ -155,7 +155,7 @@ void main() {
         creatorOnboarding: CreatorOnboardingState.empty,
       );
       expect(
-        decideRedirect(currentPath: '/', ctx: ctx),
+        decideRedirect(currentPath: '/world-map', ctx: ctx),
         '/onboarding/creator/archetype',
       );
     });
@@ -172,7 +172,7 @@ void main() {
         creatorOnboarding: CreatorOnboardingState.empty,
       );
       expect(
-        decideRedirect(currentPath: '/', ctx: ctx),
+        decideRedirect(currentPath: '/world-map', ctx: ctx),
         '/onboarding/creator/archetype',
       );
     });
@@ -190,7 +190,7 @@ void main() {
         ),
       );
       expect(
-        decideRedirect(currentPath: '/', ctx: ctx),
+        decideRedirect(currentPath: '/world-map', ctx: ctx),
         '/onboarding/creator/profile',
       );
     });
@@ -208,7 +208,7 @@ void main() {
         ),
       );
       expect(
-        decideRedirect(currentPath: '/', ctx: ctx),
+        decideRedirect(currentPath: '/world-map', ctx: ctx),
         '/onboarding/creator/reveal',
       );
     });
@@ -227,7 +227,7 @@ void main() {
         ),
       );
       expect(
-        decideRedirect(currentPath: '/', ctx: ctx),
+        decideRedirect(currentPath: '/world-map', ctx: ctx),
         '/creator/dashboard',
       );
     });
@@ -284,7 +284,7 @@ void main() {
         creatorOnboarding: null,
       );
       expect(
-        decideRedirect(currentPath: '/', ctx: ctx),
+        decideRedirect(currentPath: '/world-map', ctx: ctx),
         '/onboarding/identity-studio',
       );
     });
@@ -299,7 +299,7 @@ void main() {
         creatorOnboarding: null,
       );
       expect(
-        decideRedirect(currentPath: '/', ctx: ctx),
+        decideRedirect(currentPath: '/world-map', ctx: ctx),
         '/onboarding/first-habit',
       );
     });
@@ -313,7 +313,7 @@ void main() {
         userOnboardingCompletedAt: null,
         creatorOnboarding: null,
       );
-      expect(decideRedirect(currentPath: '/', ctx: ctx), isNull);
+      expect(decideRedirect(currentPath: '/world-map', ctx: ctx), isNull);
     });
 
     test(
@@ -360,6 +360,21 @@ void main() {
         decideRedirect(
             currentPath: '/onboarding/creator/archetype', ctx: ctx),
         '/onboarding/identity-studio',
+      );
+    });
+
+    test('role=user, complete, on /world-map with focus query parameter -> stays', () {
+      final ctx = RedirectContext(
+        isLoggedIn: true,
+        role: UserRole.user,
+        isFirstLaunch: false,
+        userOnboardingProgress: 4,
+        userOnboardingCompletedAt: DateTime(2026, 1, 1),
+        creatorOnboarding: null,
+      );
+      expect(
+        decideRedirect(currentPath: '/world-map?focus=strength', ctx: ctx),
+        isNull,
       );
     });
   });

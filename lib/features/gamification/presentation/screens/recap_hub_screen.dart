@@ -97,7 +97,7 @@ class RecapHubScreen extends ConsumerWidget {
     bool isPremium,
   ) {
     return GestureDetector(
-      onTap: () => context.push('/recap'), // Launch passive recap
+      onTap: () => context.push('/world-map/recap'), // Launch passive recap
       child: GlassmorphismCard(
         padding: const EdgeInsets.all(24),
         child: Column(
@@ -170,7 +170,7 @@ class RecapHubScreen extends ConsumerWidget {
             context.push('/paywall');
           } else {
             // Push with ID to view specific historical recap
-            context.push('/recap?id=${recap.id}');
+            context.push('/world-map/recap?id=${recap.id}');
           }
         },
         child: GlassmorphismCard(
@@ -246,7 +246,7 @@ class RecapHubScreen extends ConsumerWidget {
     if (picked != null && context.mounted) {
       final start = DateFormat('yyyy-MM-dd').format(picked.start);
       final end = DateFormat('yyyy-MM-dd').format(picked.end);
-      context.push('/recap?start=$start&end=$end');
+      context.push('/world-map/recap?start=$start&end=$end');
     }
   }
 }

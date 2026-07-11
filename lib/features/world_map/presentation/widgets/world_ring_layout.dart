@@ -7,11 +7,13 @@ import 'package:flutter/material.dart';
 class WorldRingLayout extends StatelessWidget {
   final double radius;
   final ValueChanged<HabitAttribute> onNodeTap;
+  final String? focusAttribute;
 
   const WorldRingLayout({
     super.key,
     required this.radius,
     required this.onNodeTap,
+    this.focusAttribute,
   });
 
   @override
@@ -48,6 +50,7 @@ class WorldRingLayout extends StatelessWidget {
                 translation: const Offset(-0.5, -0.5),
                 child: WorldTypeNode(
                   attribute: attr,
+                  isFocused: focusAttribute == attr.name,
                   onTap: () => onNodeTap(attr),
                 ),
               ),

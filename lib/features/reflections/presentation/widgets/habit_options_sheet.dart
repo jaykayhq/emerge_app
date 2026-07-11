@@ -14,7 +14,7 @@ import 'package:gap/gap.dart';
 ///
 /// Sections (top to bottom):
 /// 1. Header (title + close X)
-/// 2. Start Timer -> opens [TwoMinuteTimerDialog]
+/// 2. Start Timer -> opens [HabitTimerDialog]
 /// 3. Environment Priming (list + add/remove)
 /// 4. Set Reward (text + suggestions)
 /// 5. Log Reflection (mood + note + save)
@@ -44,10 +44,8 @@ class HabitOptionsSheet extends ConsumerStatefulWidget {
         minChildSize: 0.5,
         maxChildSize: 0.95,
         expand: false,
-        builder: (_, scrollController) => HabitOptionsSheet(
-          habit: habit,
-          selectedDate: selectedDate,
-        ),
+        builder: (_, scrollController) =>
+            HabitOptionsSheet(habit: habit, selectedDate: selectedDate),
       ),
     );
   }
@@ -75,7 +73,7 @@ class _HabitOptionsSheetState extends ConsumerState<HabitOptionsSheet> {
     final result = await showDialog<int?>(
       context: context,
       barrierDismissible: false,
-      builder: (_) => TwoMinuteTimerDialog(
+      builder: (_) => HabitTimerDialog(
         habitTitle: widget.habit.title,
         neonColor: EmergeColors.teal,
         durationMinutes: widget.habit.timerDurationMinutes,
@@ -121,9 +119,9 @@ class _HabitOptionsSheetState extends ConsumerState<HabitOptionsSheet> {
         .read(habitRepositoryProvider)
         .updateHabit(widget.habit.copyWith(reward: text));
     if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Reward saved')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Reward saved')));
     }
   }
 
@@ -131,17 +129,19 @@ class _HabitOptionsSheetState extends ConsumerState<HabitOptionsSheet> {
     if (_mood == null) return;
     final userId = ref.read(authStateChangesProvider).value?.id;
     if (userId == null) return;
-    await ref.read(saveHabitReflectionProvider(
-      userId: userId,
-      habitId: widget.habit.id,
-      date: widget.selectedDate,
-      mood: _mood!,
-      note: _noteCtrl.text.trim(),
-    ).future);
-    if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Reflection saved')),
+    await ref.read(
+      saveHabitReflectionProvider(
+        userId: userId,
+        habitId: widget.habit.id,
+        date: widget.selectedDate,
+        mood: _mood!,
+        note: _noteCtrl.text.trim(),
+      ).future,
     );
+    if (!mounted) return;
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(const SnackBar(content: Text('Reflection saved')));
   }
 
   Future<void> _confirmAndDelete() async {
@@ -188,8 +188,7 @@ class _HabitOptionsSheetState extends ConsumerState<HabitOptionsSheet> {
         date: widget.selectedDate,
       ),
     );
-    final notCompleted =
-        !widget.habit.isCompletedOn(widget.selectedDate);
+    final notCompleted = !widget.habit.isCompletedOn(widget.selectedDate);
 
     if (!_initReward) {
       _rewardCtrl.text = widget.habit.reward;
@@ -257,34 +256,34 @@ class _HabitOptionsSheetState extends ConsumerState<HabitOptionsSheet> {
               _sectionTitle('Environment Priming'),
               const Gap(8),
               ...widget.habit.environmentPriming.asMap().entries.map(
-                    (e) => Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 4),
-                      child: Row(
-                        children: [
-                          const Icon(
-                            Icons.check_box_outline_blank,
-                            size: 16,
-                            color: EmergeColors.teal,
-                          ),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: Text(
-                              e.value,
-                              style: const TextStyle(color: Colors.white),
-                            ),
-                          ),
-                          IconButton(
-                            icon: const Icon(
-                              Icons.close,
-                              size: 16,
-                              color: Colors.white70,
-                            ),
-                            onPressed: () => _removePriming(e.key),
-                          ),
-                        ],
+                (e) => Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 4),
+                  child: Row(
+                    children: [
+                      const Icon(
+                        Icons.check_box_outline_blank,
+                        size: 16,
+                        color: EmergeColors.teal,
                       ),
-                    ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          e.value,
+                          style: const TextStyle(color: Colors.white),
+                        ),
+                      ),
+                      IconButton(
+                        icon: const Icon(
+                          Icons.close,
+                          size: 16,
+                          color: Colors.white70,
+                        ),
+                        onPressed: () => _removePriming(e.key),
+                      ),
+                    ],
                   ),
+                ),
+              ),
               if (widget.habit.environmentPriming.isEmpty)
                 const Padding(
                   padding: EdgeInsets.symmetric(vertical: 8),
@@ -311,10 +310,7 @@ class _HabitOptionsSheetState extends ConsumerState<HabitOptionsSheet> {
                     borderSide: BorderSide.none,
                   ),
                   suffixIcon: IconButton(
-                    icon: const Icon(
-                      Icons.add,
-                      color: EmergeColors.teal,
-                    ),
+                    icon: const Icon(Icons.add, color: EmergeColors.teal),
                     onPressed: _addPriming,
                   ),
                 ),
@@ -345,28 +341,29 @@ class _HabitOptionsSheetState extends ConsumerState<HabitOptionsSheet> {
               Wrap(
                 spacing: 8,
                 runSpacing: 8,
-                children: [
-                  'Watch 1 episode',
-                  'Check social media',
-                  'Coffee/Tea',
-                  'Podcast',
-                ].map((s) {
-                  return ActionChip(
-                    label: Text(
-                      s,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 12,
-                      ),
-                    ),
-                    backgroundColor: Colors.white.withValues(alpha: 0.06),
-                    side: BorderSide.none,
-                    onPressed: () {
-                      _rewardCtrl.text = s;
-                      _saveReward();
-                    },
-                  );
-                }).toList(),
+                children:
+                    [
+                      'Watch 1 episode',
+                      'Check social media',
+                      'Coffee/Tea',
+                      'Podcast',
+                    ].map((s) {
+                      return ActionChip(
+                        label: Text(
+                          s,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 12,
+                          ),
+                        ),
+                        backgroundColor: Colors.white.withValues(alpha: 0.06),
+                        side: BorderSide.none,
+                        onPressed: () {
+                          _rewardCtrl.text = s;
+                          _saveReward();
+                        },
+                      );
+                    }).toList(),
               ),
               const Gap(24),
 
@@ -472,10 +469,7 @@ class _HabitOptionsSheetState extends ConsumerState<HabitOptionsSheet> {
                 width: double.infinity,
                 child: OutlinedButton.icon(
                   onPressed: _confirmAndDelete,
-                  icon: const Icon(
-                    Icons.delete_outline,
-                    color: Colors.red,
-                  ),
+                  icon: const Icon(Icons.delete_outline, color: Colors.red),
                   label: const Text(
                     'Delete Habit',
                     style: TextStyle(color: Colors.red),

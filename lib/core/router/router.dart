@@ -375,8 +375,10 @@ GoRouter router(Ref ref) {
           StatefulShellBranch(
             routes: [
               GoRoute(
-                path: '/',
-                builder: (context, state) => const WorldMapScreen(),
+                path: '/world-map',
+                builder: (context, state) => WorldMapScreen(
+                  focusAttribute: state.uri.queryParameters['focus'],
+                ),
                 routes: [
                   GoRoute(
                     path: 'recap-hub',

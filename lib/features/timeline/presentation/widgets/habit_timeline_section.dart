@@ -291,8 +291,6 @@ class _IndentedHabitItemState extends State<IndentedHabitItem> {
     _isTimerRunning = false;
   }
 
-
-
   void _tick() {
     if (!mounted || !_isTimerRunning) return;
     if (_remainingSeconds > 0) {
@@ -333,8 +331,7 @@ class _IndentedHabitItemState extends State<IndentedHabitItem> {
     super.dispose();
   }
 
-  bool get _isCompletedToday =>
-      widget.habit.isCompletedOn(widget.selectedDate);
+  bool get _isCompletedToday => widget.habit.isCompletedOn(widget.selectedDate);
 
   @override
   Widget build(BuildContext context) {
@@ -466,14 +463,12 @@ class _IndentedHabitItemState extends State<IndentedHabitItem> {
 
     return Row(
       children: [
-        Icon(Icons.check_circle, color: color, size: 20),
-        const SizedBox(width: 12),
         // Title with strike-through
         Expanded(
           child: Text(
             widget.habit.title,
             style: const TextStyle(
-              color: Colors.white,
+              color: Colors.white54,
               fontSize: 14,
               fontWeight: FontWeight.w500,
               decoration: TextDecoration.lineThrough,
@@ -482,13 +477,36 @@ class _IndentedHabitItemState extends State<IndentedHabitItem> {
             overflow: TextOverflow.ellipsis,
           ),
         ),
+        const SizedBox(width: 8),
+        // Checkbox (tappable — allows undo)
+        IconButton(
+          tooltip: 'Undo completion',
+          icon: Icon(Icons.check_circle, color: color, size: 22),
+          onPressed: () {
+            if (_isTimerRunning) _cancelTimer();
+            widget.onCheckboxTap();
+          },
+        ),
+        // Timer icon (tappable)
+        IconButton(
+          icon: const Icon(Icons.timer_outlined, color: Colors.white, size: 20),
+          onPressed: widget.onTimerTap,
+        ),
+        // Menu icon (tappable)
+        IconButton(
+          icon: const Icon(Icons.more_vert, color: Colors.white, size: 22),
+          onPressed: widget.onMenuTap,
+        ),
         // XP badge
-        Text(
-          '+$xp XP',
-          style: TextStyle(
-            color: color,
-            fontSize: 12,
-            fontWeight: FontWeight.bold,
+        Padding(
+          padding: const EdgeInsets.only(left: 4),
+          child: Text(
+            '+$xp XP',
+            style: TextStyle(
+              color: color,
+              fontSize: 12,
+              fontWeight: FontWeight.bold,
+            ),
           ),
         ),
       ],
