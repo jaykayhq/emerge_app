@@ -279,7 +279,6 @@ class _HabitTimerDialogState extends State<HabitTimerDialog> {
                         _remaining = _timerDuration;
                         setState(() => _hasStarted = true);
                         _beginCountdown();
-                        Navigator.of(context).pop<int>(_selectedDuration);
                       },
                       icon: const Icon(Icons.play_arrow),
                       label: Text('Start $_selectedDuration-Min Timer'),

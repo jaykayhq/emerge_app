@@ -64,7 +64,7 @@ final class AttributeCompletionsProvider
 }
 
 String _$attributeCompletionsHash() =>
-    r'f3e11b3a7f2dbb5903a9ed929048376680d03d35';
+    r'8dc2e4bd8cbc0c6473d2ffefcee57becc42d4dfd';
 
 final class AttributeCompletionsFamily extends $Family
     with $FunctionalFamilyOverride<FutureOr<List<int>>, String> {

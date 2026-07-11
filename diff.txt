@@ -1,0 +1,1446 @@
+﻿diff --git a/.superpowers/brainstorm/session-1/content/approaches.html b/.superpowers/brainstorm/session-1/content/approaches.html
+index 4e753f0e..5a85c22a 100644
+--- a/.superpowers/brainstorm/session-1/content/approaches.html
++++ b/.superpowers/brainstorm/session-1/content/approaches.html
+@@ -1,44 +1,37 @@
+-<h2>Choose Your Identity Influence</h2>
+-<p class="subtitle">How should notifications speak to you?</p>
++<h2>Emerge World Map Restructure</h2>
++<p class="subtitle">Select a design approach for the new Timeline to World Map to Attribute Screen flow.</p>
+ 
+ <div class="options">
+-  <div class="option" data-choice="archetype" onclick="toggleSelect(this)">
++  <div class="option" data-choice="a" onclick="toggleSelect(this)">
+     <div class="letter">A</div>
+     <div class="content">
+-      <h3>Persona First (Archetype)</h3>
+-      <p>Messaging focused on your <b>Archetype</b> (e.g., "Athletes don't skip workouts"). Consistent and role-focused.</p>
++      <h3>The Immersive Portal (Recommended)</h3>
++      <p><b>Timeline to Map:</b> Hero zoom directly to the World Map orb.</p>
++      <p><b>Orb Experience:</b> True 3D Fragment Shader with cracks and glow. Rotate via pan gestures. Tap 7 times to reveal the hidden mini-game.</p>
++      <p><b>Attribute Flow:</b> Tapping an attribute in the ring pulls it to the center, pushing the orb back, then expands into the Attribute Screen.</p>
++      <p><b>Visuals:</b> Deep psychological connection. The cracks represent entropy being fought off by habit completion.</p>
+     </div>
+   </div>
+-  <div class="option" data-choice="attribute" onclick="toggleSelect(this)">
++  
++  <div class="option" data-choice="b" onclick="toggleSelect(this)">
+     <div class="letter">B</div>
+     <div class="content">
+-      <h3>Skill First (Attribute)</h3>
+-      <p>Messaging focused on the <b>Attribute</b> (e.g., "Increase your Strength today"). Practical and progress-focused.</p>
++      <h3>The Constellation Flow</h3>
++      <p><b>Timeline to Map:</b> Standard fade-in, but the habit's associated attribute immediately pulses and draws a line to the orb.</p>
++      <p><b>Orb Experience:</b> 3D shader orb. Mini-game triggered by spinning the orb extremely fast rather than tapping.</p>
++      <p><b>Attribute Flow:</b> Tapping an attribute icon draws a glowing constellation line from the orb to the icon, then fades into the Attribute Screen.</p>
++      <p><b>Visuals:</b> Focuses on the interconnectedness of attributes.</p>
+     </div>
+   </div>
+-  <div class="option" data-choice="hybrid" onclick="toggleSelect(this)">
++
++  <div class="option" data-choice="c" onclick="toggleSelect(this)">
+     <div class="letter">C</div>
+     <div class="content">
+-      <h3>Hybrid Mastery</h3>
+-      <p>Messaging that blends both (e.g., "As an Athlete, your Strength is your foundation"). Deeply personalized but more complex.</p>
++      <h3>The Direct Nexus</h3>
++      <p><b>Timeline to Map:</b> Slide transition from Timeline to World Map.</p>
++      <p><b>Orb Experience:</b> Interactive 3D orb with swipe gestures. Mini-game on 7 taps.</p>
++      <p><b>Attribute Flow:</b> Tapping an attribute icon performs an immediate slide transition to the Attribute Screen. Less animation overhead, highly responsive.</p>
++      <p><b>Visuals:</b> Clean and minimal. 3D styled attribute nodes that clearly display name and color.</p>
+     </div>
+   </div>
+ </div>
+-
+-<div class="pros-cons">
+-  <div class="pros">
+-    <h4>Hybrid Benefits</h4>
+-    <ul>
+-      <li>Maximum personalization</li>
+-      <li>Higher identity reinforcement</li>
+-      <li>Feels bespoke to every habit</li>
+-    </ul>
+-  </div>
+-  <div class="cons">
+-    <h4>Hybrid Costs</h4>
+-    <ul>
+-      <li>Higher cognitive load for reminders</li>
+-      <li>Requires more complex template logic</li>
+-    </ul>
+-  </div>
+-</div>
+diff --git a/.superpowers/brainstorm/session-1/state/server-info b/.superpowers/brainstorm/session-1/state/server-info
+index b0a9ddae..c0823362 100644
+--- a/.superpowers/brainstorm/session-1/state/server-info
++++ b/.superpowers/brainstorm/session-1/state/server-info
+@@ -1 +1 @@
+-{"type":"server-started","port":65042,"host":"127.0.0.1","url_host":"localhost","url":"http://localhost:65042","screen_dir":"c:\\Users\\JOSHUA\\Downloads\\emerge_app\\.superpowers\\brainstorm\\session-1\\content","state_dir":"c:\\Users\\JOSHUA\\Downloads\\emerge_app\\.superpowers\\brainstorm\\session-1\\state"}
++{"type":"server-started","port":52152,"host":"127.0.0.1","url_host":"localhost","url":"http://localhost:52152","screen_dir":"c:\\Users\\HP\\Downloads\\emerge_app\\.superpowers\\brainstorm\\session-1\\content","state_dir":"c:\\Users\\HP\\Downloads\\emerge_app\\.superpowers\\brainstorm\\session-1\\state"}
+diff --git a/lib/core/error/failure.dart b/lib/core/error/failure.dart
+index b50dd30a..439962b5 100644
+--- a/lib/core/error/failure.dart
++++ b/lib/core/error/failure.dart
+@@ -146,7 +146,7 @@ class ErrorHandler {
+     AppLogger.e('Navigation Error', errorMessage, StackTrace.current);
+ 
+     if (context.mounted) {
+-      context.go('/'); // Navigate to home in case of navigation errors
++      context.go('/world-map'); // Navigate to home in case of navigation errors
+     }
+   }
+ 
+diff --git a/lib/core/presentation/screens/splash_screen.dart b/lib/core/presentation/screens/splash_screen.dart
+index c332a05d..e9e305f5 100644
+--- a/lib/core/presentation/screens/splash_screen.dart
++++ b/lib/core/presentation/screens/splash_screen.dart
+@@ -60,7 +60,7 @@ String determineSplashRoute({
+   final progress = userOnboardingProgress;
+   final isComplete = userOnboardingCompletedAt != null ||
+       (progress != null && progress >= 3);
+-  if (isComplete) return '/';
++  if (isComplete) return '/world-map';
+   switch (progress ?? 0) {
+     case 0:
+     case 1:
+diff --git a/lib/core/presentation/screens/world_splash_screen.dart b/lib/core/presentation/screens/world_splash_screen.dart
+index 9a9b10a0..1329ef48 100644
+--- a/lib/core/presentation/screens/world_splash_screen.dart
++++ b/lib/core/presentation/screens/world_splash_screen.dart
+@@ -32,7 +32,7 @@ class _WorldSplashScreenState extends State<WorldSplashScreen>
+     // Automatically navigate after animations complete
+     _autoNavigateTimer = Timer(const Duration(milliseconds: 1800), () {
+       if (mounted) {
+-        context.go('/');
++        context.go('/world-map');
+       }
+     });
+   }
+@@ -200,7 +200,7 @@ class _WorldSplashScreenState extends State<WorldSplashScreen>
+               right: 0,
+               child: Center(
+                 child: GestureDetector(
+-                  onTap: () => context.go('/'),
++                  onTap: () => context.go('/world-map'),
+                   child: Container(
+                     padding: const EdgeInsets.symmetric(
+                       horizontal: 16,
+diff --git a/lib/core/presentation/widgets/app_back_handler.dart b/lib/core/presentation/widgets/app_back_handler.dart
+index f1d9f266..18765a2c 100644
+--- a/lib/core/presentation/widgets/app_back_handler.dart
++++ b/lib/core/presentation/widgets/app_back_handler.dart
+@@ -14,7 +14,7 @@ class AppBackToHome extends StatelessWidget {
+   const AppBackToHome({
+     super.key,
+     required this.child,
+-    this.homeRoute = '/',
++    this.homeRoute = '/world-map',
+   });
+ 
+   @override
+diff --git a/lib/core/router/router.dart b/lib/core/router/router.dart
+index 3b8cd50d..ae1dd276 100644
+--- a/lib/core/router/router.dart
++++ b/lib/core/router/router.dart
+@@ -375,8 +375,10 @@ GoRouter router(Ref ref) {
+           StatefulShellBranch(
+             routes: [
+               GoRoute(
+-                path: '/',
+-                builder: (context, state) => const WorldMapScreen(),
++                path: '/world-map',
++                builder: (context, state) => WorldMapScreen(
++                  focusAttribute: state.uri.queryParameters['focus'],
++                ),
+                 routes: [
+                   GoRoute(
+                     path: 'recap-hub',
+diff --git a/lib/core/services/notification_service.dart b/lib/core/services/notification_service.dart
+index 880e3b0f..461a49eb 100644
+--- a/lib/core/services/notification_service.dart
++++ b/lib/core/services/notification_service.dart
+@@ -238,7 +238,7 @@ class NotificationService {
+         ),
+         androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
+         matchDateTimeComponents: DateTimeComponents.dayOfWeekAndTime,
+-        payload: '/recap',
++        payload: '/world-map/recap',
+       );
+     } catch (e, stack) {
+       debugPrint('Error scheduling weekly recap: $e');
+diff --git a/lib/features/gamification/presentation/screens/leveling_screen.dart b/lib/features/gamification/presentation/screens/leveling_screen.dart
+index 301fe795..c768e238 100644
+--- a/lib/features/gamification/presentation/screens/leveling_screen.dart
++++ b/lib/features/gamification/presentation/screens/leveling_screen.dart
+@@ -124,7 +124,7 @@ class _LevelingScreenState extends ConsumerState<LevelingScreen> {
+                     SizedBox(
+                       width: double.infinity,
+                       child: ElevatedButton.icon(
+-                        onPressed: () => context.go('/'),
++                        onPressed: () => context.go('/world-map'),
+                         icon: const Icon(Icons.map_outlined, size: 20),
+                         label: const Text(
+                           'CONTINUE JOURNEY',
+diff --git a/lib/features/gamification/presentation/screens/recap_hub_screen.dart b/lib/features/gamification/presentation/screens/recap_hub_screen.dart
+index 10225e0f..02e93097 100644
+--- a/lib/features/gamification/presentation/screens/recap_hub_screen.dart
++++ b/lib/features/gamification/presentation/screens/recap_hub_screen.dart
+@@ -97,7 +97,7 @@ class RecapHubScreen extends ConsumerWidget {
+     bool isPremium,
+   ) {
+     return GestureDetector(
+-      onTap: () => context.push('/recap'), // Launch passive recap
++      onTap: () => context.push('/world-map/recap'), // Launch passive recap
+       child: GlassmorphismCard(
+         padding: const EdgeInsets.all(24),
+         child: Column(
+@@ -170,7 +170,7 @@ class RecapHubScreen extends ConsumerWidget {
+             context.push('/paywall');
+           } else {
+             // Push with ID to view specific historical recap
+-            context.push('/recap?id=${recap.id}');
++            context.push('/world-map/recap?id=${recap.id}');
+           }
+         },
+         child: GlassmorphismCard(
+@@ -246,7 +246,7 @@ class RecapHubScreen extends ConsumerWidget {
+     if (picked != null && context.mounted) {
+       final start = DateFormat('yyyy-MM-dd').format(picked.start);
+       final end = DateFormat('yyyy-MM-dd').format(picked.end);
+-      context.push('/recap?start=$start&end=$end');
++      context.push('/world-map/recap?start=$start&end=$end');
+     }
+   }
+ }
+diff --git a/lib/features/habits/presentation/widgets/habit_timer_dialog.dart b/lib/features/habits/presentation/widgets/habit_timer_dialog.dart
+index 981511a8..c287707f 100644
+--- a/lib/features/habits/presentation/widgets/habit_timer_dialog.dart
++++ b/lib/features/habits/presentation/widgets/habit_timer_dialog.dart
+@@ -4,14 +4,16 @@ import 'package:emerge_app/core/theme/app_theme.dart';
+ import 'package:flutter/material.dart';
+ import 'package:gap/gap.dart';
+ 
+-/// Countdown timer dialog with customizable duration
+-class TwoMinuteTimerDialog extends StatefulWidget {
++/// Countdown timer dialog with customizable duration.
++/// Opens with the habit's configured duration, but lets the user
++/// pick any common duration before starting.
++class HabitTimerDialog extends StatefulWidget {
+   final String habitTitle;
+   final Color neonColor;
+   final VoidCallback onComplete;
+   final int durationMinutes;
+ 
+-  const TwoMinuteTimerDialog({
++  const HabitTimerDialog({
+     required this.habitTitle,
+     required this.neonColor,
+     required this.onComplete,
+@@ -20,14 +22,14 @@ class TwoMinuteTimerDialog extends StatefulWidget {
+   });
+ 
+   @override
+-  State<TwoMinuteTimerDialog> createState() => _TwoMinuteTimerDialogState();
++  State<HabitTimerDialog> createState() => _HabitTimerDialogState();
+ }
+ 
+-class _TwoMinuteTimerDialogState extends State<TwoMinuteTimerDialog>
+-    with SingleTickerProviderStateMixin {
++class _HabitTimerDialogState extends State<HabitTimerDialog> {
+   late Duration _timerDuration;
+   late Timer _timer;
+   late Duration _remaining;
++  late int _selectedDuration;
+   bool _isComplete = false;
+   bool _isPaused = false;
+   bool _hasStarted = false;
+@@ -35,7 +37,8 @@ class _TwoMinuteTimerDialogState extends State<TwoMinuteTimerDialog>
+   @override
+   void initState() {
+     super.initState();
+-    _timerDuration = Duration(minutes: widget.durationMinutes);
++    _selectedDuration = widget.durationMinutes;
++    _timerDuration = Duration(minutes: _selectedDuration);
+     _remaining = _timerDuration;
+   }
+ 
+@@ -56,7 +59,7 @@ class _TwoMinuteTimerDialogState extends State<TwoMinuteTimerDialog>
+ 
+   void _exitAndRunInBackground() {
+     _timer.cancel();
+-    Navigator.of(context).pop<int>(widget.durationMinutes);
++    Navigator.of(context).pop<int>(_selectedDuration);
+   }
+ 
+   @override
+@@ -216,16 +219,70 @@ class _TwoMinuteTimerDialogState extends State<TwoMinuteTimerDialog>
+                     ),
+                   ),
+                 ] else if (!_hasStarted) ...[
++                  // Duration picker
++                  const Text(
++                    'DURATION',
++                    style: TextStyle(
++                      color: Colors.white54,
++                      fontSize: 11,
++                      letterSpacing: 1.5,
++                    ),
++                  ),
++                  const Gap(8),
++                  Wrap(
++                    spacing: 8,
++                    runSpacing: 8,
++                    alignment: WrapAlignment.center,
++                    children: [1, 2, 3, 5, 10, 15, 20, 30].map((m) {
++                      final isSelected = _selectedDuration == m;
++                      return GestureDetector(
++                        onTap: () => setState(() => _selectedDuration = m),
++                        child: Container(
++                          padding: const EdgeInsets.symmetric(
++                            horizontal: 14,
++                            vertical: 8,
++                          ),
++                          decoration: BoxDecoration(
++                            color: isSelected
++                                ? widget.neonColor.withValues(alpha: 0.25)
++                                : Colors.white.withValues(alpha: 0.06),
++                            borderRadius: BorderRadius.circular(8),
++                            border: Border.all(
++                              color: isSelected
++                                  ? widget.neonColor
++                                  : Colors.white.withValues(alpha: 0.1),
++                              width: 1,
++                            ),
++                          ),
++                          child: Text(
++                            '${m}m',
++                            style: TextStyle(
++                              color: isSelected
++                                  ? widget.neonColor
++                                  : Colors.white70,
++                              fontSize: 13,
++                              fontWeight: isSelected
++                                  ? FontWeight.bold
++                                  : FontWeight.normal,
++                            ),
++                          ),
++                        ),
++                      );
++                    }).toList(),
++                  ),
++                  const Gap(16),
+                   SizedBox(
+                     width: double.infinity,
+                     child: FilledButton.icon(
+                       onPressed: () {
++                        _timerDuration = Duration(minutes: _selectedDuration);
++                        _remaining = _timerDuration;
+                         setState(() => _hasStarted = true);
+                         _beginCountdown();
+-                        Navigator.of(context).pop<int>(widget.durationMinutes);
++                        Navigator.of(context).pop<int>(_selectedDuration);
+                       },
+                       icon: const Icon(Icons.play_arrow),
+-                      label: Text('Start ${widget.durationMinutes}-Min Timer'),
++                      label: Text('Start $_selectedDuration-Min Timer'),
+                       style: FilledButton.styleFrom(
+                         backgroundColor: widget.neonColor,
+                         foregroundColor: Colors.white,
+@@ -256,7 +313,9 @@ class _TwoMinuteTimerDialogState extends State<TwoMinuteTimerDialog>
+                       label: const Text('Exit & run in background'),
+                       style: OutlinedButton.styleFrom(
+                         foregroundColor: widget.neonColor,
+-                        side: BorderSide(color: widget.neonColor.withValues(alpha: 0.5)),
++                        side: BorderSide(
++                          color: widget.neonColor.withValues(alpha: 0.5),
++                        ),
+                         padding: const EdgeInsets.symmetric(vertical: 14),
+                       ),
+                     ),
+@@ -271,7 +330,9 @@ class _TwoMinuteTimerDialogState extends State<TwoMinuteTimerDialog>
+                         },
+                         icon: Icon(_isPaused ? Icons.play_arrow : Icons.pause),
+                         style: IconButton.styleFrom(
+-                          backgroundColor: widget.neonColor.withValues(alpha: 0.2),
++                          backgroundColor: widget.neonColor.withValues(
++                            alpha: 0.2,
++                          ),
+                           foregroundColor: widget.neonColor,
+                         ),
+                       ),
+diff --git a/lib/features/onboarding/presentation/screens/welcome_screen.dart b/lib/features/onboarding/presentation/screens/welcome_screen.dart
+index 96c7413b..bf13ee9e 100644
+--- a/lib/features/onboarding/presentation/screens/welcome_screen.dart
++++ b/lib/features/onboarding/presentation/screens/welcome_screen.dart
+@@ -134,7 +134,7 @@ class WelcomeScreen extends ConsumerWidget {
+                             messenger.showSnackBar(
+                               SnackBar(content: Text(error.message)),
+                             );
+-                          }, (_) => GoRouter.of(context).go('/'));
++                          }, (_) => GoRouter.of(context).go('/world-map'));
+                         },
+                         style: OutlinedButton.styleFrom(
+                           minimumSize: const Size(double.infinity, 56),
+diff --git a/lib/features/pulse_feed/presentation/screens/pulse_feed_screen.dart b/lib/features/pulse_feed/presentation/screens/pulse_feed_screen.dart
+index c35c0d59..2ccce16c 100644
+--- a/lib/features/pulse_feed/presentation/screens/pulse_feed_screen.dart
++++ b/lib/features/pulse_feed/presentation/screens/pulse_feed_screen.dart
+@@ -27,7 +27,7 @@ class PulseFeedScreen extends ConsumerWidget {
+     return Scaffold(
+       backgroundColor: Colors.transparent,
+       body: AppBackToHome(
+-        homeRoute: '/',
++        homeRoute: '/world-map',
+         child: SafeArea(
+           child: feedAsync.when(
+             data: (cards) => _FeedContent(cards: cards),
+diff --git a/lib/features/reflections/presentation/widgets/habit_options_sheet.dart b/lib/features/reflections/presentation/widgets/habit_options_sheet.dart
+index 3ba396f1..58b59e8a 100644
+--- a/lib/features/reflections/presentation/widgets/habit_options_sheet.dart
++++ b/lib/features/reflections/presentation/widgets/habit_options_sheet.dart
+@@ -14,7 +14,7 @@ import 'package:gap/gap.dart';
+ ///
+ /// Sections (top to bottom):
+ /// 1. Header (title + close X)
+-/// 2. Start Timer -> opens [TwoMinuteTimerDialog]
++/// 2. Start Timer -> opens [HabitTimerDialog]
+ /// 3. Environment Priming (list + add/remove)
+ /// 4. Set Reward (text + suggestions)
+ /// 5. Log Reflection (mood + note + save)
+@@ -44,10 +44,8 @@ class HabitOptionsSheet extends ConsumerStatefulWidget {
+         minChildSize: 0.5,
+         maxChildSize: 0.95,
+         expand: false,
+-        builder: (_, scrollController) => HabitOptionsSheet(
+-          habit: habit,
+-          selectedDate: selectedDate,
+-        ),
++        builder: (_, scrollController) =>
++            HabitOptionsSheet(habit: habit, selectedDate: selectedDate),
+       ),
+     );
+   }
+@@ -75,14 +73,13 @@ class _HabitOptionsSheetState extends ConsumerState<HabitOptionsSheet> {
+     final result = await showDialog<int?>(
+       context: context,
+       barrierDismissible: false,
+-      builder: (_) => TwoMinuteTimerDialog(
++      builder: (_) => HabitTimerDialog(
+         habitTitle: widget.habit.title,
+         neonColor: EmergeColors.teal,
+         durationMinutes: widget.habit.timerDurationMinutes,
+         onComplete: () {
+           ref.read(completeHabitProvider(widget.habit.id));
+-          Navigator.of(context).pop();
+-          if (mounted) Navigator.of(context).pop();
++          Navigator.of(context).pop(); // pop timer dialog only
+         },
+       ),
+     );
+@@ -121,9 +118,9 @@ class _HabitOptionsSheetState extends ConsumerState<HabitOptionsSheet> {
+         .read(habitRepositoryProvider)
+         .updateHabit(widget.habit.copyWith(reward: text));
+     if (mounted) {
+-      ScaffoldMessenger.of(context).showSnackBar(
+-        const SnackBar(content: Text('Reward saved')),
+-      );
++      ScaffoldMessenger.of(
++        context,
++      ).showSnackBar(const SnackBar(content: Text('Reward saved')));
+     }
+   }
+ 
+@@ -131,17 +128,19 @@ class _HabitOptionsSheetState extends ConsumerState<HabitOptionsSheet> {
+     if (_mood == null) return;
+     final userId = ref.read(authStateChangesProvider).value?.id;
+     if (userId == null) return;
+-    await ref.read(saveHabitReflectionProvider(
+-      userId: userId,
+-      habitId: widget.habit.id,
+-      date: widget.selectedDate,
+-      mood: _mood!,
+-      note: _noteCtrl.text.trim(),
+-    ).future);
+-    if (!mounted) return;
+-    ScaffoldMessenger.of(context).showSnackBar(
+-      const SnackBar(content: Text('Reflection saved')),
++    await ref.read(
++      saveHabitReflectionProvider(
++        userId: userId,
++        habitId: widget.habit.id,
++        date: widget.selectedDate,
++        mood: _mood!,
++        note: _noteCtrl.text.trim(),
++      ).future,
+     );
++    if (!mounted) return;
++    ScaffoldMessenger.of(
++      context,
++    ).showSnackBar(const SnackBar(content: Text('Reflection saved')));
+   }
+ 
+   Future<void> _confirmAndDelete() async {
+@@ -188,8 +187,7 @@ class _HabitOptionsSheetState extends ConsumerState<HabitOptionsSheet> {
+         date: widget.selectedDate,
+       ),
+     );
+-    final notCompleted =
+-        !widget.habit.isCompletedOn(widget.selectedDate);
++    final notCompleted = !widget.habit.isCompletedOn(widget.selectedDate);
+ 
+     if (!_initReward) {
+       _rewardCtrl.text = widget.habit.reward;
+@@ -257,34 +255,34 @@ class _HabitOptionsSheetState extends ConsumerState<HabitOptionsSheet> {
+               _sectionTitle('Environment Priming'),
+               const Gap(8),
+               ...widget.habit.environmentPriming.asMap().entries.map(
+-                    (e) => Padding(
+-                      padding: const EdgeInsets.symmetric(vertical: 4),
+-                      child: Row(
+-                        children: [
+-                          const Icon(
+-                            Icons.check_box_outline_blank,
+-                            size: 16,
+-                            color: EmergeColors.teal,
+-                          ),
+-                          const SizedBox(width: 8),
+-                          Expanded(
+-                            child: Text(
+-                              e.value,
+-                              style: const TextStyle(color: Colors.white),
+-                            ),
+-                          ),
+-                          IconButton(
+-                            icon: const Icon(
+-                              Icons.close,
+-                              size: 16,
+-                              color: Colors.white70,
+-                            ),
+-                            onPressed: () => _removePriming(e.key),
+-                          ),
+-                        ],
++                (e) => Padding(
++                  padding: const EdgeInsets.symmetric(vertical: 4),
++                  child: Row(
++                    children: [
++                      const Icon(
++                        Icons.check_box_outline_blank,
++                        size: 16,
++                        color: EmergeColors.teal,
+                       ),
+-                    ),
++                      const SizedBox(width: 8),
++                      Expanded(
++                        child: Text(
++                          e.value,
++                          style: const TextStyle(color: Colors.white),
++                        ),
++                      ),
++                      IconButton(
++                        icon: const Icon(
++                          Icons.close,
++                          size: 16,
++                          color: Colors.white70,
++                        ),
++                        onPressed: () => _removePriming(e.key),
++                      ),
++                    ],
+                   ),
++                ),
++              ),
+               if (widget.habit.environmentPriming.isEmpty)
+                 const Padding(
+                   padding: EdgeInsets.symmetric(vertical: 8),
+@@ -311,10 +309,7 @@ class _HabitOptionsSheetState extends ConsumerState<HabitOptionsSheet> {
+                     borderSide: BorderSide.none,
+                   ),
+                   suffixIcon: IconButton(
+-                    icon: const Icon(
+-                      Icons.add,
+-                      color: EmergeColors.teal,
+-                    ),
++                    icon: const Icon(Icons.add, color: EmergeColors.teal),
+                     onPressed: _addPriming,
+                   ),
+                 ),
+@@ -345,28 +340,29 @@ class _HabitOptionsSheetState extends ConsumerState<HabitOptionsSheet> {
+               Wrap(
+                 spacing: 8,
+                 runSpacing: 8,
+-                children: [
+-                  'Watch 1 episode',
+-                  'Check social media',
+-                  'Coffee/Tea',
+-                  'Podcast',
+-                ].map((s) {
+-                  return ActionChip(
+-                    label: Text(
+-                      s,
+-                      style: const TextStyle(
+-                        color: Colors.white,
+-                        fontSize: 12,
+-                      ),
+-                    ),
+-                    backgroundColor: Colors.white.withValues(alpha: 0.06),
+-                    side: BorderSide.none,
+-                    onPressed: () {
+-                      _rewardCtrl.text = s;
+-                      _saveReward();
+-                    },
+-                  );
+-                }).toList(),
++                children:
++                    [
++                      'Watch 1 episode',
++                      'Check social media',
++                      'Coffee/Tea',
++                      'Podcast',
++                    ].map((s) {
++                      return ActionChip(
++                        label: Text(
++                          s,
++                          style: const TextStyle(
++                            color: Colors.white,
++                            fontSize: 12,
++                          ),
++                        ),
++                        backgroundColor: Colors.white.withValues(alpha: 0.06),
++                        side: BorderSide.none,
++                        onPressed: () {
++                          _rewardCtrl.text = s;
++                          _saveReward();
++                        },
++                      );
++                    }).toList(),
+               ),
+               const Gap(24),
+ 
+@@ -472,10 +468,7 @@ class _HabitOptionsSheetState extends ConsumerState<HabitOptionsSheet> {
+                 width: double.infinity,
+                 child: OutlinedButton.icon(
+                   onPressed: _confirmAndDelete,
+-                  icon: const Icon(
+-                    Icons.delete_outline,
+-                    color: Colors.red,
+-                  ),
++                  icon: const Icon(Icons.delete_outline, color: Colors.red),
+                   label: const Text(
+                     'Delete Habit',
+                     style: TextStyle(color: Colors.red),
+diff --git a/lib/features/social/presentation/screens/tribe_lobby_screen.dart b/lib/features/social/presentation/screens/tribe_lobby_screen.dart
+index 76e155b3..4e147154 100644
+--- a/lib/features/social/presentation/screens/tribe_lobby_screen.dart
++++ b/lib/features/social/presentation/screens/tribe_lobby_screen.dart
+@@ -48,7 +48,7 @@ class _TribeLobbyScreenState extends ConsumerState<TribeLobbyScreen> {
+     return Scaffold(
+       backgroundColor: Colors.transparent,
+       body: AppBackToHome(
+-        homeRoute: '/',
++        homeRoute: '/world-map',
+         child: SafeArea(
+           child: clubsAsync.when(
+             data: (clubs) => profileAsync.when(
+diff --git a/lib/features/timeline/presentation/screens/timeline_screen.dart b/lib/features/timeline/presentation/screens/timeline_screen.dart
+index 571734d8..6250fec2 100644
+--- a/lib/features/timeline/presentation/screens/timeline_screen.dart
++++ b/lib/features/timeline/presentation/screens/timeline_screen.dart
+@@ -8,10 +8,10 @@ import 'package:emerge_app/features/monetization/domain/services/ad_manager_serv
+ import 'package:emerge_app/features/monetization/presentation/providers/subscription_provider.dart';
+ import 'package:emerge_app/features/monetization/presentation/widgets/ad_banner_widget.dart';
+ import 'package:emerge_app/features/timeline/presentation/widgets/month_calendar_strip.dart';
+-import 'package:emerge_app/features/timeline/presentation/widgets/today_arc_card.dart';
++import 'package:emerge_app/features/timeline/presentation/widgets/recap_summary_card.dart';
+ import 'package:emerge_app/features/timeline/presentation/widgets/habit_timeline_section.dart';
+-import 'package:emerge_app/features/timeline/presentation/widgets/timeline_share_preview.dart';
+ import 'package:emerge_app/features/timeline/presentation/widgets/completion_celebration.dart';
++import 'package:emerge_app/features/timeline/presentation/widgets/timeline_share_preview.dart';
+ import 'package:emerge_app/features/auth/domain/entities/user_extension.dart';
+ import 'package:emerge_app/features/gamification/presentation/providers/user_stats_providers.dart';
+ import 'package:emerge_app/core/presentation/widgets/world_background.dart';
+@@ -26,18 +26,16 @@ import 'package:emerge_app/features/narrator/domain/models/narrator_line.dart';
+ import 'package:emerge_app/features/reflections/presentation/widgets/habit_options_sheet.dart';
+ import 'package:emerge_app/features/narrator/domain/models/narrator_note.dart';
+ import 'package:emerge_app/features/narrator/presentation/providers/narrator_providers.dart';
+-import 'package:emerge_app/features/narrator/presentation/widgets/narrator_avatar.dart';
+ import 'package:emerge_app/features/narrator/presentation/widgets/narrator_milestone_card.dart';
+ import 'package:emerge_app/features/narrator/presentation/widgets/narrator_summary_card.dart';
+ import 'package:emerge_app/features/narrator/presentation/widgets/narrator_sheet.dart';
+ import 'package:emerge_app/features/narrator/domain/models/narrator_appearance.dart';
+ import 'package:emerge_app/features/narrator/domain/models/narrator_trigger.dart';
+-import 'package:emerge_app/features/timeline/presentation/widgets/timeline_reflection_card.dart';
+ import 'package:shared_preferences/shared_preferences.dart';
+ 
+-/// Main Timeline screen - the daily command center
+-/// Shows calendar, daily summary, habit timeline grouped by time-of-day,
+-/// AI coach insights, and daily reflection
++/// Main daily screen - the habit command center
++/// Shows calendar, daily summary, habits grouped by time-of-day,
++/// and AI coach insights
+ class TimelineScreen extends ConsumerStatefulWidget {
+   const TimelineScreen({super.key});
+ 
+@@ -77,13 +75,6 @@ class _TimelineScreenState extends ConsumerState<TimelineScreen> {
+     return max;
+   }
+ 
+-  void _onNarratorAvatarTap() {
+-    // If there's a pending line, clear it without showing the sheet.
+-    // The avatar tap can later open an askNarrator sheet.
+-    ref.read(pendingMilestoneProvider.notifier).clear();
+-    // For now: no-op; future: open askNarrator sheet
+-  }
+-
+   void _onPendingMilestoneChange(NarratorLine? prev, NarratorLine? next) {
+     if (prev == null && next != null) {
+       setState(() {
+@@ -126,16 +117,18 @@ class _TimelineScreenState extends ConsumerState<TimelineScreen> {
+         context,
+         _eveningAppearance,
+         onResponse: (buttonLabel, typedText) {
+-          ref.read(narratorLocalDatasourceProvider).recordNote(
+-            type: NarratorNoteType.reflectionLogged,
+-            data: {
+-              'completedCount': completedToday,
+-              'totalHabits': totalHabits,
+-              'response': buttonLabel,
+-              if (typedText != null && typedText.isNotEmpty)
+-                'typedNote': typedText,
+-            },
+-          );
++          ref
++              .read(narratorLocalDatasourceProvider)
++              .recordNote(
++                type: NarratorNoteType.reflectionLogged,
++                data: {
++                  'completedCount': completedToday,
++                  'totalHabits': totalHabits,
++                  'response': buttonLabel,
++                  if (typedText != null && typedText.isNotEmpty)
++                    'typedNote': typedText,
++                },
++              );
+         },
+       );
+     });
+@@ -178,7 +171,10 @@ class _TimelineScreenState extends ConsumerState<TimelineScreen> {
+       }
+     });
+ 
+-    ref.listen<NarratorLine?>(pendingMilestoneProvider, _onPendingMilestoneChange);
++    ref.listen<NarratorLine?>(
++      pendingMilestoneProvider,
++      _onPendingMilestoneChange,
++    );
+ 
+     return WorldBackground(
+       useSafeArea: false,
+@@ -189,9 +185,12 @@ class _TimelineScreenState extends ConsumerState<TimelineScreen> {
+             child: habits.isNotEmpty
+                 ? _buildTimelineList(context, habits, statsAsync)
+                 : habitsAsync.when(
+-                    data: (_) => _buildTimelineList(context, habits, statsAsync),
++                    data: (_) =>
++                        _buildTimelineList(context, habits, statsAsync),
+                     loading: () => const Center(
+-                      child: CircularProgressIndicator(color: Color(0xFF2BEE79)),
++                      child: CircularProgressIndicator(
++                        color: Color(0xFF2BEE79),
++                      ),
+                     ),
+                     error: (e, s) => _buildErrorView(context, e),
+                   ),
+@@ -242,7 +241,9 @@ class _TimelineScreenState extends ConsumerState<TimelineScreen> {
+     List<Habit> habits,
+     AsyncValue<UserProfile> statsAsync,
+   ) {
+-    final completedCount = habits.where((h) => h.isCompletedOn(_selectedDate)).length;
++    final completedCount = habits
++        .where((h) => h.isCompletedOn(_selectedDate))
++        .length;
+ 
+     final grouped = _groupHabitsByTimeOfDay(habits);
+     final timelineGroups = Map<String, List<Habit>>.from(grouped);
+@@ -250,7 +251,7 @@ class _TimelineScreenState extends ConsumerState<TimelineScreen> {
+     return CustomScrollView(
+       slivers: [
+         ArchetypeSliverAppBar(
+-          title: 'TIMELINE',
++          title: 'Today',
+           syncIndicator: null,
+           badge: Consumer(
+             builder: (context, ref, _) {
+@@ -274,27 +275,36 @@ class _TimelineScreenState extends ConsumerState<TimelineScreen> {
+             },
+           ),
+           actions: [
+-            PopupMenuButton<String>(
+-              icon: const Icon(Icons.more_vert, color: Colors.white),
+-              onSelected: (v) {
+-                switch (v) {
+-                  case 'share':
+-                    _shareTimelineProgress();
+-                  case 'recap':
+-                    context.push('/recap');
+-                  case 'profile':
+-                    context.push('/profile');
+-                }
+-              },
+-              itemBuilder: (_) => [
+-                const PopupMenuItem(value: 'share', child: Text('Share progress')),
+-                const PopupMenuItem(value: 'recap', child: Text('Weekly recap')),
+-                const PopupMenuItem(value: 'profile', child: Text('Future Self Studio')),
+-              ],
+-            ),
++            // Polished profile icon
+             Padding(
+               padding: const EdgeInsets.only(right: 8),
+-              child: NarratorAvatar(onTap: () => _onNarratorAvatarTap()),
++              child: GestureDetector(
++                onTap: () => context.push('/profile'),
++                child: Container(
++                  width: 36,
++                  height: 36,
++                  decoration: BoxDecoration(
++                    shape: BoxShape.circle,
++                    gradient: const LinearGradient(
++                      colors: [EmergeColors.violet, EmergeColors.teal],
++                    ),
++                    boxShadow: [
++                      BoxShadow(
++                        color: EmergeColors.violet.withValues(alpha: 0.3),
++                        blurRadius: 8,
++                        spreadRadius: 0,
++                      ),
++                    ],
++                  ),
++                  child: const Center(
++                    child: Icon(
++                      Icons.person_rounded,
++                      color: Colors.white,
++                      size: 20,
++                    ),
++                  ),
++                ),
++              ),
+             ),
+           ],
+         ),
+@@ -314,19 +324,11 @@ class _TimelineScreenState extends ConsumerState<TimelineScreen> {
+         SliverToBoxAdapter(
+           child: Padding(
+             padding: const EdgeInsets.symmetric(horizontal: 16.0),
+-            child: TodayArcCard(
+-              completed: completedCount,
+-              total: habits.length,
+-              streakDays: _bestStreak(habits),
+-              onTap: () {
+-                // Jump to first incomplete habit
+-                final firstIncomplete = habits.where(
+-                  (h) => !h.isCompletedOn(_selectedDate),
+-                ).firstOrNull;
+-                if (firstIncomplete != null) {
+-                  // Scroll to habit — TimelineScreen can add scroll-to later
+-                }
+-              },
++            child: RecapSummaryCard(
++              habits: habits,
++              streak: _bestStreak(habits),
++              totalXp: statsAsync.value?.avatarStats.totalXp ?? 0,
++              onTap: () => context.push('/world-map/recap'),
+             ),
+           ),
+         ),
+@@ -342,8 +344,8 @@ class _TimelineScreenState extends ConsumerState<TimelineScreen> {
+                   _selectedDate.day == DateTime.now().day &&
+                           _selectedDate.month == DateTime.now().month &&
+                           _selectedDate.year == DateTime.now().year
+-                      ? "Today's Timeline"
+-                      : "${_selectedDate.month}/${_selectedDate.day} Timeline",
++                      ? "Today's Habits"
++                      : "${_selectedDate.month}/${_selectedDate.day}",
+                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                     color: Colors.white,
+                     fontWeight: FontWeight.bold,
+@@ -356,6 +358,18 @@ class _TimelineScreenState extends ConsumerState<TimelineScreen> {
+                     color: EmergeColors.tealMuted,
+                   ),
+                 ),
++                const SizedBox(width: 8),
++                Tooltip(
++                  message: 'Share progress',
++                  child: GestureDetector(
++                    onTap: _shareTimelineProgress,
++                    child: Icon(
++                      Icons.share_outlined,
++                      color: Colors.white.withValues(alpha: 0.6),
++                      size: 18,
++                    ),
++                  ),
++                ),
+               ],
+             ),
+           ),
+@@ -368,7 +382,7 @@ class _TimelineScreenState extends ConsumerState<TimelineScreen> {
+             groupedHabits: timelineGroups,
+             selectedDate: _selectedDate,
+             onHabitTap: (habit) {
+-              context.go('/');
++              context.go('/world-map?focus=${habit.attribute.name}');
+             },
+             onHabitToggle: (habit) {
+               _toggleHabitCompletion(habit);
+@@ -393,25 +407,28 @@ class _TimelineScreenState extends ConsumerState<TimelineScreen> {
+                     padding: const EdgeInsets.all(32),
+                     child: Column(
+                       children: [
+-                        Icon(Icons.add_task, color: EmergeColors.teal, size: 48),
++                        Icon(
++                          Icons.add_task,
++                          color: EmergeColors.teal,
++                          size: 48,
++                        ),
+                         const SizedBox(height: 12),
+                         Text(
+                           'No habits yet',
+-                          style: Theme.of(
+-                            context,
+-                          ).textTheme.titleMedium?.copyWith(color: Colors.white),
++                          style: Theme.of(context).textTheme.titleMedium
++                              ?.copyWith(color: Colors.white),
+                         ),
+                         const SizedBox(height: 4),
+                         Text(
+                           'Create your first habit to start your identity journey',
+-                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+-                            color: EmergeColors.tealMuted,
+-                          ),
++                          style: Theme.of(context).textTheme.bodySmall
++                              ?.copyWith(color: EmergeColors.tealMuted),
+                           textAlign: TextAlign.center,
+                         ),
+                         const SizedBox(height: 16),
+                         ElevatedButton.icon(
+-                          onPressed: () => context.push('/timeline/create-habit'),
++                          onPressed: () =>
++                              context.push('/timeline/create-habit'),
+                           icon: const Icon(Icons.add),
+                           label: const Text('Create Habit'),
+                           style: ElevatedButton.styleFrom(
+@@ -444,22 +461,7 @@ class _TimelineScreenState extends ConsumerState<TimelineScreen> {
+ 
+         const SliverToBoxAdapter(child: SizedBox(height: 8)),
+ 
+-        const SliverToBoxAdapter(
+-          child: NarratorSummaryCard(),
+-        ),
+-
+-        const SliverToBoxAdapter(child: SizedBox(height: 16)),
+-
+-        // Daily reflection card
+-        SliverToBoxAdapter(
+-          child: Padding(
+-            padding: const EdgeInsets.symmetric(horizontal: 16),
+-            child: TimelineReflectionCard(
+-              userId: statsAsync.value?.uid ?? '',
+-              date: _selectedDate,
+-            ),
+-          ),
+-        ),
++        const SliverToBoxAdapter(child: NarratorSummaryCard()),
+ 
+         const SliverToBoxAdapter(child: SizedBox(height: 24)),
+       ],
+@@ -517,7 +519,7 @@ class _TimelineScreenState extends ConsumerState<TimelineScreen> {
+     final minutes = await showDialog<int>(
+       context: context,
+       barrierDismissible: false,
+-      builder: (_) => TwoMinuteTimerDialog(
++      builder: (_) => HabitTimerDialog(
+         habitTitle: habit.title,
+         neonColor: attributeColor(habit.attribute),
+         durationMinutes: habit.timerDurationMinutes,
+@@ -568,7 +570,9 @@ class _TimelineScreenState extends ConsumerState<TimelineScreen> {
+       if (mounted) {
+         ScaffoldMessenger.of(context).showSnackBar(
+           const SnackBar(
+-            content: Text('Could not save. Check your connection and try again.'),
++            content: Text(
++              'Could not save. Check your connection and try again.',
++            ),
+             backgroundColor: Colors.orange,
+             behavior: SnackBarBehavior.floating,
+           ),
+@@ -652,9 +656,7 @@ class _BreathingWrapperState extends State<_BreathingWrapper>
+   late final Animation<double> _scaleAnimation = Tween<double>(
+     begin: 0.98,
+     end: 1.02,
+-  ).animate(
+-    CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
+-  );
++  ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
+ 
+   @override
+   void dispose() {
+@@ -664,10 +666,6 @@ class _BreathingWrapperState extends State<_BreathingWrapper>
+ 
+   @override
+   Widget build(BuildContext context) {
+-    return ScaleTransition(
+-      scale: _scaleAnimation,
+-      child: widget.child,
+-    );
++    return ScaleTransition(scale: _scaleAnimation, child: widget.child);
+   }
+ }
+-
+diff --git a/lib/features/timeline/presentation/widgets/habit_timeline_section.dart b/lib/features/timeline/presentation/widgets/habit_timeline_section.dart
+index 923e51bf..451cd386 100644
+--- a/lib/features/timeline/presentation/widgets/habit_timeline_section.dart
++++ b/lib/features/timeline/presentation/widgets/habit_timeline_section.dart
+@@ -291,8 +291,6 @@ class _IndentedHabitItemState extends State<IndentedHabitItem> {
+     _isTimerRunning = false;
+   }
+ 
+-
+-
+   void _tick() {
+     if (!mounted || !_isTimerRunning) return;
+     if (_remainingSeconds > 0) {
+@@ -333,8 +331,7 @@ class _IndentedHabitItemState extends State<IndentedHabitItem> {
+     super.dispose();
+   }
+ 
+-  bool get _isCompletedToday =>
+-      widget.habit.isCompletedOn(widget.selectedDate);
++  bool get _isCompletedToday => widget.habit.isCompletedOn(widget.selectedDate);
+ 
+   @override
+   Widget build(BuildContext context) {
+@@ -466,14 +463,12 @@ class _IndentedHabitItemState extends State<IndentedHabitItem> {
+ 
+     return Row(
+       children: [
+-        Icon(Icons.check_circle, color: color, size: 20),
+-        const SizedBox(width: 12),
+         // Title with strike-through
+         Expanded(
+           child: Text(
+             widget.habit.title,
+             style: const TextStyle(
+-              color: Colors.white,
++              color: Colors.white54,
+               fontSize: 14,
+               fontWeight: FontWeight.w500,
+               decoration: TextDecoration.lineThrough,
+@@ -482,13 +477,36 @@ class _IndentedHabitItemState extends State<IndentedHabitItem> {
+             overflow: TextOverflow.ellipsis,
+           ),
+         ),
++        const SizedBox(width: 8),
++        // Checkbox (tappable — allows undo)
++        IconButton(
++          tooltip: 'Undo completion',
++          icon: Icon(Icons.check_circle, color: color, size: 22),
++          onPressed: () {
++            if (_isTimerRunning) _cancelTimer();
++            widget.onCheckboxTap();
++          },
++        ),
++        // Timer icon (tappable)
++        IconButton(
++          icon: const Icon(Icons.timer_outlined, color: Colors.white, size: 20),
++          onPressed: widget.onTimerTap,
++        ),
++        // Menu icon (tappable)
++        IconButton(
++          icon: const Icon(Icons.more_vert, color: Colors.white, size: 22),
++          onPressed: widget.onMenuTap,
++        ),
+         // XP badge
+-        Text(
+-          '+$xp XP',
+-          style: TextStyle(
+-            color: color,
+-            fontSize: 12,
+-            fontWeight: FontWeight.bold,
++        Padding(
++          padding: const EdgeInsets.only(left: 4),
++          child: Text(
++            '+$xp XP',
++            style: TextStyle(
++              color: color,
++              fontSize: 12,
++              fontWeight: FontWeight.bold,
++            ),
+           ),
+         ),
+       ],
+diff --git a/lib/features/world_map/presentation/screens/world_map_screen.dart b/lib/features/world_map/presentation/screens/world_map_screen.dart
+index 1233ed88..8be88c8c 100644
+--- a/lib/features/world_map/presentation/screens/world_map_screen.dart
++++ b/lib/features/world_map/presentation/screens/world_map_screen.dart
+@@ -7,11 +7,47 @@ import 'package:emerge_app/features/world_map/presentation/widgets/nebula_backgr
+ import 'package:emerge_app/features/world_map/presentation/widgets/world_ring_layout.dart';
+ import 'package:emerge_app/features/world_map/presentation/widgets/central_health_orb.dart';
+ 
+-class WorldMapScreen extends ConsumerWidget {
+-  const WorldMapScreen({super.key});
++class WorldMapScreen extends ConsumerStatefulWidget {
++  final String? focusAttribute;
++  const WorldMapScreen({super.key, this.focusAttribute});
+ 
+   @override
+-  Widget build(BuildContext context, WidgetRef ref) {
++  ConsumerState<WorldMapScreen> createState() => _WorldMapScreenState();
++}
++
++class _WorldMapScreenState extends ConsumerState<WorldMapScreen> {
++  bool _isNavigating = false;
++
++  @override
++  void initState() {
++    super.initState();
++    _checkFocusFlow();
++  }
++
++  @override
++  void didUpdateWidget(WorldMapScreen oldWidget) {
++    super.didUpdateWidget(oldWidget);
++    if (widget.focusAttribute != oldWidget.focusAttribute) {
++      _checkFocusFlow();
++    }
++  }
++
++  void _checkFocusFlow() {
++    if (widget.focusAttribute != null && !_isNavigating) {
++      _isNavigating = true;
++      // Delay allows the node to scale up before navigating to the detail screen
++      Future.delayed(const Duration(milliseconds: 1000), () {
++        if (mounted) {
++          context.go('/world-map/attribute/${widget.focusAttribute}');
++          // Reset navigation flag in case user comes back to this map instance
++          _isNavigating = false;
++        }
++      });
++    }
++  }
++
++  @override
++  Widget build(BuildContext context) {
+     final healthAsync = ref.watch(worldHealthStreamProvider);
+     final entropyAsync = ref.watch(worldEntropyStreamProvider);
+ 
+@@ -42,7 +78,8 @@ class WorldMapScreen extends ConsumerWidget {
+               Center(
+                 child: WorldRingLayout(
+                   radius: 140,
+-                  onNodeTap: (attr) => context.go('/attribute/${attr.name}'),
++                  focusAttribute: widget.focusAttribute,
++                  onNodeTap: (attr) => context.go('/world-map/attribute/${attr.name}'),
+                 ),
+               ),
+               Center(
+diff --git a/lib/features/world_map/presentation/widgets/world_ring_layout.dart b/lib/features/world_map/presentation/widgets/world_ring_layout.dart
+index 1ba74d8c..9074cc12 100644
+--- a/lib/features/world_map/presentation/widgets/world_ring_layout.dart
++++ b/lib/features/world_map/presentation/widgets/world_ring_layout.dart
+@@ -7,11 +7,13 @@ import 'package:flutter/material.dart';
+ class WorldRingLayout extends StatelessWidget {
+   final double radius;
+   final ValueChanged<HabitAttribute> onNodeTap;
++  final String? focusAttribute;
+ 
+   const WorldRingLayout({
+     super.key,
+     required this.radius,
+     required this.onNodeTap,
++    this.focusAttribute,
+   });
+ 
+   @override
+@@ -48,6 +50,7 @@ class WorldRingLayout extends StatelessWidget {
+                 translation: const Offset(-0.5, -0.5),
+                 child: WorldTypeNode(
+                   attribute: attr,
++                  isFocused: focusAttribute == attr.name,
+                   onTap: () => onNodeTap(attr),
+                 ),
+               ),
+diff --git a/lib/features/world_map/presentation/widgets/world_type_node.dart b/lib/features/world_map/presentation/widgets/world_type_node.dart
+index b6ceedff..bd752a8b 100644
+--- a/lib/features/world_map/presentation/widgets/world_type_node.dart
++++ b/lib/features/world_map/presentation/widgets/world_type_node.dart
+@@ -7,11 +7,13 @@ import 'package:flutter/material.dart';
+ class WorldTypeNode extends StatelessWidget {
+   final HabitAttribute attribute;
+   final VoidCallback onTap;
++  final bool isFocused;
+ 
+   const WorldTypeNode({
+     super.key,
+     required this.attribute,
+     required this.onTap,
++    this.isFocused = false,
+   });
+ 
+   @override
+@@ -20,56 +22,67 @@ class WorldTypeNode extends StatelessWidget {
+     final theme = Theme.of(context);
+     final String labelName = attribute.name.capitalize();
+ 
+-    return GestureDetector(
+-      onTap: onTap,
+-      behavior: HitTestBehavior.opaque,
+-      child: Column(
+-        mainAxisSize: MainAxisSize.min,
+-        children: [
+-          Container(
+-            width: 56,
+-            height: 56,
+-            decoration: BoxDecoration(
+-              shape: BoxShape.circle,
+-              color: config.primaryColor.withValues(alpha: 0.15),
+-              border: Border.all(color: config.primaryColor, width: 2),
+-              // 3D pop effect
+-              boxShadow: [
+-                BoxShadow(
+-                  color: config.primaryColor.withValues(alpha: 0.6),
+-                  blurRadius: 15,
+-                  spreadRadius: 2,
+-                  offset: const Offset(0, 4),
+-                ),
+-                BoxShadow(
+-                  color: Colors.black.withValues(alpha: 0.4),
+-                  blurRadius: 8,
+-                  offset: const Offset(0, 8),
+-                ),
+-              ],
+-            ),
+-            child: Icon(
+-              config.fallbackIcon,
+-              color: config.primaryColor,
+-              size: 28,
+-            ),
+-          ),
+-          const SizedBox(height: 8),
+-          Container(
+-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+-            decoration: BoxDecoration(
+-              color: Colors.black.withValues(alpha: 0.5),
+-              borderRadius: BorderRadius.circular(12),
+-            ),
+-            child: Text(
+-              labelName,
+-              style: theme.textTheme.bodySmall?.copyWith(
+-                fontWeight: FontWeight.bold,
++    return TweenAnimationBuilder<double>(
++      duration: const Duration(milliseconds: 600),
++      curve: Curves.easeOutBack,
++      tween: Tween<double>(begin: 1.0, end: isFocused ? 1.4 : 1.0),
++      builder: (context, scale, child) {
++        return Transform.scale(
++          scale: scale,
++          child: child,
++        );
++      },
++      child: GestureDetector(
++        onTap: onTap,
++        behavior: HitTestBehavior.opaque,
++        child: Column(
++          mainAxisSize: MainAxisSize.min,
++          children: [
++            Container(
++              width: 56,
++              height: 56,
++              decoration: BoxDecoration(
++                shape: BoxShape.circle,
++                color: config.primaryColor.withValues(alpha: 0.15),
++                border: Border.all(color: config.primaryColor, width: 2),
++                // 3D pop effect
++                boxShadow: [
++                  BoxShadow(
++                    color: config.primaryColor.withValues(alpha: 0.6),
++                    blurRadius: 15,
++                    spreadRadius: 2,
++                    offset: const Offset(0, 4),
++                  ),
++                  BoxShadow(
++                    color: Colors.black.withValues(alpha: 0.4),
++                    blurRadius: 8,
++                    offset: const Offset(0, 8),
++                  ),
++                ],
++              ),
++              child: Icon(
++                config.fallbackIcon,
+                 color: config.primaryColor,
++                size: 28,
++              ),
++            ),
++            const SizedBox(height: 8),
++            Container(
++              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
++              decoration: BoxDecoration(
++                color: Colors.black.withValues(alpha: 0.5),
++                borderRadius: BorderRadius.circular(12),
++              ),
++              child: Text(
++                labelName,
++                style: theme.textTheme.bodySmall?.copyWith(
++                  fontWeight: FontWeight.bold,
++                  color: config.primaryColor,
++                ),
+               ),
+             ),
+-          ),
+-        ],
++          ],
++        ),
+       ),
+     );
+   }
+diff --git a/test/core/presentation/screens/splash_routing_test.dart b/test/core/presentation/screens/splash_routing_test.dart
+index 6190894f..e0318cef 100644
+--- a/test/core/presentation/screens/splash_routing_test.dart
++++ b/test/core/presentation/screens/splash_routing_test.dart
+@@ -173,7 +173,7 @@ void main() {
+           userOnboardingProgress: 3,
+           userOnboardingCompletedAt: null,
+         ),
+-        '/',
++        '/world-map',
+       );
+     });
+ 
+@@ -256,7 +256,7 @@ void main() {
+           userOnboardingProgress: 3,
+           userOnboardingCompletedAt: null,
+         ),
+-        '/',
++        '/world-map',
+       );
+     });
+ 
+@@ -271,7 +271,7 @@ void main() {
+           userOnboardingProgress: 4,
+           userOnboardingCompletedAt: DateTime(2026, 1, 1),
+         ),
+-        '/',
++        '/world-map',
+       );
+     });
+   });
+diff --git a/test/core/router/router_redirect_test.dart b/test/core/router/router_redirect_test.dart
+index c0e1617d..a0101f9f 100644
+--- a/test/core/router/router_redirect_test.dart
++++ b/test/core/router/router_redirect_test.dart
+@@ -20,7 +20,7 @@ void main() {
+         userOnboardingCompletedAt: null,
+         creatorOnboarding: null,
+       );
+-      expect(decideRedirect(currentPath: '/', ctx: ctx), '/welcome');
++      expect(decideRedirect(currentPath: '/world-map', ctx: ctx), '/welcome');
+     });
+ 
+     test('unauthenticated, returning user, on / -> /login', () {
+@@ -32,7 +32,7 @@ void main() {
+         userOnboardingCompletedAt: null,
+         creatorOnboarding: null,
+       );
+-      expect(decideRedirect(currentPath: '/', ctx: ctx), '/login');
++      expect(decideRedirect(currentPath: '/world-map', ctx: ctx), '/login');
+     });
+ 
+     test('unauthenticated, on /creator/signup -> stays (open signup form)', () {
+@@ -155,7 +155,7 @@ void main() {
+         creatorOnboarding: CreatorOnboardingState.empty,
+       );
+       expect(
+-        decideRedirect(currentPath: '/', ctx: ctx),
++        decideRedirect(currentPath: '/world-map', ctx: ctx),
+         '/onboarding/creator/archetype',
+       );
+     });
+@@ -172,7 +172,7 @@ void main() {
+         creatorOnboarding: CreatorOnboardingState.empty,
+       );
+       expect(
+-        decideRedirect(currentPath: '/', ctx: ctx),
++        decideRedirect(currentPath: '/world-map', ctx: ctx),
+         '/onboarding/creator/archetype',
+       );
+     });
+@@ -190,7 +190,7 @@ void main() {
+         ),
+       );
+       expect(
+-        decideRedirect(currentPath: '/', ctx: ctx),
++        decideRedirect(currentPath: '/world-map', ctx: ctx),
+         '/onboarding/creator/profile',
+       );
+     });
+@@ -208,7 +208,7 @@ void main() {
+         ),
+       );
+       expect(
+-        decideRedirect(currentPath: '/', ctx: ctx),
++        decideRedirect(currentPath: '/world-map', ctx: ctx),
+         '/onboarding/creator/reveal',
+       );
+     });
+@@ -227,7 +227,7 @@ void main() {
+         ),
+       );
+       expect(
+-        decideRedirect(currentPath: '/', ctx: ctx),
++        decideRedirect(currentPath: '/world-map', ctx: ctx),
+         '/creator/dashboard',
+       );
+     });
+@@ -284,7 +284,7 @@ void main() {
+         creatorOnboarding: null,
+       );
+       expect(
+-        decideRedirect(currentPath: '/', ctx: ctx),
++        decideRedirect(currentPath: '/world-map', ctx: ctx),
+         '/onboarding/identity-studio',
+       );
+     });
+@@ -299,7 +299,7 @@ void main() {
+         creatorOnboarding: null,
+       );
+       expect(
+-        decideRedirect(currentPath: '/', ctx: ctx),
++        decideRedirect(currentPath: '/world-map', ctx: ctx),
+         '/onboarding/first-habit',
+       );
+     });
+@@ -313,7 +313,7 @@ void main() {
+         userOnboardingCompletedAt: null,
+         creatorOnboarding: null,
+       );
+-      expect(decideRedirect(currentPath: '/', ctx: ctx), isNull);
++      expect(decideRedirect(currentPath: '/world-map', ctx: ctx), isNull);
+     });
+ 
+     test(
+@@ -362,5 +362,20 @@ void main() {
+         '/onboarding/identity-studio',
+       );
+     });
++
++    test('role=user, complete, on /world-map with focus query parameter -> stays', () {
++      final ctx = RedirectContext(
++        isLoggedIn: true,
++        role: UserRole.user,
++        isFirstLaunch: false,
++        userOnboardingProgress: 4,
++        userOnboardingCompletedAt: DateTime(2026, 1, 1),
++        creatorOnboarding: null,
++      );
++      expect(
++        decideRedirect(currentPath: '/world-map?focus=strength', ctx: ctx),
++        isNull,
++      );
++    });
+   });
+ }

@@ -22,16 +22,10 @@ class WorldTypeNode extends StatelessWidget {
     final theme = Theme.of(context);
     final String labelName = attribute.name.capitalize();
 
-    return TweenAnimationBuilder<double>(
+    return AnimatedScale(
       duration: const Duration(milliseconds: 600),
       curve: Curves.easeOutBack,
-      tween: Tween<double>(begin: 1.0, end: isFocused ? 1.4 : 1.0),
-      builder: (context, scale, child) {
-        return Transform.scale(
-          scale: scale,
-          child: child,
-        );
-      },
+      scale: isFocused ? 1.4 : 1.0,
       child: GestureDetector(
         onTap: onTap,
         behavior: HitTestBehavior.opaque,

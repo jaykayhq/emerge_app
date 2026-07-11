@@ -1,0 +1,116 @@
+<h2>Recap Stats Card — Design Mockup</h2>
+<p class="subtitle">A compact stats summary card that sits above the habit cards on the timeline. Shows live weekly progress and links to the full recap screen.</p>
+
+<div class="section">
+  <h3>Where it fits in the timeline</h3>
+  <div class="mockup" style="max-width: 420px; margin: 0 auto;">
+    <div class="mockup-body" style="padding: 0; background: #0f0f1a;">
+      <!-- Timeline layout mockup -->
+      <div style="padding: 12px 16px; border-bottom: 1px solid rgba(255,255,255,0.06);">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+          <span style="color: white; font-weight: bold; font-size: 18px;">Today</span>
+          <div style="display: flex; gap: 8px;">
+            <div style="width: 32px; height: 32px; border-radius: 50%; background: rgba(43,238,121,0.2);"></div>
+            <div style="width: 32px; height: 32px; border-radius: 50%; background: rgba(43,238,121,0.3);"></div>
+          </div>
+        </div>
+      </div>
+      <!-- Calendar strip -->
+      <div style="display: flex; gap: 6px; padding: 12px 16px; overflow-x: auto;">
+        <div style="min-width: 36px; text-align: center;"><span style="color: rgba(255,255,255,0.4); font-size: 10px;">M</span><div style="width: 28px; height: 28px; border-radius: 50%; background: rgba(43,238,121,0.3); margin-top: 4px;"></div></div>
+        <div style="min-width: 36px; text-align: center;"><span style="color: rgba(255,255,255,0.4); font-size: 10px;">T</span><div style="width: 28px; height: 28px; border-radius: 50%; background: rgba(43,238,121,0.3); margin-top: 4px;"></div></div>
+        <div style="min-width: 36px; text-align: center;"><span style="color: rgba(255,255,255,0.4); font-size: 10px;">W</span><div style="width: 28px; height: 28px; border-radius: 50%; background: rgba(43,238,121,0.5); margin-top: 4px;"></div></div>
+        <div style="min-width: 36px; text-align: center;"><span style="color: white; font-size: 10px;">T</span><div style="width: 28px; height: 28px; border-radius: 50%; background: #2BEE79; margin-top: 4px;"></div></div>
+        <div style="min-width: 36px; text-align: center;"><span style="color: rgba(255,255,255,0.4); font-size: 10px;">F</span><div style="width: 28px; height: 28px; border-radius: 50%; border: 1px solid rgba(255,255,255,0.15); margin-top: 4px;"></div></div>
+        <div style="min-width: 36px; text-align: center;"><span style="color: rgba(255,255,255,0.4); font-size: 10px;">S</span><div style="width: 28px; height: 28px; border-radius: 50%; border: 1px solid rgba(255,255,255,0.15); margin-top: 4px;"></div></div>
+        <div style="min-width: 36px; text-align: center;"><span style="color: rgba(255,255,255,0.4); font-size: 10px;">S</span><div style="width: 28px; height: 28px; border-radius: 50%; border: 1px solid rgba(255,255,255,0.15); margin-top: 4px;"></div></div>
+      </div>
+      <!-- TodayArcCard -->
+      <div style="margin: 8px 16px; padding: 16px; border-radius: 16px; background: linear-gradient(135deg, rgba(43,238,121,0.1), rgba(15,15,26,0.5)); border: 1px solid rgba(43,238,121,0.2);">
+        <div style="display: flex; align-items: center; gap: 16px;">
+          <div style="width: 56px; height: 56px; border-radius: 50%; border: 3px solid #2BEE79; display: flex; align-items: center; justify-content: center;">
+            <span style="color: #2BEE79; font-size: 18px; font-weight: bold;">3/5</span>
+          </div>
+          <div><span style="color: white; font-weight: bold;">3 habits done</span><br><span style="color: rgba(255,255,255,0.5); font-size: 12px;">Best streak: 12 days</span></div>
+        </div>
+      </div>
+
+      <!-- ★ NEW: Recap Stats Card ★ -->
+      <div style="margin: 8px 16px; padding: 12px 16px; border-radius: 12px; background: linear-gradient(135deg, rgba(108,99,255,0.12), rgba(43,238,121,0.06)); border: 1px solid rgba(108,99,255,0.2);">
+        <div style="display: flex; align-items: center; justify-content: space-between;">
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <span style="color: rgba(255,255,255,0.6); font-size: 11px; letter-spacing: 1px;">WEEKLY RECAP</span>
+          </div>
+          <div style="width: 28px; height: 28px; border-radius: 50%; background: linear-gradient(135deg, #6C63FF, #2BEE79); display: flex; align-items: center; justify-content: center;">
+            <span style="color: white; font-size: 12px;">👤</span>
+          </div>
+        </div>
+        <div style="display: flex; gap: 24px; margin-top: 10px;">
+          <div><span style="color: #2BEE79; font-size: 18px; font-weight: bold;">18</span><br><span style="color: rgba(255,255,255,0.5); font-size: 11px;">habits</span></div>
+          <div><span style="color: #FFB74D; font-size: 18px; font-weight: bold;">12</span><br><span style="color: rgba(255,255,255,0.5); font-size: 11px;">day streak</span></div>
+          <div><span style="color: #E040FB; font-size: 18px; font-weight: bold;">240</span><br><span style="color: rgba(255,255,255,0.5); font-size: 11px;">XP earned</span></div>
+          <div style="margin-left: auto; display: flex; align-items: center;">
+            <span style="color: rgba(255,255,255,0.4); font-size: 12px;">View →</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Section header -->
+      <div style="padding: 8px 16px 0;">
+        <div style="display: flex; justify-content: space-between;">
+          <span style="color: white; font-weight: bold; font-size: 16px;">Today's Habits</span>
+          <span style="color: rgba(43,238,121,0.6);">3/5</span>
+        </div>
+      </div>
+      <!-- Habit card placeholder -->
+      <div style="margin: 8px 16px; padding: 12px; border-radius: 10px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);">
+        <div style="display: flex; justify-content: space-between;">
+          <span style="color: white;">Morning Meditation</span>
+          <div style="display: flex; gap: 4px;">
+            <div style="width: 20px; height: 20px; border-radius: 50%; border: 1px solid rgba(255,255,255,0.3);"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>Design Notes</h3>
+  <ul style="color: rgba(255,255,255,0.7);">
+    <li><strong>Compact height:</strong> ~80px total — sits between TodayArcCard and "Today's Habits" header</li>
+    <li><strong>Stats:</strong> Shows <strong>habits completed this week</strong>, <strong>current streak</strong>, and <strong>XP earned this week</strong> — all pulled from already-loaded user stats (no extra Firestore reads)</li>
+    <li><strong>Avatar icon:</strong> Small gradient circle in top-right corner (user photo or fallback icon)</li>
+    <li><strong>Tappable:</strong> Tapping anywhere navigates to <code>/recap</code> (full weekly recap screen)</li>
+    <li><strong>Visual style:</strong> Subtle gradient background + accent border matching the app's existing glassmorphism design language</li>
+    <li><strong>No live recap needed:</strong> Stats come from <code>userStatsStreamProvider</code> which is already watched by the timeline screen</li>
+  </ul>
+</div>
+
+<div class="section">
+  <h3>Does this look right?</h3>
+  <p class="subtitle">Tap an option below to select, then reply in the terminal.</p>
+  <div class="options">
+    <div class="option" data-choice="yes" onclick="toggleSelect(this)">
+      <div class="letter">✓</div>
+      <div class="content">
+        <h3>Looks good — proceed</h3>
+        <p>This design works, let's implement it</p>
+      </div>
+    </div>
+    <div class="option" data-choice="tweak" onclick="toggleSelect(this)">
+      <div class="letter">✎</div>
+      <div class="content">
+        <h3>Minor tweaks needed</h3>
+        <p>I like it but want to adjust something</p>
+      </div>
+    </div>
+    <div class="option" data-choice="no" onclick="toggleSelect(this)">
+      <div class="letter">✕</div>
+      <div class="content">
+        <h3>Different direction</h3>
+        <p>Let me describe what I had in mind</p>
+      </div>
+    </div>
+  </div>
+</div>

@@ -142,6 +142,7 @@ class _HabitOptionsSheetState extends ConsumerState<HabitOptionsSheet> {
     ScaffoldMessenger.of(
       context,
     ).showSnackBar(const SnackBar(content: Text('Reflection saved')));
+    if (mounted) Navigator.of(context).pop();
   }
 
   Future<void> _confirmAndDelete() async {

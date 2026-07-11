@@ -362,20 +362,5 @@ void main() {
         '/onboarding/identity-studio',
       );
     });
-
-    test('role=user, complete, on /world-map with focus query parameter -> stays', () {
-      final ctx = RedirectContext(
-        isLoggedIn: true,
-        role: UserRole.user,
-        isFirstLaunch: false,
-        userOnboardingProgress: 4,
-        userOnboardingCompletedAt: DateTime(2026, 1, 1),
-        creatorOnboarding: null,
-      );
-      expect(
-        decideRedirect(currentPath: '/world-map?focus=strength', ctx: ctx),
-        isNull,
-      );
-    });
   });
 }

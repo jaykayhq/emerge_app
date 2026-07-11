@@ -100,7 +100,7 @@ final class WorldHealthProvider
   }
 }
 
-String _$worldHealthHash() => r'36509301219015a2fe617af3aef664e7b3654203';
+String _$worldHealthHash() => r'3535eb18b2ba155ffc430cef5d9982fc7a968574';
 
 /// Reactive stream of world health score from UserProfile
 
@@ -138,7 +138,7 @@ final class WorldHealthStreamProvider
   }
 }
 
-String _$worldHealthStreamHash() => r'305035ed2e8cad3f28d9e8b4762b70b566d91c08';
+String _$worldHealthStreamHash() => r'eb67ffd93c742ee27d07cf1754fa8099519e25e9';
 
 /// Reactive stream of world entropy score from UserProfile
 
@@ -177,4 +177,4 @@ final class WorldEntropyStreamProvider
 }
 
 String _$worldEntropyStreamHash() =>
-    r'c990cbbcc040c6ad5c9c4d5f0ec64b0c95cad427';
+    r'e9d42173f402baec2850691a2346a2971f773f42';
