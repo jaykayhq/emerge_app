@@ -376,9 +376,7 @@ GoRouter router(Ref ref) {
             routes: [
               GoRoute(
                 path: '/world-map',
-                builder: (context, state) => WorldMapScreen(
-                  focusAttribute: state.uri.queryParameters['focus'],
-                ),
+                builder: (context, state) => const WorldMapScreen(),
                 routes: [
                   GoRoute(
                     path: 'recap-hub',

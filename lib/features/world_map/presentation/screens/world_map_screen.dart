@@ -1,53 +1,47 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:emerge_app/core/domain/models/app_world_theme.dart';
 import 'package:emerge_app/features/world_map/presentation/providers/world_health_provider.dart';
+import 'package:emerge_app/features/world_map/presentation/providers/world_map_focus_provider.dart';
 import 'package:emerge_app/features/world_map/presentation/widgets/nebula_background.dart';
 import 'package:emerge_app/features/world_map/presentation/widgets/world_ring_layout.dart';
 import 'package:emerge_app/features/world_map/presentation/widgets/central_health_orb.dart';
 
 class WorldMapScreen extends ConsumerStatefulWidget {
-  final String? focusAttribute;
-  const WorldMapScreen({super.key, this.focusAttribute});
+  const WorldMapScreen({super.key});
 
   @override
   ConsumerState<WorldMapScreen> createState() => _WorldMapScreenState();
 }
 
 class _WorldMapScreenState extends ConsumerState<WorldMapScreen> {
-  bool _isNavigating = false;
+  Timer? _navTimer;
 
   @override
-  void initState() {
-    super.initState();
-    _checkFocusFlow();
-  }
-
-  @override
-  void didUpdateWidget(WorldMapScreen oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (widget.focusAttribute != oldWidget.focusAttribute) {
-      _checkFocusFlow();
-    }
-  }
-
-  void _checkFocusFlow() {
-    if (widget.focusAttribute != null && !_isNavigating) {
-      _isNavigating = true;
-      // Delay allows the node to scale up before navigating to the detail screen
-      Future.delayed(const Duration(milliseconds: 1000), () {
-        if (mounted) {
-          context.go('/world-map/attribute/${widget.focusAttribute}');
-          // Reset navigation flag in case user comes back to this map instance
-          _isNavigating = false;
-        }
-      });
-    }
+  void dispose() {
+    _navTimer?.cancel();
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
+    ref.listen<String?>(mapFocusEventProvider, (previous, next) {
+      if (next != null) {
+        _navTimer?.cancel();
+        _navTimer = Timer(const Duration(milliseconds: 1000), () {
+          if (mounted) {
+            context.go('/world-map/attribute/$next');
+            ref.read(mapFocusEventProvider.notifier).setFocus(null);
+          }
+        });
+      }
+    });
+
+    final focusAttribute = ref.watch(mapFocusEventProvider);
+
     final healthAsync = ref.watch(worldHealthStreamProvider);
     final entropyAsync = ref.watch(worldEntropyStreamProvider);
 
@@ -78,7 +72,7 @@ class _WorldMapScreenState extends ConsumerState<WorldMapScreen> {
               Center(
                 child: WorldRingLayout(
                   radius: 140,
-                  focusAttribute: widget.focusAttribute,
+                  focusAttribute: focusAttribute,
                   onNodeTap: (attr) => context.go('/world-map/attribute/${attr.name}'),
                 ),
               ),

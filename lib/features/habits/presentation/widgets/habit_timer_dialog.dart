@@ -27,7 +27,7 @@ class HabitTimerDialog extends StatefulWidget {
 
 class _HabitTimerDialogState extends State<HabitTimerDialog> {
   late Duration _timerDuration;
-  late Timer _timer;
+  Timer? _timer;
   late Duration _remaining;
   late int _selectedDuration;
   bool _isComplete = false;
@@ -50,7 +50,7 @@ class _HabitTimerDialogState extends State<HabitTimerDialog> {
         if (_remaining.inSeconds > 0) {
           _remaining = _remaining - const Duration(seconds: 1);
         } else {
-          _timer.cancel();
+          timer.cancel();
           _isComplete = true;
         }
       });
@@ -58,13 +58,13 @@ class _HabitTimerDialogState extends State<HabitTimerDialog> {
   }
 
   void _exitAndRunInBackground() {
-    _timer.cancel();
+    _timer?.cancel();
     Navigator.of(context).pop<int>(_selectedDuration);
   }
 
   @override
   void dispose() {
-    _timer.cancel();
+    _timer?.cancel();
     super.dispose();
   }
 

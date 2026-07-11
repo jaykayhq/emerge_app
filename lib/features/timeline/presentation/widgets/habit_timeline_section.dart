@@ -463,50 +463,30 @@ class _IndentedHabitItemState extends State<IndentedHabitItem> {
 
     return Row(
       children: [
+        Icon(Icons.check_circle, color: color, size: 20),
+        const SizedBox(width: 12),
         // Title with strike-through
         Expanded(
           child: Text(
             widget.habit.title,
             style: const TextStyle(
-              color: Colors.white54,
+              color: Colors.white,
               fontSize: 14,
               fontWeight: FontWeight.w500,
               decoration: TextDecoration.lineThrough,
+              decorationColor: Colors.white54,
             ),
-            maxLines: 2,
+            maxLines: 1,
             overflow: TextOverflow.ellipsis,
           ),
         ),
-        const SizedBox(width: 8),
-        // Checkbox (tappable — allows undo)
-        IconButton(
-          tooltip: 'Undo completion',
-          icon: Icon(Icons.check_circle, color: color, size: 22),
-          onPressed: () {
-            if (_isTimerRunning) _cancelTimer();
-            widget.onCheckboxTap();
-          },
-        ),
-        // Timer icon (tappable)
-        IconButton(
-          icon: const Icon(Icons.timer_outlined, color: Colors.white, size: 20),
-          onPressed: widget.onTimerTap,
-        ),
-        // Menu icon (tappable)
-        IconButton(
-          icon: const Icon(Icons.more_vert, color: Colors.white, size: 22),
-          onPressed: widget.onMenuTap,
-        ),
         // XP badge
-        Padding(
-          padding: const EdgeInsets.only(left: 4),
-          child: Text(
-            '+$xp XP',
-            style: TextStyle(
-              color: color,
-              fontSize: 12,
-              fontWeight: FontWeight.bold,
-            ),
+        Text(
+          '+$xp XP',
+          style: TextStyle(
+            color: color,
+            fontSize: 12,
+            fontWeight: FontWeight.bold,
           ),
         ),
       ],

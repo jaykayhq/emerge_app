@@ -17,6 +17,7 @@ import 'package:emerge_app/features/gamification/presentation/providers/user_sta
 import 'package:emerge_app/core/presentation/widgets/world_background.dart';
 import 'package:emerge_app/core/domain/models/app_world_theme.dart';
 import 'package:emerge_app/core/presentation/widgets/archetype_sliver_app_bar.dart';
+import 'package:emerge_app/features/world_map/presentation/providers/world_map_focus_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -382,7 +383,8 @@ class _TimelineScreenState extends ConsumerState<TimelineScreen> {
             groupedHabits: timelineGroups,
             selectedDate: _selectedDate,
             onHabitTap: (habit) {
-              context.go('/world-map?focus=${habit.attribute.name}');
+              ref.read(mapFocusEventProvider.notifier).setFocus(habit.attribute.name);
+              context.go('/world-map');
             },
             onHabitToggle: (habit) {
               _toggleHabitCompletion(habit);
