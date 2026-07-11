@@ -18,7 +18,16 @@ class WorldMapScreen extends ConsumerWidget {
     return Scaffold(
       body: healthAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (error, stack) => Center(child: Text('Error: $error')),
+        error: (error, stack) => const Center(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(Icons.error_outline, color: Colors.white54, size: 48),
+              SizedBox(height: 16),
+              Text('Failed to load world state.', style: TextStyle(color: Colors.white70)),
+            ],
+          ),
+        ),
         data: (health) {
           final entropy = entropyAsync.value ?? 0.0;
           return Stack(
@@ -40,7 +49,6 @@ class WorldMapScreen extends ConsumerWidget {
                 child: CentralHealthOrb(
                   currentHealth: health * 100,
                   maxHealth: 100,
-                  onTap: () {},
                 ),
               ),
             ],

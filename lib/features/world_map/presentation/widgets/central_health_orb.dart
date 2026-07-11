@@ -26,13 +26,13 @@ class CentralHealthOrb extends StatelessWidget {
     
     if (healthPct > 0.6) {
       baseColor = theme.colorScheme.primary; 
-      glowColor = theme.colorScheme.primary.withOpacity(0.4);
+      glowColor = theme.colorScheme.primary.withValues(alpha: 0.4);
     } else if (healthPct > 0.3) {
       baseColor = theme.colorScheme.tertiary; 
-      glowColor = theme.colorScheme.tertiary.withOpacity(0.4);
+      glowColor = theme.colorScheme.tertiary.withValues(alpha: 0.4);
     } else {
       baseColor = theme.colorScheme.error; 
-      glowColor = theme.colorScheme.error.withOpacity(0.4);
+      glowColor = theme.colorScheme.error.withValues(alpha: 0.4);
     }
 
     return GestureDetector(
@@ -54,8 +54,8 @@ class CentralHealthOrb extends StatelessWidget {
               shape: BoxShape.circle,
               gradient: RadialGradient(
                 colors: [
-                  baseColor.withOpacity(0.8),
-                  baseColor.withOpacity(0.3),
+                  baseColor.withValues(alpha: 0.8),
+                  baseColor.withValues(alpha: 0.3),
                   Colors.transparent,
                 ],
                 stops: const [0.4, 0.8, 1.0],
@@ -74,7 +74,7 @@ class CentralHealthOrb extends StatelessWidget {
                 children: [
                   Icon(
                     Icons.favorite,
-                    color: theme.colorScheme.onSurface.withOpacity(0.7),
+                    color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
                     size: clampedSize * 0.2,
                   ),
                   SizedBox(height: clampedSize * 0.05),

@@ -291,11 +291,7 @@ class _IndentedHabitItemState extends State<IndentedHabitItem> {
     _isTimerRunning = false;
   }
 
-  void _startTimer() {
-    if (_isTimerRunning || _totalSeconds <= 0) return;
-    setState(() => _isTimerRunning = true);
-    _tick();
-  }
+
 
   void _tick() {
     if (!mounted || !_isTimerRunning) return;

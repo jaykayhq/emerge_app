@@ -4,6 +4,7 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:emerge_app/features/habits/domain/entities/habit.dart';
 import 'package:emerge_app/features/world_map/domain/models/world_type_config.dart';
 import 'package:emerge_app/features/world_map/presentation/providers/attribute_completions_provider.dart';
+import 'package:intl/intl.dart';
 
 class AttributeHeatmapCard extends ConsumerWidget {
   final HabitAttribute attribute;
@@ -54,11 +55,10 @@ class AttributeHeatmapCard extends ConsumerWidget {
                             getTitlesWidget: (value, meta) {
                               final now = DateTime.now();
                               final date = now.subtract(Duration(days: 6 - value.toInt()));
-                              final weekdays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
                               return Padding(
                                 padding: const EdgeInsets.only(top: 8.0),
                                 child: Text(
-                                  weekdays[date.weekday - 1],
+                                  DateFormat('E').format(date),
                                   style: const TextStyle(color: Colors.white70, fontSize: 10),
                                 ),
                               );
@@ -93,7 +93,16 @@ class AttributeHeatmapCard extends ConsumerWidget {
                   );
                 },
                 loading: () => const Center(child: CircularProgressIndicator()),
-                error: (error, stack) => Center(child: Text('Error: $error', style: const TextStyle(color: Colors.white))),
+                error: (error, stack) => const Center(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.warning_amber_rounded, color: Colors.white54, size: 32),
+                      SizedBox(height: 8),
+                      Text('Failed to load recent activity.', style: TextStyle(color: Colors.white70)),
+                    ],
+                  ),
+                ),
               ),
             ),
           ],

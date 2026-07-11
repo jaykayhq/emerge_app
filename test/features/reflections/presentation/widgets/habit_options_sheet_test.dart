@@ -3,6 +3,7 @@ import 'package:emerge_app/features/auth/domain/entities/auth_user.dart';
 import 'package:emerge_app/features/auth/presentation/providers/auth_providers.dart';
 import 'package:emerge_app/features/blueprints/domain/models/blueprint.dart';
 import 'package:emerge_app/features/habits/domain/entities/habit.dart';
+import 'package:emerge_app/features/habits/domain/entities/habit_completion_entity.dart';
 import 'package:emerge_app/features/habits/domain/models/habit_activity.dart';
 import 'package:emerge_app/features/habits/domain/repositories/habit_repository.dart';
 import 'package:emerge_app/features/habits/presentation/providers/habit_providers.dart';
@@ -76,6 +77,15 @@ class _FakeHabitRepo implements HabitRepository {
     String? reminderTime,
   }) async =>
       const Right(unit);
+
+  @override
+  Future<Either<Failure, List<HabitCompletionEntity>>> getCompletionsBetweenDates(
+    String userId,
+    DateTime start,
+    DateTime end,
+  ) async {
+    return const Right([]);
+  }
 }
 
 /// Fake reflection repository that extends the real class with stub

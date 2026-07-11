@@ -33,7 +33,7 @@ class WorldTypeNode extends StatelessWidget {
               border: Border.all(color: config.primaryColor, width: 2),
               boxShadow: [
                 BoxShadow(
-                  color: config.primaryColor.withOpacity(0.5),
+                  color: config.primaryColor.withValues(alpha: 0.5),
                   blurRadius: 10,
                   spreadRadius: 2,
                 ),

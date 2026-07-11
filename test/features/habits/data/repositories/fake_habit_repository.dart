@@ -1,5 +1,6 @@
 import 'package:emerge_app/core/error/failure.dart';
 import 'package:emerge_app/features/habits/domain/entities/habit.dart';
+import 'package:emerge_app/features/habits/domain/entities/habit_completion_entity.dart';
 import 'package:emerge_app/features/habits/domain/models/habit_activity.dart';
 import 'package:emerge_app/features/habits/domain/repositories/habit_repository.dart';
 import 'package:emerge_app/features/blueprints/domain/models/blueprint.dart';
@@ -101,5 +102,14 @@ class FakeHabitRepository implements HabitRepository {
       _habits[habit.id] = habit;
     }
     return const Right(unit);
+  }
+
+  @override
+  Future<Either<Failure, List<HabitCompletionEntity>>> getCompletionsBetweenDates(
+    String userId,
+    DateTime start,
+    DateTime end,
+  ) async {
+    return const Right([]);
   }
 }
