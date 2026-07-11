@@ -8,6 +8,10 @@ import 'package:emerge_app/features/world_map/presentation/providers/world_healt
 import 'package:emerge_app/features/world_map/presentation/widgets/nebula_background.dart';
 import 'package:emerge_app/features/world_map/presentation/widgets/world_ring_layout.dart';
 import 'package:emerge_app/features/world_map/presentation/widgets/central_health_orb.dart';
+import 'package:emerge_app/features/world_map/presentation/widgets/ambient_particles.dart';
+import 'package:emerge_app/features/world_map/presentation/widgets/constellation_lines.dart';
+import 'package:emerge_app/features/habits/domain/entities/habit.dart';
+import 'dart:math' as math;
 
 class WorldMapScreen extends ConsumerStatefulWidget {
   final String? focusAttribute;
@@ -73,29 +77,52 @@ class _WorldMapScreenState extends ConsumerState<WorldMapScreen> {
         ),
         data: (health) {
           final entropy = entropyAsync.value ?? 0.0;
-          return Stack(
-            fit: StackFit.expand,
-            children: [
-              NebulaBackground(
-                healthState: WorldHealthState.fromHealth(health),
-                entropy: entropy,
-                primaryColor: Theme.of(context).colorScheme.primary,
-                accentColor: Theme.of(context).colorScheme.secondary,
-              ),
-              Center(
-                child: WorldRingLayout(
-                  radius: 140,
-                  focusAttribute: widget.focusAttribute,
-                  onNodeTap: (attr) => context.go('/world-map/attribute/${attr.name}'),
-                ),
-              ),
-              Center(
-                child: CentralHealthOrb(
-                  currentHealth: health * 100,
-                  maxHealth: 100,
-                ),
-              ),
-            ],
+          return LayoutBuilder(
+            builder: (context, constraints) {
+              final size = Size(constraints.maxWidth, constraints.maxHeight);
+              final center = Offset(size.width / 2, size.height / 2);
+              final attributes = HabitAttribute.values;
+              final nodeCount = attributes.length;
+              const radius = 140.0;
+              final angleStep = (2 * math.pi) / nodeCount;
+              final nodePositions = List.generate(nodeCount, (index) {
+                final angle = -math.pi / 2 + (index * angleStep);
+                return Offset(
+                  center.dx + (radius * math.cos(angle)),
+                  center.dy + (radius * math.sin(angle)),
+                );
+              });
+
+              return Stack(
+                fit: StackFit.expand,
+                children: [
+                  NebulaBackground(
+                    healthState: WorldHealthState.fromHealth(health),
+                    entropy: entropy,
+                    primaryColor: Theme.of(context).colorScheme.primary,
+                    accentColor: Theme.of(context).colorScheme.secondary,
+                  ),
+                  const AmbientParticles(particleCount: 50),
+                  ConstellationLines(
+                    center: center,
+                    nodePositions: nodePositions,
+                  ),
+                  Center(
+                    child: WorldRingLayout(
+                      radius: radius,
+                      focusAttribute: widget.focusAttribute,
+                      onNodeTap: (attr) => context.go('/world-map/attribute/${attr.name}'),
+                    ),
+                  ),
+                  Center(
+                    child: CentralHealthOrb(
+                      currentHealth: health * 100,
+                      maxHealth: 100,
+                    ),
+                  ),
+                ],
+              );
+            },
           );
         },
       ),

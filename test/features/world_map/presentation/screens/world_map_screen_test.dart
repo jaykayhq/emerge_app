@@ -32,10 +32,10 @@ void main() {
             ),
             worldThemeProvider.overrideWith(WorldThemeNotifier.new),
             worldHealthStreamProvider.overrideWith(
-              (ref) => Stream.value(0.5),
+              (ref) => const Stream.empty(),
             ),
             worldEntropyStreamProvider.overrideWith(
-              (ref) => Stream.value(0.0),
+              (ref) => const Stream.empty(),
             ),
             companionRepositoryProvider.overrideWith(
               (ref) => CompanionRepository(),
@@ -45,7 +45,6 @@ void main() {
         ),
       );
       await tester.pump();
-      await tester.pump(const Duration(milliseconds: 900));
 
       expect(find.byType(CircularProgressIndicator), findsOneWidget);
     });
