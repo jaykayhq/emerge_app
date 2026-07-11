@@ -3,6 +3,9 @@ import 'package:emerge_app/features/habits/domain/entities/habit.dart';
 import 'package:emerge_app/features/world_map/domain/models/world_type_config.dart';
 import 'package:flutter/material.dart';
 
+// Helper if attribute enum doesn't map cleanly to names directly
+String _capitalize(String s) => s.isNotEmpty ? '${s[0].toUpperCase()}${s.substring(1)}' : s;
+
 class WorldTypeNode extends StatelessWidget {
   final HabitAttribute attribute;
   final VoidCallback onTap;
@@ -17,6 +20,7 @@ class WorldTypeNode extends StatelessWidget {
   Widget build(BuildContext context) {
     final config = WorldTypeConfig.forAttribute(attribute);
     final theme = Theme.of(context);
+    final String labelName = _capitalize(attribute.name);
 
     return GestureDetector(
       onTap: onTap,
@@ -25,32 +29,46 @@ class WorldTypeNode extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           Container(
-            width: 48,
-            height: 48,
+            width: 56,
+            height: 56,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              color: theme.colorScheme.surface,
+              color: config.primaryColor.withValues(alpha: 0.15),
               border: Border.all(color: config.primaryColor, width: 2),
+              // 3D pop effect
               boxShadow: [
                 BoxShadow(
-                  color: config.primaryColor.withValues(alpha: 0.5),
-                  blurRadius: 10,
+                  color: config.primaryColor.withValues(alpha: 0.6),
+                  blurRadius: 15,
                   spreadRadius: 2,
+                  offset: const Offset(0, 4),
+                ),
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.4),
+                  blurRadius: 8,
+                  offset: const Offset(0, 8),
                 ),
               ],
             ),
             child: Icon(
               config.fallbackIcon,
               color: config.primaryColor,
-              size: 24,
+              size: 28,
             ),
           ),
           const SizedBox(height: 8),
-          Text(
-            config.worldName,
-            style: theme.textTheme.bodySmall?.copyWith(
-              fontWeight: FontWeight.bold,
-              color: theme.colorScheme.onSurface,
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            decoration: BoxDecoration(
+              color: Colors.black.withValues(alpha: 0.5),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Text(
+              labelName,
+              style: theme.textTheme.bodySmall?.copyWith(
+                fontWeight: FontWeight.bold,
+                color: config.primaryColor,
+              ),
             ),
           ),
         ],
