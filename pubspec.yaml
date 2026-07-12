@@ -79,6 +79,7 @@ dependencies:
   web: ^1.1.1
   fast_contacts: ^6.0.0
   permission_handler: ^11.3.1
+  fl_chart: ^0.70.2
 
 dev_dependencies:
   integration_test:
@@ -141,7 +142,15 @@ flutter:
     - assets/images/levels/explorer/
     - assets/images/backgrounds/
     - assets/rive/
+    - assets/worlds/strength/
+    - assets/worlds/intellect/
+    - assets/worlds/vitality/
+    - assets/worlds/creativity/
+    - assets/worlds/focus/
+    - assets/worlds/spirit/
 
+  shaders:
+    - shaders/cracked_orb.frag
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images

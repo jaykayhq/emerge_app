@@ -48,7 +48,7 @@ class _TribeLobbyScreenState extends ConsumerState<TribeLobbyScreen> {
     return Scaffold(
       backgroundColor: Colors.transparent,
       body: AppBackToHome(
-        homeRoute: '/',
+        homeRoute: '/world-map',
         child: SafeArea(
           child: clubsAsync.when(
             data: (clubs) => profileAsync.when(

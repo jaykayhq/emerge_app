@@ -32,7 +32,7 @@ class _WorldSplashScreenState extends State<WorldSplashScreen>
     // Automatically navigate after animations complete
     _autoNavigateTimer = Timer(const Duration(milliseconds: 1800), () {
       if (mounted) {
-        context.go('/');
+        context.go('/world-map');
       }
     });
   }
@@ -200,7 +200,7 @@ class _WorldSplashScreenState extends State<WorldSplashScreen>
               right: 0,
               child: Center(
                 child: GestureDetector(
-                  onTap: () => context.go('/'),
+                  onTap: () => context.go('/world-map'),
                   child: Container(
                     padding: const EdgeInsets.symmetric(
                       horizontal: 16,

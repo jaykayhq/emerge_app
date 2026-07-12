@@ -134,7 +134,7 @@ class WelcomeScreen extends ConsumerWidget {
                             messenger.showSnackBar(
                               SnackBar(content: Text(error.message)),
                             );
-                          }, (_) => GoRouter.of(context).go('/'));
+                          }, (_) => GoRouter.of(context).go('/world-map'));
                         },
                         style: OutlinedButton.styleFrom(
                           minimumSize: const Size(double.infinity, 56),

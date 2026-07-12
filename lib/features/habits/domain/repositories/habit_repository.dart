@@ -1,6 +1,7 @@
 import 'package:emerge_app/core/error/failure.dart';
 import 'package:emerge_app/features/habits/domain/entities/habit.dart';
 import 'package:emerge_app/features/habits/domain/models/habit_activity.dart';
+import 'package:emerge_app/features/habits/domain/entities/habit_completion_entity.dart';
 import 'package:emerge_app/features/blueprints/domain/models/blueprint.dart';
 import 'package:fpdart/fpdart.dart';
 
@@ -25,6 +26,12 @@ abstract class HabitRepository {
   Future<List<Habit>> getHabitsByAnchor(String anchorHabitId);
 
   Future<List<HabitActivity>> getActivity(
+    String userId,
+    DateTime start,
+    DateTime end,
+  );
+
+  Future<Either<Failure, List<HabitCompletionEntity>>> getCompletionsBetweenDates(
     String userId,
     DateTime start,
     DateTime end,

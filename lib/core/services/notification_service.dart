@@ -238,7 +238,7 @@ class NotificationService {
         ),
         androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
         matchDateTimeComponents: DateTimeComponents.dayOfWeekAndTime,
-        payload: '/recap',
+        payload: '/world-map/recap',
       );
     } catch (e, stack) {
       debugPrint('Error scheduling weekly recap: $e');

@@ -60,7 +60,7 @@ String determineSplashRoute({
   final progress = userOnboardingProgress;
   final isComplete = userOnboardingCompletedAt != null ||
       (progress != null && progress >= 3);
-  if (isComplete) return '/';
+  if (isComplete) return '/world-map';
   switch (progress ?? 0) {
     case 0:
     case 1:

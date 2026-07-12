@@ -6,6 +6,7 @@ import 'package:emerge_app/core/game_loop/game_loop_engine.dart';
 import 'package:emerge_app/core/sync/sync_engine.dart';
 import 'package:emerge_app/features/habits/domain/entities/habit.dart';
 import 'package:emerge_app/features/habits/domain/models/habit_activity.dart';
+import 'package:emerge_app/features/habits/domain/entities/habit_completion_entity.dart';
 import 'package:emerge_app/features/habits/domain/repositories/habit_repository.dart';
 import 'package:emerge_app/features/blueprints/domain/models/blueprint.dart';
 import 'package:fpdart/fpdart.dart';
@@ -436,6 +437,33 @@ class DriftHabitRepository implements HabitRepository {
           ),
         )
         .toList();
+  }
+
+  @override
+  Future<Either<Failure, List<HabitCompletionEntity>>> getCompletionsBetweenDates(
+    String userId,
+    DateTime start,
+    DateTime end,
+  ) async {
+    try {
+      final rows = await _db.habitCompletionsDao.getBetweenDates(
+        userId,
+        start.toIso8601String(),
+        end.toIso8601String(),
+      );
+
+      final entities = rows.map((r) => HabitCompletionEntity(
+        id: r.id,
+        habitId: r.habitId,
+        attribute: r.attribute ?? 'vitality',
+        xpGained: r.xpGained,
+        completedAt: DateTime.parse(r.completedAt),
+      )).toList();
+
+      return Right(entities);
+    } catch (e) {
+      return Left(ServerFailure(e.toString()));
+    }
   }
 
   @override

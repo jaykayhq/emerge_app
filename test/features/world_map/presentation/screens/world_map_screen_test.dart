@@ -9,6 +9,8 @@ import 'package:emerge_app/features/companion/presentation/providers/companion_p
 import 'package:emerge_app/features/gamification/presentation/providers/user_stats_providers.dart';
 import 'package:emerge_app/features/world_map/presentation/screens/world_map_screen.dart';
 import 'package:emerge_app/features/world_map/presentation/providers/world_health_provider.dart';
+import 'package:emerge_app/features/world_map/presentation/widgets/ambient_particles.dart';
+import 'package:emerge_app/features/world_map/presentation/widgets/constellation_lines.dart';
 
 void main() {
   setUp(() async {
@@ -32,6 +34,32 @@ void main() {
             ),
             worldThemeProvider.overrideWith(WorldThemeNotifier.new),
             worldHealthStreamProvider.overrideWith(
+              (ref) => const Stream.empty(),
+            ),
+            worldEntropyStreamProvider.overrideWith(
+              (ref) => const Stream.empty(),
+            ),
+            companionRepositoryProvider.overrideWith(
+              (ref) => CompanionRepository(),
+            ),
+          ],
+          child: const MaterialApp(home: WorldMapScreen()),
+        ),
+      );
+      await tester.pump();
+
+      expect(find.byType(CircularProgressIndicator), findsOneWidget);
+    });
+
+    testWidgets('shows loaded data state with background and layout elements', (tester) async {
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            userStatsStreamProvider.overrideWith(
+              (ref) => const Stream.empty(),
+            ),
+            worldThemeProvider.overrideWith(WorldThemeNotifier.new),
+            worldHealthStreamProvider.overrideWith(
               (ref) => Stream.value(0.5),
             ),
             worldEntropyStreamProvider.overrideWith(
@@ -47,7 +75,12 @@ void main() {
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 900));
 
-      expect(find.byType(CircularProgressIndicator), findsOneWidget);
+      expect(find.text('Failed to load world state.'), findsNothing);
+      // Wait, CentralHealthOrb might still render a CircularProgressIndicator if shader isn't loaded!
+      // But we can check for other things:
+      expect(find.byType(WorldMapScreen), findsOneWidget);
+      expect(find.byType(AmbientParticles), findsOneWidget);
+      expect(find.byType(ConstellationLines), findsOneWidget);
     });
 
     testWidgets('handles first-visit check without crashing when already seen',

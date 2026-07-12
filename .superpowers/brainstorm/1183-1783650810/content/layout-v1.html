@@ -1,0 +1,73 @@
+<h2>New Habit Widget Layout — Pick A, B, or C</h2>
+<p class="subtitle">You asked: checkbox on the right (before timer), timer fills the card, checkbox = instant complete.</p>
+
+<div class="cards">
+  <div class="card" data-choice="A" onclick="toggleSelect(this)">
+    <div class="card-body">
+      <h3>A · [title] [⋮] [☐] [⏱️]</h3>
+      <p>Three-dot far-left of action icons, checkbox immediately before timer.</p>
+      <div style="background:#0b0b14;padding:14px;border-radius:10px;font-family:monospace;color:#cfd6e4;font-size:12px;margin-top:8px">
+        <div style="display:flex;align-items:center;gap:10px;background:rgba(255,255,255,0.06);padding:10px;border-radius:10px;border:1px solid rgba(255,255,255,0.1)">
+          <span style="flex:1;color:#fff">Morning Meditation</span>
+          <button style="background:none;border:none;color:#fff;font-size:18px;cursor:pointer">⋮</button>
+          <div style="width:24px;height:24px;border-radius:50%;border:2px solid #2BEE79"></div>
+          <button style="background:none;border:none;color:#fff;font-size:16px;cursor:pointer">⏱️</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card" data-choice="B" onclick="toggleSelect(this)">
+    <div class="card-body">
+      <h3>B · [title] [☐] [⏱️] [⋮]</h3>
+      <p>Checkbox + timer grouped, ⋮ at the far right edge.</p>
+      <div style="background:#0b0b14;padding:14px;border-radius:10px;font-family:monospace;color:#cfd6e4;font-size:12px;margin-top:8px">
+        <div style="display:flex;align-items:center;gap:10px;background:rgba(255,255,255,0.06);padding:10px;border-radius:10px;border:1px solid rgba(255,255,255,0.1)">
+          <span style="flex:1;color:#fff">Morning Meditation</span>
+          <div style="width:24px;height:24px;border-radius:50%;border:2px solid #2BEE79"></div>
+          <button style="background:none;border:none;color:#fff;font-size:16px;cursor:pointer">⏱️</button>
+          <button style="background:none;border:none;color:#fff;font-size:18px;cursor:pointer">⋮</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card" data-choice="C" onclick="toggleSelect(this)">
+    <div class="card-body">
+      <h3>C · [title] [⋮] [⏱️] [☐]</h3>
+      <p>Three-dot left of action icons, timer then checkbox at far right.</p>
+      <div style="background:#0b0b14;padding:14px;border-radius:10px;font-family:monospace;color:#cfd6e4;font-size:12px;margin-top:8px">
+        <div style="display:flex;align-items:center;gap:10px;background:rgba(255,255,255,0.06);padding:10px;border-radius:10px;border:1px solid rgba(255,255,255,0.1)">
+          <span style="flex:1;color:#fff">Morning Meditation</span>
+          <button style="background:none;border:none;color:#fff;font-size:18px;cursor:pointer">⋮</button>
+          <button style="background:none;border:none;color:#fff;font-size:16px;cursor:pointer">⏱️</button>
+          <div style="width:24px;height:24px;border-radius:50%;border:2px solid #2BEE79"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>Progress fill behavior</h3>
+  <p style="line-height:1.6">
+    The card background fills from left → right as the timer counts down
+    (uses habit's <code>attribute</code> color at low alpha).
+    When the timer hits 0, the card flashes green and the habit auto-completes.
+    Tapping the checkbox at any moment fills the card to 100% immediately
+    and completes the habit (cancels the timer if running).
+  </p>
+  <div style="background:#0b0b14;padding:14px;border-radius:10px;font-family:monospace;color:#cfd6e4;font-size:11px;margin-top:8px">
+    <div style="display:flex;align-items:center;gap:10px;background:linear-gradient(to right, rgba(43,238,121,0.35) 62%, rgba(255,255,255,0.06) 62%);padding:10px;border-radius:10px;border:1px solid rgba(255,255,255,0.1)">
+      <span style="flex:1;color:#fff">Morning Meditation</span>
+      <button style="background:none;border:none;color:#fff;font-size:18px;cursor:pointer">⋮</button>
+      <div style="width:24px;height:24px;border-radius:50%;border:2px solid #2BEE79"></div>
+      <button style="background:none;border:none;color:#fff;font-size:16px;cursor:pointer">⏱️</button>
+    </div>
+    <div style="margin-top:6px;color:#888">↑ card 62% filled by timer progress</div>
+  </div>
+</div>
+
+<div class="section">
+  <p class="subtitle">Click an option above, then tell me in the terminal which layout (A/B/C) you want — or describe changes.</p>
+</div>

@@ -1,13 +1,13 @@
 import 'dart:math' as math;
 
 import 'package:emerge_app/core/domain/models/app_world_theme.dart';
-import 'package:emerge_app/features/world_map/domain/models/archetype_map_config.dart';
+import 'package:emerge_app/features/world_map/domain/models/biome_type.dart';
 import 'package:flutter/material.dart';
 
 /// Animated nebula/space background for the World Map
 /// Creates an immersive, living atmosphere with multiple parallax layers
 class NebulaBackground extends StatefulWidget {
-  final BiomeType biome;
+  final BiomeType? biome;
   final Color primaryColor;
   final Color accentColor;
   final int level;
@@ -16,7 +16,7 @@ class NebulaBackground extends StatefulWidget {
 
   const NebulaBackground({
     super.key,
-    required this.biome,
+    this.biome,
     required this.primaryColor,
     required this.accentColor,
     this.level = 1,
@@ -68,7 +68,7 @@ class _NebulaBackgroundState extends State<NebulaBackground>
       widget.healthState,
       entropy: widget.entropy,
     );
-    final random = math.Random(widget.biome.index * 42 + widget.level);
+    final random = math.Random((widget.biome?.index ?? 0) * 42 + widget.level);
 
     // Procedural evolution: every 5 levels increases the density/richness
     final evolutionPhase = ((widget.level - 1) ~/ 5).clamp(
@@ -232,7 +232,18 @@ class _NebulaBackgroundState extends State<NebulaBackground>
     );
   }
 
-  List<Color> _getBiomeColors(BiomeType biome) {
+  List<Color> _getBiomeColors(BiomeType? biome) {
+    if (biome == null) {
+      switch (widget.healthState) {
+        case WorldHealthState.thriving:
+          return const [Color(0xFF0A2A1A), Color(0xFF1A3A2A)];
+        case WorldHealthState.decaying:
+          return const [Color(0xFF2A0A0A), Color(0xFF3A1A1A)];
+        default:
+          return const [Color(0xFF1A0A2A), Color(0xFF2A1A3A)];
+      }
+    }
+
     // All biomes now use the Stitch World Map cosmic palette
     // Colors: deep purple-black with nebula accents
     switch (biome) {

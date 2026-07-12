@@ -146,7 +146,7 @@ class ErrorHandler {
     AppLogger.e('Navigation Error', errorMessage, StackTrace.current);
 
     if (context.mounted) {
-      context.go('/'); // Navigate to home in case of navigation errors
+      context.go('/world-map'); // Navigate to home in case of navigation errors
     }
   }
 

@@ -31,6 +31,18 @@ SQLite, **fpdart** `Either` for error handling. Tests use `flutter_test`,
 
 ## Project rules (the "do this, not that")
 
+### Design Authority (read before implementing any UI)
+- **`docs/design.md` is the single source of truth** for all UI/UX decisions:
+  visual identity, colors, typography, spacing, glassmorphism system, navigation
+  patterns, state UX (loading/empty/error), animation durations, accessibility,
+  gesture rules, form patterns, feedback hierarchy, and content writing standards.
+- Read the relevant section of `docs/design.md` before designing or implementing
+  any new screen, widget, or feature. If your implementation contradicts it, fix
+  the implementation — not the doc.
+- The design doc's state-management UX patterns (§5) are mandatory: every
+  `AsyncValue` must handle all three branches (`loading`/`error`/`data`) +
+  empty-array case. No exceptions for "this screen is simple."
+
 ### Architecture & layout
 - Feature-first: `lib/features/<feature>/{presentation,domain,data}` +
   shared `lib/core/`. Tests mirror lib: `test/features/<feature>/...`.

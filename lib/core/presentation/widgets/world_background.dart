@@ -1,7 +1,7 @@
 // lib/core/presentation/widgets/world_background.dart
 import 'package:emerge_app/core/domain/models/app_world_theme.dart';
 import 'package:emerge_app/core/presentation/providers/world_theme_provider.dart';
-import 'package:emerge_app/features/world_map/domain/models/archetype_map_config.dart';
+import 'package:emerge_app/features/world_map/domain/models/biome_type.dart';
 import 'package:emerge_app/features/world_map/presentation/providers/world_health_provider.dart';
 import 'package:emerge_app/features/world_map/presentation/widgets/nebula_background.dart';
 import 'package:flutter/material.dart';
