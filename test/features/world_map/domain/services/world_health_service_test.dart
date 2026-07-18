@@ -1,21 +1,29 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
+import 'package:fpdart/fpdart.dart';
 import 'package:emerge_app/features/world_map/domain/services/world_health_service.dart';
 import 'package:emerge_app/features/auth/domain/entities/user_extension.dart';
 import 'package:emerge_app/core/drift_repositories/repositories_barrel.dart';
+import 'package:emerge_app/features/habits/domain/entities/habit_completion_entity.dart';
+import 'package:emerge_app/features/habits/domain/repositories/habit_repository.dart';
+import 'package:emerge_app/core/error/failure.dart';
 
 class MockDriftRepo extends Mock implements DriftUserStatsRepository {}
 
+class MockHabitRepo extends Mock implements HabitRepository {}
+
 void main() {
   late MockDriftRepo mockRepo;
+  late MockHabitRepo mockHabitRepo;
   late WorldHealthService service;
 
   setUp(() {
     mockRepo = MockDriftRepo();
-    service = WorldHealthService(mockRepo);
+    mockHabitRepo = MockHabitRepo();
+    service = WorldHealthService(mockRepo, mockHabitRepo);
 
-    when(() => mockRepo.getWeeklyActivity(any(), any(), any()))
-        .thenAnswer((_) async => []);
+    when(() => mockHabitRepo.getCompletionsBetweenDates(any(), any(), any()))
+        .thenAnswer((_) async => const Right([]));
     when(() => mockRepo.getUserStats(any()))
         .thenAnswer((_) async => UserProfile(uid: 'test'));
   });
@@ -34,12 +42,19 @@ void main() {
 
     test('returns higher health with daily activity', () async {
       final now = DateTime.now();
-      final activity = List.generate(7, (i) => {
-        'date': now.subtract(Duration(days: i)),
-      });
+      final activity = List.generate(
+        7,
+        (i) => HabitCompletionEntity(
+          id: 'c$i',
+          habitId: 'h',
+          attribute: 'vitality',
+          xpGained: 10,
+          completedAt: now.subtract(Duration(days: i)),
+        ),
+      );
 
-      when(() => mockRepo.getWeeklyActivity(any(), any(), any()))
-          .thenAnswer((_) async => activity);
+      when(() => mockHabitRepo.getCompletionsBetweenDates(any(), any(), any()))
+          .thenAnswer((_) async => Right(activity));
 
       final profile = UserProfile(
         uid: 'test',
@@ -95,8 +110,10 @@ void main() {
     });
 
     test('falls back to profile worldHealth on repository error', () async {
-      when(() => mockRepo.getWeeklyActivity(any(), any(), any()))
-          .thenThrow(Exception('Network error'));
+      when(() => mockHabitRepo.getCompletionsBetweenDates(any(), any(), any()))
+          .thenAnswer((_) async => const Left(
+            ServerFailure('Network error'),
+          ));
 
       final profile = UserProfile(
         uid: 'test',

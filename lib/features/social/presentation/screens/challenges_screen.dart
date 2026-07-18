@@ -12,7 +12,6 @@ import 'package:emerge_app/features/social/presentation/widgets/quest_card_stitc
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
-import 'package:emerge_app/core/presentation/widgets/feature_coach_mark.dart';
 
 
 /// Challenges Screen - Optimized with bundle provider to prevent double refresh

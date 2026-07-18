@@ -7,12 +7,13 @@ Habit _makeHabit({
   String id = 'h1',
   String title = 'Test Habit',
   DateTime? lastCompletedDate,
+  DateTime? createdAt,
 }) {
   return Habit(
     id: id,
     userId: 'u1',
     title: title,
-    createdAt: DateTime.now(),
+    createdAt: createdAt ?? DateTime.now(),
     lastCompletedDate: lastCompletedDate,
     attribute: HabitAttribute.vitality,
   );
@@ -22,10 +23,11 @@ Widget buildTestApp(Widget child) => MaterialApp(home: Scaffold(body: child));
 
 void main() {
   group('RecapSummaryCard', () {
-    testWidgets('shows weekly completion count, streak, and XP', (
+    testWidgets('shows RECAP label, today count, weekly count and streak', (
       tester,
     ) async {
       final now = DateTime.now();
+      final today = DateTime(now.year, now.month, now.day);
       final thisWeek = DateTime(
         now.year,
         now.month,
@@ -36,80 +38,90 @@ void main() {
       final habits = [
         _makeHabit(
           id: 'h1',
-          lastCompletedDate: thisWeek.add(const Duration(hours: 2)),
+          createdAt: today.subtract(const Duration(days: 1)),
+          lastCompletedDate: today, // completed today
         ),
         _makeHabit(
           id: 'h2',
-          lastCompletedDate: thisWeek.add(const Duration(hours: 4)),
+          lastCompletedDate: thisWeek.add(const Duration(hours: 2)),
         ),
         _makeHabit(
           id: 'h3',
+          lastCompletedDate: thisWeek.add(const Duration(hours: 4)),
+        ),
+        _makeHabit(
+          id: 'h4',
           lastCompletedDate: thisWeek.add(const Duration(hours: 6)),
         ),
-        _makeHabit(id: 'h4', lastCompletedDate: lastWeek), // outside this week
-        _makeHabit(id: 'h5', lastCompletedDate: null), // never completed
+        _makeHabit(id: 'h5', lastCompletedDate: lastWeek), // outside this week
+        _makeHabit(id: 'h6', lastCompletedDate: null), // never completed
       ];
 
       await tester.pumpWidget(
         buildTestApp(
-          RecapSummaryCard(
-            habits: habits,
-            streak: 12,
-            totalXp: 2400,
-            onTap: () {},
-          ),
+          RecapSummaryCard(habits: habits, streak: 12, onTap: () {}),
         ),
       );
 
-      // Should count 3 habits completed this week
-      expect(find.text('3'), findsOneWidget);
+      // Eyebrow label
+      expect(find.text('RECAP'), findsOneWidget);
+      // Today done: 1 completed today out of 6 habits -> "1/6"
+      expect(find.text('1/6'), findsOneWidget);
+      // This week: 4 habits completed this week
+      expect(find.text('4'), findsOneWidget);
+      // Streak
       expect(find.text('12'), findsOneWidget);
-      // XP should be formatted as "2.4k" since >= 1000
-      expect(find.text('2.4k'), findsOneWidget);
     });
 
-    testWidgets('shows raw XP when under 1000', (tester) async {
+    testWidgets('today count reflects only today completions', (tester) async {
+      final now = DateTime.now();
+      final today = DateTime(now.year, now.month, now.day);
+      final habits = [
+        _makeHabit(
+          id: 'h1',
+          createdAt: today.subtract(const Duration(days: 1)),
+          lastCompletedDate: today,
+        ),
+        _makeHabit(
+          id: 'h2',
+          lastCompletedDate: today.subtract(const Duration(days: 1)),
+        ),
+      ];
+
       await tester.pumpWidget(
         buildTestApp(
-          RecapSummaryCard(habits: [], streak: 0, totalXp: 240, onTap: () {}),
+          RecapSummaryCard(habits: habits, streak: 3, onTap: () {}),
         ),
       );
 
-      expect(find.text('240'), findsOneWidget);
+      expect(find.text('1/2'), findsOneWidget);
     });
 
     testWidgets('shows 0 when no habits', (tester) async {
       await tester.pumpWidget(
-        buildTestApp(
-          RecapSummaryCard(habits: [], streak: 0, totalXp: 0, onTap: () {}),
-        ),
+        buildTestApp(RecapSummaryCard(habits: [], streak: 0, onTap: () {})),
       );
 
+      expect(find.text('RECAP'), findsOneWidget);
+      expect(find.text('0/0'), findsOneWidget);
       expect(find.text('0'), findsWidgets);
     });
 
     testWidgets('shows labels correctly', (tester) async {
       await tester.pumpWidget(
-        buildTestApp(
-          RecapSummaryCard(habits: [], streak: 5, totalXp: 100, onTap: () {}),
-        ),
+        buildTestApp(RecapSummaryCard(habits: [], streak: 5, onTap: () {})),
       );
 
+      expect(find.text('today done'), findsOneWidget);
       expect(find.text('this week'), findsOneWidget);
       expect(find.text('day streak'), findsOneWidget);
-      expect(find.text('total XP'), findsOneWidget);
     });
 
     testWidgets('tapping fires onTap callback', (tester) async {
       int tapCount = 0;
       await tester.pumpWidget(
         buildTestApp(
-          RecapSummaryCard(
-            habits: [],
-            streak: 0,
-            totalXp: 0,
-            onTap: () => tapCount++,
-          ),
+          RecapSummaryCard(habits: [], streak: 0, onTap: () => tapCount++),
         ),
       );
 
@@ -128,12 +140,12 @@ void main() {
           RecapSummaryCard(
             habits: [_makeHabit(id: 'h1', lastCompletedDate: oldDate)],
             streak: 0,
-            totalXp: 0,
             onTap: () {},
           ),
         ),
       );
 
+      // This week count is 0 (only the old one exists).
       expect(find.text('0'), findsWidgets);
       expect(find.text('1'), findsNothing);
     });

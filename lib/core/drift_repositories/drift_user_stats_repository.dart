@@ -165,20 +165,6 @@ class DriftUserStatsRepository {
     );
   }
 
-  Future<List<Map<String, dynamic>>> getWeeklyActivity(
-    String userId,
-    DateTime start,
-    DateTime end,
-  ) async {
-    final snapshot = await _firestore
-        .collection('user_activity')
-        .where('userId', isEqualTo: userId)
-        .where('date', isGreaterThanOrEqualTo: Timestamp.fromDate(start))
-        .where('date', isLessThanOrEqualTo: Timestamp.fromDate(end))
-        .get();
-    return snapshot.docs.map((doc) => doc.data()).toList();
-  }
-
   Future<void> logActivity({
     required String userId,
     required String type,

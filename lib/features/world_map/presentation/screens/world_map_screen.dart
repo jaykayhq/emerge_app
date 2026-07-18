@@ -13,6 +13,7 @@ import 'package:emerge_app/features/world_map/presentation/widgets/constellation
 import 'package:emerge_app/features/world_map/utils/ring_layout_geometry.dart';
 import 'package:emerge_app/features/habits/domain/entities/habit.dart';
 import 'package:emerge_app/features/world_map/presentation/widgets/world_state_hud.dart';
+import 'package:emerge_app/features/world_map/presentation/widgets/world_status_panel.dart';
 
 class WorldMapScreen extends ConsumerStatefulWidget {
   final String? focusAttribute;
@@ -25,6 +26,7 @@ class WorldMapScreen extends ConsumerStatefulWidget {
 
 class _WorldMapScreenState extends ConsumerState<WorldMapScreen> {
   Timer? _navTimer;
+  bool _showStatus = false;
 
   @override
   void initState() {
@@ -116,8 +118,20 @@ class _WorldMapScreenState extends ConsumerState<WorldMapScreen> {
                     child: CentralHealthOrb(
                       currentHealth: health * 100,
                       maxHealth: 100,
+                      onTap: () => setState(() => _showStatus = !_showStatus),
                     ),
                   ),
+                  if (_showStatus)
+                    const Positioned(
+                      left: 0,
+                      right: 0,
+                      top: 0,
+                      bottom: 0,
+                      child: Align(
+                        alignment: Alignment(0, 0.34),
+                        child: WorldStatusPanel(),
+                      ),
+                    ),
                   const Positioned(
                     top: 0,
                     left: 0,

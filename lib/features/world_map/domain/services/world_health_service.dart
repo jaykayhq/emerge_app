@@ -1,9 +1,10 @@
 import 'dart:async';
 
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:emerge_app/core/utils/app_logger.dart';
 import 'package:emerge_app/features/auth/domain/entities/user_extension.dart';
 import 'package:emerge_app/core/drift_repositories/repositories_barrel.dart';
+import 'package:emerge_app/features/habits/domain/entities/habit_completion_entity.dart';
+import 'package:emerge_app/features/habits/domain/repositories/habit_repository.dart';
 
 /// Domain service for calculating dynamic world health based on user activity.
 ///
@@ -15,11 +16,12 @@ import 'package:emerge_app/core/drift_repositories/repositories_barrel.dart';
 /// Returns a value between 0.0 (completely decayed) and 1.0 (thriving).
 class WorldHealthService {
   final DriftUserStatsRepository _repository;
+  final HabitRepository _habitRepository;
   final Map<String, double> _cache = {};
   DateTime? _lastCacheTime;
   static const _cacheDuration = Duration(minutes: 5);
 
-  WorldHealthService(this._repository);
+  WorldHealthService(this._repository, this._habitRepository);
 
   /// Calculate world health based on user profile and recent activity.
   ///
@@ -33,14 +35,18 @@ class WorldHealthService {
     try {
       AppLogger.d('Calculating world health for user ${profile.uid}');
 
-      // Get last 7 days activity
+      // Get last 7 days activity from the local source of truth.
       final now = DateTime.now();
       final sevenDaysAgo = now.subtract(const Duration(days: 7));
-
-      final weeklyActivity = await _repository.getWeeklyActivity(
-        profile.uid,
-        sevenDaysAgo,
-        now,
+      final completionsResult = await _habitRepository
+          .getCompletionsBetweenDates(profile.uid, sevenDaysAgo, now);
+      // A failure to read completions is treated like a repository error:
+      // fall through to the profile-based fallback below.
+      if (completionsResult.isLeft()) {
+        throw Exception('Failed to read completions');
+      }
+      final weeklyActivity = completionsResult.getOrElse(
+        (_) => <HabitCompletionEntity>[],
       );
 
       // Calculate completion rate (70% weight)
@@ -87,7 +93,7 @@ class WorldHealthService {
   ///
   /// Returns value between 0.0 and 1.0
   double _calculateCompletionRate(
-    List<Map<String, dynamic>> activity,
+    List<HabitCompletionEntity> activity,
     DateTime startDate,
     DateTime endDate,
   ) {
@@ -99,19 +105,7 @@ class WorldHealthService {
     // Group by day
     final Map<String, int> dailyCompletions = {};
     for (final act in activity) {
-      // Handle both Timestamp (from Firestore) and DateTime types
-      final dateValue = act['date'];
-      final DateTime date;
-
-      if (dateValue is Timestamp) {
-        date = dateValue.toDate();
-      } else if (dateValue is DateTime) {
-        date = dateValue;
-      } else {
-        AppLogger.w('Invalid date type: ${dateValue.runtimeType}, skipping');
-        continue;
-      }
-
+      final date = act.completedAt;
       final dayKey = '${date.year}-${date.month}-${date.day}';
       dailyCompletions[dayKey] = (dailyCompletions[dayKey] ?? 0) + 1;
     }

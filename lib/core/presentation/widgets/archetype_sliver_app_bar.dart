@@ -7,6 +7,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 /// A collapsing SliverAppBar that applies archetype-aware colors and styling
 class ArchetypeSliverAppBar extends ConsumerWidget {
   final String title;
+  final Widget? leading;
   final Widget? badge;
   final Widget? syncIndicator;
   final PreferredSizeWidget? bottom;
@@ -15,6 +16,7 @@ class ArchetypeSliverAppBar extends ConsumerWidget {
   const ArchetypeSliverAppBar({
     super.key,
     required this.title,
+    this.leading,
     this.badge,
     this.syncIndicator,
     this.bottom,

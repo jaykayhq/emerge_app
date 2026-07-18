@@ -3,6 +3,8 @@ import 'dart:async';
 import 'package:emerge_app/core/utils/app_logger.dart';
 import 'package:emerge_app/features/auth/presentation/providers/auth_providers.dart';
 import 'package:emerge_app/features/gamification/data/repositories/user_stats_repository.dart';
+import 'package:emerge_app/features/habits/domain/repositories/habit_repository.dart';
+import 'package:emerge_app/features/habits/presentation/providers/habit_providers.dart';
 import 'package:emerge_app/features/world_map/domain/services/world_health_service.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
@@ -12,7 +14,8 @@ part 'world_health_provider.g.dart';
 @riverpod
 WorldHealthService worldHealthService(Ref ref) {
   final repository = ref.watch(userStatsRepositoryProvider);
-  return WorldHealthService(repository);
+  final habitRepository = ref.watch(habitRepositoryProvider);
+  return WorldHealthService(repository, habitRepository);
 }
 
 /// Provider that calculates world health on demand

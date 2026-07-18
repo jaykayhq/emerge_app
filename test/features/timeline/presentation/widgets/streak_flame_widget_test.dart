@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:emerge_app/features/timeline/presentation/widgets/streak_flame_widget.dart';
 import 'package:emerge_app/features/timeline/presentation/widgets/completion_celebration.dart';
-import 'package:emerge_app/features/timeline/presentation/widgets/habit_timeline_section.dart';
 import 'package:emerge_app/features/timeline/presentation/widgets/month_calendar_strip.dart';
 
 void main() {
@@ -88,48 +87,6 @@ void main() {
       // Allow all internal timers/animations to complete (1.5s + buffer)
       await tester.pump(const Duration(milliseconds: 2000));
       await tester.pumpAndSettle();
-    });
-  });
-
-  group('HabitTimelineSection', () {
-    testWidgets('renders with minimal parameters', (tester) async {
-      await tester.pumpWidget(
-        MaterialApp(
-          home: Scaffold(
-            body: HabitTimelineSection(
-              title: 'Morning Habits',
-              description: 'Start your day strong',
-              icon: Icons.wb_sunny,
-              habits: const [],
-              selectedDate: DateTime.now(),
-              accentColor: Colors.orange,
-              onHabitTap: (_) {},
-              onHabitToggle: (_) {},
-            ),
-          ),
-        ),
-      );
-      expect(find.byType(HabitTimelineSection), findsOneWidget);
-    });
-
-    testWidgets('renders with non-empty habits', (tester) async {
-      await tester.pumpWidget(
-        MaterialApp(
-          home: Scaffold(
-            body: HabitTimelineSection(
-              title: 'Evening Habits',
-              description: 'Wind down your day',
-              icon: Icons.nightlight_round,
-              habits: const [],
-              selectedDate: DateTime.now(),
-              accentColor: Colors.indigo,
-              onHabitTap: (_) {},
-              onHabitToggle: (_) {},
-            ),
-          ),
-        ),
-      );
-      expect(find.byType(HabitTimelineSection), findsOneWidget);
     });
   });
 

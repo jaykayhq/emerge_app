@@ -19,8 +19,6 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
 import 'package:go_router/go_router.dart';
-import 'dart:ui';
-
 class ChallengeDetailScreen extends ConsumerStatefulWidget {
   final Challenge? challenge;
   final String? challengeId;

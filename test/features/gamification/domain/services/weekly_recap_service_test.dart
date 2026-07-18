@@ -1,10 +1,11 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:emerge_app/core/drift_repositories/drift_user_stats_repository.dart';
 import 'package:emerge_app/features/auth/domain/entities/user_extension.dart';
 import 'package:emerge_app/features/gamification/data/repositories/user_stats_repository.dart';
 import 'package:emerge_app/features/gamification/domain/services/weekly_recap_service.dart';
 import 'package:emerge_app/features/habits/domain/entities/habit.dart';
+import 'package:emerge_app/features/habits/domain/entities/habit_completion_entity.dart';
 import 'package:emerge_app/features/habits/domain/repositories/habit_repository.dart';
+import 'package:fpdart/fpdart.dart';
 import 'package:emerge_app/features/habits/presentation/providers/habit_providers.dart';
 import 'package:emerge_app/features/monetization/presentation/providers/subscription_provider.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -37,19 +38,19 @@ UserProfile _profile({
   );
 }
 
-Map<String, dynamic> _activity({
+HabitCompletionEntity _activity({
   required String habitId,
   int xpEarned = 10,
   String attribute = 'strength',
   required DateTime date,
 }) {
-  return {
-    'type': 'habit_completion',
-    'xpEarned': xpEarned,
-    'habitId': habitId,
-    'attribute': attribute,
-    'date': Timestamp.fromDate(date),
-  };
+  return HabitCompletionEntity(
+    id: '$habitId-${date.millisecondsSinceEpoch}',
+    habitId: habitId,
+    attribute: attribute,
+    xpGained: xpEarned,
+    completedAt: date,
+  );
 }
 
 Habit _habit({
@@ -171,7 +172,9 @@ void main() {
       expect(result!.id, 'existing-recap');
       expect(result.topHabitName, 'Existing Habit');
       verify(() => mockDriftRepo.getLatestRecap(testUserId)).called(1);
-      verifyNever(() => mockDriftRepo.getWeeklyActivity(any(), any(), any()));
+      verifyNever(
+        () => mockHabitRepo.getCompletionsBetweenDates(any(), any(), any()),
+      );
     });
 
     test('replaces existing recap when dates differ', () async {
@@ -194,8 +197,8 @@ void main() {
 
       when(() => mockDriftRepo.getLatestRecap(testUserId))
           .thenAnswer((_) async => existingData);
-      when(() => mockDriftRepo.getWeeklyActivity(any(), any(), any()))
-          .thenAnswer((_) async => []);
+      when(() => mockHabitRepo.getCompletionsBetweenDates(any(), any(), any()))
+          .thenAnswer((_) async => const Right([]));
       when(() => mockDriftRepo.getUserStats(any()))
           .thenAnswer((_) async => _profile());
       when(() => mockDriftRepo.saveRecap(any(), any()))
@@ -212,8 +215,8 @@ void main() {
     });
 
     test('skips cache check when forceRefresh is true', () async {
-      when(() => mockDriftRepo.getWeeklyActivity(any(), any(), any()))
-          .thenAnswer((_) async => []);
+      when(() => mockHabitRepo.getCompletionsBetweenDates(any(), any(), any()))
+          .thenAnswer((_) async => const Right([]));
       when(() => mockDriftRepo.getUserStats(any()))
           .thenAnswer((_) async => _profile());
       when(() => mockDriftRepo.saveRecap(any(), any()))
@@ -225,14 +228,14 @@ void main() {
       );
 
       verifyNever(() => mockDriftRepo.getLatestRecap(any()));
-      verify(() => mockDriftRepo.getWeeklyActivity(any(), any(), any()))
+      verify(() => mockHabitRepo.getCompletionsBetweenDates(any(), any(), any()))
           .called(1);
     });
 
     test('generates local recap for non-premium user with isLocked=true',
         () async {
-      when(() => mockDriftRepo.getWeeklyActivity(any(), any(), any()))
-          .thenAnswer((_) async => []);
+      when(() => mockHabitRepo.getCompletionsBetweenDates(any(), any(), any()))
+          .thenAnswer((_) async => const Right([]));
       when(() => mockDriftRepo.getUserStats(any()))
           .thenAnswer((_) async => _profile(level: 1, entropy: 0.5));
       when(() => mockDriftRepo.saveRecap(any(), any()))
@@ -257,8 +260,8 @@ void main() {
         premium: true,
       );
 
-      when(() => mockDriftRepo.getWeeklyActivity(any(), any(), any()))
-          .thenAnswer((_) async => []);
+      when(() => mockHabitRepo.getCompletionsBetweenDates(any(), any(), any()))
+          .thenAnswer((_) async => const Right([]));
       when(() => mockDriftRepo.getUserStats(any()))
           .thenAnswer((_) async => _profile(level: 1, entropy: 0.5));
       when(() => mockDriftRepo.saveRecap(any(), any()))
@@ -282,8 +285,8 @@ void main() {
     });
 
     test('saves recap to repository', () async {
-      when(() => mockDriftRepo.getWeeklyActivity(any(), any(), any()))
-          .thenAnswer((_) async => []);
+      when(() => mockHabitRepo.getCompletionsBetweenDates(any(), any(), any()))
+          .thenAnswer((_) async => const Right([]));
       when(() => mockDriftRepo.getUserStats(any()))
           .thenAnswer((_) async => _profile());
       when(() => mockDriftRepo.saveRecap(any(), any()))
@@ -301,8 +304,8 @@ void main() {
     test('uses default date range when not provided', () async {
       when(() => mockDriftRepo.getLatestRecap(any()))
           .thenAnswer((_) async => null);
-      when(() => mockDriftRepo.getWeeklyActivity(any(), any(), any()))
-          .thenAnswer((_) async => []);
+      when(() => mockHabitRepo.getCompletionsBetweenDates(any(), any(), any()))
+          .thenAnswer((_) async => const Right([]));
       when(() => mockDriftRepo.getUserStats(any()))
           .thenAnswer((_) async => _profile());
       when(() => mockDriftRepo.saveRecap(any(), any()))
@@ -318,8 +321,8 @@ void main() {
 
     test('marks recap as incomplete when range is less than 7 days',
         () async {
-      when(() => mockDriftRepo.getWeeklyActivity(any(), any(), any()))
-          .thenAnswer((_) async => []);
+      when(() => mockHabitRepo.getCompletionsBetweenDates(any(), any(), any()))
+          .thenAnswer((_) async => const Right([]));
       when(() => mockDriftRepo.getUserStats(any()))
           .thenAnswer((_) async => _profile());
       when(() => mockDriftRepo.saveRecap(any(), any()))
@@ -338,8 +341,8 @@ void main() {
 
   group('recap calculation', () {
     test('calculates correctly with empty activities', () async {
-      when(() => mockDriftRepo.getWeeklyActivity(any(), any(), any()))
-          .thenAnswer((_) async => []);
+      when(() => mockHabitRepo.getCompletionsBetweenDates(any(), any(), any()))
+          .thenAnswer((_) async => const Right([]));
       when(() => mockDriftRepo.getUserStats(any()))
           .thenAnswer((_) async => _profile(level: 1, entropy: 0.5));
       when(() => mockDriftRepo.saveRecap(any(), any()))
@@ -384,8 +387,8 @@ void main() {
         ),
       ];
 
-      when(() => mockDriftRepo.getWeeklyActivity(any(), any(), any()))
-          .thenAnswer((_) async => activities);
+      when(() => mockHabitRepo.getCompletionsBetweenDates(any(), any(), any()))
+          .thenAnswer((_) async => Right(activities));
       when(() => mockDriftRepo.getUserStats(any()))
           .thenAnswer((_) async => _profile(level: 3, entropy: 0.3));
       when(() => mockHabitRepo.getHabit('habit-1'))
@@ -421,8 +424,8 @@ void main() {
         ),
       ];
 
-      when(() => mockDriftRepo.getWeeklyActivity(any(), any(), any()))
-          .thenAnswer((_) async => activities);
+      when(() => mockHabitRepo.getCompletionsBetweenDates(any(), any(), any()))
+          .thenAnswer((_) async => Right(activities));
       when(() => mockDriftRepo.getUserStats(any()))
           .thenAnswer((_) async => _profile());
       when(() => mockHabitRepo.getHabit('unknown-habit'))
@@ -464,8 +467,8 @@ void main() {
         ),
       ];
 
-      when(() => mockDriftRepo.getWeeklyActivity(any(), any(), any()))
-          .thenAnswer((_) async => activities);
+      when(() => mockHabitRepo.getCompletionsBetweenDates(any(), any(), any()))
+          .thenAnswer((_) async => Right(activities));
       when(() => mockDriftRepo.getUserStats(any()))
           .thenAnswer((_) async => _profile());
       when(() => mockHabitRepo.getHabit('habit-1'))
@@ -484,7 +487,7 @@ void main() {
       expect(result.totalHabitsCompleted, 4);
     });
 
-    test('skips non-habit_completion activities', () async {
+    test('counts all completions from the date range', () async {
       final today = DateTime(2025, 6, 10);
       final activities = [
         _activity(
@@ -493,24 +496,30 @@ void main() {
           attribute: 'strength',
           date: today,
         ),
-        {
-          'type': 'login',
-          'xpEarned': 5,
-          'date': Timestamp.fromDate(today),
-        },
-        {
-          'type': 'challenge_completion',
-          'xpEarned': 50,
-          'date': Timestamp.fromDate(today),
-        },
+        _activity(
+          habitId: 'habit-2',
+          xpEarned: 5,
+          attribute: 'strength',
+          date: today,
+        ),
+        _activity(
+          habitId: 'habit-3',
+          xpEarned: 50,
+          attribute: 'intellect',
+          date: today,
+        ),
       ];
 
-      when(() => mockDriftRepo.getWeeklyActivity(any(), any(), any()))
-          .thenAnswer((_) async => activities);
+      when(() => mockHabitRepo.getCompletionsBetweenDates(any(), any(), any()))
+          .thenAnswer((_) async => Right(activities));
       when(() => mockDriftRepo.getUserStats(any()))
           .thenAnswer((_) async => _profile());
       when(() => mockHabitRepo.getHabit('habit-1'))
           .thenAnswer((_) async => _habit(id: 'habit-1', title: 'Real Habit'));
+      when(() => mockHabitRepo.getHabit('habit-2'))
+          .thenAnswer((_) async => _habit(id: 'habit-2', title: 'Second Habit'));
+      when(() => mockHabitRepo.getHabit('habit-3'))
+          .thenAnswer((_) async => _habit(id: 'habit-3', title: 'Third Habit'));
       when(() => mockDriftRepo.saveRecap(any(), any()))
           .thenAnswer((_) async => {});
 
@@ -521,8 +530,8 @@ void main() {
         forceRefresh: true,
       );
 
-      expect(result!.totalHabitsCompleted, 1);
-      expect(result.totalXpEarned, 10);
+      expect(result!.totalHabitsCompleted, 3);
+      expect(result.totalXpEarned, 65);
     });
   });
 }

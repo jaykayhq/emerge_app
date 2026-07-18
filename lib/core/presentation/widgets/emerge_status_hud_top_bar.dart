@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:emerge_app/core/theme/archetype_theme.dart';
 import 'package:emerge_app/features/gamification/presentation/providers/user_stats_providers.dart';
-import 'package:emerge_app/features/world_map/domain/models/archetype_maps_catalog.dart';
 
 class EmergeStatusHudTopBar extends ConsumerWidget {
   final PreferredSizeWidget? bottom;
@@ -20,7 +19,6 @@ class EmergeStatusHudTopBar extends ConsumerWidget {
     }
     
     final archetype = profile.archetype;
-    final config = ArchetypeMapsCatalog.getMapForArchetype(archetype);
     final level = profile.effectiveLevel;
     final theme = ArchetypeTheme.forArchetype(archetype);
     final xpProgress = (profile.avatarStats.totalXp % 500) / 500.0;
@@ -64,7 +62,7 @@ class EmergeStatusHudTopBar extends ConsumerWidget {
                     color: theme.primaryColor.withValues(alpha: 0.2),
                     shape: BoxShape.circle,
                   ),
-                  child: Icon(config.journeyIcon, color: theme.primaryColor, size: 18),
+                  child: Icon(theme.journeyIcon, color: theme.primaryColor, size: 18),
                 ),
                 const SizedBox(width: 8),
                 Expanded(
@@ -72,7 +70,7 @@ class EmergeStatusHudTopBar extends ConsumerWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        config.mapName.toUpperCase(),
+                        theme.journeyName.toUpperCase(),
                         style: const TextStyle(
                           color: Colors.white,
                           fontSize: 12,

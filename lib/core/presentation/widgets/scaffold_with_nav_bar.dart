@@ -6,13 +6,6 @@ import 'package:emerge_app/features/habits/presentation/providers/cue_providers.
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:emerge_app/features/companion/presentation/providers/companion_providers.dart';
-import 'package:emerge_app/features/companion/presentation/widgets/companion_overlay.dart';
-import 'package:emerge_app/features/companion/presentation/widgets/companion_panel.dart';
-import 'package:emerge_app/features/companion/presentation/widgets/companion_inline_card.dart';
-import 'package:emerge_app/features/companion/presentation/widgets/ask_mentor_button.dart';
-import 'package:emerge_app/features/companion/domain/enums/companion_enums.dart';
-import 'package:emerge_app/core/theme/emerge_dimensions.dart';
 
 /// Main scaffold wrapper that provides the world background and
 /// custom bottom navigation bar.

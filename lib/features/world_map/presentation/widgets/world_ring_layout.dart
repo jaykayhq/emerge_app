@@ -1,5 +1,4 @@
 // lib/features/world_map/presentation/widgets/world_ring_layout.dart
-import 'dart:math' as math;
 import 'package:emerge_app/features/habits/domain/entities/habit.dart';
 import 'package:emerge_app/features/world_map/presentation/widgets/world_type_node.dart';
 import 'package:emerge_app/features/world_map/utils/ring_layout_geometry.dart';

@@ -248,10 +248,17 @@ class _TimelineScreenState extends ConsumerState<TimelineScreen> {
     final grouped = _groupHabitsByTimeOfDay(habits);
     final timelineGroups = Map<String, List<Habit>>.from(grouped);
 
+    final userProfile = statsAsync.value;
+    final displayName = userProfile?.displayName ?? '';
+
     return CustomScrollView(
       slivers: [
         ArchetypeSliverAppBar(
-          title: 'Today',
+          title: '',
+          leading: _ProfileInitialAvatar(
+            displayName: displayName,
+            onTap: () => context.push('/profile'),
+          ),
           syncIndicator: null,
           badge: Consumer(
             builder: (context, ref, _) {
@@ -274,39 +281,6 @@ class _TimelineScreenState extends ConsumerState<TimelineScreen> {
               );
             },
           ),
-          actions: [
-            // Polished profile icon
-            Padding(
-              padding: const EdgeInsets.only(right: 8),
-              child: GestureDetector(
-                onTap: () => context.push('/profile'),
-                child: Container(
-                  width: 36,
-                  height: 36,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    gradient: const LinearGradient(
-                      colors: [EmergeColors.violet, EmergeColors.teal],
-                    ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: EmergeColors.violet.withValues(alpha: 0.3),
-                        blurRadius: 8,
-                        spreadRadius: 0,
-                      ),
-                    ],
-                  ),
-                  child: const Center(
-                    child: Icon(
-                      Icons.person_rounded,
-                      color: Colors.white,
-                      size: 20,
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ],
         ),
 
         SliverToBoxAdapter(
@@ -327,7 +301,6 @@ class _TimelineScreenState extends ConsumerState<TimelineScreen> {
             child: RecapSummaryCard(
               habits: habits,
               streak: _bestStreak(habits),
-              totalXp: statsAsync.value?.avatarStats.totalXp ?? 0,
               onTap: () => context.push('/world-map/recap'),
             ),
           ),
@@ -632,6 +605,69 @@ class _TimelineScreenState extends ConsumerState<TimelineScreen> {
         totalHabits: habits.length,
         totalStreaks: totalStreaks,
         totalVotes: totalVotes,
+      ),
+    );
+  }
+}
+
+class _ProfileInitialAvatar extends StatelessWidget {
+  final String displayName;
+  final VoidCallback onTap;
+
+  const _ProfileInitialAvatar({
+    required this.displayName,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final initial = displayName.isNotEmpty
+        ? displayName[0].toUpperCase()
+        : '';
+
+    return Semantics(
+      label: 'Open profile',
+      button: true,
+      child: GestureDetector(
+        onTap: onTap,
+        behavior: HitTestBehavior.opaque,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 4),
+          child: SizedBox(
+            width: 44,
+            height: 44,
+            child: Center(
+              child: Container(
+                width: 36,
+                height: 36,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: Colors.white.withValues(alpha: 0.08),
+                  border: Border.all(
+                    color: Colors.white.withValues(alpha: 0.15),
+                    width: 1,
+                  ),
+                ),
+                child: Center(
+                  child: initial.isNotEmpty
+                      ? Text(
+                          initial,
+                          style: const TextStyle(
+                            color: EmergeColors.tealMuted,
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        )
+                      : const Icon(
+                          Icons.person_rounded,
+                          color: EmergeColors.tealMuted,
+                          size: 20,
+                        ),
+                ),
+              ),
+            ),
+          ),
+        ),
       ),
     );
   }

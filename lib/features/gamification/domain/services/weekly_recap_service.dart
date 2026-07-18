@@ -1,7 +1,8 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:cloud_functions/cloud_functions.dart';
 import 'package:emerge_app/features/gamification/data/repositories/user_stats_repository.dart';
 import 'package:emerge_app/core/utils/app_logger.dart';
 import 'package:emerge_app/features/gamification/domain/entities/weekly_recap.dart';
+import 'package:emerge_app/features/habits/domain/entities/habit_completion_entity.dart';
 
 import 'package:emerge_app/features/habits/presentation/providers/habit_providers.dart'; // For habit repo provider
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -62,11 +63,16 @@ class WeeklyRecapService {
       }
     }
 
-    // 2. Fetch Activity History
-    final activities = await userStatsRepository.getWeeklyActivity(
-      userId,
-      start,
-      end,
+    // 2. Fetch Activity History from the local source of truth.
+    // Completions are reliably written to the Drift habit_completions table
+    // on every completion (see DriftHabitRepository.completeHabit), whereas
+    // the Firestore user_activity collection depends on sync having flushed.
+    final completionsResult = await _ref
+        .read(habitRepositoryProvider)
+        .getCompletionsBetweenDates(userId, start, end);
+    final activities = completionsResult.fold(
+      (failure) => <HabitCompletionEntity>[],
+      (list) => list,
     );
 
     final userProfile = await userStatsRepository.getUserStats(userId);
@@ -157,7 +163,7 @@ class WeeklyRecapService {
 
   Future<UserWeeklyRecap> _calculateRecap(
     String userId,
-    List<Map<String, dynamic>> activities,
+    List<HabitCompletionEntity> activities,
     DateTime startDate,
     DateTime endDate,
     dynamic userProfile,
@@ -168,24 +174,18 @@ class WeeklyRecapService {
     Set<String> activeDays = {};
     Map<String, int> attributeVotes = {};
 
-    for (var activity in activities) {
-      if (activity['type'] == 'habit_completion') {
-        totalHabitsCompleted++;
-        totalXpEarned += (activity['xpEarned'] as int? ?? 0);
+    for (final activity in activities) {
+      totalHabitsCompleted++;
+      totalXpEarned += activity.xpGained;
 
-        final habitId = activity['habitId'] as String;
-        habitCounts[habitId] = (habitCounts[habitId] ?? 0) + 1;
+      habitCounts[activity.habitId] = (habitCounts[activity.habitId] ?? 0) + 1;
 
-        final attribute = activity['attribute'] as String?;
-        if (attribute != null) {
-          attributeVotes[attribute] = (attributeVotes[attribute] ?? 0) + 1;
-        }
+      final attribute = activity.attribute;
+      attributeVotes[attribute] =
+          (attributeVotes[attribute] ?? 0) + 1;
 
-        if (activity['date'] != null) {
-          final date = (activity['date'] as Timestamp).toDate();
-          activeDays.add('${date.year}-${date.month}-${date.day}');
-        }
-      }
+      final date = activity.completedAt;
+      activeDays.add('${date.year}-${date.month}-${date.day}');
     }
 
     // Determine dominant identity
