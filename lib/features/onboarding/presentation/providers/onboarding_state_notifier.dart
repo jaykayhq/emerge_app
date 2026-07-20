@@ -37,6 +37,12 @@ class EnhancedOnboardingState extends Equatable {
   /// Created habit stacks
   final List<HabitStack> habitStacks;
 
+  /// Selected interests (ids from `Interest.catalog`). Editable later.
+  final List<String> interests;
+
+  /// Explicit club the user picked during onboarding.
+  final String? joinedClubId;
+
   /// Current milestone step (0-5)
   final int currentStep;
 
@@ -69,6 +75,8 @@ class EnhancedOnboardingState extends Equatable {
     this.why,
     this.anchors = const [],
     this.habitStacks = const [],
+    this.interests = const [],
+    this.joinedClubId,
     this.currentStep = 0,
     this.completedMilestones = const [false, false, false, false, false],
     this.skippedMilestones = const [false, false, false, false, false],
@@ -108,6 +116,8 @@ class EnhancedOnboardingState extends Equatable {
     String? why,
     List<String>? anchors,
     List<HabitStack>? habitStacks,
+    List<String>? interests,
+    String? joinedClubId,
     int? currentStep,
     List<bool>? completedMilestones,
     List<bool>? skippedMilestones,
@@ -123,6 +133,8 @@ class EnhancedOnboardingState extends Equatable {
       why: why ?? this.why,
       anchors: anchors ?? this.anchors,
       habitStacks: habitStacks ?? this.habitStacks,
+      interests: interests ?? this.interests,
+      joinedClubId: joinedClubId ?? this.joinedClubId,
       currentStep: currentStep ?? this.currentStep,
       completedMilestones: completedMilestones ?? this.completedMilestones,
       skippedMilestones: skippedMilestones ?? this.skippedMilestones,
@@ -141,6 +153,8 @@ class EnhancedOnboardingState extends Equatable {
     why,
     anchors,
     habitStacks,
+    interests,
+    joinedClubId,
     currentStep,
     completedMilestones,
     skippedMilestones,
@@ -224,6 +238,31 @@ class EnhancedOnboardingNotifier extends _$EnhancedOnboardingNotifier {
       await _persistToBackend();
     } catch (e, s) {
       AppLogger.e('Failed to persist motive', e, s);
+    }
+  }
+
+  /// Set the user's interest selections (Milestone 1).
+  /// `interestIds` must reference `Interest.catalog` ids. Caller is
+  /// responsible for filtering unknown ids before calling.
+  Future<void> setInterests(List<String> interestIds) async {
+    final cleaned = interestIds.where((id) => id.trim().isNotEmpty).toList();
+    state = state.copyWith(interests: cleaned);
+    try {
+      await _persistToBackend();
+    } catch (e, s) {
+      AppLogger.e('Failed to persist interests', e, s);
+    }
+  }
+
+  /// Set the explicit club picked by the user (Milestone 3). Replaces the
+  /// legacy auto-join-by-archetype behavior. The actual `joinTribe` call
+  /// lives in the club_screen — this setter is the state-side record.
+  Future<void> setClub(String clubId) async {
+    state = state.copyWith(joinedClubId: clubId);
+    try {
+      await _persistToBackend();
+    } catch (e, s) {
+      AppLogger.e('Failed to persist joinedClubId', e, s);
     }
   }
 
@@ -384,7 +423,14 @@ class EnhancedOnboardingNotifier extends _$EnhancedOnboardingNotifier {
     }
   }
 
-  /// Create habits from the configured habit stacks
+  /// Create habits from the configured habit stacks.
+  ///
+  /// **Deprecated**: superseded by `createStarterPack` on `HabitRepository`,
+  /// which is called directly from `FirstHabitsScreen`. This method is
+  /// kept only for legacy fallback when an existing user revisits the world
+  /// reveal with leftover stacks. Will be removed once legacy paths are
+  /// fully drained.
+  @Deprecated('Use HabitRepository.createStarterPack from FirstHabitsScreen')
   Future<void> _createHabitsFromStacks() async {
     final user = ref.read(authStateChangesProvider).value;
     if (user == null) return;
@@ -515,6 +561,8 @@ class EnhancedOnboardingNotifier extends _$EnhancedOnboardingNotifier {
       skippedOnboardingSteps: _getSkippedStepNames(),
       onboardingStartedAt: DateTime.now(),
       onboardingCompletedAt: state.currentStep >= 5 ? DateTime.now() : null,
+      interests: state.interests,
+      joinedClubId: state.joinedClubId,
     );
 
     await userProfileRepo.updateProfile(updatedProfile);

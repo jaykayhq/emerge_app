@@ -35,6 +35,8 @@ class UserStatsTable extends Table {
   RealColumn get momentumScore => real().withDefault(const Constant(0.5))();
   IntColumn get lastCelebratedLevel =>
       integer().withDefault(const Constant(0))();
+  TextColumn get interestsCsv => text().nullable()();
+  TextColumn get joinedClubId => text().nullable()();
 
   @override
   Set<Column> get primaryKey => {userId};

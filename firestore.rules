@@ -201,7 +201,39 @@ service cloud.firestore {
              (!data.keys().hasAny(['vitalityXp']) || data.vitalityXp is number) &&
              (!data.keys().hasAny(['creativityXp']) || data.creativityXp is number) &&
              (!data.keys().hasAny(['focusXp']) || data.focusXp is number) &&
-             (!data.keys().hasAny(['spiritXp']) || data.spiritXp is number);
+             (!data.keys().hasAny(['spiritXp']) || data.spiritXp is number) &&
+             (!data.keys().hasAny(['interests']) ||
+                (data.interests is list && isValidInterestsList(data.interests))) &&
+             (!data.keys().hasAny(['joinedClubId']) ||
+                data.joinedClubId == null ||
+                isValidJoinedClubId(data.joinedClubId));
+    }
+
+    // Personalized onboarding helpers (see isValidStats). Each interest
+    // is a namespaced lowercase id like "movement.walking"; the list is
+    // capped at 5 entries; joinedClubId is a single alphanumeric slug.
+    function isValidInterest(id) {
+      return id is string &&
+             id.size() > 0 &&
+             id.size() <= 50 &&
+             id.matches('^[a-z]+(\\.[a-z_]+)+$');
+    }
+
+    function isValidInterestsList(list) {
+      return list is list &&
+             list.size() <= 5 &&
+             (list.size() < 1 || isValidInterest(list[0])) &&
+             (list.size() < 2 || isValidInterest(list[1])) &&
+             (list.size() < 3 || isValidInterest(list[2])) &&
+             (list.size() < 4 || isValidInterest(list[3])) &&
+             (list.size() < 5 || isValidInterest(list[4]));
+    }
+
+    function isValidJoinedClubId(value) {
+      return value is string &&
+             value.size() > 0 &&
+             value.size() <= 100 &&
+             value.matches('^[a-zA-Z0-9_-]+$');
     }
 
     // User Stats / Profile (Gamification & Identity)
@@ -451,6 +483,23 @@ service cloud.firestore {
 
     // Challenge Templates (Read-only, Write by Admin)
     match /challengeTemplates/{templateId} {
+      allow read: if isAuthenticated();
+      allow write: if false;
+    }
+
+    // Starter Habit Blueprints (Curated onboarding catalog)
+    // Mirrors the in-app StarterHabitBlueprint catalog into Firestore so
+    // a future server-side createStarterPack can validate against it.
+    // Clients are read-only — writes happen via seed_starter_habits.
+    match /starter_habit_blueprints/{blueprintId} {
+      allow read: if isAuthenticated();
+      allow write: if false;
+    }
+
+    // Interest Catalog (Curated onboarding taxonomy)
+    // Mirrors the in-app Interest catalog into Firestore. Read-only for
+    // clients; populated by the seed script.
+    match /interest_catalog/{interestId} {
       allow read: if isAuthenticated();
       allow write: if false;
     }

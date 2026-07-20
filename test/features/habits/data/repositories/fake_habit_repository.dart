@@ -4,6 +4,7 @@ import 'package:emerge_app/features/habits/domain/entities/habit_completion_enti
 import 'package:emerge_app/features/habits/domain/models/habit_activity.dart';
 import 'package:emerge_app/features/habits/domain/repositories/habit_repository.dart';
 import 'package:emerge_app/features/blueprints/domain/models/blueprint.dart';
+import 'package:emerge_app/features/onboarding/domain/models/starter_habit_blueprint.dart';
 import 'package:fpdart/fpdart.dart';
 
 class FakeHabitRepository implements HabitRepository {
@@ -111,5 +112,38 @@ class FakeHabitRepository implements HabitRepository {
     DateTime end,
   ) async {
     return const Right([]);
+  }
+
+  @override
+  Future<Either<Failure, List<Habit>>> createStarterPack({
+    required String userId,
+    required List<StarterHabitBlueprint> blueprints,
+    String? archetypeName,
+    List<String> interestIds = const [],
+    String? clubId,
+  }) async {
+    final created = <Habit>[];
+    final now = DateTime.now();
+    for (var i = 0; i < blueprints.length; i++) {
+      final blueprint = blueprints[i];
+      final habit = Habit(
+        id: '${blueprint.id}_$i',
+        userId: userId,
+        title: blueprint.title,
+        cue: blueprint.shortCue,
+        attribute: blueprint.attribute,
+        difficulty: HabitDifficulty.easy,
+        createdAt: now,
+        identityTags: [
+          if (archetypeName != null) archetypeName,
+          'onboarding',
+          ...interestIds.map((id) => 'interest:$id'),
+          if (clubId != null) 'club:$clubId',
+        ],
+      );
+      _habits[habit.id] = habit;
+      created.add(habit);
+    }
+    return Right(created);
   }
 }

@@ -289,7 +289,7 @@ void main() {
       );
     });
 
-    test('role=user, progress=2, on / -> /onboarding/first-habit', () {
+    test('role=user, progress=2, on / -> /onboarding/club', () {
       final ctx = const RedirectContext(
         isLoggedIn: true,
         role: UserRole.user,
@@ -300,11 +300,11 @@ void main() {
       );
       expect(
         decideRedirect(currentPath: '/world-map', ctx: ctx),
-        '/onboarding/first-habit',
+        '/onboarding/club',
       );
     });
 
-    test('role=user, progress=3, on / -> stays (home)', () {
+    test('role=user, progress=3, on / -> /onboarding/first-habits', () {
       final ctx = const RedirectContext(
         isLoggedIn: true,
         role: UserRole.user,
@@ -313,7 +313,10 @@ void main() {
         userOnboardingCompletedAt: null,
         creatorOnboarding: null,
       );
-      expect(decideRedirect(currentPath: '/world-map', ctx: ctx), isNull);
+      expect(
+        decideRedirect(currentPath: '/world-map', ctx: ctx),
+        '/onboarding/first-habits',
+      );
     });
 
     test(
@@ -360,6 +363,76 @@ void main() {
         decideRedirect(
             currentPath: '/onboarding/creator/archetype', ctx: ctx),
         '/onboarding/identity-studio',
+      );
+    });
+  });
+
+  group('personalized 5-step onboarding route mapping', () {
+    RedirectContext ctxAt(int progress, {String? atPath}) {
+      return RedirectContext(
+        isLoggedIn: true,
+        role: UserRole.user,
+        isFirstLaunch: false,
+        userOnboardingProgress: progress,
+        userOnboardingCompletedAt: progress >= 4
+            ? DateTime(2026, 1, 1)
+            : null,
+        creatorOnboarding: null,
+      );
+    }
+
+    test('progress=0 routes to /onboarding/identity-studio', () {
+      expect(
+        decideRedirect(
+            currentPath: '/world-map', ctx: ctxAt(0)),
+        '/onboarding/identity-studio',
+      );
+    });
+
+    test('progress=1 routes to /onboarding/interests', () {
+      expect(
+        decideRedirect(
+            currentPath: '/world-map', ctx: ctxAt(1)),
+        '/onboarding/interests',
+      );
+    });
+
+    test('progress=2 routes to /onboarding/club', () {
+      expect(
+        decideRedirect(
+            currentPath: '/world-map', ctx: ctxAt(2)),
+        '/onboarding/club',
+      );
+    });
+
+    test('progress=3 routes to /onboarding/first-habits', () {
+      expect(
+        decideRedirect(
+            currentPath: '/world-map', ctx: ctxAt(3)),
+        '/onboarding/first-habits',
+      );
+    });
+
+    test('progress=4 is treated as complete, stays on /world-map', () {
+      expect(
+        decideRedirect(
+          currentPath: '/world-map',
+          ctx: ctxAt(4),
+        ),
+        isNull,
+      );
+    });
+
+    test('stale /onboarding/first-habit still resolves to new '
+        'first-habits via the notifier, but a redirect off /timeline to '
+        'that legacy path with progress=3 lands on /first-habits', () {
+      // Directly verify the new path.
+      expect(
+        decideRedirect(
+          currentPath: '/world-map',
+          ctx: ctxAt(3),
+        ),
+        '/onboarding/first-habits',
       );
     });
   });

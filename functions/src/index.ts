@@ -264,3 +264,5 @@ export * from "./revenuecat_events";
 export * from "./payments/paystack";
 export { setUserRole } from "./setUserRole";
 export { purgeOrphanedUserData } from "./purgeOrphanedUserData";
+export { createStarterPack } from "./create_starter_pack";
+export { seedOnboardingCatalog } from "./seed_starter_habits";

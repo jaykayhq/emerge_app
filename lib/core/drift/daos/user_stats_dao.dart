@@ -125,6 +125,8 @@ class UserStatsDao extends DatabaseAccessor<AppDatabase>
           (data['momentumScore'] as num?)?.toDouble() ?? 0.5,
         ),
         lastCelebratedLevel: Value(data['lastCelebratedLevel'] as int? ?? 0),
+        interestsCsv: Value(data['interestsCsv'] as String?),
+        joinedClubId: Value(data['joinedClubId'] as String?),
         syncedAt: Value(DateTime.now().toIso8601String()),
         updatedAt: Value(
           data['updatedAt'] as String? ?? DateTime.now().toIso8601String(),

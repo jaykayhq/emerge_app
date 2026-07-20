@@ -50,6 +50,8 @@ class DriftUserStatsRepository {
       'hasEmerged': profile.hasEmerged,
       'momentumScore': profile.momentumScore,
       'lastCelebratedLevel': profile.avatarStats.lastCelebratedLevel,
+      'interestsCsv': profile.interests.join(','),
+      'joinedClubId': profile.joinedClubId,
       'updatedAt': DateTime.now().toIso8601String(),
     });
 
@@ -286,6 +288,10 @@ class DriftUserStatsRepository {
         lastCelebratedLevel: (row.lastCelebratedLevel as int?) ?? 0,
       ),
       worldState: _parseWorldState(row),
+      interests: (row.interestsCsv == null || row.interestsCsv!.isEmpty)
+          ? const []
+          : row.interestsCsv!.split(',').where((s) => s.isNotEmpty).toList(),
+      joinedClubId: row.joinedClubId,
     );
   }
 

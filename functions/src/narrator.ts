@@ -197,7 +197,7 @@ export const fillNarratorSlots = onCall<SlotRequest, Promise<SlotResponse>>(
   {
     secrets: ["GROQ_API_KEY"],
     memory: "256MiB",
-    cpu: 0.5,
+    cpu: 1,
     concurrency: 80,
   },
   async (request) => {

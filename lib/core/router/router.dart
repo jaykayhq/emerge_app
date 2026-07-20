@@ -23,9 +23,11 @@ import 'package:emerge_app/features/gamification/presentation/screens/recap_hub_
 
 import 'package:emerge_app/features/ai/presentation/screens/ai_reflections_screen.dart';
 import 'package:emerge_app/features/onboarding/presentation/providers/onboarding_provider.dart';
-import 'package:emerge_app/features/onboarding/presentation/screens/first_habit_screen.dart';
+import 'package:emerge_app/features/onboarding/presentation/screens/first_habits_screen.dart';
 import 'package:emerge_app/features/onboarding/presentation/screens/identity_studio_screen.dart';
 
+import 'package:emerge_app/features/onboarding/presentation/screens/club_screen.dart';
+import 'package:emerge_app/features/onboarding/presentation/screens/interests_screen.dart';
 import 'package:emerge_app/features/onboarding/presentation/screens/welcome_screen.dart';
 import 'package:emerge_app/features/onboarding/presentation/screens/world_reveal_screen.dart';
 import 'package:emerge_app/features/settings/presentation/screens/settings_screen.dart';
@@ -193,19 +195,28 @@ String? decideRedirect({
 
     final progress = ctx.userOnboardingProgress;
     final isUserOnboardingComplete = ctx.userOnboardingCompletedAt != null ||
-        (progress != null && progress >= 3);
+        (progress != null && progress >= 4);
 
     if (!isUserOnboardingComplete) {
       if (isOnNormalOnboardingPath) return null;
       if (isOnAuthPath) return null;
-      // No stats doc yet OR progress < 3.
+      // No stats doc yet OR progress < 4. Send the user to the next
+      // uncompleted step in the new 5-step flow:
+      //   0 = archetype  → /onboarding/identity-studio
+      //   1 = interests  → /onboarding/interests
+      //   2 = club       → /onboarding/club
+      //   3 = first 3   → /onboarding/first-habits
+      //   4 = world reveal → /onboarding/world-reveal
       final effectiveProgress = progress ?? 0;
       switch (effectiveProgress) {
         case 0:
-        case 1:
           return '/onboarding/identity-studio';
+        case 1:
+          return '/onboarding/interests';
         case 2:
-          return '/onboarding/first-habit';
+          return '/onboarding/club';
+        case 3:
+          return '/onboarding/first-habits';
         default:
           return '/onboarding/world-reveal';
       }
@@ -303,8 +314,16 @@ GoRouter router(Ref ref) {
         builder: (context, state) => const IdentityStudioScreen(),
       ),
       GoRoute(
-        path: '/onboarding/first-habit',
-        builder: (context, state) => const FirstHabitScreen(),
+        path: '/onboarding/interests',
+        builder: (context, state) => const InterestsScreen(),
+      ),
+      GoRoute(
+        path: '/onboarding/club',
+        builder: (context, state) => const ClubScreen(),
+      ),
+      GoRoute(
+        path: '/onboarding/first-habits',
+        builder: (context, state) => const FirstHabitsScreen(),
       ),
       GoRoute(
         path: '/onboarding/world-reveal',

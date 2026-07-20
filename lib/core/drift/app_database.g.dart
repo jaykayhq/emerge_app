@@ -368,6 +368,28 @@ class $UserStatsTableTable extends UserStatsTable
     requiredDuringInsert: false,
     defaultValue: const Constant(0),
   );
+  static const VerificationMeta _interestsCsvMeta = const VerificationMeta(
+    'interestsCsv',
+  );
+  @override
+  late final GeneratedColumn<String> interestsCsv = GeneratedColumn<String>(
+    'interests_csv',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _joinedClubIdMeta = const VerificationMeta(
+    'joinedClubId',
+  );
+  @override
+  late final GeneratedColumn<String> joinedClubId = GeneratedColumn<String>(
+    'joined_club_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   @override
   List<GeneratedColumn> get $columns => [
     userId,
@@ -402,6 +424,8 @@ class $UserStatsTableTable extends UserStatsTable
     hasEmerged,
     momentumScore,
     lastCelebratedLevel,
+    interestsCsv,
+    joinedClubId,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -657,6 +681,24 @@ class $UserStatsTableTable extends UserStatsTable
         ),
       );
     }
+    if (data.containsKey('interests_csv')) {
+      context.handle(
+        _interestsCsvMeta,
+        interestsCsv.isAcceptableOrUnknown(
+          data['interests_csv']!,
+          _interestsCsvMeta,
+        ),
+      );
+    }
+    if (data.containsKey('joined_club_id')) {
+      context.handle(
+        _joinedClubIdMeta,
+        joinedClubId.isAcceptableOrUnknown(
+          data['joined_club_id']!,
+          _joinedClubIdMeta,
+        ),
+      );
+    }
     return context;
   }
 
@@ -794,6 +836,14 @@ class $UserStatsTableTable extends UserStatsTable
         DriftSqlType.int,
         data['${effectivePrefix}last_celebrated_level'],
       )!,
+      interestsCsv: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}interests_csv'],
+      ),
+      joinedClubId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}joined_club_id'],
+      ),
     );
   }
 
@@ -837,6 +887,8 @@ class UserStatsTableData extends DataClass
   final bool hasEmerged;
   final double momentumScore;
   final int lastCelebratedLevel;
+  final String? interestsCsv;
+  final String? joinedClubId;
   const UserStatsTableData({
     required this.userId,
     this.displayName,
@@ -870,6 +922,8 @@ class UserStatsTableData extends DataClass
     required this.hasEmerged,
     required this.momentumScore,
     required this.lastCelebratedLevel,
+    this.interestsCsv,
+    this.joinedClubId,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -938,6 +992,12 @@ class UserStatsTableData extends DataClass
     map['has_emerged'] = Variable<bool>(hasEmerged);
     map['momentum_score'] = Variable<double>(momentumScore);
     map['last_celebrated_level'] = Variable<int>(lastCelebratedLevel);
+    if (!nullToAbsent || interestsCsv != null) {
+      map['interests_csv'] = Variable<String>(interestsCsv);
+    }
+    if (!nullToAbsent || joinedClubId != null) {
+      map['joined_club_id'] = Variable<String>(joinedClubId);
+    }
     return map;
   }
 
@@ -1004,6 +1064,12 @@ class UserStatsTableData extends DataClass
       hasEmerged: Value(hasEmerged),
       momentumScore: Value(momentumScore),
       lastCelebratedLevel: Value(lastCelebratedLevel),
+      interestsCsv: interestsCsv == null && nullToAbsent
+          ? const Value.absent()
+          : Value(interestsCsv),
+      joinedClubId: joinedClubId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(joinedClubId),
     );
   }
 
@@ -1053,6 +1119,8 @@ class UserStatsTableData extends DataClass
       lastCelebratedLevel: serializer.fromJson<int>(
         json['lastCelebratedLevel'],
       ),
+      interestsCsv: serializer.fromJson<String?>(json['interestsCsv']),
+      joinedClubId: serializer.fromJson<String?>(json['joinedClubId']),
     );
   }
   @override
@@ -1095,6 +1163,8 @@ class UserStatsTableData extends DataClass
       'hasEmerged': serializer.toJson<bool>(hasEmerged),
       'momentumScore': serializer.toJson<double>(momentumScore),
       'lastCelebratedLevel': serializer.toJson<int>(lastCelebratedLevel),
+      'interestsCsv': serializer.toJson<String?>(interestsCsv),
+      'joinedClubId': serializer.toJson<String?>(joinedClubId),
     };
   }
 
@@ -1131,6 +1201,8 @@ class UserStatsTableData extends DataClass
     bool? hasEmerged,
     double? momentumScore,
     int? lastCelebratedLevel,
+    Value<String?> interestsCsv = const Value.absent(),
+    Value<String?> joinedClubId = const Value.absent(),
   }) => UserStatsTableData(
     userId: userId ?? this.userId,
     displayName: displayName.present ? displayName.value : this.displayName,
@@ -1176,6 +1248,8 @@ class UserStatsTableData extends DataClass
     hasEmerged: hasEmerged ?? this.hasEmerged,
     momentumScore: momentumScore ?? this.momentumScore,
     lastCelebratedLevel: lastCelebratedLevel ?? this.lastCelebratedLevel,
+    interestsCsv: interestsCsv.present ? interestsCsv.value : this.interestsCsv,
+    joinedClubId: joinedClubId.present ? joinedClubId.value : this.joinedClubId,
   );
   UserStatsTableData copyWithCompanion(UserStatsTableCompanion data) {
     return UserStatsTableData(
@@ -1251,6 +1325,12 @@ class UserStatsTableData extends DataClass
       lastCelebratedLevel: data.lastCelebratedLevel.present
           ? data.lastCelebratedLevel.value
           : this.lastCelebratedLevel,
+      interestsCsv: data.interestsCsv.present
+          ? data.interestsCsv.value
+          : this.interestsCsv,
+      joinedClubId: data.joinedClubId.present
+          ? data.joinedClubId.value
+          : this.joinedClubId,
     );
   }
 
@@ -1288,7 +1368,9 @@ class UserStatsTableData extends DataClass
           ..write('onboardingStartedAt: $onboardingStartedAt, ')
           ..write('hasEmerged: $hasEmerged, ')
           ..write('momentumScore: $momentumScore, ')
-          ..write('lastCelebratedLevel: $lastCelebratedLevel')
+          ..write('lastCelebratedLevel: $lastCelebratedLevel, ')
+          ..write('interestsCsv: $interestsCsv, ')
+          ..write('joinedClubId: $joinedClubId')
           ..write(')'))
         .toString();
   }
@@ -1327,6 +1409,8 @@ class UserStatsTableData extends DataClass
     hasEmerged,
     momentumScore,
     lastCelebratedLevel,
+    interestsCsv,
+    joinedClubId,
   ]);
   @override
   bool operator ==(Object other) =>
@@ -1363,7 +1447,9 @@ class UserStatsTableData extends DataClass
           other.onboardingStartedAt == this.onboardingStartedAt &&
           other.hasEmerged == this.hasEmerged &&
           other.momentumScore == this.momentumScore &&
-          other.lastCelebratedLevel == this.lastCelebratedLevel);
+          other.lastCelebratedLevel == this.lastCelebratedLevel &&
+          other.interestsCsv == this.interestsCsv &&
+          other.joinedClubId == this.joinedClubId);
 }
 
 class UserStatsTableCompanion extends UpdateCompanion<UserStatsTableData> {
@@ -1399,6 +1485,8 @@ class UserStatsTableCompanion extends UpdateCompanion<UserStatsTableData> {
   final Value<bool> hasEmerged;
   final Value<double> momentumScore;
   final Value<int> lastCelebratedLevel;
+  final Value<String?> interestsCsv;
+  final Value<String?> joinedClubId;
   final Value<int> rowid;
   const UserStatsTableCompanion({
     this.userId = const Value.absent(),
@@ -1433,6 +1521,8 @@ class UserStatsTableCompanion extends UpdateCompanion<UserStatsTableData> {
     this.hasEmerged = const Value.absent(),
     this.momentumScore = const Value.absent(),
     this.lastCelebratedLevel = const Value.absent(),
+    this.interestsCsv = const Value.absent(),
+    this.joinedClubId = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   UserStatsTableCompanion.insert({
@@ -1468,6 +1558,8 @@ class UserStatsTableCompanion extends UpdateCompanion<UserStatsTableData> {
     this.hasEmerged = const Value.absent(),
     this.momentumScore = const Value.absent(),
     this.lastCelebratedLevel = const Value.absent(),
+    this.interestsCsv = const Value.absent(),
+    this.joinedClubId = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : userId = Value(userId);
   static Insertable<UserStatsTableData> custom({
@@ -1503,6 +1595,8 @@ class UserStatsTableCompanion extends UpdateCompanion<UserStatsTableData> {
     Expression<bool>? hasEmerged,
     Expression<double>? momentumScore,
     Expression<int>? lastCelebratedLevel,
+    Expression<String>? interestsCsv,
+    Expression<String>? joinedClubId,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
@@ -1542,6 +1636,8 @@ class UserStatsTableCompanion extends UpdateCompanion<UserStatsTableData> {
       if (momentumScore != null) 'momentum_score': momentumScore,
       if (lastCelebratedLevel != null)
         'last_celebrated_level': lastCelebratedLevel,
+      if (interestsCsv != null) 'interests_csv': interestsCsv,
+      if (joinedClubId != null) 'joined_club_id': joinedClubId,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -1579,6 +1675,8 @@ class UserStatsTableCompanion extends UpdateCompanion<UserStatsTableData> {
     Value<bool>? hasEmerged,
     Value<double>? momentumScore,
     Value<int>? lastCelebratedLevel,
+    Value<String?>? interestsCsv,
+    Value<String?>? joinedClubId,
     Value<int>? rowid,
   }) {
     return UserStatsTableCompanion(
@@ -1616,6 +1714,8 @@ class UserStatsTableCompanion extends UpdateCompanion<UserStatsTableData> {
       hasEmerged: hasEmerged ?? this.hasEmerged,
       momentumScore: momentumScore ?? this.momentumScore,
       lastCelebratedLevel: lastCelebratedLevel ?? this.lastCelebratedLevel,
+      interestsCsv: interestsCsv ?? this.interestsCsv,
+      joinedClubId: joinedClubId ?? this.joinedClubId,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -1725,6 +1825,12 @@ class UserStatsTableCompanion extends UpdateCompanion<UserStatsTableData> {
     if (lastCelebratedLevel.present) {
       map['last_celebrated_level'] = Variable<int>(lastCelebratedLevel.value);
     }
+    if (interestsCsv.present) {
+      map['interests_csv'] = Variable<String>(interestsCsv.value);
+    }
+    if (joinedClubId.present) {
+      map['joined_club_id'] = Variable<String>(joinedClubId.value);
+    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -1766,6 +1872,8 @@ class UserStatsTableCompanion extends UpdateCompanion<UserStatsTableData> {
           ..write('hasEmerged: $hasEmerged, ')
           ..write('momentumScore: $momentumScore, ')
           ..write('lastCelebratedLevel: $lastCelebratedLevel, ')
+          ..write('interestsCsv: $interestsCsv, ')
+          ..write('joinedClubId: $joinedClubId, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -8814,6 +8922,8 @@ typedef $$UserStatsTableTableCreateCompanionBuilder =
       Value<bool> hasEmerged,
       Value<double> momentumScore,
       Value<int> lastCelebratedLevel,
+      Value<String?> interestsCsv,
+      Value<String?> joinedClubId,
       Value<int> rowid,
     });
 typedef $$UserStatsTableTableUpdateCompanionBuilder =
@@ -8850,6 +8960,8 @@ typedef $$UserStatsTableTableUpdateCompanionBuilder =
       Value<bool> hasEmerged,
       Value<double> momentumScore,
       Value<int> lastCelebratedLevel,
+      Value<String?> interestsCsv,
+      Value<String?> joinedClubId,
       Value<int> rowid,
     });
 
@@ -9019,6 +9131,16 @@ class $$UserStatsTableTableFilterComposer
 
   ColumnFilters<int> get lastCelebratedLevel => $composableBuilder(
     column: $table.lastCelebratedLevel,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get interestsCsv => $composableBuilder(
+    column: $table.interestsCsv,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get joinedClubId => $composableBuilder(
+    column: $table.joinedClubId,
     builder: (column) => ColumnFilters(column),
   );
 }
@@ -9191,6 +9313,16 @@ class $$UserStatsTableTableOrderingComposer
     column: $table.lastCelebratedLevel,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<String> get interestsCsv => $composableBuilder(
+    column: $table.interestsCsv,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get joinedClubId => $composableBuilder(
+    column: $table.joinedClubId,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$UserStatsTableTableAnnotationComposer
@@ -9337,6 +9469,16 @@ class $$UserStatsTableTableAnnotationComposer
     column: $table.lastCelebratedLevel,
     builder: (column) => column,
   );
+
+  GeneratedColumn<String> get interestsCsv => $composableBuilder(
+    column: $table.interestsCsv,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get joinedClubId => $composableBuilder(
+    column: $table.joinedClubId,
+    builder: (column) => column,
+  );
 }
 
 class $$UserStatsTableTableTableManager
@@ -9409,6 +9551,8 @@ class $$UserStatsTableTableTableManager
                 Value<bool> hasEmerged = const Value.absent(),
                 Value<double> momentumScore = const Value.absent(),
                 Value<int> lastCelebratedLevel = const Value.absent(),
+                Value<String?> interestsCsv = const Value.absent(),
+                Value<String?> joinedClubId = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => UserStatsTableCompanion(
                 userId: userId,
@@ -9443,6 +9587,8 @@ class $$UserStatsTableTableTableManager
                 hasEmerged: hasEmerged,
                 momentumScore: momentumScore,
                 lastCelebratedLevel: lastCelebratedLevel,
+                interestsCsv: interestsCsv,
+                joinedClubId: joinedClubId,
                 rowid: rowid,
               ),
           createCompanionCallback:
@@ -9480,6 +9626,8 @@ class $$UserStatsTableTableTableManager
                 Value<bool> hasEmerged = const Value.absent(),
                 Value<double> momentumScore = const Value.absent(),
                 Value<int> lastCelebratedLevel = const Value.absent(),
+                Value<String?> interestsCsv = const Value.absent(),
+                Value<String?> joinedClubId = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => UserStatsTableCompanion.insert(
                 userId: userId,
@@ -9514,6 +9662,8 @@ class $$UserStatsTableTableTableManager
                 hasEmerged: hasEmerged,
                 momentumScore: momentumScore,
                 lastCelebratedLevel: lastCelebratedLevel,
+                interestsCsv: interestsCsv,
+                joinedClubId: joinedClubId,
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0

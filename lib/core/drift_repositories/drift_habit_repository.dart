@@ -9,6 +9,7 @@ import 'package:emerge_app/features/habits/domain/models/habit_activity.dart';
 import 'package:emerge_app/features/habits/domain/entities/habit_completion_entity.dart';
 import 'package:emerge_app/features/habits/domain/repositories/habit_repository.dart';
 import 'package:emerge_app/features/blueprints/domain/models/blueprint.dart';
+import 'package:emerge_app/features/onboarding/domain/models/starter_habit_blueprint.dart';
 import 'package:fpdart/fpdart.dart';
 import 'package:flutter/material.dart';
 
@@ -533,6 +534,91 @@ class DriftHabitRepository implements HabitRepository {
       );
 
       return const Right(unit);
+    } catch (e, _) {
+      return Left(ServerFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, List<Habit>>> createStarterPack({
+    required String userId,
+    required List<StarterHabitBlueprint> blueprints,
+    String? archetypeName,
+    List<String> interestIds = const [],
+    String? clubId,
+  }) async {
+    if (blueprints.isEmpty) {
+      return const Right([]);
+    }
+    try {
+      final now = DateTime.now();
+      final created = <Habit>[];
+      final tagSet = <String>{
+        if (archetypeName != null) archetypeName,
+        'onboarding',
+        ...interestIds.map((id) => 'interest:$id'),
+        if (clubId != null) 'club:$clubId',
+      }.toList();
+
+      await _db.transaction(() async {
+        for (var i = 0; i < blueprints.length; i++) {
+          final blueprint = blueprints[i];
+          final habitId =
+              '${blueprint.id}_${i}_${now.millisecondsSinceEpoch}';
+
+          // Starter pack is intentionally simple: no reminder, no timer
+          // overrides, no integration. Difficulty is hardcoded `easy` so
+          // the gamification pipeline gives a low XP grant for day-1 wins.
+          final habit = Habit(
+            id: habitId,
+            userId: userId,
+            title: blueprint.title,
+            cue: blueprint.shortCue,
+            difficulty: HabitDifficulty.easy,
+            attribute: blueprint.attribute,
+            identityTags: [...tagSet, blueprint.id],
+            frequency: HabitFrequency.daily,
+            createdAt: now,
+          );
+
+          await _db.habitsDao.insertFromData(
+            id: habit.id,
+            userId: habit.userId,
+            title: habit.title,
+            cue: habit.cue,
+            difficulty: habit.difficulty.name,
+            frequency: habit.frequency.name,
+            attribute: habit.attribute.name,
+            createdAt: habit.createdAt.toIso8601String(),
+            updatedAt: now.toIso8601String(),
+          );
+
+          created.add(habit);
+        }
+      });
+
+      // One enqueue per habit so the sync engine queues them individually;
+      // cheaper than introducing a new batched-set API just for this.
+      for (final habit in created) {
+        await _syncEngine.enqueueSet(
+          collectionPath: 'habits',
+          documentId: habit.id,
+          data: habit.toMap(),
+        );
+      }
+
+      _socialService.logActivity(
+        type: 'starter_pack_created',
+        userId: userId,
+        data: {
+          'habitCount': blueprints.length,
+          'archetype': archetypeName,
+          'interestCount': interestIds.length,
+          'clubId': clubId,
+        },
+      );
+
+      return Right(created);
     } catch (e, _) {
       return Left(ServerFailure(e.toString()));
     }

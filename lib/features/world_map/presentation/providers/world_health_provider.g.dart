@@ -59,7 +59,7 @@ final class WorldHealthServiceProvider
 }
 
 String _$worldHealthServiceHash() =>
-    r'b247dd97a5cd93c71b5a5b62b0291c16f20dc70d';
+    r'5ed0823c042d4a8daf2425c607d22e5f781685da';
 
 /// Provider that calculates world health on demand
 /// Uses the WorldHealthService with caching for efficiency

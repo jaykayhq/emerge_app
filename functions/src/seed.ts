@@ -309,7 +309,7 @@ const officialClubs = [
     name: "Lunar Seekers",
     description: "Scripture study and daily prayer for spiritual growth",
     imageUrl: "https://images.unsplash.com/photo-1507692049790-de58290a4334?w=800",
-    archetypeId: "mystic",
+    archetypeId: "zealot",
     type: "official",
     levelRequirement: 1,
     tags: ["faith", "prayer", "scripture", "spiritual"],

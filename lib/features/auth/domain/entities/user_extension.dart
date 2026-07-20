@@ -529,6 +529,15 @@ class UserProfile {
   final int totalChallengesCompleted;
   final int totalQuestsCompleted;
 
+  /// Curated interests the user selected during onboarding. Persisted as a
+  /// comma-separated string list. Editable later from profile settings.
+  /// IDs match `Interest.id` from the onboarding catalog.
+  final List<String> interests;
+
+  /// Explicit club picked during onboarding. Distinct from the legacy auto-join
+  /// behavior; null means the user skipped or has not completed onboarding yet.
+  final String? joinedClubId;
+
   const UserProfile({
     required this.uid,
     this.role,
@@ -559,6 +568,8 @@ class UserProfile {
     this.totalHabitsCompleted = 0,
     this.totalChallengesCompleted = 0,
     this.totalQuestsCompleted = 0,
+    this.interests = const [],
+    this.joinedClubId,
   });
 
   Map<String, dynamic> toMap() {
@@ -592,6 +603,8 @@ class UserProfile {
       'totalHabitsCompleted': totalHabitsCompleted,
       'totalChallengesCompleted': totalChallengesCompleted,
       'totalQuestsCompleted': totalQuestsCompleted,
+      'interests': interests,
+      'joinedClubId': joinedClubId,
     };
   }
 
@@ -668,6 +681,8 @@ class UserProfile {
       totalHabitsCompleted: map['totalHabitsCompleted'] as int? ?? 0,
       totalChallengesCompleted: map['totalChallengesCompleted'] as int? ?? 0,
       totalQuestsCompleted: map['totalQuestsCompleted'] as int? ?? 0,
+      interests: List<String>.from(map['interests'] ?? const []),
+      joinedClubId: map['joinedClubId'] as String?,
     );
   }
 
@@ -701,6 +716,8 @@ class UserProfile {
     int? totalHabitsCompleted,
     int? totalChallengesCompleted,
     int? totalQuestsCompleted,
+    List<String>? interests,
+    String? joinedClubId,
   }) {
     return UserProfile(
       uid: uid ?? this.uid,
@@ -735,6 +752,8 @@ class UserProfile {
       totalChallengesCompleted:
           totalChallengesCompleted ?? this.totalChallengesCompleted,
       totalQuestsCompleted: totalQuestsCompleted ?? this.totalQuestsCompleted,
+      interests: interests ?? this.interests,
+      joinedClubId: joinedClubId ?? this.joinedClubId,
     );
   }
 }

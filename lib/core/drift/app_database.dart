@@ -66,7 +66,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.withExecutor(super.executor);
 
   @override
-  int get schemaVersion => 8;
+  int get schemaVersion => 9;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -106,6 +106,16 @@ class AppDatabase extends _$AppDatabase {
       }
       if (from < 8) {
         await m.createTable(habitReflectionsTable);
+      }
+      if (from < 9) {
+        await m.addColumn(
+          userStatsTable,
+          userStatsTable.interestsCsv as GeneratedColumn<Object>,
+        );
+        await m.addColumn(
+          userStatsTable,
+          userStatsTable.joinedClubId as GeneratedColumn<Object>,
+        );
       }
     },
     beforeOpen: (details) async {

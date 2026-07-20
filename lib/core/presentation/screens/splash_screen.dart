@@ -59,14 +59,17 @@ String determineSplashRoute({
   // Normal user or truly unknown role without creator profile.
   final progress = userOnboardingProgress;
   final isComplete = userOnboardingCompletedAt != null ||
-      (progress != null && progress >= 3);
+      (progress != null && progress >= 4);
   if (isComplete) return '/world-map';
   switch (progress ?? 0) {
     case 0:
-    case 1:
       return '/onboarding/identity-studio';
+    case 1:
+      return '/onboarding/interests';
     case 2:
-      return '/onboarding/first-habit';
+      return '/onboarding/club';
+    case 3:
+      return '/onboarding/first-habits';
     default:
       return '/onboarding/world-reveal';
   }

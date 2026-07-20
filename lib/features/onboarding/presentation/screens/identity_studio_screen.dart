@@ -102,9 +102,9 @@ class _IdentityStudioScreenState extends ConsumerState<IdentityStudioScreen> {
       // PERSIST PROGRESS: Complete the first milestone (Archetype/Motive)
       await notifier.completeMilestone(0);
 
-      // Navigate directly to first habit screen (skip map attributes)
+      // Navigate to the next step in the 5-step flow: interests.
       if (mounted) {
-        context.push('/onboarding/first-habit');
+        context.push('/onboarding/interests');
       }
     } catch (e, s) {
       AppLogger.e('Identity Studio: Failed to complete', e, s);

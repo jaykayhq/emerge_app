@@ -2,8 +2,10 @@ import 'package:drift/drift.dart' hide isNotNull, isNull;
 import 'package:emerge_app/core/drift/app_database.dart';
 import 'package:emerge_app/core/drift_repositories/drift_habit_repository.dart';
 import 'package:emerge_app/core/game_loop/game_loop_engine.dart';
+import 'package:emerge_app/features/auth/domain/entities/user_extension.dart';
 import 'package:emerge_app/features/blueprints/domain/models/blueprint.dart';
 import 'package:emerge_app/features/habits/domain/entities/habit.dart';
+import 'package:emerge_app/features/onboarding/domain/models/starter_habit_blueprint.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
@@ -460,6 +462,126 @@ void main() {
         ).called(1);
       },
     );
+
+    group('createStarterPack', () {
+      test(
+        'inserts one habit per blueprint in a single Drift batch',
+        () async {
+          final blueprints =
+              StarterHabitBlueprint.catalog
+                  .where((b) => b.archetype == UserArchetype.athlete)
+                  .take(3)
+                  .toList();
+
+          final result = await repository.createStarterPack(
+            userId: userId,
+            blueprints: blueprints,
+            archetypeName: 'athlete',
+            interestIds: const ['movement.walking'],
+            clubId: 'club_42',
+          );
+
+          expect(result.isRight(), true);
+          final createdHabits = result.getOrElse((_) => fail('expected Right'));
+          expect(createdHabits, hasLength(3));
+
+          final stored = await db.habitsDao.watchHabits(userId).first;
+          expect(stored, hasLength(3));
+          for (final habit in stored) {
+            expect(habit.difficulty, 'easy');
+            expect(habit.frequency, 'daily');
+          }
+        },
+      );
+
+      test(
+        'tags every habit with archetype, onboarding, interests, and club '
+        'in the Firestore enqueue payload',
+        () async {
+          final blueprints =
+              StarterHabitBlueprint.catalog
+                  .where((b) => b.archetype == UserArchetype.scholar)
+                  .take(2)
+                  .toList();
+
+          final result = await repository.createStarterPack(
+            userId: userId,
+            blueprints: blueprints,
+            archetypeName: 'scholar',
+            interestIds: const ['learning.reading', 'learning.languages'],
+            clubId: 'deep_work_society',
+          );
+
+          expect(result.isRight(), true);
+
+          // The Drift row schema doesn't store identityTags, but the
+          // Firestore sync does. Validate via captured mocks.
+          final captured = verify(
+            () => mockSyncEngine.enqueueSet(
+              collectionPath: 'habits',
+              documentId: captureAny(named: 'documentId'),
+              data: captureAny(named: 'data'),
+            ),
+          ).captured;
+          // mocktail flattens captured args per position across all calls:
+          // [documentId0, data0, documentId1, data1] for 2 calls.
+          // We expect one enqueue per habit, so 4 captured entries for 2
+          // habits.
+          expect(captured.length, 4);
+
+          final payloads = <Map<String, dynamic>>[];
+          for (var i = 1; i < captured.length; i += 2) {
+            payloads.add(captured[i] as Map<String, dynamic>);
+          }
+          expect(payloads, hasLength(2));
+          for (final payload in payloads) {
+            final tags =
+                (payload['identityTags'] as List<dynamic>).cast<String>();
+            expect(tags, contains('scholar'));
+            expect(tags, contains('onboarding'));
+            expect(tags, contains('interest:learning.reading'));
+            expect(tags, contains('interest:learning.languages'));
+            expect(tags, contains('club:deep_work_society'));
+          }
+        },
+      );
+
+      test('returns empty list and skips writes when given zero blueprints',
+          () async {
+        final result = await repository.createStarterPack(
+          userId: userId,
+          blueprints: const [],
+        );
+        expect(result.isRight(), true);
+        expect(result.getOrElse((_) => []), isEmpty);
+
+        final stored = await db.habitsDao.watchHabits(userId).first;
+        expect(stored, isEmpty);
+      });
+
+      test('logs a starter_pack_created social activity once per call',
+          () async {
+        final blueprints =
+            StarterHabitBlueprint.catalog
+                .where((b) => b.archetype == UserArchetype.stoic)
+                .take(2)
+                .toList();
+
+        await repository.createStarterPack(
+          userId: userId,
+          blueprints: blueprints,
+          archetypeName: 'stoic',
+        );
+
+        verify(
+          () => mockSocialService.logActivity(
+            type: 'starter_pack_created',
+            userId: userId,
+            data: any(named: 'data'),
+          ),
+        ).called(1);
+      });
+    });
 
     test('createHabitsFromBlueprint stores reminderTime in created habits', () async {
       await db.userStatsDao.upsertStats(

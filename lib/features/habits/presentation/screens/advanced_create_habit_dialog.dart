@@ -785,6 +785,7 @@ class _AdvancedCreateHabitDialogState
         HabitTemplateCarousel(
           archetype: userProfile?.archetype ?? UserArchetype.none,
           onTemplateSelected: _applyTemplate,
+          userInterests: userProfile?.interests,
         ),
       ],
     );

@@ -158,7 +158,16 @@ class OnboardingController extends _$OnboardingController {
       await userStatsRepo.syncUserIdentity(updatedProfile);
 
       if (onboardingState.currentMilestoneStep >= 4) {
-        // Officially join the archetype club
+        // If the user explicitly picked a club during the new onboarding
+        // flow, the explicit pick is authoritative. Only fall back to the
+        // legacy auto-join by archetype when no club was chosen.
+        if (updatedProfile.joinedClubId != null) {
+          AppLogger.i(
+            'Skipping legacy auto-join: explicit club '
+            '${updatedProfile.joinedClubId} already chosen',
+          );
+          return;
+        }
         if (updatedProfile.archetype != UserArchetype.none) {
           try {
             final tribeRepo = ref.read(tribeRepositoryProvider);
@@ -261,6 +270,11 @@ class OnboardingController extends _$OnboardingController {
     AppLogger.i('Milestone $milestoneIndex completed');
   }
 
+  /// **Deprecated**: superseded by `createStarterPack` on `HabitRepository`,
+  /// which is called directly from `FirstHabitsScreen`. Kept only for the
+  /// legacy world-reveal fallback path that may still own leftover stacks
+  /// from before the 5-step onboarding shipped.
+  @Deprecated('Use HabitRepository.createStarterPack from FirstHabitsScreen')
   Future<void> createOnboardingHabits() async {
     final state = ref.read(onboardingStateControllerProvider);
     final user = ref.read(authStateChangesProvider).value;
@@ -552,7 +566,7 @@ List<OnboardingMilestone> activeMilestones(Ref ref) {
       order: 3,
       title: 'Your First Identity Vote',
       description: 'Prove to yourself you are becoming who you aspire to be',
-      routePath: '/onboarding/first-habit',
+      routePath: '/onboarding/first-habits',
       icon: Icons.check_circle_outline,
       isCompleted: progress > 2,
       canSkip: true,

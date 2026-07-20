@@ -110,11 +110,18 @@ class HabitTemplateCarousel extends StatelessWidget {
   final OnTemplateSelected onTemplateSelected;
   final VoidCallback? onSeeMore;
 
+  /// Optional list of user-selected interest ids (from `Interest.catalog`).
+  /// When supplied, suggestions whose title/description overlap the user's
+  /// interest-category vocabulary float to the top of the carousel.
+  /// Pass `[]` or null to keep the original archetype order.
+  final List<String>? userInterests;
+
   const HabitTemplateCarousel({
     super.key,
     required this.archetype,
     required this.onTemplateSelected,
     this.onSeeMore,
+    this.userInterests,
   });
 
   String _getArchetypeEmoji(UserArchetype archetype) {
@@ -141,11 +148,8 @@ class HabitTemplateCarousel extends StatelessWidget {
         ? UserArchetype.athlete
         : archetype;
     final theme = ArchetypeTheme.forArchetype(effectiveArchetype);
-    final templates = theme.suggestedHabits
-        .map(
-          (h) => HabitTemplate.fromSuggestion(h, category: theme.archetypeName),
-        )
-        .toList();
+    final interestCategories = _resolveInterestCategories(userInterests);
+    final templates = _rankedTemplates(theme, interestCategories);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -267,6 +271,53 @@ class HabitTemplateCarousel extends StatelessWidget {
         },
       ),
     );
+  }
+
+  /// Translate interest ids into the matching `InterestCategory` set so we
+  /// can score templates against the user's personalization signal.
+  static Set<String> _resolveInterestCategories(List<String>? interestIds) {
+    if (interestIds == null || interestIds.isEmpty) return const {};
+    // The category prefix is the literal slug before the first dot, e.g.
+    // 'movement' for 'movement.walking'.
+    return interestIds
+        .map((id) => id.split('.').first)
+        .where((slug) => slug.isNotEmpty)
+        .toSet();
+  }
+
+  /// Reorder templates so those whose descriptive text contains a
+  /// matching interest-category keyword float to the top.
+  static List<HabitTemplate> _rankedTemplates(
+    ArchetypeTheme theme,
+    Set<String> interestCategories,
+  ) {
+    final all = theme.suggestedHabits
+        .map(
+          (h) => HabitTemplate.fromSuggestion(h, category: theme.archetypeName),
+        )
+        .toList(growable: true);
+
+    if (interestCategories.isEmpty) return all;
+
+    int score(HabitTemplate t) {
+      final haystack =
+          '${t.title} ${t.description} ${t.anchor}'.toLowerCase();
+      var s = 0;
+      for (final cat in interestCategories) {
+        // Category slug words appear in template copy (e.g. "movement",
+        // "reading", "meditation", "writing") — boosted only on explicit
+        // overlap so we don't reorder for unrelated interests.
+        if (haystack.contains(cat.toLowerCase())) s += 10;
+      }
+      return s;
+    }
+
+    all.sort((a, b) {
+      final cmp = score(b).compareTo(score(a));
+      if (cmp != 0) return cmp;
+      return a.title.compareTo(b.title);
+    });
+    return all;
   }
 }
 

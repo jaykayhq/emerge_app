@@ -295,6 +295,46 @@ void main() {
         0.0,
       ); // 1.0 - worldHealthScore fallback (1.0) = 0.0
     });
+
+    test(
+      'interests and joinedClubId round-trip through Drift and UserProfile',
+      () async {
+        final profile = UserProfile(
+          uid: userId,
+          archetype: UserArchetype.scholar,
+          interests: const [
+            'learning.reading',
+            'learning.curiosity',
+            'mindfulness.journaling',
+          ],
+          joinedClubId: 'club_42',
+        );
+
+        await repository.saveUserStats(profile);
+
+        final retrieved = await repository.getUserStats(userId);
+        expect(retrieved.interests, hasLength(3));
+        expect(retrieved.interests, contains('learning.reading'));
+        expect(retrieved.interests, contains('mindfulness.journaling'));
+        expect(retrieved.joinedClubId, 'club_42');
+      },
+    );
+
+    test(
+      'empty interests list persists as empty list, null joinedClubId survives',
+      () async {
+        final profile = UserProfile(
+          uid: userId,
+          archetype: UserArchetype.athlete,
+        );
+
+        await repository.saveUserStats(profile);
+
+        final retrieved = await repository.getUserStats(userId);
+        expect(retrieved.interests, isEmpty);
+        expect(retrieved.joinedClubId, isNull);
+      },
+    );
   });
 }
 

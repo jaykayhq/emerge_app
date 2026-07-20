@@ -3,6 +3,7 @@ import 'package:emerge_app/features/habits/domain/entities/habit.dart';
 import 'package:emerge_app/features/habits/domain/models/habit_activity.dart';
 import 'package:emerge_app/features/habits/domain/entities/habit_completion_entity.dart';
 import 'package:emerge_app/features/blueprints/domain/models/blueprint.dart';
+import 'package:emerge_app/features/onboarding/domain/models/starter_habit_blueprint.dart';
 import 'package:fpdart/fpdart.dart';
 
 abstract class HabitRepository {
@@ -41,5 +42,17 @@ abstract class HabitRepository {
     required String userId,
     required Blueprint blueprint,
     String? reminderTime,
+  });
+
+  /// Create a personalized starter pack from curated onboarding blueprints.
+  /// Bypasses free-tier capacity checks (matches the existing onboarding
+  /// bypass) and writes all habits in a single Drift transaction with one
+  /// batched Firestore sync.
+  Future<Either<Failure, List<Habit>>> createStarterPack({
+    required String userId,
+    required List<StarterHabitBlueprint> blueprints,
+    String? archetypeName,
+    List<String> interestIds = const [],
+    String? clubId,
   });
 }

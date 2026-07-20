@@ -6,6 +6,7 @@ import 'package:emerge_app/features/habits/domain/entities/habit.dart';
 import 'package:emerge_app/features/habits/domain/entities/habit_completion_entity.dart';
 import 'package:emerge_app/features/habits/domain/models/habit_activity.dart';
 import 'package:emerge_app/features/habits/domain/repositories/habit_repository.dart';
+import 'package:emerge_app/features/onboarding/domain/models/starter_habit_blueprint.dart';
 import 'package:emerge_app/features/habits/presentation/providers/habit_providers.dart';
 import 'package:emerge_app/features/reflections/data/datasources/habit_reflection_local_datasource.dart';
 import 'package:emerge_app/features/reflections/data/datasources/habit_reflection_remote_datasource.dart';
@@ -86,6 +87,16 @@ class _FakeHabitRepo implements HabitRepository {
   ) async {
     return const Right([]);
   }
+
+  @override
+  Future<Either<Failure, List<Habit>>> createStarterPack({
+    required String userId,
+    required List<StarterHabitBlueprint> blueprints,
+    String? archetypeName,
+    List<String> interestIds = const [],
+    String? clubId,
+  }) async =>
+      const Right([]);
 }
 
 /// Fake reflection repository that extends the real class with stub
