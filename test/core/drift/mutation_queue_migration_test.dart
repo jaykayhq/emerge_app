@@ -1,6 +1,5 @@
 import 'package:drift/native.dart';
 import 'package:emerge_app/core/drift/database.dart';
-import 'package:emerge_app/core/drift/tables/mutation_queue_table.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
