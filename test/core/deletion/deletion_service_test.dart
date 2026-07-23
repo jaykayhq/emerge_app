@@ -99,6 +99,34 @@ void main() {
     expect(res.isLeft(), isTrue);
   });
 
+  test('concurrent deletes of same habit enqueue exactly once', () async {
+    await db.habitsDao.insertFromData(
+      id: 'h3',
+      userId: 'u1',
+      title: 'X',
+      createdAt: DateTime(2026).toIso8601String(),
+      updatedAt: DateTime(2026).toIso8601String(),
+    );
+    final results = await Future.wait([
+      service.deleteHabit(userId: 'u1', habitId: 'h3'),
+      service.deleteHabit(userId: 'u1', habitId: 'h3'),
+      service.deleteHabit(userId: 'u1', habitId: 'h3'),
+    ]);
+    expect(
+      results.every((r) => r == const Right<Failure, Unit>(unit)),
+      isTrue,
+    );
+    final row = await db.habitsDao.getHabit('h3');
+    expect(row!.isArchived, 1);
+    // Only the first delete enqueues (idempotent key dedupes the rest).
+    verify(() => sync.enqueueUpdate(
+          collectionPath: any(named: 'collectionPath'),
+          documentId: any(named: 'documentId'),
+          data: any(named: 'data'),
+          idempotencyKey: any(named: 'idempotencyKey'),
+        )).called(1);
+  });
+
   test('remote enqueue failure surfaces Left but local archive committed',
       () async {
     when(() => sync.enqueueUpdate(
