@@ -5897,6 +5897,49 @@ class $MutationQueueTableTable extends MutationQueueTable
     requiredDuringInsert: false,
     defaultValue: const Constant(0),
   );
+  static const VerificationMeta _idempotencyKeyMeta = const VerificationMeta(
+    'idempotencyKey',
+  );
+  @override
+  late final GeneratedColumn<String> idempotencyKey = GeneratedColumn<String>(
+    'idempotency_key',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _lastErrorMeta = const VerificationMeta(
+    'lastError',
+  );
+  @override
+  late final GeneratedColumn<String> lastError = GeneratedColumn<String>(
+    'last_error',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _nextRetryAtMeta = const VerificationMeta(
+    'nextRetryAt',
+  );
+  @override
+  late final GeneratedColumn<String> nextRetryAt = GeneratedColumn<String>(
+    'next_retry_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _statusMeta = const VerificationMeta('status');
+  @override
+  late final GeneratedColumn<String> status = GeneratedColumn<String>(
+    'status',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('pending'),
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -5906,6 +5949,10 @@ class $MutationQueueTableTable extends MutationQueueTable
     dataJson,
     createdAt,
     retryCount,
+    idempotencyKey,
+    lastError,
+    nextRetryAt,
+    status,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -5969,6 +6016,36 @@ class $MutationQueueTableTable extends MutationQueueTable
         retryCount.isAcceptableOrUnknown(data['retry_count']!, _retryCountMeta),
       );
     }
+    if (data.containsKey('idempotency_key')) {
+      context.handle(
+        _idempotencyKeyMeta,
+        idempotencyKey.isAcceptableOrUnknown(
+          data['idempotency_key']!,
+          _idempotencyKeyMeta,
+        ),
+      );
+    }
+    if (data.containsKey('last_error')) {
+      context.handle(
+        _lastErrorMeta,
+        lastError.isAcceptableOrUnknown(data['last_error']!, _lastErrorMeta),
+      );
+    }
+    if (data.containsKey('next_retry_at')) {
+      context.handle(
+        _nextRetryAtMeta,
+        nextRetryAt.isAcceptableOrUnknown(
+          data['next_retry_at']!,
+          _nextRetryAtMeta,
+        ),
+      );
+    }
+    if (data.containsKey('status')) {
+      context.handle(
+        _statusMeta,
+        status.isAcceptableOrUnknown(data['status']!, _statusMeta),
+      );
+    }
     return context;
   }
 
@@ -6006,6 +6083,22 @@ class $MutationQueueTableTable extends MutationQueueTable
         DriftSqlType.int,
         data['${effectivePrefix}retry_count'],
       )!,
+      idempotencyKey: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}idempotency_key'],
+      ),
+      lastError: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}last_error'],
+      ),
+      nextRetryAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}next_retry_at'],
+      ),
+      status: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}status'],
+      )!,
     );
   }
 
@@ -6024,6 +6117,10 @@ class MutationQueueTableData extends DataClass
   final String? dataJson;
   final String createdAt;
   final int retryCount;
+  final String? idempotencyKey;
+  final String? lastError;
+  final String? nextRetryAt;
+  final String status;
   const MutationQueueTableData({
     required this.id,
     required this.collectionPath,
@@ -6032,6 +6129,10 @@ class MutationQueueTableData extends DataClass
     this.dataJson,
     required this.createdAt,
     required this.retryCount,
+    this.idempotencyKey,
+    this.lastError,
+    this.nextRetryAt,
+    required this.status,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -6045,6 +6146,16 @@ class MutationQueueTableData extends DataClass
     }
     map['created_at'] = Variable<String>(createdAt);
     map['retry_count'] = Variable<int>(retryCount);
+    if (!nullToAbsent || idempotencyKey != null) {
+      map['idempotency_key'] = Variable<String>(idempotencyKey);
+    }
+    if (!nullToAbsent || lastError != null) {
+      map['last_error'] = Variable<String>(lastError);
+    }
+    if (!nullToAbsent || nextRetryAt != null) {
+      map['next_retry_at'] = Variable<String>(nextRetryAt);
+    }
+    map['status'] = Variable<String>(status);
     return map;
   }
 
@@ -6059,6 +6170,16 @@ class MutationQueueTableData extends DataClass
           : Value(dataJson),
       createdAt: Value(createdAt),
       retryCount: Value(retryCount),
+      idempotencyKey: idempotencyKey == null && nullToAbsent
+          ? const Value.absent()
+          : Value(idempotencyKey),
+      lastError: lastError == null && nullToAbsent
+          ? const Value.absent()
+          : Value(lastError),
+      nextRetryAt: nextRetryAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(nextRetryAt),
+      status: Value(status),
     );
   }
 
@@ -6075,6 +6196,10 @@ class MutationQueueTableData extends DataClass
       dataJson: serializer.fromJson<String?>(json['dataJson']),
       createdAt: serializer.fromJson<String>(json['createdAt']),
       retryCount: serializer.fromJson<int>(json['retryCount']),
+      idempotencyKey: serializer.fromJson<String?>(json['idempotencyKey']),
+      lastError: serializer.fromJson<String?>(json['lastError']),
+      nextRetryAt: serializer.fromJson<String?>(json['nextRetryAt']),
+      status: serializer.fromJson<String>(json['status']),
     );
   }
   @override
@@ -6088,6 +6213,10 @@ class MutationQueueTableData extends DataClass
       'dataJson': serializer.toJson<String?>(dataJson),
       'createdAt': serializer.toJson<String>(createdAt),
       'retryCount': serializer.toJson<int>(retryCount),
+      'idempotencyKey': serializer.toJson<String?>(idempotencyKey),
+      'lastError': serializer.toJson<String?>(lastError),
+      'nextRetryAt': serializer.toJson<String?>(nextRetryAt),
+      'status': serializer.toJson<String>(status),
     };
   }
 
@@ -6099,6 +6228,10 @@ class MutationQueueTableData extends DataClass
     Value<String?> dataJson = const Value.absent(),
     String? createdAt,
     int? retryCount,
+    Value<String?> idempotencyKey = const Value.absent(),
+    Value<String?> lastError = const Value.absent(),
+    Value<String?> nextRetryAt = const Value.absent(),
+    String? status,
   }) => MutationQueueTableData(
     id: id ?? this.id,
     collectionPath: collectionPath ?? this.collectionPath,
@@ -6107,6 +6240,12 @@ class MutationQueueTableData extends DataClass
     dataJson: dataJson.present ? dataJson.value : this.dataJson,
     createdAt: createdAt ?? this.createdAt,
     retryCount: retryCount ?? this.retryCount,
+    idempotencyKey: idempotencyKey.present
+        ? idempotencyKey.value
+        : this.idempotencyKey,
+    lastError: lastError.present ? lastError.value : this.lastError,
+    nextRetryAt: nextRetryAt.present ? nextRetryAt.value : this.nextRetryAt,
+    status: status ?? this.status,
   );
   MutationQueueTableData copyWithCompanion(MutationQueueTableCompanion data) {
     return MutationQueueTableData(
@@ -6123,6 +6262,14 @@ class MutationQueueTableData extends DataClass
       retryCount: data.retryCount.present
           ? data.retryCount.value
           : this.retryCount,
+      idempotencyKey: data.idempotencyKey.present
+          ? data.idempotencyKey.value
+          : this.idempotencyKey,
+      lastError: data.lastError.present ? data.lastError.value : this.lastError,
+      nextRetryAt: data.nextRetryAt.present
+          ? data.nextRetryAt.value
+          : this.nextRetryAt,
+      status: data.status.present ? data.status.value : this.status,
     );
   }
 
@@ -6135,7 +6282,11 @@ class MutationQueueTableData extends DataClass
           ..write('operation: $operation, ')
           ..write('dataJson: $dataJson, ')
           ..write('createdAt: $createdAt, ')
-          ..write('retryCount: $retryCount')
+          ..write('retryCount: $retryCount, ')
+          ..write('idempotencyKey: $idempotencyKey, ')
+          ..write('lastError: $lastError, ')
+          ..write('nextRetryAt: $nextRetryAt, ')
+          ..write('status: $status')
           ..write(')'))
         .toString();
   }
@@ -6149,6 +6300,10 @@ class MutationQueueTableData extends DataClass
     dataJson,
     createdAt,
     retryCount,
+    idempotencyKey,
+    lastError,
+    nextRetryAt,
+    status,
   );
   @override
   bool operator ==(Object other) =>
@@ -6160,7 +6315,11 @@ class MutationQueueTableData extends DataClass
           other.operation == this.operation &&
           other.dataJson == this.dataJson &&
           other.createdAt == this.createdAt &&
-          other.retryCount == this.retryCount);
+          other.retryCount == this.retryCount &&
+          other.idempotencyKey == this.idempotencyKey &&
+          other.lastError == this.lastError &&
+          other.nextRetryAt == this.nextRetryAt &&
+          other.status == this.status);
 }
 
 class MutationQueueTableCompanion
@@ -6172,6 +6331,10 @@ class MutationQueueTableCompanion
   final Value<String?> dataJson;
   final Value<String> createdAt;
   final Value<int> retryCount;
+  final Value<String?> idempotencyKey;
+  final Value<String?> lastError;
+  final Value<String?> nextRetryAt;
+  final Value<String> status;
   const MutationQueueTableCompanion({
     this.id = const Value.absent(),
     this.collectionPath = const Value.absent(),
@@ -6180,6 +6343,10 @@ class MutationQueueTableCompanion
     this.dataJson = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.retryCount = const Value.absent(),
+    this.idempotencyKey = const Value.absent(),
+    this.lastError = const Value.absent(),
+    this.nextRetryAt = const Value.absent(),
+    this.status = const Value.absent(),
   });
   MutationQueueTableCompanion.insert({
     this.id = const Value.absent(),
@@ -6189,6 +6356,10 @@ class MutationQueueTableCompanion
     this.dataJson = const Value.absent(),
     required String createdAt,
     this.retryCount = const Value.absent(),
+    this.idempotencyKey = const Value.absent(),
+    this.lastError = const Value.absent(),
+    this.nextRetryAt = const Value.absent(),
+    this.status = const Value.absent(),
   }) : collectionPath = Value(collectionPath),
        documentId = Value(documentId),
        operation = Value(operation),
@@ -6201,6 +6372,10 @@ class MutationQueueTableCompanion
     Expression<String>? dataJson,
     Expression<String>? createdAt,
     Expression<int>? retryCount,
+    Expression<String>? idempotencyKey,
+    Expression<String>? lastError,
+    Expression<String>? nextRetryAt,
+    Expression<String>? status,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
@@ -6210,6 +6385,10 @@ class MutationQueueTableCompanion
       if (dataJson != null) 'data_json': dataJson,
       if (createdAt != null) 'created_at': createdAt,
       if (retryCount != null) 'retry_count': retryCount,
+      if (idempotencyKey != null) 'idempotency_key': idempotencyKey,
+      if (lastError != null) 'last_error': lastError,
+      if (nextRetryAt != null) 'next_retry_at': nextRetryAt,
+      if (status != null) 'status': status,
     });
   }
 
@@ -6221,6 +6400,10 @@ class MutationQueueTableCompanion
     Value<String?>? dataJson,
     Value<String>? createdAt,
     Value<int>? retryCount,
+    Value<String?>? idempotencyKey,
+    Value<String?>? lastError,
+    Value<String?>? nextRetryAt,
+    Value<String>? status,
   }) {
     return MutationQueueTableCompanion(
       id: id ?? this.id,
@@ -6230,6 +6413,10 @@ class MutationQueueTableCompanion
       dataJson: dataJson ?? this.dataJson,
       createdAt: createdAt ?? this.createdAt,
       retryCount: retryCount ?? this.retryCount,
+      idempotencyKey: idempotencyKey ?? this.idempotencyKey,
+      lastError: lastError ?? this.lastError,
+      nextRetryAt: nextRetryAt ?? this.nextRetryAt,
+      status: status ?? this.status,
     );
   }
 
@@ -6257,6 +6444,18 @@ class MutationQueueTableCompanion
     if (retryCount.present) {
       map['retry_count'] = Variable<int>(retryCount.value);
     }
+    if (idempotencyKey.present) {
+      map['idempotency_key'] = Variable<String>(idempotencyKey.value);
+    }
+    if (lastError.present) {
+      map['last_error'] = Variable<String>(lastError.value);
+    }
+    if (nextRetryAt.present) {
+      map['next_retry_at'] = Variable<String>(nextRetryAt.value);
+    }
+    if (status.present) {
+      map['status'] = Variable<String>(status.value);
+    }
     return map;
   }
 
@@ -6269,7 +6468,11 @@ class MutationQueueTableCompanion
           ..write('operation: $operation, ')
           ..write('dataJson: $dataJson, ')
           ..write('createdAt: $createdAt, ')
-          ..write('retryCount: $retryCount')
+          ..write('retryCount: $retryCount, ')
+          ..write('idempotencyKey: $idempotencyKey, ')
+          ..write('lastError: $lastError, ')
+          ..write('nextRetryAt: $nextRetryAt, ')
+          ..write('status: $status')
           ..write(')'))
         .toString();
   }
@@ -11594,6 +11797,10 @@ typedef $$MutationQueueTableTableCreateCompanionBuilder =
       Value<String?> dataJson,
       required String createdAt,
       Value<int> retryCount,
+      Value<String?> idempotencyKey,
+      Value<String?> lastError,
+      Value<String?> nextRetryAt,
+      Value<String> status,
     });
 typedef $$MutationQueueTableTableUpdateCompanionBuilder =
     MutationQueueTableCompanion Function({
@@ -11604,6 +11811,10 @@ typedef $$MutationQueueTableTableUpdateCompanionBuilder =
       Value<String?> dataJson,
       Value<String> createdAt,
       Value<int> retryCount,
+      Value<String?> idempotencyKey,
+      Value<String?> lastError,
+      Value<String?> nextRetryAt,
+      Value<String> status,
     });
 
 class $$MutationQueueTableTableFilterComposer
@@ -11647,6 +11858,26 @@ class $$MutationQueueTableTableFilterComposer
 
   ColumnFilters<int> get retryCount => $composableBuilder(
     column: $table.retryCount,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get idempotencyKey => $composableBuilder(
+    column: $table.idempotencyKey,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get lastError => $composableBuilder(
+    column: $table.lastError,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get nextRetryAt => $composableBuilder(
+    column: $table.nextRetryAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get status => $composableBuilder(
+    column: $table.status,
     builder: (column) => ColumnFilters(column),
   );
 }
@@ -11694,6 +11925,26 @@ class $$MutationQueueTableTableOrderingComposer
     column: $table.retryCount,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<String> get idempotencyKey => $composableBuilder(
+    column: $table.idempotencyKey,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get lastError => $composableBuilder(
+    column: $table.lastError,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get nextRetryAt => $composableBuilder(
+    column: $table.nextRetryAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get status => $composableBuilder(
+    column: $table.status,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$MutationQueueTableTableAnnotationComposer
@@ -11731,6 +11982,22 @@ class $$MutationQueueTableTableAnnotationComposer
     column: $table.retryCount,
     builder: (column) => column,
   );
+
+  GeneratedColumn<String> get idempotencyKey => $composableBuilder(
+    column: $table.idempotencyKey,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get lastError =>
+      $composableBuilder(column: $table.lastError, builder: (column) => column);
+
+  GeneratedColumn<String> get nextRetryAt => $composableBuilder(
+    column: $table.nextRetryAt,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get status =>
+      $composableBuilder(column: $table.status, builder: (column) => column);
 }
 
 class $$MutationQueueTableTableTableManager
@@ -11780,6 +12047,10 @@ class $$MutationQueueTableTableTableManager
                 Value<String?> dataJson = const Value.absent(),
                 Value<String> createdAt = const Value.absent(),
                 Value<int> retryCount = const Value.absent(),
+                Value<String?> idempotencyKey = const Value.absent(),
+                Value<String?> lastError = const Value.absent(),
+                Value<String?> nextRetryAt = const Value.absent(),
+                Value<String> status = const Value.absent(),
               }) => MutationQueueTableCompanion(
                 id: id,
                 collectionPath: collectionPath,
@@ -11788,6 +12059,10 @@ class $$MutationQueueTableTableTableManager
                 dataJson: dataJson,
                 createdAt: createdAt,
                 retryCount: retryCount,
+                idempotencyKey: idempotencyKey,
+                lastError: lastError,
+                nextRetryAt: nextRetryAt,
+                status: status,
               ),
           createCompanionCallback:
               ({
@@ -11798,6 +12073,10 @@ class $$MutationQueueTableTableTableManager
                 Value<String?> dataJson = const Value.absent(),
                 required String createdAt,
                 Value<int> retryCount = const Value.absent(),
+                Value<String?> idempotencyKey = const Value.absent(),
+                Value<String?> lastError = const Value.absent(),
+                Value<String?> nextRetryAt = const Value.absent(),
+                Value<String> status = const Value.absent(),
               }) => MutationQueueTableCompanion.insert(
                 id: id,
                 collectionPath: collectionPath,
@@ -11806,6 +12085,10 @@ class $$MutationQueueTableTableTableManager
                 dataJson: dataJson,
                 createdAt: createdAt,
                 retryCount: retryCount,
+                idempotencyKey: idempotencyKey,
+                lastError: lastError,
+                nextRetryAt: nextRetryAt,
+                status: status,
               ),
           withReferenceMapper: (p0) => p0
               .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
