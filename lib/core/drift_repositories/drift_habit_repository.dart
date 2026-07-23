@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:emerge_app/core/deletion/deletion_service.dart';
 import 'package:emerge_app/core/drift/database.dart';
 import 'package:emerge_app/features/social/domain/services/club_activity_service.dart';
 import 'package:emerge_app/core/error/failure.dart';
@@ -18,16 +19,19 @@ class DriftHabitRepository implements HabitRepository {
   final LocalGameLoopEngine _engine;
   final EnhancedSyncEngine _syncEngine;
   final SocialActivityService _socialService;
+  final DeletionService _deletionService;
 
   DriftHabitRepository({
     required AppDatabase db,
     required LocalGameLoopEngine gameLoopEngine,
     required EnhancedSyncEngine syncEngine,
     required SocialActivityService socialService,
+    required DeletionService deletionService,
   }) : _db = db,
        _engine = gameLoopEngine,
        _syncEngine = syncEngine,
-       _socialService = socialService;
+       _socialService = socialService,
+       _deletionService = deletionService;
 
   @override
   Stream<List<Habit>> watchHabits(String userId) {
@@ -122,24 +126,13 @@ class DriftHabitRepository implements HabitRepository {
   Future<Either<Failure, Unit>> deleteHabit(String habitId) async {
     try {
       final existing = await _db.habitsDao.getHabit(habitId);
-      if (existing != null) {
-        await _db.habitsDao.insertFromData(
-          id: existing.id,
-          userId: existing.userId,
-          title: existing.title,
-          isArchived: 1,
-          createdAt: existing.createdAt,
-          updatedAt: DateTime.now().toIso8601String(),
-        );
+      if (existing == null) {
+        return const Left(ServerFailure('Habit not found'));
       }
-
-      await _syncEngine.enqueueUpdate(
-        collectionPath: 'habits',
-        documentId: habitId,
-        data: {'isArchived': true},
+      return await _deletionService.deleteHabit(
+        userId: existing.userId,
+        habitId: habitId,
       );
-
-      return const Right(unit);
     } catch (e, _) {
       return Left(ServerFailure(e.toString()));
     }

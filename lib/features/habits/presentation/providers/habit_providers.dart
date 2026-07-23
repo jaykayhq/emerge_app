@@ -1,4 +1,5 @@
 import 'package:emerge_app/core/constants/gamification_constants.dart';
+import 'package:emerge_app/core/deletion/deletion_providers.dart';
 import 'package:emerge_app/core/drift/database.dart';
 import 'package:emerge_app/core/drift_repositories/repositories_barrel.dart';
 import 'package:emerge_app/core/game_loop/game_loop_engine.dart';
@@ -40,11 +41,13 @@ HabitRepository habitRepository(Ref ref) {
   final engine = LocalGameLoopEngine();
   final syncEngine = ref.watch(enhancedSyncEngineProvider);
   final socialService = ref.watch(socialActivityServiceProvider);
+  final deletionService = ref.watch(deletionServiceProvider);
   return DriftHabitRepository(
     db: db,
     gameLoopEngine: engine,
     syncEngine: syncEngine,
     socialService: socialService,
+    deletionService: deletionService,
   );
 }
 
