@@ -1,9 +1,11 @@
 import 'dart:async';
 
 import 'package:emerge_app/core/deletion/deletion_audit.dart';
+import 'package:emerge_app/core/deletion/delete_account_backend.dart';
 import 'package:emerge_app/core/drift/database.dart';
 import 'package:emerge_app/core/error/failure.dart';
 import 'package:emerge_app/core/sync/sync_engine.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:fpdart/fpdart.dart';
 
 /// Single owner of deletion logic for both habit and account deletes.
@@ -85,5 +87,42 @@ class DeletionService {
       );
       return Left(ServerFailure(e.toString()));
     }
+  }
+
+  /// Server-first account deletion: local data is only wiped after the
+  /// backend confirms success. The deletionRequestId is durable so retries
+  /// after app-kill reuse the SAME id (server dedupes).
+  Future<Either<Failure, Unit>> deleteAccount({
+    required String userId,
+    required DeleteAccountBackend backend,
+    required SecureIdStore idStore,
+    required FirebaseAuth auth,
+  }) async {
+    final sw = Stopwatch()..start();
+    final id = await idStore.loadOrCreateId('deletionRequestId:$userId');
+    final result = await backend.delete(deletionRequestId: id);
+    if (result.isLeft()) {
+      final msg = result.fold((f) => f.message, (_) => 'error');
+      _audit.log(
+        op: 'deleteAccount',
+        target: 'account',
+        uid: userId,
+        outcome: 'error',
+        durationMs: sw.elapsedMilliseconds,
+        error: msg,
+      );
+      return result; // local data intentionally NOT cleared
+    }
+    await _db.clearAll();
+    await auth.signOut();
+    await idStore.clear('deletionRequestId:$userId');
+    _audit.log(
+      op: 'deleteAccount',
+      target: 'account',
+      uid: userId,
+      outcome: 'success',
+      durationMs: sw.elapsedMilliseconds,
+    );
+    return const Right(unit);
   }
 }
