@@ -135,7 +135,7 @@ class FakeHabitRepository implements HabitRepository {
         difficulty: HabitDifficulty.easy,
         createdAt: now,
         identityTags: [
-          if (archetypeName != null) archetypeName,
+          ?archetypeName,
           'onboarding',
           ...interestIds.map((id) => 'interest:$id'),
           if (clubId != null) 'club:$clubId',

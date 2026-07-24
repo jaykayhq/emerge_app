@@ -3,7 +3,6 @@ import 'dart:async';
 import 'package:emerge_app/core/utils/app_logger.dart';
 import 'package:emerge_app/features/auth/presentation/providers/auth_providers.dart';
 import 'package:emerge_app/features/gamification/data/repositories/user_stats_repository.dart';
-import 'package:emerge_app/features/habits/domain/repositories/habit_repository.dart';
 import 'package:emerge_app/features/habits/presentation/providers/habit_providers.dart';
 import 'package:emerge_app/features/world_map/domain/services/world_health_service.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
@@ -22,8 +21,9 @@ WorldHealthService worldHealthService(Ref ref) {
 /// Uses the WorldHealthService with caching for efficiency
 @riverpod
 Future<double> worldHealth(Ref ref) async {
-  final user = await ref.watch(authStateChangesProvider.future);
-  if (user.isEmpty) {
+  final userAsync = ref.watch(authStateChangesProvider);
+  final user = userAsync.value;
+  if (user == null || user.isEmpty) {
     AppLogger.d('No user logged in, returning default world health');
     return 0.5; // Default neutral health
   }

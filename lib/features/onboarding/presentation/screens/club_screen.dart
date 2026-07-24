@@ -2,6 +2,7 @@ import 'package:emerge_app/core/theme/archetype_theme.dart';
 import 'package:emerge_app/core/utils/app_logger.dart';
 import 'package:emerge_app/features/auth/domain/entities/user_extension.dart';
 import 'package:emerge_app/features/auth/presentation/providers/auth_providers.dart';
+import 'package:emerge_app/features/onboarding/domain/models/interest.dart';
 import 'package:emerge_app/features/onboarding/presentation/providers/onboarding_state_notifier.dart';
 import 'package:emerge_app/features/social/domain/models/tribe.dart';
 import 'package:emerge_app/features/social/presentation/providers/tribes_provider.dart';
@@ -77,6 +78,29 @@ class _ClubScreenState extends ConsumerState<ClubScreen> {
     }
   }
 
+  List<String> _getInterestCategories(List<String> interestIds) {
+    final categories = <String>{};
+    for (final id in interestIds) {
+      for (final category in InterestCategory.values) {
+        if (id.startsWith(category.idPrefix)) {
+          categories.add(category.displayName);
+          break;
+        }
+      }
+    }
+    return categories.toList();
+  }
+
+  List<String> _getMatchingTags(Tribe club, List<String> interestCategories) {
+    final matching = <String>[];
+    for (final tag in club.tags) {
+      if (interestCategories.any((cat) => tag.toLowerCase().contains(cat.toLowerCase()))) {
+        matching.add(tag);
+      }
+    }
+    return matching.take(3).toList();
+  }
+
   @override
   Widget build(BuildContext context) {
     final archetype = ref
@@ -84,6 +108,8 @@ class _ClubScreenState extends ConsumerState<ClubScreen> {
             .selectedArchetype ??
         UserArchetype.none;
     final theme = ArchetypeTheme.forArchetype(archetype);
+    final interests = ref.watch(enhancedOnboardingProvider).interests;
+    final interestCategories = _getInterestCategories(interests);
     final poolAsync = ref.watch(archetypeClubsProvider);
 
     return Scaffold(
@@ -133,6 +159,63 @@ class _ClubScreenState extends ConsumerState<ClubScreen> {
                           fontSize: 16,
                         ),
                       ).animate().fadeIn(delay: 100.ms),
+                      if (interestCategories.isNotEmpty) ...[
+                        const Gap(16),
+                        Container(
+                          padding: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF2BEE79).withValues(alpha: 0.1),
+                            borderRadius: BorderRadius.circular(16),
+                            border: Border.all(color: const Color(0xFF2BEE79).withValues(alpha: 0.3)),
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                children: [
+                                  const Icon(
+                                    Icons.lightbulb_outline,
+                                    color: Color(0xFF2BEE79),
+                                    size: 20,
+                                  ),
+                                  const Gap(8),
+                                  Text(
+                                    'Based on your interests',
+                                    style: GoogleFonts.splineSans(
+                                      color: const Color(0xFF2BEE79),
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.w600,
+                                      letterSpacing: 1.0,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const Gap(8),
+                              Wrap(
+                                spacing: 8,
+                                runSpacing: 8,
+                                children: interestCategories.map((cat) => Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                                  decoration: BoxDecoration(
+                                    color: const Color(0xFF2BEE79).withValues(alpha: 0.15),
+                                    borderRadius: BorderRadius.circular(20),
+                                    border: Border.all(color: const Color(0xFF2BEE79).withValues(alpha: 0.3)),
+                                  ),
+                                  child: Text(
+                                    cat,
+                                    style: GoogleFonts.splineSans(
+                                      color: const Color(0xFF2BEE79),
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.w600,
+                                      letterSpacing: 0.5,
+                                    ),
+                                  ),
+                                )).toList(),
+                              ),
+                            ],
+                          ),
+                        ).animate().fadeIn(delay: 150.ms),
+                      ],
                       const Gap(24),
                       poolAsync.when(
                         data: (clubs) {
@@ -145,6 +228,7 @@ class _ClubScreenState extends ConsumerState<ClubScreen> {
                                 _ClubCard(
                                   club: club,
                                   isSelected: _selectedClub?.id == club.id,
+                                  matchingTags: _getMatchingTags(club, interestCategories),
                                   onTap: () {
                                     setState(() => _selectedClub = club);
                                     HapticFeedback.lightImpact();
@@ -260,11 +344,13 @@ class _Header extends StatelessWidget {
 class _ClubCard extends StatelessWidget {
   final Tribe club;
   final bool isSelected;
+  final List<String> matchingTags;
   final VoidCallback onTap;
 
   const _ClubCard({
     required this.club,
     required this.isSelected,
+    required this.matchingTags,
     required this.onTap,
   });
 
@@ -310,13 +396,36 @@ class _ClubCard extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    club.name,
-                    style: GoogleFonts.splineSans(
-                      color: Colors.white,
-                      fontSize: 17,
-                      fontWeight: FontWeight.w600,
-                    ),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          club.name,
+                          style: GoogleFonts.splineSans(
+                            color: Colors.white,
+                            fontSize: 17,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                      if (matchingTags.isNotEmpty)
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF2BEE79).withValues(alpha: 0.2),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Text(
+                            '${matchingTags.length} match${matchingTags.length > 1 ? 'es' : ''}',
+                            style: GoogleFonts.splineSans(
+                              color: const Color(0xFF2BEE79),
+                              fontSize: 10,
+                              fontWeight: FontWeight.w600,
+                              letterSpacing: 0.5,
+                            ),
+                          ),
+                        ),
+                    ],
                   ),
                   const Gap(4),
                   if (club.description.isNotEmpty)
@@ -328,7 +437,38 @@ class _ClubCard extends StatelessWidget {
                         height: 1.4,
                       ),
                     ),
-                  if (club.tags.isNotEmpty) ...[
+                  if (matchingTags.isNotEmpty) ...[
+                    const Gap(8),
+                    Wrap(
+                      spacing: 6,
+                      runSpacing: 6,
+                      children: [
+                        for (final tag in matchingTags.take(3))
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 3,
+                            ),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFF2BEE79).withValues(alpha: 0.15),
+                              borderRadius: BorderRadius.circular(10),
+                              border: Border.all(
+                                color: const Color(0xFF2BEE79).withValues(alpha: 0.3),
+                              ),
+                            ),
+                            child: Text(
+                              tag,
+                              style: GoogleFonts.splineSans(
+                                color: const Color(0xFF2BEE79),
+                                fontSize: 11,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                      ],
+                    ),
+                  ],
+                  if (club.tags.isNotEmpty && matchingTags.isEmpty) ...[
                     const Gap(8),
                     Wrap(
                       spacing: 6,

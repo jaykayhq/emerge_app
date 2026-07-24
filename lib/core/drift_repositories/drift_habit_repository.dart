@@ -554,7 +554,7 @@ class DriftHabitRepository implements HabitRepository {
       final now = DateTime.now();
       final created = <Habit>[];
       final tagSet = <String>{
-        if (archetypeName != null) archetypeName,
+        ?archetypeName,
         'onboarding',
         ...interestIds.map((id) => 'interest:$id'),
         if (clubId != null) 'club:$clubId',

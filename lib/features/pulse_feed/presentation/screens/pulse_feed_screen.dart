@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
+import 'package:go_router/go_router.dart';
 
 import 'package:emerge_app/core/presentation/widgets/app_back_handler.dart';
 import 'package:emerge_app/core/presentation/widgets/app_error_widget.dart';
@@ -153,30 +154,58 @@ class _EmptyState extends StatelessWidget {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(
-                    Icons.favorite_outline_rounded,
-                    size: 56,
-                    color: Colors.white.withValues(alpha: 0.15),
-                  ),
-                  const Gap(16),
+                  // Animated pulse ring
+                  _PulseRing(),
+                  const Gap(24),
                   Text(
-                    'No pulse yet',
+                    'Your Pulse is just getting started',
                     style: TextStyle(
-                      color: Colors.white.withValues(alpha: 0.5),
-                      fontSize: 18,
+                      color: Colors.white.withValues(alpha: 0.7),
+                      fontSize: 20,
                       fontWeight: FontWeight.w600,
                     ),
+                    textAlign: TextAlign.center,
                   ),
-                  const Gap(8),
+                  const Gap(12),
                   Text(
-                    'Complete habits and engage with your tribe\n'
-                    'to see activity here.',
+                    'Complete habits, join tribes, and share progress\nto see activity from your crew here.',
                     textAlign: TextAlign.center,
                     style: TextStyle(
-                      color: Colors.white.withValues(alpha: 0.35),
+                      color: Colors.white.withValues(alpha: 0.4),
                       fontSize: 14,
-                      height: 1.4,
+                      height: 1.5,
                     ),
+                  ),
+                  const Gap(32),
+                  // Quick actions
+                  Column(
+                    children: [
+                      _EmptyActionButton(
+                        icon: Icons.bolt,
+                        label: 'Complete a habit',
+                        onTap: () {
+                          context.go('/timeline');
+                        },
+                      ),
+                      const Gap(12),
+                      _EmptyActionButton(
+                        icon: Icons.groups,
+                        label: 'Explore tribes',
+                        onTap: () {
+                          context.go('/social/all');
+                        },
+                        isSecondary: true,
+                      ),
+                      const Gap(12),
+                      _EmptyActionButton(
+                        icon: Icons.person_add,
+                        label: 'Invite friends',
+                        onTap: () {
+                          context.go('/social/contacts');
+                        },
+                        isSecondary: true,
+                      ),
+                    ],
                   ),
                 ],
               ),
@@ -184,6 +213,154 @@ class _EmptyState extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+}
+
+class _PulseRing extends StatefulWidget {
+  const _PulseRing();
+
+  @override
+  State<_PulseRing> createState() => _PulseRingState();
+}
+
+class _PulseRingState extends State<_PulseRing> with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 2000),
+    )..repeat();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _controller,
+      builder: (context, child) {
+        return Stack(
+          alignment: Alignment.center,
+          children: [
+            // Outer expanding rings
+            ...List.generate(3, (index) {
+              final delay = index * 0.33;
+              final progress = (_controller.value + delay) % 1.0;
+              return Opacity(
+                opacity: (1.0 - progress) * 0.3,
+                child: Container(
+                  width: 80 + progress * 100,
+                  height: 80 + progress * 100,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    border: Border.all(
+                      color: const Color(0xFF2BEE79).withValues(alpha: 0.5),
+                      width: 2,
+                    ),
+                  ),
+                ),
+              );
+            }),
+            // Center icon
+            Container(
+              width: 80,
+              height: 80,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    const Color(0xFF2BEE79).withValues(alpha: 0.2),
+                    const Color(0xFF2BEE79).withValues(alpha: 0.05),
+                  ],
+                ),
+                border: Border.all(
+                  color: const Color(0xFF2BEE79).withValues(alpha: 0.3),
+                  width: 1,
+                ),
+              ),
+              child: const Icon(
+                Icons.favorite_outline_rounded,
+                size: 40,
+                color: Color(0xFF2BEE79),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+}
+
+class _EmptyActionButton extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final VoidCallback onTap;
+  final bool isSecondary;
+
+  const _EmptyActionButton({
+    required this.icon,
+    required this.label,
+    required this.onTap,
+    this.isSecondary = false,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: double.infinity,
+      child: isSecondary
+          ? OutlinedButton.icon(
+              onPressed: onTap,
+              style: OutlinedButton.styleFrom(
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                side: BorderSide(
+                  color: Colors.white.withValues(alpha: 0.2),
+                ),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                foregroundColor: Colors.white,
+              ),
+              icon: Icon(icon, size: 20, color: Colors.white70),
+              label: Text(
+                label,
+                style: const TextStyle(
+                  fontWeight: FontWeight.w600,
+                  fontSize: 14,
+                ),
+              ),
+            )
+          : ElevatedButton.icon(
+              onPressed: onTap,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF2BEE79),
+                foregroundColor: const Color(0xFF05100B),
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                elevation: 0,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
+              ),
+              icon: Icon(icon, size: 20),
+              label: Text(
+                label,
+                style: const TextStyle(
+                  fontWeight: FontWeight.w700,
+                  fontSize: 14,
+                  letterSpacing: 0.5,
+                ),
+              ),
+            ),
     );
   }
 }

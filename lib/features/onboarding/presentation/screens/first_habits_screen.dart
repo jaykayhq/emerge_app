@@ -2,10 +2,12 @@ import 'package:emerge_app/core/theme/archetype_theme.dart';
 import 'package:emerge_app/core/utils/app_logger.dart';
 import 'package:emerge_app/features/auth/domain/entities/user_extension.dart';
 import 'package:emerge_app/features/auth/presentation/providers/auth_providers.dart';
+import 'package:emerge_app/features/habits/domain/entities/habit.dart';
 import 'package:emerge_app/features/habits/presentation/providers/habit_providers.dart';
 import 'package:emerge_app/features/onboarding/domain/models/starter_habit_blueprint.dart';
 import 'package:emerge_app/features/onboarding/presentation/providers/onboarding_state_notifier.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
@@ -102,6 +104,27 @@ class _FirstHabitsScreenState extends ConsumerState<FirstHabitsScreen> {
     context.push('/onboarding/world-reveal');
   }
 
+  void _onHabitTap(StarterHabitBlueprint blueprint, int index) {
+    HapticFeedback.lightImpact();
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (context) => _HabitDetailSheet(
+        blueprint: blueprint,
+        index: index,
+        archetype: ref.read(enhancedOnboardingProvider).selectedArchetype ?? UserArchetype.none,
+        onSave: (customTitle, customCue) {
+          // Navigate to habit editor or update the blueprint locally
+          // For now, just show confirmation
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Habit "${customTitle ?? blueprint.title}" saved with cue: ${customCue ?? blueprint.shortCue}')),
+          );
+        },
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final archetype = ref
@@ -175,6 +198,7 @@ class _FirstHabitsScreenState extends ConsumerState<FirstHabitsScreen> {
                           child: _BlueprintCard(
                             index: i,
                             blueprint: blueprints[i],
+                            onTap: () => _onHabitTap(blueprints[i], i),
                           ),
                         ),
                       const Gap(80),
@@ -262,85 +286,95 @@ class _Header extends StatelessWidget {
 class _BlueprintCard extends StatelessWidget {
   final int index;
   final StarterHabitBlueprint blueprint;
+  final VoidCallback? onTap;
 
   const _BlueprintCard({
     required this.index,
     required this.blueprint,
+    this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
-    return AnimatedContainer(
-      duration: const Duration(milliseconds: 200),
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.05),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.white10),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Container(
-                width: 36,
-                height: 36,
-                decoration: BoxDecoration(
-                  color: const Color(0xFF2BEE79).withValues(alpha: 0.2),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                alignment: Alignment.center,
-                child: Text(
-                  '${index + 1}',
-                  style: GoogleFonts.splineSans(
-                    color: const Color(0xFF2BEE79),
-                    fontSize: 16,
-                    fontWeight: FontWeight.w700,
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          color: Colors.white.withValues(alpha: 0.05),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: Colors.white10),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Container(
+                  width: 36,
+                  height: 36,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF2BEE79).withValues(alpha: 0.2),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  alignment: Alignment.center,
+                  child: Text(
+                    '${index + 1}',
+                    style: GoogleFonts.splineSans(
+                      color: const Color(0xFF2BEE79),
+                      fontSize: 16,
+                      fontWeight: FontWeight.w700,
+                    ),
                   ),
                 ),
-              ),
-              const Gap(16),
-              Expanded(
-                child: Text(
-                  blueprint.title,
-                  style: GoogleFonts.splineSans(
-                    color: Colors.white,
-                    fontSize: 17,
-                    fontWeight: FontWeight.w600,
+                const Gap(16),
+                Expanded(
+                  child: Text(
+                    blueprint.title,
+                    style: GoogleFonts.splineSans(
+                      color: Colors.white,
+                      fontSize: 17,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                 ),
-              ),
-            ],
-          ),
-          const Gap(12),
-          Row(
-            children: [
-              const Icon(
-                Icons.bolt,
-                color: Color(0xFF2BEE79),
-                size: 16,
-              ),
-              const Gap(6),
-              Text(
-                blueprint.shortCue,
-                style: GoogleFonts.splineSans(
-                  color: Colors.white70,
-                  fontSize: 14,
+                Icon(
+                  Icons.chevron_right,
+                  color: Colors.white38,
+                  size: 20,
                 ),
-              ),
-            ],
-          ),
-          const Gap(6),
-          Text(
-            blueprint.sourceAttribution,
-            style: GoogleFonts.splineSans(
-              color: Colors.white38,
-              fontSize: 11,
-              fontStyle: FontStyle.italic,
+              ],
             ),
-          ),
-        ],
+            const Gap(12),
+            Row(
+              children: [
+                const Icon(
+                  Icons.bolt,
+                  color: Color(0xFF2BEE79),
+                  size: 16,
+                ),
+                const Gap(6),
+                Text(
+                  blueprint.shortCue,
+                  style: GoogleFonts.splineSans(
+                    color: Colors.white70,
+                    fontSize: 14,
+                  ),
+                ),
+              ],
+            ),
+            const Gap(6),
+            Text(
+              blueprint.sourceAttribution,
+              style: GoogleFonts.splineSans(
+                color: Colors.white38,
+                fontSize: 11,
+                fontStyle: FontStyle.italic,
+              ),
+            ),
+          ],
+        ),
       ),
     ).animate().fadeIn(delay: Duration(milliseconds: 120 * (index + 1)));
   }
@@ -395,6 +429,295 @@ class _BottomBar extends StatelessWidget {
                   ),
                 ),
         ),
+      ),
+    );
+  }
+}
+
+class _HabitDetailSheet extends ConsumerStatefulWidget {
+  final StarterHabitBlueprint blueprint;
+  final int index;
+  final UserArchetype archetype;
+  final void Function(String? customTitle, String? customCue) onSave;
+
+  const _HabitDetailSheet({
+    required this.blueprint,
+    required this.index,
+    required this.archetype,
+    required this.onSave,
+  });
+
+  @override
+  ConsumerState<_HabitDetailSheet> createState() => _HabitDetailSheetState();
+}
+
+class _HabitDetailSheetState extends ConsumerState<_HabitDetailSheet> {
+  late TextEditingController _titleController;
+  late TextEditingController _cueController;
+  bool _isSaving = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _titleController = TextEditingController(text: widget.blueprint.title);
+    _cueController = TextEditingController(text: widget.blueprint.shortCue);
+  }
+
+  @override
+  void dispose() {
+    _titleController.dispose();
+    _cueController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _save() async {
+    if (_isSaving) return;
+    setState(() => _isSaving = true);
+    
+    // Create the habit from the blueprint with customizations
+    final user = ref.read(authStateChangesProvider).value;
+    if (user != null && user.isNotEmpty) {
+      final repository = ref.read(habitRepositoryProvider);
+      final now = DateTime.now();
+      
+      final habit = Habit(
+        id: '${widget.blueprint.id}_${widget.index}_${now.millisecondsSinceEpoch}',
+        userId: user.id,
+        title: _titleController.text.trim().isEmpty ? widget.blueprint.title : _titleController.text.trim(),
+        cue: _cueController.text.trim().isEmpty ? widget.blueprint.shortCue : _cueController.text.trim(),
+        difficulty: HabitDifficulty.easy,
+        attribute: widget.blueprint.attribute,
+        identityTags: ['onboarding', widget.archetype.name, widget.blueprint.id],
+        frequency: HabitFrequency.daily,
+        createdAt: now,
+      );
+      
+      await repository.createHabit(habit);
+    }
+    
+    if (mounted) {
+      Navigator.pop(context);
+      widget.onSave(
+        _titleController.text.trim().isEmpty ? null : _titleController.text.trim(),
+        _cueController.text.trim().isEmpty ? null : _cueController.text.trim(),
+      );
+    }
+    setState(() => _isSaving = false);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
+      decoration: BoxDecoration(
+        color: const Color(0xFF0A0A1A).withValues(alpha: 0.98),
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
+        border: Border.all(color: Colors.white10),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.5),
+            blurRadius: 40,
+            spreadRadius: 10,
+          ),
+        ],
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Center(
+            child: Container(
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: Colors.white24,
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+          ),
+          const Gap(32),
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF2BEE79).withValues(alpha: 0.1),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  Icons.bolt,
+                  color: const Color(0xFF2BEE79),
+                  size: 28,
+                ),
+              ),
+              const Gap(16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'CUSTOMIZE HABIT',
+                      style: GoogleFonts.splineSans(
+                        color: Colors.white,
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        letterSpacing: 2.0,
+                      ),
+                    ),
+                    Text(
+                      'Habit ${widget.index + 1} of 3',
+                      style: GoogleFonts.splineSans(
+                        color: Colors.white54,
+                        fontSize: 14,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const Gap(32),
+          TextField(
+            controller: _titleController,
+            style: GoogleFonts.splineSans(color: Colors.white, fontSize: 16),
+            decoration: InputDecoration(
+              labelText: 'Habit Title',
+              labelStyle: GoogleFonts.splineSans(color: Colors.white54),
+              hintText: widget.blueprint.title,
+              hintStyle: GoogleFonts.splineSans(color: Colors.white30),
+              filled: true,
+              fillColor: Colors.white.withValues(alpha: 0.05),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(16),
+                borderSide: BorderSide(color: Colors.white10),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(16),
+                borderSide: BorderSide(color: Colors.white10),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(16),
+                borderSide: const BorderSide(color: Color(0xFF2BEE79), width: 2),
+              ),
+            ),
+          ),
+          const Gap(16),
+          TextField(
+            controller: _cueController,
+            style: GoogleFonts.splineSans(color: Colors.white, fontSize: 16),
+            decoration: InputDecoration(
+              labelText: 'Cue (When will you do this?)',
+              labelStyle: GoogleFonts.splineSans(color: Colors.white54),
+              hintText: widget.blueprint.shortCue,
+              hintStyle: GoogleFonts.splineSans(color: Colors.white30),
+              filled: true,
+              fillColor: Colors.white.withValues(alpha: 0.05),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(16),
+                borderSide: BorderSide(color: Colors.white10),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(16),
+                borderSide: BorderSide(color: Colors.white10),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(16),
+                borderSide: const BorderSide(color: Color(0xFF2BEE79), width: 2),
+              ),
+              prefixIcon: Icon(Icons.bolt, color: Colors.white38),
+            ),
+          ),
+          const Gap(16),
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.03),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: Colors.white10),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Attribute: ${widget.blueprint.attribute.name.toUpperCase()}',
+                  style: GoogleFonts.splineSans(
+                    color: Colors.white54,
+                    fontSize: 11,
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: 1.5,
+                  ),
+                ),
+                const Gap(4),
+                Text(
+                  widget.blueprint.sourceAttribution,
+                  style: GoogleFonts.splineSans(
+                    color: Colors.white38,
+                    fontSize: 12,
+                    fontStyle: FontStyle.italic,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const Gap(32),
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton(
+                  onPressed: _isSaving ? null : () => Navigator.pop(context),
+                  style: OutlinedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    side: const BorderSide(color: Colors.white24),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    foregroundColor: Colors.white,
+                  ),
+                  child: Text(
+                    'CANCEL',
+                    style: GoogleFonts.splineSans(
+                      fontWeight: FontWeight.bold,
+                      letterSpacing: 1.0,
+                    ),
+                  ),
+                ),
+              ),
+              const Gap(12),
+              Expanded(
+                child: ElevatedButton(
+                  onPressed: _isSaving ? null : _save,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF2BEE79),
+                    foregroundColor: const Color(0xFF05100B),
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    elevation: 0,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                  ),
+                  child: _isSaving
+                      ? const SizedBox(
+                          height: 20,
+                          width: 20,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: Color(0xFF05100B),
+                          ),
+                        )
+                      : Text(
+                          'SAVE HABIT',
+                          style: GoogleFonts.splineSans(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w800,
+                            letterSpacing: 0.5,
+                          ),
+                        ),
+                ),
+              ),
+            ],
+          ),
+          const Gap(24),
+        ],
       ),
     );
   }

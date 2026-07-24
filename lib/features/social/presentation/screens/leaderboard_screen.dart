@@ -2,8 +2,10 @@ import 'package:emerge_app/core/presentation/widgets/app_error_widget.dart';
 import 'package:emerge_app/core/presentation/widgets/emerge_loading_skeleton.dart';
 import 'package:emerge_app/core/theme/app_theme.dart';
 import 'package:emerge_app/features/gamification/presentation/providers/user_stats_providers.dart';
+import 'package:emerge_app/features/social/presentation/providers/friends_leaderboard_provider.dart';
 import 'package:emerge_app/features/social/presentation/providers/leaderboard_provider.dart';
 import 'package:emerge_app/features/social/presentation/providers/tribes_provider.dart';
+import 'package:emerge_app/features/social/presentation/widgets/friends_leaderboard.dart';
 import 'package:emerge_app/features/auth/domain/entities/user_extension.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -12,6 +14,8 @@ import 'package:go_router/go_router.dart';
 
 export 'package:emerge_app/features/social/presentation/providers/tribes_provider.dart'
     show TribeStats;
+export 'package:emerge_app/features/social/presentation/widgets/friends_leaderboard.dart'
+    show FriendRankEntry;
 
 class LeaderboardScreen extends ConsumerStatefulWidget {
   final int initialTabIndex;
@@ -104,6 +108,7 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen>
             child: TabBarView(
               controller: _tabController,
               children: [
+                _FriendsLeaderboardTab(),
                 _TribeLeaderboardTab(),
                 _WorldLeaderboardTab(),
               ],
@@ -257,6 +262,185 @@ class _WorldLeaderboardTab extends ConsumerWidget {
       error: (err, _) => AppErrorWidget(
         message: 'Could not load world rankings',
         onRetry: () => ref.invalidate(worldLeaderboardProvider),
+      ),
+    );
+  }
+}
+
+/// Friends leaderboard tab - shows user's friends ranked by XP
+class _FriendsLeaderboardTab extends ConsumerWidget {
+  const _FriendsLeaderboardTab();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final friendsAsync = ref.watch(friendsLeaderboardProvider);
+
+    return friendsAsync.when(
+      data: (friends) {
+        if (friends.isEmpty) {
+          return const Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.people_outline, size: 64, color: Colors.white30),
+                Gap(16),
+                Text(
+                  'No friends yet',
+                  style: TextStyle(color: Colors.white70, fontSize: 18),
+                ),
+                Gap(8),
+                Text(
+                  'Add friends to see them here',
+                  style: TextStyle(color: Colors.white38, fontSize: 14),
+                ),
+              ],
+            ),
+          );
+        }
+
+        return ListView.builder(
+          padding: const EdgeInsets.all(16),
+          itemCount: friends.length,
+          itemBuilder: (context, index) {
+            final friend = friends[index];
+            return _FriendLeaderboardItem(friend: friend, rank: index + 1);
+          },
+        );
+      },
+      loading: () =>
+          const EmergeLoadingSkeleton(itemCount: 5, showAvatar: true),
+      error: (err, _) => AppErrorWidget(
+        message: 'Could not load friends leaderboard',
+        onRetry: () => ref.invalidate(friendsLeaderboardProvider),
+      ),
+    );
+  }
+}
+
+class _FriendLeaderboardItem extends StatelessWidget {
+  final FriendRankEntry friend;
+  final int rank;
+
+  const _FriendLeaderboardItem({
+    required this.friend,
+    required this.rank,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppTheme.surfaceDark,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: friend.isYou
+              ? AppTheme.primary.withValues(alpha: 0.5)
+              : Colors.white.withValues(alpha: 0.1),
+        ),
+      ),
+      child: Row(
+        children: [
+          SizedBox(
+            width: 36,
+            child: Text(
+              '$rank',
+              style: TextStyle(
+                color: rank <= 3 ? AppTheme.primary : AppTheme.textSecondaryDark,
+                fontWeight: FontWeight.bold,
+                fontSize: 16,
+              ),
+            ),
+          ),
+          const Gap(12),
+          CircleAvatar(
+            radius: 22,
+            backgroundColor: friend.isYou
+                ? AppTheme.primary.withValues(alpha: 0.2)
+                : AppTheme.primary.withValues(alpha: 0.1),
+            child: friend.isYou
+                ? const Icon(Icons.person, color: AppTheme.primary, size: 22)
+                : Text(
+                    friend.name.isNotEmpty
+                        ? friend.name[0].toUpperCase()
+                        : '?',
+                    style: const TextStyle(
+                      color: AppTheme.primary,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                    ),
+                  ),
+          ),
+          const Gap(12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Text(
+                      friend.name,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w600,
+                        fontSize: 16,
+                      ),
+                    ),
+                    if (friend.isYou) ...[
+                      const Gap(8),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 2,
+                        ),
+                        decoration: BoxDecoration(
+                          color: AppTheme.primary.withValues(alpha: 0.2),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: const Text(
+                          'YOU',
+                          style: TextStyle(
+                            color: AppTheme.primary,
+                            fontSize: 10,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+                Text(
+                  '${friend.xp} XP',
+                  style: TextStyle(
+                    color: AppTheme.textSecondaryDark,
+                    fontSize: 12,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Text(
+                '${friend.xp} XP',
+                style: const TextStyle(
+                  color: AppTheme.primary,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 16,
+                ),
+              ),
+              Text(
+                '🔥 ${friend.streak}',
+                style: TextStyle(
+                  color: AppTheme.textSecondaryDark,
+                  fontSize: 11,
+                ),
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }

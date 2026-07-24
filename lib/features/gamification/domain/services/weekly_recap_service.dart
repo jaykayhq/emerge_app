@@ -6,7 +6,6 @@ import 'package:emerge_app/features/habits/domain/entities/habit_completion_enti
 
 import 'package:emerge_app/features/habits/presentation/providers/habit_providers.dart'; // For habit repo provider
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:cloud_functions/cloud_functions.dart';
 import 'package:emerge_app/features/monetization/presentation/providers/subscription_provider.dart';
 import 'package:uuid/uuid.dart';
 

@@ -100,7 +100,7 @@ final class WorldHealthProvider
   }
 }
 
-String _$worldHealthHash() => r'3535eb18b2ba155ffc430cef5d9982fc7a968574';
+String _$worldHealthHash() => r'01b220fe69fac41d1a7929bb4a5c67bfbb54a03e';
 
 /// Reactive stream of world health score from UserProfile
 
