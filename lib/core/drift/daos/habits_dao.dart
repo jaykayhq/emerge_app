@@ -109,4 +109,15 @@ class HabitsDao extends DatabaseAccessor<AppDatabase> with _$HabitsDaoMixin {
       ),
     );
   }
+
+  /// Targeted soft-delete: flips only isArchived + updatedAt.
+  /// Avoids insertOnConflictUpdate, which would blank other columns.
+  Future<void> archiveHabit(String id) async {
+    await (update(habitsTable)..where((t) => t.id.equals(id))).write(
+      HabitsTableCompanion(
+        isArchived: const Value(1),
+        updatedAt: Value(DateTime.now().toIso8601String()),
+      ),
+    );
+  }
 }

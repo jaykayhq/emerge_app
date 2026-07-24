@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:emerge_app/core/deletion/sync_status.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:emerge_app/core/drift/database.dart';
 import 'package:emerge_app/core/services/connectivity_service.dart';
@@ -8,6 +9,16 @@ import 'package:emerge_app/core/sync/sync_trigger_service.dart';
 final enhancedSyncEngineProvider = Provider<EnhancedSyncEngine>((ref) {
   final mutationQueue = ref.watch(mutationQueueDaoProvider);
   return EnhancedSyncEngine(mutationQueue, FirebaseFirestore.instance);
+});
+
+final syncMetricsProvider = Provider<SyncMetrics>((ref) {
+  final engine = ref.watch(enhancedSyncEngineProvider);
+  return engine.metrics;
+});
+
+final syncStatusProvider = StreamProvider<SyncStatus>((ref) {
+  final engine = ref.watch(enhancedSyncEngineProvider);
+  return engine.status;
 });
 
 final pendingSyncCountProvider = StreamProvider<int>((ref) {

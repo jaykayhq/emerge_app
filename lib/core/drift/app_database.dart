@@ -66,7 +66,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.withExecutor(super.executor);
 
   @override
-  int get schemaVersion => 9;
+  int get schemaVersion => 10;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -116,6 +116,12 @@ class AppDatabase extends _$AppDatabase {
           userStatsTable,
           userStatsTable.joinedClubId as GeneratedColumn<Object>,
         );
+      }
+      if (from < 10) {
+        await m.addColumn(mutationQueueTable, mutationQueueTable.idempotencyKey);
+        await m.addColumn(mutationQueueTable, mutationQueueTable.lastError);
+        await m.addColumn(mutationQueueTable, mutationQueueTable.nextRetryAt);
+        await m.addColumn(mutationQueueTable, mutationQueueTable.status);
       }
     },
     beforeOpen: (details) async {

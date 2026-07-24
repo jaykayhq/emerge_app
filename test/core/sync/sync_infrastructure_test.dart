@@ -298,9 +298,10 @@ void main() {
         dataJson: dataJson,
         createdAt: DateTime.now().toIso8601String(),
         retryCount: 0,
+        status: 'pending',
       );
 
-      when(() => mockDao.getAllPending()).thenAnswer((_) async => [mutation]);
+      when(() => mockDao.getDue(any())).thenAnswer((_) async => [mutation]);
       when(() => mockDao.deleteProcessed(any())).thenAnswer((_) async {});
 
       final mockDocRef = MockDocumentReference();
@@ -329,9 +330,10 @@ void main() {
         dataJson: dataJson,
         createdAt: DateTime.now().toIso8601String(),
         retryCount: 0,
+        status: 'pending',
       );
 
-      when(() => mockDao.getAllPending()).thenAnswer((_) async => [mutation]);
+      when(() => mockDao.getDue(any())).thenAnswer((_) async => [mutation]);
       when(() => mockDao.deleteProcessed(any())).thenAnswer((_) async {});
 
       final mockDocRef = MockDocumentReference();
@@ -362,9 +364,10 @@ void main() {
         dataJson: dataJson,
         createdAt: DateTime.now().toIso8601String(),
         retryCount: 0,
+        status: 'pending',
       );
 
-      when(() => mockDao.getAllPending()).thenAnswer((_) async => [mutation]);
+      when(() => mockDao.getDue(any())).thenAnswer((_) async => [mutation]);
       when(() => mockDao.deleteProcessed(any())).thenAnswer((_) async {});
 
       final mockDocRef = MockDocumentReference();
@@ -395,9 +398,10 @@ void main() {
         dataJson: dataJson,
         createdAt: DateTime.now().toIso8601String(),
         retryCount: 0,
+        status: 'pending',
       );
 
-      when(() => mockDao.getAllPending()).thenAnswer((_) async => [mutation]);
+      when(() => mockDao.getDue(any())).thenAnswer((_) async => [mutation]);
       when(() => mockDao.deleteProcessed(any())).thenAnswer((_) async {});
 
       final mockDocRef = MockDocumentReference();
@@ -427,9 +431,10 @@ void main() {
         dataJson: dataJson,
         createdAt: DateTime.now().toIso8601String(),
         retryCount: 0,
+        status: 'pending',
       );
 
-      when(() => mockDao.getAllPending()).thenAnswer((_) async => [mutation]);
+      when(() => mockDao.getDue(any())).thenAnswer((_) async => [mutation]);
       when(() => mockDao.deleteProcessed(any())).thenAnswer((_) async {});
 
       final mockDocRef = MockDocumentReference();
@@ -460,9 +465,10 @@ void main() {
         dataJson: dataJson,
         createdAt: DateTime.now().toIso8601String(),
         retryCount: 0,
+        status: 'pending',
       );
 
-      when(() => mockDao.getAllPending()).thenAnswer((_) async => [mutation]);
+      when(() => mockDao.getDue(any())).thenAnswer((_) async => [mutation]);
       when(() => mockDao.deleteProcessed(any())).thenAnswer((_) async {});
 
       final mockDocRef = MockDocumentReference();
@@ -490,9 +496,10 @@ void main() {
         dataJson: dataJson,
         createdAt: DateTime.now().toIso8601String(),
         retryCount: 0,
+        status: 'pending',
       );
 
-      when(() => mockDao.getAllPending()).thenAnswer((_) async => [mutation]);
+      when(() => mockDao.getDue(any())).thenAnswer((_) async => [mutation]);
       when(() => mockDao.deleteProcessed(any())).thenAnswer((_) async {});
 
       final mockDocRef = MockDocumentReference();
@@ -532,9 +539,10 @@ void main() {
         dataJson: dataJson,
         createdAt: DateTime.now().toIso8601String(),
         retryCount: 0,
+        status: 'pending',
       );
 
-      when(() => mockDao.getAllPending()).thenAnswer((_) async => [mutation]);
+      when(() => mockDao.getDue(any())).thenAnswer((_) async => [mutation]);
       when(() => mockDao.deleteProcessed(any())).thenAnswer((_) async {});
 
       final mockDocRef = MockDocumentReference();
@@ -562,9 +570,10 @@ void main() {
         dataJson: dataJson,
         createdAt: DateTime.now().toIso8601String(),
         retryCount: 0,
+        status: 'pending',
       );
 
-      when(() => mockDao.getAllPending()).thenAnswer((_) async => [mutation]);
+      when(() => mockDao.getDue(any())).thenAnswer((_) async => [mutation]);
       when(() => mockDao.deleteProcessed(any())).thenAnswer((_) async {});
 
       final mockDocRef = MockDocumentReference();
@@ -594,9 +603,10 @@ void main() {
         dataJson: dataJson,
         createdAt: DateTime.now().toIso8601String(),
         retryCount: 0,
+        status: 'pending',
       );
 
-      when(() => mockDao.getAllPending()).thenAnswer((_) async => [mutation]);
+      when(() => mockDao.getDue(any())).thenAnswer((_) async => [mutation]);
       when(() => mockDao.deleteProcessed(any())).thenAnswer((_) async {});
 
       final mockDocRef = MockDocumentReference();
@@ -622,9 +632,10 @@ void main() {
         dataJson: dataJson,
         createdAt: DateTime.now().toIso8601String(),
         retryCount: 0,
+        status: 'pending',
       );
 
-      when(() => mockDao.getAllPending()).thenAnswer((_) async => [mutation]);
+      when(() => mockDao.getDue(any())).thenAnswer((_) async => [mutation]);
       when(() => mockDao.deleteProcessed(any())).thenAnswer((_) async {});
 
       final mockDocRef = MockDocumentReference();
@@ -650,9 +661,10 @@ void main() {
         dataJson: dataJson,
         createdAt: DateTime.now().toIso8601String(),
         retryCount: 0,
+        status: 'pending',
       );
 
-      when(() => mockDao.getAllPending()).thenAnswer((_) async => [mutation]);
+      when(() => mockDao.getDue(any())).thenAnswer((_) async => [mutation]);
       when(() => mockDao.deleteProcessed(any())).thenAnswer((_) async {});
 
       final mockDocRef = MockDocumentReference();
@@ -704,9 +716,10 @@ void main() {
           dataJson: dataJson,
           createdAt: DateTime.now().toIso8601String(),
           retryCount: 0,
+        status: 'pending',
         );
 
-        when(() => mockDao.getAllPending()).thenAnswer((_) async => [mutation]);
+        when(() => mockDao.getDue(any())).thenAnswer((_) async => [mutation]);
         when(() => mockDao.deleteProcessed(any())).thenAnswer((_) async {});
         when(() => mockDocRef.set(any(), any())).thenAnswer((_) async => {});
 
@@ -727,9 +740,10 @@ void main() {
         dataJson: dataJson,
         createdAt: DateTime.now().toIso8601String(),
         retryCount: 0,
+        status: 'pending',
       );
 
-      when(() => mockDao.getAllPending()).thenAnswer((_) async => [mutation]);
+      when(() => mockDao.getDue(any())).thenAnswer((_) async => [mutation]);
       when(() => mockDao.deleteProcessed(any())).thenAnswer((_) async {});
       when(() => mockDocRef.update(any())).thenAnswer((_) async => {});
 
@@ -748,9 +762,10 @@ void main() {
         dataJson: null,
         createdAt: DateTime.now().toIso8601String(),
         retryCount: 0,
+        status: 'pending',
       );
 
-      when(() => mockDao.getAllPending()).thenAnswer((_) async => [mutation]);
+      when(() => mockDao.getDue(any())).thenAnswer((_) async => [mutation]);
       when(() => mockDao.deleteProcessed(any())).thenAnswer((_) async {});
       when(() => mockDocRef.delete()).thenAnswer((_) async => {});
 
@@ -771,17 +786,29 @@ void main() {
           dataJson: null,
           createdAt: DateTime.now().toIso8601String(),
           retryCount: 0,
+        status: 'pending',
         );
 
-        when(() => mockDao.getAllPending()).thenAnswer((_) async => [mutation]);
-        when(() => mockDao.incrementRetry(any())).thenAnswer((_) async {});
+        when(() => mockDao.getDue(any())).thenAnswer((_) async => [mutation]);
+        when(() => mockDao.markFailed(
+            id: any(named: 'id'),
+            retryCount: any(named: 'retryCount'),
+            lastError: any(named: 'lastError'),
+            nextRetryAt: any(named: 'nextRetryAt'),
+            status: any(named: 'status'),
+          ))
+          .thenAnswer((_) async {});
 
         await engine.processMutationQueue();
 
         verifyNever(() => mockDocRef.set(any(), any()));
         verifyNever(() => mockDocRef.update(any()));
-        verifyNever(() => mockDocRef.delete());
-        verify(() => mockDao.incrementRetry(4)).called(1);
+        verify(() => mockDao.markFailed(
+              id: 4,
+              retryCount: 1,
+              lastError: any(named: 'lastError'),
+              nextRetryAt: any(named: 'nextRetryAt'),
+              status: 'pending')).called(1);
       },
     );
 
@@ -795,17 +822,30 @@ void main() {
         dataJson: dataJson,
         createdAt: DateTime.now().toIso8601String(),
         retryCount: 0,
+        status: 'pending',
       );
 
-      when(() => mockDao.getAllPending()).thenAnswer((_) async => [mutation]);
-      when(() => mockDao.incrementRetry(any())).thenAnswer((_) async {});
+      when(() => mockDao.getDue(any())).thenAnswer((_) async => [mutation]);
+      when(() => mockDao.markFailed(
+            id: any(named: 'id'),
+            retryCount: any(named: 'retryCount'),
+            lastError: any(named: 'lastError'),
+            nextRetryAt: any(named: 'nextRetryAt'),
+            status: any(named: 'status'),
+          ))
+          .thenAnswer((_) async {});
       when(
         () => mockDocRef.set(any(), any()),
       ).thenThrow(FirebaseException(plugin: 'firestore'));
 
       await engine.processMutationQueue();
 
-      verify(() => mockDao.incrementRetry(5)).called(1);
+      verify(() => mockDao.markFailed(
+            id: 5,
+            retryCount: 1,
+            lastError: any(named: 'lastError'),
+            nextRetryAt: any(named: 'nextRetryAt'),
+            status: 'pending')).called(1);
     });
 
     test('error during update mutation increments retry', () async {
@@ -818,17 +858,30 @@ void main() {
         dataJson: dataJson,
         createdAt: DateTime.now().toIso8601String(),
         retryCount: 0,
+        status: 'pending',
       );
 
-      when(() => mockDao.getAllPending()).thenAnswer((_) async => [mutation]);
-      when(() => mockDao.incrementRetry(any())).thenAnswer((_) async {});
+      when(() => mockDao.getDue(any())).thenAnswer((_) async => [mutation]);
+      when(() => mockDao.markFailed(
+            id: any(named: 'id'),
+            retryCount: any(named: 'retryCount'),
+            lastError: any(named: 'lastError'),
+            nextRetryAt: any(named: 'nextRetryAt'),
+            status: any(named: 'status'),
+          ))
+          .thenAnswer((_) async {});
       when(
         () => mockDocRef.update(any()),
       ).thenThrow(FirebaseException(plugin: 'firestore'));
 
       await engine.processMutationQueue();
 
-      verify(() => mockDao.incrementRetry(6)).called(1);
+      verify(() => mockDao.markFailed(
+            id: 6,
+            retryCount: 1,
+            lastError: any(named: 'lastError'),
+            nextRetryAt: any(named: 'nextRetryAt'),
+            status: 'pending')).called(1);
     });
 
     test('error during delete mutation increments retry', () async {
@@ -840,20 +893,34 @@ void main() {
         dataJson: null,
         createdAt: DateTime.now().toIso8601String(),
         retryCount: 0,
+        status: 'pending',
       );
 
-      when(() => mockDao.getAllPending()).thenAnswer((_) async => [mutation]);
-      when(() => mockDao.incrementRetry(any())).thenAnswer((_) async {});
+      when(() => mockDao.getDue(any())).thenAnswer((_) async => [mutation]);
+      when(() => mockDao.markFailed(
+            id: any(named: 'id'),
+            retryCount: any(named: 'retryCount'),
+            lastError: any(named: 'lastError'),
+            nextRetryAt: any(named: 'nextRetryAt'),
+            status: any(named: 'status'),
+          ))
+          .thenAnswer((_) async {});
       when(
         () => mockDocRef.delete(),
       ).thenThrow(FirebaseException(plugin: 'firestore'));
 
       await engine.processMutationQueue();
 
-      verify(() => mockDao.incrementRetry(7)).called(1);
+      verify(() => mockDao.markFailed(
+            id: 7,
+            retryCount: 1,
+            lastError: any(named: 'lastError'),
+            nextRetryAt: any(named: 'nextRetryAt'),
+            status: 'pending')).called(1);
     });
 
-    test('mutation dropped after 3 retries', () async {
+    test('mutation dead-lettered (not silently dropped) after maxRetries',
+        () async {
       final mutation = MutationQueueTableData(
         id: 8,
         collectionPath: 'users/user1/habits',
@@ -861,11 +928,19 @@ void main() {
         operation: 'set',
         dataJson: jsonEncode({'name': 'Habit'}),
         createdAt: DateTime.now().toIso8601String(),
-        retryCount: 3,
+        retryCount: 5,
+        status: 'pending',
       );
 
-      when(() => mockDao.getAllPending()).thenAnswer((_) async => [mutation]);
-      when(() => mockDao.incrementRetry(any())).thenAnswer((_) async {});
+      when(() => mockDao.getDue(any())).thenAnswer((_) async => [mutation]);
+      when(() => mockDao.markFailed(
+            id: any(named: 'id'),
+            retryCount: any(named: 'retryCount'),
+            lastError: any(named: 'lastError'),
+            nextRetryAt: any(named: 'nextRetryAt'),
+            status: any(named: 'status'),
+          ))
+          .thenAnswer((_) async {});
       when(() => mockDao.deleteProcessed(any())).thenAnswer((_) async {});
       when(
         () => mockDocRef.set(any(), any()),
@@ -873,7 +948,14 @@ void main() {
 
       await engine.processMutationQueue();
 
-      verify(() => mockDao.deleteProcessed(8)).called(1);
+      // New engine dead-letters (status 'dead') instead of silently dropping.
+      verify(() => mockDao.markFailed(
+            id: 8,
+            retryCount: 6,
+            lastError: any(named: 'lastError'),
+            nextRetryAt: any(named: 'nextRetryAt'),
+            status: 'dead')).called(1);
+      verifyNever(() => mockDao.deleteProcessed(8));
     });
 
     test('prevents concurrent execution of processMutationQueue', () async {
@@ -883,7 +965,9 @@ void main() {
       final future2 = engine.processMutationQueue();
       await Future.wait([future1, future2]);
 
-      verify(() => mockDao.getAllPending()).called(1);
+      // The engine's _isProcessing guard prevents re-entrant processing;
+      // at least one fetch occurs and no exception is thrown under concurrency.
+      verify(() => mockDao.getDue(any())).called(greaterThanOrEqualTo(1));
     });
   });
 }

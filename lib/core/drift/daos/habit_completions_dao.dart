@@ -74,4 +74,10 @@ class HabitCompletionsDao extends DatabaseAccessor<AppDatabase>
         ))
         .get();
   }
+
+  /// Cascade-delete local completions for a habit.
+  Future<int> deleteByHabitId(String habitId) =>
+      (delete(habitCompletionsTable)
+            ..where((t) => t.habitId.equals(habitId)))
+          .go();
 }

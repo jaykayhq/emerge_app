@@ -12,6 +12,13 @@ import 'package:emerge_app/features/auth/presentation/providers/auth_providers.d
 import 'package:emerge_app/features/gamification/data/repositories/user_stats_repository.dart';
 import 'package:emerge_app/features/gamification/presentation/providers/user_stats_providers.dart';
 import 'package:emerge_app/features/settings/presentation/screens/notification_settings_screen.dart';
+import 'package:emerge_app/core/deletion/deletion_providers.dart'
+    show deletionServiceProvider;
+import 'package:emerge_app/core/deletion/delete_account_backend.dart'
+    show CloudFunctionDeleteBackend, SharedPreferencesIdStore;
+import 'package:cloud_functions/cloud_functions.dart';
+import 'package:emerge_app/core/error/failure.dart';
+import 'package:fpdart/fpdart.dart';
 import 'package:emerge_app/core/domain/models/app_world_theme.dart';
 import 'package:emerge_app/core/presentation/providers/world_theme_provider.dart';
 import 'package:emerge_app/features/companion/presentation/providers/companion_providers.dart';
@@ -1235,19 +1242,30 @@ class SettingsScreen extends ConsumerWidget {
                           ),
                         );
                         try {
-                          // 1. Wipe local database immediately
-                          final db = ref.read(appDatabaseProvider);
-                          await db.clearAll();
+                          final authUser =
+                              ref.read(authStateChangesProvider).value;
+                          final userId = authUser?.id;
+                          if (userId == null) throw Exception('Not signed in');
 
-                          // 2. Trigger remote deletion with timeout
-                          final result = await ref
-                              .read(authRepositoryProvider)
-                              .deleteAccount()
+                          // 1. Server-first: purge remote with idempotent key.
+                          //    Local data is wiped ONLY after the server confirms.
+                          final deletionService =
+                              ref.read(deletionServiceProvider);
+                          final result = await deletionService
+                              .deleteAccount(
+                                userId: userId,
+                                backend: CloudFunctionDeleteBackend(
+                                  FirebaseFunctions.instance,
+                                ),
+                                idStore: const SharedPreferencesIdStore(),
+                                auth: ref.read(firebaseAuthProvider),
+                              )
                               .timeout(
                                 const Duration(seconds: 15),
-                                onTimeout: () => throw TimeoutException(
-                                  'Deletion took too long. Local data cleared.',
-                                ),
+                                onTimeout: () =>
+                                    const Left(ServerFailure(
+                                  'Deletion took too long. Local data kept.',
+                                )),
                               );
 
                           if (context.mounted) {
@@ -1263,12 +1281,11 @@ class SettingsScreen extends ConsumerWidget {
                                 ScaffoldMessenger.of(context).showSnackBar(
                                   SnackBar(
                                     content: Text(
-                                      'Remote deletion pending: ${failure.message}',
+                                      'Remote deletion failed: ${failure.message}. Local data kept.',
                                     ),
                                     backgroundColor: Colors.orange,
                                   ),
                                 );
-                                context.go('/auth');
                               },
                               (_) {
                                 context.go('/auth');
@@ -1293,13 +1310,13 @@ class SettingsScreen extends ConsumerWidget {
                             context.go('/auth');
                             ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(
-                                content: Text('Local data cleared. Error: $e'),
+                                content: Text('Deletion failed: $e'),
                                 backgroundColor: Colors.orange,
                               ),
                             );
                           }
                         }
-                      }
+                      } // close arrow function body
                     : null,
                 style: FilledButton.styleFrom(
                   backgroundColor: Colors.red,

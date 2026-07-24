@@ -1,4 +1,6 @@
 import 'package:drift/drift.dart' hide isNotNull, isNull;
+import 'package:emerge_app/core/deletion/deletion_audit.dart';
+import 'package:emerge_app/core/deletion/deletion_service.dart';
 import 'package:emerge_app/core/drift/app_database.dart';
 import 'package:emerge_app/core/drift_repositories/drift_habit_repository.dart';
 import 'package:emerge_app/core/game_loop/game_loop_engine.dart';
@@ -50,6 +52,7 @@ void main() {
         collectionPath: any(named: 'collectionPath'),
         documentId: any(named: 'documentId'),
         data: any(named: 'data'),
+        idempotencyKey: any(named: 'idempotencyKey'),
       ),
     ).thenAnswer((_) async {});
 
@@ -80,6 +83,11 @@ void main() {
       gameLoopEngine: LocalGameLoopEngine(),
       syncEngine: mockSyncEngine,
       socialService: mockSocialService,
+      deletionService: DeletionService(
+        db: db,
+        syncEngine: mockSyncEngine,
+        audit: DeletionAudit(),
+      ),
     );
   });
 
@@ -173,9 +181,10 @@ void main() {
 
       verify(
         () => mockSyncEngine.enqueueUpdate(
-          collectionPath: 'habits',
+          collectionPath: 'users/$userId/habits',
           documentId: habit.id,
-          data: {'isArchived': true},
+          data: any(named: 'data'),
+          idempotencyKey: 'del:habit:${habit.id}',
         ),
       ).called(1);
     });

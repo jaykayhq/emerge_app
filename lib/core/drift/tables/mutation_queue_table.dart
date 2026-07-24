@@ -8,4 +8,8 @@ class MutationQueueTable extends Table {
   TextColumn get dataJson => text().nullable()();
   TextColumn get createdAt => text()();
   IntColumn get retryCount => integer().withDefault(const Constant(0))();
+  TextColumn get idempotencyKey => text().nullable()();
+  TextColumn get lastError => text().nullable()();
+  TextColumn get nextRetryAt => text().nullable()();
+  TextColumn get status => text().withDefault(const Constant('pending'))();
 }
