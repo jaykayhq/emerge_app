@@ -6,10 +6,10 @@ import 'package:emerge_app/features/monetization/presentation/widgets/premium_li
 GoRouter _router(Widget home) {
   return GoRouter(
     routes: [
-      GoRoute(path: '/', builder: (_, __) => home),
+      GoRoute(path: '/', builder: (context, state) => home),
       GoRoute(
         path: '/paywall',
-        builder: (_, __) => const Scaffold(body: Text('PAYWALL')),
+        builder: (context, state) => const Scaffold(body: Text('PAYWALL')),
       ),
     ],
   );

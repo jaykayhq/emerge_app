@@ -36,7 +36,7 @@ void main() {
       routes: [
         GoRoute(
           path: '/',
-          builder: (_, __) => const Scaffold(
+          builder: (context, state) => const Scaffold(
             body: PremiumThemePreview(
               themeName: 'Cosmic Void',
               description: 'A deep-space theme for premium users.',
@@ -45,7 +45,7 @@ void main() {
         ),
         GoRoute(
           path: '/paywall',
-          builder: (_, __) => const Scaffold(body: Text('PAYWALL')),
+          builder: (context, state) => const Scaffold(body: Text('PAYWALL')),
         ),
       ],
     );
