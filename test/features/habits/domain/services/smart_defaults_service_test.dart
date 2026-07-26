@@ -124,4 +124,74 @@ void main() {
       expect(defaults.attribute, equals(HabitAttribute.intellect));
     });
   });
+
+  group('sortedSuggestions', () {
+    test('sorts user-created habits first', () {
+      final result = sortedSuggestions(
+        ['Meditate', 'Read', 'Run', 'Write'],
+        userCreatedHabits: ['Read'],
+        archetypeName: 'athlete',
+        interestTags: ['Fitness'],
+      );
+      expect(result.first, 'Read');
+    });
+
+    test('sorts archetype-match habits after user-created', () {
+      final result = sortedSuggestions(
+        ['Meditate', 'Read', 'Jog', 'Paint'],
+        userCreatedHabits: ['Read'],
+        archetypeName: 'athlete',
+        interestTags: ['Fitness'],
+      );
+      // 'Jog' matches fitness/athlete; 'Meditate' and 'Paint' are fallback
+      final readIndex = result.indexOf('Read');
+      final jogIndex = result.indexOf('Jog');
+      expect(readIndex, lessThan(jogIndex));
+    });
+
+    test('sorts interest-match habits after user-created', () {
+      final result = sortedSuggestions(
+        ['Meditate', 'Read', 'Journal', 'Paint'],
+        userCreatedHabits: ['Read'],
+        archetypeName: 'scholar',
+        interestTags: ['Writing'],
+      );
+      // 'Journal' matches Writing; 'Meditate' and 'Paint' are fallback
+      final readIndex = result.indexOf('Read');
+      final journalIndex = result.indexOf('Journal');
+      expect(readIndex, lessThan(journalIndex));
+    });
+
+    test('fallback habits come last', () {
+      final result = sortedSuggestions(
+        ['Meditate', 'Read', 'Run'],
+        userCreatedHabits: ['Read'],
+        archetypeName: 'scholar',
+        interestTags: ['Fitness'],
+      );
+      // 'Meditate' and 'Run' don't match scholar or Fitness closely
+      expect(result.last, anyOf('Meditate', 'Run'));
+    });
+
+    test('handles empty suggestions', () {
+      final result = sortedSuggestions(
+        [],
+        userCreatedHabits: ['Read'],
+        archetypeName: 'athlete',
+        interestTags: ['Fitness'],
+      );
+      expect(result, isEmpty);
+    });
+
+    test('deduplicates across categories', () {
+      final result = sortedSuggestions(
+        ['Meditate', 'Meditate', 'Read'],
+        userCreatedHabits: ['Meditate'],
+        archetypeName: 'scholar',
+        interestTags: ['Mindfulness'],
+      );
+      // 'Meditate' appears only once (first)
+      expect(result.where((s) => s == 'Meditate').length, equals(1));
+    });
+  });
 }

@@ -111,3 +111,52 @@ SmartDefaults computeSmartDefaults({
     timerMinutes: timerMinutes,
   );
 }
+
+/// Sorts habit suggestion titles by relevance:
+/// 1. Habits the user has created before (anchoring/endowment effect)
+/// 2. Archetype + interest match (personalization)
+/// 3. Curated fallback (everything else)
+///
+/// Duplicates are removed, preserving the first occurrence's priority.
+List<String> sortedSuggestions(
+  List<String> allSuggestions, {
+  required List<String> userCreatedHabits,
+  required String? archetypeName,
+  required List<String> interestTags,
+}) {
+  final seen = <String>{};
+  final result = <String>[];
+
+  void addIfNew(String s) {
+    if (seen.add(s)) result.add(s);
+  }
+
+  // 1. User-created habits first
+  for (final s in allSuggestions) {
+    if (userCreatedHabits.contains(s)) {
+      addIfNew(s);
+    }
+  }
+
+  // 2. Archetype + interest match
+  final archetypeLower = archetypeName?.toLowerCase() ?? '';
+  for (final s in allSuggestions) {
+    final sLower = s.toLowerCase();
+    final matchesArchetype = archetypeLower.isNotEmpty &&
+        (sLower.contains(archetypeLower) ||
+            interestTags.any((t) => sLower.contains(t.toLowerCase())));
+    if (matchesArchetype && !userCreatedHabits.contains(s)) {
+      addIfNew(s);
+    }
+  }
+
+  // 3. Curated fallback
+  for (final s in allSuggestions) {
+    if (!userCreatedHabits.contains(s) &&
+        !interestTags.any((t) => s.toLowerCase().contains(t.toLowerCase()))) {
+      addIfNew(s);
+    }
+  }
+
+  return result;
+}
