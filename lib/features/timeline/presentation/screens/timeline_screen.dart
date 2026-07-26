@@ -3,6 +3,8 @@ import 'package:emerge_app/core/presentation/widgets/emerge_loading_skeleton.dar
 import 'package:emerge_app/core/presentation/widgets/glassmorphism_card.dart';
 import 'package:emerge_app/features/habits/domain/entities/habit.dart';
 import 'package:emerge_app/features/habits/presentation/providers/dashboard_state_provider.dart';
+import 'package:emerge_app/features/timeline/presentation/providers/goal_gradient_helpers.dart';
+import 'package:emerge_app/features/timeline/presentation/providers/goal_gradient_providers.dart';
 import 'package:emerge_app/features/habits/presentation/providers/habit_providers.dart';
 import 'package:emerge_app/features/habits/presentation/screens/streak_recovery_screen.dart';
 import 'package:emerge_app/features/habits/presentation/widgets/miss_recovery_sheet.dart';
@@ -13,6 +15,10 @@ import 'package:emerge_app/features/timeline/presentation/widgets/month_calendar
 import 'package:emerge_app/features/timeline/presentation/widgets/recap_summary_card.dart';
 import 'package:emerge_app/features/timeline/presentation/widgets/habit_timeline_section.dart';
 import 'package:emerge_app/features/timeline/presentation/widgets/completion_celebration.dart';
+import 'package:emerge_app/features/timeline/presentation/widgets/all_done_celebration.dart';
+import 'package:emerge_app/features/timeline/presentation/widgets/tribal_presence_strip.dart';
+import 'package:emerge_app/features/timeline/presentation/providers/last_habit_completed_provider.dart';
+import 'package:emerge_app/features/social/presentation/providers/tribes_provider.dart';
 import 'package:emerge_app/features/timeline/presentation/widgets/timeline_share_preview.dart';
 import 'package:emerge_app/features/auth/domain/entities/user_extension.dart';
 import 'package:emerge_app/features/gamification/presentation/providers/user_stats_providers.dart';
@@ -51,6 +57,8 @@ class _TimelineScreenState extends ConsumerState<TimelineScreen> {
   bool _hasCheckedMisses = false;
   bool _showOverlay = false;
   NarratorLine? _pendingOverlayLine;
+  final GlobalKey<AllDoneCelebrationState> _celebrationKey =
+      GlobalKey<AllDoneCelebrationState>();
 
   static const _eveningAppearance = NarratorAppearance(
     trigger: NarratorTrigger.eveningReflection,
@@ -90,6 +98,10 @@ class _TimelineScreenState extends ConsumerState<TimelineScreen> {
   void dispose() {
     super.dispose();
   }
+
+  /// Goal Gradient Effect: completion-ring color.
+  /// green ≥80%, amber 50–79%, coral below 50%.
+  Color _ringColor(double fraction) => Color(ringColorValue(fraction));
 
   void _checkEveningReflection() {
     final now = DateTime.now();
@@ -178,6 +190,13 @@ class _TimelineScreenState extends ConsumerState<TimelineScreen> {
       _onPendingMilestoneChange,
     );
 
+    // Peak-End: fire the all-done celebration when the last habit completes.
+    ref.listen<bool>(lastHabitCompletedProvider, (prev, next) {
+      if (next == true) {
+        _celebrationKey.currentState?.show();
+      }
+    });
+
     return WorldBackground(
       useSafeArea: false,
       themeOverride: AppWorldTheme.nebula,
@@ -199,22 +218,43 @@ class _TimelineScreenState extends ConsumerState<TimelineScreen> {
                     error: (e, s) => _buildErrorView(context),
                   ),
           ),
-          // Floating Action Button to create new habits
+          // Floating Action Button to create new habits.
+          // Goal Gradient Effect: a progress ring wraps the FAB showing
+          // today's completion fraction (green ≥80%, amber 50–79%, coral
+          // below 50%). The FAB stays circular so the ring reads cleanly.
           Positioned(
             right: 16,
             bottom: 16 + MediaQuery.paddingOf(context).bottom,
-            child: FloatingActionButton.extended(
-              heroTag: 'timeline_create_habit',
-              backgroundColor: EmergeColors.teal,
-              onPressed: () => context.push('/timeline/create-habit'),
-              icon: const Icon(Icons.add, color: Colors.white),
-              label: const Text(
-                'Log Habit',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
+            child: Stack(
+              alignment: Alignment.center,
+              children: [
+                Consumer(
+                  builder: (context, ref, _) {
+                    final fraction =
+                        ref.watch(completionFractionProvider);
+                    return SizedBox(
+                      width: 64,
+                      height: 64,
+                      child: CircularProgressIndicator(
+                        value: fraction,
+                        strokeWidth: 3,
+                        strokeCap: StrokeCap.round,
+                        backgroundColor: Colors.white.withValues(alpha: 0.1),
+                        valueColor: AlwaysStoppedAnimation<Color>(
+                          _ringColor(fraction),
+                        ),
+                      ),
+                    );
+                  },
                 ),
-              ),
+                FloatingActionButton(
+                  heroTag: 'timeline_create_habit',
+                  backgroundColor: EmergeColors.teal,
+                  tooltip: 'Log Habit',
+                  onPressed: () => context.push('/timeline/create-habit'),
+                  child: const Icon(Icons.add, color: Colors.white),
+                ),
+              ],
             ),
           ),
           // Milestone slide-up overlay
@@ -235,6 +275,10 @@ class _TimelineScreenState extends ConsumerState<TimelineScreen> {
                 },
               ),
             ),
+          // Peak-End all-done celebration: full-screen glow + narrator line.
+          Positioned.fill(
+            child: AllDoneCelebration(key: _celebrationKey),
+          ),
         ],
       ),
     );
@@ -263,6 +307,27 @@ class _TimelineScreenState extends ConsumerState<TimelineScreen> {
             displayName: displayName,
             onTap: () => context.push('/profile'),
           ),
+          momentumDot: Consumer(
+            builder: (context, ref, _) {
+              final streak = ref.watch(userStreakProvider).value ?? 0;
+              return Container(
+                width: 10,
+                height: 10,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: Color(momentumColorValue(streak)),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Color(
+                        momentumColorValue(streak),
+                      ).withValues(alpha: 0.4),
+                      blurRadius: 4,
+                    ),
+                  ],
+                ),
+              );
+            },
+          ),
           syncIndicator: null,
           badge: Consumer(
             builder: (context, ref, _) {
@@ -282,6 +347,33 @@ class _TimelineScreenState extends ConsumerState<TimelineScreen> {
                     fontWeight: FontWeight.bold,
                   ),
                 ),
+              );
+            },
+          ),
+        ),
+
+        // Social proof: tribal presence strip (only for users in a tribe).
+        SliverToBoxAdapter(
+          child: Consumer(
+            builder: (context, ref, _) {
+              final archetype = ref.watch(currentArchetypeProvider);
+              if (archetype == UserArchetype.none) {
+                return const SizedBox.shrink();
+              }
+              final clubAsync = ref.watch(
+                userClubProvider(archetype.name),
+              );
+              return clubAsync.maybeWhen(
+                data: (club) {
+                  if (club == null || club.memberCount <= 0) {
+                    return const SizedBox.shrink();
+                  }
+                  return TribalPresenceStrip(
+                    memberCount: club.memberCount,
+                    habitLabel: 'their habits',
+                  );
+                },
+                orElse: () => const SizedBox.shrink(),
               );
             },
           ),
