@@ -508,6 +508,7 @@ class _FutureSelfStudioScreenState
                             );
                           },
                           accentColor: accentColor,
+                          nextPhaseTitle: 'The Construct',
                         ),
                 ),
               ),
@@ -781,11 +782,13 @@ class _EmergeButton extends StatefulWidget {
   final VoidCallback onPressed;
   final Color accentColor;
   final int level;
+  final String nextPhaseTitle;
 
   const _EmergeButton({
     required this.onPressed,
     required this.accentColor,
     required this.level,
+    this.nextPhaseTitle = 'The Construct',
   });
 
   bool get isLocked => level < 5;
@@ -838,67 +841,111 @@ class _EmergeButtonState extends State<_EmergeButton>
 
   Widget _buildLockedButton(BuildContext context) {
     final levelsRemaining = 5 - widget.level;
+    final levelProgress = widget.level / 5.0;
     return Container(
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.grey.shade800,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: Colors.grey.shade600, width: 1),
       ),
-      child: ElevatedButton(
-        onPressed: () {
-          // Show tooltip explaining the lock
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(
-                'Reach level 5 to unlock! ($levelsRemaining more levels)',
-                style: const TextStyle(color: Colors.white),
-              ),
-              backgroundColor: Colors.grey.shade700,
-              behavior: SnackBarBehavior.floating,
-              duration: const Duration(seconds: 2),
+      child: Column(
+        children: [
+          // Level progress header
+          Text(
+            'Level ${widget.level}/5',
+            style: const TextStyle(
+              color: Colors.white,
+              fontWeight: FontWeight.bold,
+              fontSize: 18,
             ),
-          );
-        },
-        style: ElevatedButton.styleFrom(
-          backgroundColor: Colors.transparent,
-          shadowColor: Colors.transparent,
-          padding: const EdgeInsets.symmetric(vertical: 18),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
           ),
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.lock, color: Colors.grey.shade400, size: 20),
-            const SizedBox(width: 8),
-            Text(
-              'EMERGE',
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                color: Colors.grey.shade500,
-                fontWeight: FontWeight.bold,
-                letterSpacing: 3,
-                fontSize: 16,
+          const SizedBox(height: 8),
+          // Progress bar
+          ClipRRect(
+            borderRadius: BorderRadius.circular(4),
+            child: LinearProgressIndicator(
+              value: levelProgress,
+              backgroundColor: Colors.white.withValues(alpha: 0.1),
+              valueColor: AlwaysStoppedAnimation(widget.accentColor),
+              minHeight: 6,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            levelsRemaining > 0
+                ? 'Complete $levelsRemaining more level${levelsRemaining > 1 ? 's' : ''} to unlock the EMERGE ceremony'
+                : 'Complete the final level to unlock the EMERGE ceremony',
+            style: TextStyle(
+              color: Colors.white.withValues(alpha: 0.6),
+              fontSize: 13,
+            ),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 12),
+          // Next ceremony preview
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            decoration: BoxDecoration(
+              color: widget.accentColor.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(
+                color: widget.accentColor.withValues(alpha: 0.3),
               ),
             ),
-            const SizedBox(width: 8),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-              decoration: BoxDecoration(
-                color: Colors.grey.shade600,
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Text(
-                'LVL 5',
-                style: TextStyle(
-                  color: Colors.grey.shade300,
-                  fontSize: 10,
-                  fontWeight: FontWeight.bold,
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  Icons.auto_awesome,
+                  size: 16,
+                  color: widget.accentColor,
+                ),
+                const SizedBox(width: 6),
+                Text(
+                  'Next: ${widget.nextPhaseTitle}',
+                  style: TextStyle(
+                    color: widget.accentColor,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 16),
+          // Locked EMERGE button
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton.icon(
+              onPressed: () {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(
+                      'Reach level 5 to unlock! ($levelsRemaining more level${levelsRemaining > 1 ? 's' : ''})',
+                      style: const TextStyle(color: Colors.white),
+                    ),
+                    backgroundColor: Colors.grey.shade700,
+                    behavior: SnackBarBehavior.floating,
+                    duration: const Duration(seconds: 2),
+                  ),
+                );
+              },
+              icon: const Icon(Icons.lock_outline, size: 18),
+              label: const Text('EMERGE'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.grey.shade700,
+                foregroundColor: Colors.grey.shade400,
+                disabledBackgroundColor: Colors.grey.shade700,
+                disabledForegroundColor: Colors.grey.shade500,
+                padding: const EdgeInsets.symmetric(vertical: 14),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
                 ),
               ),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
