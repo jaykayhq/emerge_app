@@ -169,11 +169,11 @@ class _HabitCreateScreenState extends ConsumerState<HabitCreateScreen> {
               location: form.location,
               frequency: form.frequency,
               onActionChanged: (_) => _titleFocus.requestFocus(),
-              onTimeChanged: (t) {
-                // The builder returns a formatted string; also try to parse hh:mm.
+              onTimeChanged: (_) {},
+              onTimePicked: (picked) {
                 ref
                     .read(habitCreateStateProvider.notifier)
-                    .updateTime(t, form.reminderTime ?? defaults.time);
+                    .updateTime(picked.format(context), picked);
               },
               onLocationChanged: (_) => _locationFocus.requestFocus(),
               onFrequencyChanged: (f) =>

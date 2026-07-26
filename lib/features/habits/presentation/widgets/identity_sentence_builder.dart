@@ -7,6 +7,7 @@ class IdentitySentenceBuilder extends StatelessWidget {
   final String frequency;
   final ValueChanged<String> onActionChanged;
   final ValueChanged<String> onTimeChanged;
+  final ValueChanged<TimeOfDay>? onTimePicked;
   final ValueChanged<String> onLocationChanged;
   final ValueChanged<String> onFrequencyChanged;
 
@@ -18,6 +19,7 @@ class IdentitySentenceBuilder extends StatelessWidget {
     required this.frequency,
     required this.onActionChanged,
     required this.onTimeChanged,
+    this.onTimePicked,
     required this.onLocationChanged,
     required this.onFrequencyChanged,
   });
@@ -71,7 +73,10 @@ class IdentitySentenceBuilder extends StatelessWidget {
       context: context,
       initialTime: TimeOfDay.now(),
     );
-    if (picked != null && context.mounted) onTimeChanged(picked.format(context));
+    if (picked != null && context.mounted) {
+      onTimePicked?.call(picked);
+      onTimeChanged(picked.format(context));
+    }
   }
 
   void _showFrequencyPicker(BuildContext context) {
