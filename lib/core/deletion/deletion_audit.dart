@@ -28,11 +28,11 @@ class DeletionAudit {
       'op': op,
       'target': target,
       'outcome': outcome,
-      if (durationMs != null) 'durationMs': durationMs,
+      'durationMs': ?durationMs,
       'attempt': attempt,
-      if (habitId != null) 'habitId': habitId,
-      if (uid != null) 'uid': uid,
-      if (error != null) 'error': error,
+      'habitId': ?habitId,
+      'uid': ?uid,
+      'error': ?error,
       'timestamp': DateTime.now().toIso8601String(),
     };
     // Account-level deletions are security events → Crashlytics in prod.

@@ -1,5 +1,5 @@
 {
-  "dart.flutterSdkPath": "C:\\src\\flutter",
+  "dart.flutterSdkPath": "/home/user/flutter",
   "dart.flutterRunAdditionalArgs": [
     "--android-log-filter-tags=Ads:W"
   ]

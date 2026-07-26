@@ -65,3 +65,7 @@ nul
 .worktrees/
 worktrees/
 
+# Development environment
+dev.nix
+scripts/run_emulator.sh
+

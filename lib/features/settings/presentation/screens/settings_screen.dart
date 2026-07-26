@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'package:emerge_app/core/drift/database.dart' hide Column;
 import 'package:emerge_app/features/monetization/presentation/providers/subscription_provider.dart';
 import 'package:emerge_app/core/presentation/widgets/world_background.dart';
 import 'dart:ui';
