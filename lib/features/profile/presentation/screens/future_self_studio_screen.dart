@@ -1,4 +1,6 @@
 import 'package:emerge_app/core/constants/gamification_constants.dart';
+import 'package:emerge_app/core/presentation/widgets/app_error_widget.dart';
+import 'package:emerge_app/core/presentation/widgets/emerge_loading_skeleton.dart';
 import 'package:emerge_app/core/theme/app_theme.dart';
 import 'package:emerge_app/core/theme/archetype_theme.dart';
 import 'package:emerge_app/features/auth/domain/entities/user_extension.dart';
@@ -556,11 +558,9 @@ class _FutureSelfStudioScreenState
       ),
       error: (e, s) => Scaffold(
         backgroundColor: const Color(0xFF0A0A1A),
-        body: Center(
-          child: Text(
-            'Error: $e',
-            style: const TextStyle(color: AppTheme.textMainDark),
-          ),
+        body: AppErrorWidget(
+          message: "Couldn't load profile. Check your connection and try again.",
+          onRetry: () => ref.invalidate(userStatsStreamProvider),
         ),
       ),
     );
@@ -726,8 +726,11 @@ class _FutureSelfStudioScreenState
               habits: habits,
             );
           },
-          loading: () => const SizedBox.shrink(),
-          error: (_, _) => const SizedBox.shrink(),
+          loading: () => const EmergeLoadingSkeleton(itemCount: 1, itemHeight: 200),
+          error: (_, _) => AppErrorWidget(
+            message: "Couldn't load this section.",
+            onRetry: () => ref.invalidate(habitsProvider),
+          ),
         );
       },
       loading: () => const SizedBox.shrink(),

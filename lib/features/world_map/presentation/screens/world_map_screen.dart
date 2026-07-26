@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:emerge_app/core/domain/models/app_world_theme.dart';
+import 'package:emerge_app/core/presentation/widgets/app_error_widget.dart';
+import 'package:emerge_app/core/presentation/widgets/emerge_loading_skeleton.dart';
 import 'package:emerge_app/features/world_map/presentation/providers/world_health_provider.dart';
 import 'package:emerge_app/features/world_map/presentation/widgets/nebula_background.dart';
 import 'package:emerge_app/features/world_map/presentation/widgets/world_ring_layout.dart';
@@ -67,16 +69,10 @@ class _WorldMapScreenState extends ConsumerState<WorldMapScreen> {
 
     return Scaffold(
       body: healthAsync.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (error, stack) => const Center(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(Icons.error_outline, color: Colors.white54, size: 48),
-              SizedBox(height: 16),
-              Text('Failed to load world state.', style: TextStyle(color: Colors.white70)),
-            ],
-          ),
+        loading: () => const EmergeLoadingSkeleton(itemCount: 1, itemHeight: 300),
+        error: (error, stack) => AppErrorWidget(
+          message: "Couldn't load world state. Check your connection and try again.",
+          onRetry: () => ref.invalidate(worldHealthStreamProvider),
         ),
         data: (health) {
           final entropy = entropyAsync.value ?? 0.0;

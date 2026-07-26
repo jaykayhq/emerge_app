@@ -1,3 +1,4 @@
+import 'package:emerge_app/core/presentation/widgets/emerge_loading_skeleton.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -62,14 +63,7 @@ void main() {
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 600));
 
-      expect(
-        find.byWidgetPredicate(
-          (w) =>
-              w is CircularProgressIndicator &&
-              w.color?.toARGB32() == 0xFF2BEE79,
-        ),
-        findsOneWidget,
-      );
+      expect(find.byType(EmergeLoadingSkeleton), findsOneWidget);
     });
 
     testWidgets('shows create habit FAB', (tester) async {

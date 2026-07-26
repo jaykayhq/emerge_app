@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:emerge_app/core/presentation/widgets/emerge_loading_skeleton.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -48,7 +49,7 @@ void main() {
       );
       await tester.pump();
 
-      expect(find.byType(CircularProgressIndicator), findsOneWidget);
+      expect(find.byType(EmergeLoadingSkeleton), findsOneWidget);
     });
 
     testWidgets('shows loaded data state with background and layout elements', (tester) async {
