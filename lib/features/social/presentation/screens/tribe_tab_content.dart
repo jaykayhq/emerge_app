@@ -22,6 +22,7 @@ import 'package:emerge_app/features/gamification/presentation/providers/user_sta
 import 'package:emerge_app/features/auth/domain/entities/user_extension.dart';
 import 'package:emerge_app/features/auth/presentation/providers/auth_providers.dart';
 import 'package:emerge_app/features/onboarding/presentation/widgets/club_box_card.dart';
+import 'package:emerge_app/features/onboarding/presentation/widgets/club_emblem_images.dart';
 import 'package:emerge_app/features/onboarding/presentation/widgets/club_preview_sheet.dart';
 import '../widgets/tribe_header_widgets.dart';
 import '../widgets/tribe_quests_section.dart';
@@ -172,7 +173,11 @@ class _TribeTabContentState extends ConsumerState<TribeTabContent> {
                       final club = filtered[index];
                       return ClubBoxCard(
                         title: club.name,
-                        imageUrl: club.imageUrl,
+                        imageUrl: clubEmblemImageUrl(
+                          existingImageUrl: club.imageUrl,
+                          archetypeId: club.archetypeId,
+                          clubId: club.id,
+                        ),
                         memberCount: club.memberCount,
                         activityStatus:
                             club.memberCount >= 10 ? '🔥 Active' : '🌙 Quiet',
@@ -707,7 +712,11 @@ class _DiscoveryScreenState extends ConsumerState<_DiscoveryScreen> {
                         final club = filtered[index];
                         return ClubBoxCard(
                           title: club.name,
-                          imageUrl: club.imageUrl,
+                          imageUrl: clubEmblemImageUrl(
+                            existingImageUrl: club.imageUrl,
+                            archetypeId: club.archetypeId,
+                            clubId: club.id,
+                          ),
                           memberCount: club.memberCount,
                           activityStatus: club.memberCount >= 10
                               ? '🔥 Active'

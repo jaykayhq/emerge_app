@@ -56,22 +56,39 @@ class ClubBoxCard extends StatelessWidget {
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                   ),
-                  image: (imageUrl != null && imageUrl!.isNotEmpty)
-                      ? DecorationImage(
-                          image: NetworkImage(imageUrl!),
-                          fit: BoxFit.cover,
-                        )
-                      : null,
                 ),
-                child: (imageUrl == null || imageUrl!.isEmpty)
-                    ? Center(
-                        child: Icon(
-                          Icons.emoji_events,
-                          size: 36,
-                          color: accent,
-                        ),
+                child: (imageUrl != null && imageUrl!.isNotEmpty)
+                    ? Image.network(
+                        imageUrl!,
+                        fit: BoxFit.cover,
+                        width: double.infinity,
+                        height: double.infinity,
+                        // Graceful loading: show a subtle spinner over the
+                        // gradient until the image is ready.
+                        loadingBuilder: (context, child, progress) {
+                          if (progress == null) return child;
+                          return Center(
+                            child: SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                valueColor:
+                                    AlwaysStoppedAnimation<Color>(accent),
+                                value: progress.expectedTotalBytes != null
+                                    ? progress.cumulativeBytesLoaded /
+                                          progress.expectedTotalBytes!
+                                    : null,
+                              ),
+                            ),
+                          );
+                        },
+                        // Never show a broken image: fall back to the emblem
+                        // icon on the gradient if the network image fails.
+                        errorBuilder: (context, error, stackTrace) =>
+                            _EmblemFallback(accent: accent),
                       )
-                    : null,
+                    : _EmblemFallback(accent: accent),
               ),
             ),
             // Info area.
@@ -147,6 +164,22 @@ class ClubBoxCard extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+}
+
+/// Emblem shown over the gradient when there is no image, the image is still
+/// loading has failed, or the club has no picture — a trophy icon so the card
+/// always looks intentional rather than broken.
+class _EmblemFallback extends StatelessWidget {
+  final Color accent;
+
+  const _EmblemFallback({required this.accent});
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Icon(Icons.emoji_events, size: 36, color: accent),
     );
   }
 }
