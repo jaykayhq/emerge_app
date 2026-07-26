@@ -47,8 +47,6 @@ const _archetypeDefaultAttributes = {
   UserArchetype.none: HabitAttribute.vitality,
 };
 
-int _timeOfDayToMinutes(TimeOfDay t) => t.hour * 60 + t.minute;
-
 /// Pure function that computes smart defaults for habit creation.
 ///
 /// - [existingHabits]: user's current habits (used for time + timer anchoring).
@@ -68,7 +66,8 @@ SmartDefaults computeSmartDefaults({
     final timeCounts = <int, int>{};
     for (final h in existingHabits) {
       if (h.reminderTime != null) {
-        final minutes = _timeOfDayToMinutes(h.reminderTime!);
+        final t = h.reminderTime!;
+        final minutes = t.hour * 60 + t.minute;
         timeCounts[minutes] = (timeCounts[minutes] ?? 0) + 1;
       }
     }
