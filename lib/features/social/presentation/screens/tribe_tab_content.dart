@@ -23,6 +23,8 @@ import 'package:emerge_app/features/auth/domain/entities/user_extension.dart';
 import 'package:emerge_app/features/auth/presentation/providers/auth_providers.dart';
 import 'package:emerge_app/features/onboarding/presentation/widgets/club_box_card.dart';
 import 'package:emerge_app/features/onboarding/presentation/widgets/club_emblem_images.dart';
+import 'package:emerge_app/features/monetization/presentation/providers/subscription_provider.dart';
+import 'package:emerge_app/features/monetization/presentation/widgets/premium_limit_dialog.dart';
 import 'package:emerge_app/features/onboarding/presentation/widgets/club_preview_sheet.dart';
 import '../widgets/tribe_header_widgets.dart';
 import '../widgets/tribe_quests_section.dart';
@@ -312,6 +314,8 @@ class _TribeTabContentState extends ConsumerState<TribeTabContent> {
       );
       return;
     }
+    // Free-tier gate: block joining a 2nd club unless premium.
+    if (await _blockedByClubLimit(userId)) return;
     try {
       await ref.read(tribeRepositoryProvider).joinClub(userId, club.id);
       // Membership changed → re-evaluate hasClub so the view switches to the
@@ -325,6 +329,28 @@ class _TribeTabContentState extends ConsumerState<TribeTabContent> {
         SnackBar(content: Text('Failed to join: $e')),
       );
     }
+  }
+
+  /// Returns true (and shows the premium limit dialog) when a free user is
+  /// already in >= 1 club and therefore cannot join another. Premium users
+  /// and users with no clubs are never blocked.
+  Future<bool> _blockedByClubLimit(String userId) async {
+    final isPremium = ref.read(isPremiumProvider).value ?? false;
+    if (isPremium) return false;
+    try {
+      final tribes = await ref
+          .read(tribeRepositoryProvider)
+          .getUserTribes(userId);
+      if (!mounted) return true;
+      if (tribes.isNotEmpty) {
+        showPremiumLimitDialog(context, limitType: PremiumLimitType.club);
+        return true;
+      }
+    } catch (e, s) {
+      // On lookup failure, fail open (allow the join) rather than blocking.
+      AppLogger.e('_blockedByClubLimit: getUserTribes failed', e, s);
+    }
+    return false;
   }
 
   // ============ CLUB TABS (has club) ============
@@ -852,6 +878,22 @@ class _DiscoveryScreenState extends ConsumerState<_DiscoveryScreen> {
         const SnackBar(content: Text('Sign in to join a club')),
       );
       return;
+    }
+    // Free-tier gate: block joining a 2nd club unless premium.
+    final isPremium = ref.read(isPremiumProvider).value ?? false;
+    if (!isPremium) {
+      try {
+        final tribes = await ref
+            .read(tribeRepositoryProvider)
+            .getUserTribes(userId);
+        if (!mounted) return;
+        if (tribes.isNotEmpty) {
+          showPremiumLimitDialog(context, limitType: PremiumLimitType.club);
+          return;
+        }
+      } catch (e, s) {
+        AppLogger.e('_DiscoveryScreen: club-limit lookup failed', e, s);
+      }
     }
     try {
       await ref.read(tribeRepositoryProvider).joinClub(userId, club.id);

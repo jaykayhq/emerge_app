@@ -5,6 +5,7 @@ import 'package:emerge_app/features/monetization/data/repositories/revenue_cat_r
 import 'package:emerge_app/features/monetization/domain/repositories/monetization_repository.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 part 'subscription_provider.g.dart';
 
 @Riverpod(keepAlive: true)
@@ -71,4 +72,39 @@ class IsPremium extends _$IsPremium {
     state = const AsyncLoading();
     state = AsyncValue.data(await build());
   }
+}
+
+/// Whether a daily login bonus is available to claim for a premium user.
+///
+/// Returns false for free users and for premium users who already claimed
+/// today. Claiming persists the claim date to [SharedPreferences] so the
+/// bonus is one-per-calendar-day.
+@riverpod
+class DailyLoginBonus extends _$DailyLoginBonus {
+  static const _prefsKey = 'last_daily_bonus_claim';
+
+  @override
+  Future<bool> build() async {
+    final isPremium = await ref.watch(isPremiumProvider.future);
+    if (!isPremium) return false;
+
+    final prefs = await SharedPreferences.getInstance();
+    final lastClaim = prefs.getString(_prefsKey);
+    if (lastClaim == _todayKey()) {
+      return false; // Already claimed today.
+    }
+    return true; // Bonus available.
+  }
+
+  /// Records today's claim so the bonus cannot be claimed again until
+  /// tomorrow. Callers are responsible for awarding the actual reward (e.g.
+  /// +XP) in response to this returning normally.
+  Future<void> claimBonus() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_prefsKey, _todayKey());
+    state = const AsyncValue.data(false);
+  }
+
+  /// yyyy-MM-dd for the current local date.
+  String _todayKey() => DateTime.now().toIso8601String().substring(0, 10);
 }

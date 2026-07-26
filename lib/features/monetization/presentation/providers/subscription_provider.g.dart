@@ -99,3 +99,69 @@ abstract class _$IsPremium extends $AsyncNotifier<bool> {
     return element.handleCreate(ref, build);
   }
 }
+
+/// Whether a daily login bonus is available to claim for a premium user.
+///
+/// Returns false for free users and for premium users who already claimed
+/// today. Claiming persists the claim date to [SharedPreferences] so the
+/// bonus is one-per-calendar-day.
+
+@ProviderFor(DailyLoginBonus)
+final dailyLoginBonusProvider = DailyLoginBonusProvider._();
+
+/// Whether a daily login bonus is available to claim for a premium user.
+///
+/// Returns false for free users and for premium users who already claimed
+/// today. Claiming persists the claim date to [SharedPreferences] so the
+/// bonus is one-per-calendar-day.
+final class DailyLoginBonusProvider
+    extends $AsyncNotifierProvider<DailyLoginBonus, bool> {
+  /// Whether a daily login bonus is available to claim for a premium user.
+  ///
+  /// Returns false for free users and for premium users who already claimed
+  /// today. Claiming persists the claim date to [SharedPreferences] so the
+  /// bonus is one-per-calendar-day.
+  DailyLoginBonusProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'dailyLoginBonusProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$dailyLoginBonusHash();
+
+  @$internal
+  @override
+  DailyLoginBonus create() => DailyLoginBonus();
+}
+
+String _$dailyLoginBonusHash() => r'2194c9d94dda996a41d7aeb5a81c8c16c1fe5c85';
+
+/// Whether a daily login bonus is available to claim for a premium user.
+///
+/// Returns false for free users and for premium users who already claimed
+/// today. Claiming persists the claim date to [SharedPreferences] so the
+/// bonus is one-per-calendar-day.
+
+abstract class _$DailyLoginBonus extends $AsyncNotifier<bool> {
+  FutureOr<bool> build();
+  @$mustCallSuper
+  @override
+  WhenComplete runBuild() {
+    final ref = this.ref as $Ref<AsyncValue<bool>, bool>;
+    final element =
+        ref.element
+            as $ClassProviderElement<
+              AnyNotifier<AsyncValue<bool>, bool>,
+              AsyncValue<bool>,
+              Object?,
+              Object?
+            >;
+    return element.handleCreate(ref, build);
+  }
+}

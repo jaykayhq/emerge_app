@@ -5,7 +5,7 @@ import 'package:emerge_app/features/monetization/presentation/providers/paywall_
 import 'package:emerge_app/features/monetization/presentation/screens/paywall_screen.dart';
 
 final loadingState = const PaywallState(isLoading: true);
-final loadedState = PaywallState(isLoading: false, offerings: null);
+final loadedState = const PaywallState(isLoading: false, offerings: null);
 
 class _MockPaywallController extends PaywallController {
   final PaywallState _state;
@@ -32,13 +32,16 @@ Widget createTest(PaywallState state) {
 }
 
 void main() {
-  testWidgets('renders paywall screen', (tester) async {
+  testWidgets('shows Go Beyond the 5 headline and premium benefits',
+      (tester) async {
     await tester.pumpWidget(createTest(loadingState));
     await tester.pump();
 
-    expect(find.text('Evolve Your Avatar.'), findsOneWidget);
-    expect(find.text('Command Your Entropy.'), findsOneWidget);
-    expect(find.text('Restore Purchases'), findsOneWidget);
+    expect(find.text('Go Beyond the 5'), findsOneWidget);
+    expect(find.text('UNLIMITED'), findsOneWidget);
+    expect(find.text('PREMIUM INSIGHTS'), findsOneWidget);
+    expect(find.text('EXCLUSIVE STYLE'), findsOneWidget);
+    expect(find.text('Restore'), findsOneWidget);
   });
 
   testWidgets('shows no packages available when offerings null',
@@ -47,9 +50,7 @@ void main() {
     await tester.pump();
 
     expect(
-      find.text(
-        'No subscription packages available currently.',
-      ),
+      find.text('No subscription packages available currently.'),
       findsOneWidget,
     );
   });
