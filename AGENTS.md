@@ -79,6 +79,13 @@ SQLite, **fpdart** `Either` for error handling. Tests use `flutter_test`,
   fresh, read the full output, then make the claim with the evidence.
   Regression test? Show red-green (revert fix → must fail → restore → pass).
 
+### Test discipline (development workflow)
+- **Do NOT run the full test suite during development.** It's slow and
+  unnecessary. Run focused tests for the specific files/features you're
+  modifying. Only `dart analyze` for static analysis.
+- When prompting subagents, always include: "Do not run the full test suite.
+  Run only focused tests or dart analyze."
+
 ### Project-specific gotchas
 - **Inside `go_router` redirect, never `ref.watch`** — it creates a rebuild
   loop. Watch sources outside the redirect closure, `ref.read` inside it.
