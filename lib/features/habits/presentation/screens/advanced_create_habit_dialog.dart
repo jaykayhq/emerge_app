@@ -200,18 +200,10 @@ class _AdvancedCreateHabitDialogState
           );
           context.pop();
         }
-      } on SubscriptionLimitReachedException catch (e) {
+      } on SubscriptionLimitReachedException catch (_) {
+        // Free-tier habit cap reached — show the aspiration upgrade dialog.
         if (mounted) {
-          showDialog(
-            context: context,
-            builder: (context) => PremiumLimitDialog(
-              title: 'Habit Capacity Reached',
-              message: e.toString().replaceAll(
-                'SubscriptionLimitReachedException: ',
-                '',
-              ),
-            ),
-          );
+          showPremiumLimitDialog(context, limitType: PremiumLimitType.habit);
         }
       } catch (e, s) {
         AppLogger.e('Error creating habit from Advanced Create', e, s);

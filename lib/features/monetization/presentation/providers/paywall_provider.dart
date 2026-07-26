@@ -68,12 +68,14 @@ class PaywallController extends _$PaywallController {
     state = state.copyWith(isLoading: true, error: () => null);
     try {
       final repository = ref.read(monetizationRepositoryProvider);
-      final result = await repository.purchasePremium();
+      final result = await repository.purchasePremium(package);
 
       result.fold(
         (error) => state = state.copyWith(isLoading: false, error: () => error),
-        (isPremium) =>
-            state = state.copyWith(isLoading: false, isSuccess: isPremium),
+        (isPremium) {
+          state = state.copyWith(isLoading: false, isSuccess: isPremium);
+          if (isPremium) ref.invalidate(isPremiumProvider);
+        },
       );
     } catch (e) {
       state = state.copyWith(
@@ -91,8 +93,10 @@ class PaywallController extends _$PaywallController {
 
       result.fold(
         (error) => state = state.copyWith(isLoading: false, error: () => error),
-        (isPremium) =>
-            state = state.copyWith(isLoading: false, isSuccess: isPremium),
+        (isPremium) {
+          state = state.copyWith(isLoading: false, isSuccess: isPremium);
+          if (isPremium) ref.invalidate(isPremiumProvider);
+        },
       );
     } catch (e) {
       state = state.copyWith(

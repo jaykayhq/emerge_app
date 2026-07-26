@@ -57,7 +57,7 @@ final class LastHabitCompletedProvider
 }
 
 String _$lastHabitCompletedHash() =>
-    r'8080b2b08fe047f562b6916a1c95e3854b3807f3';
+    r'6fc6dad847b47a7337b247047dfc497a12439c3a';
 
 /// Emits `true` on the frame where today's last habit is completed, then
 /// resets to `false`. Timeline watches this to fire the all-done celebration.

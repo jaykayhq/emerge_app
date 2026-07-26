@@ -20,8 +20,10 @@ abstract class MonetizationRepository {
   /// Get the current entitlement status (e.g. "premium" or null)
   Future<Either<String, bool>> get isPremium;
 
-  /// Purchase a package/product
-  Future<Either<String, bool>> purchasePremium();
+  /// Purchase a package/product. When [package] is provided, that exact
+  /// package is purchased; otherwise the current offering's first package is
+  /// used (legacy fallback).
+  Future<Either<String, bool>> purchasePremium([Package? package]);
 
   /// Restore purchases
   Future<Either<String, bool>> restorePurchases();

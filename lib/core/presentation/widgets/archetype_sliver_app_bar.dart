@@ -10,6 +10,7 @@ class ArchetypeSliverAppBar extends ConsumerWidget {
   final Widget? leading;
   final Widget? badge;
   final Widget? syncIndicator;
+  final Widget? momentumDot;
   final PreferredSizeWidget? bottom;
   final List<Widget>? actions;
 
@@ -19,6 +20,7 @@ class ArchetypeSliverAppBar extends ConsumerWidget {
     this.leading,
     this.badge,
     this.syncIndicator,
+    this.momentumDot,
     this.bottom,
     this.actions,
   });
@@ -61,6 +63,8 @@ class ArchetypeSliverAppBar extends ConsumerWidget {
               ),
             ),
             if (badge != null) ...[const SizedBox(width: 8), badge!],
+            if (momentumDot != null)
+              ...[const SizedBox(width: 8), momentumDot!],
             if (syncIndicator != null) ...[
               const SizedBox(width: 8),
               syncIndicator!,

@@ -9,6 +9,7 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:purchases_flutter/purchases_flutter.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:emerge_app/features/monetization/presentation/screens/paystack_checkout_screen.dart';
+import 'package:emerge_app/features/monetization/presentation/widgets/premium_badge.dart';
 
 /// Redesigned paywall: "Go Beyond the 5" headline, hyperbolic-discounting
 /// framing ("less than a coffee per day"), gold shimmer CTA, animated cosmic
@@ -125,6 +126,7 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen>
                           title: 'EXCLUSIVE STYLE',
                           subtitle: 'Gold nameplate, shimmer badge & more',
                           color: Color(0xFFFFD700),
+                          trailing: PremiumBadge(size: 28),
                         ),
                         const Gap(40),
                         _buildPurchaseSection(paywallState, offerings),
@@ -183,15 +185,20 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen>
     }
     if (offerings != null && offerings.current != null) {
       final packages = offerings.current!.availablePackages;
-      // Prefer the annual package's price for the "coffee" framing.
-      final priceString = packages.isNotEmpty
-          ? packages.first.storeProduct.priceString
-          : null;
+      // Only make the per-day ("coffee") framing when an actual annual package
+      // exists — showing it against a monthly price would be misleading.
+      Package? annual;
+      for (final p in packages) {
+        if (p.packageType == PackageType.annual) {
+          annual = p;
+          break;
+        }
+      }
       return Column(
         children: [
-          if (priceString != null) ...[
+          if (annual != null) ...[
             Text(
-              priceString,
+              annual.storeProduct.priceString,
               style: const TextStyle(
                 color: Colors.white,
                 fontSize: 32,
@@ -199,7 +206,7 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen>
               ),
             ),
             Text(
-              'less than a coffee per day',
+              'per year — less than a coffee a week',
               style: TextStyle(
                 color: Colors.white.withValues(alpha: 0.4),
                 fontSize: 14,
@@ -245,7 +252,8 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen>
             ),
           ),
         ).then((success) {
-          if (success == true && context.mounted && context.canPop()) {
+          if (!mounted) return;
+          if (success == true && context.canPop()) {
             context.pop();
           }
         });
@@ -298,12 +306,14 @@ class _BenefitBlock extends StatelessWidget {
   final String title;
   final String subtitle;
   final Color color;
+  final Widget? trailing;
 
   const _BenefitBlock({
     required this.icon,
     required this.title,
     required this.subtitle,
     required this.color,
+    this.trailing,
   });
 
   @override
@@ -341,6 +351,7 @@ class _BenefitBlock extends StatelessWidget {
               ],
             ),
           ),
+          if (trailing != null) ...[const Gap(12), trailing!],
         ],
       ),
     );

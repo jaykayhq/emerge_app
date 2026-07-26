@@ -46,7 +46,7 @@ class MockMonetizationRepository implements MonetizationRepository {
   Future<Either<String, bool>> get isPremium async => Right(_premium);
 
   @override
-  Future<Either<String, bool>> purchasePremium() async {
+  Future<Either<String, bool>> purchasePremium([Package? package]) async {
     _premium = true;
     return const Right(true);
   }

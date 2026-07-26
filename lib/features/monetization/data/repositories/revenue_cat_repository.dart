@@ -231,23 +231,29 @@ class RevenueCatRepository implements MonetizationRepository {
   }
 
   @override
-  Future<Either<String, bool>> purchasePremium() async {
+  Future<Either<String, bool>> purchasePremium([Package? package]) async {
     if (!_isConfigured) {
       return const Left('RevenueCat not configured');
     }
     try {
-      final offerings = await Purchases.getOfferings();
+      Package? target = package;
+      if (target == null) {
+        final offerings = await Purchases.getOfferings();
 
-      // Fallback logic: Use current offering, or the first one found if current is null
-      final offering =
-          offerings.current ??
-          (offerings.all.isNotEmpty ? offerings.all.values.first : null);
+        // Fallback logic: Use current offering, or the first one found if current is null
+        final offering =
+            offerings.current ??
+            (offerings.all.isNotEmpty ? offerings.all.values.first : null);
 
-      if (offering != null && offering.availablePackages.isNotEmpty) {
-        final package = offering.availablePackages.first;
+        if (offering != null && offering.availablePackages.isNotEmpty) {
+          target = offering.availablePackages.first;
+        }
+      }
+
+      if (target != null) {
         // Use new purchase API
         final purchaseResult = await Purchases.purchase(
-          PurchaseParams.package(package),
+          PurchaseParams.package(target),
         );
         final isPremium =
             purchaseResult
