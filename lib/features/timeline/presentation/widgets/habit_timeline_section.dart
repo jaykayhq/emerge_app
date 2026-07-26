@@ -512,6 +512,20 @@ class _IndentedHabitItemState extends State<IndentedHabitItem> {
             fontWeight: FontWeight.bold,
           ),
         ),
+        const SizedBox(width: 8),
+        // Undo — reverts completion via the same toggle callback
+        GestureDetector(
+          onTap: widget.onCheckboxTap,
+          behavior: HitTestBehavior.opaque,
+          child: Padding(
+            padding: const EdgeInsets.all(4),
+            child: Icon(
+              Icons.undo,
+              size: 18,
+              color: Colors.white.withValues(alpha: 0.6),
+            ),
+          ),
+        ),
       ],
     );
   }

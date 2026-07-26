@@ -459,7 +459,7 @@ class _TimelineScreenState extends ConsumerState<TimelineScreen> {
             groupedHabits: timelineGroups,
             selectedDate: _selectedDate,
             onHabitTap: (habit) {
-              context.go('/world-map', extra: habit.attribute.name);
+              context.push('/timeline/habit/${habit.id}');
             },
             onHabitToggle: (habit) {
               _toggleHabitCompletion(habit);

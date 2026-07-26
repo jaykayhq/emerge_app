@@ -12,7 +12,8 @@ import 'package:emerge_app/features/ai/presentation/screens/goldilocks_screen.da
 import 'package:emerge_app/features/gamification/presentation/screens/leveling_screen.dart';
 import 'package:emerge_app/features/profile/presentation/screens/future_self_studio_screen.dart';
 import 'package:emerge_app/features/gamification/presentation/widgets/level_up_listener.dart';
-import 'package:emerge_app/features/habits/presentation/screens/advanced_create_habit_dialog.dart';
+import 'package:emerge_app/features/habits/presentation/screens/habit_create_screen.dart';
+import 'package:emerge_app/features/habits/presentation/screens/habit_activity_screen.dart';
 import 'package:emerge_app/features/social/presentation/screens/leaderboard_screen.dart';
 import 'package:emerge_app/features/gamification/presentation/screens/level_up_reward_screen.dart';
 import 'package:emerge_app/features/habits/domain/entities/habit.dart';
@@ -399,8 +400,31 @@ GoRouter router(Ref ref) {
                 routes: [
                   GoRoute(
                     path: 'create-habit',
-                    builder: (context, state) =>
-                        const AdvancedCreateHabitDialog(),
+                    pageBuilder: (context, state) => CustomTransitionPage(
+                      key: state.pageKey,
+                      child: const HabitCreateScreen(),
+                      transitionsBuilder:
+                          (context, animation, secondaryAnimation, child) =>
+                              SlideTransition(
+                                position: Tween<Offset>(
+                                  begin: const Offset(0, 1),
+                                  end: Offset.zero,
+                                ).animate(
+                                  CurvedAnimation(
+                                    parent: animation,
+                                    curve: Curves.easeInOut,
+                                  ),
+                                ),
+                                child: child,
+                              ),
+                    ),
+                  ),
+                  GoRoute(
+                    path: 'habit/:habitId',
+                    parentNavigatorKey: _rootNavigatorKey,
+                    builder: (context, state) => HabitActivityScreen(
+                      habitId: state.pathParameters['habitId']!,
+                    ),
                   ),
                   // detail/:habitId removed — HabitDetailScreen deleted
                 ],

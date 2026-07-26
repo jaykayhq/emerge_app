@@ -11,7 +11,7 @@ import 'package:go_router/go_router.dart';
 ///    [PremiumLimitType]. It supplies aspiration copy + honest social proof.
 ///  * The primary constructor with explicit [title]/[message] — retained for
 ///    call sites that already build their own copy (e.g. the habit-capacity
-///    path in `advanced_create_habit_dialog.dart`).
+///    path in `habit_create_screen.dart`).
 ///
 /// Copy is intentionally honest: it frames the free cap as a "focused start"
 /// and appeals to the user's own potential rather than citing fabricated
