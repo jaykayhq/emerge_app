@@ -170,6 +170,9 @@ class _HabitCategorySection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final firstIncompleteIndex =
+        habits.indexWhere((h) => !h.isCompletedOn(selectedDate));
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -177,8 +180,8 @@ class _HabitCategorySection extends StatelessWidget {
         Row(
           children: [
             Container(
-              width: 12,
-              height: 12,
+              width: 10,
+              height: 10,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 color: _categoryColor,
@@ -218,7 +221,7 @@ class _HabitCategorySection extends StatelessWidget {
             ),
           ],
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: 4),
         // Indented habit items
         ...habits.asMap().entries.map((entry) {
           final index = entry.key;
@@ -231,6 +234,7 @@ class _HabitCategorySection extends StatelessWidget {
             onTimerTap: () => onTimerTap(habit),
             onMenuTap: () => onMenuTap(habit),
             showConnector: index < habits.length - 1,
+            isFirstIncomplete: index == firstIncompleteIndex,
           );
         }),
         if (!isLast) const SizedBox(height: 16),
@@ -255,6 +259,7 @@ class IndentedHabitItem extends StatefulWidget {
   final VoidCallback onTimerTap;
   final VoidCallback onMenuTap;
   final bool showConnector;
+  final bool isFirstIncomplete;
 
   const IndentedHabitItem({
     required this.habit,
@@ -264,6 +269,7 @@ class IndentedHabitItem extends StatefulWidget {
     required this.onTimerTap,
     required this.onMenuTap,
     this.showConnector = true,
+    this.isFirstIncomplete = false,
     super.key,
   });
 
@@ -342,6 +348,30 @@ class _IndentedHabitItemState extends State<IndentedHabitItem> {
       totalSeconds: _totalSeconds,
     );
 
+    // Contrast: completed cards get a darker background
+    final gradientColors = completed
+        ? <Color>[
+            const Color(0xFF1A1A2E).withValues(alpha: 0.85),
+            const Color(0xFF1A1A2E).withValues(alpha: 0.75),
+          ]
+        : <Color>[
+            color.withValues(alpha: 0.35),
+            Colors.white.withValues(alpha: 0.06),
+          ];
+    final gradientStops = completed
+        ? const [0.0, 1.0]
+        : _isTimerRunning
+            ? [progress, progress]
+            : const [0.0, 0.0];
+
+    // Next incomplete gets a subtle green glow border
+    final borderColor = widget.isFirstIncomplete
+        ? const Color(0xFF2BEE79).withValues(alpha: 0.25)
+        : completed
+            ? color.withValues(alpha: 0.3)
+            : Colors.white.withValues(alpha: 0.1);
+    final borderWidth = widget.isFirstIncomplete ? 1.5 : 1.0;
+
     return Padding(
       padding: const EdgeInsets.only(left: 16, bottom: 8),
       child: Row(
@@ -352,7 +382,7 @@ class _IndentedHabitItemState extends State<IndentedHabitItem> {
             Padding(
               padding: const EdgeInsets.only(left: 5, top: 0),
               child: Container(
-                width: 2,
+                width: 1.5,
                 height: 48,
                 decoration: BoxDecoration(
                   color: color.withValues(alpha: 0.2),
@@ -376,23 +406,16 @@ class _IndentedHabitItemState extends State<IndentedHabitItem> {
               child: AnimatedContainer(
                 duration: const Duration(milliseconds: 250),
                 curve: Curves.easeOut,
-                padding: const EdgeInsets.all(12),
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
-                    colors: [
-                      color.withValues(alpha: 0.35),
-                      Colors.white.withValues(alpha: 0.06),
-                    ],
-                    stops: _isTimerRunning || completed
-                        ? (completed ? const [1.0, 1.0] : [progress, progress])
-                        : const [0.0, 0.0],
+                    colors: gradientColors,
+                    stops: gradientStops,
                   ),
                   borderRadius: BorderRadius.circular(10),
                   border: Border.all(
-                    color: completed
-                        ? color.withValues(alpha: 0.3)
-                        : Colors.white.withValues(alpha: 0.1),
-                    width: 1,
+                    color: borderColor,
+                    width: borderWidth,
                   ),
                 ),
                 child: completed
@@ -411,11 +434,11 @@ class _IndentedHabitItemState extends State<IndentedHabitItem> {
       children: [
         // Title (body tap zone)
         Expanded(
-          child: Text(
+            child: Text(
             widget.habit.title,
             style: const TextStyle(
               color: Colors.white,
-              fontSize: 14,
+              fontSize: 13,
               fontWeight: FontWeight.w500,
             ),
             maxLines: 2,
@@ -467,11 +490,11 @@ class _IndentedHabitItemState extends State<IndentedHabitItem> {
         const SizedBox(width: 12),
         // Title with strike-through
         Expanded(
-          child: Text(
+            child: Text(
             widget.habit.title,
             style: const TextStyle(
               color: Colors.white,
-              fontSize: 14,
+              fontSize: 13,
               fontWeight: FontWeight.w500,
               decoration: TextDecoration.lineThrough,
               decorationColor: Colors.white54,
@@ -485,7 +508,7 @@ class _IndentedHabitItemState extends State<IndentedHabitItem> {
           '+$xp XP',
           style: TextStyle(
             color: color,
-            fontSize: 12,
+            fontSize: 11,
             fontWeight: FontWeight.bold,
           ),
         ),

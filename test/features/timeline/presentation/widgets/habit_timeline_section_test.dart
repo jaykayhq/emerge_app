@@ -180,5 +180,88 @@ void main() {
       expect(find.byIcon(Icons.check_circle), findsOneWidget);
       expect(find.textContaining('XP'), findsWidgets);
     });
+
+    testWidgets('completed card has darker background', (tester) async {
+      await tester.pumpWidget(
+        buildTestApp(
+          IndentedHabitItem(
+            habit: _makeHabit(completedToday: true),
+            selectedDate: DateTime.now(),
+            onRowBodyTap: () {},
+            onCheckboxTap: () {},
+            onTimerTap: () {},
+            onMenuTap: () {},
+          ),
+        ),
+      );
+      final container = tester.widget<AnimatedContainer>(
+        find.byType(AnimatedContainer),
+      );
+      final decoration = container.decoration as BoxDecoration;
+      final gradient = decoration.gradient as LinearGradient;
+      // Completed cards use the dark background gradient (0xFF1A1A2E)
+      expect(
+        gradient.colors[0],
+        const Color(0xFF1A1A2E).withValues(alpha: 0.85),
+      );
+    });
+  });
+
+  group('IndentedHabitItem - first incomplete glow', () {
+    testWidgets('first incomplete habit has green border glow', (tester) async {
+      final now = DateTime.now();
+      await tester.pumpWidget(
+        buildTestApp(
+          IndentedHabitItem(
+            habit: _makeHabit(completedToday: false),
+            selectedDate: now,
+            onRowBodyTap: () {},
+            onCheckboxTap: () {},
+            onTimerTap: () {},
+            onMenuTap: () {},
+            isFirstIncomplete: true,
+          ),
+        ),
+      );
+      final container = tester.widget<AnimatedContainer>(
+        find.byType(AnimatedContainer),
+      );
+      final decoration = container.decoration as BoxDecoration;
+      expect(
+        decoration.border,
+        Border.all(
+          color: const Color(0xFF2BEE79).withValues(alpha: 0.25),
+          width: 1.5,
+        ),
+      );
+    });
+
+    testWidgets('non-first incomplete uses default border', (tester) async {
+      final now = DateTime.now();
+      await tester.pumpWidget(
+        buildTestApp(
+          IndentedHabitItem(
+            habit: _makeHabit(completedToday: false),
+            selectedDate: now,
+            onRowBodyTap: () {},
+            onCheckboxTap: () {},
+            onTimerTap: () {},
+            onMenuTap: () {},
+            isFirstIncomplete: false,
+          ),
+        ),
+      );
+      final container = tester.widget<AnimatedContainer>(
+        find.byType(AnimatedContainer),
+      );
+      final decoration = container.decoration as BoxDecoration;
+      expect(
+        decoration.border,
+        Border.all(
+          color: Colors.white.withValues(alpha: 0.1),
+          width: 1.0,
+        ),
+      );
+    });
   });
 }

@@ -1,127 +1,40 @@
-import 'package:emerge_app/features/habits/domain/entities/habit.dart';
 import 'package:emerge_app/features/timeline/presentation/widgets/recap_summary_card.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-Habit _makeHabit({
-  String id = 'h1',
-  String title = 'Test Habit',
-  DateTime? lastCompletedDate,
-  DateTime? createdAt,
-}) {
-  return Habit(
-    id: id,
-    userId: 'u1',
-    title: title,
-    createdAt: createdAt ?? DateTime.now(),
-    lastCompletedDate: lastCompletedDate,
-    attribute: HabitAttribute.vitality,
-  );
-}
-
 Widget buildTestApp(Widget child) => MaterialApp(home: Scaffold(body: child));
 
 void main() {
-  group('RecapSummaryCard', () {
-    testWidgets('shows RECAP label, today count, weekly count and streak', (
-      tester,
-    ) async {
-      final now = DateTime.now();
-      final today = DateTime(now.year, now.month, now.day);
-      final thisWeek = DateTime(
-        now.year,
-        now.month,
-        now.day - (now.weekday % 7),
-      );
-      final lastWeek = thisWeek.subtract(const Duration(days: 8));
-
-      final habits = [
-        _makeHabit(
-          id: 'h1',
-          createdAt: today.subtract(const Duration(days: 1)),
-          lastCompletedDate: today, // completed today
-        ),
-        _makeHabit(
-          id: 'h2',
-          lastCompletedDate: thisWeek.add(const Duration(hours: 2)),
-        ),
-        _makeHabit(
-          id: 'h3',
-          lastCompletedDate: thisWeek.add(const Duration(hours: 4)),
-        ),
-        _makeHabit(
-          id: 'h4',
-          lastCompletedDate: thisWeek.add(const Duration(hours: 6)),
-        ),
-        _makeHabit(id: 'h5', lastCompletedDate: lastWeek), // outside this week
-        _makeHabit(id: 'h6', lastCompletedDate: null), // never completed
-      ];
-
+  group('RecapSummaryCard - momentum arc + streak flame', () {
+    testWidgets('shows momentum arc and streak flame', (tester) async {
       await tester.pumpWidget(
         buildTestApp(
-          RecapSummaryCard(habits: habits, streak: 12, onTap: () {}),
+          const RecapSummaryCard(
+            completionFraction: 0.75,
+            currentStreak: 7,
+            tribePercentile: 90,
+          ),
         ),
       );
 
-      // Eyebrow label
-      expect(find.text('RECAP'), findsOneWidget);
-      // Today done: 1 completed today out of 6 habits -> "1/6"
-      expect(find.text('1/6'), findsOneWidget);
-      // This week: 4 habits completed this week
-      expect(find.text('4'), findsOneWidget);
-      // Streak
-      expect(find.text('12'), findsOneWidget);
-    });
-
-    testWidgets('today count reflects only today completions', (tester) async {
-      final now = DateTime.now();
-      final today = DateTime(now.year, now.month, now.day);
-      final habits = [
-        _makeHabit(
-          id: 'h1',
-          createdAt: today.subtract(const Duration(days: 1)),
-          lastCompletedDate: today,
-        ),
-        _makeHabit(
-          id: 'h2',
-          lastCompletedDate: today.subtract(const Duration(days: 1)),
-        ),
-      ];
-
-      await tester.pumpWidget(
-        buildTestApp(
-          RecapSummaryCard(habits: habits, streak: 3, onTap: () {}),
-        ),
-      );
-
-      expect(find.text('1/2'), findsOneWidget);
-    });
-
-    testWidgets('shows 0 when no habits', (tester) async {
-      await tester.pumpWidget(
-        buildTestApp(RecapSummaryCard(habits: [], streak: 0, onTap: () {})),
-      );
-
-      expect(find.text('RECAP'), findsOneWidget);
-      expect(find.text('0/0'), findsOneWidget);
-      expect(find.text('0'), findsWidgets);
-    });
-
-    testWidgets('shows labels correctly', (tester) async {
-      await tester.pumpWidget(
-        buildTestApp(RecapSummaryCard(habits: [], streak: 5, onTap: () {})),
-      );
-
-      expect(find.text('today done'), findsOneWidget);
-      expect(find.text('this week'), findsOneWidget);
+      expect(find.text('75%'), findsOneWidget);
+      expect(find.text('7'), findsOneWidget);
       expect(find.text('day streak'), findsOneWidget);
+      expect(
+        find.text("You're ahead of 90% of your tribe today."),
+        findsOneWidget,
+      );
     });
 
     testWidgets('tapping fires onTap callback', (tester) async {
       int tapCount = 0;
       await tester.pumpWidget(
         buildTestApp(
-          RecapSummaryCard(habits: [], streak: 0, onTap: () => tapCount++),
+          RecapSummaryCard(
+            completionFraction: 0.5,
+            currentStreak: 3,
+            onTap: () => tapCount++,
+          ),
         ),
       );
 
@@ -130,24 +43,135 @@ void main() {
       expect(tapCount, 1);
     });
 
-    testWidgets('does not count habits completed before this week', (
-      tester,
-    ) async {
-      final oldDate = DateTime.now().subtract(const Duration(days: 14));
-
+    testWidgets('shows 0% when no completions', (tester) async {
       await tester.pumpWidget(
         buildTestApp(
-          RecapSummaryCard(
-            habits: [_makeHabit(id: 'h1', lastCompletedDate: oldDate)],
-            streak: 0,
-            onTap: () {},
+          const RecapSummaryCard(
+            completionFraction: 0.0,
+            currentStreak: 0,
           ),
         ),
       );
 
-      // This week count is 0 (only the old one exists).
-      expect(find.text('0'), findsWidgets);
-      expect(find.text('1'), findsNothing);
+      expect(find.text('0%'), findsOneWidget);
+      expect(find.text("Your day hasn't started yet."), findsOneWidget);
+    });
+
+    testWidgets('shows all-done narrative without tribe data', (tester) async {
+      await tester.pumpWidget(
+        buildTestApp(
+          const RecapSummaryCard(
+            completionFraction: 1.0,
+            currentStreak: 5,
+          ),
+        ),
+      );
+
+      expect(find.text('100%'), findsOneWidget);
+      expect(find.text('All done today! Great work.'), findsOneWidget);
+    });
+
+    testWidgets('shows all-done narrative with tribe percentile', (tester) async {
+      await tester.pumpWidget(
+        buildTestApp(
+          const RecapSummaryCard(
+            completionFraction: 1.0,
+            currentStreak: 5,
+            tribePercentile: 95,
+          ),
+        ),
+      );
+
+      expect(find.text('100%'), findsOneWidget);
+      expect(
+        find.text("All done today! You're in the top 95% of your tribe."),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('shows encouraging narrative for low completions', (tester) async {
+      await tester.pumpWidget(
+        buildTestApp(
+          const RecapSummaryCard(
+            completionFraction: 0.3,
+            currentStreak: 2,
+          ),
+        ),
+      );
+
+      expect(find.text('30%'), findsOneWidget);
+      expect(
+        find.text("Every habit counts — you're at 30%."),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('streak display scales with value', (tester) async {
+      await tester.pumpWidget(
+        buildTestApp(
+          const RecapSummaryCard(
+            completionFraction: 0.6,
+            currentStreak: 21,
+          ),
+        ),
+      );
+
+      expect(find.text('21'), findsOneWidget);
+      expect(find.text('🔥🔥'), findsOneWidget);
+    });
+
+    testWidgets('amber arc color for mid-range completion', (tester) async {
+      await tester.pumpWidget(
+        buildTestApp(
+          const RecapSummaryCard(
+            completionFraction: 0.3,
+            currentStreak: 1,
+          ),
+        ),
+      );
+
+      // completionFraction 0.3 is in the amber range (0.25–0.49)
+      final progressIndicator = tester.widget<CircularProgressIndicator>(
+        find.byType(CircularProgressIndicator),
+      );
+      final arcColor = (progressIndicator.valueColor as AlwaysStoppedAnimation<Color>).value;
+      expect(arcColor, const Color(0xFFFFC107));
+    });
+
+    testWidgets('coral arc color for low completion', (tester) async {
+      await tester.pumpWidget(
+        buildTestApp(
+          const RecapSummaryCard(
+            completionFraction: 0.1,
+            currentStreak: 0,
+          ),
+        ),
+      );
+
+      final progressIndicator = tester.widget<CircularProgressIndicator>(
+        find.byType(CircularProgressIndicator),
+      );
+      final arcColor = (progressIndicator.valueColor as AlwaysStoppedAnimation<Color>).value;
+      expect(arcColor, const Color(0xFFFF6B6B));
+    });
+
+    testWidgets('narrative shows tribe percentile for partial completion', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        buildTestApp(
+          const RecapSummaryCard(
+            completionFraction: 0.65,
+            currentStreak: 8,
+            tribePercentile: 75,
+          ),
+        ),
+      );
+
+      expect(
+        find.text("You're ahead of 75% of your tribe today."),
+        findsOneWidget,
+      );
     });
   });
 }

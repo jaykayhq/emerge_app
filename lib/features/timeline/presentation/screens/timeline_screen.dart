@@ -1,3 +1,5 @@
+import 'package:emerge_app/core/presentation/widgets/app_error_widget.dart';
+import 'package:emerge_app/core/presentation/widgets/emerge_loading_skeleton.dart';
 import 'package:emerge_app/core/presentation/widgets/glassmorphism_card.dart';
 import 'package:emerge_app/features/habits/domain/entities/habit.dart';
 import 'package:emerge_app/features/habits/presentation/providers/dashboard_state_provider.dart';
@@ -185,14 +187,16 @@ class _TimelineScreenState extends ConsumerState<TimelineScreen> {
             child: habits.isNotEmpty
                 ? _buildTimelineList(context, habits, statsAsync)
                 : habitsAsync.when(
-                    data: (_) =>
-                        _buildTimelineList(context, habits, statsAsync),
-                    loading: () => const Center(
-                      child: CircularProgressIndicator(
-                        color: Color(0xFF2BEE79),
-                      ),
+                    data: (_) => _buildEmptyTimeline(
+                      context: context,
+                      onCreateHabit: () =>
+                          context.push('/timeline/create-habit'),
                     ),
-                    error: (e, s) => _buildErrorView(context, e),
+                    loading: () => const EmergeLoadingSkeleton(
+                      itemCount: 3,
+                      itemHeight: 100,
+                    ),
+                    error: (e, s) => _buildErrorView(context),
                   ),
           ),
           // Floating Action Button to create new habits
@@ -296,13 +300,14 @@ class _TimelineScreenState extends ConsumerState<TimelineScreen> {
         const SliverToBoxAdapter(child: SizedBox(height: 16)),
 
         SliverToBoxAdapter(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16.0),
-            child: RecapSummaryCard(
-              habits: habits,
-              streak: _bestStreak(habits),
-              onTap: () => context.push('/world-map/recap'),
-            ),
+          child: RecapSummaryCard(
+            completionFraction: habits.isEmpty
+                ? 0.0
+                : habits.where((h) => h.isCompletedOn(_selectedDate)).length /
+                    habits.length,
+            currentStreak: _bestStreak(habits),
+            // tribePercentile: null until tribe stats provider is wired
+            onTap: () => context.push('/world-map/recap'),
           ),
         ),
 
@@ -369,58 +374,11 @@ class _TimelineScreenState extends ConsumerState<TimelineScreen> {
           ),
         ),
 
-        if (habits.isEmpty)
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.all(32),
-              child: _BreathingWrapper(
-                child: GlassmorphismCard(
-                  glowColor: EmergeColors.teal,
-                  child: Padding(
-                    padding: const EdgeInsets.all(32),
-                    child: Column(
-                      children: [
-                        Icon(
-                          Icons.add_task,
-                          color: EmergeColors.teal,
-                          size: 48,
-                        ),
-                        const SizedBox(height: 12),
-                        Text(
-                          'No habits yet',
-                          style: Theme.of(context).textTheme.titleMedium
-                              ?.copyWith(color: Colors.white),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          'Create your first habit to start your identity journey',
-                          style: Theme.of(context).textTheme.bodySmall
-                              ?.copyWith(color: EmergeColors.tealMuted),
-                          textAlign: TextAlign.center,
-                        ),
-                        const SizedBox(height: 16),
-                        ElevatedButton.icon(
-                          onPressed: () =>
-                              context.push('/timeline/create-habit'),
-                          icon: const Icon(Icons.add),
-                          label: const Text('Create Habit'),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: EmergeColors.teal,
-                            foregroundColor: EmergeColors.background,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ),
-
         const SliverToBoxAdapter(child: SizedBox(height: 24)),
+
+        const SliverToBoxAdapter(child: NarratorSummaryCard()),
+
+        const SliverToBoxAdapter(child: SizedBox(height: 12)),
 
         // Identity-first banner ad (premium users auto-hide)
         SliverToBoxAdapter(
@@ -432,44 +390,76 @@ class _TimelineScreenState extends ConsumerState<TimelineScreen> {
           ),
         ),
 
-        const SliverToBoxAdapter(child: SizedBox(height: 8)),
-
-        const SliverToBoxAdapter(child: NarratorSummaryCard()),
-
         const SliverToBoxAdapter(child: SizedBox(height: 24)),
       ],
     );
   }
 
-  Widget _buildErrorView(BuildContext context, Object e) {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 48),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(Icons.error_outline, color: EmergeColors.coral, size: 48),
-          const SizedBox(height: 16),
-          Text(
-            'Error loading timeline',
-            style: Theme.of(
-              context,
-            ).textTheme.titleMedium?.copyWith(color: Colors.white),
+  Widget _buildEmptyTimeline({
+    required BuildContext context,
+    required VoidCallback onCreateHabit,
+  }) {
+    return Center(
+      child: SingleChildScrollView(
+        child: Padding(
+          padding: const EdgeInsets.all(32),
+          child: _BreathingWrapper(
+            child: GlassmorphismCard(
+              glowColor: EmergeColors.teal,
+              child: Padding(
+                padding: const EdgeInsets.all(32),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      Icons.add_task,
+                      color: EmergeColors.teal,
+                      size: 48,
+                    ),
+                    const SizedBox(height: 12),
+                    Text(
+                      'No habits yet',
+                      style: Theme.of(context)
+                          .textTheme
+                          .titleMedium
+                          ?.copyWith(color: Colors.white),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'Create your first habit to start your identity journey',
+                      style: Theme.of(context)
+                          .textTheme
+                          .bodySmall
+                          ?.copyWith(color: EmergeColors.tealMuted),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 16),
+                    ElevatedButton.icon(
+                      onPressed: onCreateHabit,
+                      icon: const Icon(Icons.add),
+                      label: const Text('Create Habit'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: EmergeColors.teal,
+                        foregroundColor: EmergeColors.background,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
           ),
-          const SizedBox(height: 8),
-          Text(
-            e.toString(),
-            style: const TextStyle(color: Colors.white70, fontSize: 12),
-            textAlign: TextAlign.center,
-            maxLines: 5,
-            overflow: TextOverflow.ellipsis,
-          ),
-          const SizedBox(height: 24),
-          ElevatedButton(
-            onPressed: () => ref.refresh(habitsProvider),
-            child: const Text('Retry'),
-          ),
-        ],
+        ),
       ),
+    );
+  }
+
+  Widget _buildErrorView(BuildContext context) {
+    return AppErrorWidget(
+      message: "Couldn't load habits. Check your connection and try again.",
+      onRetry: () => ref.invalidate(habitsProvider),
     );
   }
 

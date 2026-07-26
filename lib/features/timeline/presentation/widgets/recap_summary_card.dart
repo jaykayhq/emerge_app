@@ -1,147 +1,146 @@
-import 'package:emerge_app/core/presentation/widgets/glassmorphism_card.dart';
-import 'package:emerge_app/core/theme/emerge_colors.dart';
-import 'package:emerge_app/features/habits/domain/entities/habit.dart';
 import 'package:flutter/material.dart';
 
-/// A compact "RECAP" card sitting between the calendar strip and the habit
-/// list on the timeline. Tapping navigates to the full recap screen.
-///
-/// Emphasizes real completed-habit counts: today's completions vs total,
-/// this week's completions, and the best current streak.
+/// A compact recap card with a circular momentum arc (left) and streak flame
+/// (right), plus a narrative line below. Tapping navigates to the full recap
+/// screen.
 class RecapSummaryCard extends StatelessWidget {
-  final List<Habit> habits;
-  final int streak;
-  final VoidCallback onTap;
+  /// Today's completion fraction (0.0–1.0).
+  final double completionFraction;
+
+  /// The user's current streak.
+  final int currentStreak;
+
+  /// What percentile of the user's tribe they're ahead of today.
+  /// Null hides the tribe narrative line.
+  final int? tribePercentile;
+
+  /// Called when the card is tapped.
+  final VoidCallback? onTap;
 
   const RecapSummaryCard({
     super.key,
-    required this.habits,
-    required this.streak,
-    required this.onTap,
+    required this.completionFraction,
+    required this.currentStreak,
+    this.tribePercentile,
+    this.onTap,
   });
 
-  /// Number of habits completed at least once today.
-  int _todayCompletions() {
-    final now = DateTime.now();
-    return habits.where((h) => h.isCompletedOn(now)).length;
+  Color _arcColor(double fraction) {
+    if (fraction >= 0.5) return const Color(0xFF2BEE79); // green
+    if (fraction >= 0.25) return const Color(0xFFFFC107); // amber
+    return const Color(0xFFFF6B6B); // coral
   }
 
-  /// Counts habits that have been completed at least once this week.
-  /// Week starts on Sunday, matching the recap service's week boundary.
-  int _weeklyCompletions() {
-    final now = DateTime.now();
-    final daysSinceSunday = now.weekday % 7;
-    final weekStart = DateTime(now.year, now.month, now.day - daysSinceSunday);
+  String _flameEmoji(int streak) {
+    if (streak >= 21) return '🔥🔥';
+    return '🔥';
+  }
 
-    return habits
-        .where(
-          (h) =>
-              h.lastCompletedDate != null &&
-              h.lastCompletedDate!.isAfter(
-                weekStart.subtract(const Duration(hours: 1)),
-              ),
-        )
-        .length;
+  String _narrativeText() {
+    if (completionFraction >= 1.0) {
+      if (tribePercentile != null) {
+        return "All done today! You're in the top $tribePercentile% of your tribe.";
+      }
+      return 'All done today! Great work.';
+    }
+    if (completionFraction >= 0.5) {
+      if (tribePercentile != null) {
+        return "You're ahead of $tribePercentile% of your tribe today.";
+      }
+      return "You're making great progress today.";
+    }
+    if (completionFraction > 0) {
+      return "Every habit counts — you're at ${(completionFraction * 100).toInt()}%.";
+    }
+    return "Your day hasn't started yet.";
   }
 
   @override
   Widget build(BuildContext context) {
-    final today = _todayCompletions();
-    final weekly = _weeklyCompletions();
-
-    return Semantics(
-      label: 'Open weekly recap',
-      button: true,
-      child: GestureDetector(
-        onTap: onTap,
-        behavior: HitTestBehavior.opaque,
-        child: EmergeGlassCard(
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-          margin: EdgeInsets.zero,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text(
-                'RECAP',
-                style: TextStyle(
-                  color: EmergeColors.tealMuted,
-                  fontSize: 11,
-                  fontWeight: FontWeight.bold,
-                  letterSpacing: 2.0,
+    return GestureDetector(
+      onTap: onTap,
+      behavior: HitTestBehavior.opaque,
+      child: Container(
+        margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        decoration: BoxDecoration(
+          color: const Color(0xFF1A1A2E).withValues(alpha: 0.6),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                // Left: Circular progress arc
+                SizedBox(
+                  width: 44,
+                  height: 44,
+                  child: Stack(
+                    alignment: Alignment.center,
+                    children: [
+                      CircularProgressIndicator(
+                        value: completionFraction,
+                        strokeWidth: 4,
+                        strokeCap: StrokeCap.round,
+                        backgroundColor: Colors.white.withValues(alpha: 0.1),
+                        valueColor: AlwaysStoppedAnimation<Color>(
+                          _arcColor(completionFraction),
+                        ),
+                      ),
+                      Text(
+                        '${(completionFraction * 100).toInt()}%',
+                        style: TextStyle(
+                          color: _arcColor(completionFraction),
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
+                const SizedBox(width: 16),
+                // Right: Streak flame
+                Row(
+                  children: [
+                    Text(
+                      _flameEmoji(currentStreak),
+                      style: TextStyle(fontSize: currentStreak >= 7 ? 24 : 20),
+                    ),
+                    const SizedBox(width: 4),
+                    Text(
+                      '$currentStreak',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: currentStreak >= 7 ? 22 : 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(width: 4),
+                    Text(
+                      'day streak',
+                      style: TextStyle(
+                        color: Colors.white.withValues(alpha: 0.5),
+                        fontSize: 13,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            // Narrative line
+            Text(
+              _narrativeText(),
+              style: TextStyle(
+                color: Colors.white.withValues(alpha: 0.5),
+                fontSize: 12,
               ),
-              const SizedBox(height: 12),
-              Row(
-                children: [
-                  _StatItem(
-                    value: '$today/${habits.length}',
-                    label: 'today done',
-                    color: EmergeColors.teal,
-                  ),
-                  const SizedBox(width: 24),
-                  _StatItem(
-                    value: '$weekly',
-                    label: 'this week',
-                    color: EmergeColors.neonGreenBright,
-                  ),
-                  const SizedBox(width: 24),
-                  _StatItem(
-                    value: '$streak',
-                    label: 'day streak',
-                    color: const Color(0xFFFFB74D),
-                  ),
-                  const Spacer(),
-                  Icon(
-                    Icons.arrow_forward_ios_rounded,
-                    color: Colors.white.withValues(alpha: 0.3),
-                    size: 14,
-                  ),
-                ],
-              ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
-    );
-  }
-}
-
-class _StatItem extends StatelessWidget {
-  final String value;
-  final String label;
-  final Color color;
-
-  const _StatItem({
-    required this.value,
-    required this.label,
-    required this.color,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Text(
-          value,
-          style: TextStyle(
-            color: color,
-            fontSize: 20,
-            fontWeight: FontWeight.bold,
-            height: 1.1,
-          ),
-        ),
-        const SizedBox(height: 2),
-        Text(
-          label,
-          style: TextStyle(
-            color: Colors.white.withValues(alpha: 0.45),
-            fontSize: 11,
-            fontWeight: FontWeight.w500,
-          ),
-        ),
-      ],
     );
   }
 }
