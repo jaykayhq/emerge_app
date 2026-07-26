@@ -62,6 +62,15 @@ class LastHabitCompleted extends _$LastHabitCompleted {
     );
 
     _previousCompleted = currentCompleted;
+
+    // One-shot event: if we're emitting true, schedule an immediate reset to
+    // false so late-added listeners / re-reads don't observe a stale true.
+    if (justCompleted) {
+      Future.microtask(() {
+        if (ref.mounted) state = false;
+      });
+    }
+
     return justCompleted;
   }
 }

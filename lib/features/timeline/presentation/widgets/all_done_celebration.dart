@@ -65,26 +65,20 @@ class AllDoneCelebrationState extends State<AllDoneCelebration>
 
   @override
   Widget build(BuildContext context) {
+    // FadeTransition owns the opacity animation; the glow uses a fixed alpha
+    // so the effective opacity stays linear in _glow (no quadratic doubling).
     return IgnorePointer(
       child: FadeTransition(
         opacity: _glow,
-        child: AnimatedBuilder(
-          animation: _glow,
-          builder: (context, child) {
-            return Container(
-              decoration: BoxDecoration(
-                gradient: RadialGradient(
-                  colors: [
-                    Colors.cyanAccent.withValues(
-                      alpha: 0.18 * _glow.value,
-                    ),
-                    Colors.transparent,
-                  ],
-                ),
-              ),
-              child: child,
-            );
-          },
+        child: DecoratedBox(
+          decoration: BoxDecoration(
+            gradient: RadialGradient(
+              colors: [
+                Colors.cyanAccent.withValues(alpha: 0.18),
+                Colors.transparent,
+              ],
+            ),
+          ),
           child: Center(
             child: Text(
               AllDoneCelebration.message,

@@ -24,6 +24,7 @@ import 'package:emerge_app/features/auth/domain/entities/user_extension.dart';
 import 'package:emerge_app/features/gamification/presentation/providers/user_stats_providers.dart';
 import 'package:emerge_app/core/presentation/widgets/world_background.dart';
 import 'package:emerge_app/core/domain/models/app_world_theme.dart';
+import 'package:emerge_app/core/utils/app_logger.dart';
 import 'package:emerge_app/core/presentation/widgets/archetype_sliver_app_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -191,8 +192,8 @@ class _TimelineScreenState extends ConsumerState<TimelineScreen> {
     );
 
     // Peak-End: fire the all-done celebration when the last habit completes.
-    ref.listen<bool>(lastHabitCompletedProvider, (prev, next) {
-      if (next == true) {
+    ref.listen<bool>(lastHabitCompletedProvider, (_, next) {
+      if (next) {
         _celebrationKey.currentState?.show();
       }
     });
@@ -363,17 +364,23 @@ class _TimelineScreenState extends ConsumerState<TimelineScreen> {
               final clubAsync = ref.watch(
                 userClubProvider(archetype.name),
               );
-              return clubAsync.maybeWhen(
+              return clubAsync.when(
                 data: (club) {
                   if (club == null || club.memberCount <= 0) {
                     return const SizedBox.shrink();
                   }
                   return TribalPresenceStrip(
                     memberCount: club.memberCount,
-                    habitLabel: 'their habits',
                   );
                 },
-                orElse: () => const SizedBox.shrink(),
+                // Passive social-proof pill: while loading, show nothing
+                // rather than a skeleton (it must never block the timeline).
+                loading: () => const SizedBox.shrink(),
+                // §5: don't silently swallow — log, then degrade gracefully.
+                error: (e, s) {
+                  AppLogger.e('Tribal presence strip failed to load', e, s);
+                  return const SizedBox.shrink();
+                },
               );
             },
           ),
