@@ -84,7 +84,7 @@ class IdentitySentenceBuilder extends StatelessWidget {
       context: context,
       builder: (ctx) => Column(
         mainAxisSize: MainAxisSize.min,
-        children: ['daily', 'weekly', 'weekdays', 'weekends', 'custom']
+        children: ['daily', 'weekly', 'weekdays', 'weekends']
             .map((f) => ListTile(
                   title: Text(f),
                   onTap: () {

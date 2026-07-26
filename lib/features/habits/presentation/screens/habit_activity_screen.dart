@@ -184,6 +184,12 @@ class _HabitActivityScreenState extends ConsumerState<HabitActivityScreen> {
       );
       _reflectionController.clear();
       ref.invalidate(habitActivityDataProvider(widget.habitId));
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Couldn't save reflection. Try again.")),
+        );
+      }
     } finally {
       if (mounted) setState(() => _savingReflection = false);
     }

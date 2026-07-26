@@ -75,10 +75,17 @@ Future<HabitActivityData> habitActivityData(Ref ref, String habitId) async {
     throw Exception('Habit not found');
   }
 
-  // ── Heatmap: last 90 days (index 0 = oldest) ──
+  // ── Heatmap: ~13 weeks, Monday-aligned (index 0 = oldest Monday) ──
   final now = DateTime.now();
   final today = DateTime(now.year, now.month, now.day);
-  final start = today.subtract(const Duration(days: 89));
+  // Roughly 90 days back, then snap to the Monday on/before it so week
+  // columns line up with the Mon–Sun row labels in HabitHeatmap.
+  final roughStart = today.subtract(const Duration(days: 89));
+  // DateTime.weekday: Mon=1..Sun=7 → shift back to Monday.
+  final start = roughStart.subtract(Duration(days: roughStart.weekday - 1));
+  // Pad forward to a whole number of weeks ending on/after today.
+  final totalDays = today.difference(start).inDays + 1;
+  final cellCount = ((totalDays + 6) ~/ 7) * 7;
 
   final completions = await db.habitCompletionsDao.getBetweenDates(
     userId,
@@ -94,13 +101,13 @@ Future<HabitActivityData> habitActivityData(Ref ref, String habitId) async {
     final date = DateTime.parse(c.completedAt);
     final dayOnly = DateTime(date.year, date.month, date.day);
     final dayIndex = dayOnly.difference(start).inDays;
-    if (dayIndex >= 0 && dayIndex < 90) {
+    if (dayIndex >= 0 && dayIndex < cellCount) {
       completedDays.add(dayIndex);
     }
   }
 
   final heatmapData =
-      List<bool>.generate(90, (i) => completedDays.contains(i));
+      List<bool>.generate(cellCount, (i) => completedDays.contains(i));
 
   // ── Reflections ──
   final reflectionRows = await db.habitReflectionsDao

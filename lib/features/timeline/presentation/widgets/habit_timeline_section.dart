@@ -517,8 +517,9 @@ class _IndentedHabitItemState extends State<IndentedHabitItem> {
         GestureDetector(
           onTap: widget.onCheckboxTap,
           behavior: HitTestBehavior.opaque,
-          child: Padding(
-            padding: const EdgeInsets.all(4),
+          child: SizedBox(
+            width: 44,
+            height: 44,
             child: Icon(
               Icons.undo,
               size: 18,

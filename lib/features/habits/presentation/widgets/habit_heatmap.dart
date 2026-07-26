@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 
-/// GitHub-style 90-day contribution heatmap. [data] is a list of booleans,
-/// index 0 = oldest day. Renders 13 week-columns x 7 day-rows.
+/// GitHub-style contribution heatmap. [data] is a list of booleans,
+/// index 0 = oldest day and MUST start on a Monday (the provider aligns the
+/// window to a week boundary and pads to whole weeks). Renders one column per
+/// week, 7 day-rows (row 0 = Monday), exactly [data].length cells.
 class HabitHeatmap extends StatelessWidget {
   final List<bool> data;
   final ValueChanged<int>? onCellTap;
@@ -17,13 +19,13 @@ class HabitHeatmap extends StatelessWidget {
     final completedCount = data.where((d) => d).length;
     final intensity = data.isEmpty ? 0.0 : (completedCount / data.length).clamp(0.0, 1.0);
 
-    final weeks = <List<int>>[]; // store indices
-    for (int w = 0; w < 13; w++) {
-      final week = <int>[];
-      for (int d = 0; d < 7; d++) {
-        week.add(w * 7 + d);
-      }
-      weeks.add(week);
+    // Split the flat, Monday-aligned list into week-columns of 7.
+    final weeks = <List<int>>[];
+    for (int i = 0; i < data.length; i += 7) {
+      weeks.add(List<int>.generate(
+        (i + 7 <= data.length) ? 7 : data.length - i,
+        (d) => i + d,
+      ));
     }
 
     return Column(
@@ -48,7 +50,7 @@ class HabitHeatmap extends StatelessWidget {
           children: weeks
               .map((week) => Column(
                     children: week.map((index) {
-                      final completed = index < data.length && data[index];
+                      final completed = data[index];
                       return GestureDetector(
                         onTap: onCellTap != null ? () => onCellTap!(index) : null,
                         child: Container(

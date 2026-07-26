@@ -400,6 +400,7 @@ GoRouter router(Ref ref) {
                 routes: [
                   GoRoute(
                     path: 'create-habit',
+                    parentNavigatorKey: _rootNavigatorKey,
                     pageBuilder: (context, state) => CustomTransitionPage(
                       key: state.pageKey,
                       child: const HabitCreateScreen(),

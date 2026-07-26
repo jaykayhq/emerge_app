@@ -218,6 +218,63 @@ class _HabitCreateScreenState extends ConsumerState<HabitCreateScreen> {
               attribute: form.attribute,
               onTap: _showAttributePicker,
             ),
+            const Gap(20),
+            _sectionLabel('DIFFICULTY'),
+            const Gap(8),
+            Row(
+              children: HabitDifficulty.values.map((d) {
+                final selected = form.difficulty == d;
+                return Padding(
+                  padding: const EdgeInsets.only(right: 8),
+                  child: ChoiceChip(
+                    label: Text(d.name.toUpperCase()),
+                    selected: selected,
+                    onSelected: (_) => ref
+                        .read(habitCreateStateProvider.notifier)
+                        .updateDifficulty(d),
+                  ),
+                );
+              }).toList(),
+            ),
+            const Gap(16),
+            _sectionLabel('2-MINUTE VERSION (optional)'),
+            const Gap(8),
+            TextField(
+              style: const TextStyle(color: Colors.white),
+              decoration: const InputDecoration(
+                hintText: 'Scale it down so it feels effortless',
+                hintStyle: TextStyle(color: Colors.white38),
+              ),
+              onChanged: (v) =>
+                  ref.read(habitCreateStateProvider.notifier).updateTwoMinute(v),
+            ),
+            const Gap(16),
+            Row(
+              children: [
+                _sectionLabel('TIMER'),
+                const Spacer(),
+                IconButton(
+                  icon: const Icon(Icons.remove, color: Colors.white70),
+                  onPressed: form.timerMinutes <= 1
+                      ? null
+                      : () => ref
+                          .read(habitCreateStateProvider.notifier)
+                          .updateTimer(form.timerMinutes - 1),
+                ),
+                Text(
+                  '${form.timerMinutes} min',
+                  style: const TextStyle(color: Colors.white),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.add, color: Colors.white70),
+                  onPressed: form.timerMinutes >= 120
+                      ? null
+                      : () => ref
+                          .read(habitCreateStateProvider.notifier)
+                          .updateTimer(form.timerMinutes + 1),
+                ),
+              ],
+            ),
             const Gap(24),
             SizedBox(
               width: double.infinity,
@@ -252,6 +309,16 @@ class _HabitCreateScreenState extends ConsumerState<HabitCreateScreen> {
       ),
     );
   }
+
+  Widget _sectionLabel(String text) => Text(
+        text,
+        style: TextStyle(
+          color: Colors.white.withValues(alpha: 0.5),
+          fontSize: 12,
+          fontWeight: FontWeight.bold,
+          letterSpacing: 1,
+        ),
+      );
 
   void _showAttributePicker() {
     showModalBottomSheet<void>(
@@ -291,21 +358,37 @@ class _HabitCreateScreenState extends ConsumerState<HabitCreateScreen> {
 
     setState(() => _saving = true);
 
-    final frequency = form.frequency == 'weekly'
-        ? HabitFrequency.weekly
-        : HabitFrequency.daily;
+    final HabitFrequency frequency;
+    List<int> specificDays = const [];
+    switch (form.frequency) {
+      case 'weekly':
+        frequency = HabitFrequency.weekly;
+        break;
+      case 'weekdays':
+        frequency = HabitFrequency.specificDays;
+        specificDays = const [1, 2, 3, 4, 5];
+        break;
+      case 'weekends':
+        frequency = HabitFrequency.specificDays;
+        specificDays = const [6, 7];
+        break;
+      case 'daily':
+      default:
+        frequency = HabitFrequency.daily;
+    }
 
     final habit = Habit(
       id: const Uuid().v4(),
       userId: userId,
       title: form.title.trim(),
       frequency: frequency,
+      specificDays: specificDays,
       reminderTime: form.reminderTime ?? defaults.time,
       location: form.location.isNotEmpty ? form.location : null,
       attribute: form.attribute,
       createdAt: DateTime.now(),
       difficulty: form.difficulty,
-      currentStreak: 1,
+      currentStreak: 0,
       twoMinuteVersion:
           form.twoMinuteVersion.isNotEmpty ? form.twoMinuteVersion : null,
       reward: 'Complete and enjoy your progress!',
