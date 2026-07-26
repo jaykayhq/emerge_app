@@ -9,6 +9,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
 import 'package:go_router/go_router.dart';
+import 'package:emerge_app/features/onboarding/presentation/widgets/onboarding_progress_bar.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 /// Onboarding step (Milestone 1): pick 3–5 interests from the curated catalog.
@@ -21,6 +22,17 @@ class InterestsScreen extends ConsumerStatefulWidget {
   @override
   ConsumerState<InterestsScreen> createState() => _InterestsScreenState();
 }
+
+/// Color-coded flat grid: each interest chip is tinted by its category color.
+/// Category is communicated purely through color (no section headers).
+const _categoryColors = {
+  InterestCategory.movement: Color(0xFF2BEE79), // green
+  InterestCategory.creativity: Color(0xFF9C27B0), // purple
+  InterestCategory.learning: Color(0xFF009688), // teal
+  InterestCategory.mindfulness: Color(0xFF2196F3), // blue
+  InterestCategory.faith: Color(0xFFFFC107), // amber
+  InterestCategory.nutrition: Color(0xFFFF6B6B), // coral
+};
 
 class _InterestsScreenState extends ConsumerState<InterestsScreen> {
   final Set<String> _selected = <String>{};
@@ -89,11 +101,6 @@ class _InterestsScreenState extends ConsumerState<InterestsScreen> {
         UserArchetype.none;
     final theme = ArchetypeTheme.forArchetype(archetype);
 
-    final byCategory = <InterestCategory, List<Interest>>{};
-    for (final interest in Interest.catalog) {
-      byCategory.putIfAbsent(interest.category, () => []).add(interest);
-    }
-
     return Scaffold(
       body: Container(
         decoration: const BoxDecoration(
@@ -110,6 +117,10 @@ class _InterestsScreenState extends ConsumerState<InterestsScreen> {
         child: SafeArea(
           child: Column(
             children: [
+              OnboardingProgressBar(
+                progress: 0.6,
+                label: onboardingLabelFor(0.6),
+              ),
               _Header(
                 stepIndex: 1,
                 totalSteps: 5,
@@ -142,19 +153,18 @@ class _InterestsScreenState extends ConsumerState<InterestsScreen> {
                         ),
                       ).animate().fadeIn(delay: 100.ms),
                       const Gap(24),
-                      for (final category in InterestCategory.values) ...[
-                        _CategoryHeader(
-                          label: category.displayName,
-                          count: byCategory[category]?.length ?? 0,
-                        ),
-                        const Gap(8),
-                        _InterestGrid(
-                          interests: byCategory[category] ?? const [],
-                          selected: _selected,
-                          onToggle: _toggle,
-                        ),
-                        const Gap(24),
-                      ],
+                      Wrap(
+                        spacing: 4,
+                        runSpacing: 4,
+                        children: [
+                          for (final interest in Interest.catalog)
+                            _InterestChip(
+                              interest: interest,
+                              isSelected: _selected.contains(interest.id),
+                              onTap: () => _toggle(interest.id),
+                            ),
+                        ],
+                      ),
                       const Gap(80),
                     ],
                   ),
@@ -226,76 +236,6 @@ class _Header extends StatelessWidget {
   }
 }
 
-class _CategoryHeader extends StatelessWidget {
-  final String label;
-  final int count;
-
-  const _CategoryHeader({required this.label, required this.count});
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Text(
-          label.toUpperCase(),
-          style: GoogleFonts.splineSans(
-            color: const Color(0xFF2BEE79),
-            fontSize: 11,
-            fontWeight: FontWeight.bold,
-            letterSpacing: 2.0,
-          ),
-        ),
-        const Gap(8),
-        Container(
-          width: 6,
-          height: 6,
-          decoration: const BoxDecoration(
-            color: Color(0xFF2BEE79),
-            shape: BoxShape.circle,
-          ),
-        ),
-        const Gap(8),
-        Text(
-          '$count',
-          style: GoogleFonts.splineSans(
-            color: Colors.white38,
-            fontSize: 11,
-            letterSpacing: 1.5,
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class _InterestGrid extends StatelessWidget {
-  final List<Interest> interests;
-  final Set<String> selected;
-  final ValueChanged<String> onToggle;
-
-  const _InterestGrid({
-    required this.interests,
-    required this.selected,
-    required this.onToggle,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Wrap(
-      spacing: 12,
-      runSpacing: 12,
-      children: [
-        for (final interest in interests)
-          _InterestChip(
-            interest: interest,
-            isSelected: selected.contains(interest.id),
-            onTap: () => onToggle(interest.id),
-          ),
-      ],
-    );
-  }
-}
-
 class _InterestChip extends StatelessWidget {
   final Interest interest;
   final bool isSelected;
@@ -309,49 +249,28 @@ class _InterestChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.symmetric(
-          horizontal: 16,
-          vertical: 12,
-        ),
-        decoration: BoxDecoration(
-          color: isSelected
-              ? const Color(0xFF1A2C24)
-              : Colors.white.withValues(alpha: 0.05),
-          borderRadius: BorderRadius.circular(24),
-          border: Border.all(
-            color: isSelected
-                ? const Color(0xFF2BEE79)
-                : Colors.white.withValues(alpha: 0.1),
-            width: 1.5,
-          ),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              interest.icon,
-              size: 18,
-              color: isSelected
-                  ? const Color(0xFF2BEE79)
-                  : Colors.white70,
-            ),
-            const Gap(8),
-            Text(
-              interest.label,
-              style: GoogleFonts.splineSans(
-                color: isSelected ? Colors.white : Colors.white70,
-                fontWeight: isSelected
-                    ? FontWeight.w600
-                    : FontWeight.w400,
-              ),
-            ),
-          ],
+    final color = _categoryColors[interest.category] ?? Colors.white;
+    return FilterChip(
+      label: Text(
+        interest.label,
+        style: GoogleFonts.splineSans(
+          color: isSelected ? Colors.black : color,
+          fontSize: 12,
+          fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
         ),
       ),
+      avatar: Icon(
+        interest.icon,
+        size: 16,
+        color: isSelected ? Colors.black : color,
+      ),
+      selected: isSelected,
+      selectedColor: color,
+      checkmarkColor: Colors.black,
+      backgroundColor: color.withValues(alpha: 0.15),
+      side: BorderSide(color: color.withValues(alpha: 0.4), width: 1),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      onSelected: (_) => onTap(),
     );
   }
 }

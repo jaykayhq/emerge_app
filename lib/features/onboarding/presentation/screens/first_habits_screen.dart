@@ -12,6 +12,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
 import 'package:go_router/go_router.dart';
+import 'package:emerge_app/features/onboarding/presentation/widgets/onboarding_progress_bar.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 /// Onboarding step (Milestone 3): see the three personalized starter habits
@@ -158,6 +159,10 @@ class _FirstHabitsScreenState extends ConsumerState<FirstHabitsScreen> {
         child: SafeArea(
           child: Column(
             children: [
+              OnboardingProgressBar(
+                progress: 0.8,
+                label: onboardingLabelFor(0.8),
+              ),
               _Header(
                 stepIndex: 3,
                 totalSteps: 5,

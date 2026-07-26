@@ -30,6 +30,7 @@ import 'package:emerge_app/features/onboarding/presentation/screens/club_screen.
 import 'package:emerge_app/features/onboarding/presentation/screens/interests_screen.dart';
 import 'package:emerge_app/features/onboarding/presentation/screens/welcome_screen.dart';
 import 'package:emerge_app/features/onboarding/presentation/screens/world_reveal_screen.dart';
+import 'package:emerge_app/features/onboarding/presentation/screens/endowment_interstitial_screen.dart';
 import 'package:emerge_app/features/settings/presentation/screens/settings_screen.dart';
 import 'package:emerge_app/features/settings/presentation/screens/notification_settings_screen.dart';
 import 'package:emerge_app/features/monetization/presentation/screens/paywall_screen.dart';
@@ -73,6 +74,11 @@ class RedirectContext {
   final DateTime? userOnboardingCompletedAt;
   final CreatorOnboardingState? creatorOnboarding; // null = not a creator
 
+  /// Whether the one-time post-sign-up endowment interstitial has been shown.
+  /// Defaults to `true` so existing call sites/tests keep their behaviour;
+  /// production passes the real SharedPreferences flag.
+  final bool hasSeenEndowment;
+
   const RedirectContext({
     required this.isLoggedIn,
     required this.role,
@@ -80,6 +86,7 @@ class RedirectContext {
     required this.userOnboardingProgress,
     required this.userOnboardingCompletedAt,
     required this.creatorOnboarding,
+    this.hasSeenEndowment = true,
   });
 }
 
@@ -208,7 +215,11 @@ String? decideRedirect({
       final effectiveProgress = progress ?? 0;
       switch (effectiveProgress) {
         case 0:
-          return '/onboarding/identity-studio';
+          // Show the one-time endowment interstitial before archetype
+          // selection, but only if the user hasn't seen it yet.
+          return ctx.hasSeenEndowment
+              ? '/onboarding/identity-studio'
+              : '/onboarding/endowment';
         case 1:
           return '/onboarding/interests';
         case 2:
@@ -283,6 +294,8 @@ GoRouter router(Ref ref) {
           userOnboardingProgress: userStats?.onboardingProgress,
           userOnboardingCompletedAt: userStats?.onboardingCompletedAt,
           creatorOnboarding: creatorOnboarding,
+          hasSeenEndowment:
+              ref.read(localSettingsRepositoryProvider).hasSeenEndowment,
         ),
       );
     },
@@ -304,6 +317,13 @@ GoRouter router(Ref ref) {
       GoRoute(
         path: '/welcome',
         builder: (context, state) => const WelcomeScreen(),
+      ),
+      // Endowment interstitial — first onboarding step shown once after
+      // sign-up, before archetype selection.
+      GoRoute(
+        path: '/onboarding/endowment',
+        builder: (context, state) =>
+            EndowmentInterstitialScreen(userName: state.extra as String? ?? ''),
       ),
       // Normal-user onboarding routes.
       GoRoute(

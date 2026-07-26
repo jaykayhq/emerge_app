@@ -5,8 +5,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
 import 'package:emerge_app/features/companion/presentation/providers/companion_providers.dart';
 import 'package:emerge_app/features/companion/domain/enums/companion_enums.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:go_router/go_router.dart';
 import 'package:emerge_app/core/presentation/widgets/feature_coach_mark.dart';
+import 'package:emerge_app/core/utils/app_logger.dart';
 
 import 'package:emerge_app/core/presentation/widgets/app_error_widget.dart';
 import 'package:emerge_app/core/presentation/widgets/emerge_loading_skeleton.dart';
@@ -18,10 +20,43 @@ import 'package:emerge_app/features/social/presentation/providers/leaderboard_pr
 import 'package:emerge_app/features/social/domain/entities/leaderboard_entry.dart';
 import 'package:emerge_app/features/gamification/presentation/providers/user_stats_providers.dart';
 import 'package:emerge_app/features/auth/domain/entities/user_extension.dart';
+import 'package:emerge_app/features/auth/presentation/providers/auth_providers.dart';
+import 'package:emerge_app/features/onboarding/presentation/widgets/club_box_card.dart';
+import 'package:emerge_app/features/onboarding/presentation/widgets/club_preview_sheet.dart';
 import '../widgets/tribe_header_widgets.dart';
 import '../widgets/tribe_quests_section.dart';
 import '../widgets/tribe_activity_feed.dart';
 import '../widgets/tribe_accountability_section.dart';
+
+/// Merged pool of clubs shown in the discovery grid (Plan 5, Task 7):
+/// every tribe in the `tribes` collection — official archetype clubs plus
+/// creator / brand / public clubs. Mapped from Firestore docs to [Tribe].
+/// Cards derive their ARCHETYPE/CREATOR tag from [Tribe.archetypeId].
+final discoveryClubsProvider = StreamProvider<List<Tribe>>((ref) {
+  return FirebaseFirestore.instance
+      .collection('tribes')
+      .snapshots()
+      .map((snap) => snap.docs.map((d) => Tribe.fromMap(d.data())).toList());
+});
+
+/// Whether the signed-in user belongs to any club.
+///
+/// Derived from [tribeRepositoryProvider.getUserTribes]: a user "has a club"
+/// when they appear in the `members` array of at least one tribe. Returns
+/// false while signed out or while the membership lookup is in flight.
+final hasClubProvider = FutureProvider<bool>((ref) async {
+  final authUser = await ref.watch(authStateChangesProvider.future);
+  if (authUser.isEmpty) return false;
+  try {
+    final repo = ref.watch(tribeRepositoryProvider);
+    final tribes = await repo.getUserTribes(authUser.id);
+    return tribes.isNotEmpty;
+  } catch (e, s) {
+    // Treat a failed lookup as "no club" rather than blocking the UI.
+    AppLogger.e('hasClubProvider: getUserTribes failed', e, s);
+    return false;
+  }
+});
 
 /// Tribe Tab Content - Shared between CommunityScreen (tab) and TribesScreen (standalone)
 class TribeTabContent extends ConsumerStatefulWidget {
@@ -38,6 +73,10 @@ class _TribeTabContentState extends ConsumerState<TribeTabContent> {
   final GlobalKey _feedKey = GlobalKey();
 
   bool _showFirstVisitGuide = false;
+
+  // Discovery view local state (kept in-sync with the file's StatefulWidget idiom).
+  String _searchQuery = '';
+  String _selectedFilter = 'All'; // 'All' | 'By Archetype' | 'Creator'
 
   @override
   void initState() {
@@ -60,128 +99,17 @@ class _TribeTabContentState extends ConsumerState<TribeTabContent> {
 
   @override
   Widget build(BuildContext context) {
-    final profileAsync = ref.watch(userStatsStreamProvider);
-    final clubsAsync = ref.watch(allArchetypeClubsProvider);
+    final hasClubAsync = ref.watch(hasClubProvider);
 
     return Stack(
       children: [
-        clubsAsync.when(
-          data: (clubs) {
-            return profileAsync.when(
-              data: (profile) {
-                final theme = ArchetypeTheme.forArchetype(profile.archetype);
-
-                // Find the club that matches the user's archetype
-                // First try exact archetype match, then fall back to multi-archetype clubs
-                final matchingIndex = clubs.isNotEmpty
-                    ? clubs.indexWhere(
-                        (club) => club.archetypeId == profile.archetype.name,
-                      )
-                    : -1;
-                final userClub = matchingIndex != -1
-                    ? clubs[matchingIndex]
-                    : clubs
-                          .where(
-                            (club) =>
-                                club.archetypeId == null ||
-                                club.archetypeId!.isEmpty,
-                          )
-                          .firstOrNull;
-
-                if (userClub == null) {
-                  return const _EmptyState(
-                    message: 'No clubs available for your archetype yet.',
-                    icon: Icons.groups,
-                  );
-                }
-
-                return DefaultTabController(
-                  length: 4,
-                  child: Column(
-                    children: [
-                      // Secondary glassmorphic pill tab bar
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
-                        child: ClipRRect(
-                          borderRadius: BorderRadius.circular(24),
-                          child: BackdropFilter(
-                            filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-                            child: Container(
-                              height: 48,
-                              decoration: BoxDecoration(
-                                color: Colors.black.withValues(alpha: 0.3),
-                                borderRadius: BorderRadius.circular(24),
-                                border: Border.all(
-                                  color: Colors.white.withValues(alpha: 0.08),
-                                ),
-                              ),
-                              child: TabBar(
-                                indicatorSize: TabBarIndicatorSize.tab,
-                                indicator: BoxDecoration(
-                                  gradient: LinearGradient(
-                                    colors: [
-                                      theme.primaryColor.withValues(alpha: 0.25),
-                                      theme.accentColor.withValues(alpha: 0.1),
-                                    ],
-                                  ),
-                                  borderRadius: BorderRadius.circular(24),
-                                  border: Border.all(
-                                    color: theme.primaryColor.withValues(alpha: 0.3),
-                                  ),
-                                ),
-                                labelColor: Colors.white,
-                                unselectedLabelColor: Colors.white54,
-                                labelStyle: const TextStyle(
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.bold,
-                                  letterSpacing: 0.5,
-                                ),
-                                tabs: const [
-                                  Tab(text: 'SANCTUM'),
-                                  Tab(text: 'QUESTS'),
-                                  Tab(text: 'MEMBERS'),
-                                  Tab(text: 'BONDS'),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                      
-                      // Tab contents
-                      Expanded(
-                        child: TabBarView(
-                          children: [
-                            // SANCTUM Tab
-                            _buildSanctumTab(context, userClub, theme, profile),
-                            
-                            // QUESTS Tab
-                            _buildQuestsTab(),
-                            
-                            // MEMBERS Tab
-                            _buildMembersTab(userClub, profile),
-                            
-                            // BONDS Tab
-                            _buildBondsTab(),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                );
-              },
-              loading: () => const EmergeLoadingSkeleton(itemCount: 1),
-              error: (error, stack) => AppErrorWidget(
-                message: 'Could not load your profile',
-                onRetry: () => ref.invalidate(userStatsStreamProvider),
-              ),
-            );
+        hasClubAsync.when(
+          data: (hasClub) {
+            if (!hasClub) return _buildDiscoveryView(context);
+            return _buildClubTabs(context);
           },
           loading: () => const EmergeLoadingSkeleton(itemCount: 5),
-          error: (error, _) => AppErrorWidget(
-            message: 'Could not load tribes',
-            onRetry: () => ref.invalidate(allArchetypeClubsProvider),
-          ),
+          error: (_, _) => _buildClubTabs(context),
         ),
         if (_showFirstVisitGuide)
           FeatureCoachMark(
@@ -202,6 +130,354 @@ class _TribeTabContentState extends ConsumerState<TribeTabContent> {
             onDismiss: () => setState(() => _showFirstVisitGuide = false),
           ),
       ],
+    );
+  }
+
+  // ============ DISCOVERY VIEW (no club) ============
+
+  Widget _buildDiscoveryView(BuildContext context) {
+    final clubsAsync = ref.watch(discoveryClubsProvider);
+
+    return clubsAsync.when(
+      data: (clubs) {
+        final filtered = _filterClubs(clubs);
+        final columns =
+            MediaQuery.of(context).size.width > 600 ? 4 : 3;
+
+        return CustomScrollView(
+          slivers: [
+            SliverToBoxAdapter(child: _buildSearchBar()),
+            SliverToBoxAdapter(child: _buildFilterChips()),
+            if (filtered.isEmpty)
+              SliverFillRemaining(
+                child: _EmptyState(
+                  message: _searchQuery.isEmpty
+                      ? 'No clubs to discover yet.'
+                      : 'No clubs match "$_searchQuery".',
+                  icon: Icons.search_off,
+                ),
+              )
+            else
+              SliverPadding(
+                padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
+                sliver: SliverGrid(
+                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: columns,
+                    crossAxisSpacing: 8,
+                    mainAxisSpacing: 8,
+                    childAspectRatio: 0.75,
+                  ),
+                  delegate: SliverChildBuilderDelegate(
+                    (context, index) {
+                      final club = filtered[index];
+                      return ClubBoxCard(
+                        title: club.name,
+                        imageUrl: club.imageUrl,
+                        memberCount: club.memberCount,
+                        activityStatus:
+                            club.memberCount >= 10 ? '🔥 Active' : '🌙 Quiet',
+                        typeTag: _typeTagFor(club),
+                        onTap: () => _showPreviewSheet(context, club),
+                      );
+                    },
+                    childCount: filtered.length,
+                  ),
+                ),
+              ),
+          ],
+        );
+      },
+      loading: () => const EmergeLoadingSkeleton(itemCount: 6),
+      error: (err, _) => _EmptyState(
+        message: 'Could not load clubs',
+        icon: Icons.groups,
+      ),
+    );
+  }
+
+  List<Tribe> _filterClubs(List<Tribe> clubs) {
+    final query = _searchQuery.trim().toLowerCase();
+    return clubs.where((club) {
+      final matchesQuery = query.isEmpty ||
+          club.name.toLowerCase().contains(query) ||
+          club.description.toLowerCase().contains(query);
+      if (!matchesQuery) return false;
+
+      switch (_selectedFilter) {
+        case 'By Archetype':
+          return club.archetypeId != null && club.archetypeId!.isNotEmpty;
+        case 'Creator':
+          // Creator clubs are brand / user-owned (non-archetype) tribes.
+          return club.archetypeId == null || club.archetypeId!.isEmpty;
+        case 'All':
+        default:
+          return true;
+      }
+    }).toList();
+  }
+
+  String _typeTagFor(Tribe club) {
+    return (club.archetypeId != null && club.archetypeId!.isNotEmpty)
+        ? 'ARCHETYPE'
+        : 'CREATOR';
+  }
+
+  Widget _buildSearchBar() {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+      child: TextField(
+        style: const TextStyle(color: Colors.white, fontSize: 14),
+        decoration: InputDecoration(
+          hintText: '🔍 Search clubs...',
+          hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.4)),
+          filled: true,
+          fillColor: Colors.white.withValues(alpha: 0.05),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide.none,
+          ),
+          contentPadding:
+              const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        ),
+        onChanged: (val) => setState(() => _searchQuery = val),
+      ),
+    );
+  }
+
+  Widget _buildFilterChips() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      child: Row(
+        children: [
+          _FilterChip(
+            label: 'All',
+            selected: _selectedFilter == 'All',
+            onSelected: () => setState(() => _selectedFilter = 'All'),
+          ),
+          const SizedBox(width: 8),
+          _FilterChip(
+            label: 'By Archetype',
+            selected: _selectedFilter == 'By Archetype',
+            onSelected: () => setState(() => _selectedFilter = 'By Archetype'),
+          ),
+          const SizedBox(width: 8),
+          _FilterChip(
+            label: 'Creator',
+            selected: _selectedFilter == 'Creator',
+            onSelected: () => setState(() => _selectedFilter = 'Creator'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showPreviewSheet(BuildContext context, Tribe club) {
+    showModalBottomSheet<void>(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (sheetContext) => ClubPreviewSheet(
+        title: club.name,
+        description: club.description,
+        benefits: _benefitsFor(club),
+        onJoin: () => _joinClub(club),
+      ),
+    );
+  }
+
+  List<String> _benefitsFor(Tribe club) {
+    return [
+      'Join ${club.memberCount} members on the same path',
+      'Club challenges and shared XP (Lv ${club.level})',
+      if (club.tags.isNotEmpty)
+        'Focused on ${club.tags.take(3).join(', ')}'
+      else
+        'A tribe to anchor your habits',
+    ];
+  }
+
+  Future<void> _joinClub(Tribe club) async {
+    final authUser =
+        ref.read(authStateChangesProvider).value;
+    final userId = authUser?.id;
+    if (userId == null || userId.isEmpty) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Sign in to join a club')),
+      );
+      return;
+    }
+    try {
+      await ref.read(tribeRepositoryProvider).joinClub(userId, club.id);
+      // Membership changed → re-evaluate hasClub so the view switches to the
+      // 4-tab layout, and refresh the discovery pool.
+      ref.invalidate(hasClubProvider);
+      ref.invalidate(discoveryClubsProvider);
+    } catch (e, s) {
+      AppLogger.e('TribeTabContent: joinClub failed', e, s);
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to join: $e')),
+      );
+    }
+  }
+
+  // ============ CLUB TABS (has club) ============
+
+  Widget _buildClubTabs(BuildContext context) {
+    final profileAsync = ref.watch(userStatsStreamProvider);
+    final clubsAsync = ref.watch(allArchetypeClubsProvider);
+
+    return clubsAsync.when(
+      data: (clubs) {
+        return profileAsync.when(
+          data: (profile) {
+            final theme = ArchetypeTheme.forArchetype(profile.archetype);
+
+            // Find the club that matches the user's archetype
+            // First try exact archetype match, then fall back to multi-archetype clubs
+            final matchingIndex = clubs.isNotEmpty
+                ? clubs.indexWhere(
+                    (club) => club.archetypeId == profile.archetype.name,
+                  )
+                : -1;
+            final userClub = matchingIndex != -1
+                ? clubs[matchingIndex]
+                : clubs
+                      .where(
+                        (club) =>
+                            club.archetypeId == null ||
+                            club.archetypeId!.isEmpty,
+                      )
+                      .firstOrNull;
+
+            if (userClub == null) {
+              return const _EmptyState(
+                message: 'No clubs available for your archetype yet.',
+                icon: Icons.groups,
+              );
+            }
+
+            return DefaultTabController(
+              length: 4,
+              child: Column(
+                children: [
+                  // "SEE ALL TRIBES" — open the discovery view for users with a club.
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+                    child: Align(
+                      alignment: Alignment.centerRight,
+                      child: TextButton.icon(
+                        onPressed: () => _showDiscoveryView(context),
+                        icon: const Icon(Icons.explore, size: 18),
+                        label: const Text('SEE ALL TRIBES'),
+                        style: TextButton.styleFrom(
+                          foregroundColor: Colors.white70,
+                          textStyle: const TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            letterSpacing: 0.5,
+                          ),
+                          padding: EdgeInsets.zero,
+                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                        ),
+                      ),
+                    ),
+                  ),
+
+                  // Secondary glassmorphic pill tab bar
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(24),
+                      child: BackdropFilter(
+                        filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+                        child: Container(
+                          height: 48,
+                          decoration: BoxDecoration(
+                            color: Colors.black.withValues(alpha: 0.3),
+                            borderRadius: BorderRadius.circular(24),
+                            border: Border.all(
+                              color: Colors.white.withValues(alpha: 0.08),
+                            ),
+                          ),
+                          child: TabBar(
+                            indicatorSize: TabBarIndicatorSize.tab,
+                            indicator: BoxDecoration(
+                              gradient: LinearGradient(
+                                colors: [
+                                  theme.primaryColor.withValues(alpha: 0.25),
+                                  theme.accentColor.withValues(alpha: 0.1),
+                                ],
+                              ),
+                              borderRadius: BorderRadius.circular(24),
+                              border: Border.all(
+                                color: theme.primaryColor.withValues(alpha: 0.3),
+                              ),
+                            ),
+                            labelColor: Colors.white,
+                            unselectedLabelColor: Colors.white54,
+                            labelStyle: const TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.bold,
+                              letterSpacing: 0.5,
+                            ),
+                            tabs: const [
+                              Tab(text: 'SANCTUM'),
+                              Tab(text: 'QUESTS'),
+                              Tab(text: 'MEMBERS'),
+                              Tab(text: 'BONDS'),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+
+                  // Tab contents
+                  Expanded(
+                    child: TabBarView(
+                      children: [
+                        // SANCTUM Tab
+                        _buildSanctumTab(context, userClub, theme, profile),
+
+                        // QUESTS Tab
+                        _buildQuestsTab(),
+
+                        // MEMBERS Tab
+                        _buildMembersTab(userClub, profile),
+
+                        // BONDS Tab
+                        _buildBondsTab(),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            );
+          },
+          loading: () => const EmergeLoadingSkeleton(itemCount: 1),
+          error: (error, stack) => AppErrorWidget(
+            message: 'Could not load your profile',
+            onRetry: () => ref.invalidate(userStatsStreamProvider),
+          ),
+        );
+      },
+      loading: () => const EmergeLoadingSkeleton(itemCount: 5),
+      error: (error, _) => AppErrorWidget(
+        message: 'Could not load tribes',
+        onRetry: () => ref.invalidate(allArchetypeClubsProvider),
+      ),
+    );
+  }
+
+  /// Opens the discovery view as a full-screen modal for users who already
+  /// have a club (the "SEE ALL TRIBES" button).
+  void _showDiscoveryView(BuildContext context) {
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (context) => const _DiscoveryScreen(),
+      ),
     );
   }
 
@@ -366,6 +642,221 @@ class _TribeTabContentState extends ConsumerState<TribeTabContent> {
   }
 }
 
+/// Full-screen discovery view shown via the "SEE ALL TRIBES" button for
+/// users who already have a club. Reuses the same grid/search/filter logic
+/// as the no-club discovery state.
+class _DiscoveryScreen extends ConsumerStatefulWidget {
+  const _DiscoveryScreen();
+
+  @override
+  ConsumerState<_DiscoveryScreen> createState() => _DiscoveryScreenState();
+}
+
+class _DiscoveryScreenState extends ConsumerState<_DiscoveryScreen> {
+  String _searchQuery = '';
+  String _selectedFilter = 'All';
+
+  @override
+  Widget build(BuildContext context) {
+    final clubsAsync = ref.watch(discoveryClubsProvider);
+
+    return Scaffold(
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Colors.white70),
+          onPressed: () => Navigator.of(context).pop(),
+        ),
+        title: const Text(
+          'All Tribes',
+          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+        ),
+      ),
+      body: clubsAsync.when(
+        data: (clubs) {
+          final filtered = _filterClubs(clubs);
+          final columns =
+              MediaQuery.of(context).size.width > 600 ? 4 : 3;
+
+          return CustomScrollView(
+            slivers: [
+              SliverToBoxAdapter(child: _buildSearchBar()),
+              SliverToBoxAdapter(child: _buildFilterChips()),
+              if (filtered.isEmpty)
+                SliverFillRemaining(
+                  child: _EmptyState(
+                    message: _searchQuery.isEmpty
+                        ? 'No clubs to discover yet.'
+                        : 'No clubs match "$_searchQuery".',
+                    icon: Icons.search_off,
+                  ),
+                )
+              else
+                SliverPadding(
+                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
+                  sliver: SliverGrid(
+                    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: columns,
+                      crossAxisSpacing: 8,
+                      mainAxisSpacing: 8,
+                      childAspectRatio: 0.75,
+                    ),
+                    delegate: SliverChildBuilderDelegate(
+                      (context, index) {
+                        final club = filtered[index];
+                        return ClubBoxCard(
+                          title: club.name,
+                          imageUrl: club.imageUrl,
+                          memberCount: club.memberCount,
+                          activityStatus: club.memberCount >= 10
+                              ? '🔥 Active'
+                              : '🌙 Quiet',
+                          typeTag: _typeTagFor(club),
+                          onTap: () => _showPreviewSheet(context, club),
+                        );
+                      },
+                      childCount: filtered.length,
+                    ),
+                  ),
+                ),
+            ],
+          );
+        },
+        loading: () => const Center(child: CircularProgressIndicator()),
+        error: (_, _) => const Center(
+          child: Text(
+            'Could not load clubs',
+            style: TextStyle(color: Colors.white70),
+          ),
+        ),
+      ),
+    );
+  }
+
+  List<Tribe> _filterClubs(List<Tribe> clubs) {
+    final query = _searchQuery.trim().toLowerCase();
+    return clubs.where((club) {
+      final matchesQuery = query.isEmpty ||
+          club.name.toLowerCase().contains(query) ||
+          club.description.toLowerCase().contains(query);
+      if (!matchesQuery) return false;
+
+      switch (_selectedFilter) {
+        case 'By Archetype':
+          return club.archetypeId != null && club.archetypeId!.isNotEmpty;
+        case 'Creator':
+          return club.archetypeId == null || club.archetypeId!.isEmpty;
+        case 'All':
+        default:
+          return true;
+      }
+    }).toList();
+  }
+
+  String _typeTagFor(Tribe club) {
+    return (club.archetypeId != null && club.archetypeId!.isNotEmpty)
+        ? 'ARCHETYPE'
+        : 'CREATOR';
+  }
+
+  Widget _buildSearchBar() {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+      child: TextField(
+        style: const TextStyle(color: Colors.white, fontSize: 14),
+        decoration: InputDecoration(
+          hintText: '🔍 Search clubs...',
+          hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.4)),
+          filled: true,
+          fillColor: Colors.white.withValues(alpha: 0.05),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide.none,
+          ),
+          contentPadding:
+              const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        ),
+        onChanged: (val) => setState(() => _searchQuery = val),
+      ),
+    );
+  }
+
+  Widget _buildFilterChips() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      child: Row(
+        children: [
+          _FilterChip(
+            label: 'All',
+            selected: _selectedFilter == 'All',
+            onSelected: () => setState(() => _selectedFilter = 'All'),
+          ),
+          const SizedBox(width: 8),
+          _FilterChip(
+            label: 'By Archetype',
+            selected: _selectedFilter == 'By Archetype',
+            onSelected: () => setState(() => _selectedFilter = 'By Archetype'),
+          ),
+          const SizedBox(width: 8),
+          _FilterChip(
+            label: 'Creator',
+            selected: _selectedFilter == 'Creator',
+            onSelected: () => setState(() => _selectedFilter = 'Creator'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showPreviewSheet(BuildContext context, Tribe club) {
+    showModalBottomSheet<void>(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (sheetContext) => ClubPreviewSheet(
+        title: club.name,
+        description: club.description,
+        benefits: _benefitsFor(club),
+        onJoin: () => _joinClub(club),
+      ),
+    );
+  }
+
+  List<String> _benefitsFor(Tribe club) {
+    return [
+      'Join ${club.memberCount} members on the same path',
+      'Club challenges and shared XP (Lv ${club.level})',
+      if (club.tags.isNotEmpty)
+        'Focused on ${club.tags.take(3).join(', ')}'
+      else
+        'A tribe to anchor your habits',
+    ];
+  }
+
+  Future<void> _joinClub(Tribe club) async {
+    final authUser = ref.read(authStateChangesProvider).value;
+    final userId = authUser?.id;
+    if (userId == null || userId.isEmpty) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Sign in to join a club')),
+      );
+      return;
+    }
+    try {
+      await ref.read(tribeRepositoryProvider).joinClub(userId, club.id);
+      ref.invalidate(discoveryClubsProvider);
+    } catch (e, s) {
+      AppLogger.e('_DiscoveryScreen: joinClub failed', e, s);
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to join: $e')),
+      );
+    }
+  }
+}
+
 class _EmptyState extends StatelessWidget {
   final String message;
   final IconData icon;
@@ -388,6 +879,49 @@ class _EmptyState extends StatelessWidget {
               style: const TextStyle(fontSize: 14, color: Colors.white70),
             ),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+class _FilterChip extends StatelessWidget {
+  final String label;
+  final bool selected;
+  final VoidCallback onSelected;
+
+  const _FilterChip({
+    required this.label,
+    required this.selected,
+    required this.onSelected,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final accent = selected ? Colors.cyanAccent : Colors.white54;
+    return GestureDetector(
+      onTap: onSelected,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+        decoration: BoxDecoration(
+          color: selected
+              ? Colors.cyanAccent.withValues(alpha: 0.15)
+              : Colors.white.withValues(alpha: 0.05),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: selected
+                ? Colors.cyanAccent.withValues(alpha: 0.4)
+                : Colors.white.withValues(alpha: 0.12),
+          ),
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            fontSize: 12,
+            fontWeight: selected ? FontWeight.bold : FontWeight.normal,
+            color: accent,
+            letterSpacing: 0.3,
+          ),
         ),
       ),
     );

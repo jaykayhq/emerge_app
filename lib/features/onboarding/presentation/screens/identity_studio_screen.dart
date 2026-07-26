@@ -8,6 +8,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
 import 'package:go_router/go_router.dart';
+import 'package:emerge_app/features/onboarding/presentation/widgets/onboarding_progress_bar.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class IdentityStudioScreen extends ConsumerStatefulWidget {
@@ -19,87 +20,40 @@ class IdentityStudioScreen extends ConsumerStatefulWidget {
 }
 
 class _IdentityStudioScreenState extends ConsumerState<IdentityStudioScreen> {
-  // Page 0: Archetype Selection, Page 1: Motive Selection
-  final PageController _stepController = PageController();
-
   // Carousel controller for Archetypes
   final PageController _carouselController = PageController(
     viewportFraction: 0.75,
   );
 
-  int _currentStep = 0;
   int _focusedArchetypeIndex = 0;
 
   UserArchetype? _selectedArchetype;
-  String? _selectedMotive;
-  final TextEditingController _customMotiveController = TextEditingController();
-  bool _isCustomMotive = false;
   UserArchetype? _revealingArchetype;
 
   final List<ArchetypeTheme> _themes = ArchetypeTheme.allThemes;
 
   @override
   void dispose() {
-    _stepController.dispose();
     _carouselController.dispose();
-    _customMotiveController.dispose();
     super.dispose();
   }
 
-  void _nextStep() async {
-    if (_currentStep == 0) {
-      if (_selectedArchetype != null) {
-        // Narrator greeting removed per redesign: the onboarding flow
-        // now uses the quiet-companion pattern (Phase 4 Task 18).
-        if (!mounted) return;
-
-        _stepController.nextPage(
-          duration: const Duration(milliseconds: 600),
-          curve: Curves.easeInOutCubic,
-        );
-        setState(() => _currentStep = 1);
-      }
-    } else {
-      _completeIdentityStudio();
-    }
-  }
-
-  void _previousStep() {
-    if (_currentStep == 1) {
-      _stepController.previousPage(
-        duration: const Duration(milliseconds: 600),
-        curve: Curves.easeInOutCubic,
-      );
-      setState(() => _currentStep = 0);
-    }
-  }
-
   Future<void> _completeIdentityStudio() async {
-    final motiveToSave = _isCustomMotive
-        ? _customMotiveController.text.trim()
-        : _selectedMotive;
-
-    if (_selectedArchetype == null ||
-        (motiveToSave == null && !_isCustomMotive) ||
-        (_isCustomMotive && motiveToSave!.isEmpty)) {
+    if (_selectedArchetype == null) {
       return;
     }
 
     try {
       final notifier = ref.read(enhancedOnboardingProvider.notifier);
 
-      // Set Archetype and Motive
+      // Set Archetype
       await notifier.selectArchetype(_selectedArchetype!);
 
-      if (motiveToSave != null) {
-        await notifier.setMotive(motiveToSave);
-      }
-
       AppLogger.i(
-        'Identity Studio: Updated enhanced onboarding state: selectedArchetype=$_selectedArchetype, motive=$motiveToSave',
+        'Identity Studio: Updated enhanced onboarding state: selectedArchetype=$_selectedArchetype',
       );
 
-      // PERSIST PROGRESS: Complete the first milestone (Archetype/Motive)
+      // PERSIST PROGRESS: Complete the first milestone (Archetype)
       await notifier.completeMilestone(0);
 
       // Navigate to the next step in the 5-step flow: interests.
@@ -274,62 +228,12 @@ class _IdentityStudioScreenState extends ConsumerState<IdentityStudioScreen> {
         child: SafeArea(
           child: Column(
             children: [
-              // Header Progress / Back Button
-              Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 20,
-                  vertical: 16,
-                ),
-                child: Row(
-                  children: [
-                    if (_currentStep > 0)
-                      IconButton(
-                        icon: const Icon(
-                          Icons.arrow_back,
-                          color: Colors.white70,
-                        ),
-                        onPressed: _previousStep,
-                      )
-                    else
-                      const SizedBox(width: 48), // Spacer
-
-                    const Spacer(),
-                    // Subtle progress indicator
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 6,
-                      ),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.05),
-                        borderRadius: BorderRadius.circular(20),
-                        border: Border.all(color: Colors.white10),
-                      ),
-                      child: Text(
-                        'STEP ${_currentStep + 1} OF 3',
-                        style: GoogleFonts.splineSans(
-                          color: Colors.white54,
-                          fontSize: 10,
-                          letterSpacing: 1.5,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ),
-                    const Spacer(),
-                    const SizedBox(width: 48), // Balance
-                  ],
-                ),
+              OnboardingProgressBar(
+                progress: 0.4,
+                label: onboardingLabelFor(0.4),
               ),
-
               Expanded(
-                child: PageView(
-                  controller: _stepController,
-                  physics: const NeverScrollableScrollPhysics(),
-                  children: [
-                    _buildArchetypeCarousel(),
-                    _buildMotiveSelection(),
-                  ],
-                ),
+                child: _buildArchetypeCarousel(),
               ),
             ],
           ),
@@ -466,7 +370,8 @@ class _IdentityStudioScreenState extends ConsumerState<IdentityStudioScreen> {
             width: double.infinity,
             height: 56,
             child: ElevatedButton(
-              onPressed: _selectedArchetype != null ? _nextStep : null,
+              onPressed:
+                  _selectedArchetype != null ? _completeIdentityStudio : null,
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFF2BEE79), // Neon Teal
                 foregroundColor: const Color(0xFF05100B), // Dark text
@@ -711,190 +616,5 @@ class _IdentityStudioScreenState extends ConsumerState<IdentityStudioScreen> {
     );
   }
 
-  // ===========================================================================
-  // STEP 2: MOTIVE SELECTION
-  // ===========================================================================
-  Widget _buildMotiveSelection() {
-    final theme = ArchetypeTheme.forArchetype(
-      _selectedArchetype ?? UserArchetype.none,
-    );
 
-    return SingleChildScrollView(
-      physics: const BouncingScrollPhysics(),
-      padding: const EdgeInsets.symmetric(horizontal: 24),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Gap(20),
-          Text(
-            'What drives you?',
-            style: GoogleFonts.splineSans(
-              color: Colors.white,
-              fontSize: 28,
-              fontWeight: FontWeight.bold,
-              letterSpacing: -0.5,
-            ),
-          ).animate().fadeIn().moveY(begin: 10, end: 0),
-
-          const Gap(8),
-
-          Text(
-            'Choose a motive or define your own.',
-            style: GoogleFonts.splineSans(color: Colors.white54, fontSize: 16),
-          ).animate().fadeIn(delay: 100.ms),
-
-          const Gap(32),
-
-          // Custom Motive (highlighted first — draws attention)
-          AnimatedContainer(
-            duration: 300.ms,
-            margin: const EdgeInsets.only(bottom: 12),
-            decoration: BoxDecoration(
-              color: _isCustomMotive
-                  ? const Color(0xFF1A2C24)
-                  : Colors.white.withValues(alpha: 0.05),
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(
-                color: _isCustomMotive
-                    ? const Color(0xFF2BEE79)
-                    : const Color(0xFF7C3AED).withValues(alpha: 0.3),
-              ),
-            ),
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 4),
-            child: Row(
-              children: [
-                Expanded(
-                  child: TextField(
-                    controller: _customMotiveController,
-                    style: GoogleFonts.splineSans(
-                      color: Colors.white,
-                      fontSize: 16,
-                    ),
-                    decoration: InputDecoration(
-                      hintText: 'Write my own...',
-                      hintStyle: GoogleFonts.splineSans(color: Colors.white30),
-                      border: InputBorder.none,
-                      contentPadding: const EdgeInsets.symmetric(vertical: 16),
-                    ),
-                    onTap: () {
-                      setState(() {
-                        _isCustomMotive = true;
-                        _selectedMotive = null;
-                      });
-                    },
-                    onChanged: (val) {
-                      setState(() {}); // Rebuild to enable button
-                    },
-                  ),
-                ),
-                const Icon(Icons.edit, color: Colors.white30, size: 20),
-              ],
-            ),
-          ).animate().fadeIn(delay: 400.ms),
-
-          // Suggested Motives (below custom)
-          if (theme.suggestedMotives.isNotEmpty)
-            ...theme.suggestedMotives.map((motive) {
-              final isSelected = _selectedMotive == motive && !_isCustomMotive;
-              return _buildMotiveCard(
-                title: motive,
-                isSelected: isSelected,
-                onTap: () {
-                  setState(() {
-                    _selectedMotive = motive;
-                    _isCustomMotive = false;
-                    _customMotiveController.clear();
-                  });
-                  HapticFeedback.lightImpact();
-                },
-              );
-            }),
-
-          const Gap(24),
-
-          // Continue Button
-          SizedBox(
-            width: double.infinity,
-            height: 56,
-            child: ElevatedButton(
-              onPressed:
-                  (_selectedMotive != null ||
-                      (_isCustomMotive &&
-                          _customMotiveController.text.isNotEmpty))
-                  ? _nextStep
-                  : null,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF2BEE79),
-                foregroundColor: const Color(0xFF05100B),
-                disabledBackgroundColor: Colors.white10,
-                elevation: 0,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16),
-                ),
-              ),
-              child: Text(
-                'CONTINUE',
-                style: GoogleFonts.splineSans(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w700,
-                  letterSpacing: 0.5,
-                ),
-              ),
-            ),
-          ).animate().fadeIn(delay: 500.ms),
-
-          const Gap(40),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildMotiveCard({
-    required String title,
-    required bool isSelected,
-    required VoidCallback onTap,
-  }) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
-      child: GestureDetector(
-        onTap: onTap,
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 200),
-          padding: const EdgeInsets.all(20),
-          decoration: BoxDecoration(
-            color: isSelected
-                ? const Color(0xFF1A2C24) // Dark Green tint
-                : Colors.white.withValues(alpha: 0.05),
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(
-              color: isSelected
-                  ? const Color(0xFF2BEE79)
-                  : Colors.white.withValues(alpha: 0.1),
-              width: 1.5,
-            ),
-          ),
-          child: Row(
-            children: [
-              Expanded(
-                child: Text(
-                  title,
-                  style: GoogleFonts.splineSans(
-                    color: isSelected ? Colors.white : Colors.white70,
-                    fontSize: 16,
-                    fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
-                  ),
-                ),
-              ),
-              if (isSelected)
-                const Icon(
-                  Icons.check_circle,
-                  color: Color(0xFF2BEE79),
-                  size: 20,
-                ),
-            ],
-          ),
-        ),
-      ),
-    ).animate().fadeIn(delay: 200.ms).moveX(begin: 10, end: 0);
-  }
 }

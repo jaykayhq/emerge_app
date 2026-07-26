@@ -68,6 +68,19 @@ class LocalSettingsRepository {
 
   Future<void> resetOnboarding() async {
     await _setBool(_keyIsFirstLaunch, true);
+    await _setBool(_keyEndowmentSeen, false);
+  }
+
+  // --- Endowment interstitial (one-time, post sign-up) -------------------
+
+  static const _keyEndowmentSeen = 'endowment_interstitial_seen';
+
+  /// Whether the one-time post-sign-up endowment interstitial has been shown.
+  /// Synchronous so the router redirect can read it without awaiting.
+  bool get hasSeenEndowment => _getBool(_keyEndowmentSeen);
+
+  Future<void> markEndowmentSeen() async {
+    await _setBool(_keyEndowmentSeen, true);
   }
 
   String get themeMode => _getString(_keyThemeMode, defaultValue: 'system');

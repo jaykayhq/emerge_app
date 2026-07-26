@@ -9,6 +9,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
 import 'package:go_router/go_router.dart';
+import 'package:emerge_app/features/onboarding/presentation/widgets/onboarding_progress_bar.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class WorldRevealScreen extends ConsumerStatefulWidget {
@@ -27,6 +28,7 @@ class _WorldRevealScreenState extends ConsumerState<WorldRevealScreen>
   int _textPhase = 0;
   bool _showButton = false;
   bool _isCreatingHabits = false;
+  bool _skipped = false;
 
   final List<String> _messages = [
     'Your identity is forming...',
@@ -66,17 +68,20 @@ class _WorldRevealScreenState extends ConsumerState<WorldRevealScreen>
   void _startSequence() async {
     // Phase 1: Fade in first message
     await Future.delayed(const Duration(milliseconds: 500));
+    if (_skipped) return;
     _textController.forward();
     _fadeController.forward();
 
     // Phase 2: Second message
     await Future.delayed(const Duration(milliseconds: 2500));
+    if (_skipped) return;
     setState(() => _textPhase = 1);
     _textController.reset();
     _textController.forward();
 
     // Phase 3: Third message
     await Future.delayed(const Duration(milliseconds: 2500));
+    if (_skipped) return;
     setState(() => _textPhase = 2);
     _textController.reset();
     _textController.forward();
@@ -86,9 +91,27 @@ class _WorldRevealScreenState extends ConsumerState<WorldRevealScreen>
 
     // Phase 4: Show button
     await Future.delayed(const Duration(milliseconds: 2000));
+    if (_skipped) return;
     setState(() => _showButton = true);
 
     // Preload ALL social data in background while user watches animations
+    ref.read(socialDataPreloadProvider);
+  }
+
+  void _skipToEnterWorld() {
+    if (_skipped) return;
+    // Jump straight to the final "Enter Your World" state,
+    // skipping the reveal animation sequence.
+    setState(() {
+      _skipped = true;
+      _textPhase = 2;
+      _textController.value = 1.0;
+      _showButton = true;
+    });
+    if (!_pulseController.isAnimating) {
+      _pulseController.repeat(reverse: true);
+    }
+    // Preload ALL social data in background.
     ref.read(socialDataPreloadProvider);
   }
 
@@ -145,8 +168,15 @@ class _WorldRevealScreenState extends ConsumerState<WorldRevealScreen>
           ),
         ),
         child: SafeArea(
-          child: Stack(
+          child: Column(
             children: [
+              OnboardingProgressBar(
+                progress: 1.0,
+                label: onboardingLabelFor(1.0),
+              ),
+              Expanded(
+                child: Stack(
+                  children: [
               // Radial Gradient Background (Glow)
               Positioned.fill(
                 child: DecoratedBox(
@@ -228,6 +258,43 @@ class _WorldRevealScreenState extends ConsumerState<WorldRevealScreen>
                 ),
               ),
 
+              // Top controls: back arrow (left) + skip (right)
+              Positioned(
+                top: 0,
+                left: 0,
+                right: 0,
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 4,
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      IconButton(
+                        icon: const Icon(Icons.arrow_back),
+                        color: Colors.white,
+                        onPressed: () {
+                          if (context.canPop()) context.pop();
+                        },
+                      ),
+                      TextButton(
+                        onPressed: _skipToEnterWorld,
+                        child: Text(
+                          'Skip',
+                          style: GoogleFonts.splineSans(
+                            color: Colors.white,
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                            letterSpacing: 1.0,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+
               // Button
               if (_showButton)
                 Positioned(
@@ -267,6 +334,9 @@ class _WorldRevealScreenState extends ConsumerState<WorldRevealScreen>
                               ),
                             ),
                     ),
+                  ),
+                ),
+            ],
                   ),
                 ),
             ],

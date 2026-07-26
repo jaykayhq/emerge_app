@@ -2,8 +2,9 @@ import 'package:emerge_app/core/theme/archetype_theme.dart';
 import 'package:emerge_app/core/utils/app_logger.dart';
 import 'package:emerge_app/features/auth/domain/entities/user_extension.dart';
 import 'package:emerge_app/features/auth/presentation/providers/auth_providers.dart';
-import 'package:emerge_app/features/onboarding/domain/models/interest.dart';
 import 'package:emerge_app/features/onboarding/presentation/providers/onboarding_state_notifier.dart';
+import 'package:emerge_app/features/onboarding/presentation/widgets/club_box_card.dart';
+import 'package:emerge_app/features/onboarding/presentation/widgets/club_preview_sheet.dart';
 import 'package:emerge_app/features/social/domain/models/tribe.dart';
 import 'package:emerge_app/features/social/presentation/providers/tribes_provider.dart';
 import 'package:flutter/material.dart';
@@ -12,15 +13,18 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
 import 'package:go_router/go_router.dart';
+import 'package:emerge_app/features/onboarding/presentation/widgets/onboarding_progress_bar.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-/// Onboarding step (Milestone 2): pick a single club. Replaces the previous
-/// silent auto-join-by-archetype behavior; the user's explicit pick is
-/// authoritative and persisted on `UserProfile.joinedClubId`.
+/// Onboarding step (Milestone 2): pick a single club. Redesigned (Plan 5,
+/// Task 6) as a 3-column grid of compact [ClubBoxCard]s (4-column on
+/// tablets). Tapping a card opens a [ClubPreviewSheet] with a "JOIN CLUB"
+/// button; joining persists the pick on `UserProfile.joinedClubId` and
+/// advances. The step is skippable via the "Skip" link in the header.
 ///
 /// The club pool is filtered to clubs whose `archetypeId` matches the user's
-/// selected archetype. Users can still browse the full `/social/all` list
-/// (out-of-band) but cannot advance without an explicit pick here.
+/// selected archetype. Initially 6 clubs are shown; "See more clubs →"
+/// expands the grid to ~15.
 class ClubScreen extends ConsumerStatefulWidget {
   const ClubScreen({super.key});
 
@@ -29,25 +33,21 @@ class ClubScreen extends ConsumerStatefulWidget {
 }
 
 class _ClubScreenState extends ConsumerState<ClubScreen> {
-  Tribe? _selectedClub;
   bool _isSaving = false;
+  bool _showAll = false;
 
-  bool get _canContinue => _selectedClub != null;
-
-  Future<void> _onContinue() async {
-    if (!_canContinue || _isSaving) return;
-    final club = _selectedClub!;
+  /// Joins [club] (state record + membership), completes the milestone and
+  /// advances. Called by the preview sheet's "JOIN CLUB" button.
+  Future<void> _joinClub(Tribe club) async {
+    if (_isSaving) return;
     setState(() => _isSaving = true);
     try {
       // The state-side record keeps the join eager; actual join happens below.
-      await ref
-          .read(enhancedOnboardingProvider.notifier)
-          .setClub(club.id);
+      await ref.read(enhancedOnboardingProvider.notifier).setClub(club.id);
 
       // Skip the explicit auto-join guard: we want the user to be a member
       // of the club they just picked.
-      final user =
-          ref.read(authStateChangesProvider).value;
+      final user = ref.read(authStateChangesProvider).value;
       if (user != null && user.isNotEmpty) {
         try {
           await ref
@@ -78,27 +78,46 @@ class _ClubScreenState extends ConsumerState<ClubScreen> {
     }
   }
 
-  List<String> _getInterestCategories(List<String> interestIds) {
-    final categories = <String>{};
-    for (final id in interestIds) {
-      for (final category in InterestCategory.values) {
-        if (id.startsWith(category.idPrefix)) {
-          categories.add(category.displayName);
-          break;
-        }
-      }
-    }
-    return categories.toList();
+  /// Skips the club pick entirely: complete the milestone and advance
+  /// without joining (mirrors FirstHabitsScreen's skip pattern).
+  void _onSkip() {
+    if (_isSaving) return;
+    ref.read(enhancedOnboardingProvider.notifier).completeMilestone(2);
+    context.push('/onboarding/first-habits');
   }
 
-  List<String> _getMatchingTags(Tribe club, List<String> interestCategories) {
-    final matching = <String>[];
-    for (final tag in club.tags) {
-      if (interestCategories.any((cat) => tag.toLowerCase().contains(cat.toLowerCase()))) {
-        matching.add(tag);
-      }
-    }
-    return matching.take(3).toList();
+  void _openPreview(Tribe club) {
+    HapticFeedback.lightImpact();
+    showModalBottomSheet<void>(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (context) => ClubPreviewSheet(
+        title: club.name,
+        description: club.description,
+        benefits: _benefitsFor(club),
+        onJoin: () => _joinClub(club),
+      ),
+    );
+  }
+
+  List<String> _benefitsFor(Tribe club) {
+    return [
+      'Join ${club.memberCount} members on the same path',
+      'Club challenges and shared XP (Lv ${club.level})',
+      if (club.tags.isNotEmpty)
+        'Focused on ${club.tags.take(3).join(', ')}'
+      else
+        'A tribe to anchor your habits',
+    ];
+  }
+
+  String _activityStatusFor(Tribe club) {
+    return club.memberCount >= 10 ? '🔥 Active' : '🌙 Quiet';
+  }
+
+  String _typeTagFor(Tribe club) {
+    return club.archetypeId != null ? 'ARCHETYPE' : 'CREATOR';
   }
 
   @override
@@ -108,9 +127,8 @@ class _ClubScreenState extends ConsumerState<ClubScreen> {
             .selectedArchetype ??
         UserArchetype.none;
     final theme = ArchetypeTheme.forArchetype(archetype);
-    final interests = ref.watch(enhancedOnboardingProvider).interests;
-    final interestCategories = _getInterestCategories(interests);
     final poolAsync = ref.watch(archetypeClubsProvider);
+    final columns = MediaQuery.of(context).size.width > 600 ? 4 : 3;
 
     return Scaffold(
       body: Container(
@@ -128,10 +146,15 @@ class _ClubScreenState extends ConsumerState<ClubScreen> {
         child: SafeArea(
           child: Column(
             children: [
+              OnboardingProgressBar(
+                progress: 0.6,
+                label: onboardingLabelFor(0.6),
+              ),
               _Header(
                 stepIndex: 2,
                 totalSteps: 5,
                 onBack: () => context.pop(),
+                onSkip: _onSkip,
               ),
               Expanded(
                 child: SingleChildScrollView(
@@ -153,88 +176,65 @@ class _ClubScreenState extends ConsumerState<ClubScreen> {
                       const Gap(8),
                       Text(
                         'A club for ${theme.archetypeName.toLowerCase()} '
-                        'movers — pick one to anchor your tribe.',
+                        'movers — tap one to preview it.',
                         style: GoogleFonts.splineSans(
                           color: Colors.white54,
                           fontSize: 16,
                         ),
                       ).animate().fadeIn(delay: 100.ms),
-                      if (interestCategories.isNotEmpty) ...[
-                        const Gap(16),
-                        Container(
-                          padding: const EdgeInsets.all(16),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFF2BEE79).withValues(alpha: 0.1),
-                            borderRadius: BorderRadius.circular(16),
-                            border: Border.all(color: const Color(0xFF2BEE79).withValues(alpha: 0.3)),
-                          ),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Row(
-                                children: [
-                                  const Icon(
-                                    Icons.lightbulb_outline,
-                                    color: Color(0xFF2BEE79),
-                                    size: 20,
-                                  ),
-                                  const Gap(8),
-                                  Text(
-                                    'Based on your interests',
-                                    style: GoogleFonts.splineSans(
-                                      color: const Color(0xFF2BEE79),
-                                      fontSize: 13,
-                                      fontWeight: FontWeight.w600,
-                                      letterSpacing: 1.0,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              const Gap(8),
-                              Wrap(
-                                spacing: 8,
-                                runSpacing: 8,
-                                children: interestCategories.map((cat) => Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                                  decoration: BoxDecoration(
-                                    color: const Color(0xFF2BEE79).withValues(alpha: 0.15),
-                                    borderRadius: BorderRadius.circular(20),
-                                    border: Border.all(color: const Color(0xFF2BEE79).withValues(alpha: 0.3)),
-                                  ),
-                                  child: Text(
-                                    cat,
-                                    style: GoogleFonts.splineSans(
-                                      color: const Color(0xFF2BEE79),
-                                      fontSize: 11,
-                                      fontWeight: FontWeight.w600,
-                                      letterSpacing: 0.5,
-                                    ),
-                                  ),
-                                )).toList(),
-                              ),
-                            ],
-                          ),
-                        ).animate().fadeIn(delay: 150.ms),
-                      ],
                       const Gap(24),
                       poolAsync.when(
                         data: (clubs) {
                           if (clubs.isEmpty) {
                             return const _EmptyState();
                           }
+                          final visible = _showAll
+                              ? clubs
+                              : clubs.take(6).toList();
                           return Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              for (final club in clubs) ...[
-                                _ClubCard(
-                                  club: club,
-                                  isSelected: _selectedClub?.id == club.id,
-                                  matchingTags: _getMatchingTags(club, interestCategories),
-                                  onTap: () {
-                                    setState(() => _selectedClub = club);
-                                    HapticFeedback.lightImpact();
-                                  },
+                              GridView.builder(
+                                shrinkWrap: true,
+                                physics:
+                                    const NeverScrollableScrollPhysics(),
+                                gridDelegate:
+                                    SliverGridDelegateWithFixedCrossAxisCount(
+                                  crossAxisCount: columns,
+                                  crossAxisSpacing: 8,
+                                  mainAxisSpacing: 8,
+                                  childAspectRatio: 0.75,
                                 ),
-                                const Gap(12),
+                                itemCount: visible.length,
+                                itemBuilder: (context, index) {
+                                  final club = visible[index];
+                                  return ClubBoxCard(
+                                    title: club.name,
+                                    imageUrl: club.imageUrl,
+                                    memberCount: club.memberCount,
+                                    activityStatus:
+                                        _activityStatusFor(club),
+                                    typeTag: _typeTagFor(club),
+                                    onTap: () => _openPreview(club),
+                                  );
+                                },
+                              ),
+                              if (!_showAll && clubs.length > 6) ...[
+                                const Gap(16),
+                                Center(
+                                  child: TextButton(
+                                    onPressed: () =>
+                                        setState(() => _showAll = true),
+                                    child: Text(
+                                      'See more clubs →',
+                                      style: GoogleFonts.splineSans(
+                                        color: Colors.cyanAccent,
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                  ),
+                                ),
                               ],
                             ],
                           );
@@ -251,16 +251,23 @@ class _ClubScreenState extends ConsumerState<ClubScreen> {
                           message: err.toString(),
                         ),
                       ),
-                      const Gap(80),
+                      const Gap(40),
                     ],
                   ),
                 ),
               ),
-              _BottomBar(
-                canContinue: _canContinue,
-                isSaving: _isSaving,
-                onContinue: _onContinue,
-              ),
+              if (_isSaving)
+                const Padding(
+                  padding: EdgeInsets.all(24),
+                  child: SizedBox(
+                    height: 24,
+                    width: 24,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: Color(0xFF2BEE79),
+                    ),
+                  ),
+                ),
             ],
           ),
         ),
@@ -271,6 +278,7 @@ class _ClubScreenState extends ConsumerState<ClubScreen> {
 
 /// Same as the existing `tribesProvider` pool but for any tribe whose
 /// archetypeId matches the user's archetype. Falls back to [] on error.
+/// Returns up to 15 clubs; the screen shows 6 until "See more clubs →".
 final archetypeClubsProvider = FutureProvider<List<Tribe>>((ref) async {
   final archetype = ref
       .watch(enhancedOnboardingProvider)
@@ -283,7 +291,7 @@ final archetypeClubsProvider = FutureProvider<List<Tribe>>((ref) async {
     final clubs = await repo.getArchetypeClubs();
     return clubs
         .where((c) => c.archetypeId == archetype.name)
-        .take(6)
+        .take(15)
         .toList();
   } catch (e, s) {
     AppLogger.e('archetypeClubsProvider: failed to load clubs', e, s);
@@ -295,11 +303,13 @@ class _Header extends StatelessWidget {
   final int stepIndex;
   final int totalSteps;
   final VoidCallback onBack;
+  final VoidCallback onSkip;
 
   const _Header({
     required this.stepIndex,
     required this.totalSteps,
     required this.onBack,
+    required this.onSkip,
   });
 
   @override
@@ -334,183 +344,18 @@ class _Header extends StatelessWidget {
             ),
           ),
           const Spacer(),
-          const SizedBox(width: 48),
-        ],
-      ),
-    );
-  }
-}
-
-class _ClubCard extends StatelessWidget {
-  final Tribe club;
-  final bool isSelected;
-  final List<String> matchingTags;
-  final VoidCallback onTap;
-
-  const _ClubCard({
-    required this.club,
-    required this.isSelected,
-    required this.matchingTags,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.all(20),
-        decoration: BoxDecoration(
-          color: isSelected
-              ? const Color(0xFF1A2C24)
-              : Colors.white.withValues(alpha: 0.05),
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(
-            color: isSelected
-                ? const Color(0xFF2BEE79)
-                : Colors.white10,
-            width: 1.5,
+          TextButton(
+            onPressed: onSkip,
+            child: Text(
+              'Skip',
+              style: GoogleFonts.splineSans(
+                color: Colors.white54,
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
           ),
-        ),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Container(
-              padding: const EdgeInsets.all(10),
-              decoration: BoxDecoration(
-                color: isSelected
-                    ? const Color(0xFF2BEE79).withValues(alpha: 0.2)
-                    : Colors.white.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Icon(
-                Icons.groups,
-                color: isSelected
-                    ? const Color(0xFF2BEE79)
-                    : Colors.white70,
-              ),
-            ),
-            const Gap(16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Text(
-                          club.name,
-                          style: GoogleFonts.splineSans(
-                            color: Colors.white,
-                            fontSize: 17,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ),
-                      if (matchingTags.isNotEmpty)
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFF2BEE79).withValues(alpha: 0.2),
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: Text(
-                            '${matchingTags.length} match${matchingTags.length > 1 ? 'es' : ''}',
-                            style: GoogleFonts.splineSans(
-                              color: const Color(0xFF2BEE79),
-                              fontSize: 10,
-                              fontWeight: FontWeight.w600,
-                              letterSpacing: 0.5,
-                            ),
-                          ),
-                        ),
-                    ],
-                  ),
-                  const Gap(4),
-                  if (club.description.isNotEmpty)
-                    Text(
-                      club.description,
-                      style: GoogleFonts.splineSans(
-                        color: Colors.white54,
-                        fontSize: 13,
-                        height: 1.4,
-                      ),
-                    ),
-                  if (matchingTags.isNotEmpty) ...[
-                    const Gap(8),
-                    Wrap(
-                      spacing: 6,
-                      runSpacing: 6,
-                      children: [
-                        for (final tag in matchingTags.take(3))
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 8,
-                              vertical: 3,
-                            ),
-                            decoration: BoxDecoration(
-                              color: const Color(0xFF2BEE79).withValues(alpha: 0.15),
-                              borderRadius: BorderRadius.circular(10),
-                              border: Border.all(
-                                color: const Color(0xFF2BEE79).withValues(alpha: 0.3),
-                              ),
-                            ),
-                            child: Text(
-                              tag,
-                              style: GoogleFonts.splineSans(
-                                color: const Color(0xFF2BEE79),
-                                fontSize: 11,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          ),
-                      ],
-                    ),
-                  ],
-                  if (club.tags.isNotEmpty && matchingTags.isEmpty) ...[
-                    const Gap(8),
-                    Wrap(
-                      spacing: 6,
-                      runSpacing: 6,
-                      children: [
-                        for (final tag in club.tags.take(3))
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 8,
-                              vertical: 3,
-                            ),
-                            decoration: BoxDecoration(
-                              color: Colors.white.withValues(alpha: 0.08),
-                              borderRadius: BorderRadius.circular(10),
-                              border: Border.all(
-                                color: Colors.white.withValues(alpha: 0.1),
-                              ),
-                            ),
-                            child: Text(
-                              tag,
-                              style: GoogleFonts.splineSans(
-                                color: Colors.white70,
-                                fontSize: 11,
-                              ),
-                            ),
-                          ),
-                      ],
-                    ),
-                  ],
-                ],
-              ),
-            ),
-            if (isSelected)
-              const Padding(
-                padding: EdgeInsets.only(left: 8),
-                child: Icon(
-                  Icons.check_circle,
-                  color: Color(0xFF2BEE79),
-                ),
-              ),
-          ],
-        ),
+        ],
       ),
     );
   }
@@ -523,22 +368,24 @@ class _EmptyState extends StatelessWidget {
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 60),
-      child: Column(
-        children: [
-          const Icon(
-            Icons.group_off_outlined,
-            color: Colors.white24,
-            size: 48,
-          ),
-          const Gap(16),
-          Text(
-            'No clubs for this archetype yet.',
-            style: GoogleFonts.splineSans(
-              color: Colors.white54,
-              fontSize: 14,
+      child: Center(
+        child: Column(
+          children: [
+            const Icon(
+              Icons.group_off_outlined,
+              color: Colors.white24,
+              size: 48,
             ),
-          ),
-        ],
+            const Gap(16),
+            Text(
+              'No clubs for this archetype yet.',
+              style: GoogleFonts.splineSans(
+                color: Colors.white54,
+                fontSize: 14,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -559,65 +406,6 @@ class _ErrorState extends StatelessWidget {
           color: Colors.redAccent,
           fontSize: 13,
         ),
-      ),
-    );
-  }
-}
-
-class _BottomBar extends StatelessWidget {
-  final bool canContinue;
-  final bool isSaving;
-  final VoidCallback onContinue;
-
-  const _BottomBar({
-    required this.canContinue,
-    required this.isSaving,
-    required this.onContinue,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(24),
-      decoration: const BoxDecoration(color: Colors.transparent),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          SizedBox(
-            width: double.infinity,
-            height: 56,
-            child: ElevatedButton(
-              onPressed: canContinue ? onContinue : null,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF2BEE79),
-                foregroundColor: const Color(0xFF05100B),
-                disabledBackgroundColor: Colors.white10,
-                disabledForegroundColor: Colors.white38,
-                elevation: 0,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16),
-                ),
-              ),
-              child: isSaving
-                  ? const SizedBox(
-                      height: 20,
-                      width: 20,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        color: Color(0xFF05100B),
-                      ),
-                    )
-                  : Text(
-                      'JOIN & CONTINUE',
-                      style: GoogleFonts.splineSans(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w700,
-                        letterSpacing: 0.5,
-                      ),
-                    ),
-            ),
-          ),
-        ],
       ),
     );
   }
