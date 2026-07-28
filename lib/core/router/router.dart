@@ -36,6 +36,7 @@ import 'package:emerge_app/features/settings/presentation/screens/settings_scree
 import 'package:emerge_app/features/settings/presentation/screens/notification_settings_screen.dart';
 import 'package:emerge_app/features/monetization/presentation/screens/paywall_screen.dart';
 
+import 'package:emerge_app/features/social/presentation/screens/tribe_lobby_screen.dart';
 import 'package:emerge_app/features/social/presentation/screens/challenges_screen.dart';
 import 'package:emerge_app/features/social/presentation/screens/challenge_detail_screen.dart';
 import 'package:emerge_app/features/social/presentation/screens/friends_screen.dart';
@@ -51,6 +52,7 @@ import 'package:emerge_app/features/blueprints/data/repositories/blueprint_repos
 import 'package:emerge_app/features/blueprints/domain/models/blueprint.dart';
 import 'package:emerge_app/core/presentation/widgets/app_error_widget.dart';
 import 'package:emerge_app/features/pulse_feed/presentation/screens/pulse_feed_screen.dart';
+import 'package:emerge_app/features/social/presentation/screens/social_hub_screen.dart';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -249,16 +251,18 @@ GoRouter router(Ref ref) {
   final authState = ref.watch(authStateChangesProvider);
 
   // Single refresh notifier — fires only on auth login/logout.
-    final refreshNotifier = ValueNotifier<int>(0);
-    ref.listen(authStateChangesProvider, (_, _) => refreshNotifier.value++);
-  
-    // Listen to redirect-dependencies so they are initialized *before* GoRouter 
-    // is built, preventing ref.read inside redirect from triggering initialization
-    // and throwing setState-during-build errors on web. 
-    // When they change, we just ask GoRouter to re-evaluate redirect.
-    ref.listen(currentUserRoleProvider, (_, _) => refreshNotifier.value++);
-    ref.listen(currentCreatorOnboardingProvider, (_, _) => refreshNotifier.value++);
-    ref.listen(userStatsStreamProvider, (_, _) => refreshNotifier.value++);
+  final refreshNotifier = ValueNotifier<int>(0);
+  ref.listen(authStateChangesProvider, (_, _) => refreshNotifier.value++);
+
+  // Listen to redirect-dependencies so they are initialized *before* GoRouter
+  // is built, preventing ref.read inside redirect from triggering initialization
+  // and throwing setState-during-build errors on web.
+  // When they change, we just ask GoRouter to re-evaluate redirect.
+  ref.listen(currentUserRoleProvider, (_, _) => refreshNotifier.value++);
+  ref.listen(currentCreatorOnboardingProvider, (_, _) => refreshNotifier.value++);
+  ref.listen(userStatsStreamProvider, (_, _) => refreshNotifier.value++);
+  ref.listen(onboardingControllerProvider, (_, _) => refreshNotifier.value++);
+  ref.listen(localSettingsRepositoryProvider, (_, _) => refreshNotifier.value++);
 
   return GoRouter(
     navigatorKey: _rootNavigatorKey,
@@ -271,11 +275,16 @@ GoRouter router(Ref ref) {
       if (authState.isLoading) return null;
 
       final isLoggedIn = authState.value?.isNotEmpty ?? false;
-      final isFirstLaunch = ref.read(onboardingControllerProvider);
 
       // Read synchronously inside redirect — ref.read gives the latest
-      // value at navigation time. Because we listened to them above, 
+      // value at navigation time. Because we listened to them above,
       // they are already initialized and won't throw on web.
+      // We wrap reads in try/catch returning defaults as a final fallback for build-time safety.
+      bool isFirstLaunch = true;
+      try {
+        isFirstLaunch = ref.read(onboardingControllerProvider);
+      } catch (_) {}
+
       final roleAsync = ref.read(currentUserRoleProvider);
       final creatorOnboardingAsync = ref.read(currentCreatorOnboardingProvider);
       final userStatsAsync = ref.read(userStatsStreamProvider);
@@ -286,6 +295,11 @@ GoRouter router(Ref ref) {
           : null;
       final userStats = userStatsAsync is AsyncData ? userStatsAsync.value : null;
 
+      bool hasSeenEndowment = true;
+      try {
+        hasSeenEndowment = ref.read(localSettingsRepositoryProvider).hasSeenEndowment;
+      } catch (_) {}
+
       return decideRedirect(
         currentPath: path,
         ctx: RedirectContext(
@@ -295,8 +309,7 @@ GoRouter router(Ref ref) {
           userOnboardingProgress: userStats?.onboardingProgress,
           userOnboardingCompletedAt: userStats?.onboardingCompletedAt,
           creatorOnboarding: creatorOnboarding,
-          hasSeenEndowment:
-              ref.read(localSettingsRepositoryProvider).hasSeenEndowment,
+          hasSeenEndowment: hasSeenEndowment,
         ),
       );
     },
@@ -485,94 +498,102 @@ GoRouter router(Ref ref) {
             ],
           ),
           // Branch 2: Social (Pulse Feed)
-                    StatefulShellBranch(
-                      routes: [
-                        GoRoute(
-                          path: '/social',
-                          builder: (context, state) => const PulseFeedScreen(),
-                          routes: [
-                            GoRoute(
-                              path: 'challenges',
-                              builder: (context, state) =>
-                                  const ChallengesScreen(showAppBar: true),
-                            ),
-                            GoRoute(
-                              path: 'challenge/:challengeId',
-                              parentNavigatorKey: _rootNavigatorKey,
-                              builder: (context, state) {
-                                final id = state.pathParameters['challengeId']!;
-                                return ChallengeDetailScreen(challengeId: id);
-                              },
-                            ),
-                            GoRoute(
-                              path: 'accountability',
-                              parentNavigatorKey: _rootNavigatorKey,
-                              builder: (context, state) => const FriendsScreen(),
-                            ),
-                            GoRoute(
-                              path: 'activity',
-                              parentNavigatorKey: _rootNavigatorKey,
-                              builder: (context, state) {
-                                final tribeId =
-                                    state.uri.queryParameters['tribeId'] ?? '';
-                                return SocialActivityScreen(tribeId: tribeId);
-                              },
-                            ),
-                            GoRoute(
-                              path: 'contacts',
-                              parentNavigatorKey: _rootNavigatorKey,
-                              builder: (context, state) =>
-                                  const SocialContactsScreen(),
-                            ),
-                            GoRoute(
-                              path: 'contracts',
-                              parentNavigatorKey: _rootNavigatorKey,
-                              builder: (context, state) => const HabitContractScreen(),
-                            ),
-                            GoRoute(
-                              path: 'leaderboard',
-                              parentNavigatorKey: _rootNavigatorKey,
-                              builder: (context, state) {
-                                final tabStr = state.uri.queryParameters['tab'];
-                                final tabIndex = int.tryParse(tabStr ?? '0') ?? 0;
-                                return LeaderboardScreen(initialTabIndex: tabIndex);
-                              },
-                            ),
-                            GoRoute(
-                              path: 'all',
-                              parentNavigatorKey: _rootNavigatorKey,
-                              builder: (context, state) => const AllTribesScreen(),
-                            ),
-                            GoRoute(
-                              path: 'creator/:id',
-                              parentNavigatorKey: _rootNavigatorKey,
-                              builder: (context, state) => CreatorProfileScreen(
-                                creatorId: state.pathParameters['id']!,
-                              ),
-                            ),
-                            // /social/discover — re-uses CreatorsBrowseScreen (avoids duplicate)
-                            GoRoute(
-                              path: 'discover',
-                              parentNavigatorKey: _rootNavigatorKey,
-                              builder: (context, state) => const CreatorsBrowseScreen(),
-                            ),
-                            // /social/blueprint/:id — branch-local alias of /blueprint/:id
-                            GoRoute(
-                              path: 'blueprint/:id',
-                              parentNavigatorKey: _rootNavigatorKey,
-                              builder: (context, state) {
-                                final id = state.pathParameters['id']!;
-                                final extra = state.extra;
-                                if (extra is Blueprint) {
-                                  return BlueprintDetailScreen(blueprint: extra);
-                                }
-                                return _BlueprintByIdLoader(blueprintId: id);
-                              },
-                            ),
-                          ],
-                        ),
-                      ],
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/social',
+                builder: (context, state) => const SocialHubScreen(),
+                routes: [
+                  GoRoute(
+                    path: 'challenges',
+                    builder: (context, state) =>
+                        const ChallengesScreen(showAppBar: true),
+                  ),
+                  GoRoute(
+                    path: 'challenge/:challengeId',
+                    parentNavigatorKey: _rootNavigatorKey,
+                    builder: (context, state) {
+                      final id = state.pathParameters['challengeId']!;
+                      return ChallengeDetailScreen(challengeId: id);
+                    },
+                  ),
+                  GoRoute(
+                    path: 'accountability',
+                    parentNavigatorKey: _rootNavigatorKey,
+                    builder: (context, state) => const FriendsScreen(),
+                  ),
+                  GoRoute(
+                    path: 'activity',
+                    parentNavigatorKey: _rootNavigatorKey,
+                    builder: (context, state) {
+                      final tribeId =
+                          state.uri.queryParameters['tribeId'] ?? '';
+                      return SocialActivityScreen(tribeId: tribeId);
+                    },
+                  ),
+                  GoRoute(
+                    path: 'contacts',
+                    parentNavigatorKey: _rootNavigatorKey,
+                    builder: (context, state) =>
+                        const SocialContactsScreen(),
+                  ),
+                  GoRoute(
+                    path: 'contracts',
+                    parentNavigatorKey: _rootNavigatorKey,
+                    builder: (context, state) => const HabitContractScreen(),
+                  ),
+                  GoRoute(
+                    path: 'leaderboard',
+                    parentNavigatorKey: _rootNavigatorKey,
+                    builder: (context, state) {
+                      final tabStr = state.uri.queryParameters['tab'];
+                      final tabIndex = int.tryParse(tabStr ?? '0') ?? 0;
+                      return LeaderboardScreen(initialTabIndex: tabIndex);
+                    },
+                  ),
+                  GoRoute(
+                    path: 'tribe/:id',
+                    parentNavigatorKey: _rootNavigatorKey,
+                    builder: (context, state) =>
+                        TribeLobbyScreen(
+                      tribeId: state.pathParameters['id'],
                     ),
+                  ),
+                  GoRoute(
+                    path: 'all',
+                    parentNavigatorKey: _rootNavigatorKey,
+                    builder: (context, state) => const AllTribesScreen(),
+                  ),
+                  GoRoute(
+                    path: 'creator/:id',
+                    parentNavigatorKey: _rootNavigatorKey,
+                    builder: (context, state) => CreatorProfileScreen(
+                      creatorId: state.pathParameters['id']!,
+                    ),
+                  ),
+                  // /social/discover — re-uses CreatorsBrowseScreen (avoids duplicate)
+                  GoRoute(
+                    path: 'discover',
+                    parentNavigatorKey: _rootNavigatorKey,
+                    builder: (context, state) => const CreatorsBrowseScreen(),
+                  ),
+                  // /social/blueprint/:id — branch-local alias of /blueprint/:id
+                  GoRoute(
+                    path: 'blueprint/:id',
+                    parentNavigatorKey: _rootNavigatorKey,
+                    builder: (context, state) {
+                      final id = state.pathParameters['id']!;
+                      final extra = state.extra;
+                      if (extra is Blueprint) {
+                        return BlueprintDetailScreen(blueprint: extra);
+                      }
+                      return _BlueprintByIdLoader(blueprintId: id);
+                    },
+                  ),
+                ],
+              ),
+            ],
+          ),
           // Branch 3: Profile (Identity)
           StatefulShellBranch(
             routes: [
