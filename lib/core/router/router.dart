@@ -51,7 +51,6 @@ import 'package:emerge_app/core/router/creator_routes.dart';
 import 'package:emerge_app/features/blueprints/data/repositories/blueprint_repository.dart';
 import 'package:emerge_app/features/blueprints/domain/models/blueprint.dart';
 import 'package:emerge_app/core/presentation/widgets/app_error_widget.dart';
-import 'package:emerge_app/features/pulse_feed/presentation/screens/pulse_feed_screen.dart';
 import 'package:emerge_app/features/social/presentation/screens/social_hub_screen.dart';
 
 import 'package:flutter/material.dart';
