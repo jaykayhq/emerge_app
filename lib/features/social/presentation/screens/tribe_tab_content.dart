@@ -302,18 +302,21 @@ class _TribeTabContentState extends ConsumerState<TribeTabContent> {
             label: 'All',
             selected: _selectedFilter == 'All',
             onSelected: () => setState(() => _selectedFilter = 'All'),
+            icon: Icons.explore,
           ),
           const SizedBox(width: 8),
           _FilterChip(
-            label: 'By Archetype',
+            label: 'Archetype',
             selected: _selectedFilter == 'By Archetype',
             onSelected: () => setState(() => _selectedFilter = 'By Archetype'),
+            icon: Icons.auto_awesome,
           ),
           const SizedBox(width: 8),
           _FilterChip(
             label: 'Creator',
             selected: _selectedFilter == 'Creator',
             onSelected: () => setState(() => _selectedFilter = 'Creator'),
+            icon: Icons.person,
           ),
         ],
       ),
@@ -849,18 +852,21 @@ class _DiscoveryScreenState extends ConsumerState<_DiscoveryScreen> {
             label: 'All',
             selected: _selectedFilter == 'All',
             onSelected: () => setState(() => _selectedFilter = 'All'),
+            icon: Icons.explore,
           ),
           const SizedBox(width: 8),
           _FilterChip(
-            label: 'By Archetype',
+            label: 'Archetype',
             selected: _selectedFilter == 'By Archetype',
             onSelected: () => setState(() => _selectedFilter = 'By Archetype'),
+            icon: Icons.auto_awesome,
           ),
           const SizedBox(width: 8),
           _FilterChip(
             label: 'Creator',
             selected: _selectedFilter == 'Creator',
             onSelected: () => setState(() => _selectedFilter = 'Creator'),
+            icon: Icons.person,
           ),
         ],
       ),
@@ -952,11 +958,13 @@ class _FilterChip extends StatelessWidget {
   final String label;
   final bool selected;
   final VoidCallback onSelected;
+  final IconData? icon;
 
   const _FilterChip({
     required this.label,
     required this.selected,
     required this.onSelected,
+    this.icon,
   });
 
   @override
@@ -977,14 +985,23 @@ class _FilterChip extends StatelessWidget {
                 : Colors.white.withValues(alpha: 0.12),
           ),
         ),
-        child: Text(
-          label,
-          style: TextStyle(
-            fontSize: 12,
-            fontWeight: selected ? FontWeight.bold : FontWeight.normal,
-            color: accent,
-            letterSpacing: 0.3,
-          ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (icon != null) ...[
+              Icon(icon, size: 14, color: accent),
+              const SizedBox(width: 4),
+            ],
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: selected ? FontWeight.bold : FontWeight.normal,
+                color: accent,
+                letterSpacing: 0.3,
+              ),
+            ),
+          ],
         ),
       ),
     );
