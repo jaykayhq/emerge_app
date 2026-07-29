@@ -1,20 +1,11 @@
-import 'package:emerge_app/core/theme/emerge_colors.dart';
-import 'package:emerge_app/features/onboarding/presentation/providers/onboarding_provider.dart';
-import 'package:emerge_app/features/onboarding/presentation/widgets/onboarding_progress_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:gap/gap.dart';
 import 'package:go_router/go_router.dart';
+import '../providers/onboarding_provider.dart';
+import '../widgets/onboarding_progress_bar.dart';
 
-/// First-screen interstitial shown once after sign-up to "endow" the new
-/// user with the starter goods they already own (habit pack, tribe, world map).
 class EndowmentInterstitialScreen extends ConsumerWidget {
-  final String userName;
-
-  const EndowmentInterstitialScreen({
-    super.key,
-    required this.userName,
-  });
+  const EndowmentInterstitialScreen({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -25,87 +16,118 @@ class EndowmentInterstitialScreen extends ConsumerWidget {
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
             colors: [
-              EmergeColors.cosmicVoidDark,
-              EmergeColors.cosmicVoidCenter,
+              Color(0xFF0A0A1A),
+              Color(0xFF1A0A2A),
+              Color(0xFF2A1A3A),
             ],
           ),
         ),
         child: SafeArea(
-          child: Center(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.all(32),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                AnimatedOnboardingProgressBar(
-                  targetProgress: 0.2,
-                  label: onboardingLabelFor(0.2),
+          child: Column(
+            children: [
+              const AnimatedOnboardingProgressBar(
+                targetProgress: 0.2,
+                label: "You've begun. Now define yourself.",
+              ),
+              const Spacer(flex: 2),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 24),
+                child: Column(
+                  children: [
+                    Text(
+                      '✨ Welcome, Future You',
+                      style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                          ),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 24),
+                    Text(
+                      'Your world seed is planted.\nHere\'s what\'s already yours:',
+                      style: TextStyle(
+                        color: Colors.white.withValues(alpha: 0.7),
+                        fontSize: 16,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ],
                 ),
-                const Text('✨', style: TextStyle(fontSize: 48)),
-                const Gap(16),
-                Text(
-                  'Welcome, $userName',
-                  style: const TextStyle(
-                    fontSize: 28,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                  ),
-                ),
-                const Gap(8),
-                Text(
-                  'Your world seed is planted.\nHere\'s what you already have:',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    color: Colors.white.withValues(alpha: 0.7),
-                    fontSize: 16,
-                  ),
-                ),
-                const Gap(32),
-                const _EndowmentItem(
-                  emoji: '🎁',
-                  title: 'Starter habit pack',
-                  subtitle: 'reserved for you',
-                ),
-                const Gap(12),
-                const _EndowmentItem(
-                  emoji: '🏟️',
-                  title: 'Archetype tribe',
-                  subtitle: 'waiting for you',
-                ),
-                const Gap(12),
-                const _EndowmentItem(
-                  emoji: '🌍',
-                  title: 'Your world map',
-                  subtitle: 'ready to grow',
-                ),
-                const Gap(40),
-                ElevatedButton(
-                  onPressed: () async {
-                    // Mark the one-time interstitial as seen so the router
-                    // won't route back here on the next redirect.
-                    await ref
-                        .read(localSettingsRepositoryProvider)
-                        .markEndowmentSeen();
-                    if (context.mounted) {
-                      context.go('/onboarding/identity-studio');
-                    }
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.cyanAccent,
-                    foregroundColor: Colors.black,
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 40,
-                      vertical: 16,
+              ),
+              const SizedBox(height: 40),
+              _EndowmentItem(
+                emoji: '🎁',
+                title: 'Starter habit pack',
+                subtitle: 'reserved for you',
+              ),
+              const SizedBox(height: 20),
+              _EndowmentItem(
+                emoji: '🏟️',
+                title: 'Archetype tribe',
+                subtitle: 'waiting for you',
+              ),
+              const SizedBox(height: 20),
+              _EndowmentItem(
+                emoji: '🌍',
+                title: 'Your world map',
+                subtitle: 'ready to grow',
+              ),
+              const Spacer(flex: 2),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 24),
+                child: SizedBox(
+                  width: double.infinity,
+                  height: 52,
+                  child: ElevatedButton(
+                    onPressed: () async {
+                      final settings = ref.read(localSettingsRepositoryProvider);
+                      await settings.markEndowmentSeen();
+                      if (context.mounted) context.go('/signup');
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.cyanAccent,
+                      foregroundColor: Colors.black,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(26),
+                      ),
+                    ),
+                    child: const Text(
+                      'CLAIM YOUR WORLD →',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                      ),
                     ),
                   ),
-                  child: const Text(
-                    'BEGIN FORGING →',
-                    style: TextStyle(fontWeight: FontWeight.bold),
-                  ),
                 ),
-                ],
               ),
-            ),
+              const SizedBox(height: 12),
+              TextButton(
+                onPressed: () => context.go('/login'),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      'Already a member?',
+                      style: TextStyle(
+                        color: Colors.white.withValues(alpha: 0.5),
+                        fontSize: 14,
+                      ),
+                    ),
+                    const SizedBox(width: 4),
+                    Text(
+                      'Sign in',
+                      style: TextStyle(
+                        color: Colors.white.withValues(alpha: 0.7),
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 32),
+            ],
           ),
         ),
       ),
@@ -113,7 +135,6 @@ class EndowmentInterstitialScreen extends ConsumerWidget {
   }
 }
 
-/// A single endowment row: emoji badge + title + subtitle.
 class _EndowmentItem extends StatelessWidget {
   final String emoji;
   final String title;
@@ -127,45 +148,34 @@ class _EndowmentItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Container(
-          width: 48,
-          height: 48,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            color: Colors.white.withValues(alpha: 0.06),
-            border: Border.all(color: Colors.white.withValues(alpha: 0.12)),
-          ),
-          child: Center(
-            child: Text(emoji, style: const TextStyle(fontSize: 24)),
-          ),
-        ),
-        const Gap(16),
-        Expanded(
-          child: Column(
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 48),
+      child: Row(
+        children: [
+          Text(emoji, style: const TextStyle(fontSize: 28)),
+          const SizedBox(width: 16),
+          Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
                 title,
                 style: const TextStyle(
+                  color: Colors.white,
                   fontSize: 16,
                   fontWeight: FontWeight.w600,
-                  color: Colors.white,
                 ),
               ),
-              const Gap(2),
               Text(
                 subtitle,
                 style: TextStyle(
-                  fontSize: 13,
                   color: Colors.white.withValues(alpha: 0.5),
+                  fontSize: 13,
                 ),
               ),
             ],
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }
