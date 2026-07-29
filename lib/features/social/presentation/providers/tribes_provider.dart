@@ -11,7 +11,11 @@ import 'package:emerge_app/features/social/data/repositories/tribe_repository.da
 import 'package:emerge_app/features/social/domain/models/tribe.dart';
 import 'package:emerge_app/features/auth/presentation/providers/auth_providers.dart';
 import 'package:emerge_app/features/social/domain/services/club_activity_service.dart';
+import 'package:emerge_app/features/social/domain/services/streak_watchdog.dart';
+import 'package:emerge_app/features/social/domain/services/tribe_loop_service.dart';
 import 'package:emerge_app/features/social/presentation/providers/leaderboard_provider.dart';
+import 'package:emerge_app/features/social/presentation/providers/friend_provider.dart';
+import 'package:emerge_app/core/services/social_notification_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -415,3 +419,21 @@ class TribeStats {
     totalChallengesCompleted,
   );
 }
+
+final tribeLoopServiceProvider = Provider<TribeLoopService>((ref) {
+  final socialActivity = ref.read(socialActivityServiceProvider);
+  final friendRepo = ref.read(friendRepositoryProvider);
+  final dao = ref.read(habitCompletionsDaoProvider);
+  final notificationService = ref.read(socialNotificationServiceProvider);
+  final watchdog = StreakWatchdog(
+    friendRepo: friendRepo,
+    habitCompletionsDao: dao,
+    notificationService: notificationService,
+  );
+  final service = TribeLoopService(
+    socialActivity: socialActivity,
+    streakWatchdog: watchdog,
+  );
+  ref.onDispose(() => service.dispose());
+  return service;
+});
