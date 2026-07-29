@@ -1,52 +1,145 @@
+import 'package:emerge_app/core/sync/sync_engine.dart';
+import 'package:emerge_app/core/utils/app_logger.dart';
+import 'package:emerge_app/features/social/data/repositories/tribe_repository.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:fpdart/fpdart.dart';
+import 'package:emerge_app/core/error/failure.dart';
+import 'package:emerge_app/core/drift/database.dart';
+import 'package:emerge_app/core/sync/sync_providers.dart';
 import 'package:emerge_app/features/social/presentation/providers/tribes_provider.dart';
-import 'package:emerge_app/features/social/presentation/providers/cached_tribe_stats_provider.dart';
-import 'package:emerge_app/features/auth/presentation/providers/auth_providers.dart';
+import 'package:emerge_app/features/social/presentation/screens/tribe_tab_content.dart';
 
 class TribeMembershipService {
-  final Ref _ref;
+  // ignore: unused_field — injected for future use by consumers
+  final TribeRepository _repository;
+  final TribeMembershipDao _dao;
+  final EnhancedSyncEngine _syncEngine;
+  final Ref? _ref;
 
-  TribeMembershipService(this._ref);
+  TribeMembershipService(
+    this._repository,
+    this._dao,
+    this._syncEngine, [
+    this._ref,
+  ]);
 
-  Future<void> joinTribe(String tribeId) async {
-    final userId = _ref.read(authStateChangesProvider).value?.id;
-    if (userId == null) throw Exception('User not authenticated');
+  Future<Either<Failure, void>> joinTribe({
+    required String userId,
+    required String tribeId,
+    required String type,
+  }) async {
+    try {
+      // 1. Check not already in a tribe
+      final existing = await _dao.watchActiveMembership(userId).first;
+      if (existing != null) {
+        return Left(UnknownFailure('Already in tribe ${existing.tribeId}'));
+      }
 
-    final repository = _ref.read(tribeRepositoryProvider);
-    await repository.joinClub(userId, tribeId);
+      // 2. Drift: deactivate all (safety) + upsert active
+      await _dao.deactivateAll(userId);
+      await _dao.upsertMembership(UserTribeTableCompanion(
+        userId: Value(userId),
+        tribeId: Value(tribeId),
+        membershipType: Value(type),
+        joinedAt: Value(DateTime.now().toIso8601String()),
+        isActive: const Value(true),
+      ));
 
-    // Joining from the tribes list also switches contribution target.
-    _ref.read(activeTribeIdProvider.notifier).select(tribeId);
+      // 3. Sync: enqueue Firestore writes
+      await _syncEngine.enqueueSet(
+        collectionPath: 'users/$userId/tribes',
+        documentId: tribeId,
+        data: {
+          'tribeId': tribeId,
+          'joinedAt': {'__type__': 'serverTimestamp'},
+          'membershipType': type,
+        },
+      );
+      await _syncEngine.enqueueSet(
+        collectionPath: 'tribes/$tribeId/contributors',
+        documentId: userId,
+        data: {
+          'userId': userId,
+          'joinedAt': {'__type__': 'serverTimestamp'},
+          'contributionCount': 0,
+          'totalHabitsCompleted': 0,
+          'totalXpContributed': 0,
+        },
+      );
+      await _syncEngine.enqueueSet(
+        collectionPath: 'tribes',
+        documentId: tribeId,
+        data: {
+          'members': {
+            '__type__': 'arrayUnion',
+            'values': [userId],
+          },
+          'memberCount': {'__type__': 'increment', 'value': 1},
+          'lastStatsSync': {'__type__': 'serverTimestamp'},
+        },
+      );
 
-    // Invalidate caches to show updated stats immediately
-    _ref.read(tribeStatsCacheProvider).invalidate(tribeId);
-    _ref.invalidate(cachedTribeStatsProvider(tribeId));
-    _ref.invalidate(allArchetypeClubsProvider);
-  }
+      // 4. Invalidate providers (if Ref available)
+      _ref?.invalidate(hasClubProvider);
+      _ref?.invalidate(discoveryClubsProvider);
 
-  Future<void> leaveTribe(String tribeId) async {
-    final userId = _ref.read(authStateChangesProvider).value?.id;
-    if (userId == null) throw Exception('User not authenticated');
-
-    final repository = _ref.read(tribeRepositoryProvider);
-    await repository.leaveClub(userId, tribeId);
-
-    // If the left tribe was the active one, fall back to archetype auto-detect.
-    if (_ref.read(activeTribeIdProvider) == tribeId) {
-      _ref.read(activeTribeIdProvider.notifier).select(null);
+      return const Right(null);
+    } catch (e, s) {
+      AppLogger.e('joinTribe failed', e, s);
+      return Left(UnknownFailure('Failed to join tribe: $e'));
     }
-
-    // Invalidate caches
-    _ref.read(tribeStatsCacheProvider).invalidate(tribeId);
-    _ref.invalidate(cachedTribeStatsProvider(tribeId));
-    _ref.invalidate(allArchetypeClubsProvider);
   }
 
-  bool isMember(String userId, List<String> members) {
-    return members.contains(userId);
+  Future<Either<Failure, void>> leaveTribe(String userId) async {
+    try {
+      final active = await _dao.watchActiveMembership(userId).first;
+      if (active == null) {
+        return const Left(UnknownFailure('Not in a tribe'));
+      }
+
+      final tribeId = active.tribeId;
+      await _dao.deactivateAll(userId);
+
+      await _syncEngine.enqueueMutation(
+        collectionPath: 'users/$userId/tribes',
+        documentId: tribeId,
+        operation: 'delete',
+      );
+      await _syncEngine.enqueueSet(
+        collectionPath: 'tribes',
+        documentId: tribeId,
+        data: {
+          'members': {
+            '__type__': 'arrayRemove',
+            'values': [userId],
+          },
+          'memberCount': {'__type__': 'increment', 'value': -1},
+        },
+      );
+
+      _ref?.invalidate(hasClubProvider);
+      _ref?.invalidate(discoveryClubsProvider);
+
+      return const Right(null);
+    } catch (e, s) {
+      AppLogger.e('leaveTribe failed', e, s);
+      return Left(UnknownFailure('Failed to leave tribe: $e'));
+    }
+  }
+
+  Future<bool> isInTribe(String userId) async {
+    final membership = await _dao.watchActiveMembership(userId).first;
+    return membership != null;
+  }
+
+  Stream<UserTribeTableData?> watchActiveMembership(String userId) {
+    return _dao.watchActiveMembership(userId);
   }
 }
 
 final tribeMembershipServiceProvider = Provider<TribeMembershipService>((ref) {
-  return TribeMembershipService(ref);
+  final repository = ref.watch(tribeRepositoryProvider);
+  final dao = ref.watch(tribeMembershipDaoProvider);
+  final syncEngine = ref.watch(enhancedSyncEngineProvider);
+  return TribeMembershipService(repository, dao, syncEngine, ref);
 });
