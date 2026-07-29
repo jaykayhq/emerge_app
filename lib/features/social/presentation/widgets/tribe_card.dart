@@ -187,7 +187,7 @@ class _MembershipButton extends ConsumerWidget {
         onPressed: () async {
           try {
             if (isMember) {
-              await membershipService.leaveTribe(tribe.id);
+              await membershipService.leaveTribe(user.id);
               await statsService.syncTribeStats(tribe.id);
               if (context.mounted) {
                 ScaffoldMessenger.of(context).showSnackBar(
@@ -195,7 +195,11 @@ class _MembershipButton extends ConsumerWidget {
                 );
               }
             } else {
-              await membershipService.joinTribe(tribe.id);
+              await membershipService.joinTribe(
+                userId: user.id,
+                tribeId: tribe.id,
+                type: tribe.archetypeId != null ? 'archetype' : 'creator',
+              );
               await statsService.syncTribeStats(tribe.id);
               if (context.mounted) {
                 ScaffoldMessenger.of(context).showSnackBar(
