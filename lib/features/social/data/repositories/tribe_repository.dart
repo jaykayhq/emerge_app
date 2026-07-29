@@ -42,10 +42,13 @@ abstract class TribeRepository {
   /// Leave a club (when user changes archetype).
   Future<void> leaveClub(String userId, String tribeId);
 
-  /// Get tribes that the user is a member of.
+/// Get tribes that the user is a member of.
   Future<List<Tribe>> getUserTribes(String userId);
 
-  /// Seeds official clubs if collection is empty.
+  /// Watch tribes that the user is a member of.
+  Stream<List<Tribe>> watchUserTribes(String userId);
+
+  /// Seeds official tribes if collection is empty.
   Future<void> seedTribesIfEmpty();
 }
 
@@ -239,5 +242,16 @@ class FirestoreTribeRepository implements TribeRepository {
       'memberCount': FieldValue.increment(-1),
       'lastStatsSync': FieldValue.serverTimestamp(),
     });
+  }
+
+  @override
+  Stream<List<Tribe>> watchUserTribes(String userId) {
+    return _firestore
+        .collection('tribes')
+        .where('members', arrayContains: userId)
+        .snapshots()
+        .map((snapshot) => snapshot.docs
+            .map((doc) => Tribe.fromMap(doc.data()))
+            .toList());
   }
 }

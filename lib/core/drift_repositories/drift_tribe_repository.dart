@@ -506,6 +506,206 @@ class DriftTribeRepository implements TribeRepository {
   }
 
   @override
+  Stream<List<Tribe>> watchUserTribes(String userId) {
+    final controller = StreamController<List<Tribe>>();
+
+    StreamSubscription<UserTribeTableData?>? membershipSub;
+    StreamSubscription<TribeStatsTableData?>? tribeStatsSub;
+    StreamSubscription<QuerySnapshot>? tribesSub;
+
+    String? currentTribeId;
+    TribeStatsTableData? localTribeStats;
+    Map<String, dynamic>? remoteTribeData;
+
+    void emitTribe() {
+      if (controller.isClosed) return;
+
+      final tribe = _mergeTribeData(currentTribeId, localTribeStats, remoteTribeData);
+      if (tribe != null) {
+        controller.add([tribe]);
+      } else {
+        controller.add([]);
+      }
+    }
+
+    // Listen to user's active membership in Drift
+    membershipSub = _db.tribeMembershipDao.watchActiveMembership(userId).listen(
+      (membership) {
+        final newTribeId = membership?.tribeId;
+        if (newTribeId != currentTribeId) {
+          // Tribe ID changed, clean up old tribe stats subscription
+          tribeStatsSub?.cancel();
+          tribeStatsSub = null;
+          localTribeStats = null;
+          currentTribeId = newTribeId;
+
+          // Subscribe to new tribe's stats if we have a tribeId
+          if (newTribeId != null) {
+tribeStatsSub = _db.tribeStatsDao
+                .watchStats(newTribeId)
+                .listen((stats) {
+                  localTribeStats = stats;
+                  emitTribe();
+                }, onError: (error) {
+                  AppLogger.e('Error watching tribe stats for $newTribeId', error);
+});
+          }
+        }
+        emitTribe();
+      },
+      onError: (error) {
+        AppLogger.e('Error watching user membership for $userId', error);
+      },
+    );
+
+    // Listen to tribes in Firestore where user is a member
+    tribesSub = _firestore
+        .collection('tribes')
+        .where('members', arrayContains: userId)
+        .snapshots()
+        .listen((snapshot) {
+          // We expect at most one tribe for the current user (based on current design)
+          // but handle multiple just in case
+          if (snapshot.docs.isNotEmpty) {
+            // Take the first tribe (should be only one in current design)
+            final doc = snapshot.docs.first;
+            remoteTribeData = doc.data();
+            emitTribe();
+          } else {
+            // No tribes found for user in Firestore
+            remoteTribeData = null;
+            emitTribe();
+          }
+        }, onError: (error) {
+          AppLogger.e('Error watching user tribes in Firestore for $userId', error);
+        });
+
+    // Initialize: try to get initial state from Drift
+    _db.tribeMembershipDao.watchActiveMembership(userId).first.then((membership) {
+      if (!controller.isClosed) {
+        final tribeId = membership?.tribeId;
+        if (tribeId != null) {
+          currentTribeId = tribeId;
+          // Try to get initial tribe stats from Drift
+          _db.tribeStatsDao
+              .watchStats(tribeId)
+              .first
+              .then((stats) {
+                if (!controller.isClosed) {
+                  localTribeStats = stats;
+                  emitTribe();
+                }
+              })
+              .catchError((error) {
+                if (!controller.isClosed) {
+                  AppLogger.e('Error getting initial tribe stats for $tribeId', error);
+                }
+              });
+        }
+        emitTribe();
+      }
+    }).catchError((error) {
+      if (!controller.isClosed) {
+        AppLogger.e('Error getting initial membership for $userId', error);
+        emitTribe(); // Emit empty list on error
+      }
+    });
+
+    controller.onCancel = () {
+      membershipSub?.cancel();
+      tribeStatsSub?.cancel();
+      tribesSub?.cancel();
+    };
+
+    return controller.stream;
+  }
+
+  Tribe? _mergeTribeData(
+      String? tribeId,
+      TribeStatsTableData? localStats,
+      Map<String, dynamic>? remoteData) {
+    if (tribeId == null) return null;
+
+    // Start with default values
+    String name = '';
+    String description = '';
+    String imageUrl = '';
+    String ownerId = '';
+    List<String> tags = [];
+    int levelRequirement = 0;
+    int rank = 0;
+    int totalXp = 0;
+    int memberCount = 0;
+    int totalHabitsCompleted = 0;
+    int totalChallengesCompleted = 0;
+    bool isVerified = false;
+    String? archetypeId;
+
+    // Apply local Drift data (for real-time updates like XP)
+    if (localStats != null) {
+      name = localStats.tribeName ?? '';
+      totalXp = localStats.totalXp;
+      memberCount = localStats.memberCount;
+      totalHabitsCompleted = localStats.totalHabitsCompleted;
+      totalChallengesCompleted = localStats.totalChallengesCompleted;
+      archetypeId = localStats.archetypeId;
+    }
+
+    // Overlay/merge with remote Firestore data (source of truth for most fields)
+    if (remoteData != null) {
+      name = (remoteData['name'] as String? ?? '').isNotEmpty
+          ? (remoteData['name'] as String)
+          : name;
+      description = (remoteData['description'] as String?) ?? description;
+      imageUrl = (remoteData['imageUrl'] as String? ?? '')
+          .isNotEmpty
+          ? (remoteData['imageUrl'] as String)
+          : imageUrl;
+      ownerId = (remoteData['ownerId'] as String?) ?? ownerId;
+      tags = List<String>.from(remoteData['tags'] ?? const []);
+      levelRequirement = (remoteData['levelRequirement'] as int? ?? 0);
+      rank = (remoteData['rank'] as int? ?? 0);
+      // For critical fields like XP, member count, etc., we might want to
+      // prefer the higher value (to avoid losing local-only increments)
+      // but for now, let remote be source of truth for most things
+      final remoteXp = (remoteData['totalXp'] as int? ?? 0);
+      final remoteMemberCount = (remoteData['memberCount'] as int? ?? 0);
+      final remoteHabits = (remoteData['totalHabitsCompleted'] as int? ?? 0);
+      final remoteChallenges = (remoteData['totalChallengesCompleted'] as int? ?? 0);
+      
+      // Use max of local and remote for counters to prevent losing local-only updates
+      totalXp = (totalXp > remoteXp) ? totalXp : remoteXp;
+      memberCount = (memberCount > remoteMemberCount) ? memberCount : remoteMemberCount;
+      totalHabitsCompleted =
+          (totalHabitsCompleted > remoteHabits) ? totalHabitsCompleted : remoteHabits;
+      totalChallengesCompleted =
+          (totalChallengesCompleted > remoteChallenges)
+              ? totalChallengesCompleted
+              : remoteChallenges;
+      
+      isVerified = (remoteData['isVerified'] as bool? ?? false);
+      archetypeId = (remoteData['archetypeId'] as String?) ?? archetypeId;
+    }
+
+    return Tribe(
+      id: tribeId,
+      name: name,
+      description: description,
+      imageUrl: imageUrl,
+      ownerId: ownerId,
+      tags: tags,
+      levelRequirement: levelRequirement,
+      rank: rank,
+      totalXp: totalXp,
+      memberCount: memberCount,
+      totalHabitsCompleted: totalHabitsCompleted,
+      totalChallengesCompleted: totalChallengesCompleted,
+      isVerified: isVerified,
+      archetypeId: archetypeId,
+    );
+  }
+
+  @override
   Future<void> seedTribesIfEmpty() async {
     final rows = await _db.tribeStatsDao.getAll();
     if (rows.isEmpty) {

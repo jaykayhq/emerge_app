@@ -1,4 +1,4 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:fake_cloud_firestore/fake_cloud_firestore.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:emerge_app/core/drift/app_database.dart';
@@ -13,8 +13,7 @@ class MockFriendRepo extends Mock implements FriendRepository {}
 class MockHabitCompletionsDao extends Mock implements HabitCompletionsDao {}
 class MockNotificationService extends Mock implements SocialNotificationService {}
 
-class FakeDocumentReference extends Fake
-    implements DocumentReference<Map<String, dynamic>> {}
+final _fakeFirestore = FakeFirebaseFirestore();
 
 void main() {
   late StreakWatchdog watchdog;
@@ -64,7 +63,7 @@ void main() {
                 wasRecovery: 0,
               ));
       when(() => mockNotification.sendNotification(any(), any()))
-          .thenAnswer((_) async => FakeDocumentReference());
+          .thenAnswer((_) async => _fakeFirestore.collection('_').doc());
 
       await watchdog.checkPartners(userId: 'user1', tribeId: 't1');
 
@@ -110,7 +109,7 @@ void main() {
                 wasRecovery: 0,
               ));
       when(() => mockNotification.sendNotification(any(), any()))
-          .thenAnswer((_) async => FakeDocumentReference());
+          .thenAnswer((_) async => _fakeFirestore.collection('_').doc());
 
       await watchdog.checkPartners(userId: 'user1', tribeId: 't1');
       await watchdog.checkPartners(userId: 'user1', tribeId: 't1');

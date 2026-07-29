@@ -59,6 +59,27 @@ service cloud.firestore {
              ));
     }
 
+    // Helper function to validate tribe data
+    function isValidTribe(tribe) {
+      return tribe.keys().hasAll(['name', 'archetypeId', 'type']) &&
+             tribe.keys().size() <= 40 &&
+             sanitizeString(tribe.name) &&
+             tribe.name.size() <= 100 &&
+             tribe.archetypeId in ['athlete', 'scholar', 'stoic', 'creator', 'zealot', 'mystic'] &&
+             tribe.type in ['official', 'brand', 'userPrivate', 'userPublic'] &&
+             (!tribe.keys().hasAny(['description']) || (tribe.description is string && tribe.description.size() <= 500)) &&
+             (!tribe.keys().hasAny(['imageUrl']) || tribe.imageUrl == null || tribe.imageUrl is string) &&
+             (!tribe.keys().hasAny(['ownerId']) || tribe.ownerId is string) &&
+             (!tribe.keys().hasAny(['tags']) || tribe.tags is list) &&
+             (!tribe.keys().hasAny(['levelRequirement']) || tribe.levelRequirement is number) &&
+             (!tribe.keys().hasAny(['rank']) || tribe.rank is number) &&
+             (!tribe.keys().hasAny(['totalXp']) || tribe.totalXp is number) &&
+             (!tribe.keys().hasAny(['memberCount']) || tribe.memberCount is number) &&
+             (!tribe.keys().hasAny(['isVerified']) || tribe.isVerified is bool) &&
+             (!tribe.keys().hasAny(['createdAt']) || tribe.createdAt is timestamp) &&
+             (!tribe.keys().hasAny(['members']) || tribe.members is list);
+    }
+
     // Helper function to validate creator-profile data.
     // `role` is constrained to 'user' or 'creator' for the same reason
     // as in isValidUser: it's a routing field, not a privilege.
@@ -329,8 +350,8 @@ service cloud.firestore {
     // Root tribe document is managed by Cloud Functions for memberCount/members.
     // Clients may only merge-update specific aggregate stat fields.
     match /tribes/{tribeId} {
-      allow read: if true;
-      allow create, update: if isAuthenticated();
+      allow read: if isAuthenticated();
+      allow create, update: if isAuthenticated() && isValidTribe(request.resource.data);
 
 
       // Tribe contributor-specific metrics and details
