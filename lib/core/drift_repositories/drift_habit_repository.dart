@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:emerge_app/core/deletion/deletion_service.dart';
+import 'package:emerge_app/core/services/event_bus.dart';
 import 'package:emerge_app/core/drift/database.dart';
 import 'package:emerge_app/features/social/domain/services/club_activity_service.dart';
 import 'package:emerge_app/core/error/failure.dart';
@@ -150,6 +151,8 @@ class DriftHabitRepository implements HabitRepository {
 
       final statsRow = await _db.userStatsDao.getStats(habitRow.userId);
       if (statsRow == null) return Left(ServerFailure('User stats not found'));
+
+      final oldLevel = _engine.computeLevel(statsRow.totalXp);
 
       final lastDate = habitRow.lastCompletedDate != null
           ? DateTime.tryParse(habitRow.lastCompletedDate!)
@@ -490,6 +493,17 @@ class DriftHabitRepository implements HabitRepository {
           },
         );
       }
+
+      EventBus().fire(HabitCompleted(
+        habitId: habitId,
+        userId: habitRow.userId,
+        date: date,
+        gameLoopResult: result,
+        previousLevel: oldLevel,
+        tribeId: activeTribeId,
+        archetype: statsRow.archetype,
+        userName: statsRow.displayName ?? habitRow.userId,
+      ));
 
       return const Right(true);
     } catch (e, _) {

@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:emerge_app/core/game_loop/game_loop_result.dart';
 
 /// ENHANCED: EventBus with proper lifecycle management and memory leak prevention
 ///
@@ -103,10 +104,20 @@ class HabitCompleted {
   final String habitId;
   final String userId;
   final DateTime date;
+  final GameLoopResult gameLoopResult;
+  final int previousLevel;
+  final String? tribeId;
+  final String? archetype;
+  final String userName;
 
   HabitCompleted({
     required this.habitId,
     required this.userId,
     required this.date,
+    required this.gameLoopResult,
+    required this.previousLevel,
+    required this.userName,
+    this.tribeId,
+    this.archetype,
   });
 }
