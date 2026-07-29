@@ -7,7 +7,6 @@ import 'package:emerge_app/core/error/failure.dart';
 import 'package:emerge_app/core/drift/database.dart';
 import 'package:emerge_app/core/sync/sync_providers.dart';
 import 'package:emerge_app/features/social/presentation/providers/tribes_provider.dart';
-import 'package:emerge_app/features/social/presentation/screens/tribe_tab_content.dart';
 
 class TribeMembershipService {
   // ignore: unused_field — injected for future use by consumers

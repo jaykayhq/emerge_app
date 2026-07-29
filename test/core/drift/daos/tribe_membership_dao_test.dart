@@ -1,7 +1,6 @@
 import 'package:drift/drift.dart' hide isNull, isNotNull;
 import 'package:drift/native.dart';
 import 'package:emerge_app/core/drift/app_database.dart';
-import 'package:emerge_app/core/drift/tables/user_tribe_table.dart';
 import 'package:emerge_app/core/drift/daos/tribe_membership_dao.dart';
 import 'package:flutter_test/flutter_test.dart';
 
