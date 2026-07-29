@@ -70,7 +70,7 @@ final class HabitActivityDataProvider
   }
 }
 
-String _$habitActivityDataHash() => r'86025d0446336245ba1abb66ff13456830b15c5e';
+String _$habitActivityDataHash() => r'ee9ec80c900b99a74c2b8881404ffbc442192fb0';
 
 /// Loads activity data for a single habit: heatmap, stats, and reflections.
 

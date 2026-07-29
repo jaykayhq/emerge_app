@@ -9,7 +9,7 @@ import 'package:emerge_app/features/auth/presentation/providers/auth_providers.d
 import 'package:emerge_app/features/onboarding/presentation/widgets/club_box_card.dart';
 import 'package:emerge_app/features/onboarding/presentation/widgets/club_emblem_images.dart';
 import 'package:emerge_app/features/onboarding/presentation/widgets/club_preview_sheet.dart';
-import 'package:emerge_app/features/social/presentation/screens/tribe_tab_content.dart';
+import 'package:emerge_app/features/social/presentation/providers/tribes_provider.dart';
 
 class TribeEmptyState extends StatelessWidget {
   final String message;

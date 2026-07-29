@@ -4,12 +4,15 @@ import 'package:emerge_app/core/drift/database.dart';
 import 'package:emerge_app/core/drift_repositories/repositories_barrel.dart';
 import 'package:emerge_app/core/sync/sync_providers.dart';
 import 'package:emerge_app/core/utils/app_logger.dart';
+import 'package:emerge_app/features/monetization/presentation/providers/subscription_provider.dart';
+import 'package:emerge_app/features/monetization/presentation/widgets/premium_limit_dialog.dart';
 import 'package:emerge_app/features/social/data/repositories/tribe_repository.dart'
     show TribeRepository;
 import 'package:emerge_app/features/social/domain/models/tribe.dart';
 import 'package:emerge_app/features/auth/presentation/providers/auth_providers.dart';
 import 'package:emerge_app/features/social/domain/services/club_activity_service.dart';
 import 'package:emerge_app/features/social/presentation/providers/leaderboard_provider.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 final tribeRepositoryProvider = Provider<TribeRepository>((ref) {
@@ -325,6 +328,49 @@ final hasClubProvider = StreamProvider<bool>((ref) {
   final dao = ref.watch(tribeMembershipDaoProvider);
   return dao.watchActiveMembership(userId).map((m) => m != null);
 });
+
+/// All discoverable tribes from Firestore.
+final discoveryClubsProvider = StreamProvider<List<Tribe>>((ref) {
+  return FirebaseFirestore.instance
+      .collection('tribes')
+      .snapshots()
+      .map((snap) => snap.docs.map((d) => Tribe.fromMap(d.data())).toList());
+});
+
+/// Checks whether a free-tier user is blocked from joining another club.
+/// Returns `true` if the join should be blocked (shows a dialog).
+Future<bool> clubJoinBlockedByFreeTier(
+  WidgetRef ref,
+  BuildContext context,
+  String userId,
+) async {
+  bool isPremium = false;
+  try {
+    isPremium = await ref.read(isPremiumProvider.future);
+  } catch (e, s) {
+    AppLogger.e('clubJoinBlockedByFreeTier: isPremium resolve failed', e, s);
+  }
+  if (isPremium) return false;
+  try {
+    final tribes = await ref.read(tribeRepositoryProvider).getUserTribes(userId);
+    if (!context.mounted) return true;
+    if (tribes.isNotEmpty) {
+      showPremiumLimitDialog(context, limitType: PremiumLimitType.club);
+      return true;
+    }
+    return false;
+  } catch (e, s) {
+    AppLogger.e('clubJoinBlockedByFreeTier: getUserTribes failed', e, s);
+    if (context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("Couldn't verify your membership — please try again."),
+        ),
+      );
+    }
+    return true;
+  }
+}
 
 /// Model for tribe statistics
 class TribeStats {

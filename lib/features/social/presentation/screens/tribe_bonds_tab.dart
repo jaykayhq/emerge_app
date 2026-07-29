@@ -4,17 +4,24 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
 import 'package:emerge_app/features/social/presentation/widgets/tribe_accountability_section.dart';
 
-class TribeBondsTab extends ConsumerWidget {
+class TribeBondsTab extends ConsumerStatefulWidget {
   const TribeBondsTab({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<TribeBondsTab> createState() => _TribeBondsTabState();
+}
+
+class _TribeBondsTabState extends ConsumerState<TribeBondsTab> {
+  final _bondsKey = GlobalKey();
+
+  @override
+  Widget build(BuildContext context) {
     return SingleChildScrollView(
       padding: const EdgeInsets.symmetric(horizontal: 20),
       child: Column(
         children: [
           const Gap(16),
-          const TribeAccountabilitySection().animate().fadeIn(delay: 400.ms),
+          TribeAccountabilitySection(key: _bondsKey).animate().fadeIn(delay: 400.ms),
           const Gap(32),
         ],
       ),
