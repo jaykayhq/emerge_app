@@ -49,7 +49,7 @@ void main() {
     service.dispose();
   });
 
-  HabitCompleted _event({
+  HabitCompleted createEvent({
     int newStreak = 1,
     int newLevel = 5,
     int previousLevel = 5,
@@ -80,7 +80,7 @@ void main() {
   }
 
   test('streak milestone 7 calls logStreakMilestone', () async {
-    await service.onHabitCompleted(_event(newStreak: 7));
+    await service.onHabitCompleted(createEvent(newStreak: 7));
     verify(() => mockSocial.logStreakMilestone(
       userId: any(named: 'userId'),
       userName: any(named: 'userName'),
@@ -90,7 +90,7 @@ void main() {
   });
 
   test('streak 14 calls logStreakMilestone', () async {
-    await service.onHabitCompleted(_event(newStreak: 14));
+    await service.onHabitCompleted(createEvent(newStreak: 14));
     verify(() => mockSocial.logStreakMilestone(
       userId: any(named: 'userId'),
       userName: any(named: 'userName'),
@@ -100,7 +100,7 @@ void main() {
   });
 
   test('non-milestone streak does not log', () async {
-    await service.onHabitCompleted(_event(newStreak: 3));
+    await service.onHabitCompleted(createEvent(newStreak: 3));
     verifyNever(() => mockSocial.logStreakMilestone(
       userId: any(named: 'userId'),
       userName: any(named: 'userName'),
@@ -110,7 +110,7 @@ void main() {
   });
 
   test('level up calls logLevelUp', () async {
-    await service.onHabitCompleted(_event(newLevel: 6, previousLevel: 5));
+    await service.onHabitCompleted(createEvent(newLevel: 6, previousLevel: 5));
     verify(() => mockSocial.logLevelUp(
       userId: any(named: 'userId'),
       userName: any(named: 'userName'),
@@ -121,7 +121,7 @@ void main() {
   });
 
   test('no level change does not call logLevelUp', () async {
-    await service.onHabitCompleted(_event(newLevel: 5, previousLevel: 5));
+    await service.onHabitCompleted(createEvent(newLevel: 5, previousLevel: 5));
     verifyNever(() => mockSocial.logLevelUp(
       userId: any(named: 'userId'),
       userName: any(named: 'userName'),
@@ -132,7 +132,7 @@ void main() {
   });
 
   test('calls StreakWatchdog on habit completion', () async {
-    await service.onHabitCompleted(_event());
+    await service.onHabitCompleted(createEvent());
     verify(() => mockWatchdog.checkPartners(userId: 'u1', tribeId: 't1')).called(1);
   });
 }
