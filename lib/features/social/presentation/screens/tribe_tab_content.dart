@@ -16,6 +16,7 @@ import 'package:emerge_app/core/theme/archetype_theme.dart';
 import 'package:emerge_app/core/theme/emerge_colors.dart';
 import 'package:emerge_app/features/social/domain/models/tribe.dart';
 import 'package:emerge_app/features/social/presentation/providers/tribes_provider.dart';
+import 'package:emerge_app/features/social/domain/services/tribe_membership_service.dart';
 import 'package:emerge_app/features/social/presentation/providers/leaderboard_provider.dart';
 import 'package:emerge_app/features/social/domain/entities/leaderboard_entry.dart';
 import 'package:emerge_app/features/gamification/presentation/providers/user_stats_providers.dart';
@@ -40,25 +41,6 @@ final discoveryClubsProvider = StreamProvider<List<Tribe>>((ref) {
       .collection('tribes')
       .snapshots()
       .map((snap) => snap.docs.map((d) => Tribe.fromMap(d.data())).toList());
-});
-
-/// Whether the signed-in user belongs to any club.
-///
-/// Derived from [tribeRepositoryProvider.getUserTribes]: a user "has a club"
-/// when they appear in the `members` array of at least one tribe. Returns
-/// false while signed out or while the membership lookup is in flight.
-final hasClubProvider = FutureProvider<bool>((ref) async {
-  final authUser = await ref.watch(authStateChangesProvider.future);
-  if (authUser.isEmpty) return false;
-  try {
-    final repo = ref.watch(tribeRepositoryProvider);
-    final tribes = await repo.getUserTribes(authUser.id);
-    return tribes.isNotEmpty;
-  } catch (e, s) {
-    // Treat a failed lookup as "no club" rather than blocking the UI.
-    AppLogger.e('hasClubProvider: getUserTribes failed', e, s);
-    return false;
-  }
 });
 
 /// Whether a free-tier user is blocked from joining another club.
@@ -349,8 +331,7 @@ class _TribeTabContentState extends ConsumerState<TribeTabContent> {
   }
 
   Future<void> _joinClub(Tribe club) async {
-    final authUser =
-        ref.read(authStateChangesProvider).value;
+    final authUser = ref.read(authStateChangesProvider).value;
     final userId = authUser?.id;
     if (userId == null || userId.isEmpty) {
       if (!mounted) return;
@@ -359,17 +340,27 @@ class _TribeTabContentState extends ConsumerState<TribeTabContent> {
       );
       return;
     }
-    // Free-tier gate: block joining a second club (free tier = 1) unless
-    // premium. Resolves the real entitlement rather than a stale snapshot.
     if (!mounted) return;
     if (await clubJoinBlockedByFreeTier(ref, context, userId)) return;
     if (!mounted) return;
     try {
-      await ref.read(tribeRepositoryProvider).joinClub(userId, club.id);
-      // Membership changed → re-evaluate hasClub so the view switches to the
-      // 4-tab layout, and refresh the discovery pool.
-      ref.invalidate(hasClubProvider);
-      ref.invalidate(discoveryClubsProvider);
+      final service = ref.read(tribeMembershipServiceProvider);
+      final result = await service.joinTribe(
+        userId: userId,
+        tribeId: club.id,
+        type: club.archetypeId != null ? 'archetype' : 'creator',
+      );
+      result.fold(
+        (failure) {
+          if (!mounted) return;
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Failed to join: ${failure.message}')),
+          );
+        },
+        (_) {
+          ref.invalidate(discoveryClubsProvider);
+        },
+      );
     } catch (e, s) {
       AppLogger.e('TribeTabContent: joinClub failed', e, s);
       if (!mounted) return;

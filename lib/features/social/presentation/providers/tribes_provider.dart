@@ -7,6 +7,7 @@ import 'package:emerge_app/core/utils/app_logger.dart';
 import 'package:emerge_app/features/social/data/repositories/tribe_repository.dart'
     show TribeRepository;
 import 'package:emerge_app/features/social/domain/models/tribe.dart';
+import 'package:emerge_app/features/auth/presentation/providers/auth_providers.dart';
 import 'package:emerge_app/features/social/domain/services/club_activity_service.dart';
 import 'package:emerge_app/features/social/presentation/providers/leaderboard_provider.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -312,6 +313,18 @@ final worldLeaderboardProvider =
 
       return controller.stream;
     });
+
+/// Whether the signed-in user belongs to any club.
+///
+/// Reactive stream from Drift [TribeMembershipDao.watchActiveMembership].
+/// Returns false while signed out or loading. Never throws.
+final hasClubProvider = StreamProvider<bool>((ref) {
+  final authState = ref.watch(authStateChangesProvider);
+  final userId = authState.value?.id;
+  if (userId == null || userId.isEmpty) return Stream.value(false);
+  final dao = ref.watch(tribeMembershipDaoProvider);
+  return dao.watchActiveMembership(userId).map((m) => m != null);
+});
 
 /// Model for tribe statistics
 class TribeStats {

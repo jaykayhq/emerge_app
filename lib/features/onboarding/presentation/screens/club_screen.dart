@@ -7,6 +7,7 @@ import 'package:emerge_app/features/onboarding/presentation/widgets/club_box_car
 import 'package:emerge_app/features/onboarding/presentation/widgets/club_emblem_images.dart';
 import 'package:emerge_app/features/onboarding/presentation/widgets/club_preview_sheet.dart';
 import 'package:emerge_app/features/social/domain/models/tribe.dart';
+import 'package:emerge_app/features/social/domain/services/tribe_membership_service.dart';
 import 'package:emerge_app/features/social/presentation/providers/tribes_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -37,23 +38,29 @@ class _ClubScreenState extends ConsumerState<ClubScreen> {
   bool _isSaving = false;
   bool _showAll = false;
 
-  /// Joins [club] (state record + membership), completes the milestone and
-  /// advances. Called by the preview sheet's "JOIN CLUB" button.
   Future<void> _joinClub(Tribe club) async {
     if (_isSaving) return;
     setState(() => _isSaving = true);
     try {
-      // The state-side record keeps the join eager; actual join happens below.
+      // State-side record
       await ref.read(enhancedOnboardingProvider.notifier).setClub(club.id);
 
-      // Skip the explicit auto-join guard: we want the user to be a member
-      // of the club they just picked.
+      // Membership via unified service
       final user = ref.read(authStateChangesProvider).value;
       if (user != null && user.isNotEmpty) {
         try {
-          await ref
-              .read(tribeRepositoryProvider)
-              .joinClub(user.id, club.id);
+          final service = ref.read(tribeMembershipServiceProvider);
+          final result = await service.joinTribe(
+            userId: user.id,
+            tribeId: club.id,
+            type: club.archetypeId != null ? 'archetype' : 'creator',
+          );
+          result.fold(
+            (failure) {
+              AppLogger.e('ClubScreen: joinTribe failed', failure.message);
+            },
+            (_) {},
+          );
         } catch (e, s) {
           AppLogger.e('ClubScreen: joinClub failed', e, s);
           if (mounted) {
