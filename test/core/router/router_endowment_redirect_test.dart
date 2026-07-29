@@ -1,17 +1,10 @@
-// Unit tests for the endowment-interstitial gating in the redirect logic.
-//
-// New users (onboarding progress 0) who have NOT yet seen the one-time
-// endowment interstitial are routed to it; once seen, they proceed to
-// archetype selection. Existing branches are covered in
-// router_redirect_test.dart.
-
 import 'package:emerge_app/core/router/router.dart';
 import 'package:emerge_app/features/auth/presentation/providers/role_provider.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
-  group('decideRedirect — endowment interstitial gating', () {
-    RedirectContext ctxWith({required bool hasSeenEndowment, int? progress}) {
+  group('decideRedirect — simplified onboarding redirect (no endowment gate)', () {
+    RedirectContext ctxWith({required int? progress}) {
       return RedirectContext(
         isLoggedIn: true,
         role: UserRole.user,
@@ -19,45 +12,45 @@ void main() {
         userOnboardingProgress: progress,
         userOnboardingCompletedAt: null,
         creatorOnboarding: null,
-        hasSeenEndowment: hasSeenEndowment,
+        hasSeenEndowment: true,
       );
     }
 
-    test('progress=0, endowment NOT seen -> /onboarding/endowment', () {
+    test('progress=0 -> /onboarding/identity-studio', () {
       expect(
         decideRedirect(
           currentPath: '/world-map',
-          ctx: ctxWith(hasSeenEndowment: false, progress: 0),
-        ),
-        '/onboarding/endowment',
-      );
-    });
-
-    test('progress=null, endowment NOT seen -> /onboarding/endowment', () {
-      expect(
-        decideRedirect(
-          currentPath: '/world-map',
-          ctx: ctxWith(hasSeenEndowment: false, progress: null),
-        ),
-        '/onboarding/endowment',
-      );
-    });
-
-    test('progress=0, endowment seen -> /onboarding/identity-studio', () {
-      expect(
-        decideRedirect(
-          currentPath: '/world-map',
-          ctx: ctxWith(hasSeenEndowment: true, progress: 0),
+          ctx: ctxWith(progress: 0),
         ),
         '/onboarding/identity-studio',
       );
     });
 
-    test('endowment screen itself is allowed through (no redirect loop)', () {
+    test('progress=null -> /onboarding/identity-studio', () {
       expect(
         decideRedirect(
-          currentPath: '/onboarding/endowment',
-          ctx: ctxWith(hasSeenEndowment: false, progress: 0),
+          currentPath: '/world-map',
+          ctx: ctxWith(progress: null),
+        ),
+        '/onboarding/identity-studio',
+      );
+    });
+
+    test('progress=1 -> /onboarding/interests', () {
+      expect(
+        decideRedirect(
+          currentPath: '/world-map',
+          ctx: ctxWith(progress: 1),
+        ),
+        '/onboarding/interests',
+      );
+    });
+
+    test('onboarding screen path returns null (no redirect loop)', () {
+      expect(
+        decideRedirect(
+          currentPath: '/onboarding/identity-studio',
+          ctx: ctxWith(progress: 0),
         ),
         isNull,
       );

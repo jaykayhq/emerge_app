@@ -5,6 +5,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:emerge_app/core/theme/emerge_colors.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:emerge_app/features/auth/presentation/providers/auth_providers.dart';
+import 'package:emerge_app/features/onboarding/presentation/providers/onboarding_provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 /// Welcome screen matching the Stitch design with cosmic silhouette background.
@@ -98,7 +99,14 @@ class WelcomeScreen extends ConsumerWidget {
                           ],
                         ),
                         child: ElevatedButton(
-                          onPressed: () => context.push('/signup'),
+                          onPressed: () {
+                            final settings = ref.read(localSettingsRepositoryProvider);
+                            if (settings.hasSeenEndowment) {
+                              context.go('/signup');
+                            } else {
+                              context.go('/onboarding/endowment');
+                            }
+                          },
                           style: ElevatedButton.styleFrom(
                             backgroundColor: Colors.transparent,
                             shadowColor: Colors.transparent,

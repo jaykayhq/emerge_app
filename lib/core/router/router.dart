@@ -51,7 +51,6 @@ import 'package:emerge_app/core/router/creator_routes.dart';
 import 'package:emerge_app/features/blueprints/data/repositories/blueprint_repository.dart';
 import 'package:emerge_app/features/blueprints/domain/models/blueprint.dart';
 import 'package:emerge_app/core/presentation/widgets/app_error_widget.dart';
-import 'package:emerge_app/features/social/presentation/screens/social_discover_tab.dart';
 import 'package:emerge_app/features/social/presentation/screens/social_hub_screen.dart';
 
 import 'package:flutter/material.dart';
@@ -116,6 +115,7 @@ String? decideRedirect({
     '/signup',
     '/creator/login',
     '/creator/signup',
+    '/onboarding/endowment',
   };
 
   final isOnAuthPath = authPaths.contains(currentPath);
@@ -218,11 +218,7 @@ String? decideRedirect({
       final effectiveProgress = progress ?? 0;
       switch (effectiveProgress) {
         case 0:
-          // Show the one-time endowment interstitial before archetype
-          // selection, but only if the user hasn't seen it yet.
-          return ctx.hasSeenEndowment
-              ? '/onboarding/identity-studio'
-              : '/onboarding/endowment';
+          return '/onboarding/identity-studio';
         case 1:
           return '/onboarding/interests';
         case 2:
@@ -574,8 +570,7 @@ GoRouter router(Ref ref) {
                   GoRoute(
                     path: 'discover',
                     parentNavigatorKey: _rootNavigatorKey,
-                    builder: (context, state) =>
-                        const SocialDiscoverTab(showAsRoot: true),
+                    builder: (context, state) => const CreatorsBrowseScreen(),
                   ),
                   // /social/blueprint/:id — branch-local alias of /blueprint/:id
                   GoRoute(
