@@ -390,6 +390,13 @@ class DriftTribeRepository implements TribeRepository {
   Future<void> joinClub(String userId, String tribeId) async {
     // 1. Update local Drift database
     await _db.tribeStatsDao.incrementMemberCount(tribeId, delta: 1);
+    await _db.tribeMembershipDao.upsertMembership(UserTribeTableCompanion(
+      userId: Value(userId),
+      tribeId: Value(tribeId),
+      membershipType: const Value('archetype'),
+      joinedAt: Value(DateTime.now().toIso8601String()),
+      isActive: const Value(true),
+    ));
 
     // 2. Enqueue multi-path sync to Firestore
 
@@ -466,23 +473,34 @@ class DriftTribeRepository implements TribeRepository {
 
   @override
   Future<List<Tribe>> getUserTribes(String userId) async {
+    final membership =
+        await _db.tribeMembershipDao.watchActiveMembership(userId).first;
+    if (membership != null) {
+      final row = await _db.tribeStatsDao.getStats(membership.tribeId);
+      if (row != null) return [_rowToTribe(row)];
+    }
+
     try {
       final tribeDocs = await _firestore
           .collection('tribes')
           .where('members', arrayContains: userId)
           .get();
-
       if (tribeDocs.docs.isEmpty) return [];
-
-      final tribeIds = tribeDocs.docs.map((doc) => doc.id).toSet();
-      final rows = await _db.tribeStatsDao.getAll();
-
-      return rows
-          .where((row) => tribeIds.contains(row.tribeId))
-          .map(_rowToTribe)
-          .toList();
+      final tribes =
+          tribeDocs.docs.map((doc) => Tribe.fromMap(doc.data())).toList();
+      for (final tribe in tribes) {
+        await _db.tribeMembershipDao.upsertMembership(UserTribeTableCompanion(
+          userId: Value(userId),
+          tribeId: Value(tribe.id),
+          membershipType:
+              Value(tribe.archetypeId != null ? 'archetype' : 'creator'),
+          joinedAt: Value(DateTime.now().toIso8601String()),
+          isActive: const Value(true),
+        ));
+      }
+      return tribes;
     } catch (e) {
-      debugPrint('Error getting user tribes for $userId: $e');
+      debugPrint('getUserTribes Firestore fallback failed: $e');
       return [];
     }
   }
