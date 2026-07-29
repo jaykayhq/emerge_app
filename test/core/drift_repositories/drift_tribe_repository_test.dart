@@ -94,7 +94,7 @@ void main() {
         ).called(1);
 
         verify(
-          () => mockSyncEngine.enqueueUpdate(
+          () => mockSyncEngine.enqueueSet(
             collectionPath: 'tribes',
             documentId: tribeId,
             data: any(named: 'data'),
@@ -155,7 +155,7 @@ void main() {
       ).called(1);
 
       verify(
-        () => mockSyncEngine.enqueueUpdate(
+        () => mockSyncEngine.enqueueSet(
           collectionPath: 'tribes',
           documentId: tribeId,
           data: any(named: 'data'),
@@ -353,6 +353,21 @@ void main() {
       final tribes = await repository.getUserTribes(userId);
 
       expect(tribes, isEmpty);
+    });
+
+    test('getArchetypeClubs() surfaces seed imageUrl (not empty) so cards '
+        'match the Firestore/All-Tribes imagery', () async {
+      await repository.seedTribesIfEmpty();
+
+      final clubs = await repository.getArchetypeClubs();
+      expect(clubs, isNotEmpty);
+
+      // The seed catalog carries a per-club Unsplash image; Drift must
+      // surface it instead of dropping it to '' (which caused the
+      // onboarding vs All-Tribes image mismatch).
+      final withImages = clubs.where((c) => c.imageUrl.isNotEmpty).toList();
+      expect(withImages, isNotEmpty,
+          reason: 'seeded clubs should expose an imageUrl');
     });
   });
 }

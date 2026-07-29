@@ -115,12 +115,14 @@ class Habit extends Equatable {
           : null,
       'difficulty': difficulty.name,
       'isArchived': isArchived,
-      'createdAt': Timestamp.fromDate(createdAt),
+      // ISO strings, not Firestore `Timestamp`. The sync engine
+      // jsonEncodes this map at enqueue time (which can't serialize
+      // Timestamp) and converts strings → Timestamp at apply time via
+      // `_convertTimestamps`. `fromMap` also parses these as strings.
+      'createdAt': createdAt.toIso8601String(),
       'currentStreak': currentStreak,
       'longestStreak': longestStreak,
-      'lastCompletedDate': lastCompletedDate != null
-          ? Timestamp.fromDate(lastCompletedDate!)
-          : null,
+      'lastCompletedDate': lastCompletedDate?.toIso8601String(),
       'impact': impact.name,
       'twoMinuteVersion': twoMinuteVersion,
       'identityTags': identityTags,
@@ -141,6 +143,14 @@ class Habit extends Equatable {
   }
 
   factory Habit.fromMap(Map<String, dynamic> map) {
+    DateTime? parseDate(dynamic raw) {
+      if (raw == null) return null;
+      if (raw is DateTime) return raw;
+      if (raw is Timestamp) return raw.toDate();
+      if (raw is String) return DateTime.tryParse(raw);
+      return null;
+    }
+
     TimeOfDay? reminderTime;
     final rawReminderTime = map['reminderTime'];
     if (rawReminderTime is String) {
@@ -171,12 +181,10 @@ class Habit extends Equatable {
         orElse: () => HabitDifficulty.medium,
       ),
       isArchived: map['isArchived'] ?? false,
-      createdAt: DateTime.tryParse(map['createdAt'] ?? '') ?? DateTime.now(),
+      createdAt: parseDate(map['createdAt']) ?? DateTime.now(),
       currentStreak: map['currentStreak'] ?? 0,
       longestStreak: map['longestStreak'] ?? 0,
-      lastCompletedDate: map['lastCompletedDate'] != null
-          ? DateTime.tryParse(map['lastCompletedDate'])
-          : null,
+      lastCompletedDate: parseDate(map['lastCompletedDate']),
       impact: HabitImpact.values.firstWhere(
         (e) => e.name == map['impact'],
         orElse: () => HabitImpact.neutral,

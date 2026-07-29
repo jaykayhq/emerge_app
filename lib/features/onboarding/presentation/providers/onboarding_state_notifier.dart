@@ -391,30 +391,39 @@ class EnhancedOnboardingNotifier extends _$EnhancedOnboardingNotifier {
       // Persist final state
       await _persistToBackend();
 
-      // Officially join the archetype club
-      if (state.selectedArchetype != null &&
-          state.selectedArchetype != UserArchetype.none) {
-        try {
-          final tribeRepo = ref.read(tribeRepositoryProvider);
+      // Officially join the tribe the user picked during onboarding.
+      // Prefer the explicit pick (joinedClubId); fall back to the
+      // archetype-default club only if no explicit pick was made.
+      // Joins at most ONE tribe so we never double-join.
+      final String? pickedClubId = state.joinedClubId;
+      try {
+        final tribeRepo = ref.read(tribeRepositoryProvider);
+        final user = ref.read(authStateChangesProvider).value;
+        if (user == null) {
+          throw Exception('Not authenticated');
+        }
+
+        String? clubIdToJoin = pickedClubId;
+        if (clubIdToJoin == null &&
+            state.selectedArchetype != null &&
+            state.selectedArchetype != UserArchetype.none) {
           final club = await tribeRepo.getArchetypeClub(
             state.selectedArchetype!.name,
           );
-          if (club != null) {
-            final user = ref.read(authStateChangesProvider).value;
-            if (user != null) {
-              await tribeRepo.joinClub(user.id, club.id);
-            }
-          }
-        } catch (e, stack) {
-          AppLogger.e(
-            'Failed to join official club during onboarding',
-            e,
-            stack,
-          );
+          clubIdToJoin = club?.id;
         }
+
+        if (clubIdToJoin != null) {
+          await tribeRepo.joinClub(user.id, clubIdToJoin);
+          AppLogger.i('Onboarding: joined tribe $clubIdToJoin');
+        }
+      } catch (e, stack) {
+        // Don't silently swallow — surface so the UI can tell the user.
+        AppLogger.e('Failed to join tribe during onboarding', e, stack);
+        rethrow;
       }
 
-      AppLogger.i('Onboarding completed successfully');
+
     } catch (e, s) {
       AppLogger.e('Failed to complete onboarding', e, s);
       state = state.copyWith(

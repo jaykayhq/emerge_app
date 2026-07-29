@@ -201,13 +201,18 @@ class DashboardStateNotifier extends _$DashboardStateNotifier {
   }
 
   Map<String, int> _convertAttributes(UserProfile profile) {
-    if (profile.identityVotes.isNotEmpty) {
-      return profile.identityVotes;
-    }
+    if (profile.identityVotes.isNotEmpty) return profile.identityVotes;
     return {'Vitality': 0, 'Focus': 0, 'Creativity': 0, 'Strength': 0};
   }
 
-  /// Sync habits from server, preserving optimistic additions
+  Future<void> deleteHabitOptimistic(String habitId) {
+    state = state.copyWith(
+      habits: state.habits.where((h) => h.id != habitId).toList(),
+      pendingHabitIds: state.pendingHabitIds.difference({habitId}),
+    );
+    return Future.value();
+  }
+
   void _syncHabitsFromServer(List<Habit> serverHabits) {
     final serverIds = serverHabits.map((h) => h.id).toSet();
 

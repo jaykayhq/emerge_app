@@ -244,59 +244,67 @@ class _PulseRingState extends State<_PulseRing> with SingleTickerProviderStateMi
 
   @override
   Widget build(BuildContext context) {
-    return AnimatedBuilder(
-      animation: _controller,
-      builder: (context, child) {
-        return Stack(
-          alignment: Alignment.center,
-          children: [
-            // Outer expanding rings
-            ...List.generate(3, (index) {
-              final delay = index * 0.33;
-              final progress = (_controller.value + delay) % 1.0;
-              return Opacity(
-                opacity: (1.0 - progress) * 0.3,
-                child: Container(
-                  width: 80 + progress * 100,
-                  height: 80 + progress * 100,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    border: Border.all(
-                      color: const Color(0xFF2BEE79).withValues(alpha: 0.5),
-                      width: 2,
+    // Fixed-size box: the pulse rings expand from 80 -> 180px, but the
+    // widget's OUTER size must stay constant. Without this, the oscillating
+    // ring size re-lays-out SliverFillRemaining every frame and the whole
+    // page bobs up/down in sync with the pulse. (Root cause of the
+    // "page glitching" report — not the ring's transform.)
+    return SizedBox.square(
+      dimension: 180,
+      child: AnimatedBuilder(
+        animation: _controller,
+        builder: (context, child) {
+          return Stack(
+            alignment: Alignment.center,
+            children: [
+              // Outer expanding rings
+              ...List.generate(3, (index) {
+                final delay = index * 0.33;
+                final progress = (_controller.value + delay) % 1.0;
+                return Opacity(
+                  opacity: (1.0 - progress) * 0.3,
+                  child: Container(
+                    width: 80 + progress * 100,
+                    height: 80 + progress * 100,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      border: Border.all(
+                        color: const Color(0xFF2BEE79).withValues(alpha: 0.5),
+                        width: 2,
+                      ),
                     ),
                   ),
+                );
+              }),
+              // Center icon
+              Container(
+                width: 80,
+                height: 80,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [
+                      const Color(0xFF2BEE79).withValues(alpha: 0.2),
+                      const Color(0xFF2BEE79).withValues(alpha: 0.05),
+                    ],
+                  ),
+                  border: Border.all(
+                    color: const Color(0xFF2BEE79).withValues(alpha: 0.3),
+                    width: 1,
+                  ),
                 ),
-              );
-            }),
-            // Center icon
-            Container(
-              width: 80,
-              height: 80,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [
-                    const Color(0xFF2BEE79).withValues(alpha: 0.2),
-                    const Color(0xFF2BEE79).withValues(alpha: 0.05),
-                  ],
-                ),
-                border: Border.all(
-                  color: const Color(0xFF2BEE79).withValues(alpha: 0.3),
-                  width: 1,
+                child: const Icon(
+                  Icons.favorite_outline_rounded,
+                  size: 40,
+                  color: Color(0xFF2BEE79),
                 ),
               ),
-              child: const Icon(
-                Icons.favorite_outline_rounded,
-                size: 40,
-                color: Color(0xFF2BEE79),
-              ),
-            ),
-          ],
-        );
-      },
+            ],
+          );
+        },
+      ),
     );
   }
 }

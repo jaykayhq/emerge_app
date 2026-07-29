@@ -57,6 +57,16 @@ void main() {
     ).thenAnswer((_) async {});
 
     when(
+      () => mockSyncEngine.enqueueMutation(
+        collectionPath: any(named: 'collectionPath'),
+        documentId: any(named: 'documentId'),
+        operation: any(named: 'operation'),
+        data: any(named: 'data'),
+        idempotencyKey: any(named: 'idempotencyKey'),
+      ),
+    ).thenAnswer((_) async {});
+
+    when(
       () => mockSocialService.logActivity(
         type: any(named: 'type'),
         userId: any(named: 'userId'),
@@ -168,7 +178,7 @@ void main() {
       ).called(1);
     });
 
-    test('deleteHabit() sets isArchived=1 and calls enqueueUpdate', () async {
+    test('deleteHabit() sets isArchived=1 and enqueues remote delete', () async {
       final habit = createTestHabit();
       await repository.createHabit(habit);
 
@@ -180,10 +190,10 @@ void main() {
       expect(retrieved?.isArchived, true);
 
       verify(
-        () => mockSyncEngine.enqueueUpdate(
-          collectionPath: 'users/$userId/habits',
+        () => mockSyncEngine.enqueueMutation(
+          collectionPath: 'habits',
           documentId: habit.id,
-          data: any(named: 'data'),
+          operation: 'delete',
           idempotencyKey: 'del:habit:${habit.id}',
         ),
       ).called(1);
@@ -280,8 +290,10 @@ void main() {
         expect(result2.isRight(), true);
         expect(result2.fold((l) => false, (r) => r), false);
 
+        // Same-day re-completion is an UNDO: streak returns to 0
+        // (see drift_habit_repository_undo_test.dart).
         final retrieved = await repository.getHabit(habit.id);
-        expect(retrieved?.currentStreak, 1);
+        expect(retrieved?.currentStreak, 0);
       },
     );
 

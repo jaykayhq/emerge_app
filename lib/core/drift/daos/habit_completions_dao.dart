@@ -80,4 +80,9 @@ class HabitCompletionsDao extends DatabaseAccessor<AppDatabase>
       (delete(habitCompletionsTable)
             ..where((t) => t.habitId.equals(habitId)))
           .go();
+
+  /// Delete a single completion row by id (used to undo today's completion).
+  Future<int> deleteById(String id) =>
+      (delete(habitCompletionsTable)..where((t) => t.id.equals(id)))
+          .go();
 }

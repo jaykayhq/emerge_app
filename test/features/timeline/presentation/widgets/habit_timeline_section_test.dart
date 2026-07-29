@@ -29,11 +29,11 @@ void main() {
       await tester.pumpWidget(
         buildTestApp(
           IndentedHabitItem(
-            habit: _makeHabit(),
+            habit: _makeHabit(timerDurationMinutes: 0),
             selectedDate: DateTime.now(),
             onRowBodyTap: () {},
             onCheckboxTap: () {},
-            onTimerTap: () {},
+            onTimerTap: (_) async => null,
             onMenuTap: () {},
           ),
         ),
@@ -41,7 +41,7 @@ void main() {
       expect(find.text('Morning Meditation'), findsOneWidget);
       expect(find.byIcon(Icons.timer_outlined), findsOneWidget);
       expect(find.byIcon(Icons.more_vert), findsOneWidget);
-      // Checkbox: radio_button_unchecked when not completed
+      // No timer set -> standard mark-complete checkbox.
       expect(find.byIcon(Icons.radio_button_unchecked), findsOneWidget);
     });
 
@@ -53,12 +53,33 @@ void main() {
             selectedDate: DateTime.now(),
             onRowBodyTap: () {},
             onCheckboxTap: () {},
-            onTimerTap: () {},
+            onTimerTap: (_) async => null,
             onMenuTap: () {},
           ),
         ),
       );
       expect(find.byType(Dismissible), findsNothing);
+    });
+
+    testWidgets('habit with timer set shows mark-complete checkbox + timer badge, no PLAY',
+        (tester) async {
+      await tester.pumpWidget(
+        buildTestApp(
+          IndentedHabitItem(
+            habit: _makeHabit(timerDurationMinutes: 5),
+            selectedDate: DateTime.now(),
+            onRowBodyTap: () {},
+            onCheckboxTap: () {},
+            onTimerTap: (_) async => null,
+            onMenuTap: () {},
+          ),
+        ),
+      );
+      // Timer-set state: mark-complete checkbox is present (PLAY removed).
+      expect(find.byIcon(Icons.radio_button_unchecked), findsOneWidget);
+      expect(find.byIcon(Icons.play_arrow), findsNothing);
+      // Timer badge reflects the configured duration.
+      expect(find.text('⏱ 5m'), findsOneWidget);
     });
   });
 
@@ -72,7 +93,7 @@ void main() {
             selectedDate: DateTime.now(),
             onRowBodyTap: () => body++,
             onCheckboxTap: () => checkbox++,
-            onTimerTap: () => timer++,
+            onTimerTap: (_) async => null,
             onMenuTap: () => menu++,
           ),
         ),
@@ -86,15 +107,15 @@ void main() {
     });
 
     testWidgets('tap on checkbox fires onCheckboxTap only', (tester) async {
-      var body = 0, checkbox = 0, timer = 0, menu = 0;
+      var body = 0, checkbox = 0, menu = 0;
       await tester.pumpWidget(
         buildTestApp(
           IndentedHabitItem(
-            habit: _makeHabit(),
+            habit: _makeHabit(timerDurationMinutes: 0),
             selectedDate: DateTime.now(),
             onRowBodyTap: () => body++,
             onCheckboxTap: () => checkbox++,
-            onTimerTap: () => timer++,
+            onTimerTap: (_) async => null,
             onMenuTap: () => menu++,
           ),
         ),
@@ -110,23 +131,26 @@ void main() {
       await tester.pumpWidget(
         buildTestApp(
           IndentedHabitItem(
-            habit: _makeHabit(),
+            habit: _makeHabit(timerDurationMinutes: 2),
             selectedDate: DateTime.now(),
             onRowBodyTap: () => body++,
             onCheckboxTap: () => checkbox++,
-            onTimerTap: () => timer++,
+            onTimerTap: (_) async {
+              timer++;
+              return null;
+            },
             onMenuTap: () => menu++,
           ),
         ),
       );
       await tester.tap(find.byIcon(Icons.timer_outlined));
-      await tester.pump();
+      await tester.pumpAndSettle();
       expect(timer, 1);
       expect(body, 0);
     });
 
     testWidgets('tap on menu icon fires onMenuTap only', (tester) async {
-      var body = 0, checkbox = 0, timer = 0, menu = 0;
+      var body = 0, checkbox = 0, menu = 0;
       await tester.pumpWidget(
         buildTestApp(
           IndentedHabitItem(
@@ -134,7 +158,7 @@ void main() {
             selectedDate: DateTime.now(),
             onRowBodyTap: () => body++,
             onCheckboxTap: () => checkbox++,
-            onTimerTap: () => timer++,
+            onTimerTap: (_) async => null,
             onMenuTap: () => menu++,
           ),
         ),
@@ -143,6 +167,27 @@ void main() {
       await tester.pump();
       expect(menu, 1);
       expect(body, 0);
+    });
+
+    testWidgets('tapping the TIMER icon with a returned duration starts the timer',
+        (tester) async {
+      await tester.pumpWidget(
+        buildTestApp(
+          IndentedHabitItem(
+            habit: _makeHabit(timerDurationMinutes: 5),
+            selectedDate: DateTime.now(),
+            onRowBodyTap: () {},
+            onCheckboxTap: () {},
+            onTimerTap: (_) async => 5,
+            onMenuTap: () {},
+          ),
+        ),
+      );
+      await tester.tap(find.byIcon(Icons.timer_outlined));
+      await tester.pumpAndSettle();
+      // Running-timer state shows the pause control (no mark-complete).
+      expect(find.byIcon(Icons.pause), findsOneWidget);
+      expect(find.byIcon(Icons.radio_button_unchecked), findsNothing);
     });
   });
 
@@ -155,7 +200,7 @@ void main() {
             selectedDate: DateTime.now(),
             onRowBodyTap: () {},
             onCheckboxTap: () {},
-            onTimerTap: () {},
+            onTimerTap: (_) async => null,
             onMenuTap: () {},
           ),
         ),
@@ -172,7 +217,7 @@ void main() {
             selectedDate: DateTime.now(),
             onRowBodyTap: () {},
             onCheckboxTap: () {},
-            onTimerTap: () {},
+            onTimerTap: (_) async => null,
             onMenuTap: () {},
           ),
         ),
@@ -189,14 +234,13 @@ void main() {
             selectedDate: DateTime.now(),
             onRowBodyTap: () {},
             onCheckboxTap: () {},
-            onTimerTap: () {},
+            onTimerTap: (_) async => null,
             onMenuTap: () {},
           ),
         ),
       );
-      final container = tester.widget<AnimatedContainer>(
-        find.byType(AnimatedContainer),
-      );
+      final container =
+          tester.widget<AnimatedContainer>(find.byType(AnimatedContainer));
       final decoration = container.decoration as BoxDecoration;
       final gradient = decoration.gradient as LinearGradient;
       // Completed cards use the dark background gradient (0xFF1A1A2E)
@@ -217,15 +261,14 @@ void main() {
             selectedDate: now,
             onRowBodyTap: () {},
             onCheckboxTap: () {},
-            onTimerTap: () {},
+            onTimerTap: (_) async => null,
             onMenuTap: () {},
             isFirstIncomplete: true,
           ),
         ),
       );
-      final container = tester.widget<AnimatedContainer>(
-        find.byType(AnimatedContainer),
-      );
+      final container =
+          tester.widget<AnimatedContainer>(find.byType(AnimatedContainer));
       final decoration = container.decoration as BoxDecoration;
       expect(
         decoration.border,
@@ -245,15 +288,14 @@ void main() {
             selectedDate: now,
             onRowBodyTap: () {},
             onCheckboxTap: () {},
-            onTimerTap: () {},
+            onTimerTap: (_) async => null,
             onMenuTap: () {},
             isFirstIncomplete: false,
           ),
         ),
       );
-      final container = tester.widget<AnimatedContainer>(
-        find.byType(AnimatedContainer),
-      );
+      final container =
+          tester.widget<AnimatedContainer>(find.byType(AnimatedContainer));
       final decoration = container.decoration as BoxDecoration;
       expect(
         decoration.border,
@@ -262,6 +304,60 @@ void main() {
           width: 1.0,
         ),
       );
+    });
+  });
+
+  group('IndentedHabitItem - timer habit button layout (user intent)', () {
+    // Per request: remove the separate PLAY button, restore the mark-complete
+    // checkbox for timer habits, and make the TIMER button do what PLAY did
+    // (start the countdown).
+
+    testWidgets('timer-set habit shows mark-complete checkbox (no PLAY button)',
+        (tester) async {
+      await tester.pumpWidget(
+        buildTestApp(
+          IndentedHabitItem(
+            habit: _makeHabit(timerDurationMinutes: 5),
+            selectedDate: DateTime.now(),
+            onRowBodyTap: () {},
+            onCheckboxTap: () {},
+            onTimerTap: (_) async => null,
+            onMenuTap: () {},
+          ),
+        ),
+      );
+      // Restored mark-complete checkbox is present even when a timer is set.
+      expect(find.byIcon(Icons.radio_button_unchecked), findsOneWidget);
+      // The dedicated PLAY button must be gone.
+      expect(find.byIcon(Icons.play_arrow), findsNothing);
+      // Timer badge still reflects the configured duration.
+      expect(find.text('⏱ 5m'), findsOneWidget);
+    });
+
+    testWidgets('tapping the TIMER icon starts the timer (old PLAY behavior)',
+        (tester) async {
+      var timer = 0;
+      await tester.pumpWidget(
+        buildTestApp(
+          IndentedHabitItem(
+            habit: _makeHabit(timerDurationMinutes: 5),
+            selectedDate: DateTime.now(),
+            onRowBodyTap: () {},
+            onCheckboxTap: () {},
+            onTimerTap: (_) async {
+              timer++;
+              return 5;
+            },
+            onMenuTap: () {},
+          ),
+        ),
+      );
+      await tester.tap(find.byIcon(Icons.timer_outlined));
+      await tester.pumpAndSettle();
+      // Timer started -> running state shows pause control.
+      expect(timer, 1);
+      expect(find.byIcon(Icons.pause), findsOneWidget);
+      expect(find.byIcon(Icons.radio_button_unchecked), findsNothing);
     });
   });
 }

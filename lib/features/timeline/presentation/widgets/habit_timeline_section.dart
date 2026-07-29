@@ -48,7 +48,9 @@ class HierarchicalHabitTimeline extends StatelessWidget {
   final DateTime selectedDate;
   final void Function(Habit habit) onHabitTap;
   final void Function(Habit habit) onHabitToggle;
-  final void Function(Habit habit) onTimerTap;
+  // Returns the chosen timer duration in minutes (null if cancelled).
+  // The card uses this to transition into its running-timer state.
+  final Future<int?> Function(Habit habit) onTimerTap;
   final void Function(Habit habit) onMenuTap;
 
   const HierarchicalHabitTimeline({
@@ -123,7 +125,9 @@ class _HabitCategorySection extends StatelessWidget {
   final DateTime selectedDate;
   final void Function(Habit) onHabitTap;
   final void Function(Habit) onHabitToggle;
-  final void Function(Habit) onTimerTap;
+  // Returns the chosen timer duration (null if cancelled); the card
+  // uses it to enter its running-timer state.
+  final Future<int?> Function(Habit) onTimerTap;
   final void Function(Habit) onMenuTap;
   final bool isLast;
 
@@ -231,7 +235,7 @@ class _HabitCategorySection extends StatelessWidget {
             selectedDate: selectedDate,
             onRowBodyTap: () => onHabitTap(habit),
             onCheckboxTap: () => onHabitToggle(habit),
-            onTimerTap: () => onTimerTap(habit),
+            onTimerTap: onTimerTap,
             onMenuTap: () => onMenuTap(habit),
             showConnector: index < habits.length - 1,
             isFirstIncomplete: index == firstIncompleteIndex,
@@ -247,7 +251,9 @@ class _HabitCategorySection extends StatelessWidget {
 ///
 /// - Tap body → onRowBodyTap
 /// - Tap checkbox → onCheckboxTap (toggle complete)
-/// - Tap ⏱️ → onTimerTap (open timer dialog)
+/// - Tap ⏱️ → onTimerTap (open timer dialog; returns chosen
+///   duration in minutes, null if cancelled). The item then
+///   transitions into its running-timer state.
 /// - Tap ⋮ → onMenuTap (open options sheet)
 ///
 /// Card background fills as timer counts down. At 0, auto-fires onCheckboxTap.
@@ -256,7 +262,9 @@ class IndentedHabitItem extends StatefulWidget {
   final DateTime selectedDate;
   final VoidCallback onRowBodyTap;
   final VoidCallback onCheckboxTap;
-  final VoidCallback onTimerTap;
+  // Returns the chosen timer duration in minutes (null if cancelled).
+  // The item uses this to enter its running-timer state.
+  final Future<int?> Function(Habit) onTimerTap;
   final VoidCallback onMenuTap;
   final bool showConnector;
   final bool isFirstIncomplete;
@@ -430,11 +438,12 @@ class _IndentedHabitItemState extends State<IndentedHabitItem> {
   }
 
   Widget _buildPending(Color color) {
+    final hasTimer = widget.habit.timerDurationMinutes > 0;
     return Row(
       children: [
         // Title (body tap zone)
         Expanded(
-            child: Text(
+          child: Text(
             widget.habit.title,
             style: const TextStyle(
               color: Colors.white,
@@ -446,23 +455,63 @@ class _IndentedHabitItemState extends State<IndentedHabitItem> {
           ),
         ),
         const SizedBox(width: 8),
-        // Checkbox
-        IconButton(
-          tooltip: 'Mark complete',
-          icon: const Icon(
-            Icons.radio_button_unchecked,
-            color: Colors.white70,
-            size: 22,
+        // Timer-set badge: shows the configured duration so the card
+        // reflects that a timer is set on habit creation.
+        if (hasTimer && !_isTimerRunning)
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+            decoration: BoxDecoration(
+              color: color.withValues(alpha: 0.18),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Text(
+              '⏱ ${widget.habit.timerDurationMinutes}m',
+              style: TextStyle(
+                color: color,
+                fontSize: 11,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
           ),
-          onPressed: () {
-            if (_isTimerRunning) _cancelTimer();
-            widget.onCheckboxTap();
-          },
-        ),
-        // Timer icon
+        if (hasTimer && !_isTimerRunning) const SizedBox(width: 4),
+        // While a timer is running, show PAUSE in place of the
+        // mark-complete checkbox (completing early cancels the run).
+        if (_isTimerRunning)
+          IconButton(
+            tooltip: 'Pause',
+            icon: Icon(
+              Icons.pause,
+              color: color,
+              size: 22,
+            ),
+            onPressed: _cancelTimer,
+          )
+        else
+          // Mark-complete checkbox is always present now (including for
+          // timer-set habits; the dedicated PLAY button was removed per
+          // product request — the TIMER button below now starts the run).
+          IconButton(
+            tooltip: 'Mark complete',
+            icon: const Icon(
+              Icons.radio_button_unchecked,
+              color: Colors.white70,
+              size: 22,
+            ),
+            onPressed: () {
+              if (_isTimerRunning) _cancelTimer();
+              widget.onCheckboxTap();
+            },
+          ),
+        // Timer icon — opens the timer dialog and starts the countdown
+        // with the chosen duration (this is what the old PLAY button did).
         IconButton(
           icon: const Icon(Icons.timer_outlined, color: Colors.white, size: 20),
-          onPressed: widget.onTimerTap,
+          onPressed: () async {
+            final minutes = await widget.onTimerTap(widget.habit);
+            if (minutes != null && minutes > 0 && mounted && !_isTimerRunning) {
+              startTimerFromDuration(minutes);
+            }
+          },
         ),
         // Menu icon
         IconButton(

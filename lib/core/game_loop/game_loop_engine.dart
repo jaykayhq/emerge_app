@@ -7,6 +7,10 @@ class LocalGameLoopEngine {
   static const double _streakBonusPerStep = 0.10;
   static const double _maxStreakBonus = 0.50;
   static const int _completionBoost = 10;
+  /// World-health delta applied per habit completion (and reversed on undo).
+  /// Derived from [_completionBoost].
+  static const double completionWorldHealthDelta =
+      _completionBoost / 100.0;
 
   int computeXpGain({
     required double difficultyMultiplier,
@@ -100,7 +104,7 @@ class LocalGameLoopEngine {
       newMomentumScore: newMomentumScore,
       newConsecutiveMisses: newConsecutiveMisses,
       isRecovery: isRecovery,
-      worldHealthDelta: _completionBoost / 100.0,
+      worldHealthDelta: completionWorldHealthDelta,
       challengeUpdates: challengeUpdates,
     );
   }

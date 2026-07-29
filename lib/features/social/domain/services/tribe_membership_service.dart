@@ -15,6 +15,9 @@ class TribeMembershipService {
     final repository = _ref.read(tribeRepositoryProvider);
     await repository.joinClub(userId, tribeId);
 
+    // Joining from the tribes list also switches contribution target.
+    _ref.read(activeTribeIdProvider.notifier).select(tribeId);
+
     // Invalidate caches to show updated stats immediately
     _ref.read(tribeStatsCacheProvider).invalidate(tribeId);
     _ref.invalidate(cachedTribeStatsProvider(tribeId));
@@ -27,6 +30,11 @@ class TribeMembershipService {
 
     final repository = _ref.read(tribeRepositoryProvider);
     await repository.leaveClub(userId, tribeId);
+
+    // If the left tribe was the active one, fall back to archetype auto-detect.
+    if (_ref.read(activeTribeIdProvider) == tribeId) {
+      _ref.read(activeTribeIdProvider.notifier).select(null);
+    }
 
     // Invalidate caches
     _ref.read(tribeStatsCacheProvider).invalidate(tribeId);

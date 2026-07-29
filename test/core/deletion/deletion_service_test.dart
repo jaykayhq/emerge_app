@@ -26,6 +26,13 @@ void main() {
           data: any(named: 'data'),
           idempotencyKey: any(named: 'idempotencyKey'),
         )).thenAnswer((_) async {});
+    when(() => sync.enqueueMutation(
+          collectionPath: any(named: 'collectionPath'),
+          documentId: any(named: 'documentId'),
+          operation: any(named: 'operation'),
+          data: any(named: 'data'),
+          idempotencyKey: any(named: 'idempotencyKey'),
+        )).thenAnswer((_) async {});
     service = DeletionService(
       db: db,
       syncEngine: sync,
@@ -66,10 +73,10 @@ void main() {
     );
     expect(comps.length, 0);
 
-    final captured = verify(() => sync.enqueueUpdate(
-          collectionPath: 'users/u1/habits',
+    final captured = verify(() => sync.enqueueMutation(
+          collectionPath: 'habits',
           documentId: 'h1',
-          data: any(named: 'data'),
+          operation: 'delete',
           idempotencyKey: captureAny(named: 'idempotencyKey'),
         )).captured;
     expect(captured.single, 'del:habit:h1');
@@ -162,9 +169,10 @@ void main() {
   });
   test('remote enqueue failure surfaces Left but local archive committed',
       () async {
-    when(() => sync.enqueueUpdate(
+    when(() => sync.enqueueMutation(
           collectionPath: any(named: 'collectionPath'),
           documentId: any(named: 'documentId'),
+          operation: any(named: 'operation'),
           data: any(named: 'data'),
           idempotencyKey: any(named: 'idempotencyKey'),
         )).thenThrow(Exception('network down'));

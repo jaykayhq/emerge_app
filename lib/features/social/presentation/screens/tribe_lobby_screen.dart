@@ -16,6 +16,7 @@ import 'package:emerge_app/features/social/domain/models/tribe.dart';
 import 'package:emerge_app/features/social/presentation/providers/tribes_provider.dart';
 import 'package:emerge_app/features/social/presentation/widgets/glass_panel.dart';
 import 'package:emerge_app/features/social/presentation/widgets/tribe_circle_section.dart';
+import 'package:emerge_app/features/social/presentation/widgets/tribe_blueprints_section.dart';
 import 'package:emerge_app/features/social/presentation/widgets/tribe_creators_strip.dart';
 import 'package:emerge_app/features/social/presentation/widgets/tribe_live_compact.dart';
 import 'package:emerge_app/features/social/presentation/widgets/tribe_pulse_status_row.dart';
@@ -33,7 +34,12 @@ import 'package:emerge_app/features/social/presentation/widgets/tribe_your_quest
 /// paints transparently over it. Hardware back returns to the world map
 /// (home) instead of exiting the app.
 class TribeLobbyScreen extends ConsumerStatefulWidget {
-  const TribeLobbyScreen({super.key});
+  /// When [tribeId] is provided (from the All Tribes grid / a deep link), the
+  /// lobby shows that specific tribe. When null, it resolves the user's own
+  /// archetype club (the default Social-tab behavior).
+  final String? tribeId;
+
+  const TribeLobbyScreen({super.key, this.tribeId});
 
   @override
   ConsumerState<TribeLobbyScreen> createState() => _TribeLobbyScreenState();
@@ -110,6 +116,9 @@ class _TribeLobbyScreenState extends ConsumerState<TribeLobbyScreen> {
                         child: TribeCreatorsStrip(),
                       ),
                     ),
+                    SliverToBoxAdapter(
+                      child: TribeBlueprintsSection(tribe: userClub),
+                    ),
                     const SliverToBoxAdapter(
                       child: TribeYourQuestsSection(),
                     ),
@@ -145,10 +154,10 @@ class _TribeLobbyScreenState extends ConsumerState<TribeLobbyScreen> {
                     Expanded(
                       child: OutlinedButton.icon(
                         icon: const Icon(
-                          Icons.swap_horiz_rounded,
+                          Icons.emoji_events_rounded,
                           size: 16,
                         ),
-                        label: const Text('SWITCH TRIBE'),
+                        label: const Text('CHALLENGES'),
                         style: OutlinedButton.styleFrom(
                           foregroundColor: Colors.white70,
                           side: const BorderSide(color: Colors.white24),
@@ -162,15 +171,15 @@ class _TribeLobbyScreenState extends ConsumerState<TribeLobbyScreen> {
                             letterSpacing: 2,
                           ),
                         ),
-                        onPressed: () => context.push('/social/all'),
+                        onPressed: () => context.push('/challenges'),
                       ),
                     ),
                     const Gap(12),
                     Expanded(
                       child: EmergePrimaryButton(
-                        label: 'BROWSE CREATORS',
-                        leadingIcon: Icons.explore_rounded,
-                        onPressed: () => context.push('/creators'),
+                        label: 'BROWSE BLUEPRINTS',
+                        leadingIcon: Icons.auto_awesome,
+                        onPressed: () => context.push('/social/discover'),
                       ),
                     ),
                   ],
@@ -180,8 +189,13 @@ class _TribeLobbyScreenState extends ConsumerState<TribeLobbyScreen> {
     );
   }
 
-  static Tribe? _resolveUserClub(List<Tribe> clubs, UserProfile profile) {
+  Tribe? _resolveUserClub(List<Tribe> clubs, UserProfile profile) {
     if (clubs.isEmpty) return null;
+    // Explicit tribe selected from the All Tribes grid / deep link wins.
+    if (widget.tribeId != null && widget.tribeId!.isNotEmpty) {
+      final match = clubs.where((c) => c.id == widget.tribeId).firstOrNull;
+      if (match != null) return match;
+    }
     final matchIndex = clubs.indexWhere(
       (c) => c.archetypeId == profile.archetype.name,
     );

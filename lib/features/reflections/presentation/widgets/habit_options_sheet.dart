@@ -3,6 +3,7 @@ import 'package:emerge_app/core/theme/emerge_colors.dart';
 import 'package:emerge_app/features/auth/presentation/providers/auth_providers.dart';
 import 'package:emerge_app/features/habits/domain/entities/habit.dart';
 import 'package:emerge_app/features/habits/presentation/providers/habit_providers.dart';
+import 'package:emerge_app/features/habits/presentation/providers/dashboard_state_provider.dart';
 import 'package:emerge_app/features/habits/presentation/widgets/habit_timer_dialog.dart';
 import 'package:emerge_app/features/reflections/domain/entities/mood.dart';
 import 'package:emerge_app/features/reflections/presentation/providers/habit_reflection_providers.dart';
@@ -171,11 +172,35 @@ class _HabitOptionsSheetState extends ConsumerState<HabitOptionsSheet> {
       ),
     );
     if (confirmed != true) return;
-    await ref.read(habitRepositoryProvider).deleteHabit(widget.habit.id);
-    await ref
-        .read(notificationServiceProvider)
-        .cancelHabitNotifications(widget.habit.id);
-    if (mounted) Navigator.of(context).pop();
+
+    try {
+      await ref.read(habitRepositoryProvider).deleteHabit(widget.habit.id);
+      await ref
+          .read(notificationServiceProvider)
+          .cancelHabitNotifications(widget.habit.id);
+
+      final dashboardNotifier = ref.read(dashboardStateProvider.notifier);
+      await dashboardNotifier.deleteHabitOptimistic(widget.habit.id);
+
+      if (mounted) {
+        Navigator.of(context).pop();
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Habit deleted'),
+            backgroundColor: Color(0xFF2BEE79),
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Could not delete habit: $e'),
+            backgroundColor: Colors.orangeAccent,
+          ),
+        );
+      }
+    }
   }
 
   @override

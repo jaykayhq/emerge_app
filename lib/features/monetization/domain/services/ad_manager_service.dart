@@ -1,4 +1,5 @@
 import 'dart:io';
+
 import 'package:emerge_app/core/config/app_config.dart';
 import 'package:emerge_app/features/monetization/presentation/providers/subscription_provider.dart';
 import 'package:flutter/foundation.dart';
@@ -8,16 +9,14 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:emerge_app/core/services/connectivity_service.dart';
 
-/// Provides a singleton AdManagerService that reads premium/connected
-/// state at call time (not at construction time), avoiding recreation
-/// and pre-loaded ad leaks when those providers change.
 final adManagerProvider = Provider<AdManagerService>((ref) {
   final service = AdManagerService._(ref);
   ref.onDispose(() => service.dispose());
 
-  // Initial ad loading if conditions are met
+  // Initial ad loading if conditions are met, but not on web.
   Future(() {
-    if (!(ref.read(isPremiumProvider).value ?? true) &&
+    if (!kIsWeb &&
+        !(ref.read(isPremiumProvider).value ?? true) &&
         ref.read(isConnectedProvider)) {
       service.loadAds();
     }
@@ -34,18 +33,25 @@ class AdManagerService {
   InterstitialAd? _interstitialAd;
   static const String _lastInterstitialKey = 'last_interstitial_time';
 
-  String get _platform => Platform.isIOS ? 'ios' : 'android';
+  String get _platform {
+    // Prevent crash on web by not accessing dart:io 'Platform'.
+    if (kIsWeb) {
+      return '';
+    }
+    return Platform.isIOS ? 'ios' : 'android';
+  }
+
   bool get _isPremium => _ref.read(isPremiumProvider).value ?? true;
   bool get _isConnected => _ref.read(isConnectedProvider);
 
-  /// Loads both rewarded and interstitial ads.
   void loadAds() {
+    if (kIsWeb) return;
     _loadRewardedAd();
     _loadInterstitialAd();
   }
 
-  /// Disposes all pre-loaded ads (e.g., when user becomes premium).
   void disposeAds() {
+    if (kIsWeb) return;
     _rewardedAd?.dispose();
     _rewardedAd = null;
     _interstitialAd?.dispose();
@@ -84,7 +90,8 @@ class AdManagerService {
     required Function onRewarded,
     required Function onFailed,
   }) async {
-    if (_isPremium) {
+    // On web, ads are not supported, so behave like a premium user.
+    if (kIsWeb || _isPremium) {
       onRewarded();
       return;
     }
@@ -121,7 +128,7 @@ class AdManagerService {
   }
 
   Future<void> showInterstitialAd() async {
-    if (_isPremium) return;
+    if (kIsWeb || _isPremium) return;
 
     if (_interstitialAd == null) {
       _loadInterstitialAd();
@@ -150,7 +157,6 @@ class AdManagerService {
     _interstitialAd = null;
   }
 
-  /// Cleans up all pre-loaded ads.
   void dispose() {
     disposeAds();
   }

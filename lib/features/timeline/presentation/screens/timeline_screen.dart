@@ -464,9 +464,7 @@ class _TimelineScreenState extends ConsumerState<TimelineScreen> {
             onHabitToggle: (habit) {
               _toggleHabitCompletion(habit);
             },
-            onTimerTap: (habit) {
-              _openTimerDialog(habit);
-            },
+            onTimerTap: (habit) => _openTimerDialog(habit),
             onMenuTap: (habit) {
               HabitOptionsSheet.show(context, habit, _selectedDate);
             },
@@ -577,7 +575,10 @@ class _TimelineScreenState extends ConsumerState<TimelineScreen> {
     _completeHabitSilently(habit);
   }
 
-  Future<void> _openTimerDialog(Habit habit) async {
+  /// Opens the timer dialog and returns the chosen duration in
+  /// minutes (null if cancelled). The habit card uses this to
+  /// transition into its running-timer state (play button).
+  Future<int?> _openTimerDialog(Habit habit) async {
     final minutes = await showDialog<int>(
       context: context,
       barrierDismissible: false,
@@ -591,16 +592,9 @@ class _TimelineScreenState extends ConsumerState<TimelineScreen> {
         },
       ),
     );
-    if (minutes != null && minutes > 0 && mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('${habit.title}: timer set for ${minutes}m'),
-          backgroundColor: EmergeColors.teal,
-          duration: const Duration(seconds: 2),
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
-    }
+    // Return the chosen duration so the caller (the card) can start
+    // the countdown. (0/null = cancelled.)
+    return minutes;
   }
 
   Future<void> _completeHabitSilently(Habit habit) async {

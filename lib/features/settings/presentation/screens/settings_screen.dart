@@ -1260,7 +1260,7 @@ class SettingsScreen extends ConsumerWidget {
                                 auth: ref.read(firebaseAuthProvider),
                               )
                               .timeout(
-                                const Duration(seconds: 15),
+                                const Duration(seconds: 60),
                                 onTimeout: () =>
                                     const Left(ServerFailure(
                                   'Deletion took too long. Local data kept.',

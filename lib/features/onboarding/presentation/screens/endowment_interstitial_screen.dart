@@ -55,19 +55,19 @@ class EndowmentInterstitialScreen extends ConsumerWidget {
                 ),
               ),
               const SizedBox(height: 40),
-              _EndowmentItem(
+              const _EndowmentItem(
                 emoji: '🎁',
                 title: 'Starter habit pack',
                 subtitle: 'reserved for you',
               ),
               const SizedBox(height: 20),
-              _EndowmentItem(
+              const _EndowmentItem(
                 emoji: '🏟️',
                 title: 'Archetype tribe',
                 subtitle: 'waiting for you',
               ),
               const SizedBox(height: 20),
-              _EndowmentItem(
+              const _EndowmentItem(
                 emoji: '🌍',
                 title: 'Your world map',
                 subtitle: 'ready to grow',

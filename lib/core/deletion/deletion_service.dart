@@ -47,13 +47,13 @@ class DeletionService {
         await _db.habitCompletionsDao.deleteByHabitId(habitId);
       });
       try {
-        await _syncEngine.enqueueUpdate(
-          collectionPath: 'users/$userId/habits',
+        // Habits live in the TOP-LEVEL `habits` collection (see
+        // DriftHabitRepository.createHabit) and firestore.rules allows the
+        // owner to delete there. A hard delete is idempotent server-side.
+        await _syncEngine.enqueueMutation(
+          collectionPath: 'habits',
           documentId: habitId,
-          data: {
-            'isArchived': true,
-            'updatedAt': DateTime.now().toIso8601String(),
-          },
+          operation: 'delete',
           idempotencyKey: 'del:habit:$habitId',
         );
       } catch (e) {

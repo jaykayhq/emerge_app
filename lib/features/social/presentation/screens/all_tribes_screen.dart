@@ -59,8 +59,15 @@ class _AllTribesScreenState extends ConsumerState<AllTribesScreen> {
             onRefresh: () async {
               ref.invalidate(allArchetypeClubsProvider);
             },
-            child: ListView.builder(
-              padding: const EdgeInsets.only(bottom: 32, top: 8),
+            child: GridView.builder(
+              padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
+              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount:
+                    MediaQuery.of(context).size.width > 600 ? 3 : 2,
+                mainAxisSpacing: 12,
+                crossAxisSpacing: 12,
+                childAspectRatio: 0.72,
+              ),
               itemCount: tribes.length,
               itemBuilder: (context, index) {
                 return TribeCard(tribe: tribes[index]);

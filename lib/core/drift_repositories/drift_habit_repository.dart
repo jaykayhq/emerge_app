@@ -187,6 +187,107 @@ class DriftHabitRepository implements HabitRepository {
       );
 
       if (result.xpGained == 0 && result.newStreak == habitRow.currentStreak) {
+        // Already completed today -> this call is an UNDO.
+        // Reverse the completion: drop today's completion row(s) and
+        // decrement the deltas the completion had applied.
+        final today = DateTime.now();
+        final startOfDay =
+            DateTime(today.year, today.month, today.day);
+        final endOfDay = startOfDay.add(const Duration(days: 1));
+        final todays = await _db.habitCompletionsDao.getBetweenDates(
+          statsRow.userId,
+          startOfDay.toIso8601String(),
+          endOfDay.toIso8601String(),
+        );
+        final todaysForHabit =
+            todays.where((c) => c.habitId == habitId).toList();
+        if (todaysForHabit.isEmpty) {
+          // Nothing to undo locally; treat as no-op success.
+          return const Right(false);
+        }
+
+        // Recompute reversed deltas from the most recent completion row.
+        final last = todaysForHabit.last;
+        final xpToUndo = last.xpGained;
+        final attr = last.attribute ?? 'vitality';
+        final newStreak = (habitRow.currentStreak - 1).clamp(0, 99999);
+        final newMomentum =
+            (habitRow.momentumScore - 10).clamp(0, 100);
+        // Restore lastCompletedDate to the day before today (so re-completing
+        // today is counted as a fresh streak day).
+        final prevDate = startOfDay.subtract(const Duration(days: 1));
+        final newTotalXp = (statsRow.totalXp - xpToUndo).clamp(0, 1 << 30);
+        final newLevel = _engine.computeLevel(newTotalXp);
+        final newWorldHealth = (statsRow.worldHealthScore -
+                LocalGameLoopEngine.completionWorldHealthDelta)
+            .clamp(0.0, 1.0);
+
+        await _db.transaction(() async {
+          for (final c in todaysForHabit) {
+            await _db.habitCompletionsDao.deleteById(c.id);
+          }
+          await _db.habitsDao.updateStreak(
+            habitId,
+            newStreak,
+            habitRow.longestStreak,
+            prevDate.toIso8601String(),
+          );
+          await _db.habitsDao.updateMomentum(habitId, newMomentum,
+              habitRow.consecutiveMisses);
+          await _db.userStatsDao.updateAttributeXp(
+            statsRow.userId,
+            attr,
+            -xpToUndo,
+            newLevel,
+            newTotalXp,
+          );
+          await _db.userStatsDao.updateStreak(statsRow.userId, newStreak);
+          await _db.userStatsDao.updateWorldHealth(
+            statsRow.userId,
+            newWorldHealth,
+          );
+
+          // Sync deletion to Firestore (undo the completion record).
+          for (final c in todaysForHabit) {
+            await _syncEngine.enqueueMutation(
+              collectionPath: 'users/${statsRow.userId}/habit_completions',
+              documentId: c.id,
+              operation: 'delete',
+            );
+          }
+
+          if (activeTribeId != null) {
+            await _syncEngine.enqueueUpdate(
+              collectionPath: 'tribes',
+              documentId: activeTribeId,
+              data: {
+                'totalXp': {'__type__': 'increment', 'value': -xpToUndo},
+                'totalHabitsCompleted': {
+                  '__type__': 'increment',
+                  'value': -1
+                },
+                'lastStatsSync': {'__type__': 'serverTimestamp'},
+              },
+            );
+            await _syncEngine.enqueueUpdate(
+              collectionPath: 'tribes/$activeTribeId/contributors',
+              documentId: statsRow.userId,
+              data: {
+                'totalXpContributed': {
+                  '__type__': 'increment',
+                  'value': -xpToUndo
+                },
+                'totalHabitsCompleted': {
+                  '__type__': 'increment',
+                  'value': -1
+                },
+                'contributionCount': {'__type__': 'increment', 'value': -1},
+                'lastActivity': DateTime.now().toIso8601String(),
+              },
+            );
+          }
+        });
+
         return const Right(false);
       }
 

@@ -67,8 +67,19 @@ class DriftTribeRepository implements TribeRepository {
         final tribeName = (remote?['name'] as String?)?.isNotEmpty == true
             ? remote!['name'] as String
             : row.tribeName ?? '';
-        final description = remote?['description'] as String? ?? '';
-        final imageUrl = remote?['imageUrl'] as String? ?? '';
+        final description = remote?['description'] as String? ??
+            (OfficialClubsSeed.getOfficialClubsMap()[row.tribeId]?['description']
+                    as String? ??
+                '');
+        // Distinct per-tribe image: remote first, then the seed catalog
+        // (each seeded club carries its own Unsplash image).
+        final seedImage = OfficialClubsSeed
+            .getOfficialClubsMap()[row.tribeId]?['imageUrl'] as String?;
+        final remoteImage = remote?['imageUrl'] as String?;
+        final imageUrl = (remoteImage != null && remoteImage.isNotEmpty)
+            ? remoteImage
+            : (seedImage ?? '');
+        final members = List<String>.from(remote?['members'] ?? const []);
 
         return Tribe(
           id: row.tribeId,
@@ -83,6 +94,7 @@ class DriftTribeRepository implements TribeRepository {
           memberCount: memberCount,
           archetypeId: row.archetypeId,
           isVerified: remote?['isVerified'] as bool? ?? false,
+          members: members,
           totalHabitsCompleted: totalHabits,
           totalChallengesCompleted: totalChallenges,
         );
@@ -404,11 +416,14 @@ class DriftTribeRepository implements TribeRepository {
       },
     );
 
-    // Path C: Tribe master document (atomic members and count)
-    await _syncEngine.enqueueUpdate(
+    // Path C: Tribe master document (atomic members and count).
+    // Use a merge-set: `update` fails if the tribe doc doesn't exist
+    // remotely yet (locally-seeded clubs), dead-lettering the mutation.
+    await _syncEngine.enqueueSet(
       collectionPath: 'tribes',
       documentId: tribeId,
       data: {
+        'type': TribeType.official.name,
         'members': {
           '__type__': 'arrayUnion',
           'values': [userId],
@@ -433,8 +448,9 @@ class DriftTribeRepository implements TribeRepository {
       operation: 'delete',
     );
 
-    // Path B: Update Tribe master document (atomic remove and decrement)
-    await _syncEngine.enqueueUpdate(
+    // Path B: Update Tribe master document (atomic remove and decrement).
+    // Merge-set for the same reason as joinClub Path C.
+    await _syncEngine.enqueueSet(
       collectionPath: 'tribes',
       documentId: tribeId,
       data: {
@@ -480,11 +496,20 @@ class DriftTribeRepository implements TribeRepository {
   }
 
   Tribe _rowToTribe(TribeStatsTableData row) {
+    // Surface the seed catalog's per-club imagery/description so the Drift
+    // path matches the Firestore/All-Tribes path (previously _rowToTribe
+    // dropped imageUrl/description to '', causing the onboarding vs
+    // All-Tribes club-image mismatch).
+    final seed = OfficialClubsSeed.getOfficialClubsMap()[row.tribeId];
+    final seedImage = seed?['imageUrl'] as String?;
+    final seedDescription = seed?['description'] as String?;
     return Tribe(
       id: row.tribeId,
       name: row.tribeName ?? '',
-      description: '',
-      imageUrl: '',
+      description: (seedDescription != null && seedDescription.isNotEmpty)
+          ? seedDescription
+          : '',
+      imageUrl: (seedImage != null && seedImage.isNotEmpty) ? seedImage : '',
       ownerId: '',
       tags: const [],
       levelRequirement: 0,
