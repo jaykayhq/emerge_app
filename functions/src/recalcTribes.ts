@@ -38,14 +38,40 @@ export async function recalcTribesInternal(db: admin.firestore.Firestore): Promi
           const clubId = clubMap[archetype.toLowerCase()];
           if (clubId) {
             userToTribeMap.set(doc.id, clubId);
-            const members = tribeMembers.get(clubId);
-            if (members) members.push(doc.id);
           }
         }
       })
       .on("end", resolve)
       .on("error", reject);
   });
+
+  // 1b. Query explicit tribe membership records from users/{uid}/tribes subcollections
+  const userMembershipMap = new Map<string, { tribeId: string }>();
+
+  console.log("Querying explicit tribe membership records...");
+  await new Promise((resolve, reject) => {
+    db.collectionGroup("tribes")
+      .stream()
+      .on("data", (doc: admin.firestore.QueryDocumentSnapshot) => {
+        const ref = doc.ref.path;
+        const parts = ref.split("/");
+        if (parts.length === 4 && parts[0] === "users" && parts[2] === "tribes") {
+          const uid = parts[1];
+          const tribeId = parts[3];
+          userMembershipMap.set(uid, { tribeId });
+        }
+      })
+      .on("end", resolve)
+      .on("error", reject);
+  });
+
+  // 1c. Populate tribeMembers respecting explicit membership over archetype
+  for (const [uid, archetype] of userToTribeMap.entries()) {
+    const membership = userMembershipMap.get(uid);
+    const clubId = membership ? membership.tribeId : archetype;
+    const members = tribeMembers.get(clubId);
+    if (members) members.push(uid);
+  }
 
   // 2. Aggregate XP from user_stats using stream
   const tribeXp = new Map<string, number>();
