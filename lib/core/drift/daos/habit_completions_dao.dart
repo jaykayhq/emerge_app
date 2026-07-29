@@ -75,6 +75,16 @@ class HabitCompletionsDao extends DatabaseAccessor<AppDatabase>
         .get();
   }
 
+  Future<HabitCompletionsTableData?> getLastCompletion(String userId) async {
+    return (select(habitCompletionsTable)
+      ..where((t) => t.userId.equals(userId))
+      ..orderBy(
+        [(t) => OrderingTerm(expression: t.completedAt, mode: OrderingMode.desc)],
+      )
+      ..limit(1))
+        .getSingleOrNull();
+  }
+
   /// Cascade-delete local completions for a habit.
   Future<int> deleteByHabitId(String habitId) =>
       (delete(habitCompletionsTable)
