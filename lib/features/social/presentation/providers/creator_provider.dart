@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:emerge_app/features/social/data/repositories/creator_repository.dart';
 import 'package:emerge_app/features/social/domain/entities/creator_profile.dart';
+import 'package:emerge_app/features/social/presentation/providers/tribes_provider.dart';
 
 final creatorRepositoryProvider = Provider<CreatorRepository>((ref) {
   return CreatorRepository();
@@ -31,3 +32,15 @@ final verifiedCreatorsStreamProvider =
       final repo = ref.watch(creatorRepositoryProvider);
       return repo.watchVerifiedCreators();
     });
+
+/// Verified creators scoped to the user's active tribe.
+final tribeCreatorsProvider = StreamProvider<List<CreatorProfile>>((ref) {
+  final membership = ref.watch(activeMembershipProvider).value;
+  final repo = ref.watch(creatorRepositoryProvider);
+  if (membership == null) return Stream.value([]);
+  return repo.watchVerifiedCreators().map((creators) {
+    return creators.where((c) =>
+      c.tribeId == null || c.tribeId == membership.tribeId,
+    ).toList();
+  });
+});

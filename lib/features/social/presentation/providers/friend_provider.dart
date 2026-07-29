@@ -53,3 +53,15 @@ final userOnlineStatusProvider = StreamProvider.autoDispose
 
 // Legacy alias
 final friendsListProvider = partnersListProvider;
+
+/// Partners scoped to the user's active tribe membership.
+///
+/// Emits the full partners list when the user has an active tribe,
+/// or an empty list when there is no active membership.
+final tribeCircleProvider = StreamProvider<List<Friend>>((ref) {
+  final userId = ref.watch(authStateChangesProvider).value?.id;
+  final membership = ref.watch(activeMembershipProvider).value;
+  if (membership == null || userId == null) return Stream.value([]);
+  final repository = ref.watch(friendRepositoryProvider);
+  return repository.watchFriends(userId);
+});

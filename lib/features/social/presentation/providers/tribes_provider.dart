@@ -317,6 +317,17 @@ final worldLeaderboardProvider =
       return controller.stream;
     });
 
+/// The user's active tribe membership from local Drift storage.
+///
+/// Emits `null` when the user has no active tribe or is signed out.
+final activeMembershipProvider = StreamProvider<UserTribeTableData?>((ref) {
+  final authState = ref.watch(authStateChangesProvider);
+  final userId = authState.value?.id;
+  if (userId == null || userId.isEmpty) return Stream.value(null);
+  final dao = ref.watch(tribeMembershipDaoProvider);
+  return dao.watchActiveMembership(userId);
+});
+
 /// Whether the signed-in user belongs to any club.
 ///
 /// Reactive stream from Drift [TribeMembershipDao.watchActiveMembership].

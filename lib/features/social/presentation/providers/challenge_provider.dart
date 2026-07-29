@@ -6,6 +6,7 @@ import 'package:emerge_app/features/gamification/presentation/providers/user_sta
 import 'package:emerge_app/features/social/domain/models/challenge.dart';
 import 'package:emerge_app/features/social/domain/models/challenge_catalog.dart';
 import 'package:emerge_app/features/social/domain/repositories/challenge_repository.dart';
+import 'package:emerge_app/features/social/presentation/providers/tribes_provider.dart';
 import 'package:emerge_app/core/sync/sync_providers.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
@@ -91,3 +92,24 @@ final filteredChallengesProvider =
         return userChallenges.where((c) => c.status == status).toList();
       }
     });
+
+/// Challenges scoped to the user's active tribe by archetype matching.
+final tribeChallengesProvider = StreamProvider<List<Challenge>>((ref) {
+  final membership = ref.watch(activeMembershipProvider).value;
+  if (membership == null) return Stream.value([]);
+  final clubs = ref.watch(allArchetypeClubsProvider).value ?? [];
+  final tribe = clubs.where((t) => t.id == membership.tribeId).firstOrNull;
+  final archetypeId = tribe?.archetypeId;
+  final challengesAsync = ref.watch(allChallengesProvider);
+  return challengesAsync.when(
+    data: (challenges) => Stream.value(
+      challenges.where((c) =>
+        archetypeId == null ||
+        c.archetypeId == null ||
+        c.archetypeId == archetypeId,
+      ).toList(),
+    ),
+    loading: () => Stream.value([]),
+    error: (_, _) => Stream.value([]),
+  );
+});
