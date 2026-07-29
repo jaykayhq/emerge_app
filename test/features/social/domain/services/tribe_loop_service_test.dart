@@ -41,6 +41,7 @@ void main() {
     service = TribeLoopService(
       socialActivity: mockSocial,
       streakWatchdog: mockWatchdog,
+      driftSyncer: null,
     );
   });
 

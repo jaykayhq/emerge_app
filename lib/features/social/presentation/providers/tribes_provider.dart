@@ -11,6 +11,7 @@ import 'package:emerge_app/features/social/data/repositories/tribe_repository.da
 import 'package:emerge_app/features/social/domain/models/tribe.dart';
 import 'package:emerge_app/features/auth/presentation/providers/auth_providers.dart';
 import 'package:emerge_app/features/social/domain/services/club_activity_service.dart';
+import 'package:emerge_app/features/social/domain/services/firestore_drift_syncer.dart';
 import 'package:emerge_app/features/social/domain/services/streak_watchdog.dart';
 import 'package:emerge_app/features/social/domain/services/tribe_loop_service.dart';
 import 'package:emerge_app/features/social/presentation/providers/leaderboard_provider.dart';
@@ -421,6 +422,14 @@ class TribeStats {
 }
 
 final tribeLoopServiceProvider = Provider<TribeLoopService>((ref) {
+  final firestore = FirebaseFirestore.instance;
+  final leaderboardDao = ref.read(leaderboardEntriesDaoProvider);
+  final tribeStatsDao = ref.read(tribeStatsDaoProvider);
+  final syncer = FirestoreDriftSyncer(
+    firestore: firestore,
+    leaderboardDao: leaderboardDao,
+    tribeStatsDao: tribeStatsDao,
+  );
   final socialActivity = ref.read(socialActivityServiceProvider);
   final friendRepo = ref.read(friendRepositoryProvider);
   final dao = ref.read(habitCompletionsDaoProvider);
@@ -433,7 +442,18 @@ final tribeLoopServiceProvider = Provider<TribeLoopService>((ref) {
   final service = TribeLoopService(
     socialActivity: socialActivity,
     streakWatchdog: watchdog,
+    driftSyncer: syncer,
   );
+
+  ref.listen(activeMembershipProvider, (prev, next) {
+    final membership = next.asData?.value;
+    if (membership != null) {
+      service.startDriftSync(membership.tribeId);
+    } else {
+      service.stopDriftSync();
+    }
+  });
+
   ref.onDispose(() => service.dispose());
   return service;
 });
