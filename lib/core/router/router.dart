@@ -77,9 +77,10 @@ class RedirectContext {
   final DateTime? userOnboardingCompletedAt;
   final CreatorOnboardingState? creatorOnboarding; // null = not a creator
 
-  /// Whether the one-time post-sign-up endowment interstitial has been shown.
+  /// Whether the one-time pre-auth endowment interstitial has been shown.
   /// Defaults to `true` so existing call sites/tests keep their behaviour;
   /// production passes the real SharedPreferences flag.
+  /// TODO: Remove this field — endowment is no longer gated in decideRedirect.
   final bool hasSeenEndowment;
 
   const RedirectContext({
@@ -329,8 +330,8 @@ GoRouter router(Ref ref) {
         path: '/welcome',
         builder: (context, state) => const WelcomeScreen(),
       ),
-      // Endowment interstitial — first onboarding step shown once after
-      // sign-up, before archetype selection.
+      // Endowment interstitial — pre-auth "Future You" preview shown before
+      // sign-up, on the welcome screen path.
       GoRoute(
         path: '/onboarding/endowment',
         builder: (context, state) => const EndowmentInterstitialScreen(),

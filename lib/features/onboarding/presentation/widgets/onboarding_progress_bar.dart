@@ -53,10 +53,13 @@ class _AnimatedOnboardingProgressBarState
 
   @override
   Widget build(BuildContext context) {
-    final showRemaining = widget.targetProgress >= 0.5;
-    final percentageText = showRemaining
-        ? '${((1 - widget.targetProgress) * 100).round()}% to go'
-        : '${(widget.targetProgress * 100).round()}%';
+    final isComplete = widget.targetProgress >= 1.0;
+    final showRemaining = !isComplete && widget.targetProgress >= 0.5;
+    final percentageText = isComplete
+        ? '100%'
+        : showRemaining
+            ? '${((1 - widget.targetProgress) * 100).round()}% to go'
+            : '${(widget.targetProgress * 100).round()}%';
     final barColor = widget.accentColor ?? Colors.cyanAccent;
 
     return Padding(

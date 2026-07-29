@@ -47,4 +47,15 @@ void main() {
     expect(find.text('40%'), findsNothing);
     expect(find.text('40% to go'), findsOneWidget);
   });
+
+  testWidgets('shows 100% at completion, not 0% to go', (tester) async {
+    await tester.pumpWidget(MaterialApp(
+      home: AnimatedOnboardingProgressBar(
+        targetProgress: 1.0,
+        label: 'Ready to emerge.',
+      ),
+    ));
+    expect(find.text('100%'), findsOneWidget);
+    expect(find.text('0% to go'), findsNothing);
+  });
 }
