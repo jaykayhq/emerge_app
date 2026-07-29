@@ -75,3 +75,8 @@ NarratorNotesDao narratorNotesDao(Ref ref) {
 PulseFeedDao pulseFeedDao(Ref ref) {
   return ref.watch(appDatabaseProvider).pulseFeedDao;
 }
+
+@Riverpod(keepAlive: true)
+TribeMembershipDao tribeMembershipDao(Ref ref) {
+  return ref.watch(appDatabaseProvider).tribeMembershipDao;
+}

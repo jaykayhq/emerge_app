@@ -9018,6 +9018,433 @@ class HabitReflectionsTableCompanion
   }
 }
 
+class $UserTribeTableTable extends UserTribeTable
+    with TableInfo<$UserTribeTableTable, UserTribeTableData> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $UserTribeTableTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _userIdMeta = const VerificationMeta('userId');
+  @override
+  late final GeneratedColumn<String> userId = GeneratedColumn<String>(
+    'user_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _tribeIdMeta = const VerificationMeta(
+    'tribeId',
+  );
+  @override
+  late final GeneratedColumn<String> tribeId = GeneratedColumn<String>(
+    'tribe_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _membershipTypeMeta = const VerificationMeta(
+    'membershipType',
+  );
+  @override
+  late final GeneratedColumn<String> membershipType = GeneratedColumn<String>(
+    'membership_type',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _joinedAtMeta = const VerificationMeta(
+    'joinedAt',
+  );
+  @override
+  late final GeneratedColumn<String> joinedAt = GeneratedColumn<String>(
+    'joined_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _isActiveMeta = const VerificationMeta(
+    'isActive',
+  );
+  @override
+  late final GeneratedColumn<bool> isActive = GeneratedColumn<bool>(
+    'is_active',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("is_active" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _syncedAtMeta = const VerificationMeta(
+    'syncedAt',
+  );
+  @override
+  late final GeneratedColumn<String> syncedAt = GeneratedColumn<String>(
+    'synced_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    userId,
+    tribeId,
+    membershipType,
+    joinedAt,
+    isActive,
+    syncedAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'user_tribe_table';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<UserTribeTableData> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('user_id')) {
+      context.handle(
+        _userIdMeta,
+        userId.isAcceptableOrUnknown(data['user_id']!, _userIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_userIdMeta);
+    }
+    if (data.containsKey('tribe_id')) {
+      context.handle(
+        _tribeIdMeta,
+        tribeId.isAcceptableOrUnknown(data['tribe_id']!, _tribeIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_tribeIdMeta);
+    }
+    if (data.containsKey('membership_type')) {
+      context.handle(
+        _membershipTypeMeta,
+        membershipType.isAcceptableOrUnknown(
+          data['membership_type']!,
+          _membershipTypeMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_membershipTypeMeta);
+    }
+    if (data.containsKey('joined_at')) {
+      context.handle(
+        _joinedAtMeta,
+        joinedAt.isAcceptableOrUnknown(data['joined_at']!, _joinedAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_joinedAtMeta);
+    }
+    if (data.containsKey('is_active')) {
+      context.handle(
+        _isActiveMeta,
+        isActive.isAcceptableOrUnknown(data['is_active']!, _isActiveMeta),
+      );
+    }
+    if (data.containsKey('synced_at')) {
+      context.handle(
+        _syncedAtMeta,
+        syncedAt.isAcceptableOrUnknown(data['synced_at']!, _syncedAtMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {userId, tribeId};
+  @override
+  UserTribeTableData map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return UserTribeTableData(
+      userId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}user_id'],
+      )!,
+      tribeId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}tribe_id'],
+      )!,
+      membershipType: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}membership_type'],
+      )!,
+      joinedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}joined_at'],
+      )!,
+      isActive: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}is_active'],
+      )!,
+      syncedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}synced_at'],
+      ),
+    );
+  }
+
+  @override
+  $UserTribeTableTable createAlias(String alias) {
+    return $UserTribeTableTable(attachedDatabase, alias);
+  }
+}
+
+class UserTribeTableData extends DataClass
+    implements Insertable<UserTribeTableData> {
+  final String userId;
+  final String tribeId;
+  final String membershipType;
+  final String joinedAt;
+  final bool isActive;
+  final String? syncedAt;
+  const UserTribeTableData({
+    required this.userId,
+    required this.tribeId,
+    required this.membershipType,
+    required this.joinedAt,
+    required this.isActive,
+    this.syncedAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['user_id'] = Variable<String>(userId);
+    map['tribe_id'] = Variable<String>(tribeId);
+    map['membership_type'] = Variable<String>(membershipType);
+    map['joined_at'] = Variable<String>(joinedAt);
+    map['is_active'] = Variable<bool>(isActive);
+    if (!nullToAbsent || syncedAt != null) {
+      map['synced_at'] = Variable<String>(syncedAt);
+    }
+    return map;
+  }
+
+  UserTribeTableCompanion toCompanion(bool nullToAbsent) {
+    return UserTribeTableCompanion(
+      userId: Value(userId),
+      tribeId: Value(tribeId),
+      membershipType: Value(membershipType),
+      joinedAt: Value(joinedAt),
+      isActive: Value(isActive),
+      syncedAt: syncedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(syncedAt),
+    );
+  }
+
+  factory UserTribeTableData.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return UserTribeTableData(
+      userId: serializer.fromJson<String>(json['userId']),
+      tribeId: serializer.fromJson<String>(json['tribeId']),
+      membershipType: serializer.fromJson<String>(json['membershipType']),
+      joinedAt: serializer.fromJson<String>(json['joinedAt']),
+      isActive: serializer.fromJson<bool>(json['isActive']),
+      syncedAt: serializer.fromJson<String?>(json['syncedAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'userId': serializer.toJson<String>(userId),
+      'tribeId': serializer.toJson<String>(tribeId),
+      'membershipType': serializer.toJson<String>(membershipType),
+      'joinedAt': serializer.toJson<String>(joinedAt),
+      'isActive': serializer.toJson<bool>(isActive),
+      'syncedAt': serializer.toJson<String?>(syncedAt),
+    };
+  }
+
+  UserTribeTableData copyWith({
+    String? userId,
+    String? tribeId,
+    String? membershipType,
+    String? joinedAt,
+    bool? isActive,
+    Value<String?> syncedAt = const Value.absent(),
+  }) => UserTribeTableData(
+    userId: userId ?? this.userId,
+    tribeId: tribeId ?? this.tribeId,
+    membershipType: membershipType ?? this.membershipType,
+    joinedAt: joinedAt ?? this.joinedAt,
+    isActive: isActive ?? this.isActive,
+    syncedAt: syncedAt.present ? syncedAt.value : this.syncedAt,
+  );
+  UserTribeTableData copyWithCompanion(UserTribeTableCompanion data) {
+    return UserTribeTableData(
+      userId: data.userId.present ? data.userId.value : this.userId,
+      tribeId: data.tribeId.present ? data.tribeId.value : this.tribeId,
+      membershipType: data.membershipType.present
+          ? data.membershipType.value
+          : this.membershipType,
+      joinedAt: data.joinedAt.present ? data.joinedAt.value : this.joinedAt,
+      isActive: data.isActive.present ? data.isActive.value : this.isActive,
+      syncedAt: data.syncedAt.present ? data.syncedAt.value : this.syncedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('UserTribeTableData(')
+          ..write('userId: $userId, ')
+          ..write('tribeId: $tribeId, ')
+          ..write('membershipType: $membershipType, ')
+          ..write('joinedAt: $joinedAt, ')
+          ..write('isActive: $isActive, ')
+          ..write('syncedAt: $syncedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    userId,
+    tribeId,
+    membershipType,
+    joinedAt,
+    isActive,
+    syncedAt,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is UserTribeTableData &&
+          other.userId == this.userId &&
+          other.tribeId == this.tribeId &&
+          other.membershipType == this.membershipType &&
+          other.joinedAt == this.joinedAt &&
+          other.isActive == this.isActive &&
+          other.syncedAt == this.syncedAt);
+}
+
+class UserTribeTableCompanion extends UpdateCompanion<UserTribeTableData> {
+  final Value<String> userId;
+  final Value<String> tribeId;
+  final Value<String> membershipType;
+  final Value<String> joinedAt;
+  final Value<bool> isActive;
+  final Value<String?> syncedAt;
+  final Value<int> rowid;
+  const UserTribeTableCompanion({
+    this.userId = const Value.absent(),
+    this.tribeId = const Value.absent(),
+    this.membershipType = const Value.absent(),
+    this.joinedAt = const Value.absent(),
+    this.isActive = const Value.absent(),
+    this.syncedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  UserTribeTableCompanion.insert({
+    required String userId,
+    required String tribeId,
+    required String membershipType,
+    required String joinedAt,
+    this.isActive = const Value.absent(),
+    this.syncedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : userId = Value(userId),
+       tribeId = Value(tribeId),
+       membershipType = Value(membershipType),
+       joinedAt = Value(joinedAt);
+  static Insertable<UserTribeTableData> custom({
+    Expression<String>? userId,
+    Expression<String>? tribeId,
+    Expression<String>? membershipType,
+    Expression<String>? joinedAt,
+    Expression<bool>? isActive,
+    Expression<String>? syncedAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (userId != null) 'user_id': userId,
+      if (tribeId != null) 'tribe_id': tribeId,
+      if (membershipType != null) 'membership_type': membershipType,
+      if (joinedAt != null) 'joined_at': joinedAt,
+      if (isActive != null) 'is_active': isActive,
+      if (syncedAt != null) 'synced_at': syncedAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  UserTribeTableCompanion copyWith({
+    Value<String>? userId,
+    Value<String>? tribeId,
+    Value<String>? membershipType,
+    Value<String>? joinedAt,
+    Value<bool>? isActive,
+    Value<String?>? syncedAt,
+    Value<int>? rowid,
+  }) {
+    return UserTribeTableCompanion(
+      userId: userId ?? this.userId,
+      tribeId: tribeId ?? this.tribeId,
+      membershipType: membershipType ?? this.membershipType,
+      joinedAt: joinedAt ?? this.joinedAt,
+      isActive: isActive ?? this.isActive,
+      syncedAt: syncedAt ?? this.syncedAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (userId.present) {
+      map['user_id'] = Variable<String>(userId.value);
+    }
+    if (tribeId.present) {
+      map['tribe_id'] = Variable<String>(tribeId.value);
+    }
+    if (membershipType.present) {
+      map['membership_type'] = Variable<String>(membershipType.value);
+    }
+    if (joinedAt.present) {
+      map['joined_at'] = Variable<String>(joinedAt.value);
+    }
+    if (isActive.present) {
+      map['is_active'] = Variable<bool>(isActive.value);
+    }
+    if (syncedAt.present) {
+      map['synced_at'] = Variable<String>(syncedAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('UserTribeTableCompanion(')
+          ..write('userId: $userId, ')
+          ..write('tribeId: $tribeId, ')
+          ..write('membershipType: $membershipType, ')
+          ..write('joinedAt: $joinedAt, ')
+          ..write('isActive: $isActive, ')
+          ..write('syncedAt: $syncedAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
@@ -9044,6 +9471,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
       $DailyReflectionsTableTable(this);
   late final $HabitReflectionsTableTable habitReflectionsTable =
       $HabitReflectionsTableTable(this);
+  late final $UserTribeTableTable userTribeTable = $UserTribeTableTable(this);
   late final UserStatsDao userStatsDao = UserStatsDao(this as AppDatabase);
   late final HabitsDao habitsDao = HabitsDao(this as AppDatabase);
   late final HabitCompletionsDao habitCompletionsDao = HabitCompletionsDao(
@@ -9071,6 +9499,9 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final HabitReflectionsDao habitReflectionsDao = HabitReflectionsDao(
     this as AppDatabase,
   );
+  late final TribeMembershipDao tribeMembershipDao = TribeMembershipDao(
+    this as AppDatabase,
+  );
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -9088,6 +9519,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     pulseFeedCardsTable,
     dailyReflectionsTable,
     habitReflectionsTable,
+    userTribeTable,
   ];
 }
 
@@ -13471,6 +13903,233 @@ typedef $$HabitReflectionsTableTableProcessedTableManager =
       HabitReflectionsTableData,
       PrefetchHooks Function()
     >;
+typedef $$UserTribeTableTableCreateCompanionBuilder =
+    UserTribeTableCompanion Function({
+      required String userId,
+      required String tribeId,
+      required String membershipType,
+      required String joinedAt,
+      Value<bool> isActive,
+      Value<String?> syncedAt,
+      Value<int> rowid,
+    });
+typedef $$UserTribeTableTableUpdateCompanionBuilder =
+    UserTribeTableCompanion Function({
+      Value<String> userId,
+      Value<String> tribeId,
+      Value<String> membershipType,
+      Value<String> joinedAt,
+      Value<bool> isActive,
+      Value<String?> syncedAt,
+      Value<int> rowid,
+    });
+
+class $$UserTribeTableTableFilterComposer
+    extends Composer<_$AppDatabase, $UserTribeTableTable> {
+  $$UserTribeTableTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get userId => $composableBuilder(
+    column: $table.userId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get tribeId => $composableBuilder(
+    column: $table.tribeId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get membershipType => $composableBuilder(
+    column: $table.membershipType,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get joinedAt => $composableBuilder(
+    column: $table.joinedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get isActive => $composableBuilder(
+    column: $table.isActive,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get syncedAt => $composableBuilder(
+    column: $table.syncedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$UserTribeTableTableOrderingComposer
+    extends Composer<_$AppDatabase, $UserTribeTableTable> {
+  $$UserTribeTableTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get userId => $composableBuilder(
+    column: $table.userId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get tribeId => $composableBuilder(
+    column: $table.tribeId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get membershipType => $composableBuilder(
+    column: $table.membershipType,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get joinedAt => $composableBuilder(
+    column: $table.joinedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get isActive => $composableBuilder(
+    column: $table.isActive,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get syncedAt => $composableBuilder(
+    column: $table.syncedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$UserTribeTableTableAnnotationComposer
+    extends Composer<_$AppDatabase, $UserTribeTableTable> {
+  $$UserTribeTableTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get userId =>
+      $composableBuilder(column: $table.userId, builder: (column) => column);
+
+  GeneratedColumn<String> get tribeId =>
+      $composableBuilder(column: $table.tribeId, builder: (column) => column);
+
+  GeneratedColumn<String> get membershipType => $composableBuilder(
+    column: $table.membershipType,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get joinedAt =>
+      $composableBuilder(column: $table.joinedAt, builder: (column) => column);
+
+  GeneratedColumn<bool> get isActive =>
+      $composableBuilder(column: $table.isActive, builder: (column) => column);
+
+  GeneratedColumn<String> get syncedAt =>
+      $composableBuilder(column: $table.syncedAt, builder: (column) => column);
+}
+
+class $$UserTribeTableTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $UserTribeTableTable,
+          UserTribeTableData,
+          $$UserTribeTableTableFilterComposer,
+          $$UserTribeTableTableOrderingComposer,
+          $$UserTribeTableTableAnnotationComposer,
+          $$UserTribeTableTableCreateCompanionBuilder,
+          $$UserTribeTableTableUpdateCompanionBuilder,
+          (
+            UserTribeTableData,
+            BaseReferences<
+              _$AppDatabase,
+              $UserTribeTableTable,
+              UserTribeTableData
+            >,
+          ),
+          UserTribeTableData,
+          PrefetchHooks Function()
+        > {
+  $$UserTribeTableTableTableManager(
+    _$AppDatabase db,
+    $UserTribeTableTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$UserTribeTableTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$UserTribeTableTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$UserTribeTableTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> userId = const Value.absent(),
+                Value<String> tribeId = const Value.absent(),
+                Value<String> membershipType = const Value.absent(),
+                Value<String> joinedAt = const Value.absent(),
+                Value<bool> isActive = const Value.absent(),
+                Value<String?> syncedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => UserTribeTableCompanion(
+                userId: userId,
+                tribeId: tribeId,
+                membershipType: membershipType,
+                joinedAt: joinedAt,
+                isActive: isActive,
+                syncedAt: syncedAt,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String userId,
+                required String tribeId,
+                required String membershipType,
+                required String joinedAt,
+                Value<bool> isActive = const Value.absent(),
+                Value<String?> syncedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => UserTribeTableCompanion.insert(
+                userId: userId,
+                tribeId: tribeId,
+                membershipType: membershipType,
+                joinedAt: joinedAt,
+                isActive: isActive,
+                syncedAt: syncedAt,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$UserTribeTableTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $UserTribeTableTable,
+      UserTribeTableData,
+      $$UserTribeTableTableFilterComposer,
+      $$UserTribeTableTableOrderingComposer,
+      $$UserTribeTableTableAnnotationComposer,
+      $$UserTribeTableTableCreateCompanionBuilder,
+      $$UserTribeTableTableUpdateCompanionBuilder,
+      (
+        UserTribeTableData,
+        BaseReferences<_$AppDatabase, $UserTribeTableTable, UserTribeTableData>,
+      ),
+      UserTribeTableData,
+      PrefetchHooks Function()
+    >;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -13505,4 +14164,6 @@ class $AppDatabaseManager {
       $$DailyReflectionsTableTableTableManager(_db, _db.dailyReflectionsTable);
   $$HabitReflectionsTableTableTableManager get habitReflectionsTable =>
       $$HabitReflectionsTableTableTableManager(_db, _db.habitReflectionsTable);
+  $$UserTribeTableTableTableManager get userTribeTable =>
+      $$UserTribeTableTableTableManager(_db, _db.userTribeTable);
 }

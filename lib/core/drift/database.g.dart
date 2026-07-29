@@ -495,3 +495,51 @@ final class PulseFeedDaoProvider
 }
 
 String _$pulseFeedDaoHash() => r'599b0b77b9efba88f371665864f3d63462de60bd';
+
+@ProviderFor(tribeMembershipDao)
+final tribeMembershipDaoProvider = TribeMembershipDaoProvider._();
+
+final class TribeMembershipDaoProvider
+    extends
+        $FunctionalProvider<
+          TribeMembershipDao,
+          TribeMembershipDao,
+          TribeMembershipDao
+        >
+    with $Provider<TribeMembershipDao> {
+  TribeMembershipDaoProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'tribeMembershipDaoProvider',
+        isAutoDispose: false,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$tribeMembershipDaoHash();
+
+  @$internal
+  @override
+  $ProviderElement<TribeMembershipDao> $createElement(
+    $ProviderPointer pointer,
+  ) => $ProviderElement(pointer);
+
+  @override
+  TribeMembershipDao create(Ref ref) {
+    return tribeMembershipDao(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(TribeMembershipDao value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<TribeMembershipDao>(value),
+    );
+  }
+}
+
+String _$tribeMembershipDaoHash() =>
+    r'c91f1e74d43096b95060b6ada498cbfa199b840d';
