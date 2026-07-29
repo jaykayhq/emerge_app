@@ -159,13 +159,14 @@ class _FirstHabitsScreenState extends ConsumerState<FirstHabitsScreen> {
         child: SafeArea(
           child: Column(
             children: [
-              OnboardingProgressBar(
-                progress: 0.8,
+              AnimatedOnboardingProgressBar(
+                targetProgress: 0.8,
                 label: onboardingLabelFor(0.8),
+                accentColor: archetype != UserArchetype.none
+                    ? ArchetypeColors.all[archetype.name]?.accent
+                    : null,
               ),
               _Header(
-                stepIndex: 3,
-                totalSteps: 5,
                 onBack: () => context.pop(),
                 onSkip: _onSkip,
               ),
@@ -225,14 +226,10 @@ class _FirstHabitsScreenState extends ConsumerState<FirstHabitsScreen> {
 }
 
 class _Header extends StatelessWidget {
-  final int stepIndex;
-  final int totalSteps;
   final VoidCallback onBack;
   final VoidCallback onSkip;
 
   const _Header({
-    required this.stepIndex,
-    required this.totalSteps,
     required this.onBack,
     required this.onSkip,
   });
@@ -246,27 +243,6 @@ class _Header extends StatelessWidget {
           IconButton(
             icon: const Icon(Icons.arrow_back, color: Colors.white70),
             onPressed: onBack,
-          ),
-          const Spacer(),
-          Container(
-            padding: const EdgeInsets.symmetric(
-              horizontal: 12,
-              vertical: 6,
-            ),
-            decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.05),
-              borderRadius: BorderRadius.circular(20),
-              border: Border.all(color: Colors.white10),
-            ),
-            child: Text(
-              'STEP $stepIndex OF $totalSteps',
-              style: GoogleFonts.splineSans(
-                color: Colors.white54,
-                fontSize: 10,
-                letterSpacing: 1.5,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
           ),
           const Spacer(),
           TextButton(

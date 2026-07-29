@@ -55,11 +55,15 @@ class _ClubScreenState extends ConsumerState<ClubScreen> {
               .read(tribeRepositoryProvider)
               .joinClub(user.id, club.id);
         } catch (e, s) {
-          AppLogger.e(
-            'ClubScreen: joinClub failed (will retry on next launch)',
-            e,
-            s,
-          );
+          AppLogger.e('ClubScreen: joinClub failed', e, s);
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('Could not join ${club.name}. Retrying…'),
+                backgroundColor: Colors.redAccent,
+              ),
+            );
+          }
         }
       }
 
@@ -147,13 +151,14 @@ class _ClubScreenState extends ConsumerState<ClubScreen> {
         child: SafeArea(
           child: Column(
             children: [
-              OnboardingProgressBar(
-                progress: 0.6,
+              AnimatedOnboardingProgressBar(
+                targetProgress: 0.6,
                 label: onboardingLabelFor(0.6),
+                accentColor: archetype != UserArchetype.none
+                    ? ArchetypeColors.all[archetype.name]?.accent
+                    : null,
               ),
               _Header(
-                stepIndex: 2,
-                totalSteps: 5,
                 onBack: () => context.pop(),
                 onSkip: _onSkip,
               ),
@@ -305,14 +310,10 @@ final archetypeClubsProvider = FutureProvider<List<Tribe>>((ref) async {
 });
 
 class _Header extends StatelessWidget {
-  final int stepIndex;
-  final int totalSteps;
   final VoidCallback onBack;
   final VoidCallback onSkip;
 
   const _Header({
-    required this.stepIndex,
-    required this.totalSteps,
     required this.onBack,
     required this.onSkip,
   });
@@ -326,27 +327,6 @@ class _Header extends StatelessWidget {
           IconButton(
             icon: const Icon(Icons.arrow_back, color: Colors.white70),
             onPressed: onBack,
-          ),
-          const Spacer(),
-          Container(
-            padding: const EdgeInsets.symmetric(
-              horizontal: 12,
-              vertical: 6,
-            ),
-            decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.05),
-              borderRadius: BorderRadius.circular(20),
-              border: Border.all(color: Colors.white10),
-            ),
-            child: Text(
-              'STEP $stepIndex OF $totalSteps',
-              style: GoogleFonts.splineSans(
-                color: Colors.white54,
-                fontSize: 10,
-                letterSpacing: 1.5,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
           ),
           const Spacer(),
           TextButton(

@@ -37,8 +37,8 @@ class EndowmentInterstitialScreen extends ConsumerWidget {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                OnboardingProgressBar(
-                  progress: 0.2,
+                AnimatedOnboardingProgressBar(
+                  targetProgress: 0.2,
                   label: onboardingLabelFor(0.2),
                 ),
                 const Text('✨', style: TextStyle(fontSize: 48)),

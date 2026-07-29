@@ -228,9 +228,12 @@ class _IdentityStudioScreenState extends ConsumerState<IdentityStudioScreen> {
         child: SafeArea(
           child: Column(
             children: [
-              OnboardingProgressBar(
-                progress: 0.4,
+              AnimatedOnboardingProgressBar(
+                targetProgress: 0.4,
                 label: onboardingLabelFor(0.4),
+                accentColor: _selectedArchetype != null && _selectedArchetype != UserArchetype.none
+                    ? ArchetypeColors.all[_selectedArchetype!.name]?.accent
+                    : null,
               ),
               Expanded(
                 child: _buildArchetypeCarousel(),

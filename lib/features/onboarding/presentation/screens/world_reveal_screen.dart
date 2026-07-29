@@ -1,5 +1,7 @@
 import 'package:emerge_app/core/presentation/providers/social_preload_provider.dart';
+import 'package:emerge_app/core/theme/archetype_theme.dart';
 import 'package:emerge_app/core/utils/app_logger.dart';
+import 'package:emerge_app/features/auth/domain/entities/user_extension.dart';
 import 'package:emerge_app/features/onboarding/presentation/providers/onboarding_provider.dart';
 import 'package:emerge_app/features/onboarding/presentation/providers/onboarding_state_notifier.dart';
 import 'package:emerge_app/core/presentation/widgets/animated_flame_logo.dart';
@@ -170,9 +172,15 @@ class _WorldRevealScreenState extends ConsumerState<WorldRevealScreen>
         child: SafeArea(
           child: Column(
             children: [
-              OnboardingProgressBar(
-                progress: 1.0,
+              AnimatedOnboardingProgressBar(
+                targetProgress: 1.0,
                 label: onboardingLabelFor(1.0),
+                accentColor: (() {
+                  final a = ref.watch(selectedArchetypeProvider);
+                  return a != null && a != UserArchetype.none
+                      ? ArchetypeColors.all[a.name]?.accent
+                      : null;
+                })(),
               ),
               Expanded(
                 child: Stack(
