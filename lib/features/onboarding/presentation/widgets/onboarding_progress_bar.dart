@@ -1,21 +1,64 @@
 import 'package:flutter/material.dart';
 
-/// A compact progress indicator shown atop onboarding screens.
-///
-/// Displays the percentage, a [LinearProgressIndicator] tinted with
-/// [Colors.cyanAccent], and a milestone [label] below it.
-class OnboardingProgressBar extends StatelessWidget {
-  final double progress; // 0.0 - 1.0
+class AnimatedOnboardingProgressBar extends StatefulWidget {
+  final double targetProgress;
   final String label;
+  final Color? accentColor;
 
-  const OnboardingProgressBar({
+  const AnimatedOnboardingProgressBar({
     super.key,
-    required this.progress,
+    required this.targetProgress,
     required this.label,
+    this.accentColor,
   });
 
   @override
+  State<AnimatedOnboardingProgressBar> createState() =>
+      _AnimatedOnboardingProgressBarState();
+}
+
+class _AnimatedOnboardingProgressBarState
+    extends State<AnimatedOnboardingProgressBar>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _animation;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 300),
+    );
+    _animation = CurvedAnimation(
+      parent: _controller,
+      curve: Curves.easeInOut,
+    );
+    _controller.value = widget.targetProgress;
+  }
+
+  @override
+  void didUpdateWidget(AnimatedOnboardingProgressBar oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.targetProgress != widget.targetProgress) {
+      _controller.animateTo(widget.targetProgress);
+    }
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final showRemaining = widget.targetProgress >= 0.5;
+    final percentageText = showRemaining
+        ? '${((1 - widget.targetProgress) * 100).round()}% to go'
+        : '${(widget.targetProgress * 100).round()}%';
+    final barColor = widget.accentColor ?? Colors.cyanAccent;
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
       child: Column(
@@ -25,9 +68,9 @@ class OnboardingProgressBar extends StatelessWidget {
           Row(
             children: [
               Text(
-                '${(progress * 100).toInt()}%',
-                style: const TextStyle(
-                  color: Colors.cyanAccent,
+                percentageText,
+                style: TextStyle(
+                  color: barColor,
                   fontSize: 14,
                   fontWeight: FontWeight.bold,
                 ),
@@ -38,16 +81,19 @@ class OnboardingProgressBar extends StatelessWidget {
           const SizedBox(height: 4),
           ClipRRect(
             borderRadius: BorderRadius.circular(4),
-            child: LinearProgressIndicator(
-              value: progress,
-              backgroundColor: Colors.white.withValues(alpha: 0.1),
-              valueColor: const AlwaysStoppedAnimation<Color>(Colors.cyanAccent),
-              minHeight: 4,
+            child: AnimatedBuilder(
+              animation: _animation,
+              builder: (context, child) => LinearProgressIndicator(
+                value: _animation.value,
+                backgroundColor: Colors.white.withValues(alpha: 0.1),
+                valueColor: AlwaysStoppedAnimation<Color>(barColor),
+                minHeight: 4,
+              ),
             ),
           ),
           const SizedBox(height: 6),
           Text(
-            label,
+            widget.label,
             style: TextStyle(
               color: Colors.white.withValues(alpha: 0.5),
               fontSize: 12,
@@ -59,18 +105,14 @@ class OnboardingProgressBar extends StatelessWidget {
   }
 }
 
-/// Milestone label shown for each onboarding progress checkpoint.
-/// (Not `const`: Dart forbids const maps keyed by `double`.)
 final onboardingProgressLabels = {
   0.2: "You've begun. Now define yourself.",
   0.4: "Your archetype is set. What shapes you?",
-  0.6: "Good. Your interests give texture.",
-  0.8: "Almost forged. Choose your company.",
+  0.6: "40% to go. Your interests give texture.",
+  0.8: "20% to go. Almost forged. Choose your company.",
   1.0: "Ready to emerge.",
 };
 
-/// Returns the milestone label for [progress], picking the nearest
-/// checkpoint at or below the given value (defaults to the 0.2 label).
 String onboardingLabelFor(double progress) {
   final keys = onboardingProgressLabels.keys.toList()..sort();
   double best = keys.first;
