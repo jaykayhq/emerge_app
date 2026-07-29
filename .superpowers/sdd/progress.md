@@ -21,3 +21,5 @@ Task 7: complete (commit 7e47fd0..62d16ffb0107bdcd9bbe3e7ea3b67e92e636724d, 5 fi
 Task 8: complete (commit 62d16ff..ee50cfb4b46836926215192c94fa419e068e48ba, 49/49 tests pass, analysis clean)
 ---
 All 8 tasks complete. Proceeding to whole-branch review.
+Task 1: complete (commits eaa4759..28aa99e, review clean)
+Task 2: complete (commits e911b6e..130b5d7f184558565cc663ee2ebb092f3d640546, review clean, minor: unused import in test, unused tribeId param)
