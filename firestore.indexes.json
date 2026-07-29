@@ -637,17 +637,6 @@
         }
       ],
       "density": "SPARSE_ALL"
-    },
-    {
-      "collectionGroup": "club_leaderboards",
-      "queryScope": "COLLECTION",
-      "fields": [
-        {
-          "fieldPath": "tribeId",
-          "order": "ASCENDING"
-        }
-      ],
-      "density": "SPARSE_ALL"
     }
   ],
   "fieldOverrides": []
