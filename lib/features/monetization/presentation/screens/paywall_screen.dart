@@ -7,14 +7,11 @@ import 'package:gap/gap.dart';
 import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:purchases_flutter/purchases_flutter.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:emerge_app/features/monetization/presentation/screens/paystack_checkout_screen.dart';
 import 'package:emerge_app/features/monetization/presentation/widgets/premium_badge.dart';
 
 /// Redesigned paywall: "Go Beyond the 5" headline, hyperbolic-discounting
-/// framing ("less than a coffee per day"), gold shimmer CTA, animated cosmic
-/// background. Purchase wiring (RevenueCat packages, web Paystack, restore)
-/// is preserved via [paywallControllerProvider].
+/// framing, gold shimmer CTA, animated cosmic background.
+/// Web uses Paystack Payment Pages; native uses RevenueCat (Play Store / App Store).
 class PaywallScreen extends ConsumerStatefulWidget {
   const PaywallScreen({super.key});
 
@@ -134,12 +131,25 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen>
                         Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
+                            if (!kIsWeb)
+                              TextButton(
+                                onPressed: () => ref
+                                    .read(paywallControllerProvider.notifier)
+                                    .restorePurchases(),
+                                child: Text(
+                                  'Restore',
+                                  style: TextStyle(
+                                    color: Colors.white.withValues(alpha: 0.4),
+                                  ),
+                                ),
+                              ),
+                            if (!kIsWeb) const Gap(16),
                             TextButton(
-                              onPressed: () => ref
-                                  .read(paywallControllerProvider.notifier)
-                                  .restorePurchases(),
+                              onPressed: () => launchUrl(
+                                Uri.parse('https://docs.google.com/document/d/e/2PACX-1vRt5cCpFS7PLmh_nwhxq3ec9YtRWQZk7mrOqbVN7aThrclpjgYL3q5r-nAqlftQJVkOSWzxnG_FDfjo/pub'),
+                              ),
                               child: Text(
-                                'Restore',
+                                'Terms',
                                 style: TextStyle(
                                   color: Colors.white.withValues(alpha: 0.4),
                                 ),
@@ -148,10 +158,10 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen>
                             const Gap(16),
                             TextButton(
                               onPressed: () => launchUrl(
-                                Uri.parse('https://example.com/terms'),
+                                Uri.parse('https://docs.google.com/document/d/e/2PACX-1vQX-5ydyuD3ZYp_-8b_2rVyyuKW9zF2NaMm1CBxxwE5s1LXASy1P7Plxf8axNGc_TFJw-OnZrULmjgP/pub'),
                               ),
                               child: Text(
-                                'Terms & Privacy',
+                                'Privacy',
                                 style: TextStyle(
                                   color: Colors.white.withValues(alpha: 0.4),
                                 ),
@@ -172,11 +182,10 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen>
     );
   }
 
-  /// Chooses the correct purchase UI: web uses Paystack, native uses the
-  /// RevenueCat packages returned by the controller.
+  /// Routes to Paystack (web) or RevenueCat native packages (Android/iOS).
   Widget _buildPurchaseSection(PaywallState state, Offerings? offerings) {
     if (kIsWeb) {
-      return _buildWebPurchase();
+      return _buildPaystackPurchase();
     }
     if (state.isLoading && offerings == null) {
       return const Center(
@@ -185,8 +194,6 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen>
     }
     if (offerings != null && offerings.current != null) {
       final packages = offerings.current!.availablePackages;
-      // Only make the per-day ("coffee") framing when an actual annual package
-      // exists — showing it against a monthly price would be misleading.
       Package? annual;
       for (final p in packages) {
         if (p.packageType == PackageType.annual) {
@@ -238,28 +245,58 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen>
     );
   }
 
-  Widget _buildWebPurchase() {
-    return _GoldShimmerButton(
-      onPressed: () {
-        final email =
-            FirebaseAuth.instance.currentUser?.email ?? 'anonymous@emerge.com';
-        Navigator.of(context).push(
-          MaterialPageRoute<bool>(
-            builder: (_) => PaystackCheckoutScreen(
-              amount: 10.0,
-              email: email,
-              identityType: 'premium',
+  /// Paystack Payment Page URLs for web checkout.
+  /// These are pre-configured pages — no Cloud Function round-trip needed.
+  static const _monthlyPayUrl = 'https://paystack.shop/pay/y-6hxz3op4';
+  static const _yearlyPayUrl = 'https://paystack.shop/pay/wu6y8f7-di';
+
+  Widget _buildPaystackPurchase() {
+    return Column(
+      children: [
+        // Yearly — highlighted as best value
+        _GoldShimmerButton(
+          onPressed: () => _openPaystackPage(_yearlyPayUrl),
+          child: const _CtaLabel(price: 'Best Value — ₦15,000/yr'),
+        ),
+        const Gap(12),
+        // Monthly — secondary option
+        InkWell(
+          onTap: () => _openPaystackPage(_monthlyPayUrl),
+          borderRadius: BorderRadius.circular(16),
+          child: Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(vertical: 16),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(16),
+              color: Colors.white.withValues(alpha: 0.06),
+              border: Border.all(color: Colors.white24),
+            ),
+            child: const Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.calendar_month, color: Colors.white70, size: 18),
+                Gap(8),
+                Text(
+                  '₦2,500 / month',
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                    color: Colors.white,
+                  ),
+                ),
+              ],
             ),
           ),
-        ).then((success) {
-          if (!mounted) return;
-          if (success == true && context.canPop()) {
-            context.pop();
-          }
-        });
-      },
-      child: const _CtaLabel(price: '\$10.00 / mo'),
+        ),
+      ],
     );
+  }
+
+  Future<void> _openPaystackPage(String url) async {
+    final uri = Uri.parse(url);
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
+    }
   }
 
   Widget _buildCosmicBackground() {
@@ -372,7 +409,6 @@ class _PackageButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isAnnual = package.packageType == PackageType.annual;
-    // Highlight the best-value (annual) package with the gold shimmer CTA.
     if (isAnnual) {
       return _GoldShimmerButton(
         onPressed: isLoading ? () {} : onTap,

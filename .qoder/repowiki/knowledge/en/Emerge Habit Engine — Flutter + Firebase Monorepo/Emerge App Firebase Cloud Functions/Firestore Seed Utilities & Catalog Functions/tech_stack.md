@@ -1,0 +1,1 @@
+TypeScript with Firebase Admin SDK for Firestore writes and Firebase Functions v2 HTTPS triggers. Uses Firestore batched writes (`db.batch()`) and `admin.firestore.FieldValue.serverTimestamp()` for timestamps. Authentication relies on a shared `ADMIN_SECRET` environment variable validated from the `Authorization: Bearer` header.

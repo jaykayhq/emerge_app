@@ -1,0 +1,11 @@
+schema_version: 1
+module_path: scripts_and_tools
+title: Project Scripts, Asset Tools & Scratch Experiments
+scope:
+    - scripts/
+    - tools/
+    - scratch/
+source_files: []
+depends_on: []
+related_to:
+    - path: cloud_functions

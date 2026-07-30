@@ -21,6 +21,14 @@ jobs:
       - name: Install dependencies
         run: flutter pub get
 
+      - name: Run build_runner code generation
+        run: flutter pub run build_runner build --delete-conflicting-outputs
+
+      - name: Verify generated files are up to date
+        run: |
+          git diff --exit-code -- '*.g.dart' '*.freezed.dart' '*.mocks.dart' || \
+          (echo "::error::Generated files are stale. Run 'flutter pub run build_runner build --delete-conflicting-outputs' and commit the results." && exit 1)
+
       - name: Verify formatting
         run: dart format --output=none --set-exit-if-changed .
 

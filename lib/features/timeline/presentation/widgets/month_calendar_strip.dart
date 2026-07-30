@@ -1,17 +1,12 @@
-import 'package:emerge_app/core/theme/app_theme.dart';
-import 'package:emerge_app/core/theme/emerge_earthy_theme.dart';
 import 'package:emerge_app/core/presentation/widgets/emerge_semantics.dart';
-import 'package:emerge_app/core/theme/emerge_dimensions.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:emerge_app/core/theme/emerge_colors.dart';
 
 /// Completion status for a day
 enum DayCompletionStatus { none, partial, complete }
 
-/// Horizontal scrollable calendar strip showing the current month
-/// Highlights today and allows selecting a day to view its habits/progress
-/// Now includes completion dots below each day per Stitch design
+/// Horizontal scrollable calendar strip showing the current month.
+/// Each day is an individual glassmorphic card with teal accent colors.
 class MonthCalendarStrip extends StatefulWidget {
   final DateTime? selectedDate;
   final ValueChanged<DateTime>? onDateSelected;
@@ -59,7 +54,7 @@ class _MonthCalendarStripState extends State<MonthCalendarStrip> {
     final index = _monthDays.indexWhere((d) => _isSameDay(d, _selectedDate));
     if (index == -1) return;
 
-    const itemWidth = 64.0;
+    const itemWidth = 56.0; // card width + gap
     final screenWidth = MediaQuery.of(context).size.width;
     final scrollOffset =
         (index * itemWidth) - (screenWidth / 2) + (itemWidth / 2);
@@ -79,25 +74,21 @@ class _MonthCalendarStripState extends State<MonthCalendarStrip> {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      height: 110,
-      padding: const EdgeInsets.symmetric(vertical: 16),
-      decoration: BoxDecoration(
-        color: Colors.transparent,
-        border: Border(
-          bottom: BorderSide(
-            color: EmergeColors.hexLine.withValues(alpha: 0.3),
-            width: 1,
-          ),
-        ),
-      ),
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
       child: ListView.builder(
         controller: _scrollController,
         scrollDirection: Axis.horizontal,
         itemCount: _monthDays.length,
-        padding: const EdgeInsets.symmetric(horizontal: 8),
+        itemExtent: 56,
         itemBuilder: (context, index) {
-          return SizedBox(width: 64, child: _buildDayItem(_monthDays[index]));
+          return Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 4),
+            child: SizedBox(
+              width: 48,
+              child: _buildDayItem(_monthDays[index]),
+            ),
+          );
         },
       ),
     );
@@ -106,13 +97,15 @@ class _MonthCalendarStripState extends State<MonthCalendarStrip> {
   Widget _buildDayItem(DateTime date) {
     final isToday = _isToday(date);
     final isSelected = _isSameDay(date, _selectedDate);
-    // Get full day name and create short version (first 3 chars)
     final fullDayName = DateFormat('EEEE').format(date);
     final dayName = fullDayName.substring(0, 3);
     final dayNumber = date.day.toString();
     final monthName = DateFormat('MMM').format(date);
     final fullDateLabel =
         '$fullDayName, $monthName $dayNumber${isToday ? ' (Today)' : ''}';
+
+    // Teal accent color matching the HTML template
+    const teal = Color(0xFF34D4B8);
 
     return EmergeTappable(
       label: fullDateLabel,
@@ -124,26 +117,23 @@ class _MonthCalendarStripState extends State<MonthCalendarStrip> {
       },
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
-        height: 80,
-        margin: const EdgeInsets.symmetric(horizontal: 2),
-        padding: const EdgeInsets.symmetric(vertical: 8),
+        padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 6),
         decoration: BoxDecoration(
           color: isSelected
-              ? EmergeEarthyColors.terracotta
-              : isToday
-              ? EmergeEarthyColors.terracotta.withValues(alpha: 0.15)
-              : Colors.transparent,
-          borderRadius: BorderRadius.circular(12),
-          border: isToday && !isSelected
-              ? Border.all(
-                  color: EmergeEarthyColors.terracotta.withValues(alpha: 0.5),
-                )
-              : null,
-          // Glow effect for today
-          boxShadow: isToday
+              ? teal.withValues(alpha: 0.12)
+              : Colors.white.withValues(alpha: 0.06),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: isSelected
+                ? teal.withValues(alpha: 0.35)
+                : isToday
+                    ? Colors.white.withValues(alpha: 0.15)
+                    : Colors.white.withValues(alpha: 0.08),
+          ),
+          boxShadow: isToday && !isSelected
               ? [
                   BoxShadow(
-                    color: EmergeEarthyColors.terracotta.withValues(alpha: 0.3),
+                    color: teal.withValues(alpha: 0.15),
                     blurRadius: 8,
                     spreadRadius: -2,
                   ),
@@ -154,63 +144,105 @@ class _MonthCalendarStripState extends State<MonthCalendarStrip> {
           mainAxisSize: MainAxisSize.min,
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
+            // Day label
             Text(
               dayName,
               style: TextStyle(
-                color: isSelected ? Colors.white : AppTheme.textSecondaryDark,
-                fontSize: EmergeDimensions.minFontSize,
+                color: Colors.white.withValues(alpha: 0.4),
+                fontSize: 11,
                 fontWeight: FontWeight.w500,
               ),
             ),
-            const SizedBox(height: 4),
+            const SizedBox(height: 6),
+            // Day number
             Text(
               dayNumber,
               style: TextStyle(
                 color: isSelected
                     ? Colors.white
                     : isToday
-                    ? EmergeEarthyColors.terracotta
-                    : AppTheme.textMainDark,
+                        ? teal
+                        : Colors.white,
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
               ),
             ),
-            const SizedBox(height: 4),
-            // Completion indicator dot
-            _buildCompletionDot(date, isSelected),
+            const SizedBox(height: 8),
+            // Completion dot
+            _buildCompletionDot(date, isSelected, teal),
+            const SizedBox(height: 6),
+            // Percentage text
+            _buildPercentageText(date, isSelected, teal),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildCompletionDot(DateTime date, bool isSelected) {
+  Widget _buildCompletionDot(
+      DateTime date, bool isSelected, Color teal) {
     final dateKey =
         '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
     final status =
         widget.completionStatus?[dateKey] ?? DayCompletionStatus.none;
 
     if (status == DayCompletionStatus.none) {
-      return const SizedBox(height: 8);
+      return Container(
+        width: 6,
+        height: 6,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          color: Colors.white.withValues(alpha: 0.18),
+        ),
+      );
     }
 
-    final color = status == DayCompletionStatus.complete
-        ? (isSelected ? Colors.white : EmergeEarthyColors.terracotta)
-        : (isSelected ? Colors.white70 : EmergeEarthyColors.sienna);
+    final dotColor = status == DayCompletionStatus.complete
+        ? (isSelected ? Colors.white : teal)
+        : teal.withValues(alpha: 0.6);
 
     return Container(
-      width: 8,
-      height: 8,
+      width: 6,
+      height: 6,
       decoration: BoxDecoration(
         shape: BoxShape.circle,
-        color: color,
+        color: dotColor,
         boxShadow: [
           BoxShadow(
-            color: color.withValues(alpha: 0.5),
-            blurRadius: 4,
+            color: dotColor.withValues(alpha: 0.5),
+            blurRadius: 8,
             spreadRadius: 0,
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildPercentageText(
+      DateTime date, bool isSelected, Color teal) {
+    final dateKey =
+        '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
+    final status =
+        widget.completionStatus?[dateKey] ?? DayCompletionStatus.none;
+
+    String text;
+    switch (status) {
+      case DayCompletionStatus.none:
+        text = '--';
+      case DayCompletionStatus.partial:
+        text = '~50%';
+      case DayCompletionStatus.complete:
+        text = '100%';
+    }
+
+    return Text(
+      text,
+      style: TextStyle(
+        color: isSelected
+            ? teal.withValues(alpha: 0.85)
+            : Colors.white.withValues(alpha: 0.6),
+        fontSize: 11,
+        fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
       ),
     );
   }

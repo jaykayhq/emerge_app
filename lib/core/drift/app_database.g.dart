@@ -3266,6 +3266,18 @@ class $HabitCompletionsTableTable extends HabitCompletionsTable
     requiredDuringInsert: false,
     defaultValue: const Constant(0),
   );
+  static const VerificationMeta _challengeXpMeta = const VerificationMeta(
+    'challengeXp',
+  );
+  @override
+  late final GeneratedColumn<int> challengeXp = GeneratedColumn<int>(
+    'challenge_xp',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
   static const VerificationMeta _syncedAtMeta = const VerificationMeta(
     'syncedAt',
   );
@@ -3288,6 +3300,7 @@ class $HabitCompletionsTableTable extends HabitCompletionsTable
     momentumAtCompletion,
     streakDay,
     wasRecovery,
+    challengeXp,
     syncedAt,
   ];
   @override
@@ -3370,6 +3383,15 @@ class $HabitCompletionsTableTable extends HabitCompletionsTable
         ),
       );
     }
+    if (data.containsKey('challenge_xp')) {
+      context.handle(
+        _challengeXpMeta,
+        challengeXp.isAcceptableOrUnknown(
+          data['challenge_xp']!,
+          _challengeXpMeta,
+        ),
+      );
+    }
     if (data.containsKey('synced_at')) {
       context.handle(
         _syncedAtMeta,
@@ -3424,6 +3446,10 @@ class $HabitCompletionsTableTable extends HabitCompletionsTable
         DriftSqlType.int,
         data['${effectivePrefix}was_recovery'],
       )!,
+      challengeXp: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}challenge_xp'],
+      )!,
       syncedAt: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}synced_at'],
@@ -3448,6 +3474,7 @@ class HabitCompletionsTableData extends DataClass
   final int? momentumAtCompletion;
   final int streakDay;
   final int wasRecovery;
+  final int challengeXp;
   final String? syncedAt;
   const HabitCompletionsTableData({
     required this.id,
@@ -3459,6 +3486,7 @@ class HabitCompletionsTableData extends DataClass
     this.momentumAtCompletion,
     required this.streakDay,
     required this.wasRecovery,
+    required this.challengeXp,
     this.syncedAt,
   });
   @override
@@ -3477,6 +3505,7 @@ class HabitCompletionsTableData extends DataClass
     }
     map['streak_day'] = Variable<int>(streakDay);
     map['was_recovery'] = Variable<int>(wasRecovery);
+    map['challenge_xp'] = Variable<int>(challengeXp);
     if (!nullToAbsent || syncedAt != null) {
       map['synced_at'] = Variable<String>(syncedAt);
     }
@@ -3498,6 +3527,7 @@ class HabitCompletionsTableData extends DataClass
           : Value(momentumAtCompletion),
       streakDay: Value(streakDay),
       wasRecovery: Value(wasRecovery),
+      challengeXp: Value(challengeXp),
       syncedAt: syncedAt == null && nullToAbsent
           ? const Value.absent()
           : Value(syncedAt),
@@ -3521,6 +3551,7 @@ class HabitCompletionsTableData extends DataClass
       ),
       streakDay: serializer.fromJson<int>(json['streakDay']),
       wasRecovery: serializer.fromJson<int>(json['wasRecovery']),
+      challengeXp: serializer.fromJson<int>(json['challengeXp']),
       syncedAt: serializer.fromJson<String?>(json['syncedAt']),
     );
   }
@@ -3537,6 +3568,7 @@ class HabitCompletionsTableData extends DataClass
       'momentumAtCompletion': serializer.toJson<int?>(momentumAtCompletion),
       'streakDay': serializer.toJson<int>(streakDay),
       'wasRecovery': serializer.toJson<int>(wasRecovery),
+      'challengeXp': serializer.toJson<int>(challengeXp),
       'syncedAt': serializer.toJson<String?>(syncedAt),
     };
   }
@@ -3551,6 +3583,7 @@ class HabitCompletionsTableData extends DataClass
     Value<int?> momentumAtCompletion = const Value.absent(),
     int? streakDay,
     int? wasRecovery,
+    int? challengeXp,
     Value<String?> syncedAt = const Value.absent(),
   }) => HabitCompletionsTableData(
     id: id ?? this.id,
@@ -3564,6 +3597,7 @@ class HabitCompletionsTableData extends DataClass
         : this.momentumAtCompletion,
     streakDay: streakDay ?? this.streakDay,
     wasRecovery: wasRecovery ?? this.wasRecovery,
+    challengeXp: challengeXp ?? this.challengeXp,
     syncedAt: syncedAt.present ? syncedAt.value : this.syncedAt,
   );
   HabitCompletionsTableData copyWithCompanion(
@@ -3585,6 +3619,9 @@ class HabitCompletionsTableData extends DataClass
       wasRecovery: data.wasRecovery.present
           ? data.wasRecovery.value
           : this.wasRecovery,
+      challengeXp: data.challengeXp.present
+          ? data.challengeXp.value
+          : this.challengeXp,
       syncedAt: data.syncedAt.present ? data.syncedAt.value : this.syncedAt,
     );
   }
@@ -3601,6 +3638,7 @@ class HabitCompletionsTableData extends DataClass
           ..write('momentumAtCompletion: $momentumAtCompletion, ')
           ..write('streakDay: $streakDay, ')
           ..write('wasRecovery: $wasRecovery, ')
+          ..write('challengeXp: $challengeXp, ')
           ..write('syncedAt: $syncedAt')
           ..write(')'))
         .toString();
@@ -3617,6 +3655,7 @@ class HabitCompletionsTableData extends DataClass
     momentumAtCompletion,
     streakDay,
     wasRecovery,
+    challengeXp,
     syncedAt,
   );
   @override
@@ -3632,6 +3671,7 @@ class HabitCompletionsTableData extends DataClass
           other.momentumAtCompletion == this.momentumAtCompletion &&
           other.streakDay == this.streakDay &&
           other.wasRecovery == this.wasRecovery &&
+          other.challengeXp == this.challengeXp &&
           other.syncedAt == this.syncedAt);
 }
 
@@ -3646,6 +3686,7 @@ class HabitCompletionsTableCompanion
   final Value<int?> momentumAtCompletion;
   final Value<int> streakDay;
   final Value<int> wasRecovery;
+  final Value<int> challengeXp;
   final Value<String?> syncedAt;
   final Value<int> rowid;
   const HabitCompletionsTableCompanion({
@@ -3658,6 +3699,7 @@ class HabitCompletionsTableCompanion
     this.momentumAtCompletion = const Value.absent(),
     this.streakDay = const Value.absent(),
     this.wasRecovery = const Value.absent(),
+    this.challengeXp = const Value.absent(),
     this.syncedAt = const Value.absent(),
     this.rowid = const Value.absent(),
   });
@@ -3671,6 +3713,7 @@ class HabitCompletionsTableCompanion
     this.momentumAtCompletion = const Value.absent(),
     this.streakDay = const Value.absent(),
     this.wasRecovery = const Value.absent(),
+    this.challengeXp = const Value.absent(),
     this.syncedAt = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : id = Value(id),
@@ -3687,6 +3730,7 @@ class HabitCompletionsTableCompanion
     Expression<int>? momentumAtCompletion,
     Expression<int>? streakDay,
     Expression<int>? wasRecovery,
+    Expression<int>? challengeXp,
     Expression<String>? syncedAt,
     Expression<int>? rowid,
   }) {
@@ -3701,6 +3745,7 @@ class HabitCompletionsTableCompanion
         'momentum_at_completion': momentumAtCompletion,
       if (streakDay != null) 'streak_day': streakDay,
       if (wasRecovery != null) 'was_recovery': wasRecovery,
+      if (challengeXp != null) 'challenge_xp': challengeXp,
       if (syncedAt != null) 'synced_at': syncedAt,
       if (rowid != null) 'rowid': rowid,
     });
@@ -3716,6 +3761,7 @@ class HabitCompletionsTableCompanion
     Value<int?>? momentumAtCompletion,
     Value<int>? streakDay,
     Value<int>? wasRecovery,
+    Value<int>? challengeXp,
     Value<String?>? syncedAt,
     Value<int>? rowid,
   }) {
@@ -3729,6 +3775,7 @@ class HabitCompletionsTableCompanion
       momentumAtCompletion: momentumAtCompletion ?? this.momentumAtCompletion,
       streakDay: streakDay ?? this.streakDay,
       wasRecovery: wasRecovery ?? this.wasRecovery,
+      challengeXp: challengeXp ?? this.challengeXp,
       syncedAt: syncedAt ?? this.syncedAt,
       rowid: rowid ?? this.rowid,
     );
@@ -3764,6 +3811,9 @@ class HabitCompletionsTableCompanion
     if (wasRecovery.present) {
       map['was_recovery'] = Variable<int>(wasRecovery.value);
     }
+    if (challengeXp.present) {
+      map['challenge_xp'] = Variable<int>(challengeXp.value);
+    }
     if (syncedAt.present) {
       map['synced_at'] = Variable<String>(syncedAt.value);
     }
@@ -3785,6 +3835,7 @@ class HabitCompletionsTableCompanion
           ..write('momentumAtCompletion: $momentumAtCompletion, ')
           ..write('streakDay: $streakDay, ')
           ..write('wasRecovery: $wasRecovery, ')
+          ..write('challengeXp: $challengeXp, ')
           ..write('syncedAt: $syncedAt, ')
           ..write('rowid: $rowid')
           ..write(')'))
@@ -10903,6 +10954,7 @@ typedef $$HabitCompletionsTableTableCreateCompanionBuilder =
       Value<int?> momentumAtCompletion,
       Value<int> streakDay,
       Value<int> wasRecovery,
+      Value<int> challengeXp,
       Value<String?> syncedAt,
       Value<int> rowid,
     });
@@ -10917,6 +10969,7 @@ typedef $$HabitCompletionsTableTableUpdateCompanionBuilder =
       Value<int?> momentumAtCompletion,
       Value<int> streakDay,
       Value<int> wasRecovery,
+      Value<int> challengeXp,
       Value<String?> syncedAt,
       Value<int> rowid,
     });
@@ -10972,6 +11025,11 @@ class $$HabitCompletionsTableTableFilterComposer
 
   ColumnFilters<int> get wasRecovery => $composableBuilder(
     column: $table.wasRecovery,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get challengeXp => $composableBuilder(
+    column: $table.challengeXp,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -11035,6 +11093,11 @@ class $$HabitCompletionsTableTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<int> get challengeXp => $composableBuilder(
+    column: $table.challengeXp,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<String> get syncedAt => $composableBuilder(
     column: $table.syncedAt,
     builder: (column) => ColumnOrderings(column),
@@ -11080,6 +11143,11 @@ class $$HabitCompletionsTableTableAnnotationComposer
 
   GeneratedColumn<int> get wasRecovery => $composableBuilder(
     column: $table.wasRecovery,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get challengeXp => $composableBuilder(
+    column: $table.challengeXp,
     builder: (column) => column,
   );
 
@@ -11142,6 +11210,7 @@ class $$HabitCompletionsTableTableTableManager
                 Value<int?> momentumAtCompletion = const Value.absent(),
                 Value<int> streakDay = const Value.absent(),
                 Value<int> wasRecovery = const Value.absent(),
+                Value<int> challengeXp = const Value.absent(),
                 Value<String?> syncedAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => HabitCompletionsTableCompanion(
@@ -11154,6 +11223,7 @@ class $$HabitCompletionsTableTableTableManager
                 momentumAtCompletion: momentumAtCompletion,
                 streakDay: streakDay,
                 wasRecovery: wasRecovery,
+                challengeXp: challengeXp,
                 syncedAt: syncedAt,
                 rowid: rowid,
               ),
@@ -11168,6 +11238,7 @@ class $$HabitCompletionsTableTableTableManager
                 Value<int?> momentumAtCompletion = const Value.absent(),
                 Value<int> streakDay = const Value.absent(),
                 Value<int> wasRecovery = const Value.absent(),
+                Value<int> challengeXp = const Value.absent(),
                 Value<String?> syncedAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => HabitCompletionsTableCompanion.insert(
@@ -11180,6 +11251,7 @@ class $$HabitCompletionsTableTableTableManager
                 momentumAtCompletion: momentumAtCompletion,
                 streakDay: streakDay,
                 wasRecovery: wasRecovery,
+                challengeXp: challengeXp,
                 syncedAt: syncedAt,
                 rowid: rowid,
               ),

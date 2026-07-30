@@ -1,0 +1,10 @@
+schema_version: 1
+module_path: cloud_functions/data_sync
+title: Tribe & User Data Maintenance Cloud Functions
+scope:
+    - functions/src/recalcTribes.ts
+    - functions/src/cleanupUserData.ts
+    - functions/src/fixTribes.ts
+source_files: []
+depends_on: []
+related_to: []

@@ -92,4 +92,19 @@ class MutationQueueDao extends DatabaseAccessor<AppDatabase>
       [id],
     );
   }
+
+  Future<List<MutationQueueTableData>> getDeadLetters() async {
+    return (select(mutationQueueTable)..where((t) => t.status.equals('dead')))
+        .get();
+  }
+
+  Future<void> updateStatus(int id, String status) async {
+    await (update(mutationQueueTable)..where((t) => t.id.equals(id)))
+        .write(MutationQueueTableCompanion(status: Value(status)));
+  }
+
+  Future<void> updateRetryCount(int id, int count) async {
+    await (update(mutationQueueTable)..where((t) => t.id.equals(id)))
+        .write(MutationQueueTableCompanion(retryCount: Value(count)));
+  }
 }

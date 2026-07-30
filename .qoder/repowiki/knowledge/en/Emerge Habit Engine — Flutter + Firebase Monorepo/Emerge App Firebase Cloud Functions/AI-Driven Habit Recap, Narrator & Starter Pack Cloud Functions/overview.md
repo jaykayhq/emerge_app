@@ -1,0 +1,1 @@
+Firebase callable functions that generate AI-powered weekly habit recaps with difficulty recalibration, fill narrated template slots via Groq, and author starter-pack habits from a curated blueprint catalog.

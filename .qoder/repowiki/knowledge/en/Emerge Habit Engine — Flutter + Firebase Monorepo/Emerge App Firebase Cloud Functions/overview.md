@@ -1,0 +1,1 @@
+Firebase Gen 2 Cloud Functions package that wires together user lifecycle, data maintenance, seeding, AI content generation, payments, and scheduling into a single deployable function bundle.

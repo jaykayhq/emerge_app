@@ -209,8 +209,8 @@ void main() {
     });
 
     group('biomeTransition', () {
-      test('fires at level 5', () {
-        final stats = baseStats.copyWith(level: 5);
+      test('fires when level crosses 5', () {
+        final stats = baseStats.copyWith(previousLevel: 4, level: 5);
         final events = WorldEventEngine.evaluateAndFire(
           stats: stats,
           now: fixedNow,
@@ -224,8 +224,8 @@ void main() {
         expect(biomeEvents.first.payload['newLevel'], 5);
       });
 
-      test('fires at level 10', () {
-        final stats = baseStats.copyWith(level: 10);
+      test('fires when level crosses 10', () {
+        final stats = baseStats.copyWith(previousLevel: 9, level: 10);
         final events = WorldEventEngine.evaluateAndFire(
           stats: stats,
           now: fixedNow,
@@ -238,8 +238,8 @@ void main() {
         expect(biomeEvents, hasLength(1));
       });
 
-      test('fires at level 20', () {
-        final stats = baseStats.copyWith(level: 20);
+      test('fires when level crosses 20', () {
+        final stats = baseStats.copyWith(previousLevel: 19, level: 20);
         final events = WorldEventEngine.evaluateAndFire(
           stats: stats,
           now: fixedNow,
@@ -252,8 +252,8 @@ void main() {
         expect(biomeEvents, hasLength(1));
       });
 
-      test('fires at level 30', () {
-        final stats = baseStats.copyWith(level: 30);
+      test('fires when level crosses 30', () {
+        final stats = baseStats.copyWith(previousLevel: 29, level: 30);
         final events = WorldEventEngine.evaluateAndFire(
           stats: stats,
           now: fixedNow,
@@ -266,9 +266,9 @@ void main() {
         expect(biomeEvents, hasLength(1));
       });
 
-      test('does NOT fire at non-biome levels', () {
-        // Level 4 — just below the first threshold
-        final stats = baseStats.copyWith(level: 4);
+      test('does NOT fire when level did not cross a threshold', () {
+        // Level 4 — just below the first threshold, no crossing
+        final stats = baseStats.copyWith(previousLevel: 3, level: 4);
         final events = WorldEventEngine.evaluateAndFire(
           stats: stats,
           now: fixedNow,
@@ -281,11 +281,13 @@ void main() {
         expect(biomeEvents, isEmpty);
       });
 
-      test('does NOT fire when on 24h cooldown', () {
-        final stats = baseStats.copyWith(level: 5);
+      test('does NOT re-fire while user remains at a biome level', () {
+        // User has been at level 5 for a while — previousLevel == level,
+        // so no threshold is crossed and the event must not re-fire.
+        final stats = baseStats.copyWith(previousLevel: 5, level: 5);
         final recentEvents = {
           WorldEventType.biomeTransition:
-              fixedNow.subtract(const Duration(hours: 1)),
+              fixedNow.subtract(const Duration(hours: 25)),
         };
 
         final events = WorldEventEngine.evaluateAndFire(
@@ -299,15 +301,50 @@ void main() {
             .toList();
         expect(biomeEvents, isEmpty);
       });
+
+      test('does NOT fire when previousLevel is omitted (no level change)',
+          () {
+        // Without previousLevel the engine assumes no level change.
+        final stats = baseStats.copyWith(level: 5);
+        final events = WorldEventEngine.evaluateAndFire(
+          stats: stats,
+          now: fixedNow,
+          recentEvents: const {},
+        );
+
+        final biomeEvents = events
+            .where((e) => e.type == WorldEventType.biomeTransition)
+            .toList();
+        expect(biomeEvents, isEmpty);
+      });
+
+      test('fires when crossing multiple thresholds in one level-up', () {
+        // Jumping from 4 to 10 crosses both the 5 and 10 thresholds —
+        // a single celebration fires at the new level.
+        final stats = baseStats.copyWith(previousLevel: 4, level: 10);
+        final events = WorldEventEngine.evaluateAndFire(
+          stats: stats,
+          now: fixedNow,
+          recentEvents: const {},
+        );
+
+        final biomeEvents = events
+            .where((e) => e.type == WorldEventType.biomeTransition)
+            .toList();
+        expect(biomeEvents, hasLength(1));
+        expect(biomeEvents.first.payload['newLevel'], 10);
+      });
     });
 
     group('multiple events', () {
       test('can fire multiple events simultaneously', () {
-        // Level 30 + momentum 95 + 5 consecutive days = biome + burst + traveler + weather
+        // Crossing level 30 + momentum 95 + 5 consecutive days
+        // = biome + burst + traveler + weather
         final stats = UserStats(
           consecutiveActiveDays: 5,
           currentMomentumScore: 95,
           level: 30,
+          previousLevel: 29,
         );
 
         final events = WorldEventEngine.evaluateAndFire(
@@ -422,11 +459,13 @@ extension _UserStatsCopy on UserStats {
     int? consecutiveActiveDays,
     int? currentMomentumScore,
     int? level,
+    int? previousLevel,
   }) {
     return UserStats(
       consecutiveActiveDays: consecutiveActiveDays ?? this.consecutiveActiveDays,
       currentMomentumScore: currentMomentumScore ?? this.currentMomentumScore,
       level: level ?? this.level,
+      previousLevel: previousLevel ?? this.previousLevel,
     );
   }
 }

@@ -231,7 +231,7 @@ final class SignOutProvider
   }
 }
 
-String _$signOutHash() => r'6840d641d6cee42f9727d4232b28ca92351e1fe7';
+String _$signOutHash() => r'd84c9e968fea691e48d7071423acbf3eb07d1a9d';
 
 @ProviderFor(firestore)
 final firestoreProvider = FirestoreProvider._();

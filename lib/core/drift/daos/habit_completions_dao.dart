@@ -23,6 +23,7 @@ class HabitCompletionsDao extends DatabaseAccessor<AppDatabase>
     int? momentumAtCompletion,
     int streakDay = 0,
     int wasRecovery = 0,
+    int challengeXp = 0,
   }) {
     return into(habitCompletionsTable).insert(
       HabitCompletionsTableCompanion(
@@ -35,6 +36,7 @@ class HabitCompletionsDao extends DatabaseAccessor<AppDatabase>
         momentumAtCompletion: Value(momentumAtCompletion),
         streakDay: Value(streakDay),
         wasRecovery: Value(wasRecovery),
+        challengeXp: Value(challengeXp),
       ),
     );
   }
@@ -86,13 +88,14 @@ class HabitCompletionsDao extends DatabaseAccessor<AppDatabase>
   }
 
   /// Cascade-delete local completions for a habit.
-  Future<int> deleteByHabitId(String habitId) =>
+  Future<int> deleteByHabitId(String habitId, String userId) =>
       (delete(habitCompletionsTable)
-            ..where((t) => t.habitId.equals(habitId)))
+            ..where((t) => t.habitId.equals(habitId) & t.userId.equals(userId)))
           .go();
 
   /// Delete a single completion row by id (used to undo today's completion).
-  Future<int> deleteById(String id) =>
-      (delete(habitCompletionsTable)..where((t) => t.id.equals(id)))
+  Future<int> deleteById(String id, String userId) =>
+      (delete(habitCompletionsTable)
+            ..where((t) => t.id.equals(id) & t.userId.equals(userId)))
           .go();
 }

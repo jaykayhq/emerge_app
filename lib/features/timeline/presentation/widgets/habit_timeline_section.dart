@@ -42,6 +42,24 @@ String attributeLabel(HabitAttribute attribute) {
   }
 }
 
+/// Returns the 3–4 letter abbreviation for an attribute tag pill.
+String attributeAbbrev(HabitAttribute attribute) {
+  switch (attribute) {
+    case HabitAttribute.strength:
+      return 'STR';
+    case HabitAttribute.intellect:
+      return 'INT';
+    case HabitAttribute.vitality:
+      return 'VIT';
+    case HabitAttribute.creativity:
+      return 'CREA';
+    case HabitAttribute.focus:
+      return 'FOC';
+    case HabitAttribute.spirit:
+      return 'SPR';
+  }
+}
+
 /// Hierarchical timeline with category headers and indented habits.
 class HierarchicalHabitTimeline extends StatelessWidget {
   final Map<String, List<Habit>> groupedHabits;
@@ -73,24 +91,42 @@ class HierarchicalHabitTimeline extends StatelessWidget {
 
     if (slotsWithHabits.isEmpty) {
       return Padding(
-        padding: const EdgeInsets.all(32),
-        child: Center(
-          child: Column(
-            children: [
-              Icon(
-                Icons.self_improvement,
-                color: Colors.white.withValues(alpha: 0.3),
-                size: 48,
-              ),
-              const SizedBox(height: 12),
-              Text(
-                'No habits scheduled today',
-                style: TextStyle(
-                  color: Colors.white.withValues(alpha: 0.6),
-                  fontSize: 14,
+        padding: const EdgeInsets.all(16),
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 30, horizontal: 16),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(20),
+            color: Colors.white.withValues(alpha: 0.06),
+            border: Border.all(
+              color: Colors.white.withValues(alpha: 0.08),
+            ),
+          ),
+          child: Center(
+            child: Column(
+              children: [
+                Container(
+                  width: 56,
+                  height: 56,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(18),
+                    color: const Color(0xFF2BEE79).withValues(alpha: 0.18),
+                  ),
+                  child: const Icon(
+                    Icons.self_improvement,
+                    color: Color(0xFF2BEE79),
+                    size: 26,
+                  ),
                 ),
-              ),
-            ],
+                const SizedBox(height: 12),
+                Text(
+                  'No habits scheduled today',
+                  style: TextStyle(
+                    color: Colors.white.withValues(alpha: 0.6),
+                    fontSize: 14,
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       );
@@ -102,15 +138,17 @@ class HierarchicalHabitTimeline extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           for (final slot in slotsWithHabits)
-            _HabitCategorySection(
-              slot: slot,
-              habits: groupedHabits[slot]!,
-              selectedDate: selectedDate,
-              onHabitTap: onHabitTap,
-              onHabitToggle: onHabitToggle,
-              onTimerTap: onTimerTap,
-              onMenuTap: onMenuTap,
-              isLast: slot == slotsWithHabits.last,
+            Padding(
+              padding: const EdgeInsets.only(bottom: 12),
+              child: _HabitCategorySection(
+                slot: slot,
+                habits: groupedHabits[slot]!,
+                selectedDate: selectedDate,
+                onHabitTap: onHabitTap,
+                onHabitToggle: onHabitToggle,
+                onTimerTap: onTimerTap,
+                onMenuTap: onMenuTap,
+              ),
             ),
         ],
       ),
@@ -118,18 +156,15 @@ class HierarchicalHabitTimeline extends StatelessWidget {
   }
 }
 
-/// Category section with bullet header and indented habits.
+/// Glassmorphic section card for a time-of-day group of habits.
 class _HabitCategorySection extends StatelessWidget {
   final String slot;
   final List<Habit> habits;
   final DateTime selectedDate;
   final void Function(Habit) onHabitTap;
   final void Function(Habit) onHabitToggle;
-  // Returns the chosen timer duration (null if cancelled); the card
-  // uses it to enter its running-timer state.
   final Future<int?> Function(Habit) onTimerTap;
   final void Function(Habit) onMenuTap;
-  final bool isLast;
 
   const _HabitCategorySection({
     required this.slot,
@@ -139,7 +174,6 @@ class _HabitCategorySection extends StatelessWidget {
     required this.onHabitToggle,
     required this.onTimerTap,
     required this.onMenuTap,
-    required this.isLast,
   });
 
   String get _categoryTitle {
@@ -168,106 +202,160 @@ class _HabitCategorySection extends StatelessWidget {
       case 'anytime':
         return const Color(0xFF2BEE79); // Emerge green
       default:
-        return const Color(0xFF2BEE79); // Emerge green
+        return const Color(0xFF2BEE79);
     }
+  }
+
+  int get _completedCount =>
+      habits.where((h) => h.isCompletedOn(selectedDate)).length;
+
+  int get _sectionXp {
+    int total = 0;
+    for (final h in habits) {
+      if (!h.isCompletedOn(selectedDate)) continue;
+      final baseXp = switch (h.difficulty) {
+        HabitDifficulty.easy => 10,
+        HabitDifficulty.medium => 20,
+        HabitDifficulty.hard => 30,
+      };
+      final streakBonus = (h.currentStreak / 7 * 0.10).clamp(0.0, 0.5);
+      total += (baseXp * (1 + streakBonus)).round();
+    }
+    return total;
   }
 
   @override
   Widget build(BuildContext context) {
-    final firstIncompleteIndex =
-        habits.indexWhere((h) => !h.isCompletedOn(selectedDate));
+    final completed = _completedCount;
+    final total = habits.length;
+    final fraction = total > 0 ? completed / total : 0.0;
+    final xp = _sectionXp;
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        // Category header with bullet
-        Row(
-          children: [
-            Container(
-              width: 10,
-              height: 10,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: _categoryColor,
-                boxShadow: [
-                  BoxShadow(
-                    color: _categoryColor.withValues(alpha: 0.5),
-                    blurRadius: 4,
-                    spreadRadius: 1,
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(width: 12),
-            Text(
-              _categoryTitle,
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(width: 8),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-              decoration: BoxDecoration(
-                color: _categoryColor.withValues(alpha: 0.2),
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: Text(
-                '${habits.length}',
-                style: TextStyle(
+    return Container(
+      padding: const EdgeInsets.fromLTRB(14, 14, 14, 8),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.06),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: Colors.white.withValues(alpha: 0.08),
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Section header
+          Row(
+            children: [
+              // Colored dot with glow
+              Container(
+                width: 10,
+                height: 10,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
                   color: _categoryColor,
-                  fontSize: 12,
-                  fontWeight: FontWeight.bold,
+                  boxShadow: [
+                    BoxShadow(
+                      color: _categoryColor.withValues(alpha: 0.5),
+                      blurRadius: 10,
+                      spreadRadius: 1,
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 10),
+              // Title + meta
+              Expanded(
+                child: Wrap(
+                  crossAxisAlignment: WrapCrossAlignment.center,
+                  children: [
+                    Text(
+                      _categoryTitle,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 15,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    Text(
+                      ' · $completed done · $total total',
+                      style: TextStyle(
+                        color: Colors.white.withValues(alpha: 0.6),
+                        fontSize: 12,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              // XP badge
+              if (xp > 0)
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF2BEE79).withValues(alpha: 0.14),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Text(
+                    '+$xp XP',
+                    style: const TextStyle(
+                      color: Color(0xFF2BEE79),
+                      fontSize: 12,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          // Progress bar
+          Container(
+            height: 6,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(999),
+              color: Colors.white.withValues(alpha: 0.06),
+            ),
+            child: FractionallySizedBox(
+              widthFactor: fraction,
+              child: Container(
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(999),
+                  color: const Color(0xFF2BEE79),
                 ),
               ),
             ),
-          ],
-        ),
-        const SizedBox(height: 4),
-        // Indented habit items
-        ...habits.asMap().entries.map((entry) {
-          final index = entry.key;
-          final habit = entry.value;
-          return IndentedHabitItem(
-            habit: habit,
-            selectedDate: selectedDate,
-            onRowBodyTap: () => onHabitTap(habit),
-            onCheckboxTap: () => onHabitToggle(habit),
-            onTimerTap: onTimerTap,
-            onMenuTap: () => onMenuTap(habit),
-            showConnector: index < habits.length - 1,
-            isFirstIncomplete: index == firstIncompleteIndex,
-          );
-        }),
-        if (!isLast) const SizedBox(height: 16),
-      ],
+          ),
+          const SizedBox(height: 10),
+          // Habit rows
+          ...habits.map((habit) => Padding(
+                padding: const EdgeInsets.only(bottom: 8),
+                child: IndentedHabitItem(
+                  habit: habit,
+                  selectedDate: selectedDate,
+                  onRowBodyTap: () => onHabitTap(habit),
+                  onCheckboxTap: () => onHabitToggle(habit),
+                  onTimerTap: onTimerTap,
+                  onMenuTap: () => onMenuTap(habit),
+                ),
+              )),
+        ],
+      ),
     );
   }
 }
 
-/// Single habit row — Layout B: [title] [☐] [⏱️] [⋮].
+/// Single habit row — [icon box] [name + meta] [attr tag] [check circle].
 ///
 /// - Tap body → onRowBodyTap
 /// - Tap checkbox → onCheckboxTap (toggle complete)
-/// - Tap ⏱️ → onTimerTap (open timer dialog; returns chosen
-///   duration in minutes, null if cancelled). The item then
-///   transitions into its running-timer state.
+/// - Tap ⏱️ → onTimerTap (open timer dialog)
 /// - Tap ⋮ → onMenuTap (open options sheet)
-///
-/// Card background fills as timer counts down. At 0, auto-fires onCheckboxTap.
 class IndentedHabitItem extends StatefulWidget {
   final Habit habit;
   final DateTime selectedDate;
   final VoidCallback onRowBodyTap;
   final VoidCallback onCheckboxTap;
-  // Returns the chosen timer duration in minutes (null if cancelled).
-  // The item uses this to enter its running-timer state.
   final Future<int?> Function(Habit) onTimerTap;
   final VoidCallback onMenuTap;
-  final bool showConnector;
-  final bool isFirstIncomplete;
 
   const IndentedHabitItem({
     required this.habit,
@@ -276,8 +364,6 @@ class IndentedHabitItem extends StatefulWidget {
     required this.onCheckboxTap,
     required this.onTimerTap,
     required this.onMenuTap,
-    this.showConnector = true,
-    this.isFirstIncomplete = false,
     super.key,
   });
 
@@ -295,8 +381,6 @@ class _IndentedHabitItemState extends State<IndentedHabitItem> {
   void initState() {
     super.initState();
     _resetTimerToHabitDuration();
-    // Timer does NOT auto-start. It only starts when the user taps the timer
-    // dialog's "Start" or "Exit & run in background" button (see startTimerFromDuration).
   }
 
   void _resetTimerToHabitDuration() {
@@ -328,7 +412,6 @@ class _IndentedHabitItemState extends State<IndentedHabitItem> {
   }
 
   /// Called externally when the user starts a timer via the dialog.
-  /// Resets and begins the countdown for [minutes] duration.
   void startTimerFromDuration(int minutes) {
     _countdownTimer?.cancel();
     setState(() {
@@ -356,7 +439,7 @@ class _IndentedHabitItemState extends State<IndentedHabitItem> {
       totalSeconds: _totalSeconds,
     );
 
-    // Contrast: completed cards get a darker background
+    // Timer progress gradient fill
     final gradientColors = completed
         ? <Color>[
             const Color(0xFF1A1A2E).withValues(alpha: 0.85),
@@ -372,203 +455,262 @@ class _IndentedHabitItemState extends State<IndentedHabitItem> {
             ? [progress, progress]
             : const [0.0, 0.0];
 
-    // Next incomplete gets a subtle green glow border
-    final borderColor = widget.isFirstIncomplete
-        ? const Color(0xFF2BEE79).withValues(alpha: 0.25)
-        : completed
-            ? color.withValues(alpha: 0.3)
-            : Colors.white.withValues(alpha: 0.1);
-    final borderWidth = widget.isFirstIncomplete ? 1.5 : 1.0;
-
-    return Padding(
-      padding: const EdgeInsets.only(left: 16, bottom: 8),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Vertical connector line
-          if (widget.showConnector)
-            Padding(
-              padding: const EdgeInsets.only(left: 5, top: 0),
-              child: Container(
-                width: 1.5,
-                height: 48,
-                decoration: BoxDecoration(
-                  color: color.withValues(alpha: 0.2),
-                  boxShadow: [
-                    BoxShadow(
-                      color: color.withValues(alpha: 0.1),
-                      blurRadius: 4,
-                      spreadRadius: 1,
-                    ),
-                  ],
-                ),
-              ),
-            )
-          else
-            const SizedBox(width: 12),
-          // Habit item card
-          Expanded(
-            child: GestureDetector(
-              onTap: widget.onRowBodyTap,
-              behavior: HitTestBehavior.opaque,
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 250),
-                curve: Curves.easeOut,
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: gradientColors,
-                    stops: gradientStops,
-                  ),
-                  borderRadius: BorderRadius.circular(10),
-                  border: Border.all(
-                    color: borderColor,
-                    width: borderWidth,
-                  ),
-                ),
-                child: completed
-                    ? _buildCompleted(color)
-                    : _buildPending(color),
-              ),
-            ),
+    return GestureDetector(
+      onTap: widget.onRowBodyTap,
+      behavior: HitTestBehavior.opaque,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 250),
+        curve: Curves.easeOut,
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 12),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(colors: gradientColors, stops: gradientStops),
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(
+            color: Colors.white.withValues(alpha: 0.08),
           ),
-        ],
+        ),
+        child: completed ? _buildCompleted(color) : _buildPending(color),
       ),
     );
   }
 
   Widget _buildPending(Color color) {
     final hasTimer = widget.habit.timerDurationMinutes > 0;
+    final attrColor = attributeColor(widget.habit.attribute);
+
     return Row(
       children: [
-        // Title (body tap zone)
+        // Icon box
+        Container(
+          width: 32,
+          height: 32,
+          decoration: BoxDecoration(
+            color: Colors.white.withValues(alpha: 0.06),
+            borderRadius: BorderRadius.circular(10),
+          ),
+          child: Center(
+            child: widget.habit.imageUrl != null &&
+                    widget.habit.imageUrl!.isNotEmpty
+                ? Text(
+                    widget.habit.imageUrl!,
+                    style: const TextStyle(fontSize: 16),
+                  )
+                : Icon(
+                    Icons.bolt,
+                    size: 16,
+                    color: attrColor,
+                  ),
+          ),
+        ),
+        const SizedBox(width: 10),
+        // Name + meta column
         Expanded(
-          child: Text(
-            widget.habit.title,
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 13,
-              fontWeight: FontWeight.w500,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                widget.habit.title,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+              const SizedBox(height: 2),
+              Text(
+                '${attributeLabel(widget.habit.attribute)} · ${widget.habit.timerDurationMinutes} min',
+                style: TextStyle(
+                  color: Colors.white.withValues(alpha: 0.6),
+                  fontSize: 11,
+                ),
+              ),
+            ],
+          ),
+        ),
+        // Attribute tag pill
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+          decoration: BoxDecoration(
+            color: Colors.white.withValues(alpha: 0.06),
+            borderRadius: BorderRadius.circular(999),
+            border: Border.all(
+              color: attrColor.withValues(alpha: 0.25),
             ),
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
+          ),
+          child: Text(
+            attributeAbbrev(widget.habit.attribute),
+            style: TextStyle(
+              color: attrColor,
+              fontSize: 10,
+              fontWeight: FontWeight.w700,
+              letterSpacing: 0.4,
+            ),
           ),
         ),
         const SizedBox(width: 8),
-        // Timer-set badge: shows the configured duration so the card
-        // reflects that a timer is set on habit creation.
-        if (hasTimer && !_isTimerRunning)
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-            decoration: BoxDecoration(
-              color: color.withValues(alpha: 0.18),
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Text(
-              '⏱ ${widget.habit.timerDurationMinutes}m',
-              style: TextStyle(
-                color: color,
-                fontSize: 11,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ),
-        if (hasTimer && !_isTimerRunning) const SizedBox(width: 4),
-        // While a timer is running, show PAUSE in place of the
-        // mark-complete checkbox (completing early cancels the run).
+        // Check circle / timer controls
         if (_isTimerRunning)
-          IconButton(
-            tooltip: 'Pause',
-            icon: Icon(
-              Icons.pause,
-              color: color,
-              size: 22,
+          GestureDetector(
+            onTap: _cancelTimer,
+            child: SizedBox(
+              width: 24,
+              height: 24,
+              child: Icon(Icons.pause, color: color, size: 20),
             ),
-            onPressed: _cancelTimer,
           )
         else
-          // Mark-complete checkbox is always present now (including for
-          // timer-set habits; the dedicated PLAY button was removed per
-          // product request — the TIMER button below now starts the run).
-          IconButton(
-            tooltip: 'Mark complete',
-            icon: const Icon(
-              Icons.radio_button_unchecked,
-              color: Colors.white70,
-              size: 22,
-            ),
-            onPressed: () {
+          GestureDetector(
+            onTap: () {
               if (_isTimerRunning) _cancelTimer();
               widget.onCheckboxTap();
             },
+            child: Container(
+              width: 24,
+              height: 24,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                border: Border.all(
+                  color: Colors.white.withValues(alpha: 0.18),
+                  width: 2,
+                ),
+              ),
+              child: const Center(
+                child: Text(
+                  '·',
+                  style: TextStyle(color: Colors.white54, fontSize: 16),
+                ),
+              ),
+            ),
           ),
-        // Timer icon — opens the timer dialog and starts the countdown
-        // with the chosen duration (this is what the old PLAY button did).
-        IconButton(
-          icon: const Icon(Icons.timer_outlined, color: Colors.white, size: 20),
-          onPressed: () async {
-            final minutes = await widget.onTimerTap(widget.habit);
-            if (minutes != null && minutes > 0 && mounted && !_isTimerRunning) {
-              startTimerFromDuration(minutes);
-            }
-          },
-        ),
+        const SizedBox(width: 4),
+        // Timer icon
+        if (hasTimer && !_isTimerRunning)
+          GestureDetector(
+            onTap: () async {
+              final minutes = await widget.onTimerTap(widget.habit);
+              if (minutes != null && minutes > 0 && mounted && !_isTimerRunning) {
+                startTimerFromDuration(minutes);
+              }
+            },
+            child: SizedBox(
+              width: 28,
+              height: 28,
+              child: Icon(
+                Icons.timer_outlined,
+                color: Colors.white.withValues(alpha: 0.7),
+                size: 18,
+              ),
+            ),
+          ),
         // Menu icon
-        IconButton(
-          icon: const Icon(Icons.more_vert, color: Colors.white, size: 22),
-          onPressed: widget.onMenuTap,
+        GestureDetector(
+          onTap: widget.onMenuTap,
+          child: SizedBox(
+            width: 28,
+            height: 28,
+            child: Icon(
+              Icons.more_vert,
+              color: Colors.white.withValues(alpha: 0.7),
+              size: 18,
+            ),
+          ),
         ),
       ],
     );
   }
 
   Widget _buildCompleted(Color color) {
-    // Calculate XP
-    final baseXp = switch (widget.habit.difficulty) {
-      HabitDifficulty.easy => 10,
-      HabitDifficulty.medium => 20,
-      HabitDifficulty.hard => 30,
-    };
-    final xp =
-        (baseXp * (1 + (widget.habit.currentStreak * 0.1).clamp(0.0, 0.5)))
-            .toInt();
+    final attrColor = attributeColor(widget.habit.attribute);
 
     return Row(
       children: [
-        Icon(Icons.check_circle, color: color, size: 20),
-        const SizedBox(width: 12),
-        // Title with strike-through
+        // Icon box (dimmed)
+        Container(
+          width: 32,
+          height: 32,
+          decoration: BoxDecoration(
+            color: Colors.white.withValues(alpha: 0.04),
+            borderRadius: BorderRadius.circular(10),
+          ),
+          child: Center(
+            child: widget.habit.imageUrl != null &&
+                    widget.habit.imageUrl!.isNotEmpty
+                ? Text(
+                    widget.habit.imageUrl!,
+                    style: const TextStyle(fontSize: 16),
+                  )
+                : Icon(
+                    Icons.bolt,
+                    size: 16,
+                    color: attrColor.withValues(alpha: 0.5),
+                  ),
+          ),
+        ),
+        const SizedBox(width: 10),
+        // Name with strike-through
         Expanded(
-            child: Text(
+          child: Text(
             widget.habit.title,
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 13,
+            style: TextStyle(
+              color: Colors.white.withValues(alpha: 0.6),
+              fontSize: 14,
               fontWeight: FontWeight.w500,
               decoration: TextDecoration.lineThrough,
-              decorationColor: Colors.white54,
+              decorationColor: Colors.white.withValues(alpha: 0.4),
             ),
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
           ),
         ),
-        // XP badge
-        Text(
-          '+$xp XP',
-          style: TextStyle(
-            color: color,
-            fontSize: 11,
-            fontWeight: FontWeight.bold,
+        // Attribute tag (dimmed)
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+          decoration: BoxDecoration(
+            color: Colors.white.withValues(alpha: 0.04),
+            borderRadius: BorderRadius.circular(999),
+            border: Border.all(
+              color: attrColor.withValues(alpha: 0.15),
+            ),
+          ),
+          child: Text(
+            attributeAbbrev(widget.habit.attribute),
+            style: TextStyle(
+              color: attrColor.withValues(alpha: 0.5),
+              fontSize: 10,
+              fontWeight: FontWeight.w700,
+              letterSpacing: 0.4,
+            ),
           ),
         ),
         const SizedBox(width: 8),
-        // Undo — reverts completion via the same toggle callback
+        // Check circle (filled green)
+        Container(
+          width: 24,
+          height: 24,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: const Color(0xFF2BCE6B),
+            border: Border.all(
+              color: const Color(0xFF2BCE6B),
+              width: 2,
+            ),
+          ),
+          child: const Icon(
+            Icons.check,
+            color: Color(0xFF0B0F17),
+            size: 16,
+          ),
+        ),
+        const SizedBox(width: 4),
+        // Undo button
         GestureDetector(
           onTap: widget.onCheckboxTap,
           behavior: HitTestBehavior.opaque,
           child: SizedBox(
-            width: 44,
-            height: 44,
+            width: 28,
+            height: 28,
             child: Icon(
               Icons.undo,
               size: 18,

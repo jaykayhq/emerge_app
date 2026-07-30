@@ -44,6 +44,11 @@ class EnhancedSyncEngine {
 
   SyncStatus get currentStatus => _status;
 
+  /// Dispose the sync engine, closing the status stream controller.
+  void dispose() {
+    _statusController.close();
+  }
+
   void _setStatus(SyncStatus s) {
     if (_status != s) {
       _status = s;
@@ -153,6 +158,19 @@ class EnhancedSyncEngine {
     return DateTime.now().add(clamped);
   }
 
+  /// Revives dead-lettered mutations for retry. Called on app startup and connectivity restore.
+  Future<void> reviveDeadLetters() async {
+    final deadMutations = await _mutationQueue.getDeadLetters();
+    if (deadMutations.isEmpty) return;
+
+    AppLogger.d(
+        '[SyncEngine] Reviving ${deadMutations.length} dead-lettered mutations');
+    for (final mutation in deadMutations) {
+      await _mutationQueue.updateStatus(mutation.id, 'pending');
+      await _mutationQueue.updateRetryCount(mutation.id, 0);
+    }
+  }
+
   /// Re-enqueue dead-letter rows for another attempt.
   Future<void> resetDeadLetters() async {
     await _mutationQueue.resetDeadToPending();
@@ -184,7 +202,7 @@ class EnhancedSyncEngine {
         case 'update':
           _convertTimestamps(data);
           _processMarkers(data);
-          await ref.update(data);
+          await ref.set(data, SetOptions(merge: true));
           break;
         case 'delete':
           await ref.delete();
@@ -199,21 +217,31 @@ class EnhancedSyncEngine {
     }
   }
 
+  static const _timestampFields = {
+    'createdAt',
+    'updatedAt',
+    'completedAt',
+    'dueDate',
+    'joinedAt',
+    'lastActive',
+    'timestamp',
+  };
+
   void _convertTimestamps(Map<String, dynamic> data) {
-    data.forEach((key, value) {
-      if (value is String && value.contains('T') && value.contains('-')) {
-        final date = DateTime.tryParse(value);
-        if (date != null) data[key] = Timestamp.fromDate(date);
-      } else if (value is Map<String, dynamic>) {
-        _convertTimestamps(value);
-      } else if (value is List) {
-        for (var i = 0; i < value.length; i++) {
-          if (value[i] is Map<String, dynamic>) {
-            _convertTimestamps(value[i] as Map<String, dynamic>);
-          }
+    final result = <String, dynamic>{};
+    for (final entry in data.entries) {
+      if (_timestampFields.contains(entry.key) && entry.value is String) {
+        final parsed = DateTime.tryParse(entry.value as String);
+        if (parsed != null) {
+          result[entry.key] = Timestamp.fromDate(parsed);
+          continue;
         }
       }
-    });
+      result[entry.key] = entry.value;
+    }
+    data
+      ..clear()
+      ..addAll(result);
   }
 
   void _processMarkers(Map<String, dynamic> data) {

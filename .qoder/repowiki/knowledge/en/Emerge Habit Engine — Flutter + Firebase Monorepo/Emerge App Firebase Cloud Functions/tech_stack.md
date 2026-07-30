@@ -1,0 +1,1 @@
+TypeScript 5.9 compiled to Node 22, Firebase Gen 2 Functions (v2) with `firebase-admin` for Firestore/Auth access, Jest + ts-jest for testing, ESLint with Google config, and firebase-functions-test for unit tests.

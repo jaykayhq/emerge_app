@@ -68,4 +68,7 @@ async function fixTribes(): Promise<void> {
   process.exit(0);
 }
 
-fixTribes().catch(console.error);
+// Only run when executed directly (not imported)
+if (require.main === module) {
+  fixTribes().catch(console.error);
+}

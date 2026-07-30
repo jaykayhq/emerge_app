@@ -30,6 +30,34 @@ interface SlotResponse {
   slots: Record<string, string>;
 }
 
+// ── Trigger validation ───────────────────────────────────────────────────
+
+const VALID_TRIGGERS = [
+  "morningBriefEarlyDays",
+  "streakBreakFirstMiss",
+  "onFireState",
+  "levelUp",
+  "weeklyRecap",
+  "longAbsence",
+  "newHabitCreation",
+  "eveningReflection",
+  "dailyInsight",
+];
+
+// ── Context sanitization ─────────────────────────────────────────────────
+
+function sanitizeContext(context: Record<string, any>): Record<string, string> {
+  const sanitized: Record<string, string> = {};
+  for (const [key, value] of Object.entries(context)) {
+    if (typeof value === "string" && value.length <= 200) {
+      sanitized[key] = value.replace(/[<>{}]/g, "");
+    } else if (typeof value === "number") {
+      sanitized[key] = String(value);
+    }
+  }
+  return sanitized;
+}
+
 // ── Trigger-specific prompt builders ──────────────────────────────────────
 
 function buildPrompt(trigger: string, context: Record<string, unknown>): string {
@@ -65,7 +93,7 @@ function buildPrompt(trigger: string, context: Record<string, unknown>): string 
       return `Analyze habit patterns for a ${archetype}. Give a 15-word pattern observation using identity-language. Ask one 10-word action question. JSON: {"patternObservation":"...","actionQuestion":"...","actionA":"...","actionB":"..."}`;
 
     default:
-      return `Generic context for trigger ${trigger}. Provide a short 10-word message. JSON: {"message":"..."}`;
+      return `User needs encouragement. Provide a short 10-word motivational message using identity-language. JSON: {"message":"..."}`;
   }
 }
 
@@ -205,17 +233,27 @@ export const fillNarratorSlots = onCall<SlotRequest, Promise<SlotResponse>>(
       throw new HttpsError("unauthenticated", "User must be logged in");
     }
 
-    const { trigger, context = {} } = request.data;
+    let { trigger } = request.data;
+    const { context = {} } = request.data;
+
+    // Validate trigger against whitelist
+    if (!VALID_TRIGGERS.includes(trigger)) {
+      console.warn(`[narrator] Unknown narrator trigger: ${trigger}`);
+      trigger = "dailyInsight"; // safe fallback
+    }
 
     console.log(
       `[narrator] fillNarratorSlots called: trigger=${trigger}, userId=${request.auth.uid}`
     );
 
-    const prompt = buildPrompt(trigger, context as Record<string, unknown>);
+    // Sanitize context values before embedding in prompts
+    const sanitizedContext = sanitizeContext(context as Record<string, any>);
+
+    const prompt = buildPrompt(trigger, sanitizedContext as Record<string, unknown>);
     const groqSlots = await callGroq(prompt);
 
     // Merge Groq response with fallbacks — Groq wins when available
-    const triggerFallbacks = fallbackSlots[trigger] || {};
+    const triggerFallbacks = fallbackSlots[trigger] || fallbackSlots["dailyInsight"];
     const merged: Record<string, string> = {
       ...triggerFallbacks,
       ...groqSlots,

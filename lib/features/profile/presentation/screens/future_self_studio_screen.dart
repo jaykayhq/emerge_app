@@ -1,5 +1,6 @@
 import 'package:emerge_app/core/constants/gamification_constants.dart';
 import 'package:emerge_app/core/presentation/widgets/app_error_widget.dart';
+import 'package:emerge_app/core/presentation/widgets/emerge_header.dart';
 import 'package:emerge_app/core/presentation/widgets/emerge_loading_skeleton.dart';
 import 'package:emerge_app/core/theme/app_theme.dart';
 import 'package:emerge_app/core/theme/archetype_theme.dart';
@@ -117,6 +118,14 @@ class _FutureSelfStudioScreenState
         return WorldBackground(
           child: CustomScrollView(
                 slivers: [
+                  // Shared header (avatar + subscription chip)
+                  SliverToBoxAdapter(
+                    child: EmergeHeader(
+                      displayName: profile.displayName ?? '',
+                      onAvatarTap: () => context.push('/profile/settings'),
+                      onUpgradeTap: () => context.push('/paywall'),
+                    ),
+                  ),
                   // App Bar
                   SliverAppBar(
                 backgroundColor: Colors.transparent,

@@ -11,6 +11,8 @@ import 'package:emerge_app/features/social/presentation/providers/creator_provid
 import 'package:emerge_app/features/social/domain/entities/creator_profile.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:emerge_app/core/drift/database.dart';
+import 'package:emerge_app/core/sync/sync_providers.dart';
 part 'auth_providers.g.dart';
 
 @Riverpod(keepAlive: true)
@@ -44,6 +46,16 @@ Future<void> signIn(Ref ref, String email, String password) async {
 
 @Riverpod(keepAlive: true)
 Future<void> signOut(Ref ref) async {
+  // Flush pending mutations before sign-out
+  try {
+    final syncEngine = ref.read(enhancedSyncEngineProvider);
+    await syncEngine.processMutationQueue().timeout(const Duration(seconds: 5));
+  } catch (e) {
+    AppLogger.w('[Auth] Failed to flush sync queue on sign-out: $e');
+  }
+  // Clear local data for this user
+  await ref.read(appDatabaseProvider).clearAll();
+
   final repository = ref.read(authRepositoryProvider);
   await repository.signOut();
 }

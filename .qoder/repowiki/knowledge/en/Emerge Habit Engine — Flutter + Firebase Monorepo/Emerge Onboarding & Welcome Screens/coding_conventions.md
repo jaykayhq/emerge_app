@@ -1,0 +1,6 @@
+- Every page is a complete, self-contained HTML document with an inline `<script id="tailwind-config">` block defining Tailwind theme colors (`primary`, `background-light`, `background-dark`), fonts, and border radius tokens.
+- Dark mode is consistently enabled by setting `class="dark"` on the `<html>` element and using Tailwind's `dark:` modifier throughout the markup.
+- Each screen follows a mobile-first layout with `min-height: max(884px, 100dvh)` on the body and a root container using `flex flex-col min-h-screen w-full`.
+- Icons are uniformly sourced from Google's Material Symbols Outlined font, applied via `<span class="material-symbols-outlined">` elements with consistent sizing.
+- Background imagery uses `bg-center bg-no-repeat bg-cover` with `data-alt` attributes describing the image context, typically overlaid with opacity or gradient overlays for readability.
+- Form inputs follow a consistent pattern: labeled fields with `form-input` classes, focus rings via `focus:ring-primary/50`, and dark-mode variants using `dark:bg-gray-800` / `dark:text-white`.

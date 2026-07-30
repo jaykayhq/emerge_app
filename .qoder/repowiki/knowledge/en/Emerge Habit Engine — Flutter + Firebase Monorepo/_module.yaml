@@ -1,0 +1,65 @@
+schema_version: 1
+module_path: ""
+title: Emerge Habit Engine — Flutter + Firebase Monorepo
+scope:
+    - README.md
+    - pubspec.yaml
+    - firebase.json
+    - .gitignore
+    - analysis_options.yaml
+    - .env.example
+    - .firebaserc
+    - .gitignore.backup
+    - .kilocodemodes
+    - .windsurfrules
+    - AGENTS.md
+    - Affiliate Strategy.md
+    - CHANGELOG.md
+    - CLAUDE.md
+    - Qwen.md
+    - REVIEW.md
+    - THEME_ADAPTATION_PLAN.md
+    - apple-developer-merchantid-domain-association
+    - beta_testers.csv
+    - coverage_notification.info
+    - decode_stack.mjs
+    - devtools_options.yaml
+    - diff.patch
+    - diff.txt
+    - diff_utf8.patch
+    - firestore.indexes.json
+    - firestore.rules
+    - fix_bulk_errors.py
+    - flutter_native_splash.yaml
+    - generate_assets.js
+    - generate_demo.dart
+    - generate_resume.py
+    - implementation_plan.md.resolved
+    - istockphoto-931288824-1024x1024.jpg
+    - opencode.json
+    - package-lock.json
+    - package.json
+    - patch.diff
+    - pubspec.lock
+    - remoteconfig.template.json
+    - resp_onboarding.txt
+    - screens_overview.md
+    - set_env.ps1
+    - set_env_final.ps1
+    - setup_android_tools.ps1
+    - sha_check.txt
+    - skills-lock.json
+    - storage.rules
+    - test_output.txt
+    - test_results.txt
+    - test_results_v2.txt
+    - test_results_v3.txt
+    - test_results_v4.txt
+    - test_results_v5.txt
+    - test_results_v6.txt
+    - test_share.dart
+    - tmp_stitch_test.txt
+    - tmp_stitch_test2.txt
+source_files: []
+depends_on: []
+related_to: []

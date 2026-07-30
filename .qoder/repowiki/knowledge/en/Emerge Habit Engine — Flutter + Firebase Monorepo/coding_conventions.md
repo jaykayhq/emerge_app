@@ -1,0 +1,5 @@
+- Feature modules under `lib/features/` follow a consistent split of UI, state (Riverpod providers), repository, and service layers.
+- Firebase interactions are accessed through the `cloud_functions` package rather than direct HTTP calls, keeping backend contracts typed.
+- Code generation is mandatory for Riverpod, Freezed, and Drift schemas via `build_runner`, never hand-written.
+- Environment-sensitive configuration flows through `flutter_dotenv` on the client and Firebase Remote Config / Secret Manager on the server.
+- Tests are organized as unit, widget, and integration suites under `test/` using `mocktail`, `fake_cloud_firestore`, and `firebase_auth_mocks`.

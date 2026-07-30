@@ -37,7 +37,7 @@ void main() {
   });
 
   test('deleteByHabitId cascades local completions', () async {
-    final deleted = await db.habitCompletionsDao.deleteByHabitId('h1');
+    final deleted = await db.habitCompletionsDao.deleteByHabitId('h1', 'u1');
     expect(deleted, 1);
     final remaining = await db.habitCompletionsDao.getBetweenDates(
       'u1',

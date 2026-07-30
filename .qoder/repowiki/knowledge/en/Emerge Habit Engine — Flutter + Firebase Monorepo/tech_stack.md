@@ -1,0 +1,1 @@
+Flutter (Dart 3.10+) with Riverpod v3 code-gen, go_router, Drift/SQLite, Firebase SDKs (Auth, Firestore, Messaging, Crashlytics, Remote Config, App Check, Analytics), RevenueCat, Google AdMob, Sentry, and Firebase Gen 2 Cloud Functions (Node.js 22). Build/code generation uses `build_runner` with `riverpod_generator`, `drift_dev`, and `flutter_launcher_icons`.

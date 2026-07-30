@@ -1,0 +1,1 @@
+`fixTribes.ts` is a standalone Node script that must be run directly against the `tradeflash-l2966` project; it calls `process.exit(0)` after completion rather than being deployed as a function. `recalcTribes.ts` exports its logic for reuse but has no deployable entry point of its own.

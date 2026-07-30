@@ -145,8 +145,8 @@ export const getGroqCoachAdvice = onCall({
       body: JSON.stringify({
         model: "llama-3.1-8b-instant",
         messages: [
-          { role: "system", content: userContext || "You are a motivational habit coach. Be concise. Max 2 sentences." },
-          { role: "user", content: userMessage },
+          { role: "system", content: "You are Koa, a motivational habit coach in the Emerge app. You help users build healthy habits through encouragement, practical tips, and accountability. Keep responses concise (2-3 sentences), warm, and actionable. Never discuss topics outside habit formation and personal growth." },
+          { role: "user", content: userContext ? `Context about my progress: ${userContext}\n\nMy question: ${userMessage}` : userMessage },
         ],
         max_tokens: 256,
         temperature: 0.7,

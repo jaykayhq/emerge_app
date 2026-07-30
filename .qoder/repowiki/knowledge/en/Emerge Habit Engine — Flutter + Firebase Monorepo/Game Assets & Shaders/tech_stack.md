@@ -1,0 +1,1 @@
+GLSL fragment shader using Flutter's `#include <flutter/runtime_effect.glsl>` for GPU-accelerated planet rendering; PNG/JPG image assets; placeholder Markdown files describing required Rive `.riv` animation contracts.

@@ -1,0 +1,549 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Koa — Emerge Mascot Preview</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: #0A0A1A;
+            color: #fff;
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            min-height: 100vh;
+            padding: 24px;
+        }
+
+        h1 {
+            text-align: center;
+            font-size: 28px;
+            margin-bottom: 8px;
+            background: linear-gradient(135deg, #2BEE79, #A5E7FF);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #92C9A8;
+            font-size: 14px;
+            margin-bottom: 40px;
+        }
+
+        .section {
+            margin-bottom: 48px;
+        }
+
+        .section-title {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 16px;
+            color: #fff;
+        }
+
+        .section-subtitle {
+            font-size: 12px;
+            color: #92C9A8;
+            margin-bottom: 24px;
+        }
+
+        /* Grid layouts */
+        .expression-grid, .archetype-grid, .size-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 24px;
+            justify-content: center;
+        }
+
+        .mascot-card {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .mascot-label {
+            font-size: 12px;
+            color: #92C9A8;
+            text-transform: capitalize;
+        }
+
+        /* Main mascot display */
+        .main-display {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 48px;
+        }
+
+        .main-mascot {
+            width: 200px;
+            height: 200px;
+        }
+
+        /* SVG Mascot Styles */
+        .mascot-svg {
+            filter: drop-shadow(0 4px 20px rgba(43, 238, 121, 0.3));
+        }
+
+        .shell-pattern {
+            animation: shellPulse 3s ease-in-out infinite;
+        }
+
+        @keyframes shellPulse {
+            0%, 100% { opacity: 0.3; }
+            50% { opacity: 0.5; }
+        }
+
+        .eye-shine {
+            animation: eyeTwinkle 2s ease-in-out infinite;
+        }
+
+        @keyframes eyeTwinkle {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+
+        /* Breathing animation */
+        .breathing {
+            animation: breathe 3s ease-in-out infinite;
+        }
+
+        @keyframes breathe {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.03); }
+        }
+
+        /* Expression card hover */
+        .mascot-card:hover .mascot-svg {
+            filter: drop-shadow(0 4px 30px rgba(43, 238, 121, 0.5));
+            transition: filter 0.3s ease;
+        }
+
+        /* Description text */
+        .expression-desc {
+            font-size: 11px;
+            color: #666;
+            text-align: center;
+            max-width: 80px;
+        }
+
+        /* Info box */
+        .info-box {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 32px;
+        }
+
+        .info-box h3 {
+            font-size: 16px;
+            margin-bottom: 12px;
+            color: #2BEE79;
+        }
+
+        .info-box p {
+            font-size: 14px;
+            color: #ccc;
+            line-height: 1.6;
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin-top: 16px;
+        }
+
+        .info-item {
+            background: rgba(255, 255, 255, 0.03);
+            padding: 12px;
+            border-radius: 8px;
+        }
+
+        .info-item strong {
+            color: #2BEE79;
+            display: block;
+            margin-bottom: 4px;
+        }
+
+        /* Copy section */
+        .copy-section {
+            background: rgba(43, 238, 121, 0.1);
+            border: 1px solid rgba(43, 238, 121, 0.3);
+            border-radius: 16px;
+            padding: 24px;
+            margin-top: 32px;
+        }
+
+        .copy-section h3 {
+            color: #2BEE79;
+            margin-bottom: 16px;
+        }
+
+        .copy-item {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 12px 16px;
+            border-radius: 8px;
+            margin-bottom: 8px;
+            font-size: 14px;
+            color: #fff;
+        }
+
+        .copy-item .context {
+            font-size: 11px;
+            color: #92C9A8;
+            margin-bottom: 4px;
+        }
+    </style>
+</head>
+<body>
+    <h1>🐢 Koa — The Cosmic Turtle</h1>
+    <p class="subtitle">Mascot Design for Emerge App</p>
+
+    <!-- Main Display -->
+    <div class="main-display">
+        <div class="mascot-card">
+            <svg class="mascot-svg breathing main-mascot" viewBox="0 0 200 200" id="main-mascot">
+                <!-- Will be drawn by JS -->
+            </svg>
+            <span class="mascot-label">Neutral — Explorer</span>
+        </div>
+    </div>
+
+    <!-- Info Box -->
+    <div class="info-box">
+        <h3>Why a Turtle?</h3>
+        <p>The turtle embodies the core philosophy of Emerge — slow, steady, and unstoppable growth.</p>
+        <div class="info-grid">
+            <div class="info-item">
+                <strong>Slow but Steady</strong>
+                "1% better every day" — compound growth
+            </div>
+            <div class="info-item">
+                <strong>Carries Its Home</strong>
+                Identity travels with you — habits are portable
+            </div>
+            <div class="info-item">
+                <strong>Long-Lived</strong>
+                Long-term thinking, not quick fixes
+            </div>
+            <div class="info-item">
+                <strong>Resilient Shell</strong>
+                Mental fortitude, emotional regulation
+            </div>
+        </div>
+    </div>
+
+    <!-- Expressions Section -->
+    <div class="section">
+        <h2 class="section-title">Expressions</h2>
+        <p class="section-subtitle">Koa reacts to your habit journey with 7 core expressions</p>
+        <div class="expression-grid" id="expression-grid">
+            <!-- Will be populated by JS -->
+        </div>
+    </div>
+
+    <!-- Archetype Shells Section -->
+    <div class="section">
+        <h2 class="section-title">Archetype Shells</h2>
+        <p class="section-subtitle">Shell color shifts based on your primary archetype</p>
+        <div class="archetype-grid" id="archetype-grid">
+            <!-- Will be populated by JS -->
+        </div>
+    </div>
+
+    <!-- Notification Copy Section -->
+    <div class="copy-section">
+        <h3>Notification Voice Examples</h3>
+        <div class="copy-item">
+            <div class="context">Morning</div>
+            "Good morning! Ready to vote for your future self? 🐢"
+        </div>
+        <div class="copy-item">
+            <div class="context">After Habit Complete</div>
+            "That's one vote for your future self!"
+        </div>
+        <div class="copy-item">
+            <div class="context">Streak Milestone (7 days)</div>
+            "7 days strong! You're building something real."
+        </div>
+        <div class="copy-item">
+            <div class="context">Return After Break</div>
+            "Missed you. No judgment — let's start fresh."
+        </div>
+        <div class="copy-item">
+            <div class="context">Streak Broken</div>
+            "We broke the streak, but not the habit. Tomorrow?"
+        </div>
+        <div class="copy-item">
+            <div class="context">Late Night</div>
+            "Still up? One small habit before bed?"
+        </div>
+        <div class="copy-item">
+            <div class="context">Weekly Recap</div>
+            "Look how far you've come. 🐢"
+        </div>
+    </div>
+
+    <script>
+        // Configuration
+        const archetypes = {
+            explorer: { primary: '#009688', accent: '#64FFDA', name: 'Explorer' },
+            athlete: { primary: '#FF5252', accent: '#FF8E72', name: 'Athlete' },
+            scholar: { primary: '#7C3AED', accent: '#B794F6', name: 'Scholar' },
+            creator: { primary: '#FFD700', accent: '#FFD93D', name: 'Creator' },
+            stoic: { primary: '#26A69A', accent: '#4DD4AC', name: 'Stoic' },
+            zealot: { primary: '#991B1B', accent: '#B45309', name: 'Zealot' }
+        };
+
+        const expressions = {
+            neutral: { 
+                name: 'Neutral', 
+                desc: 'Default idle state',
+                mouthPath: 'M 85 70 Q 100 72 115 70',
+                irisOffsetY: 0,
+                showCheeks: false,
+                eyeScale: 1
+            },
+            happy: { 
+                name: 'Happy', 
+                desc: 'Habit completed',
+                mouthPath: 'M 85 70 Q 100 82 115 70',
+                irisOffsetY: -2,
+                showCheeks: true,
+                eyeScale: 1.1
+            },
+            excited: { 
+                name: 'Excited', 
+                desc: 'Level up / milestone',
+                mouthPath: 'M 82 68 Q 100 90 118 68',
+                irisOffsetY: -3,
+                showCheeks: true,
+                eyeScale: 1.2
+            },
+            encouraging: { 
+                name: 'Encouraging', 
+                desc: 'Return after inactivity',
+                mouthPath: 'M 88 70 Q 100 80 112 70',
+                irisOffsetY: 0,
+                showCheeks: false,
+                eyeScale: 1
+            },
+            sad: { 
+                name: 'Sad', 
+                desc: 'Streak broken',
+                mouthPath: 'M 85 78 Q 100 68 115 78',
+                irisOffsetY: 3,
+                showCheeks: false,
+                eyeScale: 0.9
+            },
+            sleepy: { 
+                name: 'Sleepy', 
+                desc: 'Late night usage',
+                mouthPath: 'M 95 72 Q 100 78 105 72',
+                irisOffsetY: 0,
+                showCheeks: false,
+                eyeScale: 0.7
+            },
+            proud: { 
+                name: 'Proud', 
+                desc: 'Weekly recap',
+                mouthPath: 'M 85 70 Q 100 85 115 70',
+                irisOffsetY: -2,
+                showCheeks: true,
+                eyeScale: 1.1
+            }
+        };
+
+        function drawMascot(svg, archetype = 'explorer', expression = 'neutral', size = 100) {
+            const arch = archetypes[archetype];
+            const expr = expressions[expression];
+            
+            svg.setAttribute('viewBox', '0 0 200 200');
+            svg.style.width = size + 'px';
+            svg.style.height = size + 'px';
+            
+            svg.innerHTML = `
+                <defs>
+                    <!-- Shell gradient -->
+                    <linearGradient id="shellGrad-${archetype}-${expression}" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" style="stop-color:${arch.primary}"/>
+                        <stop offset="100%" style="stop-color:${arch.accent}"/>
+                    </linearGradient>
+                    
+                    <!-- Body gradient -->
+                    <linearGradient id="bodyGrad-${archetype}-${expression}" x1="0%" y1="0%" x2="0%" y2="100%">
+                        <stop offset="0%" style="stop-color:#3A2A4A"/>
+                        <stop offset="100%" style="stop-color:#2A1A3A"/>
+                    </linearGradient>
+                    
+                    <!-- Glow filter -->
+                    <filter id="glow-${archetype}-${expression}">
+                        <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+                        <feMerge>
+                            <feMergeNode in="coloredBlur"/>
+                            <feMergeNode in="SourceGraphic"/>
+                        </feMerge>
+                    </filter>
+                </defs>
+                
+                <!-- Shell (dome shape) -->
+                <ellipse cx="100" cy="95" rx="58" ry="50" 
+                    fill="url(#shellGrad-${archetype}-${expression})"
+                    stroke="#0A0A1A" stroke-width="3"/>
+                
+                <!-- Shell pattern (nebula swirls) -->
+                <path class="shell-pattern" d="M 70 85 Q 60 55 100 45" 
+                    stroke="${arch.accent}" stroke-width="3" fill="none" opacity="0.4" stroke-linecap="round"/>
+                <path class="shell-pattern" d="M 115 90 Q 130 60 110 40" 
+                    stroke="${arch.accent}" stroke-width="3" fill="none" opacity="0.4" stroke-linecap="round"/>
+                <path class="shell-pattern" d="M 85 95 Q 75 70 100 55" 
+                    stroke="${arch.accent}" stroke-width="2" fill="none" opacity="0.3" stroke-linecap="round"/>
+                
+                <!-- Belly -->
+                <ellipse cx="100" cy="110" rx="40" ry="28" 
+                    fill="url(#bodyGrad-${archetype}-${expression})"
+                    stroke="#0A0A1A" stroke-width="2"/>
+                
+                <!-- Belly highlight -->
+                <ellipse cx="100" cy="100" rx="28" ry="14" 
+                    fill="rgba(255,255,255,0.1)"/>
+                
+                <!-- Head -->
+                <circle cx="100" cy="55" r="32" 
+                    fill="url(#bodyGrad-${archetype}-${expression})"
+                    stroke="#0A0A1A" stroke-width="3"/>
+                
+                <!-- Eyes (white) -->
+                <ellipse cx="87" cy="50" rx="10" ry="${11 * expr.eyeScale}" fill="white"/>
+                <ellipse cx="113" cy="50" rx="10" ry="${11 * expr.eyeScale}" fill="white"/>
+                
+                <!-- Iris -->
+                <circle cx="87" cy="${50 + expr.irisOffsetY}" r="6" 
+                    fill="${expression === 'sad' ? '#90A4AE' : (expression === 'excited' || expression === 'proud' ? '#FFD700' : '#2BEE79')}"
+                    filter="url(#glow-${archetype}-${expression})"/>
+                <circle cx="113" cy="${50 + expr.irisOffsetY}" r="6" 
+                    fill="${expression === 'sad' ? '#90A4AE' : (expression === 'excited' || expression === 'proud' ? '#FFD700' : '#2BEE79')}"
+                    filter="url(#glow-${archetype}-${expression})"/>
+                
+                <!-- Pupils -->
+                <circle cx="87" cy="${50 + expr.irisOffsetY}" r="3" fill="#0A0A1A"/>
+                <circle cx="113" cy="${50 + expr.irisOffsetY}" r="3" fill="#0A0A1A"/>
+                
+                <!-- Eye shine -->
+                <circle class="eye-shine" cx="85" cy="${48 + expr.irisOffsetY}" r="1.5" fill="white"/>
+                <circle class="eye-shine" cx="111" cy="${48 + expr.irisOffsetY}" r="1.5" fill="white"/>
+                
+                <!-- Sleepy eyelids -->
+                ${expression === 'sleepy' ? `
+                    <rect x="77" y="44" width="20" height="8" fill="#2A1A3A" rx="2"/>
+                    <rect x="103" y="44" width="20" height="8" fill="#2A1A3A" rx="2"/>
+                ` : ''}
+                
+                <!-- Cheeks -->
+                ${expr.showCheeks ? `
+                    <ellipse cx="72" cy="60" rx="7" ry="4" fill="#FF8E72" opacity="0.4"/>
+                    <ellipse cx="128" cy="60" rx="7" ry="4" fill="#FF8E72" opacity="0.4"/>
+                ` : ''}
+                
+                <!-- Mouth -->
+                <path d="${expr.mouthPath}" stroke="#0A0A1A" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+                
+                <!-- Front legs -->
+                <ellipse cx="55" cy="120" rx="12" ry="8" 
+                    fill="url(#bodyGrad-${archetype}-${expression})"
+                    stroke="#0A0A1A" stroke-width="2"/>
+                <ellipse cx="145" cy="120" rx="12" ry="8" 
+                    fill="url(#bodyGrad-${archetype}-${expression})"
+                    stroke="#0A0A1A" stroke-width="2"/>
+                
+                <!-- Back legs -->
+                <ellipse cx="50" cy="105" rx="10" ry="6" 
+                    fill="url(#bodyGrad-${archetype}-${expression})"
+                    stroke="#0A0A1A" stroke-width="2"/>
+                <ellipse cx="150" cy="105" rx="10" ry="6" 
+                    fill="url(#bodyGrad-${archetype}-${expression})"
+                    stroke="#0A0A1A" stroke-width="2"/>
+                
+                <!-- Tail -->
+                <path d="M 100 138 L 93 128 L 107 128 Z" 
+                    fill="url(#bodyGrad-${archetype}-${expression})"
+                    stroke="#0A0A1A" stroke-width="2"/>
+            `;
+        }
+
+        // Initialize expression grid
+        const expressionGrid = document.getElementById('expression-grid');
+        Object.entries(expressions).forEach(([key, value]) => {
+            const card = document.createElement('div');
+            card.className = 'mascot-card';
+            
+            const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+            svg.classList.add('mascot-svg', 'breathing');
+            svg.style.animationDelay = Math.random() * 2 + 's';
+            
+            card.appendChild(svg);
+            
+            const label = document.createElement('span');
+            label.className = 'mascot-label';
+            label.textContent = value.name;
+            card.appendChild(label);
+            
+            const desc = document.createElement('span');
+            desc.className = 'expression-desc';
+            desc.textContent = value.desc;
+            card.appendChild(desc);
+            
+            expressionGrid.appendChild(card);
+            
+            drawMascot(svg, 'explorer', key, 80);
+        });
+
+        // Initialize archetype grid
+        const archetypeGrid = document.getElementById('archetype-grid');
+        Object.entries(archetypes).forEach(([key, value]) => {
+            const card = document.createElement('div');
+            card.className = 'mascot-card';
+            
+            const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+            svg.classList.add('mascot-svg', 'breathing');
+            svg.style.animationDelay = Math.random() * 2 + 's';
+            
+            card.appendChild(svg);
+            
+            const label = document.createElement('span');
+            label.className = 'mascot-label';
+            label.textContent = value.name;
+            card.appendChild(label);
+            
+            archetypeGrid.appendChild(card);
+            
+            drawMascot(svg, key, 'neutral', 80);
+        });
+
+        // Initialize main mascot
+        const mainMascot = document.getElementById('main-mascot');
+        drawMascot(mainMascot, 'explorer', 'neutral', 200);
+
+        // Cycle through expressions on main mascot
+        let currentExpression = 0;
+        const expressionKeys = Object.keys(expressions);
+        
+        setInterval(() => {
+            currentExpression = (currentExpression + 1) % expressionKeys.length;
+            drawMascot(mainMascot, 'explorer', expressionKeys[currentExpression], 200);
+            
+            // Update label
+            document.querySelector('.main-display .mascot-label').textContent = 
+                `${expressions[expressionKeys[currentExpression]].name} — Explorer`;
+        }, 3000);
+    </script>
+</body>
+</html>

@@ -1,0 +1,3 @@
+- Level thumbnail filenames encode hierarchy through prefixes: archetype codes (`ath_`, `cre_`, `exp_`, `sch_`, `sto_`, `zeal_`) followed by chapter and level numbers, enabling programmatic resolution without metadata.
+- Missing or future assets are represented by descriptive placeholder files (README.md, .md instructions) rather than empty files, documenting the expected format and contract for replacement.
+- Shader uniforms are documented as indexed comments above their declarations so the Dart painter can bind them consistently by position.

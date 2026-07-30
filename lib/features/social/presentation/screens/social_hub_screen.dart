@@ -1,46 +1,17 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
-import 'package:emerge_app/core/drift/database.dart';
-import 'package:emerge_app/features/auth/presentation/providers/auth_providers.dart';
-import 'package:emerge_app/features/social/presentation/providers/tribes_provider.dart';
 import 'package:emerge_app/features/pulse_feed/presentation/screens/pulse_feed_screen.dart';
 
-class SocialHubScreen extends ConsumerStatefulWidget {
+/// The Social tab's root screen.
+///
+/// Always renders [PulseFeedScreen] as the lobby. Navigation to a specific
+/// tribe only happens via explicit user action (tapping a club from the
+/// pulse feed or after onboarding club selection) — never auto-redirected.
+class SocialHubScreen extends ConsumerWidget {
   const SocialHubScreen({super.key});
 
   @override
-  ConsumerState<SocialHubScreen> createState() => _SocialHubScreenState();
-}
-
-class _SocialHubScreenState extends ConsumerState<SocialHubScreen> {
-  bool _navigatedToTribe = false;
-
-  @override
-  Widget build(BuildContext context) {
-    ref.listen(hasClubProvider, (prev, next) {
-      next.whenData((hasClub) {
-        if (hasClub && !_navigatedToTribe) {
-          _navigatedToTribe = true;
-          WidgetsBinding.instance.addPostFrameCallback((_) {
-            _navigateToUserTribe();
-          });
-        } else if (!hasClub) {
-          _navigatedToTribe = false;
-        }
-      });
-    });
-
+  Widget build(BuildContext context, WidgetRef ref) {
     return const PulseFeedScreen();
-  }
-
-  Future<void> _navigateToUserTribe() async {
-    final userId = ref.read(authStateChangesProvider).value?.id;
-    if (userId == null) return;
-    final dao = ref.read(tribeMembershipDaoProvider);
-    final membership = await dao.watchActiveMembership(userId).first;
-    if (membership != null && mounted) {
-      context.go('/social/tribe/${membership.tribeId}');
-    }
   }
 }

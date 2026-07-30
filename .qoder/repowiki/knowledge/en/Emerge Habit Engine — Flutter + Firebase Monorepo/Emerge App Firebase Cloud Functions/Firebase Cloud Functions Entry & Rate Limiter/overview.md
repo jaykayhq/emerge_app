@@ -1,0 +1,1 @@
+Firebase Gen 2 Cloud Functions entry point that registers callable HTTP functions, scheduled cron jobs, and a Firestore-triggered rate limiter for habit completion abuse prevention.

@@ -1,0 +1,5 @@
+- Large Firestore scans use `.stream()` with Promise-wrapped event listeners (`on('data')`, `on('end')`, `on('error')`) instead of `.get()` to avoid memory overflow on big collections.
+- Firestore mutations are batched via `db.batch()` and committed once per logical operation to minimize round trips.
+- Archetype-to-tribe mapping is centralized in a `clubMap: Record<string, string>` constant at the top of each file that needs it.
+- Admin SDK initialization is done lazily or inline per file (`admin.initializeApp()` called when needed), with `fixTribes.ts` pinning `projectId` explicitly for standalone execution.
+- Error handling uses `.catch(() => {})` for non-fatal deletes and try/catch around Auth deletion so cleanup continues even if individual steps fail.

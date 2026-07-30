@@ -1,0 +1,1 @@
+Firebase Cloud Functions and scripts that seed Firestore with initial reference data — tribes, challenges, official clubs, starter habit blueprints, interest catalogs, and challenge templates — using the Admin SDK.

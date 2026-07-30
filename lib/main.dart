@@ -143,6 +143,9 @@ class _EmergeAppState extends ConsumerState<EmergeApp> {
     // Start the sync trigger service (listens for connectivity changes)
     ref.read(syncTriggerServiceProvider);
 
+    // Start incoming sync listener (pulls Firestore data into Drift on auth)
+    ref.read(incomingSyncListenerProvider);
+
     // Seed local Drift tribe stats table so habit completions
     // before first tribe tab visit still update tribe stats
     final tribeRepo = ref.read(tribeRepositoryProvider);

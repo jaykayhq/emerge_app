@@ -1,0 +1,6 @@
+Three independent entry-point scripts under `functions/src/`, each serving a distinct maintenance role:
+- `recalcTribes.ts` exports `recalcTribesInternal(db)` — a reusable function (not an HTTP callable) that streams `users`, `user_stats`, and `global_activities` collections to rebuild tribe member lists, XP totals, and activity counts, then commits all updates in a single Firestore batch.
+- `cleanupUserData.ts` exposes a v2 HTTPS callable `deleteMyAccount` configured with `cpu: 1, memory: 512MiB, timeoutSeconds: 120, concurrency: 1` to handle the heavy synchronous purge of a user's Auth account and every associated Firestore document via `recursiveDelete`, query-based `deleteWhere`, and array-remove operations before deleting the Auth user last.
+- `fixTribes.ts` is a standalone CLI-style script that initializes Admin SDK with a hardcoded `PROJECT_ID`, resets official club member arrays, then scans all users to re-sync archetype→tribe mappings using `arrayUnion` and `serverTimestamp`.
+
+All three share a `clubMap` archetype-to-club-id mapping and rely on the Firebase Admin SDK for Firestore and Auth. Dependency direction is one-way: functions depend on `firebase-admin` and `firebase-functions`; there is no cross-import between the three files.

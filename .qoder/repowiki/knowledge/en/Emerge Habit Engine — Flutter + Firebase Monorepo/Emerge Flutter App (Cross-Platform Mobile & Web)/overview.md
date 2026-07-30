@@ -1,0 +1,1 @@
+Cross-platform Flutter application for habit tracking, gamification, social tribes, and creator tools, backed by Firebase with local Drift/SQLite persistence and Riverpod state management.

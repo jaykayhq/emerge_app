@@ -10,6 +10,7 @@ class HabitCompletionsTable extends Table {
   IntColumn get momentumAtCompletion => integer().nullable()();
   IntColumn get streakDay => integer().withDefault(const Constant(0))();
   IntColumn get wasRecovery => integer().withDefault(const Constant(0))();
+  IntColumn get challengeXp => integer().withDefault(const Constant(0))();
   TextColumn get syncedAt => text().nullable()();
 
   @override

@@ -346,9 +346,16 @@ final hasClubProvider = StreamProvider<bool>((ref) {
 });
 
 /// All discoverable tribes from Firestore.
+///
+/// Ordered by popularity (memberCount desc) and capped at 20 docs so we
+/// never download the full collection. Note: the orderBy on memberCount
+/// requires a single-field index (auto-created) — no composite index is
+/// needed since there is no where-clause here.
 final discoveryClubsProvider = StreamProvider<List<Tribe>>((ref) {
   return FirebaseFirestore.instance
       .collection('tribes')
+      .orderBy('memberCount', descending: true)
+      .limit(20)
       .snapshots()
       .map((snap) => snap.docs.map((d) => Tribe.fromMap(d.data())).toList());
 });
@@ -434,10 +441,12 @@ final tribeLoopServiceProvider = Provider<TribeLoopService>((ref) {
   final friendRepo = ref.read(friendRepositoryProvider);
   final dao = ref.read(habitCompletionsDaoProvider);
   final notificationService = ref.read(socialNotificationServiceProvider);
+  final tribeMembershipDao = ref.read(tribeMembershipDaoProvider);
   final watchdog = StreakWatchdog(
     friendRepo: friendRepo,
     habitCompletionsDao: dao,
     notificationService: notificationService,
+    tribeMembershipDao: tribeMembershipDao,
   );
   final service = TribeLoopService(
     socialActivity: socialActivity,

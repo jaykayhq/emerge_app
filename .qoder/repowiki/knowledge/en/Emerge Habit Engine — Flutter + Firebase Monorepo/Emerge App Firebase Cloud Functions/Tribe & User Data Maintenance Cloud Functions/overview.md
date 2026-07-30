@@ -1,0 +1,1 @@
+Firebase Cloud Functions that recalculate tribe statistics, purge a user's entire account data on deletion, and fix tribe membership by reconciling user archetypes with official clubs.

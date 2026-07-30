@@ -1,0 +1,6 @@
+- Every Python/Node/Dart script exposes its usage via a `--help` flag or inline docstring, and parses arguments with `argparse` (Python) or manual `process.argv` / `args` parsing rather than a framework.
+- Scripts read configuration from environment variables or command-line flags instead of config files (e.g. `GOOGLE_APPLICATION_CREDENTIALS`, `USE_EMULATOR`, `POLLINATIONS_API_KEY`, `PORT`).
+- Firebase Admin SDK scripts initialize credentials by trying a local service-account key first, then falling back to Application Default Credentials, and always wrap the main entry in a try/catch that exits with non-zero on fatal errors.
+- Image-generation scripts target the Pollinations.ai REST endpoint with a Bearer token, stream response bytes to disk, and include retry/rate-limit delays between calls.
+- Dataset-distillation scripts follow a single-source-of-truth pattern: `SYSTEM_PROMPT.md` is read at runtime by `build_seeds.py`, `build_context.py`, and `validate.py` so generated artifacts never drift from the canonical rules.
+- Standalone scripts use `Path(__file__).parent.parent` to resolve paths relative to the repo root rather than relying on the current working directory.

@@ -9,7 +9,6 @@ import 'package:emerge_app/features/habits/presentation/providers/habit_provider
 import 'package:emerge_app/features/habits/presentation/screens/streak_recovery_screen.dart';
 import 'package:emerge_app/features/habits/presentation/widgets/miss_recovery_sheet.dart';
 import 'package:emerge_app/features/monetization/domain/services/ad_manager_service.dart';
-import 'package:emerge_app/features/monetization/presentation/providers/subscription_provider.dart';
 import 'package:emerge_app/features/monetization/presentation/widgets/ad_banner_widget.dart';
 import 'package:emerge_app/features/timeline/presentation/widgets/month_calendar_strip.dart';
 import 'package:emerge_app/features/timeline/presentation/widgets/recap_summary_card.dart';
@@ -25,7 +24,7 @@ import 'package:emerge_app/features/gamification/presentation/providers/user_sta
 import 'package:emerge_app/core/presentation/widgets/world_background.dart';
 import 'package:emerge_app/core/domain/models/app_world_theme.dart';
 import 'package:emerge_app/core/utils/app_logger.dart';
-import 'package:emerge_app/core/presentation/widgets/archetype_sliver_app_bar.dart';
+import 'package:emerge_app/core/presentation/widgets/emerge_header.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -86,6 +85,11 @@ class _TimelineScreenState extends ConsumerState<TimelineScreen> {
     return max;
   }
 
+  bool _isToday(DateTime d) {
+    final now = DateTime.now();
+    return d.year == now.year && d.month == now.month && d.day == now.day;
+  }
+
   void _onPendingMilestoneChange(NarratorLine? prev, NarratorLine? next) {
     if (prev == null && next != null) {
       setState(() {
@@ -111,7 +115,9 @@ class _TimelineScreenState extends ConsumerState<TimelineScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       if (!mounted) return;
 
-      final habits = ref.read(dashboardStateProvider).habits;
+      final habits = ref.read(dashboardStateProvider).habits
+          .where((h) => h.isActiveOnDay(now))
+          .toList();
       final completedToday = habits.where((h) => h.isCompletedOn(now)).length;
       final totalHabits = habits.length;
 
@@ -169,7 +175,14 @@ class _TimelineScreenState extends ConsumerState<TimelineScreen> {
   Widget build(BuildContext context) {
     final habitsAsync = ref.watch(habitsProvider);
     final dashboardState = ref.watch(dashboardStateProvider);
-    final habits = dashboardState.habits;
+    // Use habitsAsync (Drift-backed stream) as the primary source so the
+    // timeline renders immediately on first build.  dashboardState.habits
+    // is populated via a listener/microtask and may still be [] on the
+    // initial frame even though habitsAsync already has data.
+    final allHabits = habitsAsync.value ?? dashboardState.habits;
+    final habits = allHabits
+        .where((h) => h.isActiveOnDay(_selectedDate))
+        .toList();
     final statsAsync = ref.watch(userStatsStreamProvider);
 
     ref.listen<AsyncValue<List<Habit>>>(habitsProvider, (previous, next) {
@@ -302,54 +315,12 @@ class _TimelineScreenState extends ConsumerState<TimelineScreen> {
 
     return CustomScrollView(
       slivers: [
-        ArchetypeSliverAppBar(
-          title: '',
-          leading: _ProfileInitialAvatar(
+        SliverToBoxAdapter(
+          child: EmergeHeader(
             displayName: displayName,
-            onTap: () => context.push('/profile'),
-          ),
-          momentumDot: Consumer(
-            builder: (context, ref, _) {
-              final streak = ref.watch(userStreakProvider).value ?? 0;
-              return Container(
-                width: 10,
-                height: 10,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: Color(momentumColorValue(streak)),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Color(
-                        momentumColorValue(streak),
-                      ).withValues(alpha: 0.4),
-                      blurRadius: 4,
-                    ),
-                  ],
-                ),
-              );
-            },
-          ),
-          syncIndicator: null,
-          badge: Consumer(
-            builder: (context, ref, _) {
-              final isPremium = ref.watch(isPremiumProvider).value ?? false;
-              if (!isPremium) return const SizedBox.shrink();
-              return Container(
-                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                decoration: BoxDecoration(
-                  color: Colors.amber,
-                  borderRadius: BorderRadius.circular(4),
-                ),
-                child: const Text(
-                  'PRO',
-                  style: TextStyle(
-                    color: Colors.black,
-                    fontSize: 8,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              );
-            },
+            showToday: _isToday(_selectedDate),
+            onAvatarTap: () => context.push('/profile'),
+            onUpgradeTap: () => context.push('/paywall'),
           ),
         ),
 
@@ -619,8 +590,12 @@ class _TimelineScreenState extends ConsumerState<TimelineScreen> {
         }
         // Otherwise: silent completion — particles provide visual feedback
 
-        // Show interstitial ad after habit completion (rate-limited to 12h)
-        ref.read(adManagerProvider).showInterstitialAd();
+        // Show interstitial ad after a delay to let celebration play first
+        Future.delayed(const Duration(seconds: 3), () {
+          if (mounted) {
+            ref.read(adManagerProvider).showInterstitialAd();
+          }
+        });
       }
     } catch (e) {
       if (mounted) {
@@ -668,8 +643,10 @@ class _TimelineScreenState extends ConsumerState<TimelineScreen> {
   }
 
   void _shareTimelineProgress() {
-    final habits = ref.read(dashboardStateProvider).habits;
     final now = DateTime.now();
+    final habits = ref.read(dashboardStateProvider).habits
+        .where((h) => h.isActiveOnDay(now))
+        .toList();
     final completedToday = habits.where((h) => h.isCompletedOn(now)).toList();
 
     final totalStreaks = habits.fold<int>(0, (sum, h) => sum + h.currentStreak);
@@ -688,69 +665,6 @@ class _TimelineScreenState extends ConsumerState<TimelineScreen> {
         totalHabits: habits.length,
         totalStreaks: totalStreaks,
         totalVotes: totalVotes,
-      ),
-    );
-  }
-}
-
-class _ProfileInitialAvatar extends StatelessWidget {
-  final String displayName;
-  final VoidCallback onTap;
-
-  const _ProfileInitialAvatar({
-    required this.displayName,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final initial = displayName.isNotEmpty
-        ? displayName[0].toUpperCase()
-        : '';
-
-    return Semantics(
-      label: 'Open profile',
-      button: true,
-      child: GestureDetector(
-        onTap: onTap,
-        behavior: HitTestBehavior.opaque,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 4),
-          child: SizedBox(
-            width: 44,
-            height: 44,
-            child: Center(
-              child: Container(
-                width: 36,
-                height: 36,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: Colors.white.withValues(alpha: 0.08),
-                  border: Border.all(
-                    color: Colors.white.withValues(alpha: 0.15),
-                    width: 1,
-                  ),
-                ),
-                child: Center(
-                  child: initial.isNotEmpty
-                      ? Text(
-                          initial,
-                          style: const TextStyle(
-                            color: EmergeColors.tealMuted,
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        )
-                      : const Icon(
-                          Icons.person_rounded,
-                          color: EmergeColors.tealMuted,
-                          size: 20,
-                        ),
-                ),
-              ),
-            ),
-          ),
-        ),
       ),
     );
   }

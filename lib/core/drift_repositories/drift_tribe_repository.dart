@@ -118,10 +118,13 @@ class DriftTribeRepository implements TribeRepository {
             onError: controller.addError,
           );
 
-          // Remote: background sync, never blocks
+          // Remote: background sync, never blocks.
+          // Capped at 20 docs — the official club set is small and bounded;
+          // this prevents a runaway download if the collection ever grows.
           remoteSub = _firestore
               .collection('tribes')
               .where('type', isEqualTo: TribeType.official.name)
+              .limit(20)
               .snapshots()
               .listen(
                 (snapshot) {
@@ -473,12 +476,16 @@ class DriftTribeRepository implements TribeRepository {
 
   @override
   Future<List<Tribe>> getUserTribes(String userId) async {
+    // Gather local data first so we can fall back to it on Firestore failure
+    List<Tribe> localTribes = [];
     final membership =
         await _db.tribeMembershipDao.watchActiveMembership(userId).first;
     if (membership != null) {
       final row = await _db.tribeStatsDao.getStats(membership.tribeId);
-      if (row != null) return [_rowToTribe(row)];
+      if (row != null) localTribes = [_rowToTribe(row)];
     }
+
+    if (localTribes.isNotEmpty) return localTribes;
 
     try {
       final tribeDocs = await _firestore
@@ -499,9 +506,10 @@ class DriftTribeRepository implements TribeRepository {
         ));
       }
       return tribes;
-    } catch (e) {
-      debugPrint('getUserTribes Firestore fallback failed: $e');
-      return [];
+    } catch (e, st) {
+      debugPrint('[TribeRepo] getUserTribes Firestore fallback failed: $e\n$st');
+      // Return local data only - don't silently return empty
+      return localTribes;
     }
   }
 

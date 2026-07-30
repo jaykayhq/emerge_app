@@ -1,0 +1,1 @@
+Firebase emulator tests require starting emulators first with `firebase emulators:start`, then running with `flutter test integration_test/firebase_emulator_test.dart`. The emulator endpoints are configured as localhost:8080 (Firestore), localhost:9099 (Auth), and localhost:5001 (Functions).

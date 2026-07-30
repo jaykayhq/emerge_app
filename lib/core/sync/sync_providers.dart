@@ -5,6 +5,8 @@ import 'package:emerge_app/core/drift/database.dart';
 import 'package:emerge_app/core/services/connectivity_service.dart';
 import 'package:emerge_app/core/sync/sync_engine_barrel.dart';
 import 'package:emerge_app/core/sync/sync_trigger_service.dart';
+import 'package:emerge_app/core/sync/incoming_sync_service.dart';
+import 'package:emerge_app/features/auth/presentation/providers/auth_providers.dart';
 
 final enhancedSyncEngineProvider = Provider<EnhancedSyncEngine>((ref) {
   final mutationQueue = ref.watch(mutationQueueDaoProvider);
@@ -41,4 +43,20 @@ final syncTriggerServiceProvider = Provider<SyncTriggerService>((ref) {
   ref.onDispose(() => service.stop());
   service.start();
   return service;
+});
+
+final incomingSyncServiceProvider = Provider<IncomingSyncService>((ref) {
+  final db = ref.watch(appDatabaseProvider);
+  return IncomingSyncService(db, FirebaseFirestore.instance);
+});
+
+/// Listens to auth state changes and pulls remote data into Drift on login.
+final incomingSyncListenerProvider = Provider<void>((ref) {
+  ref.listen(authStateChangesProvider, (previous, next) {
+    next.whenData((user) {
+      if (user.isNotEmpty) {
+        ref.read(incomingSyncServiceProvider).pullRemoteData(user.id);
+      }
+    });
+  });
 });

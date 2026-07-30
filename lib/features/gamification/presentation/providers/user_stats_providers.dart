@@ -109,6 +109,7 @@ class UserStatsController {
   final String userId;
   final String userName;
   StreamSubscription? _subscription;
+  StreamSubscription? _undoSubscription;
 
   UserStatsController({
     required this.repository,
@@ -126,6 +127,14 @@ class UserStatsController {
     if (_subscription != null) {
       EventBus().registerSubscription(_subscription!);
     }
+
+    _undoSubscription =
+        EventBus().on<HabitCompletionUndone>().listen((event) async {
+      await _handleHabitCompletionUndone(event);
+    });
+    if (_undoSubscription != null) {
+      EventBus().registerSubscription(_undoSubscription!);
+    }
   }
 
   void dispose() {
@@ -133,23 +142,77 @@ class UserStatsController {
       EventBus().unregisterSubscription(_subscription!);
       _subscription?.cancel();
     }
+    if (_undoSubscription != null) {
+      EventBus().unregisterSubscription(_undoSubscription!);
+      _undoSubscription?.cancel();
+    }
   }
 
+  /// Sole authoritative path for world health updates on habit completion.
+  /// Uses the GamificationService zone-based model to compute global health.
   Future<void> _handleHabitCompletion(HabitCompleted event) async {
-    // Logic moved to Backend (Cloud Functions).
-    // FirestoreHabitRepository now logs the activity, which triggers the Function.
-    // The Client just listens to the UserProfile stream for updates.
+    if (userId.isEmpty || event.userId != userId) return;
 
-    // We can use this hook for local UI feedback (confetti, toast, etc.)
-    // but NO data mutation.
-    AppLogger.d(
-      'Habit completed: ${event.habitId}, waiting for server update...',
-    );
+    try {
+      final profile = await repository.getUserStats(userId);
+      final gamificationService = GamificationService();
 
-    // Log success for debugging
-    AppLogger.i(
-      'Habit completed event received: ${event.habitId} for user: ${event.userId}',
-    );
+      // Resolve the HabitAttribute from the game loop result
+      final attribute = HabitAttribute.values.firstWhere(
+        (a) => a.name == event.gameLoopResult.attribute,
+        orElse: () => HabitAttribute.vitality,
+      );
+
+      // Compute zone-based world health (single authoritative path)
+      final newWorldState = gamificationService.updateWorldFromAttribute(
+        currentState: profile.worldState,
+        attribute: attribute,
+        completed: true,
+      );
+
+      // Persist the updated world state (zones + derived global scalar)
+      final updatedProfile = profile.copyWith(worldState: newWorldState);
+      await repository.saveUserStats(updatedProfile);
+
+      AppLogger.d(
+        'World health updated via zone model: '
+        'entropy=${newWorldState.entropy.toStringAsFixed(3)}, '
+        'health=${newWorldState.worldHealth.toStringAsFixed(3)}',
+      );
+    } catch (e, stack) {
+      AppLogger.e('Error updating world health on completion', e, stack);
+    }
+  }
+
+  /// Reverses world health when a habit completion is undone.
+  Future<void> _handleHabitCompletionUndone(HabitCompletionUndone event) async {
+    if (userId.isEmpty || event.userId != userId) return;
+
+    try {
+      final profile = await repository.getUserStats(userId);
+      final gamificationService = GamificationService();
+
+      final attribute = HabitAttribute.values.firstWhere(
+        (a) => a.name == event.attribute,
+        orElse: () => HabitAttribute.vitality,
+      );
+
+      // Reverse the zone-based world health
+      final newWorldState = gamificationService.reverseWorldFromAttribute(
+        currentState: profile.worldState,
+        attribute: attribute,
+      );
+
+      final updatedProfile = profile.copyWith(worldState: newWorldState);
+      await repository.saveUserStats(updatedProfile);
+
+      AppLogger.d(
+        'World health reversed via zone model: '
+        'entropy=${newWorldState.entropy.toStringAsFixed(3)}',
+      );
+    } catch (e, stack) {
+      AppLogger.e('Error reversing world health on undo', e, stack);
+    }
   }
 
   /// Recalculate world health based on momentum

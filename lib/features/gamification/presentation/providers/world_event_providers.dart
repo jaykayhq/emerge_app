@@ -8,6 +8,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 final _recentTimestamps = <WorldEventType, DateTime>{};
 
+/// Tracks the last-seen level so the engine can detect fresh threshold
+/// crossings (biome transitions) instead of re-firing at a stale level.
+int? _previousLevel;
+
 /// Stream of world events that fire in response to user stat changes.
 ///
 /// Consumed by the world map and Narrator to surface variable rewards.
@@ -17,11 +21,14 @@ final worldEventStreamProvider = Provider.autoDispose<Stream<List<WorldEvent>>>(
 
     ref.listen<AsyncValue<UserProfile>>(userStatsStreamProvider, (_, next) {
       next.whenData((profile) {
+        final currentLevel = profile.avatarStats.level;
         final stats = UserStats(
           consecutiveActiveDays: _estimateActiveDays(profile),
           currentMomentumScore: (profile.momentumScore * 100).round(),
-          level: profile.avatarStats.level,
+          level: currentLevel,
+          previousLevel: _previousLevel ?? currentLevel,
         );
+        _previousLevel = currentLevel;
 
         final now = DateTime.now();
         final events = WorldEventEngine.evaluateAndFire(

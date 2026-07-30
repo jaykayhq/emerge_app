@@ -15,6 +15,9 @@ MonetizationRepository monetizationRepository(Ref ref) {
 
 @Riverpod(keepAlive: true)
 class IsPremium extends _$IsPremium {
+  static const _cacheKey = 'cached_premium_status';
+  static const _cacheTimestampKey = 'cached_premium_timestamp';
+
   @override
   Future<bool> build() async {
     final repo = ref.watch(monetizationRepositoryProvider);
@@ -29,6 +32,7 @@ class IsPremium extends _$IsPremium {
 
     // Retry RevenueCat check up to 3 times
     bool isPremium = false;
+    bool checkSucceeded = false;
     for (int attempt = 0; attempt < 3; attempt++) {
       try {
         final sdkResult = await repo.isPremium;
@@ -36,7 +40,10 @@ class IsPremium extends _$IsPremium {
           if (attempt < 2) Future.delayed(Duration(seconds: 1 << attempt));
           return false;
         }, (val) => val);
-        if (sdkResult.isRight()) break;
+        if (sdkResult.isRight()) {
+          checkSucceeded = true;
+          break;
+        }
       } catch (e) {
         if (attempt < 2) await Future.delayed(Duration(seconds: 1 << attempt));
       }
@@ -45,10 +52,16 @@ class IsPremium extends _$IsPremium {
     // Real-time listener for subscription changes
     final sub = repo.premiumStatusStream.listen((isPremiumUpdate) {
       state = AsyncValue.data(isPremiumUpdate);
+      // Cache real-time updates too
+      _cachePremiumStatus(isPremiumUpdate);
     });
     ref.onDispose(() => sub.cancel());
 
-    if (isPremium) return true;
+    if (checkSucceeded || isPremium) {
+      // Cache successful result
+      await _cachePremiumStatus(isPremium);
+      return isPremium;
+    }
 
     // Retry Firebase Custom Claims check
     try {
@@ -58,6 +71,7 @@ class IsPremium extends _$IsPremium {
         final activeEntitlements =
             idTokenResult.claims?['activeEntitlements'] as List<dynamic>?;
         if (activeEntitlements?.contains('premium') ?? false) {
+          await _cachePremiumStatus(true);
           return true;
         }
       }
@@ -65,7 +79,45 @@ class IsPremium extends _$IsPremium {
       AppLogger.w('Custom claims verification failed', error: e);
     }
 
+    // All checks failed — fall back to local cache (offline support)
+    final cached = await _readCachedPremiumStatus();
+    if (cached != null) return cached;
+
     return isPremium;
+  }
+
+  /// Persist premium status for offline fallback.
+  Future<void> _cachePremiumStatus(bool isPremium) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setBool(_cacheKey, isPremium);
+      await prefs.setInt(
+        _cacheTimestampKey,
+        DateTime.now().millisecondsSinceEpoch,
+      );
+    } catch (e) {
+      AppLogger.w('Failed to cache premium status', error: e);
+    }
+  }
+
+  /// Read cached premium status. Returns null if cache is missing or expired.
+  /// Trusts cache for up to 7 days.
+  Future<bool?> _readCachedPremiumStatus() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final cachedStatus = prefs.getBool(_cacheKey) ?? false;
+      final cachedTime = prefs.getInt(_cacheTimestampKey) ?? 0;
+      final cacheAge = DateTime.now().millisecondsSinceEpoch - cachedTime;
+
+      if (cachedStatus &&
+          cacheAge < const Duration(days: 7).inMilliseconds) {
+        AppLogger.i('Using cached premium status (age: ${cacheAge ~/ 1000}s)');
+        return cachedStatus;
+      }
+    } catch (e) {
+      AppLogger.w('Failed to read cached premium status', error: e);
+    }
+    return null;
   }
 
   Future<void> retry() async {

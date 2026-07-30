@@ -1,0 +1,1 @@
+Top-level monorepo that wires a cross-platform Flutter habit-tracking app, Firebase Gen 2 Cloud Functions, shared assets, tests, documentation, and development scripts into a single deployable product.

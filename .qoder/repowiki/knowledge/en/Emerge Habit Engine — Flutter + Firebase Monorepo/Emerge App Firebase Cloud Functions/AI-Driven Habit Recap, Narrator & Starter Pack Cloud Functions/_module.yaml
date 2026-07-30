@@ -1,0 +1,10 @@
+schema_version: 1
+module_path: cloud_functions/ai_and_content
+title: AI-Driven Habit Recap, Narrator & Starter Pack Cloud Functions
+scope:
+    - functions/src/ai_recap.ts
+    - functions/src/narrator.ts
+    - functions/src/create_starter_pack.ts
+source_files: []
+depends_on: []
+related_to: []

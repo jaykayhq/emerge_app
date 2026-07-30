@@ -12,6 +12,26 @@ class LocalGameLoopEngine {
   static const double completionWorldHealthDelta =
       _completionBoost / 100.0;
 
+  /// Checks if a habit's streak should be broken due to missed days.
+  /// Call this on app launch and when viewing a habit.
+  /// Returns the updated streak value.
+  int checkAndBreakStreak({
+    required DateTime lastCompletedDate,
+    required int currentStreak,
+    required DateTime now,
+  }) {
+    final lastDay = DateTime(
+        lastCompletedDate.year, lastCompletedDate.month, lastCompletedDate.day);
+    final today = DateTime(now.year, now.month, now.day);
+    final daysMissed = today.difference(lastDay).inDays;
+
+    if (daysMissed > 1 && currentStreak > 0) {
+      // Streak is broken — missed at least one full day
+      return 0;
+    }
+    return currentStreak;
+  }
+
   int computeXpGain({
     required double difficultyMultiplier,
     required int streak,

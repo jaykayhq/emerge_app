@@ -22,7 +22,13 @@ void main() {
       firestore,
     );
     repository = DriftTribeRepository(db, syncEngine, firestore);
-    service = TribeMembershipService(repository, db.tribeMembershipDao, syncEngine);
+    service = TribeMembershipService(repository, db.tribeMembershipDao, syncEngine, firestore);
+
+    // Seed tribe document so transactions can read it
+    await firestore.collection('tribes').doc('morning_warriors').set({
+      'memberCount': 0,
+      'members': <String>[],
+    });
   });
 
   tearDown(() => db.close());
@@ -46,7 +52,8 @@ void main() {
       type: 'archetype',
     );
     final queue = await db.mutationQueueDao.getAllPending();
-    expect(queue.length, greaterThanOrEqualTo(3));
+    // 2 sync ops (user membership + contributor); tribe doc uses direct transaction
+    expect(queue.length, greaterThanOrEqualTo(2));
   });
 
   test('leaveTribe deactivates membership', () async {

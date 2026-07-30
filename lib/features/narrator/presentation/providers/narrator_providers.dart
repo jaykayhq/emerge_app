@@ -1,5 +1,7 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
+import 'package:emerge_app/features/ai/data/datasources/groq_ai_service.dart';
 import 'package:emerge_app/features/narrator/domain/models/narrator_line.dart';
+import 'package:emerge_app/features/narrator/domain/models/narrator_trigger.dart';
 import 'package:emerge_app/features/narrator/domain/services/narrator_line_resolver.dart';
 
 import 'package:emerge_app/core/drift/database.dart';
@@ -78,17 +80,46 @@ class NarratorStateNotifier extends _$NarratorStateNotifier {
 // Line resolver provider (keep-alive singleton)
 // ---------------------------------------------------------------------------
 
+/// Maps a Dart [NarratorTrigger] enum name (snake_case) to the camelCase
+/// string expected by the `fillNarratorSlots` Cloud Function.
+String _triggerToApiName(NarratorTrigger trigger) => switch (trigger) {
+      NarratorTrigger.onboardingPostArchetype => 'onboardingPostArchetype',
+      NarratorTrigger.morningBriefEarlyDays => 'morningBriefEarlyDays',
+      NarratorTrigger.streakBreakFirstMiss => 'streakBreakFirstMiss',
+      NarratorTrigger.onFireState => 'onFireState',
+      NarratorTrigger.levelUp => 'levelUp',
+      NarratorTrigger.weeklyRecap => 'weeklyRecap',
+      NarratorTrigger.longAbsence => 'longAbsence',
+      NarratorTrigger.eveningReflection => 'eveningReflection',
+      NarratorTrigger.askNarrator => 'dailyInsight',
+    };
+
 @Riverpod(keepAlive: true)
 NarratorLineResolver lineResolver(Ref ref) {
   final isPremium = ref.watch(isPremiumProvider).value ?? false;
+  final groqService = GroqAiService();
   return LlmNarratorLineResolver(
     isPro: isPremium,
     llmGeneratePersonal: (trigger, stats) async {
-      // TODO(task-22): swap stub for real Groq call
-      return PersonalLine(
-        text: '${trigger.name} personal line for momentum=${stats.momentumScore.toStringAsFixed(2)}',
-        dataBasis: 'momentumScore',
-      );
+      try {
+        final slots = await groqService.fillNarratorSlots(
+          trigger: _triggerToApiName(trigger),
+          context: {
+            'momentumScore': stats.momentumScore,
+            'currentStreak': stats.currentStreak,
+            'currentLevel': stats.currentLevel,
+            'completedHabits': stats.completedHabitsToday,
+            'totalHabits': stats.totalHabitsToday,
+          },
+        );
+        final text = slots.values.join(' ');
+        return PersonalLine(text: text, dataBasis: 'groq_slots');
+      } catch (_) {
+        return PersonalLine(
+          text: 'Momentum at ${stats.momentumScore.toStringAsFixed(2)}.',
+          dataBasis: 'momentumScore',
+        );
+      }
     },
   );
 }

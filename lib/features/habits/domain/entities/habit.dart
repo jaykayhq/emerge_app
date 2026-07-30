@@ -361,6 +361,28 @@ extension HabitExtension on Habit {
     return timeOfDayPreference!.name;
   }
 
+  /// Canonical "is this habit active on the given day?" logic.
+  ///
+  /// - [HabitFrequency.daily]: always active.
+  /// - [HabitFrequency.weekly]: active on the same weekday as creation.
+  /// - [HabitFrequency.specificDays]: active on days listed in [specificDays].
+  ///
+  /// Both the dashboard and the timeline MUST use this method so that
+  /// weekly habits appear on exactly the same set of days in every view.
+  bool isActiveOnDay(DateTime day) {
+    if (isArchived) return false;
+
+    switch (frequency) {
+      case HabitFrequency.daily:
+        return true;
+      case HabitFrequency.weekly:
+        // Active on the same weekday as the creation date.
+        return day.weekday == createdAt.weekday;
+      case HabitFrequency.specificDays:
+        return specificDays.contains(day.weekday);
+    }
+  }
+
   bool isCompletedOn(DateTime date) {
     final last = lastCompletedDate;
     if (last == null) return false;

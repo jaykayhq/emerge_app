@@ -1,0 +1,1 @@
+Rive animations are not yet shipped — each `assets/rive/*.md` file documents the exact State Machine inputs (`isSelected` Bool, `select` Trigger) and states (`idle`, `selected`, `celebrate`) that must be implemented in the corresponding `.riv` file before it can be loaded at runtime.

@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:emerge_app/core/deletion/deletion_service.dart';
 import 'package:emerge_app/core/services/event_bus.dart';
 import 'package:emerge_app/core/drift/database.dart';
+import 'package:uuid/uuid.dart';
 import 'package:emerge_app/features/social/domain/services/club_activity_service.dart';
 import 'package:emerge_app/core/error/failure.dart';
 import 'package:emerge_app/core/game_loop/game_loop_engine.dart';
@@ -36,8 +37,35 @@ class DriftHabitRepository implements HabitRepository {
 
   @override
   Stream<List<Habit>> watchHabits(String userId) {
-    return _db.habitsDao.watchHabits(userId).map((rows) {
-      return rows.map((row) => _rowToHabit(row)).toList();
+    return _db.habitsDao.watchHabits(userId).asyncMap((rows) async {
+      // Check and break stale streaks on read
+      final now = DateTime.now();
+      for (final row in rows) {
+        if (row.currentStreak > 0 && row.lastCompletedDate != null) {
+          final lastDate = DateTime.tryParse(row.lastCompletedDate!);
+          if (lastDate != null) {
+            final lastDay = DateTime(lastDate.year, lastDate.month, lastDate.day);
+            final today = DateTime(now.year, now.month, now.day);
+            if (today.difference(lastDay).inDays > 1) {
+              // Break the streak — missed at least one full day
+              await _db.habitsDao.updateStreak(
+                row.id,
+                0,
+                row.longestStreak,
+                row.lastCompletedDate,
+              );
+              await _db.habitsDao.updateMomentum(
+                row.id,
+                row.momentumScore,
+                row.consecutiveMisses + 1,
+              );
+            }
+          }
+        }
+      }
+      // Re-read to reflect any updates made above
+      final updatedRows = await _db.habitsDao.watchHabits(userId).first;
+      return updatedRows.map((row) => _rowToHabit(row)).toList();
     });
   }
 
@@ -211,7 +239,8 @@ class DriftHabitRepository implements HabitRepository {
 
         // Recompute reversed deltas from the most recent completion row.
         final last = todaysForHabit.last;
-        final xpToUndo = last.xpGained;
+        final challengeXpToReverse = last.challengeXp;
+        final xpToUndo = last.xpGained + challengeXpToReverse;
         final attr = last.attribute ?? 'vitality';
         final newStreak = (habitRow.currentStreak - 1).clamp(0, 99999);
         final newMomentum =
@@ -221,13 +250,12 @@ class DriftHabitRepository implements HabitRepository {
         final prevDate = startOfDay.subtract(const Duration(days: 1));
         final newTotalXp = (statsRow.totalXp - xpToUndo).clamp(0, 1 << 30);
         final newLevel = _engine.computeLevel(newTotalXp);
-        final newWorldHealth = (statsRow.worldHealthScore -
-                LocalGameLoopEngine.completionWorldHealthDelta)
-            .clamp(0.0, 1.0);
+        // World health reversal is handled by GamificationService via
+        // the HabitCompletionUndone event (zone-based model).
 
         await _db.transaction(() async {
           for (final c in todaysForHabit) {
-            await _db.habitCompletionsDao.deleteById(c.id);
+            await _db.habitCompletionsDao.deleteById(c.id, statsRow.userId);
           }
           await _db.habitsDao.updateStreak(
             habitId,
@@ -245,10 +273,21 @@ class DriftHabitRepository implements HabitRepository {
             newTotalXp,
           );
           await _db.userStatsDao.updateStreak(statsRow.userId, newStreak);
-          await _db.userStatsDao.updateWorldHealth(
-            statsRow.userId,
-            newWorldHealth,
-          );
+          // World health reversal is delegated to GamificationService
+          // via the HabitCompletionUndone event fired below.
+
+          // Reverse challenge day progress
+          if (challengeXpToReverse > 0) {
+            final activeChallenges =
+                await _db.challengeProgressDao.getActive(statsRow.userId);
+            for (final challenge in activeChallenges) {
+              if (challenge.attribute == null ||
+                  challenge.attribute == habitRow.attribute) {
+                await _db.challengeProgressDao
+                    .decrementDay(challenge.challengeId);
+              }
+            }
+          }
 
           // Sync deletion to Firestore (undo the completion record).
           for (final c in todaysForHabit) {
@@ -291,6 +330,14 @@ class DriftHabitRepository implements HabitRepository {
           }
         });
 
+        // Fire undo event so GamificationService reverses world health
+        // via the zone-based model (single authoritative path).
+        EventBus().fire(HabitCompletionUndone(
+          habitId: habitId,
+          userId: statsRow.userId,
+          attribute: attr,
+        ));
+
         return const Right(false);
       }
 
@@ -311,6 +358,13 @@ class DriftHabitRepository implements HabitRepository {
       String? tribeId;
 
       await _db.transaction(() async {
+        // Re-read inside transaction to prevent TOCTOU race
+        final freshHabitRow = await _db.habitsDao.getHabit(habitId);
+        if (freshHabitRow == null) return;
+        final freshStatsRow =
+            await _db.userStatsDao.getStats(freshHabitRow.userId);
+        if (freshStatsRow == null) return;
+
         await _db.habitsDao.updateStreak(
           habitId,
           result.newStreak,
@@ -323,47 +377,40 @@ class DriftHabitRepository implements HabitRepository {
           result.newConsecutiveMisses,
         );
 
+        final totalXpToAdd = result.xpGained + challengeXpEarned;
         await _db.userStatsDao.updateAttributeXp(
-          statsRow.userId,
+          freshStatsRow.userId,
           attr,
-          result.xpGained,
+          totalXpToAdd,
           newLevel,
           newTotalXp,
         );
-        if (challengeXpEarned > 0) {
-          await _db.userStatsDao.updateAttributeXp(
-            statsRow.userId,
-            'vitality',
-            challengeXpEarned,
-            newLevel,
-            newTotalXp,
-          );
-        }
-        await _db.userStatsDao.updateStreak(statsRow.userId, result.newStreak);
-        await _db.userStatsDao.updateWorldHealth(
-          statsRow.userId,
-          (statsRow.worldHealthScore + result.worldHealthDelta).clamp(0.0, 1.0),
-        );
+        await _db.userStatsDao.updateStreak(
+            freshStatsRow.userId, result.newStreak);
+        // World health is NOT updated here — it is computed by the
+        // GamificationService zone model via the HabitCompleted event.
 
+        final completionId = const Uuid().v4();
         await _db.habitCompletionsDao.insertFromData(
-          id: '${habitId}_${now.millisecondsSinceEpoch}',
+          id: completionId,
           habitId: habitId,
-          userId: statsRow.userId,
+          userId: freshStatsRow.userId,
           completedAt: date.toIso8601String(),
           xpGained: result.xpGained,
           attribute: attr,
           momentumAtCompletion: result.newMomentumScore,
           streakDay: result.newStreak,
           wasRecovery: result.isRecovery ? 1 : 0,
+          challengeXp: challengeXpEarned,
         );
 
         // Sync habit completion to Firestore for cross-device history
         await _syncEngine.enqueueSet(
-          collectionPath: 'users/${statsRow.userId}/habit_completions',
-          documentId: '${habitId}_${now.millisecondsSinceEpoch}',
+          collectionPath: 'users/${freshStatsRow.userId}/habit_completions',
+          documentId: completionId,
           data: {
             'habitId': habitId,
-            'userId': statsRow.userId,
+            'userId': freshStatsRow.userId,
             'completedAt': date.toIso8601String(),
             'xpGained': result.xpGained,
             'attribute': attr,
@@ -430,7 +477,7 @@ class DriftHabitRepository implements HabitRepository {
       // Sync to user_activity collection for weekly recap
       await _syncEngine.enqueueSet(
         collectionPath: 'user_activity',
-        documentId: '${habitId}_${now.millisecondsSinceEpoch}',
+        documentId: const Uuid().v4(),
         data: {
           'userId': statsRow.userId,
           'type': 'habit_completion',
@@ -456,10 +503,8 @@ class DriftHabitRepository implements HabitRepository {
             '__type__': 'increment',
             'value': result.xpGained,
           },
-          'worldState.entropy': {
-            '__type__': 'increment',
-            'value': -result.worldHealthDelta,
-          }, // worldHealthDelta is positive for improvement
+          // worldState.entropy is NOT updated here — the GamificationService
+          // zone model is the sole writer via UserStatsController.
           'updatedAt': nowStr,
         },
       );

@@ -8,12 +8,20 @@ if (admin.apps.length === 0) {
 const db = admin.firestore();
 
 /** Deletes every doc matched by `field == uid` in `collection`. */
-async function deleteWhere(collection: string, field: string, uid: string): Promise<void> {
-  const snap = await db.collection(collection).where(field, "==", uid).get();
+async function deleteWhere(collectionPath: string, field: string, value: any): Promise<void> {
+  const snap = await db.collection(collectionPath).where(field, "==", value).get();
   if (snap.empty) return;
-  const batch = db.batch();
-  snap.docs.forEach((doc) => batch.delete(doc.ref));
-  await batch.commit();
+
+  const chunks: FirebaseFirestore.DocumentReference[][] = [];
+  const docs = snap.docs.map(d => d.ref);
+  for (let i = 0; i < docs.length; i += 499) {
+    chunks.push(docs.slice(i, i + 499));
+  }
+  for (const chunk of chunks) {
+    const batch = db.batch();
+    chunk.forEach(ref => batch.delete(ref));
+    await batch.commit();
+  }
 }
 
 /**
@@ -69,14 +77,21 @@ export const deleteMyAccount = onCall(
       .where("members", "array-contains", uid)
       .get();
     if (!tribesSnap.empty) {
-      const batch = db.batch();
-      tribesSnap.docs.forEach((doc) => {
-        batch.update(doc.ref, {
-          members: admin.firestore.FieldValue.arrayRemove(uid),
-          memberCount: admin.firestore.FieldValue.increment(-1),
+      const tribeDocs = tribesSnap.docs.map(d => d.ref);
+      const tribeChunks: FirebaseFirestore.DocumentReference[][] = [];
+      for (let i = 0; i < tribeDocs.length; i += 499) {
+        tribeChunks.push(tribeDocs.slice(i, i + 499));
+      }
+      for (const chunk of tribeChunks) {
+        const batch = db.batch();
+        chunk.forEach((ref) => {
+          batch.update(ref, {
+            members: admin.firestore.FieldValue.arrayRemove(uid),
+            memberCount: admin.firestore.FieldValue.increment(-1),
+          });
         });
-      });
-      await batch.commit();
+        await batch.commit();
+      }
     }
 
     // ── Delete the Firebase Auth user last ──

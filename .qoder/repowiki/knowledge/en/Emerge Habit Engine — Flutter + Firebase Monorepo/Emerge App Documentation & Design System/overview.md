@@ -1,0 +1,1 @@
+Central documentation repository for the Emerge Flutter habit-tracking app, containing architecture specs, design system guidelines, AI development rules, asset-generation prompts, legal policies, and feature plans organized by role.

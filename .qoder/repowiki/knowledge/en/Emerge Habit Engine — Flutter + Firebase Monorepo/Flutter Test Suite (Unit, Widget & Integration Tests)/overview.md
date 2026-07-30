@@ -1,0 +1,1 @@
+Comprehensive Flutter test suite covering unit, widget, and integration tests for the Emerge app's core services, feature modules, Drift database layer, and Firebase-backed flows.

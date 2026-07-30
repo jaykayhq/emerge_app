@@ -1,0 +1,5 @@
+- Each function handler is exported directly from `index.ts` and registered via the appropriate `firebase-functions/v2` factory (`onCall`, `onSchedule`, `onDocumentCreated`).
+- Callable HTTPS functions validate authentication by checking `request.auth` and throw `HttpsError("unauthenticated", ...)` when missing.
+- Firestore writes use batched operations (`db.batch()`) with periodic commits to stay within batch size limits (e.g., BATCH_SIZE = 450).
+- Admin SDK initialization is guarded by an `admin.apps.length === 0` check so it runs only once per process.
+- Sub-modules are re-exported centrally via `export * from "./module"` statements rather than imported individually.

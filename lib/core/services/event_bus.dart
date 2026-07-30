@@ -11,7 +11,9 @@ class EventBus {
   static EventBus? _instance;
 
   factory EventBus() {
-    _instance ??= EventBus._internal();
+    if (_instance == null || _instance!._isDisposed) {
+      _instance = EventBus._internal();
+    }
     return _instance!;
   }
 
@@ -119,5 +121,19 @@ class HabitCompleted {
     required this.userName,
     this.tribeId,
     this.archetype,
+  });
+}
+
+/// Fired when a habit completion is reversed (undo).
+/// The GamificationService uses this to reverse the zone-based world health.
+class HabitCompletionUndone {
+  final String habitId;
+  final String userId;
+  final String attribute;
+
+  HabitCompletionUndone({
+    required this.habitId,
+    required this.userId,
+    required this.attribute,
   });
 }

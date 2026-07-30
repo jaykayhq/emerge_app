@@ -1,0 +1,1 @@
+Firebase Functions v2 HTTPS callables, Firebase Admin SDK (Firestore), Groq API (`llama-3.1-8b-instant`) via the OpenAI-compatible `/chat/completions` endpoint with `response_format: { type: "json_object" }` for deterministic JSON output.

@@ -1,0 +1,1 @@
+Flutter testing with `flutter_test`, state management tested via `flutter_riverpod` overrides, mocking through `mocktail`, Drift in-memory databases via `NativeDatabase.memory()`, and Firebase emulator integration for Firestore, Auth, and Cloud Functions.

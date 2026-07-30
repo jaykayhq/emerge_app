@@ -1,0 +1,10 @@
+schema_version: 1
+module_path: cloud_functions/seed_utilities
+title: Firestore Seed Utilities & Catalog Functions
+scope:
+    - functions/src/seed.ts
+    - functions/src/seed_starter_habits.ts
+    - functions/src/seed_templates.ts
+source_files: []
+depends_on: []
+related_to: []

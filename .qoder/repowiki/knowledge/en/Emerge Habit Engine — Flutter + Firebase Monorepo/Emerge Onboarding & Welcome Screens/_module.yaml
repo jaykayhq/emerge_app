@@ -1,0 +1,9 @@
+schema_version: 1
+module_path: stitch_welcome
+title: Emerge Onboarding & Welcome Screens
+scope:
+    - stitch_welcome_to_emerge/
+source_files: []
+depends_on: []
+related_to:
+    - path: flutter_app

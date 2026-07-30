@@ -21,7 +21,7 @@
 import { onCall, HttpsError } from "firebase-functions/v2/https";
 import * as admin from "firebase-admin";
 
-const VALID_ROLES = ["user", "creator"] as const;
+const VALID_ROLES = ["user", "creator", "admin"] as const;
 type Role = (typeof VALID_ROLES)[number];
 
 interface SetUserRoleRequest {
@@ -47,6 +47,12 @@ export const setUserRole = onCall<SetUserRoleRequest>(async (request) => {
       "invalid-argument",
       `role must be one of: ${VALID_ROLES.join(", ")}.`,
     );
+  }
+
+  // Only admins can assign elevated roles
+  const callerToken = request.auth.token;
+  if (role !== "user" && callerToken.admin !== true) {
+    throw new HttpsError("permission-denied", "Only admins can assign elevated roles");
   }
 
   const callerUid = request.auth.uid;

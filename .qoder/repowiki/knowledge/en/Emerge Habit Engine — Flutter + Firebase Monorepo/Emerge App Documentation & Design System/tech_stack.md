@@ -1,0 +1,1 @@
+Flutter/Dart project documentation; asset generation targets 2D cel-shaded PNGs via AI image generators using fixed style-lock prompts; plans use PowerShell and bash scripts for asset scaffolding; testing references `mocktail`; state management specified as Riverpod with `riverpod_generator`.

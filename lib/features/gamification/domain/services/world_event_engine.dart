@@ -12,8 +12,10 @@ import 'package:emerge_app/features/gamification/domain/models/world_event.dart'
 ///   beyond "one per day".
 /// - [WorldEventType.discoveryBurst]: fires when momentum score >= 90.
 ///   24-hour cooldown.
-/// - [WorldEventType.biomeTransition]: fires when the user hits one of the
-///   biome-transition levels: 5, 10, 20, or 30. 24-hour cooldown.
+/// - [WorldEventType.biomeTransition]: fires ONCE when the user's level
+///   crosses one of the biome-transition thresholds: 5, 10, 20, or 30
+///   (i.e. previous level below the threshold, current level at or above).
+///   No cooldown needed — a threshold can only be crossed once.
 class WorldEventEngine {
   /// Cooldown duration for events (24 hours).
   static const Duration _eventCooldown = Duration(hours: 24);
@@ -43,10 +45,11 @@ class WorldEventEngine {
   }) {
     final events = <WorldEvent>[];
 
-    // biomeTransition — highest priority
-    if (_isBiomeTransitionLevel(stats.level) &&
-        !_isOnCooldown(
-            WorldEventType.biomeTransition, now, recentEvents)) {
+    // biomeTransition — highest priority.
+    // Fires only when the level JUST crossed a threshold (previous level
+    // below, current level at or above), so it can never re-fire for a
+    // transition that was already celebrated.
+    if (_isBiomeTransition(stats.previousLevel ?? stats.level, stats.level)) {
       events.add(WorldEvent.biomeTransition(
         firedAt: now,
         newLevel: stats.level,
@@ -107,9 +110,13 @@ class WorldEventEngine {
     return 25;
   }
 
-  /// Checks if the given level is a biome-transition level.
-  static bool _isBiomeTransitionLevel(int level) {
-    return _biomeTransitionLevels.contains(level);
+  /// Checks whether the user's level just crossed a biome-transition
+  /// threshold: the previous level was below the threshold and the current
+  /// level is at or above it. This guarantees the event fires exactly once
+  /// per threshold, regardless of cooldowns or how often evaluation runs.
+  static bool _isBiomeTransition(int previousLevel, int currentLevel) {
+    return _biomeTransitionLevels.any(
+        (threshold) => previousLevel < threshold && currentLevel >= threshold);
   }
 
   /// Checks if a weather shift has already fired today.

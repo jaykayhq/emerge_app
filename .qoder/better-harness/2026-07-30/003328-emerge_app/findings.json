@@ -1,0 +1,216 @@
+{
+  "summary": {
+    "projectName": "emerge_app",
+    "locale": "en",
+    "modelId": "agent-work-loop-v4",
+    "reportContractVersion": 25,
+    "overview": "The project has strong agent-facing documentation and a testable design philosophy, but several mechanical gates (codegen validation, coverage floor, integration tests) remain unwired, and the configured skill layer lacks observed routing or use.",
+    "aiAgentPractice": {
+      "inspectedSurfaces": [
+        "Rules",
+        "Skills",
+        "Workflows"
+      ],
+      "coverageRows": [
+        {
+          "surface": "Rules",
+          "scopes": [
+            "Project"
+          ],
+          "count": 1,
+          "paths": [
+            "AGENTS.md"
+          ]
+        },
+        {
+          "surface": "Skills",
+          "scopes": [
+            "Project"
+          ],
+          "count": 33,
+          "paths": [
+            ".agents/skills/brainstorming/SKILL.md",
+            ".agents/skills/claude-mem/SKILL.md",
+            ".agents/skills/developing-genkit-dart/SKILL.md",
+            ".agents/skills/developing-genkit-go/SKILL.md",
+            ".agents/skills/developing-genkit-js/SKILL.md",
+            ".agents/skills/developing-genkit-python/SKILL.md",
+            ".agents/skills/dispatching-parallel-agents/SKILL.md",
+            ".agents/skills/executing-plans/SKILL.md",
+            ".agents/skills/finishing-a-development-branch/SKILL.md",
+            ".agents/skills/firebase-ai-logic-basics/SKILL.md",
+            ".agents/skills/firebase-app-hosting-basics/SKILL.md",
+            ".agents/skills/firebase-auth-basics/SKILL.md"
+          ]
+        },
+        {
+          "surface": "Workflows",
+          "scopes": [
+            "Project"
+          ],
+          "count": 3,
+          "paths": [
+            ".github/workflows/ci.yml",
+            ".github/workflows/firebase-hosting-merge.yml",
+            ".github/workflows/firebase-hosting-pull-request.yml"
+          ]
+        },
+        {
+          "surface": "Custom Agents",
+          "scopes": [
+            "Project"
+          ],
+          "count": 0
+        }
+      ]
+    },
+    "assignmentSummaries": [],
+    "dimensions": [
+      {
+        "id": "task-understanding",
+        "label": "Task Understanding",
+        "score": 72,
+        "summary": "AGENTS.md provides comprehensive architecture guidance, design authority, and a gotcha register that routes agents to the right context.",
+        "findingRefs": [
+          "tdd-skill-language-mismatch"
+        ]
+      },
+      {
+        "id": "controlled-execution",
+        "label": "Controlled Execution",
+        "score": 58,
+        "summary": "Commands are documented and CI exists, but the required codegen step is implicit and no single bootstrap script chains the setup.",
+        "findingRefs": []
+      },
+      {
+        "id": "change-validation",
+        "label": "Change Validation",
+        "score": 62,
+        "summary": "CI enforces format, analysis, and unit tests with a strict flag, yet coverage threshold, codegen freshness, and integration tests are ungated.",
+        "findingRefs": [
+          "codegen-absent-from-ci",
+          "no-coverage-threshold",
+          "integration-tests-not-gated",
+          "vanilla-lint-rules"
+        ]
+      },
+      {
+        "id": "reliable-delivery",
+        "label": "Reliable Delivery",
+        "score": 48,
+        "summary": "CI gates merges on main, but no explicit acceptance boundary, rollback procedure, or recovery path is documented.",
+        "findingRefs": []
+      },
+      {
+        "id": "learning-capture",
+        "label": "Learning Capture",
+        "score": 42,
+        "summary": "Skills and a task-observer are configured, but no session evidence exercises them and most lack mechanical routing.",
+        "findingRefs": [
+          "skills-without-routing",
+          "writing-skills-progressive-disclosure"
+        ]
+      }
+    ]
+  },
+  "findings": [
+    {
+      "id": "codegen-absent-from-ci",
+      "title": "Required build_runner codegen step is absent from CI",
+      "severity": "Medium",
+      "reason": "The project uses @riverpod annotations requiring build_runner to generate .g.dart files. CI runs flutter pub get, analyze, and test but never executes build_runner. A contributor who modifies an annotated provider and omits the codegen step will push stale generated files, causing confusing compilation errors that CI attributes to the test phase rather than the missing generation step.",
+      "expectedOutput": [
+        "Add a build_runner generation step to CI before the analyzer so stale generated files are caught at the correct phase with an actionable error."
+      ],
+      "expectedArtifact": "CI workflow update",
+      "aiFixPrompt": "/better-harness fix this issue\n\nAdd a build_runner generation step to .github/workflows/ci.yml after 'flutter pub get' and before the analyzer step. Use: flutter pub run build_runner build --delete-conflicting-outputs. Optionally add a diff check that fails if generated files are stale.\n\n## Validation\n\n- Confirm the CI workflow includes the codegen step before analysis\n- Run flutter pub run build_runner build locally and verify no diff in .g.dart files",
+      "dimensionRefs": [
+        "change-validation"
+      ]
+    },
+    {
+      "id": "no-coverage-threshold",
+      "title": "CI generates coverage but enforces no minimum threshold",
+      "severity": "Low",
+      "reason": "The CI workflow runs flutter test --coverage and uploads lcov.info as an artifact, but no step checks whether coverage has regressed. Tests can be deleted or new code added without tests, and the coverage floor drops silently with no gate or alert.",
+      "expectedOutput": [
+        "Add a coverage floor check to CI that fails the build when line coverage drops below the current baseline, preventing silent test regression."
+      ],
+      "expectedArtifact": "CI workflow update",
+      "aiFixPrompt": "/better-harness fix this issue\n\nAdd a coverage threshold check to .github/workflows/ci.yml after the test step. Use a tool like lcov --fail-under-lines or a GitHub Action that compares coverage against a baseline. Start with the current coverage level as the floor.\n\n## Validation\n\n- Confirm CI fails when coverage drops below the threshold\n- Confirm current coverage passes the new gate",
+      "dimensionRefs": [
+        "change-validation"
+      ]
+    },
+    {
+      "id": "integration-tests-not-gated",
+      "title": "Integration tests exist but are never executed in CI",
+      "severity": "Low",
+      "reason": "The project has three integration test files in integration_test/ covering app startup, emulator flow, and onboarding. CI only runs flutter test (unit and widget tests). Integration test regressions are invisible until manual device testing, despite the project having invested in writing them.",
+      "expectedOutput": [
+        "Either wire integration tests into a CI job with actionable failure output, or document the device constraint and add a manual verification checklist to AGENTS.md."
+      ],
+      "expectedArtifact": "CI job or documented constraint",
+      "aiFixPrompt": "/better-harness fix this issue\n\nEvaluate whether integration_test/ files can run in CI using flutter test integration_test/ with a headless device or Firebase Test Lab. If feasible, add a separate CI job or step. If device requirements prevent CI execution, document this constraint in AGENTS.md and add a manual testing checklist.\n\n## Validation\n\n- Confirm integration tests run in CI or the constraint is explicitly documented\n- Verify the chosen route produces actionable failure output",
+      "dimensionRefs": [
+        "change-validation"
+      ]
+    },
+    {
+      "id": "vanilla-lint-rules",
+      "title": "Project-specific conventions documented in AGENTS.md are not mechanically enforced by lint rules",
+      "severity": "Low",
+      "reason": "AGENTS.md documents conventions such as fpdart Either boundaries, never ref.watch inside go_router redirect, and userId parameter passing for singleton repositories. analysis_options.yaml includes only the default flutter_lints package with all custom rules commented out. These conventions rely entirely on agent or reviewer memory rather than static analysis.",
+      "expectedOutput": [
+        "Activate project-relevant lint rules in analysis_options.yaml so at least the standard conventions are mechanically enforced during CI analysis."
+      ],
+      "expectedArtifact": "Lint configuration update",
+      "aiFixPrompt": "/better-harness fix this issue\n\nReview analysis_options.yaml and enable project-relevant lint rules. At minimum, activate avoid_print, prefer_const_constructors, and always_declare_return_types. For conventions that cannot be expressed as lint rules (e.g., fpdart boundary), add a custom analyzer plugin or document them as review checklist items in AGENTS.md.\n\n## Validation\n\n- Run dart analyze and confirm new rules produce zero violations on current code\n- Confirm at least one project convention is now mechanically checked",
+      "dimensionRefs": [
+        "change-validation"
+      ]
+    },
+    {
+      "id": "skills-without-routing",
+      "title": "Configured skill layer lacks mechanical routing and has no observed invocation",
+      "severity": "Low",
+      "reason": "The project has 33 skills under .agents/skills/ but zero hooks, zero MCPs, and zero commands to trigger them mechanically. AGENTS.md references three skills by name, but the analyzer reports zero observed skill invocations across all available sessions. Without routing triggers, the skill investment remains inert documentation that agents must discover by reading the directory.",
+      "expectedOutput": [
+        "Add explicit trigger conditions for the five core skills so agents encounter them at the right lifecycle point without directory browsing."
+      ],
+      "expectedArtifact": "Routing configuration",
+      "aiFixPrompt": "/better-harness fix this issue\n\nFor the five most important skills (test-driven-development, systematic-debugging, verification-before-completion, brainstorming, writing-plans), add explicit trigger conditions to AGENTS.md or configure Qoder hooks that invoke them at the appropriate lifecycle point. Remove or archive skills that are no longer relevant.\n\n## Validation\n\n- Confirm at least three skills have explicit trigger conditions in AGENTS.md or hooks\n- Run a development task and verify at least one skill is invoked via its trigger",
+      "dimensionRefs": [
+        "learning-capture"
+      ]
+    },
+    {
+      "id": "tdd-skill-language-mismatch",
+      "title": "TDD skill uses TypeScript examples in a Flutter/Dart project",
+      "severity": "Low",
+      "reason": "AGENTS.md routes agents to .agents/skills/test-driven-development/SKILL.md for the TDD iron law. That skill's code examples use npm test and TypeScript syntax, while the project uses flutter test and Dart. An agent following the routed guidance encounters a toolchain mismatch that reduces the skill's direct applicability and may introduce incorrect command patterns.",
+      "expectedOutput": [
+        "Replace TypeScript examples in the TDD skill with Dart/Flutter equivalents so routed agents receive directly applicable guidance."
+      ],
+      "expectedArtifact": "Skill content update",
+      "aiFixPrompt": "/better-harness fix this issue\n\nUpdate .agents/skills/test-driven-development/SKILL.md to use Dart/Flutter examples (flutter test, mocktail, fake_cloud_firestore) that match this project's stack. Alternatively, add a project-specific override section at the top that maps the generic examples to Dart equivalents.\n\n## Validation\n\n- Confirm all code examples in the skill use Dart syntax and flutter test commands\n- Confirm the skill references mocktail and fake_cloud_firestore as the project specifies",
+      "dimensionRefs": [
+        "task-understanding"
+      ]
+    },
+    {
+      "id": "writing-skills-progressive-disclosure",
+      "title": "Longest skill file triggers the only lint warning by violating progressive-disclosure guidance",
+      "severity": "Low",
+      "reason": "The writing-skills skill at 655 lines is the sole lint warning (skill-length-hard-cap). It advises authors to separate heavy reference into local Markdown files, yet itself has zero local references. This self-contradiction reduces maintainability and increases token cost when the skill is loaded, and signals that the progressive-disclosure pattern was not applied during authoring.",
+      "expectedOutput": [
+        "Extract heavy reference sections from writing-skills into local Markdown files so the main skill stays under 200 lines and follows its own progressive-disclosure guidance."
+      ],
+      "expectedArtifact": "Skill restructure",
+      "aiFixPrompt": "/better-harness fix this issue\n\nRefactor .agents/skills/writing-skills/SKILL.md by extracting reference sections (examples, rubrics, anti-patterns) into a references/ subdirectory. Keep the main SKILL.md under 200 lines with links to the extracted files, following the skill's own progressive-disclosure advice.\n\n## Validation\n\n- Confirm the lint warning resolves (skill under hard-cap or has local references)\n- Confirm extracted reference files are linked and discoverable from the main skill",
+      "dimensionRefs": [
+        "learning-capture"
+      ]
+    }
+  ]
+}

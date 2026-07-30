@@ -1,0 +1,5 @@
+- Callable functions validate authentication first, then authorize based on `request.auth.token.admin`, throwing typed `HttpsError` codes (`unauthenticated`, `permission-denied`, `invalid-argument`).
+- Admin-only operations default to dry-run mode and require an explicit `{ dryRun: false }` payload to perform destructive actions.
+- Firestore writes use `{ merge: true }` with `serverTimestamp()` for fields like `roleUpdatedAt` so the mirrored document stays at least as fresh as the Auth claim.
+- Batched Firestore operations cap at 400 writes per batch before committing, respecting the 500-write limit.
+- Each function exports a single named function and keeps its types, constants, and validation logic co-located in the same file.

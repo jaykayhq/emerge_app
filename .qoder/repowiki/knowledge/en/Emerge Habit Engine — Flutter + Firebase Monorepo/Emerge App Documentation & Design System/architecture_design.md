@@ -1,0 +1,7 @@
+The docs directory is a flat knowledge base rather than executable code, organized into logical subdirectories that mirror the product's concerns:
+- `asset_generation/` contains per-archetype (athlete, creator, scholar, stoic, zealot) prompt files with a shared GLOBAL STYLE LOCK and outfit variants (training gear, competition day, recovery mode), driving image generation for avatar assets.
+- `superpowers/` is split into three parallel tracks — `plans/` (implementation checklists with PowerShell/bash steps), `specs/` (design documents paired with their implementation counterparts), and `skills/` (agent skill definitions for brainstorming, test-driven development, debugging, etc.). Files are date-prefixed (`YYYY-MM-DD-`) to maintain chronological ordering.
+- `legal/` holds the Privacy Policy and Terms of Service.
+- Root-level markdown files cover cross-cutting concerns: `ARCHITECTURE.md` (Clean Architecture + Bloc diagram), `AI_GUIDELINES.md` (Riverpod + Clean Architecture coding rules), `design.md` (full design system with tokens, spacing, glassmorphism rules), plus setup guides (`FIREBASE_APP_CHECK_SETUP.md`, `WEBP_CONVERSION_GUIDE.md`, `monetization_setup.md`).
+
+Dependency direction is one-way: all docs reference the live Flutter codebase (`lib/`, `assets/`, `pubspec.yaml`) but nothing in the code imports from docs. The superpowers plans explicitly reference target Dart files under `lib/features/*/` as their scope boundary.

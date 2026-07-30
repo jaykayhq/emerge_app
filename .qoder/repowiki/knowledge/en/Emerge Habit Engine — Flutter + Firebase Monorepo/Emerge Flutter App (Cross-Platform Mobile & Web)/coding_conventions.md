@@ -1,0 +1,6 @@
+- Feature modules are organized as `features/<name>/` with subdirectories `domain/entities`, `data/repositories`, `presentation/screens`, and `presentation/providers`, keeping UI, state, and data layers separated within each feature.
+- Riverpod providers use the `@riverpod` annotation with build_runner generating `.g.dart` files; providers are consumed through `ref.watch`/`ref.listen` inside `ConsumerWidget`/`ConsumerStatefulWidget` subclasses.
+- Async data is represented with Riverpod's `AsyncValue` pattern and consumed via `.when(data:, loading:, error:)` builders throughout the presentation layer.
+- Configuration values follow a three-tier fallback pattern: Firebase Remote Config first, then `.env` via `flutter_dotenv`, then compile-time `String.fromEnvironment` constants, all gated by `isDevelopment`/`isProduction` checks.
+- Platform-specific initialization is guarded with `if (!kIsWeb)` or `if (kIsWeb)` branches, especially for Firebase, AdMob, notifications, and Drift WASM setup.
+- Error handling wraps independent initializations in try-catch blocks so one failure does not block others, with `debugPrint` logging prefixed by emoji markers (✅, ⚠️, ℹ️) for quick scanning.

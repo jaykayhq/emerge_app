@@ -1,0 +1,1 @@
+Each function declares its own secrets via the `secrets: ["GROQ_API_KEY"]` option on `onCall`, so the Firebase project must have the `GROQ_API_KEY` secret configured before deployment. `ai_recap.ts` also requires `memory: "512MiB"` and `timeoutSeconds: 60`; `narrator.ts` uses `memory: "256MiB", cpu: 1, concurrency: 80` for high-throughput slot filling.

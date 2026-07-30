@@ -16,7 +16,7 @@ final adManagerProvider = Provider<AdManagerService>((ref) {
   // Initial ad loading if conditions are met, but not on web.
   Future(() {
     if (!kIsWeb &&
-        !(ref.read(isPremiumProvider).value ?? true) &&
+        !(ref.read(isPremiumProvider).value ?? false) &&
         ref.read(isConnectedProvider)) {
       service.loadAds();
     }
@@ -41,7 +41,7 @@ class AdManagerService {
     return Platform.isIOS ? 'ios' : 'android';
   }
 
-  bool get _isPremium => _ref.read(isPremiumProvider).value ?? true;
+  bool get _isPremium => _ref.read(isPremiumProvider).value ?? false;
   bool get _isConnected => _ref.read(isConnectedProvider);
 
   void loadAds() {
@@ -102,9 +102,19 @@ class AdManagerService {
     }
 
     if (_rewardedAd == null) {
-      onFailed();
-      _loadRewardedAd(); // Try loading for next time
-      return;
+      // Attempt to load before failing
+      try {
+        _loadRewardedAd();
+        // Wait briefly for load
+        await Future.delayed(const Duration(seconds: 2));
+      } catch (_) {}
+
+      if (_rewardedAd == null) {
+        // Still no ad — grant the reward as fallback (better UX than blocking)
+        debugPrint('[AdManager] Rewarded ad unavailable, granting reward as fallback');
+        onRewarded();
+        return;
+      }
     }
 
     _rewardedAd!.fullScreenContentCallback = FullScreenContentCallback(

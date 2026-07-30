@@ -1,13 +1,16 @@
 import 'dart:ui';
 import 'package:emerge_app/core/theme/emerge_colors.dart';
 import 'package:emerge_app/core/domain/models/app_world_theme.dart';
+import 'package:emerge_app/core/presentation/widgets/emerge_header.dart';
 import 'package:emerge_app/core/presentation/widgets/world_background.dart';
 import 'package:emerge_app/core/presentation/widgets/emerge_status_hud_top_bar.dart';
+import 'package:emerge_app/features/gamification/presentation/providers/user_stats_providers.dart';
 import 'package:emerge_app/features/social/presentation/screens/tribe_tab_content.dart';
 import 'package:emerge_app/features/social/presentation/screens/challenges_screen.dart';
 import 'package:emerge_app/features/social/presentation/screens/create_solo_challenge_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 /// Consolidated Social Screen for the 3-tab layout
 /// Hosts Archetype Tribe info, Challenges, and Discovery
@@ -70,6 +73,9 @@ class _SocialScreenState extends ConsumerState<SocialScreen>
 
   @override
   Widget build(BuildContext context) {
+    final displayName =
+        ref.watch(userStatsStreamProvider).value?.displayName ?? '';
+
     return WorldBackground(
       useSafeArea: false,
       themeOverride: AppWorldTheme.nebula,
@@ -94,6 +100,13 @@ class _SocialScreenState extends ConsumerState<SocialScreen>
       child: SafeArea(
         child: CustomScrollView(
           slivers: [
+            SliverToBoxAdapter(
+              child: EmergeHeader(
+                displayName: displayName,
+                onAvatarTap: () => context.push('/profile'),
+                onUpgradeTap: () => context.push('/paywall'),
+              ),
+            ),
             const EmergeStatusHudTopBar(),
             SliverPersistentHeader(
               pinned: true,

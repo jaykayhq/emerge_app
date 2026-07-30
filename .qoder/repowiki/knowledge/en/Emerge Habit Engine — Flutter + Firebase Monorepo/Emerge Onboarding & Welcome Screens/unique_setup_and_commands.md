@@ -1,0 +1,1 @@
+No build or install steps required — each `code.html` can be opened directly in a browser to preview the screen. The only external dependency is internet access to load Tailwind CSS, Google Fonts, and Material Symbols from their respective CDNs.

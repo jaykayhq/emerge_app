@@ -407,5 +407,7 @@ async function seedAll(): Promise<void> {
   process.exit(0);
 }
 
-// Run seeding
-seedAll();
+// Only run when executed directly (not imported)
+if (require.main === module) {
+  seedAll().catch(console.error);
+}

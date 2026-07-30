@@ -170,7 +170,6 @@ class WeeklyRecapService {
     int totalHabitsCompleted = 0;
     int totalXpEarned = 0;
     Map<String, int> habitCounts = {};
-    Set<String> activeDays = {};
     Map<String, int> attributeVotes = {};
 
     for (final activity in activities) {
@@ -182,10 +181,16 @@ class WeeklyRecapService {
       final attribute = activity.attribute;
       attributeVotes[attribute] =
           (attributeVotes[attribute] ?? 0) + 1;
-
-      final date = activity.completedAt;
-      activeDays.add('${date.year}-${date.month}-${date.day}');
     }
+
+    // A "perfect day" is a day on which ALL active (non-archived) habits
+    // were completed — not merely a day with any completion.
+    final perfectDays = await _countPerfectDays(
+      userId,
+      activities,
+      startDate,
+      endDate,
+    );
 
     // Determine dominant identity
     String? dominantIdentity;
@@ -227,7 +232,7 @@ class WeeklyRecapService {
       startDate: startDate,
       endDate: endDate,
       totalHabitsCompleted: totalHabitsCompleted,
-      perfectDays: activeDays.length,
+      perfectDays: perfectDays,
       totalXpEarned: totalXpEarned,
       topHabitName: topHabitName,
       currentLevel: userProfile.avatarStats?.level ?? 1,
@@ -235,5 +240,43 @@ class WeeklyRecapService {
       dominantIdentityThisWeek: dominantIdentity,
       identityHeadline: identityHeadline,
     );
+  }
+
+  /// Counts "perfect days" in the given range: days on which ALL active
+  /// (non-archived) habits were completed.
+  Future<int> _countPerfectDays(
+    String userId,
+    List<HabitCompletionEntity> completions,
+    DateTime startDate,
+    DateTime endDate,
+  ) async {
+    if (completions.isEmpty) return 0;
+
+    final habitRepository = _ref.read(habitRepositoryProvider);
+    final habits = await habitRepository.watchHabits(userId).first;
+    final activeHabitIds = habits
+        .where((h) => !h.isArchived)
+        .map((h) => h.id)
+        .toSet();
+
+    if (activeHabitIds.isEmpty) return 0;
+
+    int perfectDays = 0;
+    for (var day = startDate;
+        !day.isAfter(endDate);
+        day = day.add(const Duration(days: 1))) {
+      final completedHabitIds = completions
+          .where((c) => _isSameDay(c.completedAt, day))
+          .map((c) => c.habitId)
+          .toSet();
+      if (completedHabitIds.containsAll(activeHabitIds)) {
+        perfectDays++;
+      }
+    }
+    return perfectDays;
+  }
+
+  static bool _isSameDay(DateTime a, DateTime b) {
+    return a.year == b.year && a.month == b.month && a.day == b.day;
   }
 }

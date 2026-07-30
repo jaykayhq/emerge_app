@@ -1,0 +1,6 @@
+Three independent Gen-2 Firebase Functions in `functions/src/`, each exported as a named function:
+- `accountDeletion` is an `onRequest` HTTPS endpoint that returns a static HTML page instructing users how to delete their account through the app or by email.
+- `setUserRole` is an `onCall` callable that validates inputs, enforces authorization (users can only modify their own role; admins may target another UID), writes the canonical `role` custom claim via Admin SDK, and mirrors it into both `users/{uid}` and `creator_profiles/{uid}` with server timestamps for deterministic routing.
+- `purgeOrphanedUserData` is an admin-only `onCall` callable that lists all Auth UIDs, scans five Firestore collections (`users`, `user_stats`, `creator_profiles`, `insight_cache`, `customers`), skips system-seeded IDs (prefix `creator_`), and deletes orphaned top-level documents in batches of ≤400, defaulting to dry-run mode.
+
+All three depend only on `firebase-functions/v2/https` and `firebase-admin`; there is no shared library between them — each file is self-contained. Dependency direction is one-way: functions → Firebase Admin SDK → Auth/Firestore.

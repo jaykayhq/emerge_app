@@ -19,6 +19,7 @@ void main() {
         xpGained: 10,
         streakDay: 1,
         wasRecovery: 0,
+        challengeXp: 0,
       );
     }
 

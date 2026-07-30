@@ -192,8 +192,23 @@ class GamificationService {
     required Habit habit,
     required bool completed,
   }) {
+    return updateWorldFromAttribute(
+      currentState: currentState,
+      attribute: habit.attribute,
+      completed: completed,
+    );
+  }
+
+  /// Updates the world state based on a habit attribute completion or miss.
+  /// This is the SINGLE authoritative path for computing world health.
+  /// The global scalar (worldHealth) is derived from the zone-based model.
+  UserWorldState updateWorldFromAttribute({
+    required UserWorldState currentState,
+    required HabitAttribute attribute,
+    required bool completed,
+  }) {
     // Find the zone linked to this habit's attribute
-    final zone = WorldZone.getZoneForAttribute(habit.attribute);
+    final zone = WorldZone.getZoneForAttribute(attribute);
     if (zone == null) return currentState;
 
     // Get current zone state
@@ -241,6 +256,63 @@ class GamificationService {
     };
 
     // Recalculate global entropy based on zone health
+    double totalHealth = 0;
+    int zoneCount = 0;
+    for (final z in updatedZones.values) {
+      totalHealth += (z['health'] as num?)?.toDouble() ?? 1.0;
+      zoneCount++;
+    }
+    final avgHealth = zoneCount > 0 ? totalHealth / zoneCount : 1.0;
+    final newEntropy = 1.0 - avgHealth;
+
+    return currentState.copyWith(
+      zones: updatedZones,
+      entropy: newEntropy.clamp(0.0, 1.0),
+      lastActiveDate: DateTime.now(),
+    );
+  }
+
+  /// Reverses a previously applied completion for a given attribute.
+  /// Used when a habit completion is undone.
+  UserWorldState reverseWorldFromAttribute({
+    required UserWorldState currentState,
+    required HabitAttribute attribute,
+  }) {
+    final zone = WorldZone.getZoneForAttribute(attribute);
+    if (zone == null) return currentState;
+
+    final zoneData = currentState.zones[zone.id];
+    if (zoneData == null) return currentState;
+
+    double currentHealth = (zoneData['health'] as num?)?.toDouble() ?? 1.0;
+    int currentMilestone = zoneData['milestone'] as int? ?? 0;
+    int currentLevel = zoneData['level'] as int? ?? 1;
+
+    // Reverse the completion: decrease health and milestone
+    currentHealth = (currentHealth - healthGainOnComplete).clamp(0.0, 1.0);
+    currentMilestone -= 1;
+
+    // Check for level down
+    if (currentMilestone < 0 && currentLevel > 1) {
+      currentLevel -= 1;
+      currentMilestone = currentLevel * milestonesPerLevelBase - 1;
+    } else if (currentMilestone < 0) {
+      currentMilestone = 0;
+    }
+
+    final updatedZones = Map<String, Map<String, dynamic>>.from(
+      currentState.zones,
+    );
+    updatedZones[zone.id] = {
+      'zoneId': zone.id,
+      'level': currentLevel,
+      'health': currentHealth,
+      'milestone': currentMilestone,
+      'activeElements': zoneData['activeElements'] ?? <String>[],
+      'lastUpdated': DateTime.now().toIso8601String(),
+    };
+
+    // Recalculate global entropy from zone averages
     double totalHealth = 0;
     int zoneCount = 0;
     for (final z in updatedZones.values) {

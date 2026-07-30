@@ -1,0 +1,222 @@
+# 知识卡导出索引文件
+schema_version: 1
+locale: en-US
+branch: main
+nodes_managed: true
+exported_at: "2026-07-29T23:58:43Z"
+modules:
+    "":
+        dir_name: Emerge Habit Engine — Flutter + Firebase Monorepo
+        title: Emerge Habit Engine — Flutter + Firebase Monorepo
+        scope:
+            - README.md
+            - pubspec.yaml
+            - firebase.json
+            - .gitignore
+            - analysis_options.yaml
+            - .env.example
+            - .firebaserc
+            - .gitignore.backup
+            - .kilocodemodes
+            - .windsurfrules
+            - AGENTS.md
+            - Affiliate Strategy.md
+            - CHANGELOG.md
+            - CLAUDE.md
+            - Qwen.md
+            - REVIEW.md
+            - THEME_ADAPTATION_PLAN.md
+            - apple-developer-merchantid-domain-association
+            - beta_testers.csv
+            - coverage_notification.info
+            - decode_stack.mjs
+            - devtools_options.yaml
+            - diff.patch
+            - diff.txt
+            - diff_utf8.patch
+            - firestore.indexes.json
+            - firestore.rules
+            - fix_bulk_errors.py
+            - flutter_native_splash.yaml
+            - generate_assets.js
+            - generate_demo.dart
+            - generate_resume.py
+            - implementation_plan.md.resolved
+            - istockphoto-931288824-1024x1024.jpg
+            - opencode.json
+            - package-lock.json
+            - package.json
+            - patch.diff
+            - pubspec.lock
+            - remoteconfig.template.json
+            - resp_onboarding.txt
+            - screens_overview.md
+            - set_env.ps1
+            - set_env_final.ps1
+            - setup_android_tools.ps1
+            - sha_check.txt
+            - skills-lock.json
+            - storage.rules
+            - test_output.txt
+            - test_results.txt
+            - test_results_v2.txt
+            - test_results_v3.txt
+            - test_results_v4.txt
+            - test_results_v5.txt
+            - test_results_v6.txt
+            - test_share.dart
+            - tmp_stitch_test.txt
+            - tmp_stitch_test2.txt
+        source_files: []
+        children:
+            - assets_and_media
+            - cloud_functions
+            - documentation
+            - flutter_app
+            - scripts_and_tools
+            - stitch_welcome
+            - tests
+        depends_on: []
+        related_to: []
+    assets_and_media:
+        dir_name: Game Assets & Shaders
+        title: Game Assets & Shaders
+        scope:
+            - assets/
+            - shaders/
+        source_files: []
+        children: []
+        depends_on: []
+        related_to:
+            - path: flutter_app
+    cloud_functions:
+        dir_name: Emerge App Firebase Cloud Functions
+        title: Emerge App Firebase Cloud Functions
+        scope:
+            - functions/
+        source_files: []
+        children:
+            - cloud_functions/ai_and_content
+            - cloud_functions/data_sync
+            - cloud_functions/seed_utilities
+            - cloud_functions/shared_utils
+            - cloud_functions/user_management
+        depends_on: []
+        related_to:
+            - path: scripts_and_tools
+    cloud_functions/ai_and_content:
+        dir_name: AI-Driven Habit Recap, Narrator & Starter Pack Cloud Functions
+        title: AI-Driven Habit Recap, Narrator & Starter Pack Cloud Functions
+        scope:
+            - functions/src/ai_recap.ts
+            - functions/src/narrator.ts
+            - functions/src/create_starter_pack.ts
+        source_files: []
+        children: []
+        depends_on: []
+        related_to: []
+    cloud_functions/data_sync:
+        dir_name: Tribe & User Data Maintenance Cloud Functions
+        title: Tribe & User Data Maintenance Cloud Functions
+        scope:
+            - functions/src/recalcTribes.ts
+            - functions/src/cleanupUserData.ts
+            - functions/src/fixTribes.ts
+        source_files: []
+        children: []
+        depends_on: []
+        related_to: []
+    cloud_functions/seed_utilities:
+        dir_name: Firestore Seed Utilities & Catalog Functions
+        title: Firestore Seed Utilities & Catalog Functions
+        scope:
+            - functions/src/seed.ts
+            - functions/src/seed_starter_habits.ts
+            - functions/src/seed_templates.ts
+        source_files: []
+        children: []
+        depends_on: []
+        related_to: []
+    cloud_functions/shared_utils:
+        dir_name: Firebase Cloud Functions Entry & Rate Limiter
+        title: Firebase Cloud Functions Entry & Rate Limiter
+        scope:
+            - functions/src/rateLimiter.ts
+            - functions/src/index.ts
+            - functions/lib/index.js
+        source_files: []
+        children: []
+        depends_on: []
+        related_to:
+            - path: flutter_app
+    cloud_functions/user_management:
+        dir_name: User Account Lifecycle & Role Management Cloud Functions
+        title: User Account Lifecycle & Role Management Cloud Functions
+        scope:
+            - functions/src/accountDeletion.ts
+            - functions/src/setUserRole.ts
+            - functions/src/purgeOrphanedUserData.ts
+        source_files: []
+        children: []
+        depends_on: []
+        related_to: []
+    documentation:
+        dir_name: Emerge App Documentation & Design System
+        title: Emerge App Documentation & Design System
+        scope:
+            - docs/
+        source_files: []
+        children: []
+        depends_on: []
+        related_to:
+            - path: flutter_app
+    flutter_app:
+        dir_name: Emerge Flutter App (Cross-Platform Mobile & Web)
+        title: Emerge Flutter App (Cross-Platform Mobile & Web)
+        scope:
+            - lib/
+            - android/
+            - ios/
+            - web/
+        source_files: []
+        children: []
+        depends_on: []
+        related_to:
+            - path: assets_and_media
+            - path: cloud_functions/shared_utils
+            - path: documentation
+            - path: stitch_welcome
+            - path: tests
+    scripts_and_tools:
+        dir_name: Project Scripts, Asset Tools & Scratch Experiments
+        title: Project Scripts, Asset Tools & Scratch Experiments
+        scope:
+            - scripts/
+            - tools/
+            - scratch/
+        source_files: []
+        children: []
+        depends_on: []
+        related_to:
+            - path: cloud_functions
+    stitch_welcome:
+        dir_name: Emerge Onboarding & Welcome Screens
+        title: Emerge Onboarding & Welcome Screens
+        scope:
+            - stitch_welcome_to_emerge/
+        source_files: []
+        children: []
+        depends_on: []
+        related_to:
+            - path: flutter_app
+    tests:
+        dir_name: Flutter Test Suite (Unit, Widget & Integration Tests)
+        title: Flutter Test Suite (Unit, Widget & Integration Tests)
+        scope:
+            - test/
+            - integration_test/
+        source_files: []
+        children: []
+        depends_on: []
+        related_to:
+            - path: flutter_app

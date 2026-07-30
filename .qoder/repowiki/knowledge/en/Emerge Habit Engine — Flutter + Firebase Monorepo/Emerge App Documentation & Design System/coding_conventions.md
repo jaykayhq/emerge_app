@@ -1,0 +1,5 @@
+- Feature plan and spec files are named with an ISO date prefix (`YYYY-MM-DD-`) followed by a descriptive slug, keeping them chronologically sortable and searchable.
+- Asset-generation prompt files follow a strict template: a GLOBAL STYLE LOCK block repeated verbatim, then per-outfit sections that reuse skin/hair combinations and swap only the Outfit description paragraph.
+- Superpowers plans use checkbox syntax (`- [ ]`) for task tracking and include explicit step-by-step shell/PowerShell commands that can be executed directly from the project root.
+- Design tokens and UI rules are centralized in `design.md` and referenced by path (e.g., `lib/core/theme/emerge_colors.dart`, `lib/core/theme/emerge_dimensions.dart`) rather than redefined inline.
+- Legal documents use a standard header with Effective Date and numbered sections, with contact information consolidated at the end.

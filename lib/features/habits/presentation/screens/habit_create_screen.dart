@@ -1,3 +1,5 @@
+import 'package:emerge_app/core/presentation/widgets/glassmorphism_card.dart';
+import 'package:emerge_app/core/theme/emerge_colors.dart';
 import 'package:emerge_app/core/utils/app_logger.dart';
 import 'package:emerge_app/features/auth/presentation/providers/auth_providers.dart';
 import 'package:emerge_app/features/habits/domain/entities/habit.dart';
@@ -5,7 +7,6 @@ import 'package:emerge_app/features/habits/presentation/providers/habit_provider
 import 'package:emerge_app/features/habits/presentation/providers/habit_suggestions_provider.dart';
 import 'package:emerge_app/features/habits/presentation/providers/smart_defaults_provider.dart';
 import 'package:emerge_app/features/habits/presentation/widgets/emoji_picker_row.dart';
-import 'package:emerge_app/features/habits/presentation/widgets/habit_suggestions_grid.dart';
 import 'package:emerge_app/features/habits/presentation/widgets/identity_sentence_builder.dart';
 import 'package:emerge_app/features/monetization/presentation/widgets/premium_limit_dialog.dart';
 import 'package:emerge_app/features/timeline/presentation/widgets/habit_timeline_section.dart'
@@ -115,20 +116,7 @@ class HabitCreateScreen extends ConsumerStatefulWidget {
 }
 
 class _HabitCreateScreenState extends ConsumerState<HabitCreateScreen> {
-  final _titleController = TextEditingController();
-  final _locationController = TextEditingController();
-  final _titleFocus = FocusNode();
-  final _locationFocus = FocusNode();
   bool _saving = false;
-
-  @override
-  void dispose() {
-    _titleController.dispose();
-    _locationController.dispose();
-    _titleFocus.dispose();
-    _locationFocus.dispose();
-    super.dispose();
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -136,13 +124,12 @@ class _HabitCreateScreenState extends ConsumerState<HabitCreateScreen> {
     final defaults = ref.watch(smartDefaultsProvider);
     final suggestions = ref.watch(habitSuggestionsProvider);
 
-    // Effective time display: explicit form time, else smart default.
-    final effectiveTime = form.time.isNotEmpty
-        ? form.time
-        : defaults.time.format(context);
+    final effectiveTime =
+        form.time.isNotEmpty ? form.time : defaults.time.format(context);
 
     return Scaffold(
-      backgroundColor: const Color(0xFF0F0F1A),
+      backgroundColor: Colors.transparent,
+      extendBodyBehindAppBar: true,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         leading: IconButton(
@@ -152,130 +139,74 @@ class _HabitCreateScreenState extends ConsumerState<HabitCreateScreen> {
         title: const Text('CREATE HABIT'),
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(20),
+        padding: const EdgeInsets.fromLTRB(20, 80, 20, 20),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            EmojiPickerRow(
-              selectedEmoji: form.emoji,
-              recentlyUsed: EmojiPickerRow.fullEmojiList,
-              onEmojiSelected: (e) =>
-                  ref.read(habitCreateStateProvider.notifier).updateEmoji(e),
+            // 1. Hero sentence card
+            GlassmorphismCard(
+              margin: EdgeInsets.zero,
+              padding: const EdgeInsets.all(20),
+              glowColor: EmergeColors.teal,
+              glassOpacity: 0.06,
+              child: IdentitySentenceBuilder(
+                emoji: form.emoji,
+                action: form.title,
+                time: effectiveTime,
+                location: form.location,
+                frequency: form.frequency,
+                onEmojiTap: () => _showEmojiSheet(form.emoji),
+                onActionTap: () => _showActionSheet(suggestions),
+                onTimeTap: _showTimeSheet,
+                onLocationTap: _showLocationSheet,
+                onFrequencyTap: _showFrequencySheet,
+              ),
             ),
             const Gap(20),
-            IdentitySentenceBuilder(
-              action: form.title,
-              time: effectiveTime,
-              location: form.location,
-              frequency: form.frequency,
-              onActionChanged: (_) => _titleFocus.requestFocus(),
-              onTimeChanged: (_) {},
-              onTimePicked: (picked) {
-                ref
-                    .read(habitCreateStateProvider.notifier)
-                    .updateTime(picked.format(context), picked);
-              },
-              onLocationChanged: (_) => _locationFocus.requestFocus(),
-              onFrequencyChanged: (f) =>
-                  ref.read(habitCreateStateProvider.notifier).updateFrequency(f),
-            ),
-            const Gap(16),
-            TextField(
-              controller: _titleController,
-              focusNode: _titleFocus,
-              style: const TextStyle(color: Colors.white),
-              decoration: const InputDecoration(
-                hintText: 'What habit do you want to build?',
-                hintStyle: TextStyle(color: Colors.white38),
-              ),
-              onChanged: (v) =>
-                  ref.read(habitCreateStateProvider.notifier).updateTitle(v),
-            ),
-            const Gap(8),
-            HabitSuggestionsGrid(
-              suggestions: suggestions,
-              query: form.title,
-              onSelected: (s) {
-                _titleController.text = s;
-                ref.read(habitCreateStateProvider.notifier).updateTitle(s);
-                _titleFocus.unfocus();
-              },
-            ),
-            const Gap(16),
-            TextField(
-              controller: _locationController,
-              focusNode: _locationFocus,
-              style: const TextStyle(color: Colors.white),
-              decoration: const InputDecoration(
-                hintText: 'Where? (optional)',
-                hintStyle: TextStyle(color: Colors.white38),
-              ),
-              onChanged: (v) =>
-                  ref.read(habitCreateStateProvider.notifier).updateLocation(v),
-            ),
-            const Gap(16),
-            _AttributeBadge(
-              attribute: form.attribute,
-              onTap: _showAttributePicker,
-            ),
-            const Gap(20),
-            _sectionLabel('DIFFICULTY'),
-            const Gap(8),
-            Row(
-              children: HabitDifficulty.values.map((d) {
-                final selected = form.difficulty == d;
-                return Padding(
-                  padding: const EdgeInsets.only(right: 8),
-                  child: ChoiceChip(
-                    label: Text(d.name.toUpperCase()),
-                    selected: selected,
-                    onSelected: (_) => ref
+
+            // 2. Secondary pills row
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: [
+                // Difficulty chips
+                ...HabitDifficulty.values.map((d) {
+                  final selected = form.difficulty == d;
+                  return _SecondaryPill(
+                    label: d.name.toUpperCase(),
+                    isSelected: selected,
+                    onTap: () => ref
                         .read(habitCreateStateProvider.notifier)
                         .updateDifficulty(d),
-                  ),
-                );
-              }).toList(),
-            ),
-            const Gap(16),
-            _sectionLabel('2-MINUTE VERSION (optional)'),
-            const Gap(8),
-            TextField(
-              style: const TextStyle(color: Colors.white),
-              decoration: const InputDecoration(
-                hintText: 'Scale it down so it feels effortless',
-                hintStyle: TextStyle(color: Colors.white38),
-              ),
-              onChanged: (v) =>
-                  ref.read(habitCreateStateProvider.notifier).updateTwoMinute(v),
-            ),
-            const Gap(16),
-            Row(
-              children: [
-                _sectionLabel('TIMER'),
-                const Spacer(),
-                IconButton(
-                  icon: const Icon(Icons.remove, color: Colors.white70),
-                  onPressed: form.timerMinutes <= 1
-                      ? null
-                      : () => ref
-                          .read(habitCreateStateProvider.notifier)
-                          .updateTimer(form.timerMinutes - 1),
+                  );
+                }),
+                const SizedBox(width: 8),
+                // Attribute pill
+                _SecondaryPill(
+                  label: form.attribute.name.toUpperCase(),
+                  isSelected: true,
+                  color: attributeColor(form.attribute),
+                  onTap: _showAttributeSheet,
                 ),
-                Text(
-                  '${form.timerMinutes} min',
-                  style: const TextStyle(color: Colors.white),
-                ),
-                IconButton(
-                  icon: const Icon(Icons.add, color: Colors.white70),
-                  onPressed: form.timerMinutes >= 120
-                      ? null
-                      : () => ref
-                          .read(habitCreateStateProvider.notifier)
-                          .updateTimer(form.timerMinutes + 1),
+                // Timer pill
+                _SecondaryPill(
+                  label: '${form.timerMinutes} min',
+                  isSelected: true,
+                  onTap: () => _showTimerSheet(form.timerMinutes),
                 ),
               ],
             ),
+            const Gap(16),
+
+            // 3. Expandable 2-minute version
+            _ExpandableTwoMinute(
+              value: form.twoMinuteVersion,
+              onChanged: (v) =>
+                  ref.read(habitCreateStateProvider.notifier).updateTwoMinute(v),
+            ),
             const Gap(24),
+
+            // 4. Create button
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
@@ -283,11 +214,14 @@ class _HabitCreateScreenState extends ConsumerState<HabitCreateScreen> {
                     ? null
                     : _createHabit,
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF2BEE79),
-                  foregroundColor: Colors.black,
+                  backgroundColor: EmergeColors.teal,
+                  foregroundColor: const Color(0xFF05100B),
                   padding: const EdgeInsets.symmetric(vertical: 16),
                   disabledBackgroundColor:
-                      const Color(0xFF2BEE79).withValues(alpha: 0.3),
+                      EmergeColors.teal.withValues(alpha: 0.3),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
                 ),
                 child: _saving
                     ? const SizedBox(
@@ -295,12 +229,15 @@ class _HabitCreateScreenState extends ConsumerState<HabitCreateScreen> {
                         width: 20,
                         child: CircularProgressIndicator(
                           strokeWidth: 2,
-                          color: Colors.black,
+                          color: Color(0xFF05100B),
                         ),
                       )
                     : const Text(
-                        'FORGE HABIT →',
-                        style: TextStyle(fontWeight: FontWeight.bold),
+                        'FORGE HABIT',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                        ),
                       ),
               ),
             ),
@@ -310,41 +247,319 @@ class _HabitCreateScreenState extends ConsumerState<HabitCreateScreen> {
     );
   }
 
-  Widget _sectionLabel(String text) => Text(
-        text,
-        style: TextStyle(
-          color: Colors.white.withValues(alpha: 0.5),
-          fontSize: 12,
-          fontWeight: FontWeight.bold,
-          letterSpacing: 1,
-        ),
-      );
+  // ─── Bottom Sheets ──────────────────────────────────────────────────────
 
-  void _showAttributePicker() {
+  void _showEmojiSheet(String current) {
     showModalBottomSheet<void>(
       context: context,
-      backgroundColor: const Color(0xFF1A1A2E),
-      builder: (ctx) => SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: HabitAttribute.values
-              .map((a) => ListTile(
-                    title: Text(
-                      a.name.toUpperCase(),
-                      style: const TextStyle(color: Colors.white),
-                    ),
-                    onTap: () {
-                      ref
-                          .read(habitCreateStateProvider.notifier)
-                          .updateAttribute(a);
-                      Navigator.pop(ctx);
-                    },
-                  ))
-              .toList(),
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => _GlassSheet(
+        title: 'CHOOSE EMOJI',
+        child: Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: EmojiPickerRow.fullEmojiList.map((e) {
+            final isSelected = e == current;
+            return GestureDetector(
+              onTap: () {
+                ref
+                    .read(habitCreateStateProvider.notifier)
+                    .updateEmoji(e);
+                Navigator.pop(ctx);
+              },
+              child: Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: isSelected
+                      ? EmergeColors.teal.withValues(alpha: 0.12)
+                      : Colors.white.withValues(alpha: 0.06),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: isSelected
+                        ? EmergeColors.teal.withValues(alpha: 0.35)
+                        : Colors.white.withValues(alpha: 0.08),
+                  ),
+                ),
+                child: Text(e, style: const TextStyle(fontSize: 28)),
+              ),
+            );
+          }).toList(),
         ),
       ),
     );
   }
+
+  void _showActionSheet(List<String> suggestions) {
+    final controller = TextEditingController();
+    showModalBottomSheet<void>(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (ctx) => _GlassSheet(
+        title: 'WHAT ACTION?',
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: controller,
+              style: const TextStyle(color: Colors.white),
+              decoration: InputDecoration(
+                hintText: 'Type or choose...',
+                hintStyle:
+                    TextStyle(color: Colors.white.withValues(alpha: 0.38)),
+                filled: true,
+                fillColor: Colors.white.withValues(alpha: 0.06),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(
+                      color: Colors.white.withValues(alpha: 0.08)),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(
+                      color: Colors.white.withValues(alpha: 0.08)),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(
+                      color: EmergeColors.teal.withValues(alpha: 0.5)),
+                ),
+              ),
+            ),
+            const Gap(12),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: suggestions.map((s) {
+                return GestureDetector(
+                  onTap: () {
+                    ref
+                        .read(habitCreateStateProvider.notifier)
+                        .updateTitle(s);
+                    Navigator.pop(ctx);
+                  },
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 12, vertical: 8),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.06),
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(
+                        color: Colors.white.withValues(alpha: 0.08),
+                      ),
+                    ),
+                    child: Text(
+                      s,
+                      style:
+                          const TextStyle(color: Colors.white, fontSize: 13),
+                    ),
+                  ),
+                );
+              }).toList(),
+            ),
+            const Gap(12),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: () {
+                  if (controller.text.trim().isNotEmpty) {
+                    ref
+                        .read(habitCreateStateProvider.notifier)
+                        .updateTitle(controller.text.trim());
+                    Navigator.pop(ctx);
+                  }
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: EmergeColors.teal,
+                  foregroundColor: const Color(0xFF05100B),
+                ),
+                child: const Text('CONFIRM'),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showTimeSheet() {
+    showTimePicker(
+      context: context,
+      initialTime: TimeOfDay.now(),
+    ).then((picked) {
+      if (picked != null && mounted) {
+        ref.read(habitCreateStateProvider.notifier).updateTime(
+              picked.format(context),
+              picked,
+            );
+      }
+    });
+  }
+
+  void _showLocationSheet() {
+    final controller = TextEditingController();
+    showModalBottomSheet<void>(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => _GlassSheet(
+        title: 'WHERE?',
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: controller,
+              style: const TextStyle(color: Colors.white),
+              decoration: InputDecoration(
+                hintText: 'e.g. at home, at the gym...',
+                hintStyle:
+                    TextStyle(color: Colors.white.withValues(alpha: 0.38)),
+                filled: true,
+                fillColor: Colors.white.withValues(alpha: 0.06),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(
+                      color: Colors.white.withValues(alpha: 0.08)),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(
+                      color: EmergeColors.teal.withValues(alpha: 0.5)),
+                ),
+              ),
+            ),
+            const Gap(12),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: () {
+                  ref
+                      .read(habitCreateStateProvider.notifier)
+                      .updateLocation(controller.text.trim());
+                  Navigator.pop(ctx);
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: EmergeColors.teal,
+                  foregroundColor: const Color(0xFF05100B),
+                ),
+                child: const Text('CONFIRM'),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showFrequencySheet() {
+    showModalBottomSheet<void>(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => _GlassSheet(
+        title: 'HOW OFTEN?',
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: ['daily', 'weekly', 'weekdays', 'weekends'].map((f) {
+            return ListTile(
+              title: Text(
+                f,
+                style: const TextStyle(color: Colors.white),
+              ),
+              onTap: () {
+                ref
+                    .read(habitCreateStateProvider.notifier)
+                    .updateFrequency(f);
+                Navigator.pop(ctx);
+              },
+            );
+          }).toList(),
+        ),
+      ),
+    );
+  }
+
+  void _showAttributeSheet() {
+    showModalBottomSheet<void>(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => _GlassSheet(
+        title: 'ATTRIBUTE',
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: HabitAttribute.values.map((a) {
+            final color = attributeColor(a);
+            return ListTile(
+              leading: Icon(Icons.bolt, color: color),
+              title: Text(
+                a.name.toUpperCase(),
+                style: TextStyle(color: color),
+              ),
+              onTap: () {
+                ref
+                    .read(habitCreateStateProvider.notifier)
+                    .updateAttribute(a);
+                Navigator.pop(ctx);
+              },
+            );
+          }).toList(),
+        ),
+      ),
+    );
+  }
+
+  void _showTimerSheet(int current) {
+    showModalBottomSheet<void>(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => _GlassSheet(
+        title: 'TIMER DURATION',
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            IconButton(
+              icon: const Icon(Icons.remove, color: Colors.white70),
+              onPressed: current <= 1
+                  ? null
+                  : () {
+                      Navigator.pop(ctx);
+                      _showTimerSheet(current - 1);
+                      ref
+                          .read(habitCreateStateProvider.notifier)
+                          .updateTimer(current - 1);
+                    },
+            ),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: Text(
+                '$current min',
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+            IconButton(
+              icon: const Icon(Icons.add, color: Colors.white70),
+              onPressed: current >= 120
+                  ? null
+                  : () {
+                      Navigator.pop(ctx);
+                      _showTimerSheet(current + 1);
+                      ref
+                          .read(habitCreateStateProvider.notifier)
+                          .updateTimer(current + 1);
+                    },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // ─── Habit Creation Logic ───────────────────────────────────────────────
 
   Future<void> _createHabit() async {
     final form = ref.read(habitCreateStateProvider);
@@ -422,37 +637,172 @@ class _HabitCreateScreenState extends ConsumerState<HabitCreateScreen> {
   }
 }
 
-class _AttributeBadge extends StatelessWidget {
-  final HabitAttribute attribute;
-  final VoidCallback onTap;
+// ─── Private Helper Widgets ────────────────────────────────────────────────
 
-  const _AttributeBadge({required this.attribute, required this.onTap});
+/// Small glass pill for secondary options (difficulty, attribute, timer).
+class _SecondaryPill extends StatelessWidget {
+  final String label;
+  final bool isSelected;
+  final VoidCallback onTap;
+  final Color? color;
+
+  const _SecondaryPill({
+    required this.label,
+    required this.isSelected,
+    required this.onTap,
+    this.color,
+  });
 
   @override
   Widget build(BuildContext context) {
-    final color = attributeColor(attribute);
+    final c = color ?? EmergeColors.teal;
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         decoration: BoxDecoration(
-          color: color.withValues(alpha: 0.15),
+          color: isSelected
+              ? c.withValues(alpha: 0.12)
+              : Colors.white.withValues(alpha: 0.06),
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: color.withValues(alpha: 0.4)),
+          border: Border.all(
+            color: isSelected
+                ? c.withValues(alpha: 0.35)
+                : Colors.white.withValues(alpha: 0.08),
+          ),
         ),
-        child: Row(
+        child: Text(
+          label,
+          style: TextStyle(
+            color: isSelected
+                ? c
+                : Colors.white.withValues(alpha: 0.5),
+            fontSize: 12,
+            fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Expandable 2-minute version text field.
+class _ExpandableTwoMinute extends StatefulWidget {
+  final String value;
+  final ValueChanged<String> onChanged;
+
+  const _ExpandableTwoMinute({
+    required this.value,
+    required this.onChanged,
+  });
+
+  @override
+  State<_ExpandableTwoMinute> createState() => _ExpandableTwoMinuteState();
+}
+
+class _ExpandableTwoMinuteState extends State<_ExpandableTwoMinute> {
+  bool _expanded = false;
+  final _controller = TextEditingController();
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (!_expanded) {
+      return GestureDetector(
+        onTap: () {
+          setState(() => _expanded = true);
+          if (widget.value.isNotEmpty) _controller.text = widget.value;
+        },
+        child: Text(
+          '+ Scale it down (2-minute version)',
+          style: TextStyle(
+            color: EmergeColors.teal.withValues(alpha: 0.6),
+            fontSize: 13,
+          ),
+        ),
+      );
+    }
+    return TextField(
+      controller: _controller,
+      style: const TextStyle(color: Colors.white),
+      decoration: InputDecoration(
+        hintText: 'Scale it down so it feels effortless',
+        hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.38)),
+        filled: true,
+        fillColor: Colors.white.withValues(alpha: 0.06),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.08)),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.08)),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide:
+              BorderSide(color: EmergeColors.teal.withValues(alpha: 0.5)),
+        ),
+      ),
+      onChanged: widget.onChanged,
+    );
+  }
+}
+
+/// Shared glass bottom sheet container.
+class _GlassSheet extends StatelessWidget {
+  final String title;
+  final Widget child;
+
+  const _GlassSheet({required this.title, required this.child});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: EdgeInsets.only(
+        bottom: MediaQuery.of(context).viewInsets.bottom,
+      ),
+      child: Container(
+        padding: const EdgeInsets.all(24),
+        decoration: BoxDecoration(
+          color: const Color(0xFF1A1A2E),
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+          border: const Border(
+            top: BorderSide(color: Color(0x26FFFFFF)),
+          ),
+        ),
+        child: Column(
           mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Icon(Icons.bolt, size: 16, color: color),
-            const SizedBox(width: 6),
-            Text(
-              attribute.name.toUpperCase(),
-              style: TextStyle(
-                color: color,
-                fontSize: 13,
-                fontWeight: FontWeight.w600,
+            // Drag handle
+            Center(
+              child: Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.2),
+                  borderRadius: BorderRadius.circular(2),
+                ),
               ),
             ),
+            const Gap(16),
+            Text(
+              title,
+              style: TextStyle(
+                color: Colors.white.withValues(alpha: 0.5),
+                fontSize: 12,
+                fontWeight: FontWeight.bold,
+                letterSpacing: 1,
+              ),
+            ),
+            const Gap(12),
+            child,
           ],
         ),
       ),

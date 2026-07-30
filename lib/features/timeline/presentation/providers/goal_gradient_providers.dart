@@ -6,14 +6,17 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 part 'goal_gradient_providers.g.dart';
 
 /// Shared mapper: today's completion flags for the currently-loaded habits,
-/// evaluated once per habit. Empty list when the habits stream is
-/// loading/error (`.value` is null) — the pure helpers treat that as 0.
+/// evaluated once per habit. Only includes habits active today (via
+/// [Habit.isActiveOnDay]) so the fraction matches what the user sees.
+/// Empty list when the habits stream is loading/error (`.value` is null)
+/// — the pure helpers treat that as 0.
 List<_CompFlag> _todayFlags(Ref ref) {
   final habitsAsync = ref.watch(habitsProvider);
   final habits = habitsAsync.value ?? const <Habit>[];
   final now = DateTime.now();
   return [
-    for (final h in habits) _CompFlag(h.isCompletedOn(now)),
+    for (final h in habits)
+      if (h.isActiveOnDay(now)) _CompFlag(h.isCompletedOn(now)),
   ];
 }
 

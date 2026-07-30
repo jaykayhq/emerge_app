@@ -12,6 +12,7 @@ class FirestoreDriftSyncer {
   final TribeStatsDao tribeStatsDao;
   StreamSubscription? _leaderboardSub;
   StreamSubscription? _tribeStatsSub;
+  bool _isCancelled = false;
 
   FirestoreDriftSyncer({
     required this.firestore,
@@ -20,12 +21,15 @@ class FirestoreDriftSyncer {
   });
 
   void start(String tribeId) {
+    _isCancelled = false;
+
     _leaderboardSub = firestore
         .collection('club_leaderboards')
         .where('tribeId', isEqualTo: tribeId)
         .snapshots()
         .listen(
           (snapshot) {
+            if (_isCancelled) return;
             for (final doc in snapshot.docs) {
               final data = doc.data();
               leaderboardDao.upsertEntry(LeaderboardEntriesTableCompanion(
@@ -52,6 +56,7 @@ class FirestoreDriftSyncer {
         .snapshots()
         .listen(
           (doc) {
+            if (_isCancelled) return;
             if (!doc.exists) return;
             final data = doc.data()!;
             tribeStatsDao.upsertStats(TribeStatsTableCompanion(
@@ -69,7 +74,10 @@ class FirestoreDriftSyncer {
   }
 
   void stop() {
+    _isCancelled = true;
     _leaderboardSub?.cancel();
     _tribeStatsSub?.cancel();
+    _leaderboardSub = null;
+    _tribeStatsSub = null;
   }
 }

@@ -1,0 +1,1 @@
+Firebase Functions Gen 2 (`firebase-functions/v2/https`) with Admin SDK for Auth custom claims and Firestore operations; TypeScript throughout.

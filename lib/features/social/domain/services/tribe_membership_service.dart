@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:emerge_app/core/sync/sync_engine.dart';
 import 'package:emerge_app/core/utils/app_logger.dart';
 import 'package:emerge_app/features/social/data/repositories/tribe_repository.dart';
@@ -12,13 +13,16 @@ class TribeMembershipService {
   // ignore: unused_field — injected for future use by consumers
   final TribeRepository _repository;
   final TribeMembershipDao _dao;
+  // ignore: unused_field — kept for constructor compatibility
   final EnhancedSyncEngine _syncEngine;
+  final FirebaseFirestore _firestore;
   final Ref? _ref;
 
   TribeMembershipService(
     this._repository,
     this._dao,
-    this._syncEngine, [
+    this._syncEngine,
+    this._firestore, [
     this._ref,
   ]);
 
@@ -34,7 +38,45 @@ class TribeMembershipService {
         return Left(UnknownFailure('Already in tribe ${existing.tribeId}'));
       }
 
-      // 2. Drift: deactivate all (safety) + upsert active
+      // 2. Firestore transaction FIRST (authoritative source of truth).
+      //    If this fails, Drift is never written — no ghost membership.
+      await _firestore.runTransaction((transaction) async {
+        final tribeRef = _firestore.collection('tribes').doc(tribeId);
+        final tribeSnap = await transaction.get(tribeRef);
+        if (!tribeSnap.exists) throw Exception('Tribe not found');
+
+        final currentCount = (tribeSnap.data()?['memberCount'] as int?) ?? 0;
+        transaction.update(tribeRef, {
+          'memberCount': currentCount + 1,
+          'members': FieldValue.arrayUnion([userId]),
+          'lastStatsSync': FieldValue.serverTimestamp(),
+        });
+
+        // Write the user's membership subcollection atomically
+        transaction.set(
+          _firestore.collection('users').doc(userId).collection('tribes').doc(tribeId),
+          {
+            'tribeId': tribeId,
+            'joinedAt': FieldValue.serverTimestamp(),
+            'membershipType': type,
+            'isActive': true,
+          },
+        );
+
+        // Write contributor doc
+        transaction.set(
+          _firestore.collection('tribes').doc(tribeId).collection('contributors').doc(userId),
+          {
+            'userId': userId,
+            'joinedAt': FieldValue.serverTimestamp(),
+            'contributionCount': 0,
+            'totalHabitsCompleted': 0,
+            'totalXpContributed': 0,
+          },
+        );
+      });
+
+      // 3. Drift write AFTER Firestore succeeds (local cache)
       await _dao.deactivateAll(userId);
       await _dao.upsertMembership(UserTribeTableCompanion(
         userId: Value(userId),
@@ -44,46 +86,13 @@ class TribeMembershipService {
         isActive: const Value(true),
       ));
 
-      // 3. Sync: enqueue Firestore writes
-      await _syncEngine.enqueueSet(
-        collectionPath: 'users/$userId/tribes',
-        documentId: tribeId,
-        data: {
-          'tribeId': tribeId,
-          'joinedAt': {'__type__': 'serverTimestamp'},
-          'membershipType': type,
-        },
-      );
-      await _syncEngine.enqueueSet(
-        collectionPath: 'tribes/$tribeId/contributors',
-        documentId: userId,
-        data: {
-          'userId': userId,
-          'joinedAt': {'__type__': 'serverTimestamp'},
-          'contributionCount': 0,
-          'totalHabitsCompleted': 0,
-          'totalXpContributed': 0,
-        },
-      );
-      await _syncEngine.enqueueSet(
-        collectionPath: 'tribes',
-        documentId: tribeId,
-        data: {
-          'members': {
-            '__type__': 'arrayUnion',
-            'values': [userId],
-          },
-          'memberCount': {'__type__': 'increment', 'value': 1},
-          'lastStatsSync': {'__type__': 'serverTimestamp'},
-        },
-      );
-
       // 4. Invalidate providers (if Ref available)
       _ref?.invalidate(hasClubProvider);
       _ref?.invalidate(discoveryClubsProvider);
 
       return const Right(null);
     } catch (e, s) {
+      // Firestore failed — Drift was never written, so no rollback needed.
       AppLogger.e('joinTribe failed', e, s);
       return Left(UnknownFailure('Failed to join tribe: $e'));
     }
@@ -97,30 +106,34 @@ class TribeMembershipService {
       }
 
       final tribeId = active.tribeId;
-      await _dao.deactivateAll(userId);
 
-      await _syncEngine.enqueueMutation(
-        collectionPath: 'users/$userId/tribes',
-        documentId: tribeId,
-        operation: 'delete',
-      );
-      await _syncEngine.enqueueSet(
-        collectionPath: 'tribes',
-        documentId: tribeId,
-        data: {
-          'members': {
-            '__type__': 'arrayRemove',
-            'values': [userId],
-          },
-          'memberCount': {'__type__': 'increment', 'value': -1},
-        },
-      );
+      // 1. Firestore transaction FIRST (authoritative).
+      //    If this fails, Drift is never modified — no drift.
+      await _firestore.runTransaction((transaction) async {
+        final tribeRef = _firestore.collection('tribes').doc(tribeId);
+        final tribeSnap = await transaction.get(tribeRef);
+        if (tribeSnap.exists) {
+          final currentCount = (tribeSnap.data()?['memberCount'] as int?) ?? 0;
+          transaction.update(tribeRef, {
+            'memberCount': (currentCount - 1).clamp(0, 999999),
+            'members': FieldValue.arrayRemove([userId]),
+          });
+        }
+        // Remove the user's membership subcollection doc
+        transaction.delete(
+          _firestore.collection('users').doc(userId).collection('tribes').doc(tribeId),
+        );
+      });
+
+      // 2. Drift AFTER Firestore success (local cache)
+      await _dao.deactivateAll(userId);
 
       _ref?.invalidate(hasClubProvider);
       _ref?.invalidate(discoveryClubsProvider);
 
       return const Right(null);
     } catch (e, s) {
+      // Firestore failed — Drift was never modified, so no rollback needed.
       AppLogger.e('leaveTribe failed', e, s);
       return Left(UnknownFailure('Failed to leave tribe: $e'));
     }
@@ -140,5 +153,5 @@ final tribeMembershipServiceProvider = Provider<TribeMembershipService>((ref) {
   final repository = ref.watch(tribeRepositoryProvider);
   final dao = ref.watch(tribeMembershipDaoProvider);
   final syncEngine = ref.watch(enhancedSyncEngineProvider);
-  return TribeMembershipService(repository, dao, syncEngine, ref);
+  return TribeMembershipService(repository, dao, syncEngine, FirebaseFirestore.instance, ref);
 });

@@ -187,6 +187,32 @@ class _MembershipButton extends ConsumerWidget {
         onPressed: () async {
           try {
             if (isMember) {
+              // Confirmation dialog before leaving
+              final confirmed = await showDialog<bool>(
+                context: context,
+                builder: (ctx) => AlertDialog(
+                  title: const Text('Leave Tribe'),
+                  content: const Text(
+                    'Are you sure you want to leave? You will lose your streak progress, '
+                    'accountability partners, and tribe contributions.',
+                  ),
+                  actions: [
+                    TextButton(
+                      onPressed: () => Navigator.pop(ctx, false),
+                      child: const Text('Cancel'),
+                    ),
+                    TextButton(
+                      onPressed: () => Navigator.pop(ctx, true),
+                      child: const Text(
+                        'Leave',
+                        style: TextStyle(color: Colors.red),
+                      ),
+                    ),
+                  ],
+                ),
+              );
+              if (confirmed != true) return;
+
               await membershipService.leaveTribe(user.id);
               await statsService.syncTribeStats(tribe.id);
               if (context.mounted) {

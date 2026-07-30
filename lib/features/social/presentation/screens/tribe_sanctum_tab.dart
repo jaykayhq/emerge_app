@@ -64,6 +64,7 @@ class _TribeSanctumTabState extends ConsumerState<TribeSanctumTab> {
   Widget build(BuildContext context) {
     final profileAsync = ref.watch(userStatsStreamProvider);
     final clubsAsync = ref.watch(allArchetypeClubsProvider);
+    final activeMembership = ref.watch(activeMembershipProvider).value;
 
     return clubsAsync.when(
       data: (clubs) {
@@ -71,20 +72,17 @@ class _TribeSanctumTabState extends ConsumerState<TribeSanctumTab> {
           data: (profile) {
             final theme = ArchetypeTheme.forArchetype(profile.archetype);
 
-            final matchingIndex = clubs.isNotEmpty
-                ? clubs.indexWhere(
-                    (club) => club.archetypeId == profile.archetype.name,
-                  )
-                : -1;
-            final userClub = matchingIndex != -1
-                ? clubs[matchingIndex]
-                : clubs
-                      .where(
-                        (club) =>
-                            club.archetypeId == null ||
-                            club.archetypeId!.isEmpty,
-                      )
-                      .firstOrNull;
+            if (activeMembership == null) {
+              return const Center(
+                child: Text(
+                  'No active tribe',
+                  style: TextStyle(color: Colors.white70),
+                ),
+              );
+            }
+
+            final tribeId = activeMembership.tribeId;
+            final userClub = clubs.where((c) => c.id == tribeId).firstOrNull;
 
             if (userClub == null) {
               return const Center(

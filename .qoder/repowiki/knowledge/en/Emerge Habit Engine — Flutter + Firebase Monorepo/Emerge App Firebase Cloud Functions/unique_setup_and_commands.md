@@ -1,0 +1,1 @@
+`npm run build` compiles `src/` → `lib/`; `npm run serve` starts the Firebase emulator for local function testing; `npm run deploy` deploys only the functions target; `npm run seed` runs `lib/seed.js` to populate initial Firestore data; `npm test` runs Jest with coverage.

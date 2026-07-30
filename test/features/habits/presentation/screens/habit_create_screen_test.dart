@@ -37,55 +37,41 @@ void main() {
       await tester.pumpWidget(_createTestWidget());
       await tester.pump();
 
-      // App bar title from the new full-screen screen.
+      // App bar title.
       expect(find.text('CREATE HABIT'), findsOneWidget);
       // Identity sentence builder copy.
       expect(
         find.text('I am the type of person who'),
         findsOneWidget,
       );
-      // Emoji picker renders the selected default emoji.
+      // Default emoji shown in the sentence pill.
       expect(find.text('🔥'), findsOneWidget);
       // Difficulty chips render (default difficulty = medium).
       expect(find.text('MEDIUM'), findsOneWidget);
-      // Title + location + 2-minute text fields are present.
-      expect(find.byType(TextField), findsWidgets);
+      // IdentitySentenceBuilder is present.
+      expect(find.byType(IdentitySentenceBuilder), findsOneWidget);
     });
 
-    testWidgets('forge button disabled until a title is entered',
+    testWidgets('forge button disabled until action is set',
         (tester) async {
       await tester.pumpWidget(_createTestWidget());
       await tester.pump();
 
       final forgeButton =
-          find.widgetWithText(ElevatedButton, 'FORGE HABIT →');
+          find.widgetWithText(ElevatedButton, 'FORGE HABIT');
       expect(forgeButton, findsOneWidget);
+      // With no action set, the button is disabled.
       expect(tester.widget<ElevatedButton>(forgeButton).enabled, isFalse);
-
-      // Entering a title enables it.
-      await tester.enterText(find.byType(TextField).first, 'Morning Run');
-      await tester.pump();
-
-      expect(tester.widget<ElevatedButton>(forgeButton).enabled, isTrue);
     });
 
-    testWidgets('entering title updates the identity statement pill',
+    testWidgets('sentence shows placeholder pills when empty',
         (tester) async {
       await tester.pumpWidget(_createTestWidget());
       await tester.pump();
 
-      await tester.enterText(find.byType(TextField).first, 'Morning Run');
-      await tester.pump();
-
-      // The action pill in IdentitySentenceBuilder reflects the typed title,
-      // rendered as a Text inside the pill (not the editable TextField).
-      expect(
-        find.descendant(
-          of: find.byType(IdentitySentenceBuilder),
-          matching: find.text('Morning Run'),
-        ),
-        findsOneWidget,
-      );
+      // Placeholder text for unset pills.
+      expect(find.text('action'), findsOneWidget);
+      expect(find.text('where...'), findsOneWidget);
     });
   });
 }

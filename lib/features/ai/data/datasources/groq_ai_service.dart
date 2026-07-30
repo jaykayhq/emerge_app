@@ -25,4 +25,19 @@ class GroqAiService {
       rethrow;
     }
   }
+
+  /// Calls the `fillNarratorSlots` Cloud Function to get Groq-generated
+  /// narrator slot text for a given trigger and user context.
+  Future<Map<String, String>> fillNarratorSlots({
+    required String trigger,
+    required Map<String, dynamic> context,
+  }) async {
+    final result = await _functions
+        .httpsCallable('fillNarratorSlots')
+        .call({'trigger': trigger, 'context': context});
+    final data = result.data as Map<String, dynamic>?;
+    final slots = data?['slots'] as Map<String, dynamic>?;
+    if (slots == null) return {};
+    return slots.map((k, v) => MapEntry(k, v.toString()));
+  }
 }

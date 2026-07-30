@@ -1,0 +1,16 @@
+schema_version: 1
+module_path: flutter_app
+title: Emerge Flutter App (Cross-Platform Mobile & Web)
+scope:
+    - lib/
+    - android/
+    - ios/
+    - web/
+source_files: []
+depends_on: []
+related_to:
+    - path: assets_and_media
+    - path: cloud_functions/shared_utils
+    - path: documentation
+    - path: stitch_welcome
+    - path: tests

@@ -1,0 +1,1 @@
+Static asset repository for the Emerge app containing icons, level thumbnails, avatar silhouettes, background images, Rive animation placeholders, and a GLSL fragment shader for the cracked-orb planet effect.

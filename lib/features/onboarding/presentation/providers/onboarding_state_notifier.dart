@@ -169,6 +169,16 @@ class EnhancedOnboardingState extends Equatable {
 class EnhancedOnboardingNotifier extends _$EnhancedOnboardingNotifier {
   @override
   EnhancedOnboardingState build() {
+    // Reset onboarding state when the authenticated user changes
+    // (sign-out, sign-in as different user, etc.)
+    ref.listen(authStateChangesProvider, (prev, next) {
+      final prevUid = prev?.value?.id;
+      final nextUid = next.value?.id;
+      if (prevUid != nextUid) {
+        state = const EnhancedOnboardingState();
+      }
+    });
+
     // Check if user has completed onboarding
     final localSettings = ref.read(localSettingsRepositoryProvider);
     final isFirstLaunch = localSettings.isFirstLaunch;

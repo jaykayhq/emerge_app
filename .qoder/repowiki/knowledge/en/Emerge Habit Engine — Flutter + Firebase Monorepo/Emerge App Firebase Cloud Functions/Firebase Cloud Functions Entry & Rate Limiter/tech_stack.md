@@ -1,0 +1,1 @@
+Firebase Gen 2 Cloud Functions (`firebase-functions/v2`), Firebase Admin SDK, Firestore triggers, and Google Managed Secrets for the Groq API key. Functions are compiled from TypeScript to CommonJS in `lib/`.

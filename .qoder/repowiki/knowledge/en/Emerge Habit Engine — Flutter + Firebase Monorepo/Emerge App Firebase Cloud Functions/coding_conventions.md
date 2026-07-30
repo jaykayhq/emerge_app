@@ -1,0 +1,5 @@
+- Each cloud function lives in its own `src/<name>.ts` file and is exported directly, then re-exported from `src/index.ts` for deployment.
+- Callable functions use `onCall` from `firebase-functions/v2/https` and validate authentication via `request.auth`, throwing `HttpsError` for unauthenticated or invalid-argument cases.
+- Scheduled functions use `onSchedule` with cron expressions and operate on Firestore batches of fixed size (e.g., BATCH_SIZE = 450) to avoid quota limits.
+- Firestore writes use batched operations with `admin.firestore.FieldValue.serverTimestamp()` and `FieldValue.increment()` for atomic updates.
+- Secrets such as `GROQ_API_KEY` are accessed via `process.env` and declared in the function options `{ secrets: [...] }` rather than hardcoded.

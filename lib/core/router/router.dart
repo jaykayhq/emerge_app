@@ -77,12 +77,6 @@ class RedirectContext {
   final DateTime? userOnboardingCompletedAt;
   final CreatorOnboardingState? creatorOnboarding; // null = not a creator
 
-  /// Whether the one-time pre-auth endowment interstitial has been shown.
-  /// Defaults to `true` so existing call sites/tests keep their behaviour;
-  /// production passes the real SharedPreferences flag.
-  /// TODO: Remove this field — endowment is no longer gated in decideRedirect.
-  final bool hasSeenEndowment;
-
   const RedirectContext({
     required this.isLoggedIn,
     required this.role,
@@ -90,7 +84,6 @@ class RedirectContext {
     required this.userOnboardingProgress,
     required this.userOnboardingCompletedAt,
     required this.creatorOnboarding,
-    this.hasSeenEndowment = true,
   });
 }
 
@@ -260,7 +253,6 @@ GoRouter router(Ref ref) {
   ref.listen(currentCreatorOnboardingProvider, (_, _) => refreshNotifier.value++);
   ref.listen(userStatsStreamProvider, (_, _) => refreshNotifier.value++);
   ref.listen(onboardingControllerProvider, (_, _) => refreshNotifier.value++);
-  ref.listen(localSettingsRepositoryProvider, (_, _) => refreshNotifier.value++);
 
   return GoRouter(
     navigatorKey: _rootNavigatorKey,
@@ -281,7 +273,10 @@ GoRouter router(Ref ref) {
       bool isFirstLaunch = true;
       try {
         isFirstLaunch = ref.read(onboardingControllerProvider);
-      } catch (_) {}
+      } catch (e) {
+        debugPrint('[Router] Provider not ready during redirect, deferring: $e');
+        // Return null to defer redirect safely (provider will trigger rebuild when ready)
+      }
 
       final roleAsync = ref.read(currentUserRoleProvider);
       final creatorOnboardingAsync = ref.read(currentCreatorOnboardingProvider);
@@ -293,11 +288,6 @@ GoRouter router(Ref ref) {
           : null;
       final userStats = userStatsAsync is AsyncData ? userStatsAsync.value : null;
 
-      bool hasSeenEndowment = true;
-      try {
-        hasSeenEndowment = ref.read(localSettingsRepositoryProvider).hasSeenEndowment;
-      } catch (_) {}
-
       return decideRedirect(
         currentPath: path,
         ctx: RedirectContext(
@@ -307,7 +297,6 @@ GoRouter router(Ref ref) {
           userOnboardingProgress: userStats?.onboardingProgress,
           userOnboardingCompletedAt: userStats?.onboardingCompletedAt,
           creatorOnboarding: creatorOnboarding,
-          hasSeenEndowment: hasSeenEndowment,
         ),
       );
     },

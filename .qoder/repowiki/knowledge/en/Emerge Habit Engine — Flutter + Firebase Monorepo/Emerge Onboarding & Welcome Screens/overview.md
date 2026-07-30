@@ -1,0 +1,1 @@
+Static HTML mockups of the Emerge app's welcome, authentication, and onboarding screens — covering login/signup, avatar/XP system, habit blueprints, dashboard timeline, and community features.

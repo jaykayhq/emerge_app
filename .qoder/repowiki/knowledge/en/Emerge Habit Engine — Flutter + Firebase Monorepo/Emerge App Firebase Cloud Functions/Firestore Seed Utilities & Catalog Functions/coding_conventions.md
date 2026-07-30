@@ -1,0 +1,6 @@
+- Each seed file defines its payload as a module-level constant array of plain objects, which are then iterated to populate a Firestore batch.
+- Every seeded document is written with `batch.set(ref, { ...entry, createdAt: admin.firestore.FieldValue.serverTimestamp() })` (or `updatedAt` for mutable catalogs), ensuring server-side timestamps.
+- Cloud Function endpoints validate admin access by checking that the `Authorization` header starts with `Bearer ` and that the token equals `process.env.ADMIN_SECRET`, returning 401/403 accordingly.
+- HTTP seed functions accept both POST and PUT methods, rejecting others with a 405 response.
+- Batch operations wrap all writes in a single `db.batch().commit()` call so that seeding is atomic per endpoint invocation.
+- Files initialize the Admin SDK defensively with an `if (admin.apps.length === 0) admin.initializeApp()` guard before accessing Firestore.

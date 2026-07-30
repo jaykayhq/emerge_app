@@ -9,20 +9,23 @@ void main() {
       MaterialApp(
         home: Scaffold(
           body: IdentitySentenceBuilder(
+            emoji: '🔥',
             action: 'meditate',
             time: '7:00 AM',
             location: 'living room',
             frequency: 'daily',
-            onActionChanged: (_) {},
-            onTimeChanged: (_) {},
-            onLocationChanged: (_) {},
-            onFrequencyChanged: (_) {},
+            onEmojiTap: () {},
+            onActionTap: () {},
+            onTimeTap: () {},
+            onLocationTap: () {},
+            onFrequencyTap: () {},
           ),
         ),
       ),
     );
 
     expect(find.text('I am the type of person who'), findsOneWidget);
+    expect(find.text('🔥'), findsOneWidget);
     expect(find.text('meditate'), findsOneWidget);
     expect(find.text('at 7:00 AM'), findsOneWidget);
     expect(find.text('in living room'), findsOneWidget);

@@ -97,6 +97,12 @@ void main() {
     when(() => mockDriftRepo.getLatestRecap(any()))
         .thenAnswer((_) async => null);
 
+    // Default active-habits stub used by the perfectDays calculation.
+    when(() => mockHabitRepo.watchHabits(any()))
+        .thenAnswer((_) => Stream.value([
+              _habit(id: 'habit-1', title: 'Habit One'),
+            ]));
+
     container = _makeContainer(
       driftRepo: mockDriftRepo,
       habitRepo: mockHabitRepo,
@@ -484,6 +490,63 @@ void main() {
       );
 
       expect(result!.perfectDays, 3);
+      expect(result.totalHabitsCompleted, 4);
+    });
+
+    test('perfectDays only counts days where ALL active habits completed',
+        () async {
+      // Two active habits: only days where both are completed count.
+      when(() => mockHabitRepo.watchHabits(any()))
+          .thenAnswer((_) => Stream.value([
+                _habit(id: 'habit-1', title: 'Habit One'),
+                _habit(id: 'habit-2', title: 'Habit Two'),
+              ]));
+
+      final activities = [
+        // June 9: only habit-1 → NOT a perfect day
+        _activity(
+          habitId: 'habit-1',
+          attribute: 'vitality',
+          date: DateTime(2025, 6, 9),
+        ),
+        // June 10: both habits → perfect day
+        _activity(
+          habitId: 'habit-1',
+          attribute: 'vitality',
+          date: DateTime(2025, 6, 10),
+        ),
+        _activity(
+          habitId: 'habit-2',
+          attribute: 'strength',
+          date: DateTime(2025, 6, 10),
+        ),
+        // June 11: only habit-2 → NOT a perfect day
+        _activity(
+          habitId: 'habit-2',
+          attribute: 'strength',
+          date: DateTime(2025, 6, 11),
+        ),
+      ];
+
+      when(() => mockHabitRepo.getCompletionsBetweenDates(any(), any(), any()))
+          .thenAnswer((_) async => Right(activities));
+      when(() => mockDriftRepo.getUserStats(any()))
+          .thenAnswer((_) async => _profile());
+      when(() => mockHabitRepo.getHabit('habit-1'))
+          .thenAnswer((_) async => _habit(id: 'habit-1', title: 'Habit One'));
+      when(() => mockHabitRepo.getHabit('habit-2'))
+          .thenAnswer((_) async => _habit(id: 'habit-2', title: 'Habit Two'));
+      when(() => mockDriftRepo.saveRecap(any(), any()))
+          .thenAnswer((_) async => {});
+
+      final result = await service().generateRecap(
+        userId: testUserId,
+        startDate: DateTime(2025, 6, 9),
+        endDate: DateTime(2025, 6, 15),
+        forceRefresh: true,
+      );
+
+      expect(result!.perfectDays, 1);
       expect(result.totalHabitsCompleted, 4);
     });
 

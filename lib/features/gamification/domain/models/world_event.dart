@@ -96,10 +96,16 @@ class UserStats {
   final int currentMomentumScore;
   final int level;
 
+  /// The user's level at the previous evaluation. Used to detect fresh
+  /// threshold crossings (e.g. biome transitions). When null, the engine
+  /// assumes no level change occurred.
+  final int? previousLevel;
+
   const UserStats({
     required this.consecutiveActiveDays,
     required this.currentMomentumScore,
     required this.level,
+    this.previousLevel,
   });
 
   @override
@@ -109,14 +115,16 @@ class UserStats {
           runtimeType == other.runtimeType &&
           consecutiveActiveDays == other.consecutiveActiveDays &&
           currentMomentumScore == other.currentMomentumScore &&
-          level == other.level;
+          level == other.level &&
+          previousLevel == other.previousLevel;
 
   @override
-  int get hashCode =>
-      Object.hash(consecutiveActiveDays, currentMomentumScore, level);
+  int get hashCode => Object.hash(
+      consecutiveActiveDays, currentMomentumScore, level, previousLevel);
 
   @override
   String toString() =>
       'UserStats(consecutiveActiveDays: $consecutiveActiveDays, '
-      'currentMomentumScore: $currentMomentumScore, level: $level)';
+      'currentMomentumScore: $currentMomentumScore, level: $level, '
+      'previousLevel: $previousLevel)';
 }

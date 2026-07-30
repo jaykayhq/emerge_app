@@ -1,0 +1,11 @@
+schema_version: 1
+module_path: cloud_functions/shared_utils
+title: Firebase Cloud Functions Entry & Rate Limiter
+scope:
+    - functions/src/rateLimiter.ts
+    - functions/src/index.ts
+    - functions/lib/index.js
+source_files: []
+depends_on: []
+related_to:
+    - path: flutter_app

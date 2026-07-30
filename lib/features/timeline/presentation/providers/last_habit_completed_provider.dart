@@ -45,9 +45,13 @@ class LastHabitCompleted extends _$LastHabitCompleted {
     final habits = habitsAsync.value ?? const <Habit>[];
     final now = DateTime.now();
 
-    final total = habits.length;
+    // Only count habits that are active today so the "all done" celebration
+    // fires at the right moment (ignoring weekly habits not scheduled today).
+    final todaysHabits =
+        habits.where((h) => h.isActiveOnDay(now)).toList();
+    final total = todaysHabits.length;
     final currentCompleted =
-        habits.where((h) => h.isCompletedOn(now)).length;
+        todaysHabits.where((h) => h.isCompletedOn(now)).length;
 
     // First real build: record baseline only, never celebrate.
     if (_previousCompleted == null) {

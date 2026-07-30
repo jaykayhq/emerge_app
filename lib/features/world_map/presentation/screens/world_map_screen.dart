@@ -5,11 +5,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:emerge_app/core/domain/models/app_world_theme.dart';
 import 'package:emerge_app/core/presentation/widgets/app_error_widget.dart';
+import 'package:emerge_app/core/presentation/widgets/emerge_header.dart';
 import 'package:emerge_app/core/presentation/widgets/emerge_loading_skeleton.dart';
+import 'package:emerge_app/features/gamification/presentation/providers/user_stats_providers.dart';
 import 'package:emerge_app/features/world_map/presentation/providers/world_health_provider.dart';
 import 'package:emerge_app/features/world_map/presentation/widgets/nebula_background.dart';
 import 'package:emerge_app/features/world_map/presentation/widgets/world_ring_layout.dart';
-import 'package:emerge_app/features/world_map/presentation/widgets/central_health_orb.dart';
+import 'package:emerge_app/features/world_map/presentation/widgets/world_flame_video_background.dart';
 import 'package:emerge_app/features/world_map/presentation/widgets/ambient_particles.dart';
 import 'package:emerge_app/features/world_map/presentation/widgets/constellation_lines.dart';
 import 'package:emerge_app/features/world_map/utils/ring_layout_geometry.dart';
@@ -66,6 +68,8 @@ class _WorldMapScreenState extends ConsumerState<WorldMapScreen> {
 
     final healthAsync = ref.watch(worldHealthStreamProvider);
     final entropyAsync = ref.watch(worldEntropyStreamProvider);
+    final displayName =
+        ref.watch(userStatsStreamProvider).value?.displayName ?? '';
 
     return Scaffold(
       body: healthAsync.when(
@@ -92,11 +96,14 @@ class _WorldMapScreenState extends ConsumerState<WorldMapScreen> {
               return Stack(
                 fit: StackFit.expand,
                 children: [
-                  NebulaBackground(
+                  WorldFlameVideoBackground(
                     healthState: WorldHealthState.fromHealth(health),
-                    entropy: entropy,
-                    primaryColor: Theme.of(context).colorScheme.primary,
-                    accentColor: Theme.of(context).colorScheme.secondary,
+                    fallback: NebulaBackground(
+                      healthState: WorldHealthState.fromHealth(health),
+                      entropy: entropy,
+                      primaryColor: Theme.of(context).colorScheme.primary,
+                      accentColor: Theme.of(context).colorScheme.secondary,
+                    ),
                   ),
                   const AmbientParticles(particleCount: 50),
                   ConstellationLines(
@@ -110,13 +117,6 @@ class _WorldMapScreenState extends ConsumerState<WorldMapScreen> {
                       onNodeTap: (attr) => context.go('/world-map/attribute/${attr.name}'),
                     ),
                   ),
-                  Center(
-                    child: CentralHealthOrb(
-                      currentHealth: health * 100,
-                      maxHealth: 100,
-                      onTap: () => setState(() => _showStatus = !_showStatus),
-                    ),
-                  ),
                   if (_showStatus)
                     const Positioned(
                       left: 0,
@@ -128,17 +128,35 @@ class _WorldMapScreenState extends ConsumerState<WorldMapScreen> {
                         child: WorldStatusPanel(),
                       ),
                     ),
-                  const Positioned(
+                  Positioned(
                     top: 0,
                     left: 0,
                     right: 0,
+                    // SafeArea here consumes the top inset, so the nested
+                    // SafeArea inside EmergeHeader becomes a no-op (no
+                    // double insets) and the HUD stays inside SafeArea.
                     child: SafeArea(
-                      child: Padding(
-                        padding: EdgeInsets.only(top: 16.0),
-                        child: Align(
-                          alignment: Alignment.topCenter,
-                          child: WorldStateHUD(),
-                        ),
+                      bottom: false,
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          EmergeHeader(
+                            displayName: displayName,
+                            onAvatarTap: () => context.push('/profile'),
+                            onUpgradeTap: () => context.push('/paywall'),
+                          ),
+                          Padding(
+                            padding: const EdgeInsets.only(top: 16.0),
+                            child: Align(
+                              alignment: Alignment.topCenter,
+                              child: GestureDetector(
+                                onTap: () =>
+                                    setState(() => _showStatus = !_showStatus),
+                                child: const WorldStateHUD(),
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   ),

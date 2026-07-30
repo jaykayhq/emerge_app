@@ -86,7 +86,8 @@ class _ClubScreenState extends ConsumerState<ClubScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Failed to save: $e')),
       );
-      setState(() => _isSaving = false);
+    } finally {
+      if (mounted) setState(() => _isSaving = false);
     }
   }
 
@@ -99,6 +100,7 @@ class _ClubScreenState extends ConsumerState<ClubScreen> {
   }
 
   void _openPreview(Tribe club) {
+    if (_isSaving) return;
     HapticFeedback.lightImpact();
     showModalBottomSheet<void>(
       context: context,
@@ -268,23 +270,11 @@ class _ClubScreenState extends ConsumerState<ClubScreen> {
                           message: err.toString(),
                         ),
                       ),
-                      const Gap(40),
+                      const Gap(16),
                     ],
                   ),
                 ),
               ),
-              if (_isSaving)
-                const Padding(
-                  padding: EdgeInsets.all(24),
-                  child: SizedBox(
-                    height: 24,
-                    width: 24,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2,
-                      color: Color(0xFF2BEE79),
-                    ),
-                  ),
-                ),
             ],
           ),
         ),

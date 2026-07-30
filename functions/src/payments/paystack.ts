@@ -10,7 +10,6 @@ if (admin.apps.length === 0) {
 }
 
 const db = admin.firestore();
-const PAYSTACK_SECRET_KEY = process.env.PAYSTACK_SECRET_KEY || "sk_test_mockkey"; // Replace with Secret Manager
 
 /**
  * Cloud Function to securely initialize a Paystack transaction.
@@ -25,11 +24,18 @@ export const initializePaystackTransaction = onCall({
     }
 
     const { amount, email, metadata } = request.data;
-    if (!amount || !email) {
-        throw new HttpsError("invalid-argument", "Missing required fields (amount, email).");
+    if (!amount || typeof amount !== "number" || amount <= 0 || !Number.isInteger(amount)) {
+        throw new HttpsError("invalid-argument", "amount must be a positive integer (in kobo)");
+    }
+    if (!email || typeof email !== "string" || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        throw new HttpsError("invalid-argument", "A valid email address is required");
     }
 
     // 2. Call Paystack API
+    const secretKey = process.env.PAYSTACK_SECRET_KEY;
+    if (!secretKey) {
+        throw new HttpsError("failed-precondition", "PAYSTACK_SECRET_KEY is not configured.");
+    }
     try {
         const response = await axios.post(
             "https://api.paystack.co/transaction/initialize",
@@ -54,7 +60,7 @@ export const initializePaystackTransaction = onCall({
             },
             {
                 headers: {
-                    Authorization: `Bearer ${PAYSTACK_SECRET_KEY}`,
+                    Authorization: `Bearer ${secretKey}`,
                     "Content-Type": "application/json",
                 },
             }
@@ -80,8 +86,13 @@ export const initializePaystackTransaction = onCall({
 export const paystackWebhook = onRequest({
     secrets: ["PAYSTACK_SECRET_KEY"],
 }, async (req, res) => {
+    const secretKey = process.env.PAYSTACK_SECRET_KEY;
+    if (!secretKey) {
+        res.status(500).send("PAYSTACK_SECRET_KEY not configured");
+        return;
+    }
     const hash = crypto
-        .createHmac("sha512", PAYSTACK_SECRET_KEY)
+        .createHmac("sha512", secretKey)
         .update(JSON.stringify(req.body))
         .digest("hex");
 
@@ -92,6 +103,21 @@ export const paystackWebhook = onRequest({
     }
 
     const event = req.body;
+
+    const eventReference = event.data?.reference || event.id;
+    if (!eventReference) {
+        console.warn("Webhook missing reference, skipping");
+        res.status(200).send("ignored");
+        return;
+    }
+    // Idempotency check
+    const processedRef = db.collection("processed_webhooks").doc(eventReference);
+    const existing = await processedRef.get();
+    if (existing.exists) {
+        console.log(`Duplicate webhook ${eventReference}, skipping`);
+        res.status(200).send("duplicate");
+        return;
+    }
 
     if (event.event === "charge.success") {
         const data = event.data;
@@ -113,6 +139,8 @@ export const paystackWebhook = onRequest({
             }
         }
     }
+
+    await processedRef.set({ processedAt: admin.firestore.FieldValue.serverTimestamp(), type: event.event });
 
     res.status(200).send("Webhook received");
 });

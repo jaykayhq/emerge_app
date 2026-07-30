@@ -1,0 +1,6 @@
+- Each production file has a co-located `_test.dart` sibling following the same package path (e.g., `features/habits/data/repositories/habit_repository.dart` → `features/habits/data/repositories/habit_repository_test.dart`).
+- Widget tests wrap the screen under test in `createScreenUnderTest(screen: ..., overrides: [])` which injects a `ProviderScope` with optional Riverpod overrides inside a `MaterialApp`.
+- Mocks are created with `mocktail` by extending `Mock` and implementing the target interface (e.g., `class MockAuthRepository extends Mock implements AuthRepository {}`), and fake objects extend `Fake`.
+- Drift tests construct an in-memory database via the shared `createTestDatabase()` helper from `core/drift/test_database.dart` rather than instantiating the real persistent database.
+- Riverpod providers are overridden using `.overrideWith` or `.overrideWithValue` in `ProviderScope` to supply test doubles instead of real implementations.
+- Integration tests initialize `IntegrationTestWidgetsFlutterBinding.ensureInitialized()` at the top of `main()` before any `testWidgets` blocks.

@@ -1,0 +1,6 @@
+- Every callable begins with an explicit `request.auth` guard that throws `HttpsError("unauthenticated", ...)` when missing.
+- External API calls go through a dedicated helper (`callGroq`) that catches errors and returns an empty object so callers can merge with fallback defaults rather than crashing.
+- User-facing errors are thrown as `HttpsError` with named codes (`invalid-argument`, `not-found`, `permission-denied`, `internal`) instead of generic exceptions.
+- Server timestamps are written via `admin.firestore.FieldValue.serverTimestamp()` rather than client-side dates.
+- Input validation is done inline at the top of the handler with descriptive `HttpsError("invalid-argument", ...)` messages before any Firestore access.
+- Logging uses bracket-prefixed console statements like `[generateAiRecap]`, `[narrator]`, or `[createStarterPack]` to distinguish logs across functions.

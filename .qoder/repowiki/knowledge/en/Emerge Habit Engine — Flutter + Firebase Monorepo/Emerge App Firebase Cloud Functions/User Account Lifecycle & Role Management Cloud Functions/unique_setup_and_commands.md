@@ -1,0 +1,1 @@
+The purge function documents an alternative standalone script path `scripts/purge_orphaned_data.js` that can be run directly with Node (defaults to dry-run, `--execute` flag to delete). Deployment follows the standard Firebase Functions deploy process.

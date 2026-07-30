@@ -6,6 +6,7 @@ import 'package:emerge_app/core/drift/database.dart';
 import 'package:emerge_app/core/error/failure.dart';
 import 'package:emerge_app/core/sync/sync_engine.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/foundation.dart';
 import 'package:fpdart/fpdart.dart';
 
 /// Single owner of deletion logic for both habit and account deletes.
@@ -44,7 +45,7 @@ class DeletionService {
       }
       await _db.transaction(() async {
         await _db.habitsDao.archiveHabit(habitId);
-        await _db.habitCompletionsDao.deleteByHabitId(habitId);
+        await _db.habitCompletionsDao.deleteByHabitId(habitId, userId);
       });
       try {
         // Habits live in the TOP-LEVEL `habits` collection (see
@@ -113,9 +114,22 @@ class DeletionService {
       );
       return result; // local data intentionally NOT cleared
     }
-    await _db.clearAll();
-    await auth.signOut();
-    await idStore.clear('deletionRequestId:$userId');
+    // After backend confirms deletion:
+    try {
+      await _db.clearAll();
+    } catch (e, st) {
+      debugPrint('Failed to clear local DB during deletion: $e\n$st');
+    }
+    try {
+      await auth.signOut();
+    } catch (e, st) {
+      debugPrint('Failed to sign out during deletion: $e\n$st');
+    }
+    try {
+      await idStore.clear('deletionRequestId:$userId');
+    } catch (e, st) {
+      debugPrint('Failed to clear ID store during deletion: $e\n$st');
+    }
     _audit.log(
       op: 'deleteAccount',
       target: 'account',

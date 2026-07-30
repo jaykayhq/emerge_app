@@ -72,24 +72,12 @@ class DashboardState extends Equatable {
     return grouped;
   }
 
-  /// Get habits that are due today
+  /// Get habits that are due today.
+  /// Uses [Habit.isActiveOnDay] — the single canonical filter shared
+  /// with the timeline so both views show the same habits.
   List<Habit> get todaysHabits {
     final now = DateTime.now();
-    final weekday = now.weekday; // 1 = Monday, 7 = Sunday
-
-    return habits.where((habit) {
-      if (habit.isArchived) return false;
-
-      switch (habit.frequency) {
-        case HabitFrequency.daily:
-          return true;
-        case HabitFrequency.weekly:
-          // Show on the day it was created (or Monday if not specified)
-          return weekday == (habit.createdAt.weekday);
-        case HabitFrequency.specificDays:
-          return habit.specificDays.contains(weekday);
-      }
-    }).toList();
+    return habits.where((habit) => habit.isActiveOnDay(now)).toList();
   }
 
   /// Get completion rate for today
@@ -284,10 +272,12 @@ class DashboardStateNotifier extends _$DashboardStateNotifier {
       final isPremium = await ref.read(isPremiumProvider.future);
       if (!isPremium) {
         final currentHabits = ref.read(habitsProvider).value ?? [];
+        final activeHabits =
+            currentHabits.where((h) => !h.isArchived).toList();
         final freeHabitLimit = ref
             .read(remoteConfigServiceProvider)
             .freeHabitLimit;
-        if (currentHabits.length >= freeHabitLimit) {
+        if (activeHabits.length >= freeHabitLimit) {
           throw SubscriptionLimitReachedException(
             'You have reached the limit of $freeHabitLimit active habits '
             'on the free tier. Upgrade to Premium for unlimited habits!',

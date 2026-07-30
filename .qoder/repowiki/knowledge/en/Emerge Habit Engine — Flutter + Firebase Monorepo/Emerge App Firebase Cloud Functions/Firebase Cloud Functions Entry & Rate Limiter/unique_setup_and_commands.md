@@ -1,0 +1,1 @@
+Functions are deployed as a Gen 2 Firebase project; secrets like `GROQ_API_KEY` must be provisioned via Firebase Managed Secrets before deployment. Global options (region, memory, CPU, max instances) are set once at module load in `index.ts`.

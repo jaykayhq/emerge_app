@@ -1,0 +1,1 @@
+Ad-hoc scripts and Dart/Node tools for dataset distillation, Firebase admin operations, asset generation via Pollinations.ai, and local development helpers around the Flutter/Dart/Firebase codebase.

@@ -12,6 +12,8 @@ import 'package:emerge_app/features/world_map/presentation/screens/world_map_scr
 import 'package:emerge_app/features/world_map/presentation/providers/world_health_provider.dart';
 import 'package:emerge_app/features/world_map/presentation/widgets/ambient_particles.dart';
 import 'package:emerge_app/features/world_map/presentation/widgets/constellation_lines.dart';
+import 'package:emerge_app/features/world_map/presentation/widgets/nebula_background.dart';
+import 'package:emerge_app/features/world_map/presentation/widgets/world_ring_layout.dart';
 
 void main() {
   setUp(() async {
@@ -77,9 +79,11 @@ void main() {
       await tester.pump(const Duration(milliseconds: 900));
 
       expect(find.text('Failed to load world state.'), findsNothing);
-      // Wait, CentralHealthOrb might still render a CircularProgressIndicator if shader isn't loaded!
-      // But we can check for other things:
+      // Asset videos don't initialize under flutter_test, so the flame video
+      // background renders its NebulaBackground fallback:
       expect(find.byType(WorldMapScreen), findsOneWidget);
+      expect(find.byType(NebulaBackground), findsOneWidget);
+      expect(find.byType(WorldRingLayout), findsOneWidget);
       expect(find.byType(AmbientParticles), findsOneWidget);
       expect(find.byType(ConstellationLines), findsOneWidget);
     });

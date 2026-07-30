@@ -1,0 +1,1 @@
+Firebase Callable and HTTPS functions that serve the account-deletion page, set user roles via Firebase Auth custom claims with Firestore mirroring, and purge orphaned user documents across multiple collections.

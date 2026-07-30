@@ -1,0 +1,9 @@
+schema_version: 1
+module_path: cloud_functions
+title: Emerge App Firebase Cloud Functions
+scope:
+    - functions/
+source_files: []
+depends_on: []
+related_to:
+    - path: scripts_and_tools

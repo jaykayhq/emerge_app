@@ -21,6 +21,12 @@ function getRequiredEnvVar(name: string): string {
 export const seedReviewerAccount = onRequest({
   secrets: ["REVIEWER_EMAIL", "REVIEWER_PASSWORD"],
 }, async (req, res) => {
+  const adminSecret = req.headers.authorization?.replace("Bearer ", "");
+  if (adminSecret !== process.env.ADMIN_SECRET) {
+    res.status(403).json({ error: "Unauthorized" });
+    return;
+  }
+
   try {
     const REVIEWER_EMAIL = getRequiredEnvVar("REVIEWER_EMAIL");
     const REVIEWER_PASSWORD = getRequiredEnvVar("REVIEWER_PASSWORD");
@@ -182,7 +188,7 @@ export const seedReviewerAccount = onRequest({
       });
     }
 
-    res.status(200).json({ success: true, message: "Reviewer account seeded successfully", credentials: { email: REVIEWER_EMAIL, password: REVIEWER_PASSWORD }, uid: uid });
+    res.status(200).json({ success: true, uid, email: REVIEWER_EMAIL });
   } catch (error) {
     console.error("Error seeding reviewer account:", error);
     res.status(500).json({ success: false, error: (error as Error).message });

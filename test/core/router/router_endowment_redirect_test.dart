@@ -12,7 +12,6 @@ void main() {
         userOnboardingProgress: progress,
         userOnboardingCompletedAt: null,
         creatorOnboarding: null,
-        hasSeenEndowment: true,
       );
     }
 

@@ -13,6 +13,11 @@ service cloud.firestore {
       return isAuthenticated() && request.auth.uid == userId;
     }
 
+    // Helper function to check if user has admin claim
+    function isAdmin() {
+      return request.auth != null && request.auth.token.admin == true;
+    }
+
     // Input validation - simplified to avoid false positives
     function sanitizeString(input) {
       return input is string &&
@@ -263,7 +268,7 @@ service cloud.firestore {
       // Allow reading for leaderboards - client filters to only public fields (avatarStats, totalXp, level, streak)
       // Note: Firestore doesn't support true field-level security, so authenticated users can read the document
       // but the client code only displays public gamification data
-      allow read: if isOwner(userId) || isAuthenticated();
+      allow read: if isOwner(userId) || isAdmin();
       allow create: if isOwner(userId) && isValidStats(request.resource.data);
       allow update: if isOwner(userId) && isValidStats(request.resource.data);
     }
@@ -351,7 +356,16 @@ service cloud.firestore {
     // Clients may only merge-update specific aggregate stat fields.
     match /tribes/{tribeId} {
       allow read: if isAuthenticated();
-      allow create, update: if isAuthenticated() && isValidTribe(request.resource.data);
+      allow create: if isAuthenticated() && isValidTribe(request.resource.data);
+      allow update: if isAuthenticated() && isValidTribe(request.resource.data) && (
+        resource.data.createdBy == request.auth.uid ||
+        isAdmin() ||
+        // Any authenticated user may update aggregate member fields
+        // (joinTribe / leaveTribe / recalcTribes).
+        request.resource.data.diff(resource.data).affectedKeys()
+          .hasOnly(['memberCount', 'members', 'lastStatsSync'])
+      );
+      allow delete: if isAdmin();
 
 
       // Tribe contributor-specific metrics and details
@@ -389,8 +403,7 @@ service cloud.firestore {
     // Challenges — catalog entries
     match /challenges/{challengeId} {
       allow read: if true;
-      allow create, update: if isAuthenticated();
-      allow delete: if false;
+      allow create, update, delete: if isAdmin();
 
       match /participants/{participantId} {
         allow read: if isAuthenticated();
@@ -403,7 +416,7 @@ service cloud.firestore {
       allow read: if isAuthenticated();
       // Entry ID is userId_clubId - allow write if the userId part matches or field userId matches
       allow create, update: if isAuthenticated() && 
-                           (entryId.matches('^' + request.auth.uid + '.*') || 
+                           (entryId.matches('^' + request.auth.uid + '_.*') || 
                             request.resource.data.userId == request.auth.uid || 
                             resource.data.userId == request.auth.uid);
       allow delete: if false;
@@ -412,10 +425,9 @@ service cloud.firestore {
     // Challenge Leaderboards
     match /challenge_leaderboards/{leaderboardId} {
       allow read: if isAuthenticated();
-      // Allow users to update their own leaderboard entries via SocialActivityService
-      allow write: if isAuthenticated() && 
-                   (request.resource.data.userId == request.auth.uid || 
-                    resource.data.userId == request.auth.uid);
+      allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid;
+      allow update: if isAuthenticated() && resource.data.userId == request.auth.uid;
+      allow delete: if isAdmin();
     }
 
     // Social Posts (Feed)
@@ -484,8 +496,7 @@ service cloud.firestore {
     // Blueprints (habit stacks shared by Emerge)
     match /blueprints/{blueprintId} {
       allow read: if true;
-      allow create, update: if isAuthenticated();
-      allow delete: if request.auth != null && request.auth.token.admin == true;
+      allow create, update, delete: if isAdmin();
     }
 
     // Creator Profiles (verified creators)
@@ -495,11 +506,10 @@ service cloud.firestore {
     // must validate against isValidCreatorProfile (which allows role +
     // creator onboarding progress but blocks privileged fields).
     match /creator_profiles/{profileId} {
-      allow read: if isAuthenticated();
-      allow create, update: if isAuthenticated() &&
-        (profileId.matches('^creator_.*') ||
-         (isOwner(profileId) && isValidCreatorProfile(request.resource.data)));
-      allow delete: if false;
+      allow read: if true;
+      allow create: if isAuthenticated() && request.resource.data.ownerId == request.auth.uid;
+      allow update: if isAuthenticated() && (resource.data.ownerId == request.auth.uid || isAdmin());
+      allow delete: if isAdmin();
     }
 
     // Challenge Templates (Read-only, Write by Admin)

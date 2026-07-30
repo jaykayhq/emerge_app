@@ -1,0 +1,1 @@
+Firebase Admin SDK (`firebase-admin`) for Firestore and Auth access, Firebase Functions v2 HTTPS callable API (`firebase-functions/v2/https`) for `deleteMyAccount`, and Firestore streaming queries plus batched writes for efficient large-collection processing.
