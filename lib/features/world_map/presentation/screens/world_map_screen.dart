@@ -11,7 +11,6 @@ import 'package:emerge_app/features/gamification/presentation/providers/user_sta
 import 'package:emerge_app/features/world_map/presentation/providers/world_health_provider.dart';
 import 'package:emerge_app/features/world_map/presentation/widgets/nebula_background.dart';
 import 'package:emerge_app/features/world_map/presentation/widgets/world_ring_layout.dart';
-import 'package:emerge_app/features/world_map/presentation/widgets/world_flame_video_background.dart';
 import 'package:emerge_app/features/world_map/presentation/widgets/ambient_particles.dart';
 import 'package:emerge_app/features/world_map/presentation/widgets/constellation_lines.dart';
 import 'package:emerge_app/features/world_map/utils/ring_layout_geometry.dart';
@@ -96,14 +95,11 @@ class _WorldMapScreenState extends ConsumerState<WorldMapScreen> {
               return Stack(
                 fit: StackFit.expand,
                 children: [
-                  WorldFlameVideoBackground(
+                  NebulaBackground(
                     healthState: WorldHealthState.fromHealth(health),
-                    fallback: NebulaBackground(
-                      healthState: WorldHealthState.fromHealth(health),
-                      entropy: entropy,
-                      primaryColor: Theme.of(context).colorScheme.primary,
-                      accentColor: Theme.of(context).colorScheme.secondary,
-                    ),
+                    entropy: entropy,
+                    primaryColor: Theme.of(context).colorScheme.primary,
+                    accentColor: Theme.of(context).colorScheme.secondary,
                   ),
                   const AmbientParticles(particleCount: 50),
                   ConstellationLines(

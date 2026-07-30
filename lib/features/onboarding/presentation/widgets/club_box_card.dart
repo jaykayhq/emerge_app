@@ -95,69 +95,73 @@ class ClubBoxCard extends StatelessWidget {
             Expanded(
               flex: 4,
               child: Padding(
-                padding: const EdgeInsets.all(10),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      title,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: GoogleFonts.splineSans(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 13,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Row(
-                      children: [
-                        Text(
-                          '$memberCount',
-                          style: GoogleFonts.splineSans(
-                            color: Colors.white.withValues(alpha: 0.5),
-                            fontSize: 11,
-                          ),
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  alignment: Alignment.topCenter,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        title,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: GoogleFonts.splineSans(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 12,
                         ),
-                        const SizedBox(width: 4),
-                        Flexible(
-                          child: Text(
-                            activityStatus,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
+                      ),
+                      const SizedBox(height: 2),
+                      Row(
+                        children: [
+                          Text(
+                            '$memberCount',
                             style: GoogleFonts.splineSans(
-                              color: activityStatus.contains('Active')
-                                  ? Colors.greenAccent
-                                  : Colors.grey,
+                              color: Colors.white.withValues(alpha: 0.5),
                               fontSize: 11,
                             ),
                           ),
+                          const SizedBox(width: 4),
+                          Flexible(
+                            child: Text(
+                              activityStatus,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: GoogleFonts.splineSans(
+                                color: activityStatus.contains('Active')
+                                    ? Colors.greenAccent
+                                    : Colors.grey,
+                                fontSize: 11,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 2),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 6,
+                          vertical: 1,
                         ),
-                      ],
-                    ),
-                    const Spacer(),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 6,
-                        vertical: 2,
-                      ),
-                      decoration: BoxDecoration(
-                        color: _isArchetype
-                            ? Colors.cyanAccent.withValues(alpha: 0.2)
-                            : Colors.purple.withValues(alpha: 0.2),
-                        borderRadius: BorderRadius.circular(4),
-                      ),
-                      child: Text(
-                        typeTag,
-                        style: GoogleFonts.splineSans(
-                          color: accent,
-                          fontSize: 9,
-                          fontWeight: FontWeight.bold,
-                          letterSpacing: 0.5,
+                        decoration: BoxDecoration(
+                          color: _isArchetype
+                              ? Colors.cyanAccent.withValues(alpha: 0.2)
+                              : Colors.purple.withValues(alpha: 0.2),
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                        child: Text(
+                          typeTag,
+                          style: GoogleFonts.splineSans(
+                            color: accent,
+                            fontSize: 9,
+                            fontWeight: FontWeight.bold,
+                            letterSpacing: 0.5,
+                          ),
                         ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
             ),

@@ -148,7 +148,6 @@ flutter:
     - assets/worlds/creativity/
     - assets/worlds/focus/
     - assets/worlds/spirit/
-    - assets/videos/world_health/
 
   shaders:
     - shaders/cracked_orb.frag
