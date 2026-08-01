@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:emerge_app/core/theme/archetype_theme.dart';
 import 'package:emerge_app/core/utils/app_logger.dart';
 import 'package:emerge_app/features/auth/domain/entities/user_extension.dart';
@@ -36,10 +38,17 @@ class _IdentityStudioScreenState extends ConsumerState<IdentityStudioScreen> {
 
   PendingMilestoneLine? _pendingMilestone;
 
+  /// Completes when the narrator welcome card is dismissed (tap or 6s
+  /// auto-dismiss); gates navigation to the next onboarding step.
+  Completer<void>? _pendingDismissed;
+
   final List<ArchetypeTheme> _themes = ArchetypeTheme.allThemes;
 
   @override
   void dispose() {
+    // Unblock the navigation wait if the user backs out mid-wait.
+    _pendingDismissed?.complete();
+    _pendingDismissed = null;
     _carouselController.dispose();
     super.dispose();
   }
@@ -63,6 +72,8 @@ class _IdentityStudioScreenState extends ConsumerState<IdentityStudioScreen> {
       await notifier.completeMilestone(0);
 
       // Narrator welcomes the newly-chosen archetype (non-blocking card).
+      // Navigate as soon as the card is dismissed (tap or 6s auto-dismiss),
+      // so the welcome is actually seen before the next milestone.
       if (mounted) {
         final resolver = ref.read(lineResolverProvider);
         final welcomeLine = await resolver.resolve(
@@ -90,12 +101,18 @@ class _IdentityStudioScreenState extends ConsumerState<IdentityStudioScreen> {
                   trigger: NarratorTrigger.onboardingPostArchetype,
                 ),
               );
+          final dismissed = Completer<void>();
+          _pendingDismissed = dismissed;
+          await dismissed.future.timeout(
+            const Duration(seconds: 6),
+            onTimeout: () {},
+          );
+          _pendingDismissed = null;
+          // Navigate to the next step in the 5-step flow: interests.
+          if (mounted) {
+            context.push('/onboarding/interests');
+          }
         }
-      }
-
-      // Navigate to the next step in the 5-step flow: interests.
-      if (mounted) {
-        context.push('/onboarding/interests');
       }
     } catch (e, s) {
       AppLogger.e('Identity Studio: Failed to complete', e, s);
@@ -300,6 +317,8 @@ class _IdentityStudioScreenState extends ConsumerState<IdentityStudioScreen> {
               line: _pendingMilestone!.line,
               trigger: _pendingMilestone!.trigger,
               onDismissed: () {
+                _pendingDismissed?.complete();
+                _pendingDismissed = null;
                 setState(() => _pendingMilestone = null);
                 ref.read(pendingMilestoneProvider.notifier).clear();
               },

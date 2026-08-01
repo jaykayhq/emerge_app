@@ -615,8 +615,13 @@ class _TimelineScreenState extends ConsumerState<TimelineScreen> {
         }
         // Otherwise: silent completion — particles provide visual feedback
 
-        // Narrator milestone card for streak recovery / on-fire completions
-        if (result.narratorTrigger != null) {
+        // Narrator milestone card for on-fire completions. Skipped when the
+        // streak-recovery screen (opaque route) or the legacy celebration
+        // dialog (isStreakMilestone: 7/14/30-day) is the presenting surface,
+        // so the card is never produced behind another surface.
+        if (result.narratorTrigger != null &&
+            !result.wasRecovery &&
+            !result.isStreakMilestone) {
           final resolver = ref.read(lineResolverProvider);
           final line = await resolver.resolve(
             trigger: result.narratorTrigger!,
