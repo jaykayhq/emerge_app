@@ -19,13 +19,14 @@ class GroqAiService {
         return result.data['advice'].toString().trim();
       }
 
-      return "Keep going! Consistency is key.";
+      throw Exception('Unexpected response format from AI Coach function');
     } on FirebaseFunctionsException catch (e) {
       AppLogger.e('AI Coach Service Error: ${e.code} - ${e.message}');
-      return "I'm having trouble connecting to your inner coach right now. Keep pushing!";
+      throw Exception('AI Coach Service Error: ${e.code} - ${e.message}');
     } catch (e, s) {
       AppLogger.e('Groq Exception', e, s);
-      return "You're doing great. Stay focused!";
+      // Re-throw to be handled by the consumer (which decides on fallback).
+      rethrow;
     }
   }
 

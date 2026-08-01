@@ -39,59 +39,80 @@ void main() {
       expect(result, 'You can do it!');
     });
 
-    test('should return default message when response data is null', () async {
+    test('should throw when response data is null', () async {
       // Arrange
       final mockResult = _MockHttpsCallableResult();
       when(() => mockResult.data).thenReturn(null);
       when(() => mockHttpsCallable.call(any())).thenAnswer((_) async => mockResult);
 
-      // Act
-      final result = await service.getCoachAdvice("context", "message");
-
-      // Assert
-      expect(result, 'Keep going! Consistency is key.');
+      // Act & Assert
+      expect(
+        () => service.getCoachAdvice("context", "message"),
+        throwsA(
+          isA<Exception>().having(
+            (e) => e.toString(),
+            'toString',
+            contains('Unexpected response format from AI Coach function'),
+          ),
+        ),
+      );
     });
 
-    test('should return default message when advice field is missing', () async {
+    test('should throw when advice field is missing', () async {
       // Arrange
       final mockResult = _MockHttpsCallableResult();
       when(() => mockResult.data).thenReturn({});
       when(() => mockHttpsCallable.call(any())).thenAnswer((_) async => mockResult);
 
-      // Act
-      final result = await service.getCoachAdvice("context", "message");
-
-      // Assert
-      expect(result, 'Keep going! Consistency is key.');
+      // Act & Assert
+      expect(
+        () => service.getCoachAdvice("context", "message"),
+        throwsA(
+          isA<Exception>().having(
+            (e) => e.toString(),
+            'toString',
+            contains('Unexpected response format from AI Coach function'),
+          ),
+        ),
+      );
     });
 
-    test('should return fallback on FirebaseFunctionsException', () async {
+    test('should throw with the error code on FirebaseFunctionsException', () async {
       // Arrange
       when(() => mockHttpsCallable.call(any())).thenThrow(
         FirebaseFunctionsException(code: 'internal', message: 'Server error'),
       );
 
-      // Act
-      final result = await service.getCoachAdvice("context", "message");
-
-      // Assert
+      // Act & Assert
       expect(
-        result,
-        "I'm having trouble connecting to your inner coach right now. Keep pushing!",
+        () => service.getCoachAdvice("context", "message"),
+        throwsA(
+          isA<Exception>().having(
+            (e) => e.toString(),
+            'toString',
+            contains('AI Coach Service Error: internal'),
+          ),
+        ),
       );
     });
 
-    test('should return fallback on generic exception', () async {
+    test('should rethrow generic exceptions', () async {
       // Arrange
       when(
         () => mockHttpsCallable.call(any()),
       ).thenThrow(Exception('Network error'));
 
-      // Act
-      final result = await service.getCoachAdvice("context", "message");
-
-      // Assert
-      expect(result, "You're doing great. Stay focused!");
+      // Act & Assert
+      expect(
+        () => service.getCoachAdvice("context", "message"),
+        throwsA(
+          isA<Exception>().having(
+            (e) => e.toString(),
+            'toString',
+            contains('Network error'),
+          ),
+        ),
+      );
     });
 
     test('should pass correct parameters to the callable', () async {
