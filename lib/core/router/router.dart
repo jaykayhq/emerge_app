@@ -8,7 +8,6 @@ import 'package:emerge_app/features/auth/presentation/screens/signup_screen.dart
 import 'package:emerge_app/features/gamification/presentation/providers/user_stats_providers.dart';
 import 'package:emerge_app/features/world_map/presentation/screens/world_map_screen.dart';
 import 'package:emerge_app/features/timeline/presentation/screens/timeline_screen.dart';
-import 'package:emerge_app/features/ai/presentation/screens/goldilocks_screen.dart';
 import 'package:emerge_app/features/gamification/presentation/screens/leveling_screen.dart';
 import 'package:emerge_app/features/profile/presentation/screens/future_self_studio_screen.dart';
 import 'package:emerge_app/features/gamification/presentation/widgets/level_up_listener.dart';
@@ -22,7 +21,6 @@ import 'package:emerge_app/features/world_map/presentation/screens/attribute_det
 import 'package:emerge_app/features/gamification/presentation/screens/weekly_recap_screen.dart';
 import 'package:emerge_app/features/gamification/presentation/screens/recap_hub_screen.dart';
 
-import 'package:emerge_app/features/ai/presentation/screens/ai_reflections_screen.dart';
 import 'package:emerge_app/features/onboarding/presentation/providers/onboarding_provider.dart';
 import 'package:emerge_app/features/onboarding/presentation/screens/first_habits_screen.dart';
 import 'package:emerge_app/features/onboarding/presentation/screens/identity_studio_screen.dart';
@@ -598,16 +596,8 @@ GoRouter router(Ref ref) {
                         const NotificationSettingsScreen(),
                   ),
                   GoRoute(
-                    path: 'reflections',
-                    builder: (context, state) => const AiReflectionsScreen(),
-                  ),
-                  GoRoute(
                     path: 'leveling',
                     builder: (context, state) => const LevelingScreen(),
-                  ),
-                  GoRoute(
-                    path: 'goldilocks',
-                    builder: (context, state) => const GoldilocksScreen(),
                   ),
                   GoRoute(
                     path: 'level-up-reward/:level',
