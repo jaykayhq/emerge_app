@@ -16,7 +16,7 @@ import 'package:go_router/go_router.dart';
 /// Copy is intentionally honest: it frames the free cap as a "focused start"
 /// and appeals to the user's own potential rather than citing fabricated
 /// cross-user statistics.
-enum PremiumLimitType { habit, club }
+enum PremiumLimitType { habit, club, coachAsk }
 
 class PremiumLimitDialog extends StatelessWidget {
   final String title;
@@ -48,6 +48,15 @@ class PremiumLimitDialog extends StatelessWidget {
               "That's the free limit. Premium unlocks unlimited clubs so you "
               "can belong to every community that moves you forward.",
           icon: Icons.groups_2,
+        );
+      case PremiumLimitType.coachAsk:
+        return const PremiumLimitDialog(
+          title: "You've used your 3 free coach asks today",
+          message:
+              "That's the free limit — a focused start. Premium unlocks "
+              "unlimited personal coach guidance, grounded in your own "
+              "habit data.",
+          icon: Icons.auto_awesome,
         );
     }
   }
