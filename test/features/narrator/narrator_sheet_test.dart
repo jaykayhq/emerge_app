@@ -116,4 +116,13 @@ void main() {
 
     expect(find.text("You've used your 3 free coach asks today"), findsOneWidget);
   });
+
+  testWidgets('premium user sees the unlimited quota hint', (tester) async {
+    await tester.pumpWidget(harness(premium: true));
+    await tester.tap(find.text('open'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 500));
+
+    expect(find.text('Unlimited coach asks'), findsOneWidget);
+  });
 }

@@ -100,21 +100,18 @@ class _NarratorSheetState extends ConsumerState<NarratorSheet>
   Future<void> _submitAsk(String raw) async {
     final question = raw.trim();
     if (question.isEmpty || _isAsking) return;
-
-    final quotaCtrl = ref.read(coachAskQuotaControllerProvider.notifier);
-    final quota = await ref.read(coachAskQuotaControllerProvider.future);
-    if (!quota.canAsk) {
-      if (mounted) {
-        showPremiumLimitDialog(
-          context,
-          limitType: PremiumLimitType.coachAsk,
-        );
-      }
-      return;
-    }
-
+    // Set synchronously BEFORE the first await so concurrent submits are
+    // serialized and the button shows the busy state during quota load.
     setState(() => _isAsking = true);
     try {
+      final quotaCtrl = ref.read(coachAskQuotaControllerProvider.notifier);
+      final quota = await ref.read(coachAskQuotaControllerProvider.future);
+      if (!quota.canAsk) {
+        if (mounted) {
+          showPremiumLimitDialog(context, limitType: PremiumLimitType.coachAsk);
+        }
+        return;
+      }
       final isPremium = ref.read(isPremiumProvider).value ?? false;
       final NarratorLine line;
       if (isPremium) {
