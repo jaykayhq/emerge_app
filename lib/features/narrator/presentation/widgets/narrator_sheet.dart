@@ -9,6 +9,7 @@ import 'package:emerge_app/features/narrator/domain/models/narrator_appearance.d
 import 'package:emerge_app/features/narrator/domain/models/narrator_line.dart';
 import 'package:emerge_app/features/narrator/presentation/providers/narrator_providers.dart';
 import 'package:emerge_app/features/narrator/presentation/widgets/narrator_pulse_indicator.dart';
+import 'package:emerge_app/features/tutorials/presentation/widgets/node_guide_overlay.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -33,12 +34,19 @@ class NarratorSheet extends ConsumerStatefulWidget {
   });
 
   /// Displays the Narrator as a centered dialog.
+  ///
+  /// In coach mode ([showAskField] = true) the first-visit coach guide is
+  /// shown as a full-screen overlay before the sheet opens.
   static Future<void> show(
     BuildContext context,
     NarratorAppearance appearance, {
     void Function(String buttonLabel, String? typedText)? onResponse,
     bool showAskField = false,
-  }) {
+  }) async {
+    if (showAskField) {
+      await NodeGuideOverlay.show(context, 'coach');
+      if (!context.mounted) return;
+    }
     return showDialog(
       context: context,
       barrierDismissible: true,
@@ -84,9 +92,10 @@ class _NarratorSheetState extends ConsumerState<NarratorSheet>
       parent: _entryController,
       curve: Curves.easeOut,
     );
-    _scaleAnim = Tween<double>(begin: 0.85, end: 1.0).animate(
-      CurvedAnimation(parent: _entryController, curve: Curves.easeOut),
-    );
+    _scaleAnim = Tween<double>(
+      begin: 0.85,
+      end: 1.0,
+    ).animate(CurvedAnimation(parent: _entryController, curve: Curves.easeOut));
     _entryController.forward();
   }
 
@@ -119,7 +128,9 @@ class _NarratorSheetState extends ConsumerState<NarratorSheet>
         final advice = await groq.getCoachAdvice('', question);
         line = PersonalLine(text: advice, dataBasis: 'groq_coach');
       } else {
-        line = GenericLine(_genericAskPool[question.length % _genericAskPool.length]);
+        line = GenericLine(
+          _genericAskPool[question.length % _genericAskPool.length],
+        );
       }
       await quotaCtrl.consume();
       if (mounted) {
@@ -130,7 +141,9 @@ class _NarratorSheetState extends ConsumerState<NarratorSheet>
       }
     } catch (_) {
       if (mounted) {
-        setState(() => _currentLine = const GenericLine("I'm here — keep going."));
+        setState(
+          () => _currentLine = const GenericLine("I'm here — keep going."),
+        );
       }
     } finally {
       if (mounted) setState(() => _isAsking = false);
@@ -148,7 +161,8 @@ class _NarratorSheetState extends ConsumerState<NarratorSheet>
   @override
   Widget build(BuildContext context) {
     final appearance = widget.appearance;
-    final isPersonal = _currentLine is PersonalLine || appearance.line is PersonalLine;
+    final isPersonal =
+        _currentLine is PersonalLine || appearance.line is PersonalLine;
     final screenWidth = MediaQuery.of(context).size.width;
     final cardWidth = (screenWidth * 0.85).clamp(0.0, 400.0);
 
@@ -205,9 +219,7 @@ class _NarratorSheetState extends ConsumerState<NarratorSheet>
                                 const SizedBox(width: 10),
                                 Text(
                                   widget.showAskField ? 'COACH' : 'EMERGE',
-                                  style: Theme.of(context)
-                                      .textTheme
-                                      .titleSmall
+                                  style: Theme.of(context).textTheme.titleSmall
                                       ?.copyWith(
                                         color: EmergeColors.teal,
                                         fontWeight: FontWeight.bold,
@@ -222,8 +234,9 @@ class _NarratorSheetState extends ConsumerState<NarratorSheet>
                                       vertical: 3,
                                     ),
                                     decoration: BoxDecoration(
-                                      color: EmergeColors.warmGold
-                                          .withValues(alpha: 0.15),
+                                      color: EmergeColors.warmGold.withValues(
+                                        alpha: 0.15,
+                                      ),
                                       borderRadius: BorderRadius.circular(8),
                                     ),
                                     child: const Text(
@@ -249,13 +262,8 @@ class _NarratorSheetState extends ConsumerState<NarratorSheet>
                             // Instant text (no typewriter)
                             Text(
                               _currentLine?.text ?? appearance.line.text,
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .bodyLarge
-                                  ?.copyWith(
-                                    color: Colors.white,
-                                    height: 1.6,
-                                  ),
+                              style: Theme.of(context).textTheme.bodyLarge
+                                  ?.copyWith(color: Colors.white, height: 1.6),
                             ),
 
                             if (widget.showAskField) ...[
@@ -269,14 +277,19 @@ class _NarratorSheetState extends ConsumerState<NarratorSheet>
                                   hintText: _isAsking
                                       ? 'Consulting your coach…'
                                       : 'Ask your coach anything…',
-                                  hintStyle:
-                                      const TextStyle(color: Colors.white38),
+                                  hintStyle: const TextStyle(
+                                    color: Colors.white38,
+                                  ),
                                   filled: true,
-                                  fillColor: Colors.white.withValues(alpha: 0.06),
+                                  fillColor: Colors.white.withValues(
+                                    alpha: 0.06,
+                                  ),
                                   border: OutlineInputBorder(
                                     borderRadius: BorderRadius.circular(12),
                                     borderSide: BorderSide(
-                                      color: Colors.white.withValues(alpha: 0.15),
+                                      color: Colors.white.withValues(
+                                        alpha: 0.15,
+                                      ),
                                     ),
                                   ),
                                 ),
@@ -373,9 +386,7 @@ class _ActionButton extends StatelessWidget {
         decoration: BoxDecoration(
           color: color.withValues(alpha: 0.15),
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: color.withValues(alpha: 0.3),
-          ),
+          border: Border.all(color: color.withValues(alpha: 0.3)),
         ),
         child: Center(
           child: Text(

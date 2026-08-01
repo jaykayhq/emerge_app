@@ -5,6 +5,7 @@ import 'package:emerge_app/features/narrator/domain/models/narrator_appearance.d
 import 'package:emerge_app/features/narrator/domain/models/narrator_line.dart';
 import 'package:emerge_app/features/narrator/domain/models/narrator_trigger.dart';
 import 'package:emerge_app/features/narrator/presentation/widgets/narrator_sheet.dart';
+import 'package:emerge_app/features/onboarding/data/repositories/local_settings_repository.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -29,7 +30,16 @@ class _FakeQuota extends CoachAskQuotaController {
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
-  setUp(() => SharedPreferences.setMockInitialValues({}));
+  setUp(() async {
+    // Coach-mode NarratorSheet.show runs the first-visit coach guide before
+    // the dialog — seed the seen flag so the guide never blocks the sheet
+    // under test.
+    SharedPreferences.setMockInitialValues({
+      'tutorialsEnabled': true,
+      'hasSeenNodeGuide_coach': true,
+    });
+    await LocalSettingsRepository().init();
+  });
 
   const appearance = NarratorAppearance(
     trigger: NarratorTrigger.askNarrator,

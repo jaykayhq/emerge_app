@@ -80,29 +80,6 @@ class NodeGuideRegistry {
       ],
     ),
     NodeGuideDefinition(
-      nodeId: 'habit_advanced',
-      title: 'Advanced Habit Setup',
-      primaryColor: EmergeColors.teal,
-      titleIcon: Icons.tune,
-      items: [
-        NodeGuideItem(
-          icon: Icons.anchor_outlined,
-          title: 'Anchor habits',
-          body: 'Stack a new habit onto one you already never miss.',
-        ),
-        NodeGuideItem(
-          icon: Icons.sports_score_outlined,
-          title: 'Attribute XP',
-          body: 'Each habit feeds an attribute that shapes your avatar.',
-        ),
-        NodeGuideItem(
-          icon: Icons.thermostat_outlined,
-          title: 'Lower the friction',
-          body: 'Reduce the 2-minute rule for hard days — showing up counts.',
-        ),
-      ],
-    ),
-    NodeGuideDefinition(
       nodeId: 'streak_recovery',
       title: 'Streak Recovery',
       primaryColor: EmergeColors.warmGold,

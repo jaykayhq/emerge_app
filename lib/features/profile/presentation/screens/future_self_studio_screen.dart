@@ -1,6 +1,5 @@
 import 'package:emerge_app/core/constants/gamification_constants.dart';
 import 'package:emerge_app/core/presentation/widgets/app_error_widget.dart';
-import 'package:emerge_app/core/presentation/widgets/emerge_header.dart';
 import 'package:emerge_app/core/presentation/widgets/emerge_loading_skeleton.dart';
 import 'package:emerge_app/core/theme/app_theme.dart';
 import 'package:emerge_app/core/theme/archetype_theme.dart';
@@ -20,6 +19,7 @@ import 'package:emerge_app/features/profile/presentation/widgets/synergy_status_
 import 'package:emerge_app/features/profile/presentation/widgets/synergy_card.dart';
 import 'package:emerge_app/features/profile/presentation/widgets/emerge_splash_reveal.dart';
 import 'package:emerge_app/features/monetization/presentation/providers/subscription_provider.dart';
+import 'package:emerge_app/features/tutorials/presentation/widgets/node_guide_host.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -75,502 +75,509 @@ class _FutureSelfStudioScreenState
     final statsAsync = ref.watch(userStatsStreamProvider);
     final isRecovering = ref.watch(recoveryAnimatingProvider);
 
-    return statsAsync.when(
-      data: (profile) {
-        final stats = profile.avatarStats;
+    return NodeGuideHost(
+      nodeId: 'future_self',
+      child: statsAsync.when(
+        data: (profile) {
+          final stats = profile.avatarStats;
 
-        // Detect recovery: streak was 0 but now > 0
-        if (_previousStreak != null &&
-            _previousStreak == 0 &&
-            stats.streak > 0) {
-          // Trigger recovery animation
-          WidgetsBinding.instance.addPostFrameCallback((_) {
-            ref.read(recoveryAnimatingProvider.notifier).setAnimating(true);
-          });
-        }
-        _previousStreak = stats.streak;
+          // Detect recovery: streak was 0 but now > 0
+          if (_previousStreak != null &&
+              _previousStreak == 0 &&
+              stats.streak > 0) {
+            // Trigger recovery animation
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              ref.read(recoveryAnimatingProvider.notifier).setAnimating(true);
+            });
+          }
+          _previousStreak = stats.streak;
 
-        // Calculate attributes from stats
-        final attributes = _calculateAttributes(stats);
+          // Calculate attributes from stats
+          final attributes = _calculateAttributes(stats);
 
-        // Find top two attributes for synergy
-        final sortedAttributes = attributes.entries.toList()
-          ..sort((a, b) => b.value.compareTo(a.value));
-        final primaryAttribute = sortedAttributes.isNotEmpty
-            ? sortedAttributes[0].key
-            : 'Focus';
-        final secondaryAttribute = sortedAttributes.length > 1
-            ? sortedAttributes[1].key
-            : 'Discipline';
+          // Find top two attributes for synergy
+          final sortedAttributes = attributes.entries.toList()
+            ..sort((a, b) => b.value.compareTo(a.value));
+          final primaryAttribute = sortedAttributes.isNotEmpty
+              ? sortedAttributes[0].key
+              : 'Focus';
+          final secondaryAttribute = sortedAttributes.length > 1
+              ? sortedAttributes[1].key
+              : 'Discipline';
 
-        // Calculate growth multiplier based on consistency
-        final effectiveLevel = profile.effectiveLevel;
-        final growthMultiplier = 1.0 + (effectiveLevel * 0.05).clamp(0, 1);
+          // Calculate growth multiplier based on consistency
+          final effectiveLevel = profile.effectiveLevel;
+          final growthMultiplier = 1.0 + (effectiveLevel * 0.05).clamp(0, 1);
 
-        // Get archetype rank
-        final archetypeRank = _getArchetypeRank(effectiveLevel);
+          // Get archetype rank
+          final archetypeRank = _getArchetypeRank(effectiveLevel);
 
-        // World theme based on archetype
-        final worldTheme = _getWorldTheme(profile.archetype);
-        final archetypeTheme = ArchetypeTheme.forArchetype(profile.archetype);
-        final accentColor = archetypeTheme.primaryColor;
+          // World theme based on archetype
+          final worldTheme = _getWorldTheme(profile.archetype);
+          final archetypeTheme = ArchetypeTheme.forArchetype(profile.archetype);
+          final accentColor = archetypeTheme.primaryColor;
 
-        return WorldBackground(
-          child: CustomScrollView(
-                slivers: [
-                  // Shared header (avatar + subscription chip)
-                  SliverToBoxAdapter(
-                    child: EmergeHeader(
-                      displayName: profile.displayName ?? '',
-                      onAvatarTap: () => context.push('/profile/settings'),
-                      onUpgradeTap: () => context.push('/paywall'),
-                    ),
-                  ),
-                  // App Bar
-                  SliverAppBar(
-                backgroundColor: Colors.transparent,
-                floating: true,
-                actions: [
-                  IconButton(
-                    icon: const Icon(
-                      Icons.settings,
-                      color: AppTheme.textMainDark,
-                    ),
-                    onPressed: () => context.push('/profile/settings'),
-                  ),
-                ],
-                title: Column(
-                  children: [
-                    Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(
-                          'FUTURE SELF',
-                          style: Theme.of(context).textTheme.titleMedium
-                              ?.copyWith(
-                                color: AppTheme.textMainDark,
-                                fontWeight: FontWeight.bold,
-                                letterSpacing: 2,
-                              ),
-                        ),
-                        const SizedBox(width: 8),
-                        Consumer(
-                          builder: (context, ref, _) {
-                            final isPremium =
-                                ref.watch(isPremiumProvider).value ?? false;
-                            if (!isPremium) return const SizedBox.shrink();
-                            return Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 6,
-                                vertical: 2,
-                              ),
-                              decoration: BoxDecoration(
-                                color: Colors.amber,
-                                borderRadius: BorderRadius.circular(4),
-                              ),
-                              child: const Text(
-                                'PRO',
-                                style: TextStyle(
-                                  color: Colors.black,
-                                  fontSize: 8,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            );
-                          },
-                        ),
-                      ],
-                    ),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 4,
+          return WorldBackground(
+            child: CustomScrollView(
+              slivers: [
+                // App Bar
+                SliverAppBar(
+                  backgroundColor: Colors.transparent,
+                  floating: true,
+                  actions: [
+                    IconButton(
+                      icon: const Icon(
+                        Icons.settings,
+                        color: AppTheme.textMainDark,
                       ),
-                      decoration: BoxDecoration(
-                        color: accentColor.withValues(alpha: 0.2),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Text(
-                        '● IDENTITY CALIBRATED',
-                        style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                          color: accentColor,
-                          fontSize: 10,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
+                      onPressed: () => context.push('/profile/settings'),
                     ),
                   ],
-                ),
-                centerTitle: true,
-              ),
-
-              // Identity header (archetype + level)
-              SliverToBoxAdapter(
-                child: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 8,
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  title: Column(
                     children: [
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
                         children: [
                           Text(
-                            'IDENTITY',
-                            style: Theme.of(context).textTheme.labelSmall
-                                ?.copyWith(
-                                  color: AppTheme.textSecondaryDark,
-                                  letterSpacing: 1,
-                                ),
-                          ),
-                          Text(
-                            '${_getArchetypeName(profile.archetype)} Archetype',
+                            'FUTURE SELF',
                             style: Theme.of(context).textTheme.titleMedium
                                 ?.copyWith(
                                   color: AppTheme.textMainDark,
                                   fontWeight: FontWeight.bold,
+                                  letterSpacing: 2,
                                 ),
+                          ),
+                          const SizedBox(width: 8),
+                          Consumer(
+                            builder: (context, ref, _) {
+                              final isPremium =
+                                  ref.watch(isPremiumProvider).value ?? false;
+                              if (!isPremium) return const SizedBox.shrink();
+                              return Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 6,
+                                  vertical: 2,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: Colors.amber,
+                                  borderRadius: BorderRadius.circular(4),
+                                ),
+                                child: const Text(
+                                  'PRO',
+                                  style: TextStyle(
+                                    color: Colors.black,
+                                    fontSize: 8,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              );
+                            },
                           ),
                         ],
                       ),
                       Container(
                         padding: const EdgeInsets.symmetric(
                           horizontal: 12,
-                          vertical: 6,
+                          vertical: 4,
                         ),
                         decoration: BoxDecoration(
                           color: accentColor.withValues(alpha: 0.2),
-                          borderRadius: BorderRadius.circular(8),
-                          border: Border.all(
-                            color: accentColor.withValues(alpha: 0.4),
-                            width: 1,
-                          ),
+                          borderRadius: BorderRadius.circular(12),
                         ),
                         child: Text(
-                          'LVL $effectiveLevel',
-                          style: Theme.of(context).textTheme.titleMedium
+                          '● IDENTITY CALIBRATED',
+                          style: Theme.of(context).textTheme.labelSmall
                               ?.copyWith(
                                 color: accentColor,
-                                fontWeight: FontWeight.bold,
+                                fontSize: 10,
+                                fontWeight: FontWeight.w500,
                               ),
                         ),
                       ),
                     ],
                   ),
+                  centerTitle: true,
                 ),
-              ),
 
-              const SliverToBoxAdapter(child: SizedBox(height: 16)),
-
-              // NEW: Evolving Silhouette with 5-tier system + decay/recovery
-              // OR: New 2D Isometric Avatar Renderer (toggle via useNewAvatarRendererProvider)
-              // Wrapped in RepaintBoundary to isolate animation repaints
-              SliverToBoxAdapter(
-                child: RepaintBoundary(
-                  child: Center(
-                    child: Column(
-                      children: [
-                        ref.watch(useNewAvatarRendererProvider)
-                            ? _buildAvatarRenderer(
-                                context,
-                                profile.archetype,
-                                effectiveLevel,
-                                stats.streak,
-                                accentColor,
-                                ref,
-                                isRecovering,
-                              )
-                            : DecayRecoveryOverlay(
-                                entropyLevel: stats.streak > 0 ? 0.0 : 0.5,
-                                daysMissed: stats.streak > 0 ? 0 : 1,
-                                primaryColor: accentColor,
-                                isRecovering: isRecovering,
-                                onRecoveryComplete: () {
-                                  // Reset recovery state after animation
-                                  ref
-                                      .read(recoveryAnimatingProvider.notifier)
-                                      .setAnimating(false);
-                                },
-                                child: EvolvingSilhouetteWidget(
-                                  evolutionState:
-                                      SilhouetteEvolutionState.fromUserStats(
-                                        level: effectiveLevel,
-                                        currentStreak: stats.streak,
-                                        // Days missed = 0 if active streak, else estimate based on streak reset
-                                        daysMissed: stats.streak > 0 ? 0 : 1,
-                                        habitVotes: _calculateHabitVotes(stats),
-                                      ),
-                                  archetype: profile.archetype,
-                                  attributes: attributes,
-                                  size: 280,
-                                  onEvolutionTap: () {
-                                    HapticFeedback.lightImpact();
-                                    _showEvolutionInfo(
-                                      context,
-                                      effectiveLevel,
-                                      accentColor,
-                                    );
-                                  },
-                                ),
-                              ),
-
-                        // Phase label — visible at all times so users know
-                        // what "The Phantom" is without needing to tap.
-                        const SizedBox(height: 12),
-                        GestureDetector(
-                          onTap: () {
-                            HapticFeedback.lightImpact();
-                            _showEvolutionInfo(
-                              context,
-                              effectiveLevel,
-                              accentColor,
-                            );
-                          },
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Text(
-                                SilhouetteEvolutionState.phaseFromLevel(
-                                  effectiveLevel,
-                                ).name.toUpperCase(),
-                                style: TextStyle(
-                                  color: accentColor,
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.bold,
-                                  letterSpacing: 3,
-                                ),
-                              ),
-                              const SizedBox(width: 6),
-                              Icon(
-                                Icons.info_outline_rounded,
-                                color: accentColor.withValues(alpha: 0.7),
-                                size: 14,
-                              ),
-                            ],
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 40),
-                          child: Text(
-                            effectiveLevel < 5
-                                ? 'Your avatar — complete habits to evolve it'
-                                : 'Tap your avatar to see evolution details',
-                            style: const TextStyle(
-                              color: Colors.white54,
-                              fontSize: 12,
-                              height: 1.3,
-                            ),
-                            textAlign: TextAlign.center,
-                          ),
-                        ),
-                      ],
+                // Identity header (archetype + level)
+                SliverToBoxAdapter(
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 8,
                     ),
-                  ),
-                ),
-              ),
-
-              const SliverToBoxAdapter(child: SizedBox(height: 24)),
-
-              // XP Progress bar
-              SliverToBoxAdapter(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 24),
-                  child: Column(
-                    children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(
-                            'NEXT LEVEL',
-                            style: Theme.of(context).textTheme.labelSmall
-                                ?.copyWith(
-                                  color: accentColor.withValues(alpha: 0.8),
-                                  fontSize: 10,
-                                  letterSpacing: 1,
-                                ),
-                          ),
-                          Text(
-                            '${stats.totalXp % GamificationConstants.xpPerLevel}/${GamificationConstants.xpPerLevel} XP',
-                            style: Theme.of(context).textTheme.bodySmall
-                                ?.copyWith(color: AppTheme.textSecondaryDark),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 8),
-                      ClipRRect(
-                        borderRadius: BorderRadius.circular(6),
-                        child: LinearProgressIndicator(
-                          value:
-                              (stats.totalXp %
-                                  GamificationConstants.xpPerLevel) /
-                              GamificationConstants.xpPerLevel,
-                          backgroundColor: Colors.white.withValues(alpha: 0.08),
-                          valueColor: AlwaysStoppedAnimation(accentColor),
-                          minHeight: 8,
-                        ),
-                      ),
-                      const SizedBox(height: 12),
-                      // Challenge XP display
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 8,
-                        ),
-                        decoration: BoxDecoration(
-                          color: Colors.amber.withValues(alpha: 0.1),
-                          borderRadius: BorderRadius.circular(8),
-                          border: Border.all(
-                            color: Colors.amber.withValues(alpha: 0.3),
-                          ),
-                        ),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            const Icon(
-                              Icons.emoji_events,
-                              size: 16,
-                              color: Colors.amber,
-                            ),
-                            const SizedBox(width: 8),
                             Text(
-                              'Challenge XP: ${stats.challengeXp}',
-                              style: Theme.of(context).textTheme.bodySmall
+                              'IDENTITY',
+                              style: Theme.of(context).textTheme.labelSmall
                                   ?.copyWith(
-                                    color: Colors.amber,
+                                    color: AppTheme.textSecondaryDark,
+                                    letterSpacing: 1,
+                                  ),
+                            ),
+                            Text(
+                              '${_getArchetypeName(profile.archetype)} Archetype',
+                              style: Theme.of(context).textTheme.titleMedium
+                                  ?.copyWith(
+                                    color: AppTheme.textMainDark,
                                     fontWeight: FontWeight.bold,
                                   ),
                             ),
                           ],
                         ),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 6,
+                          ),
+                          decoration: BoxDecoration(
+                            color: accentColor.withValues(alpha: 0.2),
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(
+                              color: accentColor.withValues(alpha: 0.4),
+                              width: 1,
+                            ),
+                          ),
+                          child: Text(
+                            'LVL $effectiveLevel',
+                            style: Theme.of(context).textTheme.titleMedium
+                                ?.copyWith(
+                                  color: accentColor,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+
+                const SliverToBoxAdapter(child: SizedBox(height: 16)),
+
+                // NEW: Evolving Silhouette with 5-tier system + decay/recovery
+                // OR: New 2D Isometric Avatar Renderer (toggle via useNewAvatarRendererProvider)
+                // Wrapped in RepaintBoundary to isolate animation repaints
+                SliverToBoxAdapter(
+                  child: RepaintBoundary(
+                    child: Center(
+                      child: Column(
+                        children: [
+                          ref.watch(useNewAvatarRendererProvider)
+                              ? _buildAvatarRenderer(
+                                  context,
+                                  profile.archetype,
+                                  effectiveLevel,
+                                  stats.streak,
+                                  accentColor,
+                                  ref,
+                                  isRecovering,
+                                )
+                              : DecayRecoveryOverlay(
+                                  entropyLevel: stats.streak > 0 ? 0.0 : 0.5,
+                                  daysMissed: stats.streak > 0 ? 0 : 1,
+                                  primaryColor: accentColor,
+                                  isRecovering: isRecovering,
+                                  onRecoveryComplete: () {
+                                    // Reset recovery state after animation
+                                    ref
+                                        .read(
+                                          recoveryAnimatingProvider.notifier,
+                                        )
+                                        .setAnimating(false);
+                                  },
+                                  child: EvolvingSilhouetteWidget(
+                                    evolutionState:
+                                        SilhouetteEvolutionState.fromUserStats(
+                                          level: effectiveLevel,
+                                          currentStreak: stats.streak,
+                                          // Days missed = 0 if active streak, else estimate based on streak reset
+                                          daysMissed: stats.streak > 0 ? 0 : 1,
+                                          habitVotes: _calculateHabitVotes(
+                                            stats,
+                                          ),
+                                        ),
+                                    archetype: profile.archetype,
+                                    attributes: attributes,
+                                    size: 280,
+                                    onEvolutionTap: () {
+                                      HapticFeedback.lightImpact();
+                                      _showEvolutionInfo(
+                                        context,
+                                        effectiveLevel,
+                                        accentColor,
+                                      );
+                                    },
+                                  ),
+                                ),
+
+                          // Phase label — visible at all times so users know
+                          // what "The Phantom" is without needing to tap.
+                          const SizedBox(height: 12),
+                          GestureDetector(
+                            onTap: () {
+                              HapticFeedback.lightImpact();
+                              _showEvolutionInfo(
+                                context,
+                                effectiveLevel,
+                                accentColor,
+                              );
+                            },
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Text(
+                                  SilhouetteEvolutionState.phaseFromLevel(
+                                    effectiveLevel,
+                                  ).name.toUpperCase(),
+                                  style: TextStyle(
+                                    color: accentColor,
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.bold,
+                                    letterSpacing: 3,
+                                  ),
+                                ),
+                                const SizedBox(width: 6),
+                                Icon(
+                                  Icons.info_outline_rounded,
+                                  color: accentColor.withValues(alpha: 0.7),
+                                  size: 14,
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 40),
+                            child: Text(
+                              effectiveLevel < 5
+                                  ? 'Your avatar — complete habits to evolve it'
+                                  : 'Tap your avatar to see evolution details',
+                              style: const TextStyle(
+                                color: Colors.white54,
+                                fontSize: 12,
+                                height: 1.3,
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                          ),
+                        ],
                       ),
-                    ],
+                    ),
                   ),
                 ),
-              ),
 
-              const SliverToBoxAdapter(child: SizedBox(height: 24)),
+                const SliverToBoxAdapter(child: SizedBox(height: 24)),
 
-              // NEW: Trajectory Timeline (Stitch design) - isolated with RepaintBoundary
-              SliverToBoxAdapter(
-                child: RepaintBoundary(
-                  child: TrajectoryTimeline(
-                    archetype: profile.archetype,
-                    currentLevel: effectiveLevel,
-                    currentXp:
-                        (stats.totalXp % GamificationConstants.xpPerLevel)
-                            .toDouble(),
-                    xpForNextLevel: GamificationConstants.xpPerLevel.toDouble(),
-                  ),
-                ),
-              ),
-
-              const SliverToBoxAdapter(child: SizedBox(height: 24)),
-
-              // NEW: Synergy Status Card (Stitch design)
-              SliverToBoxAdapter(
-                child: _buildSynergyStatusCard(ref, accentColor),
-              ),
-
-              const SliverToBoxAdapter(child: SizedBox(height: 24)),
-
-              // Synergy Card with glassmorphism
-              SliverToBoxAdapter(
-                child: SynergyCard(
-                  primaryAttribute: primaryAttribute,
-                  secondaryAttribute: secondaryAttribute,
-                  growthMultiplier: growthMultiplier,
-                  archetypeRank: archetypeRank,
-                  worldTheme: worldTheme,
-                  accentColor: accentColor,
-                ),
-              ),
-
-              const SliverToBoxAdapter(child: SizedBox(height: 24)),
-
-              // Emerge Button (CTA) or Emerged State Card
-              SliverToBoxAdapter(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  child: profile.hasEmerged
-                      ? _EmergedStateCard(
-                          accentColor: accentColor,
-                          phase: SilhouetteEvolutionState.phaseFromLevel(
-                            stats.level,
+                // XP Progress bar
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 24),
+                    child: Column(
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              'NEXT LEVEL',
+                              style: Theme.of(context).textTheme.labelSmall
+                                  ?.copyWith(
+                                    color: accentColor.withValues(alpha: 0.8),
+                                    fontSize: 10,
+                                    letterSpacing: 1,
+                                  ),
+                            ),
+                            Text(
+                              '${stats.totalXp % GamificationConstants.xpPerLevel}/${GamificationConstants.xpPerLevel} XP',
+                              style: Theme.of(context).textTheme.bodySmall
+                                  ?.copyWith(color: AppTheme.textSecondaryDark),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 8),
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(6),
+                          child: LinearProgressIndicator(
+                            value:
+                                (stats.totalXp %
+                                    GamificationConstants.xpPerLevel) /
+                                GamificationConstants.xpPerLevel,
+                            backgroundColor: Colors.white.withValues(
+                              alpha: 0.08,
+                            ),
+                            valueColor: AlwaysStoppedAnimation(accentColor),
+                            minHeight: 8,
                           ),
-                        )
-                      : _EmergeButton(
-                          level: effectiveLevel,
-                          onPressed: () {
-                            // Show splash reveal then persist emerge to Firestore
-                            EmergeSplashReveal.show(
-                              context,
-                              primaryColor: accentColor,
-                              onComplete: () async {
-                                // Persist emerge state via controller
-                                await ref
-                                    .read(userStatsControllerProvider)
-                                    .emerge();
-                              },
+                        ),
+                        const SizedBox(height: 12),
+                        // Challenge XP display
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 8,
+                          ),
+                          decoration: BoxDecoration(
+                            color: Colors.amber.withValues(alpha: 0.1),
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(
+                              color: Colors.amber.withValues(alpha: 0.3),
+                            ),
+                          ),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              const Icon(
+                                Icons.emoji_events,
+                                size: 16,
+                                color: Colors.amber,
+                              ),
+                              const SizedBox(width: 8),
+                              Text(
+                                'Challenge XP: ${stats.challengeXp}',
+                                style: Theme.of(context).textTheme.bodySmall
+                                    ?.copyWith(
+                                      color: Colors.amber,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+
+                const SliverToBoxAdapter(child: SizedBox(height: 24)),
+
+                // NEW: Trajectory Timeline (Stitch design) - isolated with RepaintBoundary
+                SliverToBoxAdapter(
+                  child: RepaintBoundary(
+                    child: TrajectoryTimeline(
+                      archetype: profile.archetype,
+                      currentLevel: effectiveLevel,
+                      currentXp:
+                          (stats.totalXp % GamificationConstants.xpPerLevel)
+                              .toDouble(),
+                      xpForNextLevel: GamificationConstants.xpPerLevel
+                          .toDouble(),
+                    ),
+                  ),
+                ),
+
+                const SliverToBoxAdapter(child: SizedBox(height: 24)),
+
+                // NEW: Synergy Status Card (Stitch design)
+                SliverToBoxAdapter(
+                  child: _buildSynergyStatusCard(ref, accentColor),
+                ),
+
+                const SliverToBoxAdapter(child: SizedBox(height: 24)),
+
+                // Synergy Card with glassmorphism
+                SliverToBoxAdapter(
+                  child: SynergyCard(
+                    primaryAttribute: primaryAttribute,
+                    secondaryAttribute: secondaryAttribute,
+                    growthMultiplier: growthMultiplier,
+                    archetypeRank: archetypeRank,
+                    worldTheme: worldTheme,
+                    accentColor: accentColor,
+                  ),
+                ),
+
+                const SliverToBoxAdapter(child: SizedBox(height: 24)),
+
+                // Emerge Button (CTA) or Emerged State Card
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    child: profile.hasEmerged
+                        ? _EmergedStateCard(
+                            accentColor: accentColor,
+                            phase: SilhouetteEvolutionState.phaseFromLevel(
+                              stats.level,
+                            ),
+                          )
+                        : _EmergeButton(
+                            level: effectiveLevel,
+                            onPressed: () {
+                              // Show splash reveal then persist emerge to Firestore
+                              EmergeSplashReveal.show(
+                                context,
+                                primaryColor: accentColor,
+                                onComplete: () async {
+                                  // Persist emerge state via controller
+                                  await ref
+                                      .read(userStatsControllerProvider)
+                                      .emerge();
+                                },
+                              );
+                            },
+                            accentColor: accentColor,
+                            nextPhaseTitle: 'The Construct',
+                          ),
+                  ),
+                ),
+
+                // Creator Hub entry — only for verified creators
+                SliverToBoxAdapter(
+                  child: ref
+                      .watch(isVerifiedCreatorProvider)
+                      .when(
+                        data: (verified) {
+                          if (verified) {
+                            return Padding(
+                              padding: const EdgeInsets.all(16),
+                              child: ElevatedButton.icon(
+                                onPressed: () =>
+                                    context.push('/creator/dashboard'),
+                                icon: const Icon(Icons.dashboard_customize),
+                                label: const Text('Creator Hub'),
+                                style: ElevatedButton.styleFrom(
+                                  minimumSize: const Size(double.infinity, 48),
+                                ),
+                              ),
                             );
-                          },
-                          accentColor: accentColor,
-                          nextPhaseTitle: 'The Construct',
-                        ),
+                          }
+                          return const SizedBox.shrink();
+                        },
+                        loading: () => const SizedBox.shrink(),
+                        error: (error, stack) => const SizedBox.shrink(),
+                      ),
                 ),
-              ),
 
-              // Creator Hub entry — only for verified creators
-              SliverToBoxAdapter(
-                child: ref.watch(isVerifiedCreatorProvider).when(
-                  data: (verified) {
-                    if (verified) {
-                      return Padding(
-                        padding: const EdgeInsets.all(16),
-                        child: ElevatedButton.icon(
-                          onPressed: () => context.push('/creator/dashboard'),
-                          icon: const Icon(Icons.dashboard_customize),
-                          label: const Text('Creator Hub'),
-                          style: ElevatedButton.styleFrom(
-                            minimumSize: const Size(double.infinity, 48),
-                          ),
-                        ),
-                      );
-                    }
-                    return const SizedBox.shrink();
-                  },
-                  loading: () => const SizedBox.shrink(),
-                  error: (error, stack) => const SizedBox.shrink(),
-                ),
-              ),
-
-                  const SliverToBoxAdapter(child: SizedBox(height: 40)),
-                ],
-              ),
-        );
-      },
-      loading: () => const Scaffold(
-        backgroundColor: Color(0xFF0A0A1A),
-        body: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              SkeletonShimmer.circular(size: 120),
-              SizedBox(height: 24),
-              SkeletonShimmer(width: 150, height: 20),
-              SizedBox(height: 8),
-              SkeletonShimmer(width: 100, height: 16),
-            ],
+                const SliverToBoxAdapter(child: SizedBox(height: 40)),
+              ],
+            ),
+          );
+        },
+        loading: () => const Scaffold(
+          backgroundColor: Color(0xFF0A0A1A),
+          body: Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                SkeletonShimmer.circular(size: 120),
+                SizedBox(height: 24),
+                SkeletonShimmer(width: 150, height: 20),
+                SizedBox(height: 8),
+                SkeletonShimmer(width: 100, height: 16),
+              ],
+            ),
           ),
         ),
-      ),
-      error: (e, s) => Scaffold(
-        backgroundColor: const Color(0xFF0A0A1A),
-        body: AppErrorWidget(
-          message: "Couldn't load profile. Check your connection and try again.",
-          onRetry: () => ref.invalidate(userStatsStreamProvider),
+        error: (e, s) => Scaffold(
+          backgroundColor: const Color(0xFF0A0A1A),
+          body: AppErrorWidget(
+            message:
+                "Couldn't load profile. Check your connection and try again.",
+            onRetry: () => ref.invalidate(userStatsStreamProvider),
+          ),
         ),
       ),
     );
@@ -645,8 +652,6 @@ class _FutureSelfStudioScreenState
         return 'Living Forest';
     }
   }
-
-
 
   /// Calculate habit votes from user XP stats for artifact unlocking
   Map<String, int> _calculateHabitVotes(UserAvatarStats stats) {
@@ -736,7 +741,8 @@ class _FutureSelfStudioScreenState
               habits: habits,
             );
           },
-          loading: () => const EmergeLoadingSkeleton(itemCount: 1, itemHeight: 200),
+          loading: () =>
+              const EmergeLoadingSkeleton(itemCount: 1, itemHeight: 200),
           error: (_, _) => AppErrorWidget(
             message: "Couldn't load this section.",
             onRetry: () => ref.invalidate(habitsProvider),
@@ -776,10 +782,7 @@ class _FutureSelfStudioScreenState
           HapticFeedback.lightImpact();
           _showEvolutionInfo(context, level, accentColor);
         },
-        child: StickmanAvatar(
-          avatarData: avatarData,
-          size: 140,
-        ),
+        child: StickmanAvatar(avatarData: avatarData, size: 140),
       ),
     );
   }
@@ -905,11 +908,7 @@ class _EmergeButtonState extends State<_EmergeButton>
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(
-                  Icons.auto_awesome,
-                  size: 16,
-                  color: widget.accentColor,
-                ),
+                Icon(Icons.auto_awesome, size: 16, color: widget.accentColor),
                 const SizedBox(width: 6),
                 Text(
                   'Next: ${widget.nextPhaseTitle}',
