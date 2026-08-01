@@ -1,7 +1,6 @@
 import 'package:emerge_app/core/presentation/widgets/app_error_widget.dart';
 import 'package:emerge_app/core/theme/app_theme.dart';
 import 'package:emerge_app/core/theme/emerge_colors.dart';
-import 'package:emerge_app/features/onboarding/data/repositories/local_settings_repository.dart';
 import 'package:emerge_app/features/social/domain/models/challenge.dart';
 import 'package:emerge_app/features/social/domain/models/challenge_bundle.dart';
 import 'package:emerge_app/features/social/presentation/providers/challenge_bundle_provider.dart';
@@ -9,10 +8,10 @@ import 'package:emerge_app/features/social/presentation/screens/challenge_detail
 import 'package:emerge_app/features/social/presentation/screens/create_solo_challenge_dialog.dart';
 import 'package:emerge_app/features/social/presentation/widgets/challenges_skeleton.dart';
 import 'package:emerge_app/features/social/presentation/widgets/quest_card_stitch.dart';
+import 'package:emerge_app/features/tutorials/presentation/widgets/node_guide_host.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
-
 
 /// Challenges Screen - Optimized with bundle provider to prevent double refresh
 /// Uses single consolidated data fetch instead of multiple independent providers
@@ -37,34 +36,6 @@ class _ChallengesScreenState extends ConsumerState<ChallengesScreen> {
 
   final GlobalKey _filterKey = GlobalKey();
   final GlobalKey _createKey = GlobalKey();
-
-  bool _disposed = false;
-
-  @override
-  void initState() {
-    super.initState();
-    _checkFirstVisit();
-  }
-
-  @override
-  void dispose() {
-    _disposed = true;
-    super.dispose();
-  }
-
-  Future<void> _checkFirstVisit() async {
-    await Future<void>.delayed(const Duration(milliseconds: 500));
-    if (!mounted || _disposed) return;
-
-    final repo = LocalSettingsRepository();
-    if (repo.isFirstLaunch) return;
-    if (!repo.isTutorialsEnabled()) return;
-
-    final hasSeen = await repo.getHasSeenNodeGuide('/challenges');
-    if (!hasSeen && mounted && !_disposed) {
-      await repo.setHasSeenNodeGuide('/challenges');
-    }
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -119,22 +90,25 @@ class _ChallengesScreenState extends ConsumerState<ChallengesScreen> {
 
     if (!widget.showAppBar) return content;
 
-    return Scaffold(
-      backgroundColor: EmergeColors.background,
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          showDialog(
-            context: context,
-            barrierDismissible: true,
-            barrierColor: Colors.black.withValues(alpha: 0.6),
-            builder: (context) => const CreateSoloChallengeDialog(),
-          );
-        },
-        backgroundColor: EmergeColors.teal,
-        foregroundColor: Colors.black,
-        child: Icon(Icons.add_rounded, size: 32, key: _createKey),
+    return NodeGuideHost(
+      nodeId: 'challenges',
+      child: Scaffold(
+        backgroundColor: EmergeColors.background,
+        floatingActionButton: FloatingActionButton(
+          onPressed: () {
+            showDialog(
+              context: context,
+              barrierDismissible: true,
+              barrierColor: Colors.black.withValues(alpha: 0.6),
+              builder: (context) => const CreateSoloChallengeDialog(),
+            );
+          },
+          backgroundColor: EmergeColors.teal,
+          foregroundColor: Colors.black,
+          child: Icon(Icons.add_rounded, size: 32, key: _createKey),
+        ),
+        body: content,
       ),
-      body: content,
     );
   }
 

@@ -1,14 +1,9 @@
-import 'dart:async';
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:emerge_app/core/theme/archetype_theme.dart';
-import 'package:emerge_app/core/theme/emerge_colors.dart';
 import 'package:emerge_app/core/presentation/widgets/emerge_loading_skeleton.dart';
-import 'package:emerge_app/core/presentation/widgets/feature_coach_mark.dart';
 import 'package:emerge_app/features/social/presentation/providers/tribes_provider.dart';
-import 'package:emerge_app/features/companion/presentation/providers/companion_providers.dart';
-import 'package:emerge_app/features/companion/domain/enums/companion_enums.dart';
 import 'package:emerge_app/features/gamification/presentation/providers/user_stats_providers.dart';
 import 'package:emerge_app/features/social/presentation/screens/tribe_discovery_screen.dart';
 import 'package:emerge_app/features/social/presentation/screens/tribe_sanctum_tab.dart';
@@ -24,27 +19,6 @@ class TribeTabContent extends ConsumerStatefulWidget {
 }
 
 class _TribeTabContentState extends ConsumerState<TribeTabContent> {
-  bool _showFirstVisitGuide = false;
-
-  @override
-  void initState() {
-    super.initState();
-    Future.delayed(const Duration(milliseconds: 500), () {
-      if (!mounted) return;
-      final repo = ref.read(companionRepositoryProvider);
-      if (!repo.hasVisited('/tribes')) {
-        repo.markVisited('/tribes');
-        ref
-            .read(companionEngineProvider.notifier)
-            .triggerEvent(
-              eventType: CompanionEventType.firstFeatureVisit,
-              userContext: {'route': '/tribes'},
-            );
-        setState(() => _showFirstVisitGuide = true);
-      }
-    });
-  }
-
   @override
   Widget build(BuildContext context) {
     final hasClubAsync = ref.watch(hasClubProvider);
@@ -83,7 +57,10 @@ class _TribeTabContentState extends ConsumerState<TribeTabContent> {
                       ),
                     ),
                     Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16.0,
+                        vertical: 12.0,
+                      ),
                       child: ClipRRect(
                         borderRadius: BorderRadius.circular(24),
                         child: BackdropFilter(
@@ -150,24 +127,6 @@ class _TribeTabContentState extends ConsumerState<TribeTabContent> {
           loading: () => const EmergeLoadingSkeleton(itemCount: 5),
           error: (_, _) => const TribeSanctumTab(),
         ),
-        if (_showFirstVisitGuide)
-          FeatureCoachMark(
-            title: "Tribe Sanctum",
-            primaryColor: EmergeColors.green,
-            items: const [
-              CoachItemData(
-                icon: Icons.shield_outlined,
-                title: "Tribe Momentum Score",
-                body: "Check your team's current weekly momentum, active members, and territory tier.",
-              ),
-              CoachItemData(
-                icon: Icons.people_outline,
-                title: "Tribe Accountability",
-                body: "Track who completed which habits today and maintain your collective streak.",
-              ),
-            ],
-            onDismiss: () => setState(() => _showFirstVisitGuide = false),
-          ),
       ],
     );
   }

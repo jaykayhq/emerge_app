@@ -43,6 +43,7 @@ import 'package:emerge_app/features/narrator/presentation/widgets/narrator_sheet
 import 'package:emerge_app/features/narrator/domain/models/narrator_appearance.dart';
 import 'package:emerge_app/features/narrator/domain/models/narrator_trigger.dart';
 import 'package:emerge_app/features/narrator/domain/services/narrator_trigger_engine.dart';
+import 'package:emerge_app/features/tutorials/presentation/widgets/node_guide_host.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 /// Main daily screen - the habit command center
@@ -122,7 +123,9 @@ class _TimelineScreenState extends ConsumerState<TimelineScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       if (!mounted) return;
 
-      final habits = ref.read(dashboardStateProvider).habits
+      final habits = ref
+          .read(dashboardStateProvider)
+          .habits
           .where((h) => h.isActiveOnDay(now))
           .toList();
       final completedToday = habits.where((h) => h.isCompletedOn(now)).length;
@@ -232,89 +235,89 @@ class _TimelineScreenState extends ConsumerState<TimelineScreen> {
       }
     });
 
-    return WorldBackground(
-      useSafeArea: false,
-      themeOverride: AppWorldTheme.nebula,
-      child: Stack(
-        children: [
-          SafeArea(
-            child: habits.isNotEmpty
-                ? _buildTimelineList(context, habits, statsAsync)
-                : habitsAsync.when(
-                    data: (_) => _buildEmptyTimeline(
-                      context: context,
-                      onCreateHabit: () =>
-                          context.push('/timeline/create-habit'),
-                    ),
-                    loading: () => const EmergeLoadingSkeleton(
-                      itemCount: 3,
-                      itemHeight: 100,
-                    ),
-                    error: (e, s) => _buildErrorView(context),
-                  ),
-          ),
-          // Floating Action Button to create new habits.
-          // Goal Gradient Effect: a progress ring wraps the FAB showing
-          // today's completion fraction (green ≥80%, amber 50–79%, coral
-          // below 50%). The FAB stays circular so the ring reads cleanly.
-          Positioned(
-            right: 16,
-            bottom: 16 + MediaQuery.paddingOf(context).bottom,
-            child: Stack(
-              alignment: Alignment.center,
-              children: [
-                Consumer(
-                  builder: (context, ref, _) {
-                    final fraction =
-                        ref.watch(completionFractionProvider);
-                    return SizedBox(
-                      width: 64,
-                      height: 64,
-                      child: CircularProgressIndicator(
-                        value: fraction,
-                        strokeWidth: 3,
-                        strokeCap: StrokeCap.round,
-                        backgroundColor: Colors.white.withValues(alpha: 0.1),
-                        valueColor: AlwaysStoppedAnimation<Color>(
-                          _ringColor(fraction),
-                        ),
+    return NodeGuideHost(
+      nodeId: 'timeline',
+      child: WorldBackground(
+        useSafeArea: false,
+        themeOverride: AppWorldTheme.nebula,
+        child: Stack(
+          children: [
+            SafeArea(
+              child: habits.isNotEmpty
+                  ? _buildTimelineList(context, habits, statsAsync)
+                  : habitsAsync.when(
+                      data: (_) => _buildEmptyTimeline(
+                        context: context,
+                        onCreateHabit: () =>
+                            context.push('/timeline/create-habit'),
                       ),
-                    );
-                  },
-                ),
-                FloatingActionButton(
-                  heroTag: 'timeline_create_habit',
-                  backgroundColor: EmergeColors.teal,
-                  tooltip: 'Log Habit',
-                  onPressed: () => context.push('/timeline/create-habit'),
-                  child: const Icon(Icons.add, color: Colors.white),
-                ),
-              ],
+                      loading: () => const EmergeLoadingSkeleton(
+                        itemCount: 3,
+                        itemHeight: 100,
+                      ),
+                      error: (e, s) => _buildErrorView(context),
+                    ),
             ),
-          ),
-          // Milestone slide-up overlay
-          if (_showOverlay && _pendingOverlayLine != null)
+            // Floating Action Button to create new habits.
+            // Goal Gradient Effect: a progress ring wraps the FAB showing
+            // today's completion fraction (green ≥80%, amber 50–79%, coral
+            // below 50%). The FAB stays circular so the ring reads cleanly.
             Positioned(
-              left: 0,
-              right: 0,
-              bottom: 100 + MediaQuery.paddingOf(context).bottom,
-              child: NarratorMilestoneCard(
-                line: _pendingOverlayLine!.line,
-                trigger: _pendingOverlayLine!.trigger,
-                onDismissed: () {
-                  setState(() {
-                    _showOverlay = false;
-                    _pendingOverlayLine = null;
-                  });
-                  ref.read(pendingMilestoneProvider.notifier).clear();
-                },
+              right: 16,
+              bottom: 16 + MediaQuery.paddingOf(context).bottom,
+              child: Stack(
+                alignment: Alignment.center,
+                children: [
+                  Consumer(
+                    builder: (context, ref, _) {
+                      final fraction = ref.watch(completionFractionProvider);
+                      return SizedBox(
+                        width: 64,
+                        height: 64,
+                        child: CircularProgressIndicator(
+                          value: fraction,
+                          strokeWidth: 3,
+                          strokeCap: StrokeCap.round,
+                          backgroundColor: Colors.white.withValues(alpha: 0.1),
+                          valueColor: AlwaysStoppedAnimation<Color>(
+                            _ringColor(fraction),
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                  FloatingActionButton(
+                    heroTag: 'timeline_create_habit',
+                    backgroundColor: EmergeColors.teal,
+                    tooltip: 'Log Habit',
+                    onPressed: () => context.push('/timeline/create-habit'),
+                    child: const Icon(Icons.add, color: Colors.white),
+                  ),
+                ],
               ),
             ),
-          // Peak-End all-done celebration: full-screen glow + narrator line.
-          Positioned.fill(
-            child: AllDoneCelebration(key: _celebrationKey),
-          ),
-        ],
+            // Milestone slide-up overlay
+            if (_showOverlay && _pendingOverlayLine != null)
+              Positioned(
+                left: 0,
+                right: 0,
+                bottom: 100 + MediaQuery.paddingOf(context).bottom,
+                child: NarratorMilestoneCard(
+                  line: _pendingOverlayLine!.line,
+                  trigger: _pendingOverlayLine!.trigger,
+                  onDismissed: () {
+                    setState(() {
+                      _showOverlay = false;
+                      _pendingOverlayLine = null;
+                    });
+                    ref.read(pendingMilestoneProvider.notifier).clear();
+                  },
+                ),
+              ),
+            // Peak-End all-done celebration: full-screen glow + narrator line.
+            Positioned.fill(child: AllDoneCelebration(key: _celebrationKey)),
+          ],
+        ),
       ),
     );
   }
@@ -354,17 +357,13 @@ class _TimelineScreenState extends ConsumerState<TimelineScreen> {
               if (archetype == UserArchetype.none) {
                 return const SizedBox.shrink();
               }
-              final clubAsync = ref.watch(
-                userClubProvider(archetype.name),
-              );
+              final clubAsync = ref.watch(userClubProvider(archetype.name));
               return clubAsync.when(
                 data: (club) {
                   if (club == null || club.memberCount <= 0) {
                     return const SizedBox.shrink();
                   }
-                  return TribalPresenceStrip(
-                    memberCount: club.memberCount,
-                  );
+                  return TribalPresenceStrip(memberCount: club.memberCount);
                 },
                 // Passive social-proof pill: while loading, show nothing
                 // rather than a skeleton (it must never block the timeline).
@@ -388,7 +387,7 @@ class _TimelineScreenState extends ConsumerState<TimelineScreen> {
             },
             completionStatus:
                 ref.watch(monthCompletionProvider).value ??
-                    const <String, DayCompletion>{},
+                const <String, DayCompletion>{},
           ),
         ),
 
@@ -399,7 +398,7 @@ class _TimelineScreenState extends ConsumerState<TimelineScreen> {
             completionFraction: habits.isEmpty
                 ? 0.0
                 : habits.where((h) => h.isCompletedOn(_selectedDate)).length /
-                    habits.length,
+                      habits.length,
             currentStreak: _bestStreak(habits),
             // tribePercentile: null until tribe stats provider is wired
             onTap: () => context.push('/world-map/recap'),
@@ -504,26 +503,20 @@ class _TimelineScreenState extends ConsumerState<TimelineScreen> {
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(
-                      Icons.add_task,
-                      color: EmergeColors.teal,
-                      size: 48,
-                    ),
+                    Icon(Icons.add_task, color: EmergeColors.teal, size: 48),
                     const SizedBox(height: 12),
                     Text(
                       'No habits yet',
-                      style: Theme.of(context)
-                          .textTheme
-                          .titleMedium
-                          ?.copyWith(color: Colors.white),
+                      style: Theme.of(
+                        context,
+                      ).textTheme.titleMedium?.copyWith(color: Colors.white),
                     ),
                     const SizedBox(height: 4),
                     Text(
                       'Create your first habit to start your identity journey',
-                      style: Theme.of(context)
-                          .textTheme
-                          .bodySmall
-                          ?.copyWith(color: EmergeColors.tealMuted),
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: EmergeColors.tealMuted,
+                      ),
                       textAlign: TextAlign.center,
                     ),
                     const SizedBox(height: 16),
@@ -642,7 +635,9 @@ class _TimelineScreenState extends ConsumerState<TimelineScreen> {
             ),
           );
           if (mounted) {
-            ref.read(pendingMilestoneProvider.notifier).set(
+            ref
+                .read(pendingMilestoneProvider.notifier)
+                .set(
                   PendingMilestoneLine(
                     line: line,
                     trigger: result.narratorTrigger!,
@@ -705,7 +700,9 @@ class _TimelineScreenState extends ConsumerState<TimelineScreen> {
 
   void _shareTimelineProgress() {
     final now = DateTime.now();
-    final habits = ref.read(dashboardStateProvider).habits
+    final habits = ref
+        .read(dashboardStateProvider)
+        .habits
         .where((h) => h.isActiveOnDay(now))
         .toList();
     final completedToday = habits.where((h) => h.isCompletedOn(now)).toList();

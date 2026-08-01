@@ -4,13 +4,11 @@ import 'package:emerge_app/core/presentation/widgets/app_error_widget.dart';
 import 'package:emerge_app/features/blueprints/domain/models/blueprint.dart';
 import 'package:emerge_app/features/blueprints/data/repositories/blueprint_repository.dart';
 import 'package:emerge_app/features/social/presentation/screens/blueprint_detail_screen.dart';
-import 'package:emerge_app/features/companion/presentation/providers/companion_providers.dart';
-import 'package:emerge_app/features/companion/domain/enums/companion_enums.dart';
+import 'package:emerge_app/features/tutorials/presentation/widgets/node_guide_host.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:emerge_app/core/presentation/widgets/feature_coach_mark.dart';
 import 'package:emerge_app/core/presentation/widgets/emerge_status_hud_top_bar.dart';
 import 'package:emerge_app/core/presentation/widgets/world_background.dart';
 import 'package:emerge_app/core/domain/models/app_world_theme.dart';
@@ -35,27 +33,6 @@ const _displayedBlueprintCategories = {
 };
 
 class _SocialDiscoverTabState extends ConsumerState<SocialDiscoverTab> {
-  bool _showFirstVisitGuide = false;
-
-  @override
-  void initState() {
-    super.initState();
-    Future.delayed(const Duration(milliseconds: 500), () {
-      if (!mounted) return;
-      final repo = ref.read(companionRepositoryProvider);
-      if (!repo.hasVisited('/discover')) {
-        repo.markVisited('/discover');
-        ref
-            .read(companionEngineProvider.notifier)
-            .triggerEvent(
-              eventType: CompanionEventType.firstFeatureVisit,
-              userContext: {'route': '/discover'},
-            );
-        setState(() => _showFirstVisitGuide = true);
-      }
-    });
-  }
-
   @override
   Widget build(BuildContext context) {
     final blueprintsAsync = ref.watch(allBlueprintsStreamProvider);
@@ -71,13 +48,13 @@ class _SocialDiscoverTabState extends ConsumerState<SocialDiscoverTab> {
               if (!_displayedBlueprintCategories.contains(cat)) continue;
               grouped.putIfAbsent(cat, () => []).add(bp);
             }
-     
+
             final categories = grouped.keys.toList()..sort();
-     
+
             if (categories.isEmpty) {
               return const _EmptyState();
             }
-     
+
             return RefreshIndicator(
               onRefresh: () async {
                 ref.invalidate(allBlueprintsStreamProvider);
@@ -101,45 +78,28 @@ class _SocialDiscoverTabState extends ConsumerState<SocialDiscoverTab> {
             ),
           ),
         ),
-        if (_showFirstVisitGuide)
-          FeatureCoachMark(
-            title: "Discover Blueprints",
-            primaryColor: EmergeColors.teal,
-            items: const [
-              CoachItemData(
-                icon: Icons.explore_outlined,
-                title: "Curated Habit Packs",
-                body: "Explore habit templates and blueprints created by the community and optimized for specific archetypes.",
-              ),
-              CoachItemData(
-                icon: Icons.category_outlined,
-                title: "Structured Categories",
-                body: "Filter blueprints by focus areas such as Fitness, Productivity, Mindfulness, and Learning.",
-              ),
-            ],
-            onDismiss: () => setState(() => _showFirstVisitGuide = false),
-          ),
       ],
     );
 
     if (widget.showAsRoot) {
-      return WorldBackground(
-        useSafeArea: false,
-        themeOverride: AppWorldTheme.nebula,
-        child: SafeArea(
-          child: CustomScrollView(
-            slivers: [
-              const EmergeStatusHudTopBar(),
-              SliverFillRemaining(
-                child: content,
-              ),
-            ],
+      return NodeGuideHost(
+        nodeId: 'discover',
+        child: WorldBackground(
+          useSafeArea: false,
+          themeOverride: AppWorldTheme.nebula,
+          child: SafeArea(
+            child: CustomScrollView(
+              slivers: [
+                const EmergeStatusHudTopBar(),
+                SliverFillRemaining(child: content),
+              ],
+            ),
           ),
         ),
       );
     }
 
-    return content;
+    return NodeGuideHost(nodeId: 'discover', child: content);
   }
 
   Widget _buildShimmerLoading() {

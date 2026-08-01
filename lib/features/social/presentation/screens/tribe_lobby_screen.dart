@@ -22,6 +22,7 @@ import 'package:emerge_app/features/social/presentation/widgets/tribe_live_compa
 import 'package:emerge_app/features/social/presentation/widgets/tribe_pulse_status_row.dart';
 import 'package:emerge_app/features/social/presentation/widgets/tribe_quests_for_you_section.dart';
 import 'package:emerge_app/features/social/presentation/widgets/tribe_your_quests_section.dart';
+import 'package:emerge_app/features/tutorials/presentation/widgets/node_guide_host.dart';
 
 /// Tribe lobby — the canonical social hub (dual hub: tribe + friends).
 ///
@@ -51,141 +52,138 @@ class _TribeLobbyScreenState extends ConsumerState<TribeLobbyScreen> {
     final profileAsync = ref.watch(userStatsStreamProvider);
     final clubsAsync = ref.watch(allArchetypeClubsProvider);
 
-    return Scaffold(
-      backgroundColor: Colors.transparent,
-      body: AppBackToHome(
-        homeRoute: '/world-map',
-        child: SafeArea(
-          child: clubsAsync.when(
-            data: (clubs) => profileAsync.when(
-              data: (profile) {
-                final userClub = _resolveUserClub(clubs, profile);
-                if (userClub == null) {
-                  return const _ErrorState(
-                    message: 'No tribe found.',
+    return NodeGuideHost(
+      nodeId: 'tribe_lobby',
+      child: Scaffold(
+        backgroundColor: Colors.transparent,
+        body: AppBackToHome(
+          homeRoute: '/world-map',
+          child: SafeArea(
+            child: clubsAsync.when(
+              data: (clubs) => profileAsync.when(
+                data: (profile) {
+                  final userClub = _resolveUserClub(clubs, profile);
+                  if (userClub == null) {
+                    return const _ErrorState(message: 'No tribe found.');
+                  }
+
+                  final archetypeTheme = ArchetypeTheme.forArchetype(
+                    profile.archetype,
                   );
-                }
+                  final momentumPct =
+                      (profile.momentumScore.clamp(0.0, 1.0) * 100).round();
 
-                final archetypeTheme =
-                    ArchetypeTheme.forArchetype(profile.archetype);
-                final momentumPct =
-                    (profile.momentumScore.clamp(0.0, 1.0) * 100).round();
-
-                return CustomScrollView(
-                  physics: const BouncingScrollPhysics(),
-                  slivers: [
-                    const SliverToBoxAdapter(child: Gap(12)),
-                    SliverToBoxAdapter(
-                      child: _Hero(
-                        userClub: userClub,
-                        archetypeTheme: archetypeTheme,
-                      ),
-                    ),
-                    SliverToBoxAdapter(
-                      child: Padding(
-                        padding:
-                            const EdgeInsets.fromLTRB(20, 24, 20, 0),
-                        child: _StatsBar(
+                  return CustomScrollView(
+                    physics: const BouncingScrollPhysics(),
+                    slivers: [
+                      const SliverToBoxAdapter(child: Gap(12)),
+                      SliverToBoxAdapter(
+                        child: _Hero(
                           userClub: userClub,
-                          profile: profile,
-                          momentumPct: momentumPct,
+                          archetypeTheme: archetypeTheme,
                         ),
                       ),
-                    ),
-                    const SliverToBoxAdapter(child: Gap(20)),
-                    SliverToBoxAdapter(
-                      child: TribePulseStatusRow(
-                        userClub: userClub,
-                        profile: profile,
+                      SliverToBoxAdapter(
+                        child: Padding(
+                          padding: const EdgeInsets.fromLTRB(20, 24, 20, 0),
+                          child: _StatsBar(
+                            userClub: userClub,
+                            profile: profile,
+                            momentumPct: momentumPct,
+                          ),
+                        ),
                       ),
-                    ),
-                    const SliverToBoxAdapter(child: Gap(8)),
-                    const SliverToBoxAdapter(
-                        child: TribeCircleSection()),
-                    const SliverToBoxAdapter(child: Gap(8)),
-                    SliverToBoxAdapter(
-                      child: TribeLiveCompact(
-                        clubId: userClub.id,
-                        profile: profile,
+                      const SliverToBoxAdapter(child: Gap(20)),
+                      SliverToBoxAdapter(
+                        child: TribePulseStatusRow(
+                          userClub: userClub,
+                          profile: profile,
+                        ),
                       ),
-                    ),
-                    const SliverToBoxAdapter(child: Gap(8)),
-                    const SliverToBoxAdapter(
-                      child: Padding(
-                        padding: EdgeInsets.only(bottom: 8),
-                        child: TribeCreatorsStrip(),
+                      const SliverToBoxAdapter(child: Gap(8)),
+                      const SliverToBoxAdapter(child: TribeCircleSection()),
+                      const SliverToBoxAdapter(child: Gap(8)),
+                      SliverToBoxAdapter(
+                        child: TribeLiveCompact(
+                          clubId: userClub.id,
+                          profile: profile,
+                        ),
                       ),
-                    ),
-                    SliverToBoxAdapter(
-                      child: TribeBlueprintsSection(tribe: userClub),
-                    ),
-                    const SliverToBoxAdapter(
-                      child: TribeYourQuestsSection(),
-                    ),
-                    const SliverToBoxAdapter(child: Gap(4)),
-                    const SliverToBoxAdapter(
-                      child: TribeQuestsForYouSection(),
-                    ),
-                    const SliverToBoxAdapter(child: Gap(24)),
-                  ],
-                );
-              },
+                      const SliverToBoxAdapter(child: Gap(8)),
+                      const SliverToBoxAdapter(
+                        child: Padding(
+                          padding: EdgeInsets.only(bottom: 8),
+                          child: TribeCreatorsStrip(),
+                        ),
+                      ),
+                      SliverToBoxAdapter(
+                        child: TribeBlueprintsSection(tribe: userClub),
+                      ),
+                      const SliverToBoxAdapter(child: TribeYourQuestsSection()),
+                      const SliverToBoxAdapter(child: Gap(4)),
+                      const SliverToBoxAdapter(
+                        child: TribeQuestsForYouSection(),
+                      ),
+                      const SliverToBoxAdapter(child: Gap(24)),
+                    ],
+                  );
+                },
+                loading: () => const _LobbyLoading(),
+                error: (_, _) => AppErrorWidget(
+                  message: 'Could not load profile.',
+                  onRetry: () => ref.invalidate(userStatsStreamProvider),
+                ),
+              ),
               loading: () => const _LobbyLoading(),
               error: (_, _) => AppErrorWidget(
-                message: 'Could not load profile.',
-                onRetry: () => ref.invalidate(userStatsStreamProvider),
+                message: 'Could not load tribes.',
+                onRetry: () => ref.invalidate(allArchetypeClubsProvider),
               ),
-            ),
-            loading: () => const _LobbyLoading(),
-            error: (_, _) => AppErrorWidget(
-              message: 'Could not load tribes.',
-              onRetry: () => ref.invalidate(allArchetypeClubsProvider),
             ),
           ),
         ),
-      ),
-      bottomNavigationBar: profileAsync.value == null
-          ? null
-          : SafeArea(
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(20, 12, 20, 16),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: OutlinedButton.icon(
-                        icon: const Icon(
-                          Icons.emoji_events_rounded,
-                          size: 16,
-                        ),
-                        label: const Text('CHALLENGES'),
-                        style: OutlinedButton.styleFrom(
-                          foregroundColor: Colors.white70,
-                          side: const BorderSide(color: Colors.white24),
-                          padding:
-                              const EdgeInsets.symmetric(vertical: 22),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(28),
+        bottomNavigationBar: profileAsync.value == null
+            ? null
+            : SafeArea(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 12, 20, 16),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: OutlinedButton.icon(
+                          icon: const Icon(
+                            Icons.emoji_events_rounded,
+                            size: 16,
                           ),
-                          textStyle: const TextStyle(
-                            fontWeight: FontWeight.bold,
-                            letterSpacing: 2,
+                          label: const Text('CHALLENGES'),
+                          style: OutlinedButton.styleFrom(
+                            foregroundColor: Colors.white70,
+                            side: const BorderSide(color: Colors.white24),
+                            padding: const EdgeInsets.symmetric(vertical: 22),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(28),
+                            ),
+                            textStyle: const TextStyle(
+                              fontWeight: FontWeight.bold,
+                              letterSpacing: 2,
+                            ),
                           ),
+                          onPressed: () => context.push('/challenges'),
                         ),
-                        onPressed: () => context.push('/challenges'),
                       ),
-                    ),
-                    const Gap(12),
-                    Expanded(
-                      child: EmergePrimaryButton(
-                        label: 'BROWSE BLUEPRINTS',
-                        leadingIcon: Icons.auto_awesome,
-                        onPressed: () => context.push('/social/discover'),
+                      const Gap(12),
+                      Expanded(
+                        child: EmergePrimaryButton(
+                          label: 'BROWSE BLUEPRINTS',
+                          leadingIcon: Icons.auto_awesome,
+                          onPressed: () => context.push('/social/discover'),
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
-            ),
+      ),
     );
   }
 
@@ -293,10 +291,7 @@ class _StatsBar extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: [
-          _StatColumn(
-            label: 'MEMBERS',
-            value: '${userClub.memberCount}',
-          ),
+          _StatColumn(label: 'MEMBERS', value: '${userClub.memberCount}'),
           Container(
             width: 1,
             height: 40,
@@ -393,10 +388,7 @@ class _ErrorState extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Center(
-      child: Text(
-        message,
-        style: const TextStyle(color: Colors.white54),
-      ),
+      child: Text(message, style: const TextStyle(color: Colors.white54)),
     );
   }
 }

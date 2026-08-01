@@ -229,7 +229,7 @@ class NodeGuideRegistry {
         NodeGuideItem(
           icon: Icons.swap_horiz_outlined,
           title: 'Switch tribes',
-          body: 'Use the bottom button to browse and switch tribes.',
+          body: 'Switch tribes anytime from the All Tribes screen.',
         ),
       ],
     ),
