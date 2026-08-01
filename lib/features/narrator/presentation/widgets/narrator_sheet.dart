@@ -2,6 +2,7 @@ import 'dart:ui';
 
 import 'package:emerge_app/core/theme/emerge_colors.dart';
 import 'package:emerge_app/features/ai/data/services/groq_ai_service.dart';
+import 'package:emerge_app/features/gamification/presentation/providers/user_stats_providers.dart';
 import 'package:emerge_app/features/monetization/presentation/providers/coach_ask_quota_provider.dart';
 import 'package:emerge_app/features/monetization/presentation/providers/subscription_provider.dart';
 import 'package:emerge_app/features/monetization/presentation/widgets/premium_limit_dialog.dart';
@@ -124,8 +125,17 @@ class _NarratorSheetState extends ConsumerState<NarratorSheet>
       final isPremium = ref.read(isPremiumProvider).value ?? false;
       final NarratorLine line;
       if (isPremium) {
+        // Ground the LLM in the user's real progress so the DATA-GROUNDED
+        // badge is honest. Empty context when the profile hasn't loaded.
+        final profile = ref.read(userStatsStreamProvider).value;
+        final context = profile == null
+            ? ''
+            : 'Level ${profile.avatarStats.level}, '
+                '${profile.avatarStats.totalXp} total XP, '
+                'archetype ${profile.archetype.name}, '
+                'streak ${profile.avatarStats.streak}';
         final groq = GroqAiService();
-        final advice = await groq.getCoachAdvice('', question);
+        final advice = await groq.getCoachAdvice(context, question);
         line = PersonalLine(text: advice, dataBasis: 'groq_coach');
       } else {
         line = GenericLine(

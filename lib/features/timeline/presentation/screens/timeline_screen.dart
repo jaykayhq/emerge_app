@@ -43,6 +43,8 @@ import 'package:emerge_app/features/narrator/presentation/widgets/narrator_sheet
 import 'package:emerge_app/features/narrator/domain/models/narrator_appearance.dart';
 import 'package:emerge_app/features/narrator/domain/models/narrator_trigger.dart';
 import 'package:emerge_app/features/narrator/domain/services/narrator_trigger_engine.dart';
+import 'package:emerge_app/features/narrator/domain/services/narrator_open_evaluator.dart';
+import 'package:emerge_app/features/onboarding/presentation/providers/onboarding_provider.dart';
 import 'package:emerge_app/features/tutorials/presentation/widgets/node_guide_host.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -60,6 +62,7 @@ class _TimelineScreenState extends ConsumerState<TimelineScreen> {
   DateTime _selectedDate = DateTime.now();
   final GlobalKey _calendarKey = GlobalKey();
   bool _hasCheckedMisses = false;
+  bool _hasEvaluatedOpen = false;
   bool _showOverlay = false;
   PendingMilestoneLine? _pendingOverlayLine;
   final GlobalKey<AllDoneCelebrationState> _celebrationKey =
@@ -80,6 +83,88 @@ class _TimelineScreenState extends ConsumerState<TimelineScreen> {
   void initState() {
     super.initState();
     _checkEveningReflection();
+    WidgetsBinding.instance.addPostFrameCallback((_) => _evaluateNarratorOnOpen());
+  }
+
+  /// Ambient narrator evaluation on timeline open: computes the trigger via
+  /// the pure [NarratorOpenEvaluator] (long absence, morning brief, streak
+  /// break — with cooldowns) and surfaces the resolved line as a pending
+  /// milestone. Runs once per screen mount; also persists app-open metadata
+  /// (installed-at, last-open, recent triggers) for the cooldown logic.
+  Future<void> _evaluateNarratorOnOpen() async {
+    if (_hasEvaluatedOpen || !mounted) return;
+    _hasEvaluatedOpen = true;
+
+    final repo = ref.read(localSettingsRepositoryProvider);
+    final now = DateTime.now();
+    var installedAt = repo.getAppInstalledAt();
+    if (installedAt == null) {
+      await repo.setAppInstalledAt(now);
+      installedAt = now;
+    }
+    final lastOpen = repo.getLastAppOpen();
+    final recent = await repo.getRecentNarratorTriggers();
+
+    final profile = ref.read(userStatsStreamProvider).value;
+    final todayHabits = ref
+        .read(dashboardStateProvider)
+        .habits
+        .where((h) => h.isActiveOnDay(now))
+        .toList();
+    final bestStreak = todayHabits.fold<int>(
+      0,
+      (max, h) => h.currentStreak > max ? h.currentStreak : max,
+    );
+    final misses = todayHabits.fold<int>(
+      0,
+      (max, h) => h.consecutiveMisses > max ? h.consecutiveMisses : max,
+    );
+
+    final input = NarratorOpenInput(
+      now: now,
+      installedAt: installedAt,
+      lastOpenAt: lastOpen,
+      momentumScore: ((profile?.avatarStats.momentumScore ?? 0) / 100)
+          .clamp(0.0, 1.0),
+      consecutiveActiveDays: 0, // not exposed on the profile
+      currentStreak: bestStreak,
+      longestStreak: bestStreak,
+      consecutiveMisses: misses,
+      hasCompletedOnboarding: true,
+      archetypeSelected: profile?.archetype != UserArchetype.none,
+      recentTriggers: recent,
+    );
+    await repo.setLastAppOpen(now);
+
+    final trigger = NarratorOpenEvaluator.evaluate(input);
+    if (trigger == null || !mounted) return;
+
+    final resolver = ref.read(lineResolverProvider);
+    final line = await resolver.resolve(
+      trigger: trigger,
+      stats: NarratorUserStats(
+        momentumScore: input.momentumScore,
+        consecutiveActiveDays: 0,
+        totalHabitsToday: todayHabits.length,
+        completedHabitsToday: todayHabits
+            .where((h) => h.isCompletedOn(now))
+            .length,
+        currentLevel: profile?.avatarStats.level ?? 1,
+        previousLevel: profile?.avatarStats.level ?? 1,
+        hasStreakBreak: misses > 0,
+        currentStreak: bestStreak,
+        longestStreak: bestStreak,
+        consecutiveMisses: misses,
+        hasCompletedEveningReflectionToday: true,
+        hasCompletedOnboarding: true,
+        archetypeSelected: profile?.archetype != UserArchetype.none,
+      ),
+    );
+    if (!mounted) return;
+    ref
+        .read(pendingMilestoneProvider.notifier)
+        .set(PendingMilestoneLine(line: line, trigger: trigger));
+    await repo.recordNarratorTrigger(trigger, now);
   }
 
   int _bestStreak(List<Habit> habits) {
@@ -169,7 +254,9 @@ class _TimelineScreenState extends ConsumerState<TimelineScreen> {
     NarratorSheet.show(
       context,
       NarratorAppearance(
-        trigger: NarratorTrigger.askNarrator,
+        // Resolver hook: keeps the engine the single source of truth for
+        // trigger resolution (askNarrator is user-driven, no cooldown).
+        trigger: NarratorTriggerEngine.resolveAskNarratorTrigger(),
         shellText: 'Ask your coach anything.',
         buttonA: 'Later',
         buttonB: 'Later',
@@ -616,15 +703,27 @@ class _TimelineScreenState extends ConsumerState<TimelineScreen> {
             !result.wasRecovery &&
             !result.isStreakMilestone) {
           final resolver = ref.read(lineResolverProvider);
+          final profile = ref.read(userStatsStreamProvider).value;
+          final now = DateTime.now();
+          final todayHabits = ref
+              .read(dashboardStateProvider)
+              .habits
+              .where((h) => h.isActiveOnDay(now))
+              .toList();
           final line = await resolver.resolve(
             trigger: result.narratorTrigger!,
             stats: NarratorUserStats(
               momentumScore: (result.newMomentumScore / 100).clamp(0.0, 1.0),
+              // Real fields: momentum/streak come from the completion result,
+              // level + habit counts come from the profile/dashboard.
+              // consecutiveActiveDays is not exposed on the profile — 0.
               consecutiveActiveDays: 0,
-              totalHabitsToday: 1,
-              completedHabitsToday: 1,
-              currentLevel: 1,
-              previousLevel: 1,
+              totalHabitsToday: todayHabits.length,
+              completedHabitsToday: todayHabits
+                  .where((h) => h.isCompletedOn(now))
+                  .length,
+              currentLevel: profile?.avatarStats.level ?? 1,
+              previousLevel: profile?.avatarStats.level ?? 1,
               hasStreakBreak: result.wasRecovery,
               currentStreak: result.newStreak,
               longestStreak: result.newStreak,
