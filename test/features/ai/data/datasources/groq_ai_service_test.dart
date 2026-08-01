@@ -1,11 +1,13 @@
 import 'package:cloud_functions/cloud_functions.dart';
+import 'package:emerge_app/features/ai/data/services/groq_ai_service.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
-import 'package:emerge_app/features/ai/data/datasources/groq_ai_service.dart';
 
 class MockFirebaseFunctions extends Mock implements FirebaseFunctions {}
 
 class MockHttpsCallable extends Mock implements HttpsCallable {}
+
+class _MockHttpsCallableResult extends Mock implements HttpsCallableResult {}
 
 void main() {
   late GroqAiService service;
@@ -20,102 +22,163 @@ void main() {
     mockFunctions = MockFirebaseFunctions();
     mockHttpsCallable = MockHttpsCallable();
     service = GroqAiService(functions: mockFunctions);
+    when(() => mockFunctions.httpsCallable(any())).thenReturn(mockHttpsCallable);
   });
 
-  group('GroqAiService', () {
-    test('should return advice when response is 200', () async {
+  group('getCoachAdvice', () {
+    test('should return trimmed advice when response has advice', () async {
       // Arrange
       final mockResult = _MockHttpsCallableResult();
-      when(() => mockResult.data).thenReturn({'advice': 'You can do it!'});
-
-      when(
-        () => mockFunctions.httpsCallable('getGroqCoachAdvice'),
-      ).thenReturn(mockHttpsCallable);
-      when(
-        () => mockHttpsCallable.call(any()),
-      ).thenAnswer((_) async => mockResult);
+      when(() => mockResult.data).thenReturn({'advice': '  You can do it!  '});
+      when(() => mockHttpsCallable.call(any())).thenAnswer((_) async => mockResult);
 
       // Act
       final result = await service.getCoachAdvice("context", "message");
 
       // Assert
-      expect(result, "You can do it!");
+      expect(result, 'You can do it!');
     });
 
-    test('should throw Exception on non-200 response', () async {
+    test('should return default message when response data is null', () async {
       // Arrange
-      when(
-        () => mockFunctions.httpsCallable('getGroqCoachAdvice'),
-      ).thenReturn(mockHttpsCallable);
+      final mockResult = _MockHttpsCallableResult();
+      when(() => mockResult.data).thenReturn(null);
+      when(() => mockHttpsCallable.call(any())).thenAnswer((_) async => mockResult);
+
+      // Act
+      final result = await service.getCoachAdvice("context", "message");
+
+      // Assert
+      expect(result, 'Keep going! Consistency is key.');
+    });
+
+    test('should return default message when advice field is missing', () async {
+      // Arrange
+      final mockResult = _MockHttpsCallableResult();
+      when(() => mockResult.data).thenReturn({});
+      when(() => mockHttpsCallable.call(any())).thenAnswer((_) async => mockResult);
+
+      // Act
+      final result = await service.getCoachAdvice("context", "message");
+
+      // Assert
+      expect(result, 'Keep going! Consistency is key.');
+    });
+
+    test('should return fallback on FirebaseFunctionsException', () async {
+      // Arrange
       when(() => mockHttpsCallable.call(any())).thenThrow(
         FirebaseFunctionsException(code: 'internal', message: 'Server error'),
       );
 
-      // Act & Assert
-      expect(
-        () => service.getCoachAdvice("context", "message"),
-        throwsA(isA<Exception>()),
-      );
-    });
-
-    test('should throw Exception when response data is null', () async {
-      final mockResult = _MockHttpsCallableResult();
-      when(() => mockResult.data).thenReturn(null);
-      when(() => mockFunctions.httpsCallable('getGroqCoachAdvice')).thenReturn(mockHttpsCallable);
-      when(() => mockHttpsCallable.call(any())).thenAnswer((_) async => mockResult);
-
-      expect(
-        () => service.getCoachAdvice("context", "message"),
-        throwsA(isA<Exception>()),
-      );
-    });
-
-    test('should throw Exception when advice field is missing', () async {
-      final mockResult = _MockHttpsCallableResult();
-      when(() => mockResult.data).thenReturn({});
-      when(() => mockFunctions.httpsCallable('getGroqCoachAdvice')).thenReturn(mockHttpsCallable);
-      when(() => mockHttpsCallable.call(any())).thenAnswer((_) async => mockResult);
-
-      expect(
-        () => service.getCoachAdvice("context", "message"),
-        throwsA(isA<Exception>()),
-      );
-    });
-
-    test('should trim whitespace from advice', () async {
-      final mockResult = _MockHttpsCallableResult();
-      when(() => mockResult.data).thenReturn({'advice': '  You can do it!  '});
-      when(() => mockFunctions.httpsCallable('getGroqCoachAdvice')).thenReturn(mockHttpsCallable);
-      when(() => mockHttpsCallable.call(any())).thenAnswer((_) async => mockResult);
-
+      // Act
       final result = await service.getCoachAdvice("context", "message");
-      expect(result, 'You can do it!');
-    });
 
-    test('should throw generic Exception when non-Firebase error occurs', () async {
-      when(() => mockFunctions.httpsCallable('getGroqCoachAdvice')).thenReturn(mockHttpsCallable);
-      when(() => mockHttpsCallable.call(any())).thenThrow(Exception('Network error'));
-
+      // Assert
       expect(
-        () => service.getCoachAdvice("context", "message"),
-        throwsA(isA<Exception>()),
+        result,
+        "I'm having trouble connecting to your inner coach right now. Keep pushing!",
       );
     });
 
-    test('should pass correct parameters to Firebase callable', () async {
+    test('should return fallback on generic exception', () async {
+      // Arrange
+      when(
+        () => mockHttpsCallable.call(any()),
+      ).thenThrow(Exception('Network error'));
+
+      // Act
+      final result = await service.getCoachAdvice("context", "message");
+
+      // Assert
+      expect(result, "You're doing great. Stay focused!");
+    });
+
+    test('should pass correct parameters to the callable', () async {
+      // Arrange
       final mockResult = _MockHttpsCallableResult();
       when(() => mockResult.data).thenReturn({'advice': 'ok'});
-      when(() => mockFunctions.httpsCallable('getGroqCoachAdvice')).thenReturn(mockHttpsCallable);
       when(() => mockHttpsCallable.call(any())).thenAnswer((_) async => mockResult);
 
+      // Act
       await service.getCoachAdvice('test_context', 'test_message');
 
+      // Assert
       final captured = verify(() => mockHttpsCallable.call(captureAny())).captured;
       final args = captured.first as Map<String, dynamic>;
       expect(args['userContext'], 'test_context');
       expect(args['userMessage'], 'test_message');
     });
   });
-}
 
-class _MockHttpsCallableResult extends Mock implements HttpsCallableResult {}
+  group('fillNarratorSlots', () {
+    test('should return empty map when response data is null', () async {
+      // Arrange
+      final mockResult = _MockHttpsCallableResult();
+      when(() => mockResult.data).thenReturn(null);
+      when(() => mockHttpsCallable.call(any())).thenAnswer((_) async => mockResult);
+
+      // Act
+      final slots = await service.fillNarratorSlots(
+        trigger: 'levelUp',
+        context: {'currentStreak': 3},
+      );
+
+      // Assert
+      expect(slots, isEmpty);
+    });
+
+    test('should return empty map when slots key is missing', () async {
+      // Arrange
+      final mockResult = _MockHttpsCallableResult();
+      when(() => mockResult.data).thenReturn({'other': 'data'});
+      when(() => mockHttpsCallable.call(any())).thenAnswer((_) async => mockResult);
+
+      // Act
+      final slots = await service.fillNarratorSlots(
+        trigger: 'levelUp',
+        context: {'currentStreak': 3},
+      );
+
+      // Assert
+      expect(slots, isEmpty);
+    });
+
+    test('should return string map when slots exist', () async {
+      // Arrange
+      final mockResult = _MockHttpsCallableResult();
+      when(() => mockResult.data).thenReturn({
+        'slots': {'greeting': 'Hello there', 'streak': 7},
+      });
+      when(() => mockHttpsCallable.call(any())).thenAnswer((_) async => mockResult);
+
+      // Act
+      final slots = await service.fillNarratorSlots(
+        trigger: 'levelUp',
+        context: {'currentStreak': 7},
+      );
+
+      // Assert
+      expect(slots, {'greeting': 'Hello there', 'streak': '7'});
+    });
+
+    test('should pass trigger and context to the callable', () async {
+      // Arrange
+      final mockResult = _MockHttpsCallableResult();
+      when(() => mockResult.data).thenReturn({'slots': {'a': 'b'}});
+      when(() => mockHttpsCallable.call(any())).thenAnswer((_) async => mockResult);
+
+      // Act
+      await service.fillNarratorSlots(
+        trigger: 'levelUp',
+        context: {'currentStreak': 7, 'momentumScore': 0.8},
+      );
+
+      // Assert
+      final captured = verify(() => mockHttpsCallable.call(captureAny())).captured;
+      final args = captured.first as Map<String, dynamic>;
+      expect(args['trigger'], 'levelUp');
+      expect(args['context'], {'currentStreak': 7, 'momentumScore': 0.8});
+    });
+  });
+}

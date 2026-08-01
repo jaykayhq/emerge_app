@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
-import 'package:emerge_app/features/ai/data/datasources/groq_ai_service.dart';
+import 'package:emerge_app/features/ai/data/services/groq_ai_service.dart';
 import 'package:emerge_app/features/ai/domain/services/ai_personalization_service.dart';
 import 'package:emerge_app/features/habits/domain/entities/habit.dart';
 

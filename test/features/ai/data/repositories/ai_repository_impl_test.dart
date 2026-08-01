@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
-import 'package:emerge_app/features/ai/data/datasources/groq_ai_service.dart';
+import 'package:emerge_app/features/ai/data/services/groq_ai_service.dart';
 import 'package:emerge_app/features/ai/data/repositories/ai_repository_impl.dart';
 
 class MockGroqAiService extends Mock implements GroqAiService {}
