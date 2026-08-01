@@ -2122,16 +2122,17 @@ git commit -m "feat(tutorials): node guides on timeline, challenges, tribes; por
 
 ---
 
-## Task 12: Node guides — habit create, advanced dialog, streak recovery, world map, leveling, future self, coach sheet
+## Task 12: Node guides — habit create, streak recovery, world map, leveling, future self, coach sheet
 
 **Files:**
 - Modify: `lib/features/habits/presentation/screens/habit_create_screen.dart`
-- Modify: `lib/features/habits/presentation/screens/advanced_create_habit_dialog.dart`
 - Modify: `lib/features/habits/presentation/screens/streak_recovery_screen.dart`
 - Modify: `lib/features/world_map/presentation/screens/world_map_screen.dart`
 - Modify: `lib/features/gamification/presentation/screens/leveling_screen.dart`
 - Modify: `lib/features/profile/presentation/screens/future_self_studio_screen.dart`
 - Modify: `lib/features/narrator/presentation/widgets/narrator_sheet.dart`
+- Modify: `lib/features/tutorials/domain/node_guide_registry.dart` — remove `habit_advanced`
+- New: `lib/features/tutorials/presentation/widgets/node_guide_overlay.dart`
 
 - [ ] **Step 1: Wrap the five full screens**
 
@@ -2152,53 +2153,48 @@ import 'package:emerge_app/features/tutorials/presentation/widgets/node_guide_ho
     );
 ```
 
-- [ ] **Step 2: Advanced habit dialog**
+- [ ] **Step 2: Drop `habit_advanced` (no live surface)**
 
-In `advanced_create_habit_dialog.dart`, the dialog's `builder` returns the dialog content widget. Wrap that returned widget:
+`advanced_create_habit_dialog.dart` does NOT exist at HEAD — the advanced habit features live inside `habit_create_screen.dart`, whose content is covered by the `habit_create` guide. Per the registry contract (one entry per live screen), remove the `habit_advanced` entry from `node_guide_registry.dart`. The registry test only asserts non-empty/uniqueness — removal is safe.
 
-```dart
-builder: (_) => NodeGuideHost(
-  nodeId: 'habit_advanced',
-  child: /* the widget that was previously returned */,
-),
-```
+Also in `streak_recovery_screen.dart`: its `initState` shows a hardcoded `NarratorSheet.show` on first visit (leftover pattern). Gate it so the legacy sheet only shows when the node guide is NOT due (`if (await ref.read(nodeGuideControllerProvider).shouldShow('streak_recovery')) return;`) — otherwise the sheet's dialog would sit awkwardly above the guide's scrim on first visit.
 
-+ import. (Note: `initState` in this file currently has a `_checkScreenFirstVisit`-style block left over from the narrator redesign — if present, delete it and its helper method; see Task 11 Step 2 for the same pattern.)
+- [ ] **Step 3: Coach sheet — overlay gate, not a host wrap**
 
-- [ ] **Step 3: Coach sheet**
+The coach sheet is a dialog and cannot host `NodeGuideHost`'s `SizedBox.expand` overlay. Add a full-screen-dialog variant `NodeGuideOverlay.show(context, nodeId)` (`lib/features/tutorials/presentation/widgets/node_guide_overlay.dart`): no-op when tutorials disabled or the node was seen; renders `FeatureCoachMark` and marks the node seen on dismiss.
 
-In `narrator_sheet.dart` (the file rewritten in Task 8), wrap the dialog content so the coach guide shows on the first coach open. Change the `NarratorSheet.show` builder:
+Make `NarratorSheet.show` async and gate on coach mode (`showAskField`):
 
 ```dart
-      builder: (_) => NodeGuideHost(
-        nodeId: 'coach',
-        child: NarratorSheet(
-          appearance: appearance,
-          onResponse: onResponse,
-          showAskField: showAskField,
-        ),
-      ),
+  static Future<void> show(
+    BuildContext context,
+    NarratorAppearance appearance, {
+    void Function(String buttonLabel, String? typedText)? onResponse,
+    bool showAskField = false,
+  }) async {
+    if (showAskField) {
+      await NodeGuideOverlay.show(context, 'coach');
+      if (!context.mounted) return;
+    }
+    return showDialog(...);
+  }
 ```
 
-+ import:
-
-```dart
-import 'package:emerge_app/features/tutorials/presentation/widgets/node_guide_host.dart';
-```
+Callers don't await the returned future (it was already `Future<void>`) — safe.
 
 - [ ] **Step 4: Verify**
 
-Run: `dart analyze lib/features/habits lib/features/world_map lib/features/gamification lib/features/profile lib/features/narrator`
+Run: `dart analyze lib/features/habits lib/features/world_map lib/features/gamification lib/features/profile lib/features/narrator lib/features/tutorials`
 Expected: 0 errors.
 
-Run: `flutter test test/features/habits test/features/world_map test/features/gamification test/features/profile test/features/narrator`
+Run: `flutter test test/features/habits test/features/world_map test/features/gamification test/features/profile test/features/narrator test/features/tutorials`
 Expected: pass.
 
 - [ ] **Step 5: Commit**
 
 ```bash
-git add lib/features/habits lib/features/world_map lib/features/gamification lib/features/profile lib/features/narrator
-git commit -m "feat(tutorials): node guides on habit create/advanced, streak recovery, world map, leveling, future self, coach sheet"
+git add lib/features/habits lib/features/world_map lib/features/gamification lib/features/profile lib/features/narrator lib/features/tutorials
+git commit -m "feat(tutorials): node guides on habit create, streak recovery, world map, leveling, future self; coach guide overlay"
 ```
 
 ---

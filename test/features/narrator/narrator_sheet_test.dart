@@ -27,19 +27,18 @@ class _FakeQuota extends CoachAskQuotaController {
   Future<CoachAskQuota> build() async => _quota;
 }
 
+/// Seeds the coach node guide as already-seen so the first-visit overlay
+/// doesn't block the sheet under test (tutorials default to enabled).
+Future<void> seedCoachGuideSeen() async {
+  SharedPreferences.setMockInitialValues({
+    'tutorialsEnabled': true,
+    'hasSeenNodeGuide_coach': true,
+  });
+  await LocalSettingsRepository().init();
+}
+
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
-
-  setUp(() async {
-    // Coach-mode NarratorSheet.show runs the first-visit coach guide before
-    // the dialog — seed the seen flag so the guide never blocks the sheet
-    // under test.
-    SharedPreferences.setMockInitialValues({
-      'tutorialsEnabled': true,
-      'hasSeenNodeGuide_coach': true,
-    });
-    await LocalSettingsRepository().init();
-  });
 
   const appearance = NarratorAppearance(
     trigger: NarratorTrigger.askNarrator,
@@ -79,6 +78,7 @@ void main() {
   }
 
   testWidgets('coach mode shows the ask field with quota hint', (tester) async {
+    await seedCoachGuideSeen();
     await tester.pumpWidget(harness());
     await tester.tap(find.text('open'));
     await tester.pump();
@@ -90,6 +90,7 @@ void main() {
 
   testWidgets('submitting an ask shows a response and decrements the quota',
       (tester) async {
+    await seedCoachGuideSeen();
     await tester.pumpWidget(harness());
     await tester.tap(find.text('open'));
     await tester.pump();
@@ -106,6 +107,7 @@ void main() {
   });
 
   testWidgets('exhausted quota shows the premium limit dialog', (tester) async {
+    await seedCoachGuideSeen();
     await tester.pumpWidget(
       harness(
         quota: const CoachAskQuota(
@@ -128,11 +130,44 @@ void main() {
   });
 
   testWidgets('premium user sees the unlimited quota hint', (tester) async {
+    await seedCoachGuideSeen();
     await tester.pumpWidget(harness(premium: true));
     await tester.tap(find.text('open'));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 500));
 
     expect(find.text('Unlimited coach asks'), findsOneWidget);
+  });
+
+  testWidgets('coach mode shows the first-visit guide overlay before the sheet',
+      (tester) async {
+    // Coach node unseen — tutorials default to enabled, so the guide is due.
+    SharedPreferences.setMockInitialValues({
+      'tutorialsEnabled': true,
+    });
+    await LocalSettingsRepository().init();
+
+    await tester.pumpWidget(harness());
+    await tester.tap(find.text('open'));
+    await tester.pump();
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 500));
+
+    // The guide overlay appears first; the sheet is not open yet.
+    expect(find.text('Your Coach'), findsOneWidget);
+    expect(find.byType(TextField), findsNothing);
+
+    // Dismissing the guide marks the node seen and then opens the sheet.
+    await tester.tap(find.text("GOT IT — LET'S GO"));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 500));
+    await tester.pump(const Duration(milliseconds: 500));
+
+    expect(find.text('Your Coach'), findsNothing);
+    expect(find.byType(TextField), findsOneWidget);
+    expect(find.text('3 of 3 coach asks left today'), findsOneWidget);
+
+    final prefs = await SharedPreferences.getInstance();
+    expect(prefs.getBool('hasSeenNodeGuide_coach'), isTrue);
   });
 }

@@ -8,6 +8,7 @@ import 'package:emerge_app/core/presentation/providers/world_theme_provider.dart
 import 'package:emerge_app/features/companion/data/repositories/companion_repository.dart';
 import 'package:emerge_app/features/companion/presentation/providers/companion_providers.dart';
 import 'package:emerge_app/features/gamification/presentation/providers/user_stats_providers.dart';
+import 'package:emerge_app/features/onboarding/data/repositories/local_settings_repository.dart';
 import 'package:emerge_app/features/world_map/presentation/screens/world_map_screen.dart';
 import 'package:emerge_app/features/world_map/presentation/providers/world_health_provider.dart';
 import 'package:emerge_app/features/world_map/presentation/widgets/ambient_particles.dart';
@@ -19,12 +20,16 @@ void main() {
   setUp(() async {
     SharedPreferences.setMockInitialValues({
       'companion_visited_/world-map': true,
-      'hasSeenNodeGuide_world-map': true,
+      // Node-id key (underscore) — the legacy hyphenated key is ignored by
+      // getHasSeenNodeGuide and would let the guide render unasserted.
+      'hasSeenNodeGuide_world_map': true,
       'isFirstLaunch': false,
       'tutorialsEnabled': true,
     });
     final repo = CompanionRepository();
     await repo.init();
+    // Refresh the static prefs handle so the seeded seen-flag is honored.
+    await LocalSettingsRepository().init();
   });
 
   group('WorldMapScreen', () {
@@ -90,8 +95,8 @@ void main() {
 
     testWidgets('handles first-visit check without crashing when already seen',
         (tester) async {
-      // hasSeenNodeGuide_world-map is set to true in setUp,
-      // so the narrator should NOT show
+      // hasSeenNodeGuide_world_map is set to true in setUp,
+      // so neither the narrator nor the node guide should show
       await tester.pumpWidget(
         ProviderScope(
           overrides: [
@@ -117,6 +122,8 @@ void main() {
 
       // Screen renders without narrator dialog
       expect(find.text('EMERGE'), findsNothing);
+      // ...and without the node-guide overlay (node marked seen in setUp).
+      expect(find.text('Your Living World'), findsNothing);
     });
 
     testWidgets(
@@ -124,11 +131,13 @@ void main() {
         (tester) async {
       SharedPreferences.setMockInitialValues({
         'companion_visited_/world-map': true,
-        'hasSeenNodeGuide_world-map': false,
+        // Node unseen — the node guide IS due here (positive branch).
+        'hasSeenNodeGuide_world_map': false,
         'isFirstLaunch': true,
         'tutorialsEnabled': true,
       });
       await CompanionRepository().init();
+      await LocalSettingsRepository().init();
 
       await tester.pumpWidget(
         ProviderScope(
@@ -155,6 +164,8 @@ void main() {
 
       // No narrator dialog shown (first launch skips tutorial)
       expect(find.text('EMERGE'), findsNothing);
+      // Node guide IS due (node unseen) — the overlay appears.
+      expect(find.text('Your Living World'), findsOneWidget);
     });
   });
 }

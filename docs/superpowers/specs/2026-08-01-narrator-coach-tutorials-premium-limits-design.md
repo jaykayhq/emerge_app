@@ -94,7 +94,6 @@ Layers:
   |---|---|---|
   | `timeline` | Timeline | `timeline_screen.dart` |
   | `habit_create` | Create habit dialog | `habit_create_screen.dart` |
-  | `habit_advanced` | Advanced habit dialog | `advanced_create_habit_dialog.dart` |
   | `streak_recovery` | Streak Recovery | `streak_recovery_screen.dart` |
   | `world_map` | World Map | `world_map_screen.dart` |
   | `leveling` | Leveling | `leveling_screen.dart` |
@@ -103,6 +102,9 @@ Layers:
   | `challenges` | Challenges | `challenges_screen.dart` (fixes dead `_checkFirstVisit` stub at lines 55–67 that renders nothing) |
   | `all_tribes` | All Tribes | `all_tribes_screen.dart` |
   | `tribe_lobby` | Tribe Lobby | `tribe_lobby_screen.dart` |
+
+- **`habit_advanced` dropped** — the advanced habit surface never shipped as a separate dialog (`advanced_create_habit_dialog.dart` does not exist at HEAD); its content is covered by `habit_create`. Registry contract: one entry per live screen.
+- **Coach guide is an overlay, not a host wrap** — the narrator coach sheet is a dialog and cannot host `NodeGuideHost`'s `SizedBox.expand` overlay. Instead, `NarratorSheet.show` (coach mode) gates on `shouldShow('coach')` and shows the guide via `NodeGuideOverlay` (full-screen dialog) before the sheet opens; dismissing it marks the node seen.
 
 - **Replace the 2 companion coach marks** (`social_discover_tab.dart:104-120`, `tribe_tab_content.dart:153-169`): `tribe_tab_content` is orphaned (legacy shell) — remove its mark; the discover mark dies with the blueprints page in SP-F (do not port).
 - **Gate everything by `tutorialsEnabled`** — the 2 live companion marks currently ignore it (bug fixed by replacement).
@@ -135,12 +137,13 @@ Remove companion legacy from Settings; clean up the superseded-companion comment
 **New:**
 - `lib/features/tutorials/domain/node_guide_registry.dart` (+ test)
 - `lib/features/tutorials/presentation/providers/node_guide_provider.dart` (+ `.g.dart`, generated)
+- `lib/features/tutorials/presentation/widgets/node_guide_overlay.dart` — full-screen overlay variant of the node guide, used by the coach sheet (a dialog can't host `NodeGuideHost`). Note: the `habit_advanced` node was dropped — no separate advanced dialog exists at HEAD (`advanced_create_habit_dialog.dart` was never created).
 - `lib/features/monetization/domain/services/coach_ask_quota.dart` (+ test)
 - `lib/features/monetization/presentation/providers/coach_ask_quota_provider.dart` (+ `.g.dart`)
 
 **Modified (primary):**
 - `lib/features/timeline/presentation/screens/timeline_screen.dart` — avatar mount, milestone producers, node guide
-- `lib/features/narrator/presentation/widgets/narrator_sheet.dart` — coach ask input, coach node guide
+- `lib/features/narrator/presentation/widgets/narrator_sheet.dart` — coach ask input, coach node guide (overlay gate in `NarratorSheet.show`)
 - `lib/features/narrator/presentation/providers/narrator_providers.dart` — `resolveAskNarratorTrigger` wiring, quota-aware coach ask
 - `lib/features/habits/data/services/habit_completion_service.dart` / timeline completion flow — consume `narratorTrigger` → `pendingMilestoneProvider`
 - `lib/features/onboarding/presentation/screens/identity_studio_screen.dart` — `onboardingPostArchetype` milestone card
