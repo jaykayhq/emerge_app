@@ -17,6 +17,8 @@ import 'package:emerge_app/features/timeline/presentation/widgets/completion_cel
 import 'package:emerge_app/features/timeline/presentation/widgets/all_done_celebration.dart';
 import 'package:emerge_app/features/timeline/presentation/widgets/tribal_presence_strip.dart';
 import 'package:emerge_app/features/timeline/presentation/providers/last_habit_completed_provider.dart';
+import 'package:emerge_app/features/timeline/presentation/providers/month_completion_provider.dart';
+import 'package:emerge_app/features/timeline/domain/models/day_completion.dart';
 import 'package:emerge_app/features/social/presentation/providers/tribes_provider.dart';
 import 'package:emerge_app/features/timeline/presentation/widgets/timeline_share_preview.dart';
 import 'package:emerge_app/features/auth/domain/entities/user_extension.dart';
@@ -36,6 +38,7 @@ import 'package:emerge_app/features/narrator/domain/models/narrator_note.dart';
 import 'package:emerge_app/features/narrator/presentation/providers/narrator_providers.dart';
 import 'package:emerge_app/features/narrator/presentation/widgets/narrator_milestone_card.dart';
 import 'package:emerge_app/features/narrator/presentation/widgets/narrator_summary_card.dart';
+import 'package:emerge_app/features/narrator/presentation/widgets/narrator_avatar.dart';
 import 'package:emerge_app/features/narrator/presentation/widgets/narrator_sheet.dart';
 import 'package:emerge_app/features/narrator/domain/models/narrator_appearance.dart';
 import 'package:emerge_app/features/narrator/domain/models/narrator_trigger.dart';
@@ -153,6 +156,20 @@ class _TimelineScreenState extends ConsumerState<TimelineScreen> {
         },
       );
     });
+  }
+
+  void _openCoach() {
+    NarratorSheet.show(
+      context,
+      NarratorAppearance(
+        trigger: NarratorTrigger.askNarrator,
+        shellText: 'Ask your coach anything.',
+        buttonA: 'Later',
+        buttonB: 'Later',
+        line: const GenericLine('Ask your coach anything.'),
+      ),
+      showAskField: true,
+    );
   }
 
   Map<String, List<Habit>> _groupHabitsByTimeOfDay(List<Habit> habits) {
@@ -321,6 +338,7 @@ class _TimelineScreenState extends ConsumerState<TimelineScreen> {
             showToday: _isToday(_selectedDate),
             onAvatarTap: () => context.push('/profile'),
             onUpgradeTap: () => context.push('/paywall'),
+            trailing: NarratorAvatar(onTap: _openCoach),
           ),
         ),
 
@@ -364,6 +382,9 @@ class _TimelineScreenState extends ConsumerState<TimelineScreen> {
             onDateSelected: (date) {
               setState(() => _selectedDate = date);
             },
+            completionStatus:
+                ref.watch(monthCompletionProvider).value ??
+                    const <String, DayCompletion>{},
           ),
         ),
 
