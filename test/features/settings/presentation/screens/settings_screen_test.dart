@@ -13,8 +13,6 @@ import 'package:emerge_app/core/theme/theme_provider.dart';
 import 'package:emerge_app/features/auth/domain/entities/auth_user.dart';
 import 'package:emerge_app/features/auth/domain/entities/user_extension.dart';
 import 'package:emerge_app/features/auth/presentation/providers/auth_providers.dart';
-import 'package:emerge_app/features/companion/data/repositories/companion_repository.dart';
-import 'package:emerge_app/features/companion/presentation/providers/companion_providers.dart';
 import 'package:emerge_app/features/gamification/data/repositories/user_stats_repository.dart';
 import 'package:emerge_app/features/gamification/presentation/providers/user_stats_providers.dart';
 import 'package:emerge_app/features/monetization/presentation/providers/subscription_provider.dart';
@@ -23,8 +21,6 @@ import 'package:emerge_app/features/world_map/presentation/providers/world_healt
 
 class _MockAppDatabase extends Mock implements AppDatabase {}
 class _MockSyncEngine extends Mock implements EnhancedSyncEngine {}
-
-class _MockCompanionRepository extends Mock implements CompanionRepository {}
 
 class FakeDriftUserStatsRepository extends DriftUserStatsRepository {
   FakeDriftUserStatsRepository()
@@ -51,11 +47,6 @@ final testProfile = UserProfile(
 );
 
 Widget createTest() {
-  final mockCompanionRepo = _MockCompanionRepository();
-  when(() => mockCompanionRepo.migrateFromTutorials()).thenAnswer((_) async {});
-  when(() => mockCompanionRepo.isCompanionEnabled()).thenReturn(true);
-  when(() => mockCompanionRepo.hasVisited(any())).thenReturn(true);
-
   return ProviderScope(
     overrides: [
       authStateChangesProvider.overrideWith(
@@ -68,9 +59,6 @@ Widget createTest() {
         (ref) => FakeDriftUserStatsRepository(),
       ),
       themeControllerProvider.overrideWithValue(ThemeMode.dark),
-      companionRepositoryProvider.overrideWith(
-        (ref) => mockCompanionRepo,
-      ),
       worldThemeProvider.overrideWith(() => FakeWorldThemeNotifier()),
       isPremiumProvider.overrideWith(() => FakeIsPremium(false)),
       worldHealthStreamProvider.overrideWith(

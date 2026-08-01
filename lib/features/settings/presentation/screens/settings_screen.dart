@@ -20,8 +20,9 @@ import 'package:emerge_app/core/error/failure.dart';
 import 'package:fpdart/fpdart.dart';
 import 'package:emerge_app/core/domain/models/app_world_theme.dart';
 import 'package:emerge_app/core/presentation/providers/world_theme_provider.dart';
-import 'package:emerge_app/features/companion/presentation/providers/companion_providers.dart';
+import 'package:emerge_app/features/monetization/presentation/providers/coach_ask_quota_provider.dart';
 import 'package:emerge_app/features/onboarding/presentation/providers/onboarding_provider.dart';
+import 'package:emerge_app/features/onboarding/presentation/providers/onboarding_state_notifier.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -42,9 +43,6 @@ class SettingsScreen extends ConsumerWidget {
     final authUserAsync = ref.watch(authStateChangesProvider);
     final userProfile = userProfileAsync.value;
     final authUser = authUserAsync.value;
-    final companionEnabled = ref.watch(
-      companionEngineProvider.select((s) => s.companionEnabled),
-    );
     final tutorialsEnabled = ref.watch(tutorialSettingProvider);
 
     final userSettings = userProfile?.settings ?? const UserSettings();
@@ -329,6 +327,12 @@ class SettingsScreen extends ConsumerWidget {
                 activeThumbColor: EmergeColors.teal,
                 activeTrackColor: EmergeColors.teal.withValues(alpha: 0.5),
               ),
+            ]),
+            const SizedBox(height: 24),
+
+            // Tutorials Section
+            _buildSectionHeader(context, 'Tutorials'),
+            _buildSectionContainer(context, [
               SwitchListTile(
                 secondary: Container(
                   padding: const EdgeInsets.all(8),
@@ -339,40 +343,7 @@ class SettingsScreen extends ConsumerWidget {
                   child: Icon(Icons.school_outlined, color: EmergeColors.teal),
                 ),
                 title: Text(
-                  'Show Companion',
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    fontWeight: FontWeight.w500,
-                    color: AppTheme.textMainDark,
-                  ),
-                ),
-                subtitle: Text(
-                  companionEnabled
-                      ? 'Companion tips enabled'
-                      : 'Companion tips disabled',
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: AppTheme.textSecondaryDark,
-                  ),
-                ),
-                value: companionEnabled,
-                onChanged: (value) async {
-                  await ref
-                      .read(companionEngineProvider.notifier)
-                      .setCompanionEnabled(value);
-                },
-                activeThumbColor: EmergeColors.teal,
-                activeTrackColor: EmergeColors.teal.withValues(alpha: 0.5),
-              ),
-              SwitchListTile(
-                secondary: Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: EmergeColors.teal.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Icon(Icons.explore_outlined, color: EmergeColors.teal),
-                ),
-                title: Text(
-                  'Show Node Guides',
+                  'Show first-visit guides',
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                     fontWeight: FontWeight.w500,
                     color: AppTheme.textMainDark,
@@ -380,8 +351,8 @@ class SettingsScreen extends ConsumerWidget {
                 ),
                 subtitle: Text(
                   tutorialsEnabled
-                      ? 'Node guide shown on first node visit'
-                      : 'Node guide hidden',
+                      ? 'Guides shown once on each screen'
+                      : 'Guides hidden',
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
                     color: AppTheme.textSecondaryDark,
                   ),
@@ -395,29 +366,45 @@ class SettingsScreen extends ConsumerWidget {
                 activeThumbColor: EmergeColors.teal,
                 activeTrackColor: EmergeColors.teal.withValues(alpha: 0.5),
               ),
+              _buildListTile(
+                context,
+                Icons.replay_outlined,
+                'Replay first-visit guides',
+                subtitle: 'Shows every guide again on next visit',
+                onTap: () => _showReplayGuidesDialog(context, ref),
+              ),
+              _buildListTile(
+                context,
+                Icons.restart_alt_outlined,
+                'Replay onboarding',
+                subtitle: 'Runs the 5-step onboarding flow again',
+                onTap: () => _showReplayOnboardingDialog(context, ref),
+              ),
+              Consumer(
+                builder: (context, ref, _) {
+                  final isPremium =
+                      ref.watch(isPremiumProvider).value ?? false;
+                  final remaining = ref
+                      .watch(coachAskQuotaControllerProvider)
+                      .value
+                      ?.remaining;
+                  return _buildListTile(
+                    context,
+                    Icons.auto_awesome_outlined,
+                    'Coach asks',
+                    subtitle: isPremium
+                        ? 'Unlimited coach asks'
+                        : '${remaining ?? 3} of 3 coach asks left today',
+                    onTap: isPremium ? null : () => context.push('/paywall'),
+                  );
+                },
+              ),
             ]),
             const SizedBox(height: 24),
 
             // Support & Legal
             _buildSectionHeader(context, 'Support & Legal'),
             _buildSectionContainer(context, [
-              _buildListTile(
-                context,
-                Icons.replay_outlined,
-                'Reset Companion Tips',
-                onTap: () {
-                  _showResetCompanionDialog(context, ref);
-                },
-              ),
-              _buildListTile(
-                context,
-                Icons.replay_outlined,
-                'Reset Node Guides',
-                subtitle: 'Makes node guides appear again on next node visit',
-                onTap: () {
-                  _showResetTutorialsDialog(context, ref);
-                },
-              ),
               _buildListTile(
                 context,
                 Icons.help_outline,
@@ -926,68 +913,17 @@ class SettingsScreen extends ConsumerWidget {
     );
   }
 
-  void _showResetCompanionDialog(BuildContext context, WidgetRef ref) {
+  void _showReplayGuidesDialog(BuildContext context, WidgetRef ref) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: AppTheme.surfaceDark,
         title: const Text(
-          'Reset Companion Tips?',
+          'Replay first-visit guides?',
           style: TextStyle(color: Colors.white),
         ),
         content: const Text(
-          'This will reset all companion tips. They will show once the next time you visit each screen.',
-          style: TextStyle(color: Colors.white70),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text(
-              'CANCEL',
-              style: TextStyle(color: Colors.white54),
-            ),
-          ),
-          ElevatedButton(
-            onPressed: () async {
-              await ref
-                  .read(companionEngineProvider.notifier)
-                  .setCompanionEnabled(false);
-              await ref
-                  .read(companionEngineProvider.notifier)
-                  .setCompanionEnabled(true);
-              if (!context.mounted) return;
-              Navigator.pop(context);
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Companion tips reset successfully!'),
-                ),
-              );
-            },
-            style: ElevatedButton.styleFrom(backgroundColor: EmergeColors.teal),
-            child: const Text(
-              'RESET',
-              style: TextStyle(
-                color: Colors.black,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _showResetTutorialsDialog(BuildContext context, WidgetRef ref) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: AppTheme.surfaceDark,
-        title: const Text(
-          'Reset Tutorials?',
-          style: TextStyle(color: Colors.white),
-        ),
-        content: const Text(
-          'This will reset node tutorials. They will show once the next time you visit a node.',
+          'All first-visit guides will show again the next time you visit each screen.',
           style: TextStyle(color: Colors.white70),
         ),
         actions: [
@@ -1007,13 +943,61 @@ class SettingsScreen extends ConsumerWidget {
               Navigator.pop(context);
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(
-                  content: Text('Tutorials reset successfully!'),
+                  content: Text('Guides will reappear on next visit!'),
                 ),
               );
             },
-            style: ElevatedButton.styleFrom(backgroundColor: EmergeColors.teal),
+            style:
+                ElevatedButton.styleFrom(backgroundColor: EmergeColors.teal),
             child: const Text(
               'RESET',
+              style: TextStyle(
+                color: Colors.black,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showReplayOnboardingDialog(BuildContext context, WidgetRef ref) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: AppTheme.surfaceDark,
+        title: const Text(
+          'Replay onboarding?',
+          style: TextStyle(color: Colors.white),
+        ),
+        content: const Text(
+          'This restarts the 5-step onboarding flow and clears local data.',
+          style: TextStyle(color: Colors.white70),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text(
+              'CANCEL',
+              style: TextStyle(color: Colors.white54),
+            ),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              await ref
+                  .read(enhancedOnboardingProvider.notifier)
+                  .resetOnboarding();
+              ref.invalidate(onboardingControllerProvider);
+              ref.invalidate(userStatsStreamProvider);
+              if (!context.mounted) return;
+              Navigator.pop(context);
+              context.go('/timeline'); // redirect takes over from here
+            },
+            style:
+                ElevatedButton.styleFrom(backgroundColor: EmergeColors.teal),
+            child: const Text(
+              'REPLAY',
               style: TextStyle(
                 color: Colors.black,
                 fontWeight: FontWeight.bold,
