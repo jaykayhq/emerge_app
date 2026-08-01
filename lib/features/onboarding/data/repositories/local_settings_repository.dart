@@ -123,4 +123,35 @@ class LocalSettingsRepository {
       await _remove(key);
     }
   }
+
+  /// Migrates legacy companion visited flags into the node-guide system.
+  /// Idempotent: only migrates keys that exist; never overwrites already-seen
+  /// node flags. The `discover` flag migrates too — its node dies with the
+  /// blueprints page in SP-F.
+  Future<void> migrateVisitedFlags() async {
+    final keys = _getKeys().where((k) => k.startsWith('companion_visited_'));
+    if (keys.isEmpty) return;
+
+    const routeToNode = {
+      '/timeline': 'timeline',
+      '/world-map': 'world_map',
+      '/profile': 'profile',
+      '/tribes': 'tribes',
+      '/profile/reflections': 'coach',
+      '/challenges': 'challenges',
+      '/discover': 'discover',
+    };
+
+    for (final key in keys) {
+      final route = key.substring('companion_visited_'.length);
+      final nodeId = routeToNode[route];
+      final keyWasSeen = _getBool(key);
+      final nodeAlreadySeen =
+          nodeId != null && _getBool('hasSeenNodeGuide_$nodeId');
+      if (nodeId != null && keyWasSeen && !nodeAlreadySeen) {
+        await _setBool('hasSeenNodeGuide_$nodeId', true);
+      }
+      await _remove(key);
+    }
+  }
 }
