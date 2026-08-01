@@ -59,7 +59,6 @@ class CompanionEngine extends Notifier<CompanionState> {
   @override
   CompanionState build() {
     final repo = ref.read(companionRepositoryProvider);
-    repo.migrateFromTutorials();
     return CompanionState(
       companionEnabled: repo.isCompanionEnabled(),
       persona: _loadPersona(),
@@ -138,10 +137,6 @@ class CompanionEngine extends Notifier<CompanionState> {
   void dismiss() {
     _lastDismissTime = DateTime.now();
     state = state.copyWith(visible: false, message: null, targetKey: null);
-  }
-
-  void markVisited(String route) {
-    _repository.markVisited(route);
   }
 
   Future<void> setCompanionEnabled(bool enabled) async {

@@ -23,8 +23,6 @@ class CompanionRepository {
         (_fallback[key] as String? ?? defaultValue);
   }
 
-  Set<String> _getKeys() => _prefs?.getKeys() ?? _fallback.keys.toSet();
-
   Future<void> _setBool(String key, bool value) async {
     if (_prefs != null) {
       await _prefs!.setBool(key, value);
@@ -39,22 +37,6 @@ class CompanionRepository {
     } else {
       _fallback[key] = value;
     }
-  }
-
-  Future<void> _remove(String key) async {
-    if (_prefs != null) {
-      await _prefs!.remove(key);
-    } else {
-      _fallback.remove(key);
-    }
-  }
-
-  // --- Visit tracking ---
-
-  bool hasVisited(String route) => _getBool('companion_visited_$route');
-
-  Future<void> markVisited(String route) async {
-    await _setBool('companion_visited_$route', true);
   }
 
   // --- Dismissal tracking ---
@@ -93,48 +75,5 @@ class CompanionRepository {
 
   Future<void> setCompanionEnabled(bool enabled) async {
     await _setBool(_keyCompanionEnabled, enabled);
-    if (enabled) {
-      final keys = _getKeys().where((k) => k.startsWith('companion_visited_'));
-      for (final key in keys) {
-        await _remove(key);
-      }
-    }
-  }
-
-  // --- Migration from old tutorial system ---
-
-  Future<void> migrateFromTutorials() async {
-    final tutorialKeys = _getKeys().where((k) => k.startsWith('tutorial_'));
-    if (tutorialKeys.isEmpty) return;
-
-    final routeMap = {
-      'timeline': '/timeline',
-      'worldMap': '/world-map',
-      'worldMapImmersive': '/world-map/immersive',
-      'profile': '/profile',
-      'tribes': '/tribes',
-      'tribeDiscovery': '/tribes/discovery',
-      'tribeWitnessing': '/tribes/witnessing',
-      'tribeBonds': '/tribes/bonds',
-      'tribePost': '/tribes/post',
-      'futureSelfArchetype': '/profile/future-self',
-      'worldMapHealth': '/world-map/health',
-      'createHabit': '/habits/create',
-      'insights': '/insights',
-      'aiCoach': '/profile/reflections',
-      'gamification': '/gamification',
-      'challenges': '/challenges',
-      'friends': '/friends',
-      'discover': '/discover',
-    };
-
-    for (final key in tutorialKeys) {
-      final tutorialId = key.substring('tutorial_'.length);
-      final route = routeMap[tutorialId];
-      if (route != null && _getBool(key)) {
-        await _setBool('companion_visited_$route', true);
-      }
-      await _remove(key);
-    }
   }
 }

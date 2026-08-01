@@ -201,6 +201,7 @@ Future<void> initApp() async {
     () async {
       try {
         await LocalSettingsRepository().init();
+        await LocalSettingsRepository().migrateVisitedFlags();
         debugPrint('✅ Local Settings initialized');
       } catch (e) {
         debugPrint('⚠️ Local Settings initialization failed: $e');

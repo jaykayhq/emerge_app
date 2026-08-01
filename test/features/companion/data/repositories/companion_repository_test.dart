@@ -11,17 +11,6 @@ void main() {
     await repository.init();
   });
 
-  group('visit tracking', () {
-    test('returns false for unvisited route', () {
-      expect(repository.hasVisited('/timeline'), false);
-    });
-
-    test('returns true after marking visited', () async {
-      await repository.markVisited('/timeline');
-      expect(repository.hasVisited('/timeline'), true);
-    });
-  });
-
   group('dismissal tracking', () {
     test('returns false for unknown message', () {
       expect(repository.isMessageDismissed('msg_1'), false);
@@ -48,18 +37,6 @@ void main() {
     test('returns true when no cooldown set', () {
       expect(repository.isCooldownActive(), false);
     });
-  });
-
-  group('migration', () {
-    test(
-      'migrateFromTutorials maps tutorial keys to companion routes',
-      () async {
-        // Test the migration logic directly on the repository
-        // Since _prefs is static, we test by setting a key and verifying
-        await repository.markVisited('/timeline');
-        expect(repository.hasVisited('/timeline'), true);
-      },
-    );
   });
 
   group('companion enabled', () {
