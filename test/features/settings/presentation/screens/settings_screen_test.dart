@@ -15,7 +15,11 @@ import 'package:emerge_app/features/auth/domain/entities/user_extension.dart';
 import 'package:emerge_app/features/auth/presentation/providers/auth_providers.dart';
 import 'package:emerge_app/features/gamification/data/repositories/user_stats_repository.dart';
 import 'package:emerge_app/features/gamification/presentation/providers/user_stats_providers.dart';
+import 'package:emerge_app/features/monetization/domain/services/coach_ask_quota.dart';
+import 'package:emerge_app/features/monetization/presentation/providers/coach_ask_quota_provider.dart';
 import 'package:emerge_app/features/monetization/presentation/providers/subscription_provider.dart';
+import 'package:emerge_app/features/onboarding/data/repositories/local_settings_repository.dart';
+import 'package:emerge_app/features/onboarding/presentation/providers/onboarding_provider.dart';
 import 'package:emerge_app/features/settings/presentation/screens/settings_screen.dart';
 import 'package:emerge_app/features/world_map/presentation/providers/world_health_provider.dart';
 
@@ -39,6 +43,36 @@ class FakeIsPremium extends IsPremium {
   Future<bool> build() async => premium;
 }
 
+/// In-memory settings store for the Tutorials section tests (mirrors
+/// test/features/tutorials/presentation/node_guide_host_test.dart).
+class FakeSettings extends LocalSettingsRepository {
+  FakeSettings({required this.tutorialsEnabled});
+  final bool tutorialsEnabled;
+  final List<bool> recorded = [];
+
+  @override
+  bool isTutorialsEnabled() => tutorialsEnabled;
+
+  @override
+  Future<void> setTutorialsEnabled(bool enabled) async {
+    recorded.add(enabled);
+  }
+
+  @override
+  Future<bool> getHasSeenNodeGuide(String nodeId) async => false;
+
+  @override
+  Future<void> setHasSeenNodeGuide(String nodeId) async {}
+}
+
+class FakeCoachAskQuota extends CoachAskQuotaController {
+  FakeCoachAskQuota(this.quota);
+  final CoachAskQuota quota;
+
+  @override
+  Future<CoachAskQuota> build() async => quota;
+}
+
 final testUser = AuthUser(id: 'test-uid', email: 'test@example.com', displayName: 'Test User');
 
 final testProfile = UserProfile(
@@ -46,7 +80,11 @@ final testProfile = UserProfile(
   settings: const UserSettings(soundsEnabled: true),
 );
 
-Widget createTest() {
+Widget createTest({
+  FakeSettings? settings,
+  bool premium = false,
+  CoachAskQuota? quota,
+}) {
   return ProviderScope(
     overrides: [
       authStateChangesProvider.overrideWith(
@@ -60,12 +98,24 @@ Widget createTest() {
       ),
       themeControllerProvider.overrideWithValue(ThemeMode.dark),
       worldThemeProvider.overrideWith(() => FakeWorldThemeNotifier()),
-      isPremiumProvider.overrideWith(() => FakeIsPremium(false)),
+      isPremiumProvider.overrideWith(() => FakeIsPremium(premium)),
       worldHealthStreamProvider.overrideWith(
         (ref) => Stream.value(0.5),
       ),
       worldEntropyStreamProvider.overrideWith(
         (ref) => Stream.value(0.0),
+      ),
+      if (settings != null)
+        localSettingsRepositoryProvider.overrideWithValue(settings),
+      coachAskQuotaControllerProvider.overrideWith(
+        () => FakeCoachAskQuota(
+          quota ??
+              CoachAskQuota(
+                dateKey: CoachAskQuota.dateKeyFor(DateTime.now()),
+                usedToday: 1,
+                isPremium: premium,
+              ),
+        ),
       ),
     ],
     child: const MaterialApp(
@@ -97,5 +147,53 @@ void main() {
     await tester.pump();
 
     expect(find.text('Dark Mode'), findsOneWidget);
+  });
+
+  group('Tutorials section', () {
+    testWidgets('renders toggle, replay tiles and the coach quota row',
+        (tester) async {
+      final settings = FakeSettings(tutorialsEnabled: true);
+      await tester.pumpWidget(createTest(settings: settings));
+      await tester.pump();
+      await tester.pump();
+
+      // Toggle defaults on with the "shown once" subtitle.
+      expect(find.text('Show first-visit guides'), findsOneWidget);
+      expect(find.text('Guides shown once on each screen'), findsOneWidget);
+
+      // Replay tiles.
+      expect(find.text('Replay first-visit guides'), findsOneWidget);
+      expect(find.text('Replay onboarding'), findsOneWidget);
+
+      // Quota row: usedToday 1 of 3 free asks -> 2 left.
+      expect(find.text('2 of 3 coach asks left today'), findsOneWidget);
+    });
+
+    testWidgets('toggling the switch disables tutorials and flips the subtitle',
+        (tester) async {
+      final settings = FakeSettings(tutorialsEnabled: true);
+      await tester.pumpWidget(createTest(settings: settings));
+      await tester.pump();
+      await tester.pump();
+
+      await tester.ensureVisible(find.text('Show first-visit guides'));
+      await tester.tap(find.text('Show first-visit guides'));
+      await tester.pump();
+      await tester.pump();
+
+      expect(settings.recorded, [false]);
+      expect(find.text('Guides hidden'), findsOneWidget);
+    });
+
+    testWidgets('premium override shows the unlimited coach-ask quota',
+        (tester) async {
+      final settings = FakeSettings(tutorialsEnabled: true);
+      await tester.pumpWidget(createTest(settings: settings, premium: true));
+      await tester.pump();
+      await tester.pump();
+
+      await tester.ensureVisible(find.text('Coach asks'));
+      expect(find.text('Unlimited coach asks'), findsOneWidget);
+    });
   });
 }
