@@ -19,10 +19,24 @@ import 'package:emerge_app/features/habits/presentation/providers/cue_providers.
 import 'package:emerge_app/features/monetization/presentation/providers/subscription_provider.dart';
 import 'package:emerge_app/features/gamification/presentation/providers/user_stats_providers.dart';
 import 'package:emerge_app/features/gamification/presentation/providers/recap_hub_provider.dart';
+import 'package:emerge_app/features/narrator/domain/models/narrator_trigger.dart';
 import 'package:emerge_app/features/social/presentation/providers/tribes_provider.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'habit_providers.g.dart';
+
+/// Mirrors `HabitCompletionService._evaluateNarratorTrigger`: recovery and
+/// weekly-streak milestones surface as narrator lines.
+NarratorTrigger? _narratorTriggerFor({
+  required bool isCompleted,
+  required bool wasRecovery,
+  required int newStreak,
+}) {
+  if (!isCompleted) return null;
+  if (wasRecovery) return NarratorTrigger.streakBreakFirstMiss;
+  if (newStreak >= 7 && newStreak % 7 == 0) return NarratorTrigger.onFireState;
+  return null;
+}
 
 /// Fallback free tier habit limit when Remote Config is unavailable.
 const int kDefaultFreeHabitLimit = 5;
@@ -273,6 +287,12 @@ Future<HabitCompletionResult> completeHabit(Ref ref, String habitId) async {
                 AppLogger.e('Failed to recalculate world health', e);
               }
 
+              final narratorTrigger = _narratorTriggerFor(
+                isCompleted: true,
+                wasRecovery: wasRecovery,
+                newStreak: newStreak,
+              );
+
               return HabitCompletionResult(
                 habitId: habitId,
                 xpEarned: xpGained,
@@ -280,6 +300,7 @@ Future<HabitCompletionResult> completeHabit(Ref ref, String habitId) async {
                 newMomentumScore: momentumAfter,
                 isStreakMilestone: isMilestone,
                 wasRecovery: wasRecovery,
+                narratorTrigger: narratorTrigger,
               );
             }
           }

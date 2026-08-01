@@ -124,13 +124,22 @@ NarratorLineResolver lineResolver(Ref ref) {
   );
 }
 
+/// A narrator line awaiting display in the slide-up card, with the trigger
+/// that produced it (drives the card label).
+class PendingMilestoneLine {
+  final NarratorLine line;
+  final NarratorTrigger trigger;
+
+  const PendingMilestoneLine({required this.line, required this.trigger});
+}
+
 /// Pending narrator line awaiting display in the slide-up card.
 @riverpod
 class PendingMilestone extends _$PendingMilestone {
   @override
-  NarratorLine? build() => null;
+  PendingMilestoneLine? build() => null;
 
-  void set(NarratorLine line) => state = line;
+  void set(PendingMilestoneLine line) => state = line;
   void clear() => state = null;
 }
 

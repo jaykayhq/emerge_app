@@ -1,6 +1,10 @@
 import 'package:emerge_app/core/theme/archetype_theme.dart';
 import 'package:emerge_app/core/utils/app_logger.dart';
 import 'package:emerge_app/features/auth/domain/entities/user_extension.dart';
+import 'package:emerge_app/features/narrator/domain/models/narrator_trigger.dart';
+import 'package:emerge_app/features/narrator/domain/services/narrator_trigger_engine.dart';
+import 'package:emerge_app/features/narrator/presentation/providers/narrator_providers.dart';
+import 'package:emerge_app/features/narrator/presentation/widgets/narrator_milestone_card.dart';
 import 'package:emerge_app/features/onboarding/presentation/providers/onboarding_state_notifier.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -30,6 +34,8 @@ class _IdentityStudioScreenState extends ConsumerState<IdentityStudioScreen> {
   UserArchetype? _selectedArchetype;
   UserArchetype? _revealingArchetype;
 
+  PendingMilestoneLine? _pendingMilestone;
+
   final List<ArchetypeTheme> _themes = ArchetypeTheme.allThemes;
 
   @override
@@ -55,6 +61,37 @@ class _IdentityStudioScreenState extends ConsumerState<IdentityStudioScreen> {
 
       // PERSIST PROGRESS: Complete the first milestone (Archetype)
       await notifier.completeMilestone(0);
+
+      // Narrator welcomes the newly-chosen archetype (non-blocking card).
+      if (mounted) {
+        final resolver = ref.read(lineResolverProvider);
+        final welcomeLine = await resolver.resolve(
+          trigger: NarratorTrigger.onboardingPostArchetype,
+          stats: const NarratorUserStats(
+            momentumScore: 0,
+            consecutiveActiveDays: 0,
+            totalHabitsToday: 0,
+            completedHabitsToday: 0,
+            currentLevel: 1,
+            previousLevel: 1,
+            hasStreakBreak: false,
+            currentStreak: 0,
+            longestStreak: 0,
+            consecutiveMisses: 0,
+            hasCompletedEveningReflectionToday: true,
+            hasCompletedOnboarding: false,
+            archetypeSelected: true,
+          ),
+        );
+        if (mounted) {
+          ref.read(pendingMilestoneProvider.notifier).set(
+                PendingMilestoneLine(
+                  line: welcomeLine,
+                  trigger: NarratorTrigger.onboardingPostArchetype,
+                ),
+              );
+        }
+      }
 
       // Navigate to the next step in the 5-step flow: interests.
       if (mounted) {
@@ -211,37 +248,64 @@ class _IdentityStudioScreenState extends ConsumerState<IdentityStudioScreen> {
 
   @override
   Widget build(BuildContext context) {
+    ref.listen<PendingMilestoneLine?>(
+      pendingMilestoneProvider,
+      (prev, next) {
+        if (prev == null && next != null) {
+          setState(() => _pendingMilestone = next);
+        }
+      },
+    );
+
     // Cosmic purple background
-    return Scaffold(
-      body: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              Color(0xFF0A0A1A), // cosmicVoidDark
-              Color(0xFF1A0A2A), // cosmicVoidCenter
-              Color(0xFF2A1A3A), // cosmicMidPurple
-            ],
+    return Stack(
+      children: [
+        Scaffold(
+          body: Container(
+            decoration: const BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  Color(0xFF0A0A1A), // cosmicVoidDark
+                  Color(0xFF1A0A2A), // cosmicVoidCenter
+                  Color(0xFF2A1A3A), // cosmicMidPurple
+                ],
+              ),
+            ),
+            child: SafeArea(
+              child: Column(
+                children: [
+                  AnimatedOnboardingProgressBar(
+                    targetProgress: 0.4,
+                    label: onboardingLabelFor(0.4),
+                    accentColor: _selectedArchetype != null && _selectedArchetype != UserArchetype.none
+                        ? ArchetypeColors.all[_selectedArchetype!.name]?.accent
+                        : null,
+                  ),
+                  Expanded(
+                    child: _buildArchetypeCarousel(),
+                  ),
+                ],
+              ),
+            ),
           ),
         ),
-        child: SafeArea(
-          child: Column(
-            children: [
-              AnimatedOnboardingProgressBar(
-                targetProgress: 0.4,
-                label: onboardingLabelFor(0.4),
-                accentColor: _selectedArchetype != null && _selectedArchetype != UserArchetype.none
-                    ? ArchetypeColors.all[_selectedArchetype!.name]?.accent
-                    : null,
-              ),
-              Expanded(
-                child: _buildArchetypeCarousel(),
-              ),
-            ],
+        if (_pendingMilestone != null)
+          Positioned(
+            left: 16,
+            right: 16,
+            bottom: 32,
+            child: NarratorMilestoneCard(
+              line: _pendingMilestone!.line,
+              trigger: _pendingMilestone!.trigger,
+              onDismissed: () {
+                setState(() => _pendingMilestone = null);
+                ref.read(pendingMilestoneProvider.notifier).clear();
+              },
+            ),
           ),
-        ),
-      ),
+      ],
     );
   }
 

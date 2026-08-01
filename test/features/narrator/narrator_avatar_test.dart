@@ -1,4 +1,5 @@
 import 'package:emerge_app/features/narrator/domain/models/narrator_line.dart';
+import 'package:emerge_app/features/narrator/domain/models/narrator_trigger.dart';
 import 'package:emerge_app/features/narrator/presentation/providers/narrator_providers.dart';
 import 'package:emerge_app/features/narrator/presentation/widgets/narrator_avatar.dart';
 import 'package:flutter/material.dart';
@@ -35,11 +36,41 @@ void main() {
     await tester.tap(find.byType(NarratorAvatar));
     expect(tapped, isTrue);
   });
+
+  testWidgets('avatar shows pending dot when a milestone line is pending',
+      (tester) async {
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          pendingMilestoneProvider.overrideWith(
+            () => _StubNotifier(
+              PendingMilestoneLine(
+                line: const GenericLine('A path begins.'),
+                trigger: NarratorTrigger.onboardingPostArchetype,
+              ),
+            ),
+          ),
+        ],
+        child: const MaterialApp(home: Scaffold(body: NarratorAvatar())),
+      ),
+    );
+    // The 12x12 status dot should be present when a line is pending.
+    final dots = tester
+        .widgetList<Container>(
+          find.descendant(
+            of: find.byType(NarratorAvatar),
+            matching: find.byType(Container),
+          ),
+        )
+        .where((c) => c.constraints?.maxWidth == 12)
+        .toList();
+    expect(dots, hasLength(1));
+  });
 }
 
 class _StubNotifier extends PendingMilestone {
   _StubNotifier(this._value);
-  final NarratorLine? _value;
+  final PendingMilestoneLine? _value;
   @override
-  NarratorLine? build() => _value;
+  PendingMilestoneLine? build() => _value;
 }

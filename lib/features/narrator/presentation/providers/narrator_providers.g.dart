@@ -291,7 +291,7 @@ final class LineResolverProvider
   }
 }
 
-String _$lineResolverHash() => r'bb55b4e5717e98895a297a758a17d5d2483dca58';
+String _$lineResolverHash() => r'75dbaa5d6cbae31d16610f8aeae19b3307d4223c';
 
 /// Pending narrator line awaiting display in the slide-up card.
 
@@ -300,7 +300,7 @@ final pendingMilestoneProvider = PendingMilestoneProvider._();
 
 /// Pending narrator line awaiting display in the slide-up card.
 final class PendingMilestoneProvider
-    extends $NotifierProvider<PendingMilestone, NarratorLine?> {
+    extends $NotifierProvider<PendingMilestone, PendingMilestoneLine?> {
   /// Pending narrator line awaiting display in the slide-up card.
   PendingMilestoneProvider._()
     : super(
@@ -321,29 +321,29 @@ final class PendingMilestoneProvider
   PendingMilestone create() => PendingMilestone();
 
   /// {@macro riverpod.override_with_value}
-  Override overrideWithValue(NarratorLine? value) {
+  Override overrideWithValue(PendingMilestoneLine? value) {
     return $ProviderOverride(
       origin: this,
-      providerOverride: $SyncValueProvider<NarratorLine?>(value),
+      providerOverride: $SyncValueProvider<PendingMilestoneLine?>(value),
     );
   }
 }
 
-String _$pendingMilestoneHash() => r'daaba9b289c88ae413ad2a0a1b8e81df72a55622';
+String _$pendingMilestoneHash() => r'ea518de9cf562be01d44746b9381ec16cdcd6c50';
 
 /// Pending narrator line awaiting display in the slide-up card.
 
-abstract class _$PendingMilestone extends $Notifier<NarratorLine?> {
-  NarratorLine? build();
+abstract class _$PendingMilestone extends $Notifier<PendingMilestoneLine?> {
+  PendingMilestoneLine? build();
   @$mustCallSuper
   @override
   WhenComplete runBuild() {
-    final ref = this.ref as $Ref<NarratorLine?, NarratorLine?>;
+    final ref = this.ref as $Ref<PendingMilestoneLine?, PendingMilestoneLine?>;
     final element =
         ref.element
             as $ClassProviderElement<
-              AnyNotifier<NarratorLine?, NarratorLine?>,
-              NarratorLine?,
+              AnyNotifier<PendingMilestoneLine?, PendingMilestoneLine?>,
+              PendingMilestoneLine?,
               Object?,
               Object?
             >;

@@ -42,6 +42,7 @@ import 'package:emerge_app/features/narrator/presentation/widgets/narrator_avata
 import 'package:emerge_app/features/narrator/presentation/widgets/narrator_sheet.dart';
 import 'package:emerge_app/features/narrator/domain/models/narrator_appearance.dart';
 import 'package:emerge_app/features/narrator/domain/models/narrator_trigger.dart';
+import 'package:emerge_app/features/narrator/domain/services/narrator_trigger_engine.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 /// Main daily screen - the habit command center
@@ -59,7 +60,7 @@ class _TimelineScreenState extends ConsumerState<TimelineScreen> {
   final GlobalKey _calendarKey = GlobalKey();
   bool _hasCheckedMisses = false;
   bool _showOverlay = false;
-  NarratorLine? _pendingOverlayLine;
+  PendingMilestoneLine? _pendingOverlayLine;
   final GlobalKey<AllDoneCelebrationState> _celebrationKey =
       GlobalKey<AllDoneCelebrationState>();
 
@@ -93,7 +94,10 @@ class _TimelineScreenState extends ConsumerState<TimelineScreen> {
     return d.year == now.year && d.month == now.month && d.day == now.day;
   }
 
-  void _onPendingMilestoneChange(NarratorLine? prev, NarratorLine? next) {
+  void _onPendingMilestoneChange(
+    PendingMilestoneLine? prev,
+    PendingMilestoneLine? next,
+  ) {
     if (prev == null && next != null) {
       setState(() {
         _pendingOverlayLine = next;
@@ -216,7 +220,7 @@ class _TimelineScreenState extends ConsumerState<TimelineScreen> {
       }
     });
 
-    ref.listen<NarratorLine?>(
+    ref.listen<PendingMilestoneLine?>(
       pendingMilestoneProvider,
       _onPendingMilestoneChange,
     );
@@ -295,8 +299,8 @@ class _TimelineScreenState extends ConsumerState<TimelineScreen> {
               right: 0,
               bottom: 100 + MediaQuery.paddingOf(context).bottom,
               child: NarratorMilestoneCard(
-                line: _pendingOverlayLine!,
-                trigger: NarratorTrigger.askNarrator,
+                line: _pendingOverlayLine!.line,
+                trigger: _pendingOverlayLine!.trigger,
                 onDismissed: () {
                   setState(() {
                     _showOverlay = false;
@@ -610,6 +614,37 @@ class _TimelineScreenState extends ConsumerState<TimelineScreen> {
           );
         }
         // Otherwise: silent completion — particles provide visual feedback
+
+        // Narrator milestone card for streak recovery / on-fire completions
+        if (result.narratorTrigger != null) {
+          final resolver = ref.read(lineResolverProvider);
+          final line = await resolver.resolve(
+            trigger: result.narratorTrigger!,
+            stats: NarratorUserStats(
+              momentumScore: (result.newMomentumScore / 100).clamp(0.0, 1.0),
+              consecutiveActiveDays: 0,
+              totalHabitsToday: 1,
+              completedHabitsToday: 1,
+              currentLevel: 1,
+              previousLevel: 1,
+              hasStreakBreak: result.wasRecovery,
+              currentStreak: result.newStreak,
+              longestStreak: result.newStreak,
+              consecutiveMisses: 0,
+              hasCompletedEveningReflectionToday: true,
+              hasCompletedOnboarding: true,
+              archetypeSelected: true,
+            ),
+          );
+          if (mounted) {
+            ref.read(pendingMilestoneProvider.notifier).set(
+                  PendingMilestoneLine(
+                    line: line,
+                    trigger: result.narratorTrigger!,
+                  ),
+                );
+          }
+        }
 
         // Show interstitial ad after a delay to let celebration play first
         Future.delayed(const Duration(seconds: 3), () {
