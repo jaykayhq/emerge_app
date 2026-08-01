@@ -25,6 +25,13 @@ void main() {
     expect(await repo.getHasSeenNodeGuide('discover'), isTrue);
     // False legacy flags do not migrate.
     expect(await repo.getHasSeenNodeGuide('tribes'), isFalse);
+
+    // Legacy keys are always removed, whether or not they migrated.
+    final keys = (await SharedPreferences.getInstance()).getKeys();
+    expect(keys.contains('companion_visited_/timeline'), isFalse);
+    expect(keys.contains('companion_visited_/challenges'), isFalse);
+    expect(keys.contains('companion_visited_/discover'), isFalse);
+    expect(keys.contains('companion_visited_/tribes'), isFalse);
   });
 
   test('does not overwrite an existing seen flag', () async {
@@ -35,6 +42,9 @@ void main() {
     final repo = LocalSettingsRepository();
     await repo.init();
     await repo.migrateVisitedFlags();
+    // Pins the no-overwrite invariant: both flags start true, so this test
+    // cannot observe a redundant write (setting true over true is
+    // value-invisible); the guard in migrateVisitedFlags is what matters.
     expect(await repo.getHasSeenNodeGuide('timeline'), isTrue);
   });
 
@@ -47,5 +57,21 @@ void main() {
     await repo.migrateVisitedFlags();
     await repo.migrateVisitedFlags();
     expect(await repo.getHasSeenNodeGuide('challenges'), isTrue);
+  });
+
+  test('removes unknown-route legacy flags without creating a node flag',
+      () async {
+    SharedPreferences.setMockInitialValues({
+      'companion_visited_/insights': true,
+    });
+    final repo = LocalSettingsRepository();
+    await repo.init();
+    await repo.migrateVisitedFlags();
+
+    // '/insights' is not in the migration map: the legacy key is still
+    // removed, but no hasSeenNodeGuide_insights flag is created.
+    final keys = (await SharedPreferences.getInstance()).getKeys();
+    expect(keys.contains('companion_visited_/insights'), isFalse);
+    expect(await repo.getHasSeenNodeGuide('insights'), isFalse);
   });
 }

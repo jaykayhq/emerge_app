@@ -12,7 +12,9 @@ class LocalSettingsRepository {
   };
 
   Future<void> init() async {
-    if (_prefs != null) return;
+    // Re-fetch on every call (no early return) so per-test mock stores seeded
+    // via SharedPreferences.setMockInitialValues are honored; after the first
+    // load getInstance() returns the cached singleton, so this is cheap.
     try {
       _prefs = await SharedPreferences.getInstance();
     } catch (_) {
