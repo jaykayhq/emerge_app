@@ -1,5 +1,5 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
-import 'package:emerge_app/features/ai/data/datasources/groq_ai_service.dart';
+import 'package:emerge_app/features/ai/data/services/groq_ai_service.dart';
 import 'package:emerge_app/features/narrator/domain/models/narrator_line.dart';
 import 'package:emerge_app/features/narrator/domain/models/narrator_trigger.dart';
 import 'package:emerge_app/features/narrator/domain/services/narrator_line_resolver.dart';

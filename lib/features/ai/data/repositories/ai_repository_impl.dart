@@ -1,4 +1,4 @@
-import 'package:emerge_app/features/ai/data/datasources/groq_ai_service.dart';
+import 'package:emerge_app/features/ai/data/services/groq_ai_service.dart';
 import 'package:emerge_app/features/ai/domain/repositories/ai_repository.dart';
 
 class AiRepositoryImpl implements AiRepository {
