@@ -19,7 +19,10 @@ class NodeGuideOverlay {
 
     await showGeneralDialog<void>(
       context: context,
-      barrierDismissible: true,
+      // Lock the barrier: tapping outside must NOT dismiss the guide, or the
+      // node would never be marked seen and the guide would reappear on every
+      // coach open. The GOT IT button guarantees markSeen runs.
+      barrierDismissible: false,
       barrierLabel: 'Node guide',
       barrierColor: Colors.black54,
       pageBuilder: (_, _, _) => FeatureCoachMark(

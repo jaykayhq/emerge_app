@@ -1,3 +1,6 @@
+import 'dart:convert';
+
+import 'package:emerge_app/features/narrator/domain/models/narrator_trigger.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class LocalSettingsRepository {
@@ -126,6 +129,83 @@ class LocalSettingsRepository {
     }
   }
 
+  // --- App-open metadata (Narrator ambient-trigger timing) ---------------
+
+  static const _keyAppInstalledAt = 'app_installed_at';
+  static const _keyLastAppOpen = 'last_app_open';
+  static const _keyRecentNarratorTriggers = 'narrator_recent_triggers';
+
+  /// When the app was first opened (set on first timeline open).
+  /// Null-safe: returns null when unset or on storage failure.
+  DateTime? getAppInstalledAt() {
+    final raw = _getString(_keyAppInstalledAt);
+    return raw.isEmpty ? null : DateTime.tryParse(raw);
+  }
+
+  Future<void> setAppInstalledAt(DateTime when) async {
+    await _setString(_keyAppInstalledAt, when.toIso8601String());
+  }
+
+  /// When the app was last opened (set on each timeline open).
+  /// Null-safe: returns null when unset or on storage failure.
+  DateTime? getLastAppOpen() {
+    final raw = _getString(_keyLastAppOpen);
+    return raw.isEmpty ? null : DateTime.tryParse(raw);
+  }
+
+  Future<void> setLastAppOpen(DateTime when) async {
+    await _setString(_keyLastAppOpen, when.toIso8601String());
+  }
+
+  /// When each narrator trigger last fired, keyed by trigger.
+  /// Stored as a JSON string map `{triggerName: isoTime}`. Unknown trigger
+  /// names (forward-compatible) and unparseable timestamps are skipped;
+  /// corrupt JSON degrades to an empty map.
+  Future<Map<NarratorTrigger, DateTime>> getRecentNarratorTriggers() async {
+    final raw = _getString(_keyRecentNarratorTriggers);
+    if (raw.isEmpty) return {};
+    try {
+      final decoded = jsonDecode(raw);
+      if (decoded is! Map<String, dynamic>) return {};
+      final result = <NarratorTrigger, DateTime>{};
+      decoded.forEach((name, iso) {
+        final trigger = _narratorTriggerFromName(name);
+        final when = DateTime.tryParse(iso.toString());
+        if (trigger != null && when != null) {
+          result[trigger] = when;
+        }
+      });
+      return result;
+    } catch (_) {
+      return {};
+    }
+  }
+
+  /// Records that [trigger] fired at [when], merging into any stored map.
+  Future<void> recordNarratorTrigger(
+    NarratorTrigger trigger,
+    DateTime when,
+  ) async {
+    final current = await getRecentNarratorTriggers();
+    current[trigger] = when;
+    await _setString(
+      _keyRecentNarratorTriggers,
+      jsonEncode(
+        current.map((k, v) => MapEntry(k.name, v.toIso8601String())),
+      ),
+    );
+  }
+
+  /// Parses a stored trigger name, skipping unknown names (try/catch around
+  /// firstWhere: it throws StateError when no value matches).
+  static NarratorTrigger? _narratorTriggerFromName(String name) {
+    try {
+      return NarratorTrigger.values.firstWhere((t) => t.name == name);
+    } catch (_) {
+      return null;
+    }
+  }
+
   /// Migrates legacy companion visited flags into the node-guide system.
   /// Idempotent: only migrates keys that exist; never overwrites already-seen
   /// node flags. The `discover` flag migrates too — its node dies with the
@@ -137,8 +217,6 @@ class LocalSettingsRepository {
     const routeToNode = {
       '/timeline': 'timeline',
       '/world-map': 'world_map',
-      '/profile': 'profile',
-      '/tribes': 'tribes',
       '/profile/reflections': 'coach',
       '/challenges': 'challenges',
       '/discover': 'discover',
