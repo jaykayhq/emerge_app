@@ -52,7 +52,7 @@ final class CoachAskQuotaControllerProvider
 }
 
 String _$coachAskQuotaControllerHash() =>
-    r'6fb73acf68236fb2686ac74e45b4a4caf4bd3eaa';
+    r'31900066711cd364993c24813e501bc09e93a537';
 
 /// Daily coach-ask quota controller.
 ///

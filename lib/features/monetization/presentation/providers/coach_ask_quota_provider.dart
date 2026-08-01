@@ -32,16 +32,21 @@ class CoachAskQuotaController extends _$CoachAskQuotaController {
   }
 
   /// Records one ask. Free users persist the incremented counter;
-  /// premium counters never change.
+  /// premium counters never change. Handles date rollover at call time.
   Future<CoachAskQuota> consume() async {
-    final current = state.value ??
-        CoachAskQuota(
-          dateKey: CoachAskQuota.dateKeyFor(DateTime.now()),
-          usedToday: 0,
-          isPremium: false,
-        );
-    final next = current.consume();
-    if (!current.isPremium) {
+    final now = CoachAskQuota.dateKeyFor(DateTime.now());
+    final current = state.value;
+    final base = (current == null || current.dateKey != now)
+        ? CoachAskQuota(
+            dateKey: now,
+            usedToday: 0,
+            isPremium: current?.isPremium ?? false,
+          )
+        : current;
+    final next = base.consume();
+    // Set state synchronously so concurrent callers never double-count.
+    state = AsyncValue.data(next);
+    if (!base.isPremium) {
       try {
         final prefs = await SharedPreferences.getInstance();
         await prefs.setInt('coach_asks_${next.dateKey}', next.usedToday);
@@ -49,7 +54,6 @@ class CoachAskQuotaController extends _$CoachAskQuotaController {
         // Permit by default on storage failure.
       }
     }
-    state = AsyncValue.data(next);
     return next;
   }
 }
