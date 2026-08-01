@@ -12,6 +12,38 @@
 
 ---
 
+## ✅ HANDOFF NOTE — IMPLEMENTED 2026-08-01 (all 16 tasks complete)
+
+**Status: all tasks implemented, whole-project `dart analyze` clean, 1,002 focused tests pass. One pre-existing failure unrelated to SP-A:** `test/features/social/domain/services/tribe_membership_service_test.dart` ("joinTribe enqueues Firestore sync operations") — fails identically at HEAD (confirmed via clean worktree twice); it belongs to SP-G (tribe membership/XP accounting).
+
+**Commits (in order):**
+| Task | SHA | Summary |
+|---|---|---|
+| T1 | `60b6671` | CoachAskQuota pure domain (3/day, premium bypass, rollover) |
+| T2 | `2082ff8e` | Node guide registry (12→11 nodes; habit_advanced dropped in T12) |
+| T3 | `3344cc0d` + `280ff21a` | migrateVisitedFlags + test-isolation fix (init() guard removed) |
+| T4 | `245135cc` + `25e3959b` | CoachAskQuotaController provider (rollover at consume, sync state write) |
+| T5 | `4ac81527` + `a58823ae` | NodeGuideController + NodeGuideHost (+ markSeen assertion) |
+| T6 | `0f4e1331` | PremiumLimitType.coachAsk + dialog copy |
+| T7 | `a427dcda` + `10d755b0` + `33009a5d` | GroqAiService consolidation + test re-point + throwing contract restored |
+| T8 | `cfe03f79` + `382e8efb` | NarratorSheet coach mode + _isAsking serialization |
+| T9 | `a3e3c299` | NarratorAvatar in timeline header → coach dialog |
+| T10 | `0f5f4654` + `391a9bff` | Milestone producers + sequencing fixes (welcome card visible) |
+| T11 | `be0d425a` | Node guides: timeline/challenges/all_tribes/tribe_lobby/discover; dead stubs removed |
+| T12 | `31ec85be` + `413cfd41` | Node guides: habit create/streak recovery/world map/leveling/future self; NodeGuideOverlay for coach; world-map seed fix + overlay test + docs |
+| T13 | `40a9a62e` | Companion visited-flag + migration APIs removed; migrateVisitedFlags wired in init_app |
+| T14 | `3155f9e7` | Unified Tutorials settings section (toggle/replay guides/replay onboarding/quota row) |
+| T15 | `6b1899bc` | Oracle screens + routes deleted |
+| Fix | `40e3b63c` | challenges_screen_test companion mock dropped |
+
+**Notable deviations from the plan (all approved during review):** dispose-clear removed in identity studio (ref-in-dispose StateError; autoDispose covers it); `ProviderScope.containerOf` instead of `context.read` (Riverpod 3); `habit_advanced` node dropped (no live surface); coach guide via full-screen `NodeGuideOverlay` before the sheet (dialog can't host the expand host); `await ref.watch(isPremiumProvider.future)` pattern (watch+.value hangs in riverpod 3.3.2); tribe_lobby guide copy adjusted (CTA becomes "Switch Tribes" only in SP-D).
+
+**Deferred notes for later sub-projects:** `test/features/gamification/.../leveling_screen_test.dart:62` has an inert `companion_visited_/gamification` prefs seed (dead data, harmless — remove in a later cleanup); remote-config `goldilocks_threshold_*` keys are inert (deleted screen) — safe to remove; manual smoke checklist (Task 16 Step 3) still needs a device run by a human.
+
+---
+
+
+
 ## ⚠️ Pre-flight (read first)
 
 1. **The working tree is dirty** (pre-existing uncommitted changes across ~30 files from earlier sessions). **Commit only the files each task names** — never `git add -A` or `git add lib` wholesale.
