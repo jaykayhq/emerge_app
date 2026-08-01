@@ -40,6 +40,18 @@
 
 **Deferred notes for later sub-projects:** `test/features/gamification/.../leveling_screen_test.dart:62` has an inert `companion_visited_/gamification` prefs seed (dead data, harmless — remove in a later cleanup); remote-config `goldilocks_threshold_*` keys are inert (deleted screen) — safe to remove; manual smoke checklist (Task 16 Step 3) still needs a device run by a human.
 
+**Final review gate (Emerge-App-Code-Reviewer, 2026-08-01): READY.** All four must-fix items resolved in T17:
+
+| T17 commit | SHA | Summary |
+|---|---|---|
+| T17a | `99250d03` | App-open metadata + trigger cooldown store (LocalSettingsRepository), pure `NarratorOpenEvaluator` (timeline-open ambient triggers: longAbsence/morningBrief/streakBreak/onFire, excluding weeklyRecap/eveningReflection), migration map dropped orphan '/profile'+'/tribes', coach-guide barrier locked (barrierDismissible: false) |
+| T17b | `92c27768` | Timeline-open evaluation wired (post-frame, `_hasEvaluatedOpen` guard, persisted cooldowns); real level/counts in completion producer; data-grounded coach ask context (Level/XP/archetype/streak); `resolveAskNarratorTrigger` app-called |
+| T17c | `b164af1b` | Settings Tutorials section widget tests (toggle, replay tiles, quota row 2/3 + premium unlimited) |
+
+**Final state:** `dart analyze lib test` → 0 issues; 1,027 focused tests pass; only pre-existing `tribe_membership_service_test.dart` joinTribe fails (SP-G). Model-name adaptations: `UserProfile.archetype` non-nullable (`!= UserArchetype.none`), `UserAvatarStats.streak` (not currentStreak), `avatarStats.level`/`momentumScore`/`totalXp` confirmed.
+
+**Deferred cleanup (reviewer-noted, not blocking):** dead AI surface after Oracle deletion (`ai_service.dart`/GroqAiServiceImpl/`aiServiceProvider`, `ai_personalization_service.dart`, `get_coach_advice.dart` usecase + AiRepository/AiRepositoryImpl — only their own tests consume them) and the companion presentation layer (CompanionPanel/Overlay/InlineCard/AskMentorButton — no app consumers) — a dedicated cleanup PR. Minor: `_narratorTriggerFor` mirrors `_evaluateNarratorTrigger` — extract a shared pure function.
+
 ---
 
 
