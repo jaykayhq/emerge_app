@@ -9,6 +9,7 @@ class _FakeSettings extends LocalSettingsRepository {
   _FakeSettings({required this.tutorialsEnabled, this.seen = const {}});
   final bool tutorialsEnabled;
   final Set<String> seen;
+  final Set<String> recorded = {};
 
   @override
   bool isTutorialsEnabled() => tutorialsEnabled;
@@ -17,7 +18,9 @@ class _FakeSettings extends LocalSettingsRepository {
   Future<bool> getHasSeenNodeGuide(String nodeId) async => seen.contains(nodeId);
 
   @override
-  Future<void> setHasSeenNodeGuide(String nodeId) async {}
+  Future<void> setHasSeenNodeGuide(String nodeId) async {
+    recorded.add(nodeId);
+  }
 }
 
 void main() {
@@ -61,5 +64,6 @@ void main() {
     await tester.tap(find.text("GOT IT — LET'S GO"));
     await tester.pumpAndSettle();
     expect(find.text('Your Daily Timeline'), findsNothing);
+    expect(settings.recorded, contains('timeline'));
   });
 }
