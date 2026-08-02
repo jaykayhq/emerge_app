@@ -40,6 +40,15 @@ SP-H (rules/indexes/functions + admin doc cleanup —      │
 
 Alternative: SP-G before SP-E if data-integrity is the priority (SP-G's plan absorbs the pre-existing failing `tribe_membership_service_test`).
 
+## ✅ Confirmations (2026-08-02 — all four resolved by the user)
+
+1. **SP-E D2:** option (a) — ADMIN_SECRET-guarded seed script for the default creator account. **CONFIRMED**
+2. **SP-F D1a:** interim single CHALLENGES lobby button (until SP-D's Switch Tribes CTA) is acceptable. **CONFIRMED**
+3. **SP-G D2:** leave semantics = "Keep everything" (contributions/contributor doc/leaderboard entry preserved; leave-dialog copy fixed). **CONFIRMED by the user directly**
+4. **SP-H:** include the blueprints `'system'` carve-out, dead-function removal (`notifyAchievement` + `onHabitChanged`), and the `isValidStats` deny-list additions. **CONFIRMED**
+
+Execution started 2026-08-02 in the recommended order (SP-C → SP-B → SP-E → SP-F → SP-D → SP-G → SP-H); this index is the coordination source.
+
 ## ⚠️ CONFIRM-WITH-USER items (decide before executing the affected sub-project)
 
 1. **SP-E D2 — Default creator account (must confirm):** the spec recommends option (a): an ADMIN_SECRET-guarded seed script creating a known default creator account (credentials delivered out-of-band), mirroring the unexported `seedReviewerAccount.ts` precedent. Alternative (b): manually promote the first creator via admin `setUserRole` + console.
