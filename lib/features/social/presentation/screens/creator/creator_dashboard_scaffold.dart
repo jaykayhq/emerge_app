@@ -15,11 +15,14 @@ class CreatorDashboardScaffold extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     ref.listen(isVerifiedCreatorProvider, (_, next) {
-      next.whenData((verified) {
-        if (!verified && context.mounted) {
-          context.go('/creator/login');
-        }
-      });
+      // Hold while loading: a fresh redeem is followed by the profile doc
+      // resolving; bouncing during that window logs the creator out (SP-E D6).
+      // Also suppresses redirects on reload-retained values (Riverpod 3
+      // retains previous data during refresh — whenData would fire on it).
+      if (next.isLoading || !next.hasValue) return;
+      if (!next.value! && context.mounted) {
+        context.go('/creator/login');
+      }
     });
 
     final width = MediaQuery.sizeOf(context).width;

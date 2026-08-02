@@ -1,4 +1,3 @@
-import 'package:cloud_functions/cloud_functions.dart';
 import 'package:emerge_app/core/utils/app_logger.dart';
 import 'package:emerge_app/features/auth/presentation/providers/auth_providers.dart';
 import 'package:emerge_app/features/auth/presentation/providers/role_provider.dart';
@@ -110,7 +109,9 @@ Future<void> saveCreatorOnboardingProgress(
             role: 'creator',
           ))
       .copyWith(
-    role: 'creator',
+    // Deliberately NOT role: the rules diff-whitelist denies touching
+    // privileged fields; re-writing the same 'creator' value would trip it
+    // (SP-E D4).
     archetype: draft.archetype,
     bio: draft.bio ?? existing?.bio ?? '',
     specialityTags: draft.specialityTags.isNotEmpty
@@ -121,26 +122,5 @@ Future<void> saveCreatorOnboardingProgress(
   );
 
   await repo.updateCreatorProfile(updated);
-
-  // Mirror the progress in the role claim too, so the router can read
-  // it without an extra Firestore round-trip if the caller wants.
-  try {
-    final functions = FirebaseFunctions.instance;
-    await functions.httpsCallable('setUserRole').call(<String, dynamic>{
-      'role': 'creator',
-      'creatorOnboardingProgress': progress,
-      if (progress >= 3)
-        'creatorOnboardingCompletedAt': DateTime.now().toIso8601String(),
-    });
-    await user.getIdToken(true);
-  } catch (e, s) {
-    AppLogger.w(
-      'saveCreatorOnboardingProgress: setUserRole mirror failed; '
-      'router will re-read Firestore.',
-      error: e,
-      stackTrace: s,
-    );
-  } finally {
-    ref.invalidate(currentCreatorOnboardingProvider);
-  }
+  ref.invalidate(currentCreatorOnboardingProvider);
 }
