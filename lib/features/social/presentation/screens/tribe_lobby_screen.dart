@@ -6,7 +6,6 @@ import 'package:go_router/go_router.dart';
 import 'package:emerge_app/core/presentation/widgets/app_back_handler.dart';
 import 'package:emerge_app/core/presentation/widgets/app_error_widget.dart';
 import 'package:emerge_app/core/presentation/widgets/emerge_loading_skeleton.dart';
-import 'package:emerge_app/core/presentation/widgets/emerge_primary_button.dart';
 import 'package:emerge_app/core/theme/archetype_theme.dart';
 import 'package:emerge_app/core/theme/emerge_colors.dart';
 
@@ -192,14 +191,6 @@ class _TribeLobbyScreenState extends ConsumerState<TribeLobbyScreen> {
                           ),
                         ),
                         onPressed: () => context.push('/challenges'),
-                      ),
-                    ),
-                    const Gap(12),
-                    Expanded(
-                      child: EmergePrimaryButton(
-                        label: 'BROWSE BLUEPRINTS',
-                        leadingIcon: Icons.auto_awesome,
-                        onPressed: () => context.push('/social/discover'),
                       ),
                     ),
                   ],

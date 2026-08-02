@@ -49,7 +49,6 @@ import 'package:emerge_app/core/router/creator_routes.dart';
 import 'package:emerge_app/features/blueprints/data/repositories/blueprint_repository.dart';
 import 'package:emerge_app/features/blueprints/domain/models/blueprint.dart';
 import 'package:emerge_app/core/presentation/widgets/app_error_widget.dart';
-import 'package:emerge_app/features/social/presentation/screens/social_discover_tab.dart';
 import 'package:emerge_app/features/social/presentation/screens/social_hub_screen.dart';
 
 import 'package:flutter/material.dart';
@@ -554,13 +553,6 @@ GoRouter router(Ref ref) {
                     builder: (context, state) => CreatorProfileScreen(
                       creatorId: state.pathParameters['id']!,
                     ),
-                  ),
-                  // /social/discover — blueprint categories browse (member-facing)
-                  GoRoute(
-                    path: 'discover',
-                    parentNavigatorKey: _rootNavigatorKey,
-                    builder: (context, state) =>
-                        const SocialDiscoverTab(showAsRoot: true),
                   ),
                   // /social/blueprint/:id — branch-local alias of /blueprint/:id
                   GoRoute(
