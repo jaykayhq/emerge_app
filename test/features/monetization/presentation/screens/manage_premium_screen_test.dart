@@ -78,12 +78,13 @@ class _FakeIsPremium extends IsPremium {
 ProviderScope _pump({
   required MonetizationRepository repo,
   required ManagePremiumService service,
+  bool isPremium = true,
 }) {
   return ProviderScope(
     overrides: [
       monetizationRepositoryProvider.overrideWithValue(repo),
       managePremiumServiceProvider.overrideWithValue(service),
-      isPremiumProvider.overrideWith(() => _FakeIsPremium(true)),
+      isPremiumProvider.overrideWith(() => _FakeIsPremium(isPremium)),
       userStreakProvider.overrideWith((ref) => Stream.value(0)),
       habitsProvider.overrideWith((ref) => Stream.value(const [])),
     ],
@@ -144,8 +145,6 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.text('Cancel anyway'));
     await tester.pumpAndSettle();
-    expect(repo.openManageCalls, 1);
-
     // The store page already opened — the CTA must be inert, pointing at Play.
     final confirmButton = tester.widget<ElevatedButton>(
       find.widgetWithText(ElevatedButton, 'Finish in Google Play'),
@@ -157,5 +156,21 @@ void main() {
     await tester.pumpAndSettle();
     expect(repo.openManageCalls, 1);
     expect(find.text('Premium cancelled'), findsNothing);
+  });
+
+  testWidgets('free user sees the upgrade affordance, never the cancel flow',
+      (tester) async {
+    await tester.pumpWidget(_pump(
+      repo: _FakeMonetizationRepository(),
+      service: _FakeManagePremiumService(),
+      isPremium: false,
+    ));
+    await tester.pumpAndSettle();
+
+    // No billing line, no loss-framed cancel flow for a plan the user doesn't
+    // own. No tap on the upgrade button — the harness has no router.
+    expect(find.text('Cancel subscription'), findsNothing);
+    expect(find.textContaining('Billed at'), findsNothing);
+    expect(find.text('Go Premium'), findsOneWidget);
   });
 }

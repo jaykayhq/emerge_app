@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:emerge_app/core/utils/app_logger.dart';
 import 'package:emerge_app/features/auth/presentation/providers/auth_providers.dart';
 import 'package:emerge_app/features/monetization/data/repositories/revenue_cat_repository.dart';
@@ -110,12 +111,60 @@ class IsPremium extends _$IsPremium {
     ref.onDispose(sub.cancel);
     try {
       final snap = await firestore.collection('users').doc(uid).get();
+      _schedulePauseEndTimer(firestore, uid, snap.data());
       return recordToPremium(snap.data());
     } catch (e) {
       AppLogger.w('Web premium Firestore check failed', error: e);
       final cached = await _readCachedPremiumStatus();
       return cached ?? false;
     }
+  }
+
+  /// Web Firestore streams only re-emit on doc CHANGES — time passage alone
+  /// never triggers one, so a paused user would otherwise stay premium for
+  /// the whole session after `premiumEndsAt` passes. Schedule one timer for
+  /// the pause end (+1s): on fire, re-read the doc, push the fresh status,
+  /// and re-schedule while the doc is still paused with a future end date
+  /// (covers repeated pauses; each pause writes now+30d, so a single timer
+  /// stays under Dart's ~24.7-day Timer cap). No timer when there is no end
+  /// date (indefinite pause) or it is not in the future.
+  void _schedulePauseEndTimer(
+    FirebaseFirestore firestore,
+    String uid,
+    Map<String, dynamic>? data,
+  ) {
+    final endsAt = _parsePauseEndsAt(data);
+    if (endsAt == null || !endsAt.isAfter(DateTime.now())) return;
+    final timer = Timer(
+      endsAt.difference(DateTime.now()) + const Duration(seconds: 1),
+      () => _checkPauseEnd(firestore, uid),
+    );
+    ref.onDispose(timer.cancel);
+  }
+
+  Future<void> _checkPauseEnd(FirebaseFirestore firestore, String uid) async {
+    try {
+      final snap = await firestore.collection('users').doc(uid).get();
+      state = AsyncValue.data(recordToPremium(snap.data()));
+      final data = snap.data();
+      if (data?['subscriptionStatus'] == 'paused' &&
+          _parsePauseEndsAt(data) != null) {
+        // The future-end-date guard lives in `_schedulePauseEndTimer`.
+        _schedulePauseEndTimer(firestore, uid, data);
+      }
+    } catch (e) {
+      AppLogger.w('Web premium pause-end re-check failed', error: e);
+    }
+  }
+
+  /// `premiumEndsAt` as a DateTime when present and parseable — never throws
+  /// on unexpected shapes.
+  DateTime? _parsePauseEndsAt(Map<String, dynamic>? data) {
+    final raw = data?['premiumEndsAt'];
+    if (raw == null) return null;
+    if (raw is Timestamp) return raw.toDate();
+    if (raw is DateTime) return raw;
+    return null;
   }
 
   /// Persist premium status for offline fallback.

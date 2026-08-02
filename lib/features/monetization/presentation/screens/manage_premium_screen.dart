@@ -181,17 +181,28 @@ class _ManagePremiumScreenState extends ConsumerState<ManagePremiumScreen> {
               ?.copyWith(color: AppTheme.textMainDark, fontWeight: FontWeight.bold),
         ),
         const Gap(8),
-        Text(
-          [
-            if (price != null) 'Billed at $price',
-            kIsWeb ? 'via Paystack' : 'via Google Play',
-          ].join(' — '),
-          style: Theme.of(context)
-              .textTheme
-              .bodyMedium
-              ?.copyWith(color: AppTheme.textSecondaryDark),
-        ),
-        if (premiumSince != null) ...[
+        // Free users own no plan: hide the billing line and the cancel flow,
+        // point them at the paywall instead.
+        if (isPremium)
+          Text(
+            [
+              if (price != null) 'Billed at $price',
+              kIsWeb ? 'via Paystack' : 'via Google Play',
+            ].join(' — '),
+            style: Theme.of(context)
+                .textTheme
+                .bodyMedium
+                ?.copyWith(color: AppTheme.textSecondaryDark),
+          )
+        else
+          Text(
+            'Free plan — no charges, upgrade anytime',
+            style: Theme.of(context)
+                .textTheme
+                .bodyMedium
+                ?.copyWith(color: AppTheme.textSecondaryDark),
+          ),
+        if (isPremium && premiumSince != null) ...[
           const Gap(8),
           Text(
             'Premium since ${_formatDate(premiumSince)}',
@@ -202,10 +213,16 @@ class _ManagePremiumScreenState extends ConsumerState<ManagePremiumScreen> {
           ),
         ],
         const Gap(32),
-        _PrimaryButton(
-          label: 'Cancel subscription',
-          onPressed: _busy ? null : () => setState(() => _step = _CancelStep.recap),
-        ),
+        if (isPremium)
+          _PrimaryButton(
+            label: 'Cancel subscription',
+            onPressed: _busy ? null : () => setState(() => _step = _CancelStep.recap),
+          )
+        else
+          _PrimaryButton(
+            label: 'Go Premium',
+            onPressed: () => context.push('/paywall'),
+          ),
       ],
     );
   }
