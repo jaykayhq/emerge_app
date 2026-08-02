@@ -38,7 +38,11 @@ void main() {
     await tester.pump();
 
     expect(find.text('Go Beyond the 5'), findsOneWidget);
-    expect(find.text('UNLIMITED'), findsOneWidget);
+    expect(find.text('UNLIMITED HABITS'), findsOneWidget);
+    expect(find.text('UNLIMITED CLUBS'), findsOneWidget);
+    expect(find.text('UNLIMITED COACH ASKS'), findsOneWidget);
+    expect(find.text('MORE WORLD THEMES'), findsOneWidget);
+    expect(find.text('Free: 5 active habits · Premium: no cap'), findsOneWidget);
     expect(find.text('PREMIUM INSIGHTS'), findsOneWidget);
     expect(find.text('EXCLUSIVE STYLE'), findsOneWidget);
     expect(find.text('Restore'), findsOneWidget);

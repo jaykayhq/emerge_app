@@ -1,4 +1,5 @@
 import 'dart:math' as math;
+import 'package:emerge_app/features/monetization/domain/models/premium_limit.dart';
 import 'package:emerge_app/features/monetization/domain/services/paywall_web_guard.dart';
 import 'package:emerge_app/features/monetization/presentation/providers/paywall_provider.dart';
 import 'package:flutter/foundation.dart';
@@ -110,10 +111,31 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen>
                           ),
                         ),
                         const Gap(40),
-                        const _BenefitBlock(
+                        _BenefitBlock(
                           icon: Icons.lock_open,
-                          title: 'UNLIMITED',
-                          subtitle: 'Habits, clubs, themes',
+                          title: LimitsCatalog.habits.paywallTitle,
+                          subtitle: LimitsCatalog.habits.paywallSubtitle,
+                          color: Colors.cyanAccent,
+                        ),
+                        const Gap(12),
+                        _BenefitBlock(
+                          icon: Icons.groups,
+                          title: LimitsCatalog.clubs.paywallTitle,
+                          subtitle: LimitsCatalog.clubs.paywallSubtitle,
+                          color: Colors.cyanAccent,
+                        ),
+                        const Gap(12),
+                        _BenefitBlock(
+                          icon: Icons.auto_awesome,
+                          title: LimitsCatalog.coachAsk.paywallTitle,
+                          subtitle: LimitsCatalog.coachAsk.paywallSubtitle,
+                          color: Colors.cyanAccent,
+                        ),
+                        const Gap(12),
+                        _BenefitBlock(
+                          icon: Icons.public,
+                          title: LimitsCatalog.themes.paywallTitle,
+                          subtitle: LimitsCatalog.themes.paywallSubtitle,
                           color: Colors.cyanAccent,
                         ),
                         const Gap(12),
