@@ -262,6 +262,8 @@ export * from "./rateLimiter";
 export * from "./ai_recap";
 export * from "./revenuecat_events";
 export * from "./payments/paystack";
+export * from "./creator_invites";
+// export * from "./seedCreatorAccount";   // enable explicitly when bootstrapping the default creator (SP-E Task 4)
 export { setUserRole } from "./setUserRole";
 export { purgeOrphanedUserData } from "./purgeOrphanedUserData";
 export { createStarterPack } from "./create_starter_pack";
