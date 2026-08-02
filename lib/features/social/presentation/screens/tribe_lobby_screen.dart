@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import 'package:emerge_app/core/presentation/widgets/app_back_handler.dart';
 import 'package:emerge_app/core/presentation/widgets/app_error_widget.dart';
 import 'package:emerge_app/core/presentation/widgets/emerge_loading_skeleton.dart';
+import 'package:emerge_app/core/presentation/widgets/emerge_primary_button.dart';
 import 'package:emerge_app/core/theme/archetype_theme.dart';
 import 'package:emerge_app/core/theme/emerge_colors.dart';
 
@@ -16,7 +17,6 @@ import 'package:emerge_app/features/social/presentation/providers/tribes_provide
 import 'package:emerge_app/features/social/presentation/widgets/glass_panel.dart';
 import 'package:emerge_app/features/social/presentation/widgets/tribe_circle_section.dart';
 import 'package:emerge_app/features/social/presentation/widgets/tribe_blueprints_section.dart';
-import 'package:emerge_app/features/social/presentation/widgets/tribe_creators_strip.dart';
 import 'package:emerge_app/features/social/presentation/widgets/tribe_live_compact.dart';
 import 'package:emerge_app/features/social/presentation/widgets/tribe_pulse_status_row.dart';
 import 'package:emerge_app/features/social/presentation/widgets/tribe_quests_for_you_section.dart';
@@ -27,8 +27,8 @@ import 'package:emerge_app/features/tutorials/presentation/widgets/node_guide_ho
 ///
 /// Sequence (identity-first):
 ///   Hero → Stats → Status chips → Your Circle (partners) →
-///   Live (feed / leaderboard) → Creators (faces only) →
-///   Your Quests (active) → Quests For You (featured) → sticky CTA bar
+///   Live (feed / leaderboard) → Your Quests (active) →
+///   Quests For You (featured) → sticky CTA bar
 ///
 /// Background is provided by the shell's [WorldBackground]; this screen
 /// paints transparently over it. Hardware back returns to the world map
@@ -103,13 +103,6 @@ class _TribeLobbyScreenState extends ConsumerState<TribeLobbyScreen> {
                           child: TribeLiveCompact(
                             clubId: userClub.id,
                             profile: profile,
-                          ),
-                        ),
-                        const SliverToBoxAdapter(child: Gap(8)),
-                        const SliverToBoxAdapter(
-                          child: Padding(
-                            padding: EdgeInsets.only(bottom: 8),
-                            child: TribeCreatorsStrip(),
                           ),
                         ),
                         SliverToBoxAdapter(
@@ -191,6 +184,14 @@ class _TribeLobbyScreenState extends ConsumerState<TribeLobbyScreen> {
                           ),
                         ),
                         onPressed: () => context.push('/challenges'),
+                      ),
+                    ),
+                    const Gap(12),
+                    Expanded(
+                      child: EmergePrimaryButton(
+                        label: 'SWITCH TRIBES',
+                        leadingIcon: Icons.swap_horiz,
+                        onPressed: () => context.push('/social/all'),
                       ),
                     ),
                   ],

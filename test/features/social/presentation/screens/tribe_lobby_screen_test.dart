@@ -126,13 +126,14 @@ void main() {
   });
 
   testWidgets(
-      'TribeLobbyScreen renders a single full-width CHALLENGES CTA button, no BROWSE BLUEPRINTS',
+      'TribeLobbyScreen renders CTA bar with CHALLENGES and SWITCH TRIBES buttons',
       (tester) async {
     await tester.pumpWidget(buildTest());
     await tester.pump(const Duration(milliseconds: 100));
 
-    // CTA bar: one full-width button; the blueprints browse CTA is gone.
+    // CTA bar buttons.
     expect(find.text('CHALLENGES'), findsOneWidget);
+    expect(find.text('SWITCH TRIBES'), findsOneWidget);
     expect(find.text('BROWSE BLUEPRINTS'), findsNothing);
   });
 
