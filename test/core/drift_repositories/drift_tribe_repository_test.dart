@@ -1,16 +1,20 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:drift/drift.dart' hide isNotNull, isNull;
 import 'package:emerge_app/core/drift/app_database.dart';
 import 'package:emerge_app/core/drift_repositories/drift_tribe_repository.dart';
+import 'package:emerge_app/core/sync/sync_engine.dart';
 import 'package:emerge_app/features/social/domain/models/tribe.dart';
+import 'package:fake_cloud_firestore/fake_cloud_firestore.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
 import '../drift/test_database.dart';
-import 'mocks.dart';
+import 'mocks.dart' hide FakeFirebaseFirestore;
 
 void main() {
   late AppDatabase db;
   late MockSyncEngine mockSyncEngine;
+  late FakeFirebaseFirestore fakeFirestore;
   late DriftTribeRepository repository;
   const userId = 'test_user_123';
   const tribeId = 'tribe_athlete_001';
@@ -22,7 +26,7 @@ void main() {
   setUp(() {
     db = createTestDatabase();
     mockSyncEngine = MockSyncEngine();
-    final fakeFirestore = FakeFirebaseFirestore();
+    fakeFirestore = FakeFirebaseFirestore();
 
     when(
       () => mockSyncEngine.enqueueSet(
@@ -368,6 +372,79 @@ void main() {
       final withImages = clubs.where((c) => c.imageUrl.isNotEmpty).toList();
       expect(withImages, isNotEmpty,
           reason: 'seeded clubs should expose an imageUrl');
+    });
+  });
+
+  group('joinClub guard', () {
+    // Uses the real sync engine (backed by the in-memory Drift queue) so
+    // enqueued mutations are observable; the outer harness's MockSyncEngine
+    // swallows them.
+    late DriftTribeRepository guardRepository;
+
+    setUp(() {
+      guardRepository = DriftTribeRepository(
+        db,
+        EnhancedSyncEngine(db.mutationQueueDao, fakeFirestore),
+        fakeFirestore,
+      );
+    });
+
+    Future<void> seedStats({
+      required String tribeId,
+      required int memberCount,
+    }) {
+      return db.tribeStatsDao.upsertStats(
+        TribeStatsTableCompanion(
+          tribeId: Value(tribeId),
+          tribeName: Value('Athletes'),
+          archetypeId: Value('athlete'),
+          memberCount: Value(memberCount),
+          totalXp: Value(0),
+          totalHabitsCompleted: Value(0),
+          totalChallengesCompleted: Value(0),
+          userContributionXp: Value(0),
+          userHabitsCompleted: Value(0),
+          userChallengesCompleted: Value(0),
+          updatedAt: Value(DateTime.now().toIso8601String()),
+        ),
+      );
+    }
+
+    test('early-returns when a Firestore membership doc already exists',
+        () async {
+      await seedStats(tribeId: 'tribeA', memberCount: 0);
+
+      await fakeFirestore
+          .collection('users').doc('user1').collection('tribes').doc('tribeA')
+          .set({'tribeId': 'tribeA', 'joinedAt': Timestamp.now()});
+
+      await guardRepository.joinClub('user1', 'tribeA');
+
+      final stats = await db.tribeStatsDao.getStats('tribeA');
+      expect(stats?.memberCount, 0); // no local increment
+      final queue = await db.mutationQueueDao.getAllPending();
+      expect(queue, isEmpty);        // nothing enqueued
+    });
+
+    test('early-returns when a Drift membership is active', () async {
+      await db.tribeMembershipDao.upsertMembership(UserTribeTableCompanion(
+        userId: const Value('user1'),
+        tribeId: const Value('tribeA'),
+        membershipType: const Value('archetype'),
+        joinedAt: Value(DateTime.now().toIso8601String()),
+        isActive: const Value(true),
+      ));
+
+      await guardRepository.joinClub('user1', 'tribeA');
+
+      final queue = await db.mutationQueueDao.getAllPending();
+      expect(queue, isEmpty);
+    });
+
+    test('still joins when no membership exists anywhere', () async {
+      await guardRepository.joinClub('user1', 'tribeA');
+      final queue = await db.mutationQueueDao.getAllPending();
+      expect(queue.length, 3); // user tribes + contributors + tribe doc
     });
   });
 }

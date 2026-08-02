@@ -391,6 +391,24 @@ class DriftTribeRepository implements TribeRepository {
 
   @override
   Future<void> joinClub(String userId, String tribeId) async {
+    // SP-G D1: idempotence. Never join twice — the onboarding flow calls
+    // joinTribe (Firestore transaction) and this method back-to-back, and a
+    // reinstall can leave Firestore membership without local Drift state.
+    final localMembership =
+        await _db.tribeMembershipDao.watchActiveMembership(userId).first;
+    if (localMembership != null && localMembership.isActive) return;
+
+    var remoteExists = false;
+    try {
+      remoteExists = await _firestore
+          .collection('users').doc(userId).collection('tribes').doc(tribeId)
+          .get()
+          .then((s) => s.exists);
+    } catch (_) {
+      remoteExists = false; // offline: Drift check only (best-effort guard)
+    }
+    if (localMembership != null || remoteExists) return;
+
     // 1. Update local Drift database
     await _db.tribeStatsDao.incrementMemberCount(tribeId, delta: 1);
     await _db.tribeMembershipDao.upsertMembership(UserTribeTableCompanion(
