@@ -63,7 +63,7 @@ class _ManagePremiumScreenState extends ConsumerState<ManagePremiumScreen> {
   /// Pause-step exit. On web the confirm step runs the callable; on native
   /// the Google Play manage page IS the confirmation surface (store policy —
   /// no in-app button disables auto-renew), so opening it is the action and
-  /// the confirm step's redirect copy stays on screen.
+  /// the confirm step's inert CTA just points back at the store.
   Future<void> _cancelAnyway() async {
     if (kIsWeb) {
       setState(() => _step = _CancelStep.confirm);
@@ -87,31 +87,24 @@ class _ManagePremiumScreenState extends ConsumerState<ManagePremiumScreen> {
     }
   }
 
+  /// Confirm-step action. Web runs the callable; on native the Google Play
+  /// manage page already opened and IS the cancellation surface (store policy
+  /// — no in-app button disables auto-renew), so the CTA is disabled there.
+  /// This branch is defensive only: never open the store a second time.
   Future<void> _confirmCancel() async {
+    if (!kIsWeb) return;
     setState(() => _busy = true);
     final messenger = ScaffoldMessenger.of(context);
     try {
-      if (kIsWeb) {
-        final result = await ref.read(managePremiumServiceProvider).cancel();
-        result.fold(
-          (error) => messenger.showSnackBar(
-            SnackBar(content: Text('Could not cancel premium: $error')),
-          ),
-          (_) {
-            if (mounted) setState(() => _step = _CancelStep.done);
-          },
-        );
-      } else {
-        final result = await ref
-            .read(monetizationRepositoryProvider)
-            .openManageSubscription();
-        result.fold(
-          (error) => messenger.showSnackBar(
-            SnackBar(content: Text('Could not open subscription settings: $error')),
-          ),
-          (_) => setState(() => _step = _CancelStep.done),
-        );
-      }
+      final result = await ref.read(managePremiumServiceProvider).cancel();
+      result.fold(
+        (error) => messenger.showSnackBar(
+          SnackBar(content: Text('Could not cancel premium: $error')),
+        ),
+        (_) {
+          if (mounted) setState(() => _step = _CancelStep.done);
+        },
+      );
     } finally {
       if (mounted) setState(() => _busy = false);
     }
@@ -325,6 +318,7 @@ class _ManagePremiumScreenState extends ConsumerState<ManagePremiumScreen> {
   }
 
   Widget _buildConfirmStep() {
+    final isWeb = kIsWeb;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -337,10 +331,9 @@ class _ManagePremiumScreenState extends ConsumerState<ManagePremiumScreen> {
         ),
         const Gap(8),
         Text(
-          kIsWeb
+          isWeb
               ? 'Cancelling ends your premium access now. Your account stays free — your data and world are safe.'
-              : "You'll be redirected to Google Play to finish cancelling. "
-                  'Your account stays free — your data and world are safe.',
+              : 'Finish cancelling in Google Play. Your account stays free — your data and world are safe.',
           style: Theme.of(context)
               .textTheme
               .bodyMedium
@@ -348,8 +341,10 @@ class _ManagePremiumScreenState extends ConsumerState<ManagePremiumScreen> {
         ),
         const Gap(24),
         _PrimaryButton(
-          label: 'Confirm cancellation',
-          onPressed: _busy ? null : _confirmCancel,
+          // On native the store page already opened — the CTA just points back
+          // at it. Inert: Google Play is the only cancellation surface.
+          label: isWeb ? 'Confirm cancellation' : 'Finish in Google Play',
+          onPressed: isWeb ? (_busy ? null : _confirmCancel) : null,
         ),
         const Gap(12),
         TextButton(

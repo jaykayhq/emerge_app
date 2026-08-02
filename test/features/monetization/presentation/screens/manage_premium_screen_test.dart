@@ -126,6 +126,36 @@ void main() {
     await tester.pumpAndSettle();
     expect(repo.openManageCalls, 1);
     expect(service.cancelCalls, 0);
-    expect(find.textContaining('Google Play'), findsOneWidget);
+    expect(find.textContaining('Finish cancelling in Google Play'), findsOneWidget);
+  });
+
+  testWidgets(
+      'native confirm CTA is inert after store-open: no second store call, no done state',
+      (tester) async {
+    final repo = _FakeMonetizationRepository();
+    final service = _FakeManagePremiumService();
+    await tester.pumpWidget(_pump(repo: repo, service: service));
+    await tester.pumpAndSettle();
+
+    // Reach the confirm step the same way the flow test does.
+    await tester.tap(find.text('Cancel subscription'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Continue cancelling'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Cancel anyway'));
+    await tester.pumpAndSettle();
+    expect(repo.openManageCalls, 1);
+
+    // The store page already opened — the CTA must be inert, pointing at Play.
+    final confirmButton = tester.widget<ElevatedButton>(
+      find.widgetWithText(ElevatedButton, 'Finish in Google Play'),
+    );
+    expect(confirmButton.onPressed, isNull);
+
+    // Tapping it must not re-open the store nor claim cancellation.
+    await tester.tap(find.text('Finish in Google Play'));
+    await tester.pumpAndSettle();
+    expect(repo.openManageCalls, 1);
+    expect(find.text('Premium cancelled'), findsNothing);
   });
 }
