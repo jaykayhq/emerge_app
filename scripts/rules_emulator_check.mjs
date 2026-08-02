@@ -74,7 +74,7 @@ async function signUp(email) {
   });
   const j = await r.json();
   if (j.idToken) {
-    return { idToken: j.idToken, refreshToken: j.refreshToken, uid: j.localId };
+    return { idToken: j.idToken, refreshToken: j.refreshToken, uid: j.localId, email };
   }
   // Idempotent re-run against a still-running emulator: the account already
   // exists, so sign in with the same credentials instead of failing.
@@ -89,7 +89,7 @@ async function signUp(email) {
     if (!sj.idToken) {
       throw new Error(`signIn after EMAIL_EXISTS failed for ${email}: ${JSON.stringify(sj)}`);
     }
-    return { idToken: sj.idToken, refreshToken: sj.refreshToken, uid: sj.localId };
+    return { idToken: sj.idToken, refreshToken: sj.refreshToken, uid: sj.localId, email };
   }
   throw new Error(`signUp failed for ${email}: ${JSON.stringify(j)}`);
 }
@@ -99,7 +99,7 @@ async function signUp(email) {
 // minted after (refresh or re-sign-in) does. Fall back to re-sign-in if the
 // refresh endpoint is unavailable.
 async function tokenWithClaims(account) {
-  const r = await fetch(`${TOKEN}`, {
+  const r = await fetch(`${TOKEN}${KEY}`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
@@ -202,6 +202,10 @@ await db.collection("tribes").doc("morning_warriors").set({
 });
 await db.collection("challenges").doc("c1").set({ title: "t", status: "active" });
 
+// 10a creates an immutable habit_completions doc; a leftover from a previous
+// run would flip the check from create-allow to update-deny, so delete it.
+await db.doc(`users/${alice.uid}/habit_completions/c1`).delete().catch(() => {});
+
 const A = alice.idToken;
 const B = bob.idToken;
 
@@ -218,9 +222,11 @@ check("2c  users isPremium write", await call("PATCH", A, `users/${alice.uid}`, 
 // 3: user_stats — isValidStats denies premium fields (SP-H-1)
 check("3   user_stats isPremium write", await call("PATCH", A, `user_stats/${alice.uid}`, doc({ isPremium: true })), 403);
 
-// 4: creator_profiles — create only by admin or the 'creator_' system-seed carve-out
+// 4: creator_profiles — create only by admin; owners may update non-privileged
+// fields. The 'creator_' system-seed carve-out was deleted (SP-D) — a normal
+// user can no longer create creator_profiles/creator_demo.
 check("4a  creator_profiles create by normal user", await call("PATCH", B, "creator_profiles/bob_uid", doc({ userId: "bob_uid", ownerId: "bob_uid" })), 403);
-check("4b  creator_ prefix create by normal user", await call("PATCH", B, "creator_profiles/creator_demo", doc({ userId: "creator_demo" })), 200);
+check("4b  creator_ prefix create by normal user", await call("PATCH", B, "creator_profiles/creator_demo", doc({ userId: "creator_demo" })), 403);
 check("4c  creator_profiles flip isVerifiedCreator", await call("PATCH", A, `creator_profiles/${alice.uid}`, doc({ isVerifiedCreator: false })), 403);
 
 // 5: blueprints — verified-creator + 'system' catalog carve-out (SP-H-1)
