@@ -5,6 +5,7 @@ import 'package:emerge_app/core/theme/app_theme.dart';
 import 'package:emerge_app/core/theme/emerge_colors.dart';
 import 'package:emerge_app/core/utils/validators.dart';
 import 'package:emerge_app/features/auth/presentation/providers/auth_providers.dart';
+import 'package:emerge_app/features/auth/presentation/widgets/password_requirement_checklist.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
@@ -235,6 +236,7 @@ class _CreatorSignUpScreenState extends ConsumerState<CreatorSignUpScreen> {
 
         Form(
           key: _formKey,
+          autovalidateMode: AutovalidateMode.onUserInteraction,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
@@ -318,6 +320,9 @@ class _CreatorSignUpScreenState extends ConsumerState<CreatorSignUpScreen> {
                 ),
                 validator: AppValidators.validatePassword,
               ).animate(delay: 200.ms).fadeIn().slideX(begin: 0.02),
+              PasswordRequirementChecklist(
+                passwordController: _passwordController,
+              ),
               const Gap(16),
 
               // Confirm Password

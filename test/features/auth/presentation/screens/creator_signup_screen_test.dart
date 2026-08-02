@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/misc.dart';
 import 'package:emerge_app/features/auth/presentation/providers/auth_providers.dart';
 import 'package:emerge_app/features/auth/presentation/screens/creator_signup_screen.dart';
+import 'package:emerge_app/features/auth/presentation/widgets/password_requirement_checklist.dart';
 
 Widget _buildTest({
   List<Override> overrides = const [],
@@ -204,5 +205,41 @@ void main() {
 
     expect(find.byType(SnackBar), findsOneWidget);
     expect(find.text('Google sign-up failed'), findsOneWidget);
+  });
+
+  testWidgets('errors appear only after interacting with a field',
+      (tester) async {
+    await setMobileViewport(tester);
+
+    await tester.pumpWidget(_buildTest(router: router));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Email is required'), findsNothing);
+
+    await tester.enterText(find.byType(TextFormField).at(0), 'ab');
+    await tester.pumpAndSettle();
+    expect(
+      find.text('Username must be at least 3 characters long'),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets('password checklist appears while typing, not on confirm field',
+      (tester) async {
+    await setMobileViewport(tester);
+
+    await tester.pumpWidget(_buildTest(router: router));
+    await tester.pumpAndSettle();
+
+    expect(find.text('At least 12 characters'), findsNothing);
+
+    await tester.enterText(find.byType(TextFormField).at(2), 'abc');
+    await tester.pumpAndSettle();
+    expect(find.text('At least 12 characters'), findsOneWidget);
+
+    // Confirm field gets real-time validation but never the checklist.
+    await tester.enterText(find.byType(TextFormField).at(3), 'abc');
+    await tester.pumpAndSettle();
+    expect(find.byType(PasswordRequirementChecklist), findsOneWidget);
   });
 }
