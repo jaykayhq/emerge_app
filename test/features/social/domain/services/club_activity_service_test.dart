@@ -1,10 +1,12 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:emerge_app/core/error/failure.dart';
 import 'package:emerge_app/core/sync/sync_engine_barrel.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:emerge_app/features/auth/domain/entities/user_extension.dart';
 import 'package:emerge_app/features/social/domain/services/club_activity_service.dart';
 import 'package:emerge_app/features/social/domain/repositories/leaderboard_repository.dart';
+import 'package:emerge_app/features/social/domain/entities/leaderboard_entry.dart';
 import 'package:emerge_app/core/drift/database.dart';
 import 'package:fpdart/fpdart.dart';
 
@@ -27,6 +29,54 @@ class MockSyncEngine extends Mock implements EnhancedSyncEngine {}
 class MockTribeActivityDao extends Mock implements TribeActivityDao {}
 
 class MockLeaderboardRepository extends Mock implements LeaderboardRepository {}
+
+/// Records every [LeaderboardRepository.updateUserScore] invocation so tests
+/// can assert on the resolved club and the write shape (SP-G T7, B7/B8).
+class RecordingLeaderboardRepository implements LeaderboardRepository {
+  String? lastClubId;
+  bool? lastIsIncrement;
+  final List<
+      ({
+        String userId,
+        int xp,
+        int level,
+        String? clubId,
+        bool isIncrement,
+      })> updateCalls = [];
+
+  @override
+  Future<Either<Failure, Unit>> updateUserScore(
+    String userId, {
+    required int xp,
+    required int level,
+    required UserArchetype archetype,
+    String? userName,
+    String? clubId,
+    String? challengeId,
+    bool isIncrement = false,
+  }) async {
+    lastClubId = clubId;
+    lastIsIncrement = isIncrement;
+    updateCalls.add((
+      userId: userId,
+      xp: xp,
+      level: level,
+      clubId: clubId,
+      isIncrement: isIncrement,
+    ));
+    return const Right(unit);
+  }
+
+  @override
+  Stream<List<LeaderboardEntry>> watchClubLeaderboard([String? clubId]) =>
+      const Stream.empty();
+
+  @override
+  Stream<List<LeaderboardEntry>> watchChallengeLeaderboard([
+    String? challengeId,
+  ]) =>
+      const Stream.empty();
+}
 
 class MockTransaction extends Mock implements Transaction {
   @override
@@ -139,6 +189,31 @@ void main() {
           completes,
         );
       });
+
+      test('uses the provided clubId (active tribe) for the leaderboard', () async {
+        final leaderboardRepo = RecordingLeaderboardRepository();
+        final service = SocialActivityService(
+          syncEngine: mockSyncEngine,
+          activityDao: mockActivityDao,
+          leaderboardRepo: leaderboardRepo,
+        );
+
+        await service.logHabitCompletion(
+          userId: 'u1',
+          userName: 'A',
+          archetype: 'athlete',
+          habitId: 'h1',
+          habitTitle: 'H',
+          streakDay: 1,
+          attribute: 'vitality',
+          xpGained: 10,
+          currentLevel: 2,
+          clubId: 'my_tribe',
+        );
+
+        expect(leaderboardRepo.lastClubId, 'my_tribe'); // NOT morning_warriors
+        expect(leaderboardRepo.lastIsIncrement, true);
+      });
     });
 
     group('logLevelUp', () {
@@ -159,9 +234,11 @@ void main() {
           ),
         ).called(
           2,
-        ); // Global and Club (Leaderboard uses updateUserScore, not enqueueSet)
+        ); // Global and Club (Level-up no longer writes the leaderboard; B7)
 
-        verify(
+        // Level is derivable from XP, so logLevelUp must NOT write the
+        // leaderboard — that would double-count against the increment path.
+        verifyNever(
           () => mockLeaderboardRepo.updateUserScore(
             any(),
             xp: any(named: 'xp'),
@@ -171,7 +248,27 @@ void main() {
             clubId: any(named: 'clubId'),
             isIncrement: any(named: 'isIncrement'),
           ),
-        ).called(1);
+        );
+      });
+
+      test('writes no leaderboard entry', () async {
+        final leaderboardRepo = RecordingLeaderboardRepository();
+        final service = SocialActivityService(
+          syncEngine: mockSyncEngine,
+          activityDao: mockActivityDao,
+          leaderboardRepo: leaderboardRepo,
+        );
+
+        await service.logLevelUp(
+          userId: 'u1',
+          userName: 'A',
+          archetype: 'athlete',
+          newLevel: 3,
+          totalXp: 250,
+          clubId: 'my_tribe',
+        );
+
+        expect(leaderboardRepo.updateCalls, isEmpty);
       });
     });
 

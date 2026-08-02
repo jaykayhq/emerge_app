@@ -105,9 +105,12 @@ class SocialActivityService {
     required String attribute,
     int? xpGained,
     int? currentLevel,
+    String? clubId,
   }) async {
     try {
-      final clubId = _getClubIdForArchetype(archetype);
+      // The active tribe (joined club) overrides the archetype's default club
+      // so XP and activity land on the club the user actually belongs to (B8).
+      final resolvedClubId = clubId ?? _getClubIdForArchetype(archetype);
       final id =
           '${userId}_${habitId}_${DateTime.now().millisecondsSinceEpoch}';
       final nowStr = DateTime.now().toUtc().toIso8601String();
@@ -118,7 +121,7 @@ class SocialActivityService {
           id: Value(id),
           userId: Value(userId),
           userName: Value(userName),
-          tribeId: Value(clubId),
+          tribeId: Value(resolvedClubId),
           type: Value(_kActivityTypeHabitComplete),
           description: Value('Completed habit: $habitTitle'),
           value: Value(xpGained ?? 0),
@@ -135,7 +138,7 @@ class SocialActivityService {
           'userId': userId,
           'userName': userName,
           'archetypeId': archetype,
-          'clubId': clubId,
+          'clubId': resolvedClubId,
           'data': {
             'habitId': habitId,
             'habitTitle': habitTitle,
@@ -148,7 +151,8 @@ class SocialActivityService {
 
       // 3. Write to Club Activity Firestore
       await _syncEngine.enqueueSet(
-        collectionPath: '$_kTribesCollection/$clubId/$_kActivityCollection',
+        collectionPath:
+            '$_kTribesCollection/$resolvedClubId/$_kActivityCollection',
         documentId: id,
         data: {
           'type': _kActivityTypeHabitComplete,
@@ -181,7 +185,6 @@ class SocialActivityService {
 
       // 4. Update Leaderboard via Repository
       if (xpGained != null || currentLevel != null) {
-        final clubId = _getClubIdForArchetype(archetype);
         await _leaderboardRepo.updateUserScore(
           userId,
           xp: xpGained ?? 0,
@@ -191,7 +194,7 @@ class SocialActivityService {
             orElse: () => UserArchetype.none,
           ),
           userName: userName,
-          clubId: clubId,
+          clubId: resolvedClubId,
           isIncrement: true,
         );
       }
@@ -210,9 +213,10 @@ class SocialActivityService {
     required String archetype,
     required int newLevel,
     required int totalXp,
+    String? clubId,
   }) async {
     try {
-      final clubId = _getClubIdForArchetype(archetype);
+      final resolvedClubId = clubId ?? _getClubIdForArchetype(archetype);
       final id = '${userId}_level_${DateTime.now().millisecondsSinceEpoch}';
       final nowStr = DateTime.now().toUtc().toIso8601String();
 
@@ -222,7 +226,7 @@ class SocialActivityService {
           id: Value(id),
           userId: Value(userId),
           userName: Value(userName),
-          tribeId: Value(clubId),
+          tribeId: Value(resolvedClubId),
           type: Value(_kActivityTypeLevelUp),
           description: Value('Leveled up to Level $newLevel!'),
           value: Value(totalXp),
@@ -239,7 +243,7 @@ class SocialActivityService {
           'userId': userId,
           'userName': userName,
           'archetypeId': archetype,
-          'clubId': clubId,
+          'clubId': resolvedClubId,
           'data': {'newLevel': newLevel, 'totalXp': totalXp},
           'timestamp': nowStr,
         },
@@ -247,7 +251,8 @@ class SocialActivityService {
 
       // 3. Club Firestore
       await _syncEngine.enqueueSet(
-        collectionPath: '$_kTribesCollection/$clubId/$_kActivityCollection',
+        collectionPath:
+            '$_kTribesCollection/$resolvedClubId/$_kActivityCollection',
         documentId: id,
         data: {
           'type': _kActivityTypeLevelUp,
@@ -268,19 +273,9 @@ class SocialActivityService {
         eventId: id,
       );
 
-      // 4. Update Leaderboard
-      await _leaderboardRepo.updateUserScore(
-        userId,
-        xp: totalXp,
-        level: newLevel,
-        archetype: UserArchetype.values.firstWhere(
-          (e) => e.name.toLowerCase() == archetype.toLowerCase(),
-          orElse: () => UserArchetype.none,
-        ),
-        userName: userName,
-        clubId: clubId,
-        isIncrement: false, // Level up sets absolute values
-      );
+      // No leaderboard write: level is derivable from XP, and the increment
+      // path in logHabitCompletion is the single write shape (SP-G D7).
+      // Writing an absolute score here double-counts the same XP (B7).
     } catch (e) {
       debugPrint('Error logging level up to social activity: $e');
     }
@@ -294,9 +289,10 @@ class SocialActivityService {
     required String challengeId,
     required String challengeTitle,
     required int xpReward,
+    String? clubId,
   }) async {
     try {
-      final clubId = _getClubIdForArchetype(archetype);
+      final resolvedClubId = clubId ?? _getClubIdForArchetype(archetype);
       final id =
           '${userId}_challenge_${challengeId}_${DateTime.now().millisecondsSinceEpoch}';
       final nowStr = DateTime.now().toUtc().toIso8601String();
@@ -307,7 +303,7 @@ class SocialActivityService {
           id: Value(id),
           userId: Value(userId),
           userName: Value(userName),
-          tribeId: Value(clubId),
+          tribeId: Value(resolvedClubId),
           type: Value(_kActivityTypeChallengeComplete),
           description: Value('Completed challenge: $challengeTitle'),
           value: Value(xpReward),
@@ -324,7 +320,7 @@ class SocialActivityService {
           'userId': userId,
           'userName': userName,
           'archetypeId': archetype,
-          'clubId': clubId,
+          'clubId': resolvedClubId,
           'data': {
             'challengeId': challengeId,
             'challengeTitle': challengeTitle,
@@ -336,7 +332,8 @@ class SocialActivityService {
 
       // 3. Club Firestore
       await _syncEngine.enqueueSet(
-        collectionPath: '$_kTribesCollection/$clubId/$_kActivityCollection',
+        collectionPath:
+            '$_kTribesCollection/$resolvedClubId/$_kActivityCollection',
         documentId: id,
         data: {
           'type': _kActivityTypeChallengeComplete,
@@ -373,7 +370,7 @@ class SocialActivityService {
           orElse: () => UserArchetype.none,
         ),
         userName: userName,
-        clubId: clubId,
+        clubId: resolvedClubId,
         isIncrement: true,
       );
     } catch (e) {
@@ -387,9 +384,10 @@ class SocialActivityService {
     required String userName,
     required String archetype,
     required int streakDays,
+    String? clubId,
   }) async {
     try {
-      final clubId = _getClubIdForArchetype(archetype);
+      final resolvedClubId = clubId ?? _getClubIdForArchetype(archetype);
       final id =
           '${userId}_streak_${streakDays}_${DateTime.now().millisecondsSinceEpoch}';
       final nowStr = DateTime.now().toUtc().toIso8601String();
@@ -403,7 +401,7 @@ class SocialActivityService {
           'userId': userId,
           'userName': userName,
           'archetypeId': archetype,
-          'clubId': clubId,
+          'clubId': resolvedClubId,
           'data': {'streakDays': streakDays},
           'timestamp': nowStr,
         },
@@ -411,7 +409,8 @@ class SocialActivityService {
 
       // Club
       await _syncEngine.enqueueSet(
-        collectionPath: '$_kTribesCollection/$clubId/$_kActivityCollection',
+        collectionPath:
+            '$_kTribesCollection/$resolvedClubId/$_kActivityCollection',
         documentId: id,
         data: {
           'type': _kActivityTypeStreakMilestone,
@@ -443,9 +442,10 @@ class SocialActivityService {
     required String archetype,
     required String nodeId,
     required String nodeName,
+    String? clubId,
   }) async {
     try {
-      final clubId = _getClubIdForArchetype(archetype);
+      final resolvedClubId = clubId ?? _getClubIdForArchetype(archetype);
       final id =
           '${userId}_node_${nodeId}_${DateTime.now().millisecondsSinceEpoch}';
       final nowStr = DateTime.now().toUtc().toIso8601String();
@@ -459,7 +459,7 @@ class SocialActivityService {
           'userId': userId,
           'userName': userName,
           'archetypeId': archetype,
-          'clubId': clubId,
+          'clubId': resolvedClubId,
           'data': {'nodeId': nodeId, 'nodeName': nodeName},
           'timestamp': nowStr,
         },
@@ -467,7 +467,8 @@ class SocialActivityService {
 
       // Club
       await _syncEngine.enqueueSet(
-        collectionPath: '$_kTribesCollection/$clubId/$_kActivityCollection',
+        collectionPath:
+            '$_kTribesCollection/$resolvedClubId/$_kActivityCollection',
         documentId: id,
         data: {
           'type': _kActivityTypeNodeClaim,
@@ -499,9 +500,10 @@ class SocialActivityService {
     required String archetype,
     required String badgeId,
     required String badgeName,
+    String? clubId,
   }) async {
     try {
-      final clubId = _getClubIdForArchetype(archetype);
+      final resolvedClubId = clubId ?? _getClubIdForArchetype(archetype);
       final id =
           '${userId}_badge_${badgeId}_${DateTime.now().millisecondsSinceEpoch}';
       final nowStr = DateTime.now().toUtc().toIso8601String();
@@ -515,7 +517,7 @@ class SocialActivityService {
           'userId': userId,
           'userName': userName,
           'archetypeId': archetype,
-          'clubId': clubId,
+          'clubId': resolvedClubId,
           'data': {'badgeId': badgeId, 'badgeName': badgeName},
           'timestamp': nowStr,
         },
@@ -523,7 +525,8 @@ class SocialActivityService {
 
       // Club
       await _syncEngine.enqueueSet(
-        collectionPath: '$_kTribesCollection/$clubId/$_kActivityCollection',
+        collectionPath:
+            '$_kTribesCollection/$resolvedClubId/$_kActivityCollection',
         documentId: id,
         data: {
           'type': _kActivityTypeBadgeEarned,
@@ -554,9 +557,10 @@ class SocialActivityService {
     required String userName,
     required String archetype,
     required String partnerName,
+    String? clubId,
   }) async {
     try {
-      final clubId = _getClubIdForArchetype(archetype);
+      final resolvedClubId = clubId ?? _getClubIdForArchetype(archetype);
       final id = '${userId}_partner_${DateTime.now().millisecondsSinceEpoch}';
       final nowStr = DateTime.now().toUtc().toIso8601String();
 
@@ -568,14 +572,15 @@ class SocialActivityService {
           'userId': userId,
           'userName': userName,
           'archetypeId': archetype,
-          'clubId': clubId,
+          'clubId': resolvedClubId,
           'data': {'partnerName': partnerName},
           'timestamp': nowStr,
         },
       );
 
       await _syncEngine.enqueueSet(
-        collectionPath: '$_kTribesCollection/$clubId/$_kActivityCollection',
+        collectionPath:
+            '$_kTribesCollection/$resolvedClubId/$_kActivityCollection',
         documentId: id,
         data: {
           'type': _kActivityTypePartnerJoined,
@@ -630,9 +635,10 @@ class SocialActivityService {
     required String archetype,
     required String habitTitle,
     required String penalty,
+    String? clubId,
   }) async {
     try {
-      final clubId = _getClubIdForArchetype(archetype);
+      final resolvedClubId = clubId ?? _getClubIdForArchetype(archetype);
       final id = '${userId}_contract_${DateTime.now().millisecondsSinceEpoch}';
       final nowStr = DateTime.now().toUtc().toIso8601String();
 
@@ -644,14 +650,15 @@ class SocialActivityService {
           'userId': userId,
           'userName': userName,
           'archetypeId': archetype,
-          'clubId': clubId,
+          'clubId': resolvedClubId,
           'data': {'habitTitle': habitTitle, 'penalty': penalty},
           'timestamp': nowStr,
         },
       );
 
       await _syncEngine.enqueueSet(
-        collectionPath: '$_kTribesCollection/$clubId/$_kActivityCollection',
+        collectionPath:
+            '$_kTribesCollection/$resolvedClubId/$_kActivityCollection',
         documentId: id,
         data: {
           'type': _kActivityTypeContractCommitted,
