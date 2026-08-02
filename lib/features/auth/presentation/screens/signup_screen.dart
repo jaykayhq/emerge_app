@@ -4,6 +4,7 @@ import 'package:emerge_app/core/presentation/widgets/responsive_layout.dart';
 import 'package:emerge_app/core/theme/app_theme.dart';
 import 'package:emerge_app/core/utils/validators.dart';
 import 'package:emerge_app/features/auth/presentation/providers/auth_providers.dart';
+import 'package:emerge_app/features/auth/presentation/widgets/password_requirement_checklist.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
@@ -258,6 +259,7 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
                 padding: const EdgeInsets.all(24.0),
                 child: Form(
                   key: _formKey,
+                  autovalidateMode: AutovalidateMode.onUserInteraction,
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -395,6 +397,9 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
                         ),
                         validator: AppValidators.validatePassword,
                       ).animate(delay: 350.ms).fadeIn().slideX(begin: 0.02),
+                      PasswordRequirementChecklist(
+                        passwordController: _passwordController,
+                      ),
                       const Gap(16),
 
                       // Confirm Password Field
@@ -673,6 +678,7 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
                           child: SingleChildScrollView(
                             child: Form(
                               key: _formKey,
+                              autovalidateMode: AutovalidateMode.onUserInteraction,
                               // *Simplification*: The original code duplicated the form.
                               // I'll direct the user to look at the mobile layout for simplicity or duplicate the fields if I must match exact functionality.
                               // I will duplicate the fields with the new styling.
@@ -831,6 +837,9 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
                                       .animate(delay: 350.ms)
                                       .fadeIn()
                                       .slideX(begin: 0.02),
+                                  PasswordRequirementChecklist(
+                                    passwordController: _passwordController,
+                                  ),
                                   const Gap(16),
                                   // Confirm
                                   TextFormField(

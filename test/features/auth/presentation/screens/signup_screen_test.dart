@@ -6,6 +6,7 @@ import 'package:mocktail/mocktail.dart';
 import 'package:emerge_app/features/auth/domain/repositories/auth_repository.dart';
 import 'package:emerge_app/features/auth/presentation/providers/auth_providers.dart';
 import 'package:emerge_app/features/auth/presentation/screens/signup_screen.dart';
+import 'package:emerge_app/features/auth/presentation/widgets/password_requirement_checklist.dart';
 import 'package:fpdart/fpdart.dart';
 import 'package:emerge_app/core/error/failure.dart';
 import 'package:emerge_app/features/auth/domain/entities/auth_user.dart';
@@ -116,5 +117,48 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.byType(SnackBar), findsOneWidget);
+  });
+
+  testWidgets('errors appear only after interacting with a field',
+      (tester) async {
+    await setMobileViewport(tester);
+
+    await tester.pumpWidget(_buildTest(mockAuth));
+    await tester.pumpAndSettle();
+
+    // Untouched fields must not show errors on first frame.
+    expect(find.text('Email is required'), findsNothing);
+    expect(find.text('Username is required'), findsNothing);
+
+    // Typing invalid text then leaving the field surfaces the error.
+    await tester.enterText(find.byType(TextFormField).at(0), 'ab');
+    await tester.pumpAndSettle();
+    expect(find.text('Username is required'), findsNothing);
+    expect(
+      find.text('Username must be at least 3 characters long'),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets('password checklist appears while typing, not on confirm field',
+      (tester) async {
+    await setMobileViewport(tester);
+
+    await tester.pumpWidget(_buildTest(mockAuth));
+    await tester.pumpAndSettle();
+
+    expect(find.text('At least 12 characters'), findsNothing);
+
+    // Typing into the password field shows the checklist.
+    await tester.enterText(find.byType(TextFormField).at(2), 'abc');
+    await tester.pumpAndSettle();
+    expect(find.text('At least 12 characters'), findsOneWidget);
+
+    // Typing into the confirm field must NOT show the checklist — the
+    // widget is attached only to the password field.
+    await tester.enterText(find.byType(TextFormField).at(3), 'abc');
+    await tester.pumpAndSettle();
+    expect(find.byType(PasswordRequirementChecklist), findsOneWidget);
+    expect(find.text('Password looks good'), findsNothing);
   });
 }
