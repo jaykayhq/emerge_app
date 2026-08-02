@@ -431,16 +431,15 @@ class DriftTribeRepository implements TribeRepository {
       },
     );
 
-    // Path B: Tribe's contributor subcollection
+    // Path B: Tribe's contributor subcollection.
+    // SP-G D3: omit zero totals — the sync engine applies merge-sets, so
+    // explicit zeros would overwrite existing totals on rejoin.
     await _syncEngine.enqueueSet(
       collectionPath: 'tribes/$tribeId/contributors',
       documentId: userId,
       data: {
         'userId': userId,
         'joinedAt': {'__type__': 'serverTimestamp'},
-        'contributionCount': 0,
-        'totalHabitsCompleted': 0,
-        'totalXpContributed': 0,
       },
     );
 

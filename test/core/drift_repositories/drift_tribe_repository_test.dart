@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:drift/drift.dart' hide isNotNull, isNull;
 import 'package:emerge_app/core/drift/app_database.dart';
@@ -445,6 +447,21 @@ void main() {
       await guardRepository.joinClub('user1', 'tribeA');
       final queue = await db.mutationQueueDao.getAllPending();
       expect(queue.length, 3); // user tribes + contributors + tribe doc
+    });
+
+    test('joinClub contributor payload omits zero totals (preserves on rejoin)',
+        () async {
+      await guardRepository.joinClub('user1', 'tribeA');
+      final queue = await db.mutationQueueDao.getAllPending();
+      final contributorOp = queue.singleWhere(
+          (m) => m.collectionPath == 'tribes/tribeA/contributors');
+      final data = Map<String, dynamic>.from(
+          (contributorOp.dataJson != null
+                  ? jsonDecode(contributorOp.dataJson!)
+                  : {})
+              as Map);
+      expect(data.containsKey('totalXpContributed'), false);
+      expect(data.containsKey('contributionCount'), false);
     });
   });
 }

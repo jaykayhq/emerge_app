@@ -38,12 +38,30 @@ class TribeMembershipService {
         return Left(UnknownFailure('Already in tribe ${existing.tribeId}'));
       }
 
+      // SP-G D1/B2: the Drift-only guard above misses users whose Firestore
+      // membership survived a reinstall. Check Firestore first.
+      final existingDocs = await _firestore
+          .collection('users').doc(userId).collection('tribes')
+          .limit(1)
+          .get();
+      if (existingDocs.docs.isNotEmpty) {
+        return Left(UnknownFailure(
+            'Already in tribe ${existingDocs.docs.first.id}'));
+      }
+
       // 2. Firestore transaction FIRST (authoritative source of truth).
       //    If this fails, Drift is never written — no ghost membership.
       await _firestore.runTransaction((transaction) async {
+        // All reads before any writes (Firestore transaction constraint).
         final tribeRef = _firestore.collection('tribes').doc(tribeId);
         final tribeSnap = await transaction.get(tribeRef);
         if (!tribeSnap.exists) throw Exception('Tribe not found');
+
+        // SP-G D3/B11: rejoining must never wipe previously contributed
+        // totals — read the contributor doc now, branch on existence below.
+        final contributorRef = _firestore
+            .collection('tribes').doc(tribeId).collection('contributors').doc(userId);
+        final contributorSnap = await transaction.get(contributorRef);
 
         final currentCount = (tribeSnap.data()?['memberCount'] as int?) ?? 0;
         transaction.update(tribeRef, {
@@ -63,17 +81,25 @@ class TribeMembershipService {
           },
         );
 
-        // Write contributor doc
-        transaction.set(
-          _firestore.collection('tribes').doc(tribeId).collection('contributors').doc(userId),
-          {
+        // Write contributor doc: preserve existing totals on rejoin, zeroed
+        // create for a first join. The existing doc's fields are spread back
+        // (read in this same transaction, so the write is a safe overwrite) —
+        // fake_cloud_firestore ignores SetOptions.merge in transactions.
+        if (contributorSnap.exists) {
+          transaction.set(contributorRef, {
+            ...(contributorSnap.data() ?? {}),
+            'userId': userId,
+            'joinedAt': FieldValue.serverTimestamp(),
+          });
+        } else {
+          transaction.set(contributorRef, {
             'userId': userId,
             'joinedAt': FieldValue.serverTimestamp(),
             'contributionCount': 0,
             'totalHabitsCompleted': 0,
             'totalXpContributed': 0,
-          },
-        );
+          });
+        }
       });
 
       // 3. Drift write AFTER Firestore succeeds (local cache)
