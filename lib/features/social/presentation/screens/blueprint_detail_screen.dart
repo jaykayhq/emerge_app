@@ -11,7 +11,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:emerge_app/features/monetization/presentation/providers/subscription_provider.dart';
 import 'package:go_router/go_router.dart';
 import 'package:emerge_app/features/social/presentation/widgets/blueprint_adopt_dialog.dart';
-import 'package:cached_network_image/cached_network_image.dart';
+import 'package:emerge_app/features/blueprints/presentation/widgets/blueprint_artwork.dart';
 import 'package:emerge_app/features/blueprints/presentation/providers/blueprint_detail_controller.dart';
 class BlueprintDetailScreen extends ConsumerWidget {
   final Blueprint blueprint;
@@ -75,32 +75,10 @@ class BlueprintDetailScreen extends ConsumerWidget {
         background: Stack(
           fit: StackFit.expand,
           children: [
-            if (blueprint.imageUrl != null)
-              blueprint.imageUrl!.startsWith('images/')
-                  ? Image.asset(blueprint.imageUrl!, fit: BoxFit.cover)
-                  : CachedNetworkImage(
-                      imageUrl: blueprint.imageUrl!,
-                      fit: BoxFit.cover,
-                      placeholder: (context, url) => const Center(child: CircularProgressIndicator()),
-                      errorWidget: (context, url, error) => const Icon(Icons.error),
-                    )
-            else
-              Container(
-                decoration: const BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: [Color(0xFF2A1B4E), Color(0xFF1A0A2E)],
-                  ),
-                ),
-                child: Center(
-                  child: Icon(
-                    Icons.auto_awesome_motion_rounded,
-                    size: 64,
-                    color: Colors.white.withValues(alpha: 0.1),
-                  ),
-                ),
-              ),
+            BlueprintArtwork(
+              imageUrl: blueprint.imageUrl,
+              useCachedNetworkImage: true,
+            ),
             Container(
               decoration: BoxDecoration(
                 gradient: LinearGradient(

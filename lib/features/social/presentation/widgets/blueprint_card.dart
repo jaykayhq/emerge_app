@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:emerge_app/features/blueprints/domain/models/blueprint.dart';
+import 'package:emerge_app/features/blueprints/presentation/widgets/blueprint_artwork.dart';
 import 'package:emerge_app/features/social/presentation/screens/blueprint_detail_screen.dart';
 
 class BlueprintCard extends StatelessWidget {
@@ -32,21 +33,7 @@ class BlueprintCard extends StatelessWidget {
               child: Stack(
                 fit: StackFit.expand,
                 children: [
-                  blueprint.imageUrl != null
-                      ? (blueprint.imageUrl!.startsWith('images/')
-                      ? Image.asset(blueprint.imageUrl!, fit: BoxFit.cover)
-                      : Image.network(blueprint.imageUrl!, fit: BoxFit.cover))
-                      : Container(
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: [
-                          Colors.white.withValues(alpha: 0.1),
-                          Colors.white.withValues(alpha: 0.05),
-                        ],
-                      ),
-                    ),
-                    child: const Icon(Icons.auto_awesome, color: Colors.white10, size: 32),
-                  ),
+                  BlueprintArtwork(imageUrl: blueprint.imageUrl),
                   Container(
                     decoration: BoxDecoration(
                       gradient: LinearGradient(
