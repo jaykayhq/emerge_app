@@ -6,9 +6,7 @@
  * AI insights, and level-up celebrations.
  *
  * Features:
- * - Habit creation welcome notifications
  * - Streak at-risk warnings (respects Do Not Disturb)
- * - Level-up achievement notifications
  * - Daily AI insights
  * - FCM push notifications with archetype-themed messaging
  */
