@@ -301,26 +301,36 @@ class DriftHabitRepository implements HabitRepository {
             );
           }
 
+          // SP-G B12: mirror the credit exactly on user_stats — debit the
+          // full credited amount (base + challenge XP). The split's deltas
+          // are already negated for the undo side.
+          final split = CompletionXpSplit.fromStoredRow(
+            xpGained: last.xpGained,
+            challengeXp: last.challengeXp,
+          );
+          await _syncEngine.enqueueUpdate(
+            collectionPath: 'user_stats',
+            documentId: statsRow.userId,
+            data: buildUserStatsXpPayload(
+              totalDelta: split.userStatsDelta,
+              attr: attr,
+              level: newLevel,
+              streak: newStreak,
+              updatedAt: DateTime.now().toIso8601String(),
+            ),
+          );
+
+          // Tribe totals are NOT debited here (D4 — the server recalc owns
+          // them). Only the per-member contributor record is debited, by
+          // base XP only, matching what the credit path added.
           if (activeTribeId != null) {
-            await _syncEngine.enqueueUpdate(
-              collectionPath: 'tribes',
-              documentId: activeTribeId,
-              data: {
-                'totalXp': {'__type__': 'increment', 'value': -xpToUndo},
-                'totalHabitsCompleted': {
-                  '__type__': 'increment',
-                  'value': -1
-                },
-                'lastStatsSync': {'__type__': 'serverTimestamp'},
-              },
-            );
             await _syncEngine.enqueueUpdate(
               collectionPath: 'tribes/$activeTribeId/contributors',
               documentId: statsRow.userId,
               data: {
                 'totalXpContributed': {
                   '__type__': 'increment',
-                  'value': -xpToUndo
+                  'value': split.tribeDelta,
                 },
                 'totalHabitsCompleted': {
                   '__type__': 'increment',

@@ -311,6 +311,135 @@ void main() {
       },
     );
 
+    // Seeds a same-day-undo scenario: an easy habit (10 base XP) plus a
+    // challenge that completes on the first completion (+5 XP), and
+    // optionally the tribe row the credit/undo paths resolve.
+    Future<Habit> seedSameDayUndo({bool withTribe = false}) async {
+      final habit = createTestHabit(difficulty: HabitDifficulty.easy);
+      await repository.createHabit(habit);
+
+      await db.userStatsDao.upsertStats(
+        UserStatsTableCompanion(
+          userId: Value(userId),
+          displayName: Value('Test User'),
+          archetype: Value('athlete'),
+          totalXp: Value(0),
+          level: Value(1),
+          vitalityXp: Value(0),
+        ),
+      );
+
+      await db.challengeProgressDao.insertFromData(
+        challengeId: 'challenge_1',
+        userId: userId,
+        title: 'Test Challenge',
+        attribute: 'vitality',
+        currentDay: 1,
+        totalDays: 2,
+        status: 'active',
+        xpReward: 5,
+        updatedAt: DateTime.now().toIso8601String(),
+      );
+
+      if (withTribe) {
+        await db.tribeStatsDao.upsertStats(
+          TribeStatsTableCompanion(
+            tribeId: Value('tribeA'),
+            tribeName: Value('Tribe A'),
+            totalXp: Value(0),
+            totalHabitsCompleted: Value(0),
+            totalChallengesCompleted: Value(0),
+            userContributionXp: Value(0),
+            userHabitsCompleted: Value(0),
+            userChallengesCompleted: Value(0),
+            updatedAt: Value(DateTime.now().toIso8601String()),
+          ),
+        );
+      }
+
+      return habit;
+    }
+
+    test(
+      'undo debits Firestore user_stats by the exact credited amount',
+      () async {
+        final habit = await seedSameDayUndo();
+        final today = DateTime.now();
+
+        final result1 = await repository.completeHabit(habit.id, today);
+        expect(result1.isRight(), true);
+
+        final result2 = await repository.completeHabit(habit.id, today);
+        expect(result2.isRight(), true);
+        expect(result2.fold((l) => false, (r) => r), false);
+
+        // Easy habit: 10 base XP + 5 challenge XP = 15 credited. The undo
+        // must debit the identical amount from Firestore user_stats.
+        verify(
+          () => mockSyncEngine.enqueueUpdate(
+            collectionPath: 'user_stats',
+            documentId: userId,
+            data: any(
+              named: 'data',
+              that: containsPair(
+                'avatarStats.totalXp',
+                {'__type__': 'increment', 'value': -15},
+              ),
+            ),
+          ),
+        ).called(1);
+      },
+    );
+
+    test(
+      'undo debits contributors by base XP only (no challenge XP)',
+      () async {
+        final habit = await seedSameDayUndo(withTribe: true);
+        final today = DateTime.now();
+
+        await repository.completeHabit(habit.id, today,
+            activeTribeId: 'tribeA');
+        await repository.completeHabit(habit.id, today,
+            activeTribeId: 'tribeA');
+
+        // Contributors only ever received the 10 base XP; the undo must
+        // debit exactly that, not the full 15 (base + challenge).
+        verify(
+          () => mockSyncEngine.enqueueUpdate(
+            collectionPath: 'tribes/tribeA/contributors',
+            documentId: userId,
+            data: any(
+              named: 'data',
+              that: containsPair(
+                'totalXpContributed',
+                {'__type__': 'increment', 'value': -10},
+              ),
+            ),
+          ),
+        ).called(1);
+      },
+    );
+
+    test('undo no longer enqueues tribes.totalXp writes', () async {
+      final habit = await seedSameDayUndo(withTribe: true);
+      final today = DateTime.now();
+
+      await repository.completeHabit(habit.id, today,
+          activeTribeId: 'tribeA');
+      await repository.completeHabit(habit.id, today,
+          activeTribeId: 'tribeA');
+
+      // Tribe totals are recalc-only (server sums user_stats.totalXp);
+      // the undo path must not write them either.
+      verifyNever(
+        () => mockSyncEngine.enqueueUpdate(
+          collectionPath: 'tribes',
+          documentId: any(named: 'documentId'),
+          data: any(named: 'data', that: contains('totalXp')),
+        ),
+      );
+    });
+
     test('completeHabit() - returns failure if habit not found', () async {
       final result = await repository.completeHabit(
         'non_existent_id',
