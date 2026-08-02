@@ -54,22 +54,30 @@ class BlueprintRepository {
   }
 
   /// Current seed version — bump when seed data changes to force re-seed
-  static const int _seedVersion = 2;
+  static const int _seedVersion = 3;
 
   Future<void> seedBlueprintsIfEmpty() async {
     try {
-      // Check if v2 seed data already exists
-      final v2Check = await _firestore
+      // Skip only when the sentinel doc exists AND already carries v3
+      // curation data. A bare sentinel (v2 seed) must be backfilled.
+      final v3Check = await _firestore
           .collection('blueprints')
           .doc('morning_1')
           .get();
+      final isV3 =
+          v3Check.exists && v3Check.data()?['recommendedArchetypes'] is List;
 
-      if (v2Check.exists) {
+      if (isV3) {
         AppLogger.i(
           'BlueprintRepository: Blueprints already seeded (v$_seedVersion).',
         );
         return;
       }
+
+      // Backfilling v2 docs: merge must not clobber live-doc adoption counts
+      // or creation timestamps, so increment(0) is a no-op for counters and
+      // createdAt is left untouched on existing docs.
+      final backfilling = v3Check.exists;
 
       // Note: Old archetype blueprints (v1) remain in Firestore but are
       // filtered out in the UI by allowed categories list. Server-side
@@ -90,6 +98,7 @@ class BlueprintRepository {
             'Drink 500ml Water',
             '10 Min Sunlight Exposure',
           ],
+          recommendedArchetypes: const ['athlete', 'stoic'],
         ),
         _createSeed(
           id: 'morning_2',
@@ -100,6 +109,7 @@ class BlueprintRepository {
               'https://images.unsplash.com/photo-1513506003901-1e6a229e2d15?w=800',
           difficulty: BlueprintDifficulty.intermediate,
           habits: ['Cold Shower', 'Stretch Routine', 'High-Protein Breakfast'],
+          recommendedArchetypes: const ['athlete'],
         ),
         _createSeed(
           id: 'morning_3',
@@ -110,6 +120,7 @@ class BlueprintRepository {
               'https://images.unsplash.com/photo-1545205597-3d9d02e29597?w=800',
           difficulty: BlueprintDifficulty.beginner,
           habits: ['5 Min Meditation', 'Gratitude Journal', 'Herbal Tea'],
+          recommendedArchetypes: const ['stoic'],
         ),
         _createSeed(
           id: 'morning_4',
@@ -120,6 +131,7 @@ class BlueprintRepository {
               'https://images.unsplash.com/photo-1490818387583-1baba5e638af?w=800',
           difficulty: BlueprintDifficulty.advanced,
           habits: ['Wake at 5 AM', 'Deep Work Block', 'No Phone for 1 Hour'],
+          recommendedArchetypes: const ['scholar', 'zealot'],
         ),
         _createSeed(
           id: 'morning_5',
@@ -130,6 +142,7 @@ class BlueprintRepository {
               'https://images.unsplash.com/photo-1552196563-55cd4e45efb3?w=800',
           difficulty: BlueprintDifficulty.intermediate,
           habits: ['Dynamic Stretching', 'Foam Rolling', 'Posture Check'],
+          recommendedArchetypes: const ['athlete'],
         ),
 
         // PRODUCTIVITY
@@ -142,6 +155,7 @@ class BlueprintRepository {
               'https://images.unsplash.com/photo-1483058712412-4245e9b90334?w=800',
           difficulty: BlueprintDifficulty.advanced,
           habits: ['90 Min Deep Work', 'Phone on DND', 'Task Batching'],
+          recommendedArchetypes: const ['scholar', 'zealot'],
         ),
         _createSeed(
           id: 'productivity_2',
@@ -157,6 +171,7 @@ class BlueprintRepository {
             'Prioritize by Importance',
             'Complete One at a Time',
           ],
+          recommendedArchetypes: const ['scholar', 'zealot'],
         ),
         _createSeed(
           id: 'productivity_3',
@@ -171,6 +186,7 @@ class BlueprintRepository {
             'Time Block Calendar',
             'Review & Reflect',
           ],
+          recommendedArchetypes: const ['scholar', 'zealot'],
         ),
         _createSeed(
           id: 'productivity_4',
@@ -181,6 +197,7 @@ class BlueprintRepository {
               'https://images.unsplash.com/photo-1517694712202-14dd9538aa97?w=800',
           difficulty: BlueprintDifficulty.intermediate,
           habits: ['Unsubscribe from Junk', 'Organize Files', 'App Purge'],
+          recommendedArchetypes: const ['stoic', 'scholar'],
         ),
         _createSeed(
           id: 'productivity_5',
@@ -191,6 +208,7 @@ class BlueprintRepository {
               'https://images.unsplash.com/photo-1499750310107-5fef28a66643?w=800',
           difficulty: BlueprintDifficulty.beginner,
           habits: ['25 Min Focus Sprint', '5 Min Break', 'Track Pomodoros'],
+          recommendedArchetypes: const ['scholar', 'athlete'],
         ),
 
         // FITNESS
@@ -203,6 +221,7 @@ class BlueprintRepository {
               'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=800',
           difficulty: BlueprintDifficulty.beginner,
           habits: ['Push-Ups', 'Bodyweight Squats', 'Plank Hold'],
+          recommendedArchetypes: const ['athlete'],
         ),
         _createSeed(
           id: 'fitness_2',
@@ -213,6 +232,7 @@ class BlueprintRepository {
               'https://images.unsplash.com/photo-1476480862126-209bfaa8edc8?w=800',
           difficulty: BlueprintDifficulty.intermediate,
           habits: ['20 Min Run', 'Jump Rope', 'Cool Down Stretch'],
+          recommendedArchetypes: const ['athlete'],
         ),
         _createSeed(
           id: 'fitness_3',
@@ -223,6 +243,7 @@ class BlueprintRepository {
               'https://images.unsplash.com/photo-1571019614242-c5c5dee9f50b?w=800',
           difficulty: BlueprintDifficulty.beginner,
           habits: ['Hamstring Stretch', 'Hip Openers', 'Spine Twists'],
+          recommendedArchetypes: const ['athlete', 'stoic'],
         ),
         _createSeed(
           id: 'fitness_4',
@@ -233,6 +254,7 @@ class BlueprintRepository {
               'https://images.unsplash.com/photo-1532029837206-abbe2b7620e3?w=800',
           difficulty: BlueprintDifficulty.advanced,
           habits: ['Deadlifts', 'Overhead Press', 'Pull-Ups'],
+          recommendedArchetypes: const ['athlete', 'zealot'],
         ),
         _createSeed(
           id: 'fitness_5',
@@ -243,6 +265,7 @@ class BlueprintRepository {
               'https://images.unsplash.com/photo-1517836357463-d25dfeac3438?w=800',
           difficulty: BlueprintDifficulty.beginner,
           habits: ['Brisk Walk', 'Light Yoga', 'Hydration Focus'],
+          recommendedArchetypes: const ['athlete', 'stoic'],
         ),
 
         // MINDFULNESS
@@ -255,6 +278,7 @@ class BlueprintRepository {
               'https://images.unsplash.com/photo-1508672019048-805c876b67e2?w=800',
           difficulty: BlueprintDifficulty.beginner,
           habits: ['5 Min Breath Focus', 'Body Scan', 'Loving Kindness'],
+          recommendedArchetypes: const ['stoic'],
         ),
         _createSeed(
           id: 'mindfulness_2',
@@ -265,6 +289,7 @@ class BlueprintRepository {
               'https://images.unsplash.com/photo-1499209974431-9dddcece7f88?w=800',
           difficulty: BlueprintDifficulty.advanced,
           habits: ['No Screens for 4 Hours', 'Nature Walk', 'Analog Activity'],
+          recommendedArchetypes: const ['stoic', 'scholar'],
         ),
         _createSeed(
           id: 'mindfulness_3',
@@ -275,6 +300,7 @@ class BlueprintRepository {
               'https://images.unsplash.com/photo-1489710437720-ebb67ec84dd2?w=800',
           difficulty: BlueprintDifficulty.beginner,
           habits: ['Write 3 Gratitudes', 'Thank Someone', 'Savor a Moment'],
+          recommendedArchetypes: const ['stoic', 'zealot'],
         ),
         _createSeed(
           id: 'mindfulness_4',
@@ -285,6 +311,7 @@ class BlueprintRepository {
               'https://images.unsplash.com/photo-1506126613408-eca07ce68773?w=800',
           difficulty: BlueprintDifficulty.intermediate,
           habits: ['Box Breathing', 'Progressive Relaxation', 'Journaling'],
+          recommendedArchetypes: const ['stoic'],
         ),
         _createSeed(
           id: 'mindfulness_5',
@@ -300,6 +327,7 @@ class BlueprintRepository {
             'Tidy Your Space',
             'Read Fiction',
           ],
+          recommendedArchetypes: const ['stoic', 'scholar'],
         ),
 
         // LEARNING
@@ -312,6 +340,7 @@ class BlueprintRepository {
               'https://images.unsplash.com/photo-1456513080510-7bf3a84b82f8?w=800',
           difficulty: BlueprintDifficulty.beginner,
           habits: ['Read 20 Pages', 'Take Notes', 'Summarize Key Idea'],
+          recommendedArchetypes: const ['scholar'],
         ),
         _createSeed(
           id: 'learning_2',
@@ -326,6 +355,7 @@ class BlueprintRepository {
             'Track Progress',
             'Review Mistakes',
           ],
+          recommendedArchetypes: const ['scholar', 'creator'],
         ),
         _createSeed(
           id: 'learning_3',
@@ -340,6 +370,7 @@ class BlueprintRepository {
             'Read One Article',
             'Discuss What You Learned',
           ],
+          recommendedArchetypes: const ['scholar', 'creator'],
         ),
         _createSeed(
           id: 'learning_4',
@@ -354,6 +385,7 @@ class BlueprintRepository {
             'Teach Someone',
             'Active Recall Session',
           ],
+          recommendedArchetypes: const ['scholar'],
         ),
         _createSeed(
           id: 'learning_5',
@@ -365,16 +397,24 @@ class BlueprintRepository {
               'https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=800',
           difficulty: BlueprintDifficulty.advanced,
           habits: ['Watch One Lesson', 'Do the Assignment', 'Write Reflection'],
+          recommendedArchetypes: const ['scholar', 'zealot'],
         ),
       ];
 
       final batch = _firestore.batch();
       for (final bp in seedData) {
         final docRef = _firestore.collection('blueprints').doc(bp.id);
-        batch.set(docRef, bp.toMap());
+        final data = bp.toMap();
+        if (backfilling) {
+          data['adoptionCount'] = FieldValue.increment(0);
+          data.remove('createdAt');
+        }
+        batch.set(docRef, data, SetOptions(merge: true));
       }
       await batch.commit();
-      AppLogger.i('BlueprintRepository: Seeding complete.');
+      AppLogger.i(
+        'BlueprintRepository: Seeding complete (v$_seedVersion).',
+      );
     } catch (e) {
       AppLogger.e('BlueprintRepository: Seeding failed', e);
     }
@@ -388,6 +428,7 @@ class BlueprintRepository {
     required String image,
     required BlueprintDifficulty difficulty,
     required List<String> habits,
+    required List<String> recommendedArchetypes,
   }) {
     return Blueprint(
       id: id,
@@ -401,6 +442,7 @@ class BlueprintRepository {
       imageUrl: image,
       category: category,
       difficulty: difficulty,
+      recommendedArchetypes: recommendedArchetypes,
     );
   }
 
@@ -457,6 +499,7 @@ class BlueprintRepository {
           difficulty: BlueprintDifficulty.intermediate,
           isCreatorBlueprint: true,
           specialityTags: const ['Deep Work', 'Reading', 'Note Systems'],
+          recommendedArchetypes: const ['scholar', 'zealot'],
         ),
         Blueprint(
           id: 'cb_marcus_morning',
@@ -490,6 +533,7 @@ class BlueprintRepository {
           difficulty: BlueprintDifficulty.intermediate,
           isCreatorBlueprint: true,
           specialityTags: const ['Strength', 'Mobility', 'Recovery'],
+          recommendedArchetypes: const ['athlete'],
         ),
         Blueprint(
           id: 'cb_sora_creative',
@@ -523,6 +567,7 @@ class BlueprintRepository {
           difficulty: BlueprintDifficulty.beginner,
           isCreatorBlueprint: true,
           specialityTags: const ['Creative', 'Studio', 'Constraints'],
+          recommendedArchetypes: const ['creator'],
         ),
         Blueprint(
           id: 'cb_julian_calm',
@@ -556,6 +601,7 @@ class BlueprintRepository {
           difficulty: BlueprintDifficulty.beginner,
           isCreatorBlueprint: true,
           specialityTags: const ['Mindfulness', 'Journaling', 'Equanimity'],
+          recommendedArchetypes: const ['stoic'],
         ),
         Blueprint(
           id: 'cb_naia_devotion',
@@ -589,6 +635,7 @@ class BlueprintRepository {
           difficulty: BlueprintDifficulty.intermediate,
           isCreatorBlueprint: true,
           specialityTags: const ['Devotion', 'Discipline', 'Service'],
+          recommendedArchetypes: const ['zealot'],
         ),
         Blueprint(
           id: 'cb_elias_studio',
@@ -622,6 +669,7 @@ class BlueprintRepository {
           difficulty: BlueprintDifficulty.beginner,
           isCreatorBlueprint: true,
           specialityTags: const ['Sketching', 'Visual', 'Practice'],
+          recommendedArchetypes: const ['creator'],
         ),
       ];
 
