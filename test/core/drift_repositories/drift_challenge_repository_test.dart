@@ -13,6 +13,7 @@ import 'mocks.dart';
 void main() {
   late AppDatabase db;
   late MockSyncEngine mockSyncEngine;
+  late MockSocialActivityService mockSocialService;
   late DriftChallengeRepository repository;
   const userId = 'test_user_456';
 
@@ -38,6 +39,7 @@ void main() {
   setUp(() {
     db = createTestDatabase();
     mockSyncEngine = MockSyncEngine();
+    mockSocialService = MockSocialActivityService();
 
     when(
       () => mockSyncEngine.enqueueSet(
@@ -55,10 +57,23 @@ void main() {
       ),
     ).thenAnswer((_) async {});
 
+    when(
+      () => mockSocialService.logChallengeComplete(
+        userId: any(named: 'userId'),
+        userName: any(named: 'userName'),
+        archetype: any(named: 'archetype'),
+        challengeId: any(named: 'challengeId'),
+        challengeTitle: any(named: 'challengeTitle'),
+        xpReward: any(named: 'xpReward'),
+        clubId: any(named: 'clubId'),
+      ),
+    ).thenAnswer((_) async {});
+
     repository = DriftChallengeRepository(
       db,
       LocalGameLoopEngine(),
       mockSyncEngine,
+      mockSocialService,
     );
   });
 
@@ -215,6 +230,137 @@ void main() {
 
       final finalStats = await db.userStatsDao.getStats(userId);
       expect(finalStats?.totalXp, greaterThan(initialXp));
+    });
+
+    test('completing a challenge credits XP to Firestore user_stats', () async {
+      await db.challengeProgressDao.insertFromData(
+        challengeId: 'c1',
+        userId: userId,
+        title: 'T',
+        attribute: 'vitality',
+        totalDays: 3,
+        xpReward: 50,
+        joinedAt: DateTime.now().toIso8601String(),
+        updatedAt: DateTime.now().toIso8601String(),
+      );
+
+      await db.userStatsDao.upsertStats(
+        UserStatsTableCompanion(
+          userId: Value(userId),
+          displayName: Value('Test User'),
+          totalXp: Value(0),
+          level: Value(1),
+          vitalityXp: Value(0),
+        ),
+      );
+
+      // One call per day — the engine advances a single day per call
+      // (processChallengeProgress ignores the progress argument).
+      await repository.updateProgress(userId, 'c1', 1);
+      await repository.updateProgress(userId, 'c1', 2);
+      final result = await repository.updateProgress(userId, 'c1', 3);
+
+      expect(result.isRight(), true);
+      verify(
+        () => mockSyncEngine.enqueueUpdate(
+          collectionPath: 'user_stats',
+          documentId: userId,
+          data: any(
+            named: 'data',
+            that: containsPair(
+              'avatarStats.totalXp',
+              {'__type__': 'increment', 'value': 50},
+            ),
+          ),
+        ),
+      ).called(1);
+    });
+
+    test(
+      'completing a challenge calls logChallengeComplete with the active tribe',
+      () async {
+        await db.challengeProgressDao.insertFromData(
+          challengeId: 'c1',
+          userId: userId,
+          title: 'T',
+          attribute: 'vitality',
+          totalDays: 3,
+          xpReward: 50,
+          joinedAt: DateTime.now().toIso8601String(),
+          updatedAt: DateTime.now().toIso8601String(),
+        );
+
+        await db.userStatsDao.upsertStats(
+          UserStatsTableCompanion(
+            userId: Value(userId),
+            displayName: Value('Test User'),
+            totalXp: Value(0),
+            level: Value(1),
+            vitalityXp: Value(0),
+          ),
+        );
+
+        await db.tribeMembershipDao.upsertMembership(
+          UserTribeTableCompanion(
+            userId: Value(userId),
+            tribeId: Value('tribeA'),
+            membershipType: const Value('archetype'),
+            joinedAt: Value(DateTime.now().toIso8601String()),
+            isActive: const Value(true),
+          ),
+        );
+
+        await repository.updateProgress(userId, 'c1', 1);
+        await repository.updateProgress(userId, 'c1', 2);
+        await repository.updateProgress(userId, 'c1', 3);
+
+        verify(
+          () => mockSocialService.logChallengeComplete(
+            userId: userId,
+            userName: any(named: 'userName'),
+            archetype: any(named: 'archetype'),
+            challengeId: 'c1',
+            challengeTitle: any(named: 'challengeTitle'),
+            xpReward: 50,
+            clubId: 'tribeA',
+          ),
+        ).called(1);
+      },
+    );
+
+    test('partial progress does not credit XP', () async {
+      await db.challengeProgressDao.insertFromData(
+        challengeId: 'c1',
+        userId: userId,
+        title: 'T',
+        attribute: 'vitality',
+        totalDays: 3,
+        xpReward: 50,
+        joinedAt: DateTime.now().toIso8601String(),
+        updatedAt: DateTime.now().toIso8601String(),
+      );
+
+      await db.userStatsDao.upsertStats(
+        UserStatsTableCompanion(
+          userId: Value(userId),
+          displayName: Value('Test User'),
+          totalXp: Value(0),
+          level: Value(1),
+          vitalityXp: Value(0),
+        ),
+      );
+
+      // Two of three days — not complete, no user_stats credit.
+      await repository.updateProgress(userId, 'c1', 1);
+      await repository.updateProgress(userId, 'c1', 2);
+
+      verifyNever(
+        () => mockSyncEngine.enqueueUpdate(
+          collectionPath: 'user_stats',
+          documentId: userId,
+          data: any(named: 'data'),
+        ),
+      );
     });
 
     test('completeChallenge() marks as completed and calls sync', () async {

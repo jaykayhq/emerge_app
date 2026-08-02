@@ -2,18 +2,26 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:emerge_app/core/drift/database.dart';
 import 'package:emerge_app/core/error/failure.dart';
 import 'package:emerge_app/core/game_loop/game_loop_engine.dart';
+import 'package:emerge_app/core/sync/sync_engine.dart';
+import 'package:emerge_app/features/gamification/domain/services/completion_xp_split.dart';
 import 'package:emerge_app/features/social/domain/models/challenge.dart';
 import 'package:emerge_app/features/social/domain/models/challenge_catalog.dart';
 import 'package:emerge_app/features/social/domain/repositories/challenge_repository.dart';
-import 'package:emerge_app/core/sync/sync_engine.dart';
+import 'package:emerge_app/features/social/domain/services/club_activity_service.dart';
 import 'package:fpdart/fpdart.dart';
 
 class DriftChallengeRepository implements ChallengeRepository {
   final AppDatabase _db;
   final LocalGameLoopEngine _engine;
   final EnhancedSyncEngine _syncEngine;
+  final SocialActivityService _socialService;
 
-  DriftChallengeRepository(this._db, this._engine, this._syncEngine);
+  DriftChallengeRepository(
+    this._db,
+    this._engine,
+    this._syncEngine,
+    this._socialService,
+  );
 
   @override
   Future<Either<Failure, Unit>> joinChallenge(
@@ -101,6 +109,40 @@ class DriftChallengeRepository implements ChallengeRepository {
             result.xpReward!,
             newLevel,
             newTotal,
+          );
+
+          // Firestore user_stats reward — same shape as the local Drift
+          // updateAttributeXp write so credit and server state stay aligned
+          // (SP-G D5/D6).
+          final userName = stats.displayName ?? userId;
+          final nowStr = DateTime.now().toIso8601String();
+          await _syncEngine.enqueueUpdate(
+            collectionPath: 'user_stats',
+            documentId: userId,
+            data: buildUserStatsXpPayload(
+              totalDelta: result.xpReward!,
+              attr: 'vitality',
+              level: newLevel,
+              streak: stats.streak,
+              updatedAt: nowStr,
+            ),
+          );
+
+          // Active tribe for leaderboard attribution (local read —
+          // offline-safe; the service falls back to archetype when null).
+          final membership = await _db.tribeMembershipDao
+              .watchActiveMembership(userId)
+              .first;
+          final activeTribeId = membership?.tribeId;
+
+          await _socialService.logChallengeComplete(
+            userId: userId,
+            userName: userName,
+            archetype: stats.archetype ?? 'none',
+            challengeId: challengeId,
+            challengeTitle: challenge.title ?? '',
+            xpReward: result.xpReward!,
+            clubId: activeTribeId,
           );
         }
       }

@@ -17,7 +17,8 @@ final challengeRepositoryProvider = Provider<ChallengeRepository>((ref) {
   final db = ref.watch(appDatabaseProvider);
   final engine = LocalGameLoopEngine();
   final syncEngine = ref.watch(enhancedSyncEngineProvider);
-  return DriftChallengeRepository(db, engine, syncEngine);
+  final socialService = ref.watch(socialActivityServiceProvider);
+  return DriftChallengeRepository(db, engine, syncEngine, socialService);
 });
 
 @Riverpod(keepAlive: true)
