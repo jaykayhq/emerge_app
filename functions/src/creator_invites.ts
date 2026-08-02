@@ -177,3 +177,70 @@ export const redeemCreatorInvite = onCall(async (request) => {
 
   return { ok: true, uid };
 });
+
+export const ensureCreatorTribe = onCall(async (request) => {
+  if (!request.auth) {
+    throw new HttpsError("unauthenticated", "User must be logged in.");
+  }
+  const uid = request.auth.uid;
+  if (!(await isVerifiedCreator(uid))) {
+    throw new HttpsError(
+      "permission-denied",
+      "Only verified creators can create tribes."
+    );
+  }
+  const data = request.data ?? {};
+  const blueprintId =
+    typeof data.blueprintId === "string" && data.blueprintId.trim() !== ""
+      ? data.blueprintId.trim()
+      : null;
+
+  const existing = await db
+    .collection("tribes")
+    .where("createdBy", "==", uid)
+    .where("type", "==", "creator")
+    .limit(1)
+    .get();
+
+  let tribeId: string;
+  let created = false;
+  if (existing.empty) {
+    const profile = await db.collection("creator_profiles").doc(uid).get();
+    const displayName = (profile.data()?.displayName as string) ?? "Creator";
+    const archetype = (profile.data()?.archetype as string) ?? "none";
+    const tribeRef = db.collection("tribes").doc();
+    const tribeDoc: Record<string, unknown> = {
+      name: `${displayName}'s Tribe`,
+      type: "creator",
+      createdBy: uid,
+      members: [uid],
+      memberCount: 1,
+      description: "",
+      createdAt: admin.firestore.FieldValue.serverTimestamp(),
+    };
+    if (archetype && archetype !== "none") {
+      tribeDoc.archetypeId = archetype;
+    }
+    await tribeRef.set(tribeDoc);
+    tribeId = tribeRef.id;
+    created = true;
+    await db
+      .collection("creator_profiles")
+      .doc(uid)
+      .set({ tribeId, ownerId: uid }, { merge: true });
+  } else {
+    tribeId = existing.docs[0].id;
+  }
+
+  if (blueprintId) {
+    const bp = await db.collection("blueprints").doc(blueprintId).get();
+    if (bp.exists && bp.data()?.creatorUserId === uid) {
+      await db
+        .collection("blueprints")
+        .doc(blueprintId)
+        .set({ creatorTribeId: tribeId }, { merge: true });
+    }
+  }
+
+  return { tribeId, created };
+});

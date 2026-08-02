@@ -14,12 +14,20 @@ const docDelete = jest.fn();
 const queryGet = jest.fn();
 const runTransaction = jest.fn();
 const collection = jest.fn((name: string) => ({
-  doc: jest.fn((id: string) => ({
+  doc: jest.fn((id?: string) => ({
+    id: id ?? "tribe-auto-1", // deterministic auto-id for .doc() with no arg
     get: jest.fn(() => docGet(name, id)),
     set: docSet,
     delete: docDelete,
   })),
-  where: jest.fn(() => ({ get: queryGet })),
+  where: jest.fn(() => ({
+    where: jest.fn(() => ({
+      limit: jest.fn(() => ({ get: queryGet })),
+      get: queryGet,
+    })),
+    limit: jest.fn(() => ({ get: queryGet })),
+    get: queryGet,
+  })),
 }));
 
 const firestoreMock = jest.fn(() => ({ collection, runTransaction }));
@@ -61,11 +69,18 @@ beforeEach(() => {
   docGet.mockImplementation((name: string, id: string) =>
     Promise.resolve(
       name === "creator_profiles" && id === "u1"
-        ? { exists: true, data: () => ({ isVerifiedCreator: true }) }
+        ? {
+            exists: true,
+            data: () => ({
+              isVerifiedCreator: true,
+              displayName: "Aria",
+              archetype: "none",
+            }),
+          }
         : { exists: false, data: () => null }
     )
   );
-  queryGet.mockResolvedValue({ size: 0, docs: [], forEach: jest.fn() });
+  queryGet.mockResolvedValue({ size: 0, empty: true, docs: [], forEach: jest.fn() });
 });
 
 describe("generateCreatorInviteCode", () => {
@@ -222,5 +237,102 @@ describe("redeemCreatorInvite", () => {
       "u2",
       expect.objectContaining({ role: "creator" })
     );
+  });
+});
+
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const { ensureCreatorTribe } = require("../src/creator_invites");
+
+describe("ensureCreatorTribe", () => {
+  it("rejects unauthenticated calls", async () => {
+    await expect(
+      ensureCreatorTribe.run({ auth: undefined, data: {} })
+    ).rejects.toHaveProperty("code", "unauthenticated");
+  });
+
+  it("rejects unverified creators", async () => {
+    docGet.mockImplementation(() =>
+      Promise.resolve({ exists: false, data: () => null })
+    );
+    await expect(
+      ensureCreatorTribe.run({ auth: { uid: "u1" }, data: {} })
+    ).rejects.toHaveProperty("code", "permission-denied");
+  });
+
+  it("creates a tribe on first publish and links the blueprint", async () => {
+    // u1 verified (default mock), no existing tribe, blueprint owned by u1.
+    docGet.mockImplementation((name: string, id: string) =>
+      Promise.resolve(
+        name === "creator_profiles" && id === "u1"
+          ? {
+              exists: true,
+              data: () => ({ isVerifiedCreator: true, displayName: "Aria", archetype: "none" }),
+            }
+          : name === "blueprints" && id === "bp1"
+            ? { exists: true, data: () => ({ creatorUserId: "u1" }) }
+            : { exists: false, data: () => null }
+      )
+    );
+
+    const result = await ensureCreatorTribe.run({
+      auth: { uid: "u1" },
+      data: { blueprintId: "bp1" },
+    });
+    expect(result.tribeId).toBeTruthy();
+    expect(result.created).toBe(true);
+    const tribeWrite = docSet.mock.calls.find((args) =>
+      args.some(
+        (a: unknown) =>
+          a !== null &&
+          typeof a === "object" &&
+          (a as Record<string, unknown>).type === "creator"
+      )
+    );
+    expect(tribeWrite).toBeDefined();
+    const tribeData = tribeWrite!.find(
+      (a: unknown) =>
+        a !== null &&
+        typeof a === "object" &&
+        (a as Record<string, unknown>).type === "creator"
+    ) as Record<string, unknown>;
+    expect(tribeData.name).toBe("Aria's Tribe");
+    expect(tribeData.createdBy).toBe("u1");
+    expect(tribeData.members).toEqual(["u1"]);
+    expect(tribeData.memberCount).toBe(1);
+    // profile merge: creator_profiles/{uid}.tribeId
+    const profileMerge = docSet.mock.calls.find((args) =>
+      args.some(
+        (a: unknown) =>
+          a !== null &&
+          typeof a === "object" &&
+          (a as Record<string, unknown>).tribeId === result.tribeId &&
+          (a as Record<string, unknown>).ownerId === "u1"
+      )
+    );
+    expect(profileMerge).toBeDefined();
+    // blueprint linked
+    const bpLink = docSet.mock.calls.find((args) =>
+      args.some(
+        (a: unknown) =>
+          a !== null &&
+          typeof a === "object" &&
+          (a as Record<string, unknown>).creatorTribeId === result.tribeId
+      )
+    );
+    expect(bpLink).toBeDefined();
+  });
+
+  it("reuses an existing tribe on second publish", async () => {
+    queryGet.mockResolvedValue({
+      empty: false,
+      docs: [{ id: "tribe-1", data: () => ({}) }],
+      size: 1,
+      forEach: jest.fn((cb: (doc: { id: string; data: () => object }) => void) =>
+        cb({ id: "tribe-1", data: () => ({}) })
+      ),
+    });
+    const result = await ensureCreatorTribe.run({ auth: { uid: "u1" }, data: {} });
+    expect(result.tribeId).toBe("tribe-1");
+    expect(result.created).toBe(false);
   });
 });
