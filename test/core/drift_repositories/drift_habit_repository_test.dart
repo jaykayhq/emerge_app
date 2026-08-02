@@ -85,6 +85,7 @@ void main() {
         attribute: any(named: 'attribute'),
         xpGained: any(named: 'xpGained'),
         currentLevel: any(named: 'currentLevel'),
+        clubId: any(named: 'clubId'),
       ),
     ).thenAnswer((_) async {});
 
@@ -624,6 +625,76 @@ void main() {
             attribute: any(named: 'attribute'),
             xpGained: any(named: 'xpGained'),
             currentLevel: any(named: 'currentLevel'),
+            clubId: any(named: 'clubId'),
+          ),
+        ).called(1);
+      },
+    );
+
+    test(
+      'completeHabit passes the active tribe as clubId to social logging',
+      () async {
+        final habit = createTestHabit();
+        await repository.createHabit(habit);
+
+        await db.userStatsDao.upsertStats(
+          UserStatsTableCompanion(
+            userId: Value(userId),
+            displayName: Value('Test User'),
+            archetype: Value('athlete'),
+            totalXp: Value(0),
+            level: Value(1),
+            vitalityXp: Value(0),
+          ),
+        );
+
+        // The completion path resolves its tribeId from the tribe stats row.
+        await db.tribeStatsDao.upsertStats(
+          TribeStatsTableCompanion(
+            tribeId: Value('tribeA'),
+            tribeName: Value('Tribe A'),
+            totalXp: Value(0),
+            totalHabitsCompleted: Value(0),
+            totalChallengesCompleted: Value(0),
+            userContributionXp: Value(0),
+            userHabitsCompleted: Value(0),
+            userChallengesCompleted: Value(0),
+            updatedAt: Value(DateTime.now().toIso8601String()),
+          ),
+        );
+
+        // Active membership mirrors the real flow: completions attribute to
+        // the tribe the user actually belongs to (SP-G B8).
+        await db.tribeMembershipDao.upsertMembership(
+          UserTribeTableData(
+            userId: userId,
+            tribeId: 'tribeA',
+            membershipType: 'member',
+            joinedAt: DateTime.now().toIso8601String(),
+            isActive: true,
+          ),
+        );
+
+        final result = await repository.completeHabit(
+          habit.id,
+          DateTime.now(),
+          activeTribeId: 'tribeA',
+        );
+
+        expect(result.isRight(), true);
+
+        verify(
+          () => mockSocialService.logHabitCompletion(
+            userId: userId,
+            userName: any(named: 'userName'),
+            archetype: any(named: 'archetype'),
+            habitId: habit.id,
+            habitTitle: any(named: 'habitTitle'),
+            streakDay: any(named: 'streakDay'),
+            attribute: any(named: 'attribute'),
+            xpGained: any(named: 'xpGained'),
+            currentLevel: any(named: 'currentLevel'),
+            clubId: 'tribeA',
           ),
         ).called(1);
       },

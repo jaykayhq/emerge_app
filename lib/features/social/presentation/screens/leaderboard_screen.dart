@@ -142,6 +142,7 @@ class _TribeLeaderboardTab extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final userStatsAsync = ref.watch(userStatsStreamProvider);
+    final membershipAsync = ref.watch(activeMembershipProvider);
 
     return userStatsAsync.when(
       data: (profile) {
@@ -154,7 +155,11 @@ class _TribeLeaderboardTab extends ConsumerWidget {
           );
         }
 
-        final clubId = _archetypeToClubId(profile.archetype.name);
+        // Attribute to the ACTIVE tribe the user belongs to; the archetype
+        // club remains the fallback for users with no membership yet (B8).
+        final membership = membershipAsync.value;
+        final clubId =
+            membership?.tribeId ?? _archetypeToClubId(profile.archetype.name);
         final leaderboardAsync = ref.watch(clubLeaderboardProvider(clubId));
 
         return Column(

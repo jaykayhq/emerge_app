@@ -484,6 +484,7 @@ class DriftHabitRepository implements HabitRepository {
         attribute: attr,
         xpGained: result.xpGained,
         currentLevel: newLevel,
+        clubId: tribeId,
       );
 
       // Enqueue user stats sync via update to preserve other fields (markers ensure atomic changes)
