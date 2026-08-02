@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
-import 'package:go_router/go_router.dart';
 import 'package:emerge_app/core/theme/emerge_colors.dart';
 import 'package:emerge_app/features/social/domain/models/tribe.dart';
 import 'package:emerge_app/features/social/presentation/providers/tribe_blueprints_provider.dart';
@@ -14,10 +13,12 @@ class TribeBlueprintsSection extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final archetypeId = tribe.archetypeId ?? '';
-    if (archetypeId.isEmpty) return const SizedBox.shrink();
-
-    final blueprintsAsync = ref.watch(tribeBlueprintsProvider(archetypeId));
+    // Creator tribes carry no archetype id, so they surface the tribe's own
+    // published blueprints; archetype clubs get their curated set instead.
+    final archetypeId = tribe.archetypeId;
+    final blueprintsAsync = archetypeId != null
+        ? ref.watch(tribeBlueprintsProvider(archetypeId))
+        : ref.watch(tribeCreatorBlueprintsProvider(tribe.id));
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -36,17 +37,6 @@ class TribeBlueprintsSection extends ConsumerWidget {
                 ),
               ),
               const Spacer(),
-              GestureDetector(
-                onTap: () => context.push('/social/discover'),
-                child: const Text(
-                  'Discover →',
-                  style: TextStyle(
-                    color: Colors.white70,
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ),
             ],
           ),
         ),
