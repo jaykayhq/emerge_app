@@ -168,48 +168,78 @@ void main() {
     });
   });
 
-  group('Merge logic (local vs remote)', () {
-    test('local XP wins when higher than remote', () {
+  group('Merge logic (local vs remote, SP-G D4)', () {
+    // Mirrors cachedTribeStatsProvider.emitMerged's exact expressions: tribe
+    // totals are recalc-only (server-authoritative D10) — remote Firestore
+    // values win as soon as they arrive; local Drift totals only fill in
+    // while remote is absent. (memberCount can decrease on leave, so remote
+    // is authoritative there too.)
+    int mergedTotalXp({required int localXp, int? remoteXp}) =>
+        remoteXp ?? localXp;
+    int mergedHabits({required int localHabits, int? remoteHabits}) =>
+        remoteHabits ?? localHabits;
+    int mergedChallenges({
+      required int localChallenges,
+      int? remoteChallenges,
+    }) =>
+        remoteChallenges ?? localChallenges;
+    int mergedMemberCount({int? localMembers, int? remoteMembers}) =>
+        remoteMembers ?? localMembers ?? 0;
+
+    test('remote totalXp wins over inflated local', () {
       const localXp = 500;
       const remoteXp = 200;
-      final mergedXp = localXp > remoteXp ? localXp : remoteXp;
-      expect(mergedXp, 500);
+      expect(mergedTotalXp(localXp: localXp, remoteXp: remoteXp), 200);
     });
 
-    test('remote XP wins when higher than local', () {
-      const localXp = 100;
-      const remoteXp = 300;
-      final mergedXp = localXp > remoteXp ? localXp : remoteXp;
-      expect(mergedXp, 300);
+    test('remote totalHabitsCompleted wins over inflated local', () {
+      const localHabits = 30;
+      const remoteHabits = 20;
+      expect(mergedHabits(localHabits: localHabits, remoteHabits: remoteHabits), 20);
+    });
+
+    test('remote totalChallengesCompleted wins over inflated local', () {
+      const localChallenges = 10;
+      const remoteChallenges = 3;
+      expect(
+        mergedChallenges(
+          localChallenges: localChallenges,
+          remoteChallenges: remoteChallenges,
+        ),
+        3,
+      );
+    });
+
+    test('local totalXp survives when remote is absent', () {
+      const localXp = 500;
+      expect(mergedTotalXp(localXp: localXp), 500);
+    });
+
+    test('local habits survive when remote is absent', () {
+      const localHabits = 30;
+      expect(mergedHabits(localHabits: localHabits), 30);
     });
 
     test('remote memberCount used over local (can decrease)', () {
-      // Remote wins for memberCount (tribe can lose members)
-      final mergedMemberCount = 15;
-      expect(mergedMemberCount, 15);
-    });
-
-    test('local habits win when higher', () {
-      const localHabits = 30;
-      const remoteHabits = 20;
-      final mergedHabits = localHabits > remoteHabits
-          ? localHabits
-          : remoteHabits;
-      expect(mergedHabits, 30);
+      const localMembers = 15;
+      const remoteMembers = 8;
+      expect(
+        mergedMemberCount(
+          localMembers: localMembers,
+          remoteMembers: remoteMembers,
+        ),
+        8,
+      );
     });
 
     test('handles null local data gracefully', () {
-      final localXp = null as int?;
-      final remoteXp = 100;
-      final mergedXp = (localXp ?? 0) > remoteXp ? (localXp ?? 0) : remoteXp;
-      expect(mergedXp, 100);
+      const remoteXp = 100;
+      expect(mergedTotalXp(localXp: 0, remoteXp: remoteXp), 100);
     });
 
     test('handles null remote data gracefully', () {
-      final localXp = 200;
-      final remoteXp = null as int?;
-      final mergedXp = localXp > (remoteXp ?? 0) ? localXp : (remoteXp ?? 0);
-      expect(mergedXp, 200);
+      const localXp = 200;
+      expect(mergedTotalXp(localXp: localXp), 200);
     });
   });
 }

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -462,6 +463,142 @@ void main() {
               as Map);
       expect(data.containsKey('totalXpContributed'), false);
       expect(data.containsKey('contributionCount'), false);
+    });
+  });
+
+  group('_mergeTribeData D4 remote-preferred merge (via watchUserTribes)', () {
+    // SP-G D4: tribe totals are recalc-only (server-authoritative D10) —
+    // remote Firestore values must win over stale/inflated local Drift
+    // totals, and local values must survive while remote is absent.
+    Future<void> seedLocalStats({
+      required String tribeId,
+      required int totalXp,
+      required int memberCount,
+      required int habits,
+      required int challenges,
+    }) async {
+      await db.tribeStatsDao.upsertStats(
+        TribeStatsTableCompanion(
+          tribeId: Value(tribeId),
+          tribeName: const Value('Merge Tribe'),
+          archetypeId: const Value('athlete'),
+          memberCount: Value(memberCount),
+          totalXp: Value(totalXp),
+          totalHabitsCompleted: Value(habits),
+          totalChallengesCompleted: Value(challenges),
+          userContributionXp: const Value(0),
+          userHabitsCompleted: const Value(0),
+          userChallengesCompleted: const Value(0),
+          updatedAt: Value(DateTime.now().toIso8601String()),
+        ),
+      );
+      await db.tribeMembershipDao.upsertMembership(UserTribeTableCompanion(
+        userId: const Value('mergeUser'),
+        tribeId: Value(tribeId),
+        membershipType: const Value('archetype'),
+        joinedAt: Value(DateTime.now().toIso8601String()),
+        isActive: const Value(true),
+      ));
+    }
+
+    /// Waits until the merged stream emits a tribe matching [predicate];
+    /// times out (test failure) if that value never appears.
+    Future<Tribe> firstMergedEmission(
+      Stream<List<Tribe>> stream,
+      bool Function(Tribe) predicate,
+    ) async {
+      final completer = Completer<Tribe>();
+      late StreamSubscription<List<Tribe>> sub;
+      sub = stream.listen(
+        (tribes) {
+          for (final tribe in tribes) {
+            if (predicate(tribe)) {
+              sub.cancel();
+              if (!completer.isCompleted) completer.complete(tribe);
+            }
+          }
+        },
+        onError: (Object e, StackTrace st) {
+          sub.cancel();
+          if (!completer.isCompleted) completer.completeError(e, st);
+        },
+      );
+      return completer.future.timeout(const Duration(seconds: 5));
+    }
+
+    test('remote totalXp wins over inflated local (recalc-only totals)',
+        () async {
+      await seedLocalStats(
+        tribeId: 'mergeTribe',
+        totalXp: 5000,
+        memberCount: 3,
+        habits: 40,
+        challenges: 4,
+      );
+
+      // Broadcast so both phases below can listen without re-subscribing
+      // the single-subscription stream.
+      final stream = repository.watchUserTribes('mergeUser').asBroadcastStream();
+
+      // Phase 1: local-only merge must be observed (remote not yet present),
+      // so the remote doc below can never win by arriving first.
+      final localSeen = Completer<void>();
+      final localSub = stream.listen((tribes) {
+        for (final t in tribes) {
+          if (t.totalXp == 5000 && !localSeen.isCompleted) localSeen.complete();
+        }
+      });
+      await localSeen.future.timeout(const Duration(seconds: 5));
+
+      // Phase 2: after the remote doc lands, the merged tribe must carry the
+      // remote (recalc'd, server-authoritative) totals.
+      final remoteSeen = Completer<Tribe>();
+      final remoteSub = stream.listen((tribes) {
+        for (final t in tribes) {
+          if (t.totalXp == 100 && !remoteSeen.isCompleted) {
+            remoteSeen.complete(t);
+          }
+        }
+      });
+
+      await fakeFirestore.collection('tribes').doc('mergeTribe').set({
+        'name': 'Merge Tribe',
+        'type': 'official',
+        'members': ['mergeUser'],
+        'totalXp': 100,
+        'memberCount': 1,
+        'totalHabitsCompleted': 5,
+        'totalChallengesCompleted': 1,
+      });
+
+      final tribe = await remoteSeen.future.timeout(const Duration(seconds: 5));
+      await localSub.cancel();
+      await remoteSub.cancel();
+
+      expect(tribe.totalXp, 100);
+      expect(tribe.memberCount, 1);
+      expect(tribe.totalHabitsCompleted, 5);
+      expect(tribe.totalChallengesCompleted, 1);
+    });
+
+    test('local totalXp survives when remote doc is absent', () async {
+      await seedLocalStats(
+        tribeId: 'mergeTribe',
+        totalXp: 5000,
+        memberCount: 3,
+        habits: 40,
+        challenges: 4,
+      );
+
+      final tribe = await firstMergedEmission(
+        repository.watchUserTribes('mergeUser'),
+        (t) => t.totalXp == 5000,
+      );
+
+      expect(tribe.totalXp, 5000);
+      expect(tribe.memberCount, 3);
+      expect(tribe.totalHabitsCompleted, 40);
+      expect(tribe.totalChallengesCompleted, 4);
     });
   });
 }
