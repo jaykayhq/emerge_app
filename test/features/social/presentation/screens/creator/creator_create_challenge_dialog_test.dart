@@ -11,6 +11,7 @@ import 'package:emerge_app/core/game_loop/game_loop_engine.dart';
 import 'package:emerge_app/core/sync/sync_engine.dart';
 import 'package:emerge_app/features/social/domain/entities/creator_profile.dart';
 import 'package:emerge_app/features/social/domain/models/challenge.dart';
+import 'package:emerge_app/features/social/domain/services/club_activity_service.dart';
 import 'package:emerge_app/features/social/presentation/providers/challenge_provider.dart';
 import 'package:emerge_app/features/social/presentation/providers/creator_provider.dart';
 import 'package:emerge_app/features/social/presentation/providers/tribes_provider.dart';
@@ -18,10 +19,16 @@ import 'package:emerge_app/features/social/presentation/screens/creator/creator_
 
 class _MockAppDatabase extends Mock implements AppDatabase {}
 class _MockSyncEngine extends Mock implements EnhancedSyncEngine {}
+class _MockSocialActivityService extends Mock implements SocialActivityService {}
 
 class FakeChallengeRepository extends DriftChallengeRepository {
   FakeChallengeRepository()
-      : super(_MockAppDatabase(), LocalGameLoopEngine(), _MockSyncEngine());
+      : super(
+          _MockAppDatabase(),
+          LocalGameLoopEngine(),
+          _MockSyncEngine(),
+          _MockSocialActivityService(),
+        );
 
   final List<Challenge> created = [];
 
