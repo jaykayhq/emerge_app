@@ -58,6 +58,11 @@ class MockMonetizationRepository implements MonetizationRepository {
   }
 
   @override
+  Future<Either<String, bool>> openManageSubscription() async {
+    return const Right(true);
+  }
+
+  @override
   Future<String?> get premiumPriceString async => '\$9.99';
 
   @override

@@ -1,6 +1,5 @@
 import 'package:emerge_app/features/monetization/data/services/manage_premium_service.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:fpdart/fpdart.dart';
 
 class _FakeFunctions implements ManagePremiumCaller {
   final calls = <Map<String, dynamic>>[];
