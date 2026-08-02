@@ -51,138 +51,161 @@ class _TribeLobbyScreenState extends ConsumerState<TribeLobbyScreen> {
   Widget build(BuildContext context) {
     final profileAsync = ref.watch(userStatsStreamProvider);
     final clubsAsync = ref.watch(allArchetypeClubsProvider);
+    // True when the lobby was pushed onto the stack (e.g. from the All Tribes
+    // grid or a deep link); false when it is the Social tab's root route.
+    final canPop = Navigator.of(context).canPop();
+
+    Widget lobby() => SafeArea(
+          child: clubsAsync.when(
+            data: (clubs) => profileAsync.when(
+              data: (profile) {
+                final userClub = _resolveUserClub(clubs, profile);
+                if (userClub == null) {
+                  return const _ErrorState(message: 'No tribe found.');
+                }
+
+                    final archetypeTheme = ArchetypeTheme.forArchetype(
+                      profile.archetype,
+                    );
+                    final momentumPct =
+                        (profile.momentumScore.clamp(0.0, 1.0) * 100).round();
+
+                    return CustomScrollView(
+                      physics: const BouncingScrollPhysics(),
+                      slivers: [
+                        const SliverToBoxAdapter(child: Gap(12)),
+                        SliverToBoxAdapter(
+                          child: _Hero(
+                            userClub: userClub,
+                            archetypeTheme: archetypeTheme,
+                          ),
+                        ),
+                        SliverToBoxAdapter(
+                          child: Padding(
+                            padding: const EdgeInsets.fromLTRB(20, 24, 20, 0),
+                            child: _StatsBar(
+                              userClub: userClub,
+                              profile: profile,
+                              momentumPct: momentumPct,
+                            ),
+                          ),
+                        ),
+                        const SliverToBoxAdapter(child: Gap(20)),
+                        SliverToBoxAdapter(
+                          child: TribePulseStatusRow(
+                            userClub: userClub,
+                            profile: profile,
+                          ),
+                        ),
+                        const SliverToBoxAdapter(child: Gap(8)),
+                        const SliverToBoxAdapter(child: TribeCircleSection()),
+                        const SliverToBoxAdapter(child: Gap(8)),
+                        SliverToBoxAdapter(
+                          child: TribeLiveCompact(
+                            clubId: userClub.id,
+                            profile: profile,
+                          ),
+                        ),
+                        const SliverToBoxAdapter(child: Gap(8)),
+                        const SliverToBoxAdapter(
+                          child: Padding(
+                            padding: EdgeInsets.only(bottom: 8),
+                            child: TribeCreatorsStrip(),
+                          ),
+                        ),
+                        SliverToBoxAdapter(
+                          child: TribeBlueprintsSection(tribe: userClub),
+                        ),
+                        const SliverToBoxAdapter(
+                          child: TribeYourQuestsSection(),
+                        ),
+                        const SliverToBoxAdapter(child: Gap(4)),
+                        const SliverToBoxAdapter(
+                          child: TribeQuestsForYouSection(),
+                        ),
+                        const SliverToBoxAdapter(child: Gap(24)),
+                      ],
+                    );
+                  },
+                  loading: () => const _LobbyLoading(),
+                  error: (_, _) => AppErrorWidget(
+                    message: 'Could not load profile.',
+                    onRetry: () => ref.invalidate(userStatsStreamProvider),
+                  ),
+                ),
+                loading: () => const _LobbyLoading(),
+                error: (_, _) => AppErrorWidget(
+                  message: 'Could not load tribes.',
+                  onRetry: () => ref.invalidate(allArchetypeClubsProvider),
+                ),
+              ),
+            );
 
     return NodeGuideHost(
       nodeId: 'tribe_lobby',
       child: Scaffold(
-        backgroundColor: Colors.transparent,
-        body: AppBackToHome(
-          homeRoute: '/world-map',
-          child: SafeArea(
-            child: clubsAsync.when(
-              data: (clubs) => profileAsync.when(
-                data: (profile) {
-                  final userClub = _resolveUserClub(clubs, profile);
-                  if (userClub == null) {
-                    return const _ErrorState(message: 'No tribe found.');
-                  }
-
-                  final archetypeTheme = ArchetypeTheme.forArchetype(
-                    profile.archetype,
-                  );
-                  final momentumPct =
-                      (profile.momentumScore.clamp(0.0, 1.0) * 100).round();
-
-                  return CustomScrollView(
-                    physics: const BouncingScrollPhysics(),
-                    slivers: [
-                      const SliverToBoxAdapter(child: Gap(12)),
-                      SliverToBoxAdapter(
-                        child: _Hero(
-                          userClub: userClub,
-                          archetypeTheme: archetypeTheme,
-                        ),
-                      ),
-                      SliverToBoxAdapter(
-                        child: Padding(
-                          padding: const EdgeInsets.fromLTRB(20, 24, 20, 0),
-                          child: _StatsBar(
-                            userClub: userClub,
-                            profile: profile,
-                            momentumPct: momentumPct,
-                          ),
-                        ),
-                      ),
-                      const SliverToBoxAdapter(child: Gap(20)),
-                      SliverToBoxAdapter(
-                        child: TribePulseStatusRow(
-                          userClub: userClub,
-                          profile: profile,
-                        ),
-                      ),
-                      const SliverToBoxAdapter(child: Gap(8)),
-                      const SliverToBoxAdapter(child: TribeCircleSection()),
-                      const SliverToBoxAdapter(child: Gap(8)),
-                      SliverToBoxAdapter(
-                        child: TribeLiveCompact(
-                          clubId: userClub.id,
-                          profile: profile,
-                        ),
-                      ),
-                      const SliverToBoxAdapter(child: Gap(8)),
-                      const SliverToBoxAdapter(
-                        child: Padding(
-                          padding: EdgeInsets.only(bottom: 8),
-                          child: TribeCreatorsStrip(),
-                        ),
-                      ),
-                      SliverToBoxAdapter(
-                        child: TribeBlueprintsSection(tribe: userClub),
-                      ),
-                      const SliverToBoxAdapter(child: TribeYourQuestsSection()),
-                      const SliverToBoxAdapter(child: Gap(4)),
-                      const SliverToBoxAdapter(
-                        child: TribeQuestsForYouSection(),
-                      ),
-                      const SliverToBoxAdapter(child: Gap(24)),
-                    ],
-                  );
-                },
-                loading: () => const _LobbyLoading(),
-                error: (_, _) => AppErrorWidget(
-                  message: 'Could not load profile.',
-                  onRetry: () => ref.invalidate(userStatsStreamProvider),
+      backgroundColor: Colors.transparent,
+      body: Stack(
+        children: [
+          if (canPop)
+            lobby()
+          else
+            AppBackToHome(homeRoute: '/world-map', child: lobby()),
+          // Top-left back arrow — shown only when the lobby was pushed onto
+          // the stack (e.g. from the All Tribes grid). Hidden when the lobby
+          // is the Social tab's root (no history to go back to). Rendered
+          // outside AppBackToHome so its pop is not blocked by that wrapper's
+          // PopScope(canPop: false), which only redirects the system back.
+          if (canPop)
+            Positioned(
+              top: 8,
+              left: 12,
+              child: SafeArea(
+                child: _BackButton(
+                  onPressed: () => Navigator.of(context).pop(),
                 ),
-              ),
-              loading: () => const _LobbyLoading(),
-              error: (_, _) => AppErrorWidget(
-                message: 'Could not load tribes.',
-                onRetry: () => ref.invalidate(allArchetypeClubsProvider),
               ),
             ),
-          ),
-        ),
-        bottomNavigationBar: profileAsync.value == null
-            ? null
-            : SafeArea(
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(20, 12, 20, 16),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: OutlinedButton.icon(
-                          icon: const Icon(
-                            Icons.emoji_events_rounded,
-                            size: 16,
+        ],
+      ),
+      bottomNavigationBar: profileAsync.value == null
+          ? null
+          : SafeArea(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(20, 12, 20, 16),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton.icon(
+                        icon: const Icon(Icons.emoji_events_rounded, size: 16),
+                        label: const Text('CHALLENGES'),
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: Colors.white70,
+                          side: const BorderSide(color: Colors.white24),
+                          padding: const EdgeInsets.symmetric(vertical: 22),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(28),
                           ),
-                          label: const Text('CHALLENGES'),
-                          style: OutlinedButton.styleFrom(
-                            foregroundColor: Colors.white70,
-                            side: const BorderSide(color: Colors.white24),
-                            padding: const EdgeInsets.symmetric(vertical: 22),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(28),
-                            ),
-                            textStyle: const TextStyle(
-                              fontWeight: FontWeight.bold,
-                              letterSpacing: 2,
-                            ),
+                          textStyle: const TextStyle(
+                            fontWeight: FontWeight.bold,
+                            letterSpacing: 2,
                           ),
-                          onPressed: () => context.push('/challenges'),
                         ),
+                        onPressed: () => context.push('/challenges'),
                       ),
-                      const Gap(12),
-                      Expanded(
-                        child: EmergePrimaryButton(
-                          label: 'BROWSE BLUEPRINTS',
-                          leadingIcon: Icons.auto_awesome,
-                          onPressed: () => context.push('/social/discover'),
-                        ),
+                    ),
+                    const Gap(12),
+                    Expanded(
+                      child: EmergePrimaryButton(
+                        label: 'BROWSE BLUEPRINTS',
+                        leadingIcon: Icons.auto_awesome,
+                        onPressed: () => context.push('/social/discover'),
                       ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
               ),
+            ),
       ),
     );
   }
@@ -199,6 +222,33 @@ class _TribeLobbyScreenState extends ConsumerState<TribeLobbyScreen> {
     );
     if (matchIndex != -1) return clubs[matchIndex];
     return clubs.first;
+  }
+}
+
+// ── Back Button ────────────────────────────────────────────────────────────
+
+/// Small circular glass back arrow for the top-left corner, matching the
+/// dark glass UI used by the lobby's CTA bar buttons.
+class _BackButton extends StatelessWidget {
+  final VoidCallback onPressed;
+
+  const _BackButton({required this.onPressed});
+
+  @override
+  Widget build(BuildContext context) {
+    return IconButton(
+      onPressed: onPressed,
+      style: IconButton.styleFrom(
+        backgroundColor: Colors.white.withValues(alpha: 0.08),
+        foregroundColor: Colors.white70,
+        side: const BorderSide(color: Colors.white24),
+        padding: const EdgeInsets.all(10),
+        minimumSize: const Size(40, 40),
+        shape: const CircleBorder(),
+      ),
+      tooltip: 'Back',
+      icon: const Icon(Icons.arrow_back_ios_new, size: 18),
+    );
   }
 }
 

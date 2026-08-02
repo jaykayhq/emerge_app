@@ -319,7 +319,11 @@ service cloud.firestore {
       match /habit_completions/{completionId} {
         allow create: if isOwner(userId) && request.resource.data.userId == request.auth.uid;
         allow read: if isOwner(userId);
-        allow update, delete: if false; // Completions are immutable logs
+        // Updates stay forbidden (completions are immutable once written), but
+        // deletes must be allowed: the app's undo flow removes the completion
+        // record from Firestore so the backend mirrors the local state.
+        allow update: if false;
+        allow delete: if isOwner(userId) && resource.data.userId == request.auth.uid;
       }
 
       // Per-Habit Reflections Subcollection (mood + note per habit per day)

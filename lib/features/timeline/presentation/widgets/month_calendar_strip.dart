@@ -1,9 +1,7 @@
 import 'package:emerge_app/core/presentation/widgets/emerge_semantics.dart';
+import 'package:emerge_app/features/timeline/domain/models/day_completion.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-
-/// Completion status for a day
-enum DayCompletionStatus { none, partial, complete }
 
 /// Horizontal scrollable calendar strip showing the current month.
 /// Each day is an individual glassmorphic card with teal accent colors.
@@ -11,8 +9,8 @@ class MonthCalendarStrip extends StatefulWidget {
   final DateTime? selectedDate;
   final ValueChanged<DateTime>? onDateSelected;
 
-  /// Map of date (year-month-day string) to completion status
-  final Map<String, DayCompletionStatus>? completionStatus;
+  /// Map of date (year-month-day string) to per-day completion summary
+  final Map<String, DayCompletion>? completionStatus;
 
   const MonthCalendarStrip({
     super.key,
@@ -74,22 +72,32 @@ class _MonthCalendarStripState extends State<MonthCalendarStrip> {
 
   @override
   Widget build(BuildContext context) {
+    // The timeline hosts this strip inside a SliverToBoxAdapter, which passes
+    // unbounded height down the main axis. A horizontal viewport requires a
+    // bounded cross-axis (vertical) extent, so fix the strip's height here —
+    // otherwise layout throws and the whole timeline dies on every frame.
+    const double stripHeight = 140;
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-      child: ListView.builder(
-        controller: _scrollController,
-        scrollDirection: Axis.horizontal,
-        itemCount: _monthDays.length,
-        itemExtent: 56,
-        itemBuilder: (context, index) {
-          return Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 4),
-            child: SizedBox(
-              width: 48,
-              child: _buildDayItem(_monthDays[index]),
-            ),
-          );
-        },
+      child: SizedBox(
+        height: stripHeight,
+        child: ListView.builder(
+          controller: _scrollController,
+          scrollDirection: Axis.horizontal,
+          itemCount: _monthDays.length,
+          itemExtent: 56,
+          itemBuilder: (context, index) {
+            return Center(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 4),
+                child: SizedBox(
+                  width: 48,
+                  child: _buildDayItem(_monthDays[index]),
+                ),
+              ),
+            );
+          },
+        ),
       ),
     );
   }
@@ -183,10 +191,10 @@ class _MonthCalendarStripState extends State<MonthCalendarStrip> {
       DateTime date, bool isSelected, Color teal) {
     final dateKey =
         '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
-    final status =
-        widget.completionStatus?[dateKey] ?? DayCompletionStatus.none;
+    final completion =
+        widget.completionStatus?[dateKey] ?? DayCompletion.none;
 
-    if (status == DayCompletionStatus.none) {
+    if (completion.status == DayCompletionStatus.none) {
       return Container(
         width: 6,
         height: 6,
@@ -197,7 +205,7 @@ class _MonthCalendarStripState extends State<MonthCalendarStrip> {
       );
     }
 
-    final dotColor = status == DayCompletionStatus.complete
+    final dotColor = completion.status == DayCompletionStatus.complete
         ? (isSelected ? Colors.white : teal)
         : teal.withValues(alpha: 0.6);
 
@@ -222,21 +230,24 @@ class _MonthCalendarStripState extends State<MonthCalendarStrip> {
       DateTime date, bool isSelected, Color teal) {
     final dateKey =
         '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
-    final status =
-        widget.completionStatus?[dateKey] ?? DayCompletionStatus.none;
+    final completion =
+        widget.completionStatus?[dateKey] ?? DayCompletion.none;
 
     String text;
-    switch (status) {
+    switch (completion.status) {
       case DayCompletionStatus.none:
         text = '--';
       case DayCompletionStatus.partial:
-        text = '~50%';
       case DayCompletionStatus.complete:
-        text = '100%';
+        text = '${completion.percent}%';
     }
 
     return Text(
       text,
+      // '100%' is wider than the 36px usable card width in wide fonts; keep it
+      // on one line so the day card never overflows vertically.
+      maxLines: 1,
+      overflow: TextOverflow.ellipsis,
       style: TextStyle(
         color: isSelected
             ? teal.withValues(alpha: 0.85)

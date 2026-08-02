@@ -197,9 +197,17 @@ class _AdBannerWidgetState extends ConsumerState<AdBannerWidget>
               child: SizedBox(
                 width: _bannerAd!.size.width.toDouble(),
                 height: _bannerAd!.size.height.toDouble(),
-                child: AdWidget(
-                  key: ValueKey(_bannerAd!.hashCode),
-                  ad: _bannerAd!,
+                // The ad is a platform view (WebView). Exclude it from the
+                // semantics tree: the framework's platform-view semantics
+                // bridge can trip the `!semantics.parentDataDirty` assertion
+                // when TalkBack is active, crashing the whole frame. The ad's
+                // content is third-party web content screen readers can't
+                // navigate anyway; the archetype overlay below stays exposed.
+                child: ExcludeSemantics(
+                  child: AdWidget(
+                    key: ValueKey(_bannerAd!.hashCode),
+                    ad: _bannerAd!,
+                  ),
                 ),
               ),
             ),

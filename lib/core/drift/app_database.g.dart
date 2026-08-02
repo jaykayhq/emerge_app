@@ -2138,6 +2138,17 @@ class $HabitsTableTable extends HabitsTable
     type: DriftSqlType.int,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _imageUrlMeta = const VerificationMeta(
+    'imageUrl',
+  );
+  @override
+  late final GeneratedColumn<String> imageUrl = GeneratedColumn<String>(
+    'image_url',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -2163,6 +2174,7 @@ class $HabitsTableTable extends HabitsTable
     timerDurationMinutes,
     integrationType,
     integrationTarget,
+    imageUrl,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -2351,6 +2363,12 @@ class $HabitsTableTable extends HabitsTable
         ),
       );
     }
+    if (data.containsKey('image_url')) {
+      context.handle(
+        _imageUrlMeta,
+        imageUrl.isAcceptableOrUnknown(data['image_url']!, _imageUrlMeta),
+      );
+    }
     return context;
   }
 
@@ -2452,6 +2470,10 @@ class $HabitsTableTable extends HabitsTable
         DriftSqlType.int,
         data['${effectivePrefix}integration_target'],
       ),
+      imageUrl: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}image_url'],
+      ),
     );
   }
 
@@ -2485,6 +2507,7 @@ class HabitsTableData extends DataClass implements Insertable<HabitsTableData> {
   final int timerDurationMinutes;
   final String integrationType;
   final int? integrationTarget;
+  final String? imageUrl;
   const HabitsTableData({
     required this.id,
     required this.userId,
@@ -2509,6 +2532,7 @@ class HabitsTableData extends DataClass implements Insertable<HabitsTableData> {
     required this.timerDurationMinutes,
     required this.integrationType,
     this.integrationTarget,
+    this.imageUrl,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -2554,6 +2578,9 @@ class HabitsTableData extends DataClass implements Insertable<HabitsTableData> {
     if (!nullToAbsent || integrationTarget != null) {
       map['integration_target'] = Variable<int>(integrationTarget);
     }
+    if (!nullToAbsent || imageUrl != null) {
+      map['image_url'] = Variable<String>(imageUrl);
+    }
     return map;
   }
 
@@ -2598,6 +2625,9 @@ class HabitsTableData extends DataClass implements Insertable<HabitsTableData> {
       integrationTarget: integrationTarget == null && nullToAbsent
           ? const Value.absent()
           : Value(integrationTarget),
+      imageUrl: imageUrl == null && nullToAbsent
+          ? const Value.absent()
+          : Value(imageUrl),
     );
   }
 
@@ -2636,6 +2666,7 @@ class HabitsTableData extends DataClass implements Insertable<HabitsTableData> {
       ),
       integrationType: serializer.fromJson<String>(json['integrationType']),
       integrationTarget: serializer.fromJson<int?>(json['integrationTarget']),
+      imageUrl: serializer.fromJson<String?>(json['imageUrl']),
     );
   }
   @override
@@ -2665,6 +2696,7 @@ class HabitsTableData extends DataClass implements Insertable<HabitsTableData> {
       'timerDurationMinutes': serializer.toJson<int>(timerDurationMinutes),
       'integrationType': serializer.toJson<String>(integrationType),
       'integrationTarget': serializer.toJson<int?>(integrationTarget),
+      'imageUrl': serializer.toJson<String?>(imageUrl),
     };
   }
 
@@ -2692,6 +2724,7 @@ class HabitsTableData extends DataClass implements Insertable<HabitsTableData> {
     int? timerDurationMinutes,
     String? integrationType,
     Value<int?> integrationTarget = const Value.absent(),
+    Value<String?> imageUrl = const Value.absent(),
   }) => HabitsTableData(
     id: id ?? this.id,
     userId: userId ?? this.userId,
@@ -2722,6 +2755,7 @@ class HabitsTableData extends DataClass implements Insertable<HabitsTableData> {
     integrationTarget: integrationTarget.present
         ? integrationTarget.value
         : this.integrationTarget,
+    imageUrl: imageUrl.present ? imageUrl.value : this.imageUrl,
   );
   HabitsTableData copyWithCompanion(HabitsTableCompanion data) {
     return HabitsTableData(
@@ -2772,6 +2806,7 @@ class HabitsTableData extends DataClass implements Insertable<HabitsTableData> {
       integrationTarget: data.integrationTarget.present
           ? data.integrationTarget.value
           : this.integrationTarget,
+      imageUrl: data.imageUrl.present ? data.imageUrl.value : this.imageUrl,
     );
   }
 
@@ -2800,7 +2835,8 @@ class HabitsTableData extends DataClass implements Insertable<HabitsTableData> {
           ..write('reminderTime: $reminderTime, ')
           ..write('timerDurationMinutes: $timerDurationMinutes, ')
           ..write('integrationType: $integrationType, ')
-          ..write('integrationTarget: $integrationTarget')
+          ..write('integrationTarget: $integrationTarget, ')
+          ..write('imageUrl: $imageUrl')
           ..write(')'))
         .toString();
   }
@@ -2830,6 +2866,7 @@ class HabitsTableData extends DataClass implements Insertable<HabitsTableData> {
     timerDurationMinutes,
     integrationType,
     integrationTarget,
+    imageUrl,
   ]);
   @override
   bool operator ==(Object other) =>
@@ -2857,7 +2894,8 @@ class HabitsTableData extends DataClass implements Insertable<HabitsTableData> {
           other.reminderTime == this.reminderTime &&
           other.timerDurationMinutes == this.timerDurationMinutes &&
           other.integrationType == this.integrationType &&
-          other.integrationTarget == this.integrationTarget);
+          other.integrationTarget == this.integrationTarget &&
+          other.imageUrl == this.imageUrl);
 }
 
 class HabitsTableCompanion extends UpdateCompanion<HabitsTableData> {
@@ -2884,6 +2922,7 @@ class HabitsTableCompanion extends UpdateCompanion<HabitsTableData> {
   final Value<int> timerDurationMinutes;
   final Value<String> integrationType;
   final Value<int?> integrationTarget;
+  final Value<String?> imageUrl;
   final Value<int> rowid;
   const HabitsTableCompanion({
     this.id = const Value.absent(),
@@ -2909,6 +2948,7 @@ class HabitsTableCompanion extends UpdateCompanion<HabitsTableData> {
     this.timerDurationMinutes = const Value.absent(),
     this.integrationType = const Value.absent(),
     this.integrationTarget = const Value.absent(),
+    this.imageUrl = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   HabitsTableCompanion.insert({
@@ -2935,6 +2975,7 @@ class HabitsTableCompanion extends UpdateCompanion<HabitsTableData> {
     this.timerDurationMinutes = const Value.absent(),
     this.integrationType = const Value.absent(),
     this.integrationTarget = const Value.absent(),
+    this.imageUrl = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : id = Value(id),
        userId = Value(userId),
@@ -2965,6 +3006,7 @@ class HabitsTableCompanion extends UpdateCompanion<HabitsTableData> {
     Expression<int>? timerDurationMinutes,
     Expression<String>? integrationType,
     Expression<int>? integrationTarget,
+    Expression<String>? imageUrl,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
@@ -2993,6 +3035,7 @@ class HabitsTableCompanion extends UpdateCompanion<HabitsTableData> {
         'timer_duration_minutes': timerDurationMinutes,
       if (integrationType != null) 'integration_type': integrationType,
       if (integrationTarget != null) 'integration_target': integrationTarget,
+      if (imageUrl != null) 'image_url': imageUrl,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -3021,6 +3064,7 @@ class HabitsTableCompanion extends UpdateCompanion<HabitsTableData> {
     Value<int>? timerDurationMinutes,
     Value<String>? integrationType,
     Value<int?>? integrationTarget,
+    Value<String?>? imageUrl,
     Value<int>? rowid,
   }) {
     return HabitsTableCompanion(
@@ -3047,6 +3091,7 @@ class HabitsTableCompanion extends UpdateCompanion<HabitsTableData> {
       timerDurationMinutes: timerDurationMinutes ?? this.timerDurationMinutes,
       integrationType: integrationType ?? this.integrationType,
       integrationTarget: integrationTarget ?? this.integrationTarget,
+      imageUrl: imageUrl ?? this.imageUrl,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -3125,6 +3170,9 @@ class HabitsTableCompanion extends UpdateCompanion<HabitsTableData> {
     if (integrationTarget.present) {
       map['integration_target'] = Variable<int>(integrationTarget.value);
     }
+    if (imageUrl.present) {
+      map['image_url'] = Variable<String>(imageUrl.value);
+    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -3157,6 +3205,7 @@ class HabitsTableCompanion extends UpdateCompanion<HabitsTableData> {
           ..write('timerDurationMinutes: $timerDurationMinutes, ')
           ..write('integrationType: $integrationType, ')
           ..write('integrationTarget: $integrationTarget, ')
+          ..write('imageUrl: $imageUrl, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -10402,6 +10451,7 @@ typedef $$HabitsTableTableCreateCompanionBuilder =
       Value<int> timerDurationMinutes,
       Value<String> integrationType,
       Value<int?> integrationTarget,
+      Value<String?> imageUrl,
       Value<int> rowid,
     });
 typedef $$HabitsTableTableUpdateCompanionBuilder =
@@ -10429,6 +10479,7 @@ typedef $$HabitsTableTableUpdateCompanionBuilder =
       Value<int> timerDurationMinutes,
       Value<String> integrationType,
       Value<int?> integrationTarget,
+      Value<String?> imageUrl,
       Value<int> rowid,
     });
 
@@ -10553,6 +10604,11 @@ class $$HabitsTableTableFilterComposer
 
   ColumnFilters<int> get integrationTarget => $composableBuilder(
     column: $table.integrationTarget,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get imageUrl => $composableBuilder(
+    column: $table.imageUrl,
     builder: (column) => ColumnFilters(column),
   );
 }
@@ -10680,6 +10736,11 @@ class $$HabitsTableTableOrderingComposer
     column: $table.integrationTarget,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<String> get imageUrl => $composableBuilder(
+    column: $table.imageUrl,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$HabitsTableTableAnnotationComposer
@@ -10783,6 +10844,9 @@ class $$HabitsTableTableAnnotationComposer
     column: $table.integrationTarget,
     builder: (column) => column,
   );
+
+  GeneratedColumn<String> get imageUrl =>
+      $composableBuilder(column: $table.imageUrl, builder: (column) => column);
 }
 
 class $$HabitsTableTableTableManager
@@ -10839,6 +10903,7 @@ class $$HabitsTableTableTableManager
                 Value<int> timerDurationMinutes = const Value.absent(),
                 Value<String> integrationType = const Value.absent(),
                 Value<int?> integrationTarget = const Value.absent(),
+                Value<String?> imageUrl = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => HabitsTableCompanion(
                 id: id,
@@ -10864,6 +10929,7 @@ class $$HabitsTableTableTableManager
                 timerDurationMinutes: timerDurationMinutes,
                 integrationType: integrationType,
                 integrationTarget: integrationTarget,
+                imageUrl: imageUrl,
                 rowid: rowid,
               ),
           createCompanionCallback:
@@ -10891,6 +10957,7 @@ class $$HabitsTableTableTableManager
                 Value<int> timerDurationMinutes = const Value.absent(),
                 Value<String> integrationType = const Value.absent(),
                 Value<int?> integrationTarget = const Value.absent(),
+                Value<String?> imageUrl = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => HabitsTableCompanion.insert(
                 id: id,
@@ -10916,6 +10983,7 @@ class $$HabitsTableTableTableManager
                 timerDurationMinutes: timerDurationMinutes,
                 integrationType: integrationType,
                 integrationTarget: integrationTarget,
+                imageUrl: imageUrl,
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0

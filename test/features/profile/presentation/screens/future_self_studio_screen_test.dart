@@ -1,6 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:emerge_app/core/presentation/widgets/emerge_header.dart';
 import 'package:emerge_app/features/auth/domain/entities/user_extension.dart';
 import 'package:emerge_app/features/auth/presentation/providers/auth_providers.dart';
 import 'package:emerge_app/features/gamification/presentation/providers/user_stats_providers.dart';
@@ -86,6 +87,11 @@ void main() {
     expect(find.textContaining('Archetype'), findsOneWidget);
     expect(find.textContaining('LVL'), findsWidgets);
     expect(find.textContaining('XP'), findsWidgets);
+
+    // The redundant shared EmergeHeader was removed; the SliverAppBar with
+    // its settings action remains the only top chrome.
+    expect(find.byType(EmergeHeader), findsNothing);
+    expect(find.byIcon(Icons.settings), findsOneWidget);
   });
 
   testWidgets('renders without crashing on stream error', (tester) async {

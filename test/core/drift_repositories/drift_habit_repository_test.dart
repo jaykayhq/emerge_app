@@ -115,6 +115,7 @@ void main() {
     int longestStreak = 0,
     int momentumScore = 0,
     int consecutiveMisses = 0,
+    String? imageUrl,
   }) {
     return Habit(
       id: id ?? const Uuid().v4(),
@@ -131,12 +132,13 @@ void main() {
       longestStreak: longestStreak,
       momentumScore: momentumScore,
       consecutiveMisses: consecutiveMisses,
+      imageUrl: imageUrl,
     );
   }
 
   group('DriftHabitRepository', () {
     test('createHabit() inserts into Drift and calls enqueueSet', () async {
-      final habit = createTestHabit();
+      final habit = createTestHabit(imageUrl: '🏃');
 
       final result = await repository.createHabit(habit);
 
@@ -148,13 +150,15 @@ void main() {
       expect(retrieved.title, habit.title);
       expect(retrieved.userId, habit.userId);
 
-      verify(
+      final captured = verify(
         () => mockSyncEngine.enqueueSet(
           collectionPath: 'habits',
           documentId: habit.id,
-          data: any(named: 'data'),
+          data: captureAny(named: 'data'),
         ),
-      ).called(1);
+      ).captured;
+      // The emoji must reach the Firestore map so cards render it after sync.
+      expect((captured.single as Map)['imageUrl'], '🏃');
     });
 
     test('updateHabit() updates in Drift and calls enqueueUpdate', () async {
@@ -290,10 +294,20 @@ void main() {
         expect(result2.isRight(), true);
         expect(result2.fold((l) => false, (r) => r), false);
 
-        // Same-day re-completion is an UNDO: streak returns to 0
-        // (see drift_habit_repository_undo_test.dart).
+        // Same-day re-completion is an UNDO: streak returns to 0.
         final retrieved = await repository.getHabit(habit.id);
         expect(retrieved?.currentStreak, 0);
+
+        // Regression: undo must delete the completion record on Firestore,
+        // otherwise the backend keeps a completion the user undid locally
+        // (firestore.rules must allow the owner delete for this to succeed).
+        verify(
+          () => mockSyncEngine.enqueueMutation(
+            collectionPath: 'users/$userId/habit_completions',
+            documentId: any(named: 'documentId'),
+            operation: 'delete',
+          ),
+        ).called(1);
       },
     );
 
@@ -382,6 +396,7 @@ void main() {
         consecutiveMisses: 0,
         timeOfDayPreference: TimeOfDayPreference.morning,
         reminderTime: const TimeOfDay(hour: 7, minute: 0),
+        imageUrl: '🔥',
       );
 
       final result = await repository.createHabit(habit);
@@ -399,6 +414,7 @@ void main() {
       expect(retrieved?.timeOfDayPreference, TimeOfDayPreference.morning);
       expect(retrieved?.reminderTime?.hour, 7);
       expect(retrieved?.reminderTime?.minute, 0);
+      expect(retrieved?.imageUrl, '🔥');
     });
 
     test('completeHabit() with hard difficulty gives more XP', () async {

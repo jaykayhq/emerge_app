@@ -96,6 +96,7 @@ class DriftHabitRepository implements HabitRepository {
         timerDurationMinutes: habit.timerDurationMinutes,
         integrationType: habit.integrationType.name,
         integrationTarget: habit.integrationTarget,
+        imageUrl: habit.imageUrl,
       );
 
       await _syncEngine.enqueueSet(
@@ -137,6 +138,7 @@ class DriftHabitRepository implements HabitRepository {
         timerDurationMinutes: habit.timerDurationMinutes,
         integrationType: habit.integrationType.name,
         integrationTarget: habit.integrationTarget,
+        imageUrl: habit.imageUrl,
       );
 
       await _syncEngine.enqueueUpdate(
@@ -665,6 +667,7 @@ class DriftHabitRepository implements HabitRepository {
           timerDurationMinutes: habit.timerDurationMinutes,
           integrationType: habit.integrationType.name,
           integrationTarget: habit.integrationTarget,
+          imageUrl: habit.imageUrl,
         );
 
         // Sync to Firestore with all fields
@@ -744,6 +747,7 @@ class DriftHabitRepository implements HabitRepository {
             attribute: habit.attribute.name,
             createdAt: habit.createdAt.toIso8601String(),
             updatedAt: now.toIso8601String(),
+            imageUrl: habit.imageUrl,
           );
 
           created.add(habit);
@@ -834,6 +838,7 @@ class DriftHabitRepository implements HabitRepository {
         orElse: () => HabitIntegrationType.none,
       ),
       integrationTarget: row.integrationTarget,
+      imageUrl: row.imageUrl,
     );
   }
 
@@ -855,6 +860,7 @@ class DriftHabitRepository implements HabitRepository {
       'timerDurationMinutes': habit.timerDurationMinutes,
       'integrationType': habit.integrationType.name,
       'integrationTarget': habit.integrationTarget,
+      'imageUrl': habit.imageUrl,
     };
   }
 

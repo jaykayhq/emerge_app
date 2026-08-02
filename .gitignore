@@ -69,3 +69,6 @@ worktrees/
 dev.nix
 scripts/run_emulator.sh
 
+
+# Agent harness session metadata
+.zcode/

@@ -70,7 +70,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.withExecutor(super.executor);
 
   @override
-  int get schemaVersion => 12;
+  int get schemaVersion => 13;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -135,6 +135,10 @@ class AppDatabase extends _$AppDatabase {
           habitCompletionsTable,
           habitCompletionsTable.challengeXp,
         );
+      }
+      if (from < 13) {
+        // Persist the habit's emoji (imageUrl) so cards render it after reload.
+        await m.addColumn(habitsTable, habitsTable.imageUrl);
       }
     },
     beforeOpen: (details) async {

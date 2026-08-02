@@ -24,6 +24,8 @@ class HabitsTable extends Table {
   IntColumn get timerDurationMinutes => integer().withDefault(const Constant(2))();
   TextColumn get integrationType => text().withDefault(const Constant('none'))();
   IntColumn get integrationTarget => integer().nullable()();
+  // User-picked emoji shown on the habit card (the habit's visual identity).
+  TextColumn get imageUrl => text().nullable()();
 
   @override
   Set<Column> get primaryKey => {id};

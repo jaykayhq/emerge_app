@@ -52,6 +52,7 @@ class HabitsDao extends DatabaseAccessor<AppDatabase> with _$HabitsDaoMixin {
     int timerDurationMinutes = 2,
     String integrationType = 'none',
     int? integrationTarget,
+    String? imageUrl,
   }) {
     return into(habitsTable).insertOnConflictUpdate(
       HabitsTableCompanion(
@@ -76,6 +77,7 @@ class HabitsDao extends DatabaseAccessor<AppDatabase> with _$HabitsDaoMixin {
         timerDurationMinutes: Value(timerDurationMinutes),
         integrationType: Value(integrationType),
         integrationTarget: Value(integrationTarget),
+        imageUrl: Value(imageUrl),
       ),
     );
   }
