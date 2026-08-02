@@ -33,6 +33,7 @@ import 'package:emerge_app/features/onboarding/presentation/screens/endowment_in
 import 'package:emerge_app/features/settings/presentation/screens/settings_screen.dart';
 import 'package:emerge_app/features/settings/presentation/screens/notification_settings_screen.dart';
 import 'package:emerge_app/features/monetization/presentation/screens/paywall_screen.dart';
+import 'package:emerge_app/features/monetization/presentation/screens/manage_premium_screen.dart';
 
 import 'package:emerge_app/features/social/presentation/screens/tribe_lobby_screen.dart';
 import 'package:emerge_app/features/social/presentation/screens/challenges_screen.dart';
@@ -304,6 +305,10 @@ GoRouter router(Ref ref) {
       GoRoute(
         path: '/paywall',
         builder: (context, state) => const PaywallScreen(),
+      ),
+      GoRoute(
+        path: '/manage-premium',
+        builder: (context, state) => const ManagePremiumScreen(),
       ),
       GoRoute(
         path: '/world-splash',

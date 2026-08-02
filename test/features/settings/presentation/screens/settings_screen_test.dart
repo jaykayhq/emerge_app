@@ -1,6 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_core_platform_interface/test.dart';
@@ -15,13 +16,19 @@ import 'package:emerge_app/features/auth/domain/entities/user_extension.dart';
 import 'package:emerge_app/features/auth/presentation/providers/auth_providers.dart';
 import 'package:emerge_app/features/gamification/data/repositories/user_stats_repository.dart';
 import 'package:emerge_app/features/gamification/presentation/providers/user_stats_providers.dart';
+import 'package:emerge_app/features/habits/presentation/providers/habit_providers.dart';
+import 'package:emerge_app/features/monetization/data/services/manage_premium_service.dart';
+import 'package:emerge_app/features/monetization/domain/repositories/monetization_repository.dart';
 import 'package:emerge_app/features/monetization/domain/services/coach_ask_quota.dart';
 import 'package:emerge_app/features/monetization/presentation/providers/coach_ask_quota_provider.dart';
 import 'package:emerge_app/features/monetization/presentation/providers/subscription_provider.dart';
+import 'package:emerge_app/features/monetization/presentation/screens/manage_premium_screen.dart';
 import 'package:emerge_app/features/onboarding/data/repositories/local_settings_repository.dart';
 import 'package:emerge_app/features/onboarding/presentation/providers/onboarding_provider.dart';
 import 'package:emerge_app/features/settings/presentation/screens/settings_screen.dart';
 import 'package:emerge_app/features/world_map/presentation/providers/world_health_provider.dart';
+import 'package:fpdart/fpdart.dart';
+import 'package:purchases_flutter/purchases_flutter.dart';
 
 class _MockAppDatabase extends Mock implements AppDatabase {}
 class _MockSyncEngine extends Mock implements EnhancedSyncEngine {}
@@ -49,6 +56,55 @@ class FakeIsPremium extends IsPremium {
   FakeIsPremium(this.premium);
   @override
   Future<bool> build() async => premium;
+}
+
+class _FakeMonetizationRepository implements MonetizationRepository {
+  int openManageCalls = 0;
+  @override
+  Future<Either<String, bool>> openManageSubscription() async {
+    openManageCalls++;
+    return const Right(true);
+  }
+  // Unused members — fail loudly if touched.
+  @override
+  Future<Either<String, Map<String, String>>> getConsumablePrices(List<String> productIds) async => const Left('unused');
+  @override
+  Future<Either<String, bool>> get isPremium async => const Right(true);
+  @override
+  Future<Either<String, Offerings>> getOfferings() async => const Left('unused');
+  @override
+  Future<void> identify(String uid) async {}
+  @override
+  Future<void> initialize({String? uid}) async {}
+  @override
+  Future<Either<String, bool>> purchaseConsumable(String productId) async => const Left('unused');
+  @override
+  Future<Either<String, bool>> purchasePremium([Package? package]) async => const Right(true);
+  @override
+  Future<Either<String, bool>> restorePurchases() async => const Right(true);
+  @override
+  Future<String?> get premiumPriceString async => '\$4.99/mo';
+  @override
+  Stream<bool> get premiumStatusStream => const Stream.empty();
+  @override
+  Future<void> reset() async {}
+}
+
+class _FakeCaller implements ManagePremiumCaller {
+  @override
+  Future<Map<String, dynamic>> call(String name, Map<String, dynamic> data) async {
+    return {'ok': true};
+  }
+}
+
+class _FakeManagePremiumService extends ManagePremiumService {
+  _FakeManagePremiumService() : super(_FakeCaller());
+
+  @override
+  Future<Either<String, void>> cancel() async => const Right(null);
+
+  @override
+  Future<Either<String, void>> pause() async => const Right(null);
 }
 
 /// In-memory settings store for the Tutorials section tests (mirrors
@@ -93,6 +149,7 @@ Widget createTest({
   bool premium = false,
   CoachAskQuota? quota,
   FakeWorldThemeNotifier? worldTheme,
+  GoRouter? router,
 }) {
   return ProviderScope(
     overrides: [
@@ -108,6 +165,14 @@ Widget createTest({
       themeControllerProvider.overrideWithValue(ThemeMode.dark),
       worldThemeProvider.overrideWith(() => worldTheme ?? FakeWorldThemeNotifier()),
       isPremiumProvider.overrideWith(() => FakeIsPremium(premium)),
+      habitsProvider.overrideWith((ref) => Stream.value(const [])),
+      userStreakProvider.overrideWith((ref) => Stream.value(0)),
+      monetizationRepositoryProvider.overrideWithValue(
+        _FakeMonetizationRepository(),
+      ),
+      managePremiumServiceProvider.overrideWithValue(
+        _FakeManagePremiumService(),
+      ),
       worldHealthStreamProvider.overrideWith(
         (ref) => Stream.value(0.5),
       ),
@@ -127,9 +192,11 @@ Widget createTest({
         ),
       ),
     ],
-    child: const MaterialApp(
-      home: SettingsScreen(),
-    ),
+    child: router != null
+        ? MaterialApp.router(routerConfig: router)
+        : const MaterialApp(
+            home: SettingsScreen(),
+          ),
   );
 }
 
@@ -156,6 +223,29 @@ void main() {
     await tester.pump();
 
     expect(find.text('Dark Mode'), findsOneWidget);
+  });
+
+  testWidgets('Manage Subscription tile navigates to manage premium',
+      (tester) async {
+    final router = GoRouter(
+      initialLocation: '/settings',
+      routes: [
+        GoRoute(path: '/settings', builder: (_, _) => const SettingsScreen()),
+        GoRoute(
+          path: '/manage-premium',
+          builder: (_, _) => const ManagePremiumScreen(),
+        ),
+      ],
+    );
+
+    await tester.pumpWidget(createTest(premium: true, router: router));
+    await tester.pump();
+    await tester.pump();
+
+    await tester.tap(find.text('Manage Subscription'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Manage Premium'), findsOneWidget);
   });
 
   group('Tutorials section', () {

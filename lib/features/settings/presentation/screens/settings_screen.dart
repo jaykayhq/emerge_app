@@ -147,18 +147,7 @@ class SettingsScreen extends ConsumerWidget {
                     Icons.card_membership,
                     'Manage Subscription',
                     trailingText: isPremium ? 'Premium' : 'Free',
-                    onTap: () {
-                      if (isPremium) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text('You are an active Premium member!'),
-                            backgroundColor: EmergeColors.teal,
-                          ),
-                        );
-                      } else {
-                        context.push('/paywall');
-                      }
-                    },
+                    onTap: () => context.push('/manage-premium'),
                   );
                 },
               ),
