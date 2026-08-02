@@ -18,6 +18,14 @@ service cloud.firestore {
       return request.auth != null && request.auth.token.admin == true;
     }
 
+    // Verified creator: role claim 'creator' AND a verified creator_profiles
+    // doc. get() on a missing doc errors → the rule denies (fail-closed).
+    function isVerifiedCreator() {
+      return isAuthenticated() &&
+             request.auth.token.role == 'creator' &&
+             get(/databases/$(database)/documents/creator_profiles/$(request.auth.uid)).data.isVerifiedCreator == true;
+    }
+
     // Input validation - simplified to avoid false positives
     function sanitizeString(input) {
       return input is string &&
@@ -66,12 +74,14 @@ service cloud.firestore {
 
     // Helper function to validate tribe data
     function isValidTribe(tribe) {
-      return tribe.keys().hasAll(['name', 'archetypeId', 'type']) &&
+      return tribe.keys().hasAll(['name', 'type']) &&
              tribe.keys().size() <= 40 &&
              sanitizeString(tribe.name) &&
              tribe.name.size() <= 100 &&
-             tribe.archetypeId in ['athlete', 'scholar', 'stoic', 'creator', 'zealot', 'mystic'] &&
-             tribe.type in ['official', 'brand', 'userPrivate', 'userPublic'] &&
+             // archetypeId optional ONLY for creator tribes (null archetype)
+             (!tribe.keys().hasAny(['archetypeId']) ||
+                tribe.archetypeId in ['athlete', 'scholar', 'stoic', 'creator', 'zealot', 'mystic']) &&
+             tribe.type in ['official', 'brand', 'userPrivate', 'userPublic', 'creator'] &&
              (!tribe.keys().hasAny(['description']) || (tribe.description is string && tribe.description.size() <= 500)) &&
              (!tribe.keys().hasAny(['imageUrl']) || tribe.imageUrl == null || tribe.imageUrl is string) &&
              (!tribe.keys().hasAny(['ownerId']) || tribe.ownerId is string) &&
@@ -360,7 +370,8 @@ service cloud.firestore {
     // Clients may only merge-update specific aggregate stat fields.
     match /tribes/{tribeId} {
       allow read: if isAuthenticated();
-      allow create: if isAuthenticated() && isValidTribe(request.resource.data);
+      allow create: if isAuthenticated() && isValidTribe(request.resource.data) &&
+        (request.resource.data.type != 'creator' || isVerifiedCreator());
       allow update: if isAuthenticated() && isValidTribe(request.resource.data) && (
         resource.data.createdBy == request.auth.uid ||
         isAdmin() ||
@@ -404,10 +415,16 @@ service cloud.firestore {
       allow delete: if isAuthenticated() && resource.data.senderId == request.auth.uid;
     }
 
-    // Challenges — catalog entries
+    // Challenges — catalog entries. Verified creators may add their own
+    // (createdBy == auth.uid); admins manage the curated catalog.
     match /challenges/{challengeId} {
       allow read: if true;
-      allow create, update, delete: if isAdmin();
+      allow create: if isAdmin() ||
+        (isVerifiedCreator() && request.resource.data.createdBy == request.auth.uid);
+      allow update: if isAdmin() ||
+        (isVerifiedCreator() && resource.data.createdBy == request.auth.uid);
+      allow delete: if isAdmin() ||
+        (isVerifiedCreator() && resource.data.createdBy == request.auth.uid);
 
       match /participants/{participantId} {
         allow read: if isAuthenticated();
@@ -497,22 +514,40 @@ service cloud.firestore {
       allow write: if request.auth != null && request.auth.token.admin == true;
     }
 
-    // Blueprints (habit stacks shared by Emerge)
-    match /blueprints/{blueprintId} {
-      allow read: if true;
-      allow create, update, delete: if isAdmin();
+    // Creator invite codes — functions only (admin SDK bypasses rules).
+    // Clients must never read, create, or consume codes directly.
+    match /creator_invite_codes/{code} {
+      allow read, write: if false;
     }
 
-    // Creator Profiles (verified creators)
-    // Docs whose ID starts with "creator_" are system-seeded official profiles
-    // and may be written by any authenticated user (seeder runs on-device).
-    // Real user-owned creator profiles are restricted to their owner only and
-    // must validate against isValidCreatorProfile (which allows role +
-    // creator onboarding progress but blocks privileged fields).
+    // Blueprints — verified creators publish their own (creatorUserId).
+    match /blueprints/{blueprintId} {
+      allow read: if true;
+      allow create: if isAdmin() ||
+        (isVerifiedCreator() && request.resource.data.creatorUserId == request.auth.uid);
+      allow update: if isAdmin() ||
+        (isVerifiedCreator() && resource.data.creatorUserId == request.auth.uid &&
+         request.resource.data.creatorUserId == request.auth.uid);
+      allow delete: if isAdmin() ||
+        (isVerifiedCreator() && resource.data.creatorUserId == request.auth.uid);
+    }
+
+    // Creator Profiles.
+    // The redeemCreatorInvite function creates docs (isVerifiedCreator: true).
+    // Owners may update non-privileged fields (onboarding) but can never flip
+    // ownerId / userId / role / isVerifiedCreator — those are server-only.
+    // The profileId.startsWith('creator_') carve-out preserves the on-device
+    // system-creator seeder (seedCreatorsIfEmpty, creator_aria_chen, ...).
     match /creator_profiles/{profileId} {
       allow read: if true;
-      allow create: if isAuthenticated() && request.resource.data.ownerId == request.auth.uid;
-      allow update: if isAuthenticated() && (resource.data.ownerId == request.auth.uid || isAdmin());
+      allow create: if isAdmin() ||
+        (profileId.startsWith('creator_') && isAuthenticated());
+      allow update: if isAdmin() ||
+        (isAuthenticated() && resource.data.ownerId == request.auth.uid &&
+         isValidCreatorProfile(request.resource.data) &&
+         !request.resource.data.diff(resource.data).affectedKeys()
+           .hasAny(['ownerId', 'userId', 'role', 'isVerifiedCreator'])) ||
+        (profileId.startsWith('creator_') && isAuthenticated());
       allow delete: if isAdmin();
     }
 
