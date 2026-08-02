@@ -13,7 +13,6 @@
  * - FCM push notifications with archetype-themed messaging
  */
 
-import { onDocumentCreated, onDocumentWritten } from "firebase-functions/v2/firestore";
 import { onSchedule } from "firebase-functions/v2/scheduler";
 // import { onCall, HttpsError } from "firebase-functions/v2/https";
 import * as admin from "firebase-admin";
@@ -251,129 +250,6 @@ async function generateAIInsight(userId: string): Promise<string> {
 }
 
 // ============================================================================
-// CLOUD FUNCTIONS - HABIT LIFECYCLE
-// ============================================================================
-
-/**
- * Triggered when a habit is created, updated, or deleted.
- */
-export const onHabitChanged = onDocumentWritten("users/{userId}/habits/{habitId}", async (event) => {
-  const userId = event.params.userId;
-  const habitId = event.params.habitId;
-  const firestore = getDb();
-
-  const before = event.data?.before.exists ? event.data?.before.data() : null;
-  const after = event.data?.after.exists ? event.data?.after.data() : null;
-
-  try {
-    // HANDLE DELETION
-    if (before && !after) {
-      console.log(`Habit deleted: ${habitId} for user ${userId}`);
-      await firestore
-        .collection("users")
-        .doc(userId)
-        .collection("notificationSchedules")
-        .doc(habitId)
-        .delete();
-      return;
-    }
-
-    // HANDLE CREATION
-    if (!before && after) {
-      console.log(`Habit created: ${habitId} for user ${userId}`);
-      const userDoc = await firestore.collection("users").doc(userId).get();
-      if (!userDoc.exists) return;
-
-      const userData = userDoc.data();
-      const archetype = userData?.archetype || "none";
-      const settings = userData?.settings || {};
-      const notificationsEnabled = userData?.notificationsEnabled !== false;
-      const archetypeNudges = settings.archetypeNudges !== false;
-
-      if (after.reminderEnabled && notificationsEnabled && archetypeNudges) {
-        const title = "Habit Created";
-        const body = getTemplateMessage(archetype, "welcome", after.title || "Your new habit");
-        await sendNotification(userId, title, body, "habit_welcome", { habitId, archetype });
-      }
-
-      await firestore
-        .collection("users")
-        .doc(userId)
-        .collection("notificationSchedules")
-        .doc(habitId)
-        .set({
-          habitId,
-          userId,
-          archetype: userData?.archetype || "none",
-          reminderTime: after.reminderTime || "07:00",
-          frequency: after.frequency || "daily",
-          specificDays: after.specificDays || [],
-          welcomeNotified: true,
-          lastReminderSent: null,
-          enabled: after.reminderEnabled || false,
-          lastStreakWarningSent: null,
-          streakWarningCount: 0,
-          createdAt: admin.firestore.FieldValue.serverTimestamp(),
-          updatedAt: admin.firestore.FieldValue.serverTimestamp(),
-        });
-      return;
-    }
-
-    // HANDLE UPDATE
-    if (before && after) {
-      const timeChanged = before.reminderTime !== after.reminderTime;
-      const frequencyChanged = before.frequency !== after.frequency;
-      const daysChanged = JSON.stringify(before.specificDays) !== JSON.stringify(after.specificDays);
-      const enabledChanged = before.reminderEnabled !== after.reminderEnabled;
-
-      if (!timeChanged && !frequencyChanged && !daysChanged && !enabledChanged) return;
-
-      const scheduleRef = firestore
-        .collection("users")
-        .doc(userId)
-        .collection("notificationSchedules")
-        .doc(habitId);
-
-      const scheduleDoc = await scheduleRef.get();
-
-      if (!scheduleDoc.exists && after.reminderEnabled) {
-        const userDoc = await firestore.collection("users").doc(userId).get();
-        const archetype = userDoc.data()?.archetype || "none";
-
-        await scheduleRef.set({
-          habitId,
-          userId,
-          archetype,
-          reminderTime: after.reminderTime || "07:00",
-          frequency: after.frequency || "daily",
-          specificDays: after.specificDays || [],
-          welcomeNotified: true,
-          lastReminderSent: null,
-          enabled: true,
-          lastStreakWarningSent: null,
-          streakWarningCount: 0,
-          createdAt: admin.firestore.FieldValue.serverTimestamp(),
-          updatedAt: admin.firestore.FieldValue.serverTimestamp(),
-        });
-      } else if (scheduleDoc.exists) {
-        const updates: Record<string, any> = {
-          updatedAt: admin.firestore.FieldValue.serverTimestamp(),
-        };
-        if (timeChanged) updates.reminderTime = after.reminderTime;
-        if (frequencyChanged) updates.frequency = after.frequency;
-        if (daysChanged) updates.specificDays = after.specificDays;
-        if (enabledChanged) updates.enabled = after.reminderEnabled;
-        await scheduleRef.update(updates);
-      }
-    }
-    return;
-  } catch (error) {
-    console.error(`Error in onHabitChanged:`, error);
-    return;
-  }
-});
-
-// ============================================================================
 // CLOUD FUNCTIONS - LEVEL UP
 // ============================================================================
 
@@ -412,41 +288,6 @@ export const sendDailyInsights = onSchedule({
     return;
   } catch (error) {
     console.error("Error in sendDailyInsights:", error);
-    return;
-  }
-});
-
-// ============================================================================
-// CLOUD FUNCTIONS - ACHIEVEMENT NOTIFICATIONS
-// ============================================================================
-
-/**
- * Triggered when an achievement is earned.
- */
-export const notifyAchievement = onDocumentCreated("users/{userId}/achievements/{achievementId}", async (event) => {
-  const achievement = event.data?.data();
-  if (!achievement) return;
-
-  const userId = event.params.userId;
-  const firestore = getDb();
-
-  try {
-    const userDoc = await firestore.collection("users").doc(userId).get();
-    const userData = userDoc.data();
-    const settings = userData?.settings || {};
-    const archetype = userData?.archetype || "none";
-
-    if (userData?.notificationsEnabled === false || settings.rewardsUpdates === false) {
-      return;
-    }
-
-    await sendNotification(userId, "Achievement Earned!", `${achievement.title}: ${achievement.description}`, "achievement", {
-      achievementId: event.params.achievementId,
-      archetype,
-    });
-    return;
-  } catch (error) {
-    console.error(`Error in notifyAchievement:`, error);
     return;
   }
 });

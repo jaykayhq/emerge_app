@@ -51,3 +51,17 @@ describe("Cloud Functions", () => {
     });
   });
 });
+
+describe("dead triggers removed (SP-H)", () => {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const index = require("../lib/index");
+  it("no longer exports enforceRateLimit", () => {
+    expect(index.enforceRateLimit).toBeUndefined();
+  });
+  it("no longer exports onHabitChanged", () => {
+    expect(index.onHabitChanged).toBeUndefined();
+  });
+  it("no longer exports notifyAchievement", () => {
+    expect(index.notifyAchievement).toBeUndefined();
+  });
+});
