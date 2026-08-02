@@ -5,6 +5,8 @@ import 'package:gap/gap.dart';
 import 'package:emerge_app/core/theme/emerge_colors.dart';
 import 'package:emerge_app/core/presentation/widgets/emerge_loading_skeleton.dart';
 import 'package:emerge_app/core/presentation/widgets/app_error_widget.dart';
+import 'package:emerge_app/features/social/domain/models/challenge.dart';
+import 'package:emerge_app/features/social/presentation/providers/challenge_provider.dart';
 import 'package:emerge_app/features/social/presentation/providers/creator_provider.dart';
 import 'package:emerge_app/features/social/presentation/providers/tribes_provider.dart';
 
@@ -168,11 +170,10 @@ class _TribeManagementView extends ConsumerWidget {
           title: 'Create Challenge',
           subtitle: 'Launch a tribe-wide habit challenge',
           color: Colors.amber,
-          onTap: () => ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Challenge creator launching soon 🏆'),
-              behavior: SnackBarBehavior.floating,
-            ),
+          onTap: () => _showCreateChallengeDialog(
+            context,
+            ref,
+            FirebaseAuth.instance.currentUser?.uid ?? '',
           ),
         ),
         const Gap(8),
@@ -271,6 +272,173 @@ class _TribeManagementView extends ConsumerWidget {
               );
             },
             child: const Text('Post'),
+          ),
+        ],
+      ),
+    );
+  }
+  void _showCreateChallengeDialog(
+    BuildContext context,
+    WidgetRef ref,
+    String creatorUid,
+  ) {
+    final titleController = TextEditingController();
+    final descriptionController = TextEditingController();
+    var category = ChallengeCategory.fitness;
+    var days = 7;
+    var submitting = false;
+
+    Future<void> submit() async {
+      final title = titleController.text.trim();
+      if (title.isEmpty) return;
+      final now = DateTime.now();
+      final challenge = Challenge(
+        id: '',
+        title: title,
+        description: descriptionController.text.trim(),
+        imageUrl: '',
+        reward: '',
+        participants: 0,
+        daysLeft: days,
+        totalDays: days,
+        currentDay: 0,
+        status: ChallengeStatus.active,
+        xpReward: 100,
+        steps: const [],
+        category: category,
+        createdBy: creatorUid,
+        createdAt: now,
+      );
+      await ref.read(challengeRepositoryProvider).createCatalogChallenge(challenge);
+      ref.invalidate(allChallengesProvider);
+      ref.invalidate(featuredChallengesProvider);
+    }
+
+    showDialog<void>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: const Color(0xFF1A0A2A),
+        title: const Text('Launch a Tribe Challenge',
+            style: TextStyle(color: Colors.white)),
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              TextField(
+                controller: titleController,
+                style: const TextStyle(color: Colors.white),
+                decoration: const InputDecoration(
+                  labelText: 'Challenge title',
+                  labelStyle: TextStyle(color: Colors.white70),
+                  filled: true,
+                  fillColor: Colors.white10,
+                ),
+              ),
+              const Gap(12),
+              TextField(
+                controller: descriptionController,
+                maxLines: 3,
+                style: const TextStyle(color: Colors.white),
+                decoration: const InputDecoration(
+                  labelText: 'Description (optional)',
+                  labelStyle: TextStyle(color: Colors.white70),
+                  filled: true,
+                  fillColor: Colors.white10,
+                ),
+              ),
+              const Gap(12),
+              DropdownButtonFormField<ChallengeCategory>(
+                initialValue: category,
+                dropdownColor: const Color(0xFF1A0A2A),
+                style: const TextStyle(color: Colors.white),
+                decoration: const InputDecoration(
+                  labelText: 'Category',
+                  labelStyle: TextStyle(color: Colors.white70),
+                  filled: true,
+                  fillColor: Colors.white10,
+                ),
+                items: ChallengeCategory.values
+                    .where((c) => c != ChallengeCategory.all)
+                    .map(
+                      (c) => DropdownMenuItem(
+                        value: c,
+                        child: Text(
+                          c.name[0].toUpperCase() + c.name.substring(1),
+                        ),
+                      ),
+                    )
+                    .toList(),
+                onChanged: (v) {
+                  if (v != null) category = v;
+                },
+              ),
+              const Gap(12),
+              DropdownButtonFormField<int>(
+                initialValue: days,
+                dropdownColor: const Color(0xFF1A0A2A),
+                style: const TextStyle(color: Colors.white),
+                decoration: const InputDecoration(
+                  labelText: 'Duration',
+                  labelStyle: TextStyle(color: Colors.white70),
+                  filled: true,
+                  fillColor: Colors.white10,
+                ),
+                items: const [7, 14, 21, 30]
+                    .map(
+                      (d) => DropdownMenuItem(
+                        value: d,
+                        child: Text('$d days'),
+                      ),
+                    )
+                    .toList(),
+                onChanged: (v) {
+                  if (v != null) days = v;
+                },
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Cancel', style: TextStyle(color: Colors.white54)),
+          ),
+          FilledButton(
+            style: FilledButton.styleFrom(
+              backgroundColor: Colors.amber,
+              foregroundColor: Colors.black,
+            ),
+            onPressed: submitting
+                ? null
+                : () async {
+                    submitting = true;
+                    try {
+                      await submit();
+                      if (ctx.mounted) Navigator.pop(ctx);
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('Challenge published to your tribe! 🏆'),
+                            behavior: SnackBarBehavior.floating,
+                          ),
+                        );
+                      }
+                    } catch (e) {
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text('Publishing failed: $e'),
+                            behavior: SnackBarBehavior.floating,
+                          ),
+                        );
+                      }
+                    } finally {
+                      submitting = false;
+                    }
+                  },
+            child: const Text('Publish Challenge',
+                style: TextStyle(fontWeight: FontWeight.bold)),
           ),
         ],
       ),

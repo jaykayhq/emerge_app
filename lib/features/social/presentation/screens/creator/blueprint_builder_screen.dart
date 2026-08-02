@@ -1,3 +1,5 @@
+import 'package:cloud_functions/cloud_functions.dart';
+import 'package:emerge_app/core/utils/app_logger.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
@@ -278,7 +280,18 @@ class _BlueprintBuilderScreenState extends ConsumerState<BlueprintBuilderScreen>
       );
 
       final repo = ref.read(blueprintRepositoryProvider);
-      await repo.createBlueprint(blueprint);
+      final id = await repo.createBlueprint(blueprint);
+
+      // SP-E D5/D7: auto-create (or reuse) the creator tribe and link it.
+      // Failure is non-fatal — the blueprint is already published.
+      try {
+        final functions = FirebaseFunctions.instance;
+        await functions.httpsCallable('ensureCreatorTribe').call(
+          <String, dynamic>{'blueprintId': id},
+        );
+      } catch (e) {
+        AppLogger.w('ensureCreatorTribe failed (publish still succeeded): $e');
+      }
 
       if (mounted) {
         context.pop();
