@@ -10,21 +10,17 @@ const clubMap: Record<string, string> = {
 };
 
 /**
- * Recalculates all tribe statistics by scanning user_stats and global activities.
+ * Recalculates tribe statistics for every tribe (official clubs + creator
+ * tribes with explicit membership docs) from user_stats and global activities.
  * Uses streams to process large collections efficiently without memory overflow.
+ * Non-transactional by design: a failed run simply reruns at the next 3AM (spec §8).
  */
 export async function recalcTribesInternal(db: admin.firestore.Firestore): Promise<number> {
   console.log("Starting scalable tribe recalculation...");
-  
-  // 1. Map users to tribes based on archetype
-  // We store this in memory. For 100k users, this is ~10-20MB.
-  const userToTribeMap = new Map<string, string>();
-  const tribeMembers = new Map<string, string[]>();
-  
-  // Initialize tribe member lists
-  for (const clubId of Object.values(clubMap)) {
-    tribeMembers.set(clubId, []);
-  }
+
+  // 1. uid -> archetype. The archetype club is only a fallback for users
+  // without an explicit membership doc (aggregateTribeStats enforces this).
+  const archetypeMap = new Map<string, string>();
 
   console.log("Mapping users to archetypes...");
   await new Promise((resolve, reject) => {
@@ -32,21 +28,17 @@ export async function recalcTribesInternal(db: admin.firestore.Firestore): Promi
       .select("archetype") // Only fetch needed field
       .stream()
       .on("data", (doc: admin.firestore.QueryDocumentSnapshot) => {
-        const userData = doc.data();
-        const archetype = userData.archetype;
+        const archetype = doc.data().archetype;
         if (archetype && archetype !== "none") {
-          const clubId = clubMap[archetype.toLowerCase()];
-          if (clubId) {
-            userToTribeMap.set(doc.id, clubId);
-          }
+          archetypeMap.set(doc.id, archetype);
         }
       })
       .on("end", resolve)
       .on("error", reject);
   });
 
-  // 1b. Query explicit tribe membership records from users/{uid}/tribes subcollections
-  const userMembershipMap = new Map<string, { tribeId: string }>();
+  // 2. Explicit membership records from users/{uid}/tribes subcollections
+  const membershipMap = new Map<string, string>();
 
   console.log("Querying explicit tribe membership records...");
   await new Promise((resolve, reject) => {
@@ -56,59 +48,39 @@ export async function recalcTribesInternal(db: admin.firestore.Firestore): Promi
         const ref = doc.ref.path;
         const parts = ref.split("/");
         if (parts.length === 4 && parts[0] === "users" && parts[2] === "tribes") {
-          const uid = parts[1];
-          const tribeId = parts[3];
-          userMembershipMap.set(uid, { tribeId });
+          membershipMap.set(parts[1], parts[3]);
         }
       })
       .on("end", resolve)
       .on("error", reject);
   });
 
-  // 1c. Populate tribeMembers respecting explicit membership over archetype
-  for (const [uid, archetype] of userToTribeMap.entries()) {
-    const membership = userMembershipMap.get(uid);
-    const clubId = membership ? membership.tribeId : archetype;
-    const members = tribeMembers.get(clubId);
-    if (members) members.push(uid);
-  }
-
-  // 2. Aggregate XP from user_stats using stream
-  const tribeXp = new Map<string, number>();
-  for (const clubId of Object.values(clubMap)) {
-    tribeXp.set(clubId, 0);
-  }
+  // 3. uid -> xp from user_stats (per-member XP, no archetype bucketing)
+  const userStatsXp = new Map<string, number>();
 
   console.log("Aggregating XP from user_stats...");
   await new Promise((resolve, reject) => {
     db.collection("user_stats")
       .stream()
       .on("data", (doc: admin.firestore.QueryDocumentSnapshot) => {
-        const tribeId = userToTribeMap.get(doc.id);
-        if (tribeId) {
-          const stats = doc.data();
-          let xp = 0;
-          const avatarStats = stats.avatarStats || {};
-          
-          if (typeof avatarStats.totalXp === "number") {
-            xp = avatarStats.totalXp;
-          } else if (typeof stats.totalXp === "number") {
-            xp = stats.totalXp;
-          }
-          
-          const currentXp = tribeXp.get(tribeId) || 0;
-          tribeXp.set(tribeId, currentXp + xp);
+        const stats = doc.data();
+        let xp = 0;
+        const avatarStats = stats.avatarStats || {};
+
+        if (typeof avatarStats.totalXp === "number") {
+          xp = avatarStats.totalXp;
+        } else if (typeof stats.totalXp === "number") {
+          xp = stats.totalXp;
         }
+
+        userStatsXp.set(doc.id, xp);
       })
       .on("end", resolve)
       .on("error", reject);
   });
 
-  // 3. Aggregate activity counts from global_activities using stream
+  // 4. Aggregate activity counts from global_activities using stream
   const tribeActivities = new Map<string, { habits: number, challenges: number }>();
-  for (const clubId of Object.values(clubMap)) {
-    tribeActivities.set(clubId, { habits: 0, challenges: 0 });
-  }
 
   console.log("Aggregating activity counts...");
   await new Promise((resolve, reject) => {
@@ -117,49 +89,68 @@ export async function recalcTribesInternal(db: admin.firestore.Firestore): Promi
       .on("data", (doc: admin.firestore.QueryDocumentSnapshot) => {
         const act = doc.data();
         const clubId = act.clubId;
-        const counts = tribeActivities.get(clubId);
-        
-        if (clubId && counts) {
+
+        if (clubId) {
+          const counts = tribeActivities.get(clubId) ?? { habits: 0, challenges: 0 };
           if (act.type === "habit_complete" || act.type === "habit_completion") {
             counts.habits++;
           } else if (act.type === "challenge_complete") {
             counts.challenges++;
           }
+          tribeActivities.set(clubId, counts);
         }
       })
       .on("end", resolve)
       .on("error", reject);
   });
 
-  // 4. Update tribe documents in batches
-  let updatedCount = 0;
-  const batch = db.batch();
-  
-  // Use a Set to avoid duplicate official club IDs if multiple archetypes map to same club
-  const officialClubIds = Array.from(new Set(Object.values(clubMap)));
+  // 5. Pure aggregation: members = explicit membership docs, official-club
+  // fallback for legacy users; XP summed per member.
+  const byTribe = aggregateTribeStats({ membershipMap, archetypeMap, clubMap, userStatsXp });
 
-  for (const clubId of officialClubIds) {
-    const members = tribeMembers.get(clubId) || [];
-    const totalXp = tribeXp.get(clubId) || 0;
-    const activities = tribeActivities.get(clubId) || { habits: 0, challenges: 0 };
-    
-    const tribeRef = db.collection("tribes").doc(clubId);
-    
-    batch.update(tribeRef, {
+  // 6. Union with the official club ids so clubs with zero members still get
+  // their stale memberCount/members/stats reset by the daily recalc.
+  const tribeIds = new Set([...byTribe.keys(), ...Object.values(clubMap)]);
+
+  // 7. Merge-set writes preserve creator-tribe ownerId/name/type and create
+  // missing docs. Chunked because Firestore batches cap at 500 ops.
+  let updatedCount = 0;
+  const batchSize = 500;
+  let batch = db.batch();
+  let opsInBatch = 0;
+
+  for (const tribeId of tribeIds) {
+    const entry = byTribe.get(tribeId);
+    const members = entry?.members ?? [];
+    const totalXp = entry?.totalXp ?? 0;
+    const activities = tribeActivities.get(tribeId) ?? { habits: 0, challenges: 0 };
+
+    const tribeRef = db.collection("tribes").doc(tribeId);
+
+    batch.set(tribeRef, {
       members: members,
       memberCount: members.length,
       totalXp: totalXp,
       totalHabitsCompleted: activities.habits,
       totalChallengesCompleted: activities.challenges,
       lastStatsSync: admin.firestore.FieldValue.serverTimestamp()
-    });
-    
+    }, { merge: true });
+
     updatedCount++;
-    console.log(`Queued update for ${clubId}: ${members.length} members, ${totalXp} XP.`);
+    opsInBatch++;
+    console.log(`Queued update for ${tribeId}: ${members.length} members, ${totalXp} XP.`);
+
+    if (opsInBatch === batchSize) {
+      await batch.commit();
+      batch = db.batch();
+      opsInBatch = 0;
+    }
   }
 
-  await batch.commit();
-  console.log(`✓ Scalable tribe recalculation finished. Updated ${updatedCount} official clubs.`);
+  if (opsInBatch > 0) {
+    await batch.commit();
+  }
+  console.log(`✓ Scalable tribe recalculation finished. Updated ${updatedCount} tribes.`);
   return updatedCount;
 }
 
