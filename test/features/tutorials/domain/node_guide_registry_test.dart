@@ -21,6 +21,10 @@ void main() {
       expect(NodeGuideRegistry.forNode('does_not_exist'), isNull);
     });
 
+    test('retired discover node has no guide', () {
+      expect(NodeGuideRegistry.forNode('discover'), isNull);
+    });
+
     test('every item has title and body', () {
       for (final d in NodeGuideRegistry.all) {
         for (final item in d.items) {

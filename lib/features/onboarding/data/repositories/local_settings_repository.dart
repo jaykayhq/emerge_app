@@ -208,8 +208,8 @@ class LocalSettingsRepository {
 
   /// Migrates legacy companion visited flags into the node-guide system.
   /// Idempotent: only migrates keys that exist; never overwrites already-seen
-  /// node flags. The `discover` flag migrates too — its node dies with the
-  /// blueprints page in SP-F.
+  /// node flags. Legacy flags for retired nodes (e.g. the blueprints page's
+  /// `/discover`) are dropped, not migrated.
   Future<void> migrateVisitedFlags() async {
     final keys = _getKeys().where((k) => k.startsWith('companion_visited_'));
     if (keys.isEmpty) return;
@@ -219,7 +219,6 @@ class LocalSettingsRepository {
       '/world-map': 'world_map',
       '/profile/reflections': 'coach',
       '/challenges': 'challenges',
-      '/discover': 'discover',
     };
 
     for (final key in keys) {

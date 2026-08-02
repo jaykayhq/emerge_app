@@ -228,24 +228,6 @@ class NodeGuideRegistry {
         ),
       ],
     ),
-    NodeGuideDefinition(
-      nodeId: 'discover',
-      title: 'Blueprints',
-      primaryColor: EmergeColors.violet,
-      titleIcon: Icons.auto_stories_outlined,
-      items: [
-        NodeGuideItem(
-          icon: Icons.category_outlined,
-          title: 'Browse by category',
-          body: 'Morning, productivity, fitness, mindfulness, learning.',
-        ),
-        NodeGuideItem(
-          icon: Icons.preview_outlined,
-          title: 'Preview before adopting',
-          body: 'Open a blueprint to see its habit stack and adopt it.',
-        ),
-      ],
-    ),
   ];
 
   static NodeGuideDefinition? forNode(String nodeId) {

@@ -23,7 +23,9 @@ void main() {
 
     expect(await repo.getHasSeenNodeGuide('timeline'), isTrue);
     expect(await repo.getHasSeenNodeGuide('challenges'), isTrue);
-    expect(await repo.getHasSeenNodeGuide('discover'), isTrue);
+    // The discover node died with the blueprints page in SP-F: its legacy
+    // flag must not migrate into a node-guide flag.
+    expect(await repo.getHasSeenNodeGuide('discover'), isFalse);
     // False legacy flags do not migrate.
     expect(await repo.getHasSeenNodeGuide('tribes'), isFalse);
 
