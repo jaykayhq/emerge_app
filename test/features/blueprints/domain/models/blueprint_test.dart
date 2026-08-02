@@ -22,6 +22,7 @@ void main() {
             attribute: HabitAttribute.focus,
           ),
         ],
+        recommendedArchetypes: ['scholar', 'zealot'],
       );
 
       final map = blueprint.toMap();
@@ -37,6 +38,10 @@ void main() {
       expect(restored.habits.length, blueprint.habits.length);
       expect(restored.habits[0].title, blueprint.habits[0].title);
       expect(restored.habits[1].attribute, blueprint.habits[1].attribute);
+      expect(
+        restored.recommendedArchetypes,
+        blueprint.recommendedArchetypes,
+      );
     });
 
     test('default values for new blueprint', () {
@@ -78,6 +83,44 @@ void main() {
       expect(copy.description, 'Original description');
       expect(copy.adoptionCount, 10);
       expect(copy.id, blueprint.id);
+    });
+
+    test('fromMap without recommendedArchetypes key returns empty list', () {
+      final map = {
+        'title': 'No Archetypes',
+        'description': '',
+        'category': 'General',
+        'creatorName': 'Emerge Official',
+        'creatorUserId': 'system',
+        'creatorArchetype': 'General',
+        'createdAt': DateTime(2025, 6, 1).toIso8601String(),
+        'habits': <Map<String, dynamic>>[],
+      };
+
+      final blueprint = Blueprint.fromMap('test_4', map);
+
+      expect(blueprint.recommendedArchetypes, isEmpty);
+    });
+
+    test('copyWith replaces recommendedArchetypes', () {
+      final blueprint = Blueprint(
+        id: 'test_5',
+        title: 'Original',
+        description: 'Original description',
+        category: 'Fitness',
+        creatorName: 'Creator',
+        creatorUserId: 'user_1',
+        creatorArchetype: 'Athlete',
+        createdAt: DateTime.now(),
+        habits: [const BlueprintHabit(title: 'Run')],
+      );
+
+      final copy = blueprint.copyWith(
+        recommendedArchetypes: ['scholar', 'zealot'],
+      );
+
+      expect(copy.recommendedArchetypes, ['scholar', 'zealot']);
+      expect(blueprint.recommendedArchetypes, isEmpty);
     });
 
     test('BlueprintHabit fromMap and toMap are symmetric', () {

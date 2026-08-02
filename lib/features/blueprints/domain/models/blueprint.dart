@@ -97,6 +97,7 @@ class Blueprint extends Equatable {
   final int tribeMemberCount;
   final bool isCreatorBlueprint;
   final String? creatorTribeId;
+  final List<String> recommendedArchetypes;
 
   const Blueprint({
     required this.id,
@@ -118,6 +119,7 @@ class Blueprint extends Equatable {
     this.tribeMemberCount = 0,
     this.isCreatorBlueprint = false,
     this.creatorTribeId,
+    this.recommendedArchetypes = const [],
   });
 
   Blueprint copyWith({
@@ -140,6 +142,7 @@ class Blueprint extends Equatable {
     int? tribeMemberCount,
     bool? isCreatorBlueprint,
     String? creatorTribeId,
+    List<String>? recommendedArchetypes,
   }) {
     return Blueprint(
       id: id ?? this.id,
@@ -161,6 +164,8 @@ class Blueprint extends Equatable {
       tribeMemberCount: tribeMemberCount ?? this.tribeMemberCount,
       isCreatorBlueprint: isCreatorBlueprint ?? this.isCreatorBlueprint,
       creatorTribeId: creatorTribeId ?? this.creatorTribeId,
+      recommendedArchetypes:
+          recommendedArchetypes ?? this.recommendedArchetypes,
     );
   }
 
@@ -184,6 +189,7 @@ class Blueprint extends Equatable {
     'tribeMemberCount': tribeMemberCount,
     'isCreatorBlueprint': isCreatorBlueprint,
     'creatorTribeId': creatorTribeId,
+    'recommendedArchetypes': recommendedArchetypes,
   };
 
   factory Blueprint.fromMap(String id, Map<String, dynamic> map) {
@@ -228,6 +234,8 @@ class Blueprint extends Equatable {
       tribeMemberCount: map['tribeMemberCount']?.toInt() ?? 0,
       isCreatorBlueprint: map['isCreatorBlueprint'] ?? false,
       creatorTribeId: map['creatorTribeId'] as String?,
+      recommendedArchetypes:
+          List<String>.from(map['recommendedArchetypes'] ?? []),
     );
   }
 
@@ -252,5 +260,6 @@ class Blueprint extends Equatable {
     tribeMemberCount,
     isCreatorBlueprint,
     creatorTribeId,
+    recommendedArchetypes,
   ];
 }
