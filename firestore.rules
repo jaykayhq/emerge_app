@@ -15,7 +15,9 @@ service cloud.firestore {
 
     // Helper function to check if user has admin claim
     function isAdmin() {
-      return request.auth != null && request.auth.token.admin == true;
+      return request.auth != null &&
+             'admin' in request.auth.token &&
+             request.auth.token.admin == true;
     }
 
     // Verified creator: role claim 'creator' AND a verified creator_profiles
@@ -370,7 +372,7 @@ service cloud.firestore {
                      request.resource.data.type != 'brand' &&
                      (request.resource.data.type != 'creator' || isVerifiedCreator());
       allow update: if isAuthenticated() && isValidTribe(request.resource.data) && (
-        resource.data.createdBy == request.auth.uid ||
+        ('createdBy' in resource.data && resource.data.createdBy == request.auth.uid) ||
         isAdmin() ||
         // SP-G D9: aggregate membership writes only — keys, ±1 delta, and the
         // caller's own uid must be the added/removed member.
@@ -381,14 +383,14 @@ service cloud.firestore {
           request.resource.data.memberCount == resource.data.memberCount - 1) &&
          request.resource.data.memberCount == resource.data.memberCount +
              (request.resource.data.members.size() - resource.data.members.size()) &&
-         ((request.resource.data.members.size() == resource.data.members.size() + 1 &&
-           request.resource.data.members.hasAll(resource.data.members) &&
-           request.resource.data.members.difference(resource.data.members)
-               .hasOnly([request.auth.uid])) ||
-          (request.resource.data.members.size() + 1 == resource.data.members.size() &&
-           resource.data.members.hasAll(request.resource.data.members) &&
-           resource.data.members.difference(request.resource.data.members)
-               .hasOnly([request.auth.uid]))))
+          ((request.resource.data.members.size() == resource.data.members.size() + 1 &&
+            request.resource.data.members.hasAll(resource.data.members) &&
+            request.resource.data.members.removeAll(resource.data.members)
+                .hasOnly([request.auth.uid])) ||
+           (request.resource.data.members.size() + 1 == resource.data.members.size() &&
+            resource.data.members.hasAll(request.resource.data.members) &&
+            resource.data.members.removeAll(request.resource.data.members)
+                .hasOnly([request.auth.uid]))))
       );
       allow delete: if isAdmin();
 
@@ -531,8 +533,8 @@ service cloud.firestore {
     }
 
     // Blueprints (habit stacks) — public read; written by admins, verified
-    // creators (their own docs), and the curated 'system' catalog seed
-    // (SP-F v3 backfill writes creatorUserId: 'system' in-app).
+    // creators (their own docs), and the curated 'system' catalog seed (the
+    // in-app curated catalog seed (`_createSeed`) writes creatorUserId: 'system').
     match /blueprints/{blueprintId} {
       allow read: if true;
       allow create: if isAdmin() ||
@@ -551,18 +553,14 @@ service cloud.firestore {
     // The redeemCreatorInvite function creates docs (isVerifiedCreator: true).
     // Owners may update non-privileged fields (onboarding) but can never flip
     // ownerId / userId / role / isVerifiedCreator — those are server-only.
-    // The profileId.startsWith('creator_') carve-out preserves the on-device
-    // system-creator seeder (seedCreatorsIfEmpty, creator_aria_chen, ...).
     match /creator_profiles/{profileId} {
       allow read: if true;
-      allow create: if isAdmin() ||
-        (profileId.startsWith('creator_') && isAuthenticated());
+      allow create: if isAdmin();
       allow update: if isAdmin() ||
         (isAuthenticated() && resource.data.ownerId == request.auth.uid &&
          isValidCreatorProfile(request.resource.data) &&
          !request.resource.data.diff(resource.data).affectedKeys()
-           .hasAny(['ownerId', 'userId', 'role', 'isVerifiedCreator'])) ||
-        (profileId.startsWith('creator_') && isAuthenticated());
+           .hasAny(['ownerId', 'userId', 'role', 'isVerifiedCreator']));
       allow delete: if isAdmin();
     }
 
