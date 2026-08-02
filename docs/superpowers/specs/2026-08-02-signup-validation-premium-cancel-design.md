@@ -4,6 +4,8 @@
 > (1) real-time inline validation on the signup forms with a conditional password-requirements checklist; (2) a full premium cancellation flow with retention psychology (loss framing, endowment recap, pause step) for both native (RevenueCat) and web (Paystack). Documentation only — no code changes in this file.
 >
 > **Related specs:** `2026-08-01-sp-b-paywall-premium-limits-design.md` (web premium source of truth via `users/{uid}.isPremium`), `2026-07-25-ux-psychology-and-habit-features-design.md` (prior psychology work — no password-checklist overlap).
+>
+> **Platform scope (user decision):** this feature ships for **Android + web only**. **No iOS configuration** — no Info.plist/entitlement/capability changes, no App Store-specific setup, and no iOS-specific branches. The native management-link path covers Android via the RevenueCat `managementURL`; iOS is neither configured nor tested here.
 
 ---
 
@@ -12,7 +14,7 @@
 1. **Sign-up forms indicate what is missing before completion.** User signup (`lib/features/auth/presentation/screens/signup_screen.dart`) and creator signup (`lib/features/auth/presentation/screens/creator_signup_screen.dart`) validate fields in real time as the user interacts (`AutovalidateMode.onUserInteraction`), per `docs/design.md` §10.2 (line 679) — currently no form sets an autovalidate mode, so errors only surface on submit.
 2. **Conditional password-requirements checklist.** A checklist of the real `validatePassword` rules appears **only while the password is being completed** (focused + non-empty) and ticks off live. It appears on the **password field only — never the confirm-password field** (user decision). Checklist rules derive from the same constants as the validator so UI can never contradict validation.
 3. **Premium cancellation exists.** Replace the Settings stub (`lib/features/settings/presentation/screens/settings_screen.dart:142-164`) with a real manage flow:
-   - **Native (iOS/Android):** cancel via the platform store manage page (App Store / Play Store) opened through RevenueCat — the only store-policy-compliant path for auto-renewing subscriptions.
+   - **Native (Android):** cancel via the Google Play manage page opened through RevenueCat's `managementURL` — the only store-policy-compliant path for auto-renewing subscriptions. **No iOS configuration** (user decision).
    - **Web:** in-app cancellation via a new `managePremium` Cloud Function callable that revokes `isPremium` + the `activeEntitlements` claim (Paystack charges are one-time, not recurring — revocation is a grant-revocation, not a billing operation).
 4. **Retention psychology in the cancel flow** (research-backed, honest, no dark patterns):
    - **Loss aversion** — "You'll lose X" framing (thesigma.co/Ordergroove research).
@@ -44,7 +46,7 @@
 
 - **New screen:** `lib/features/monetization/presentation/screens/manage_premium_screen.dart`, pushed from the Settings "Manage Subscription" tile (`settings_screen.dart:142-164`).
 - Shows:
-  - Plan state (Premium active / paused / free), price string from `monetizationRepositoryProvider.premiumPriceString`, billing channel label (App Store / Google Play / Paystack), and "Premium since {date}" from `users/{uid}.premium_since` (web) / RevenueCat purchase date (native).
+   - Plan state (Premium active / paused / free), price string from `monetizationRepositoryProvider.premiumPriceString`, billing channel label (Paystack on web / Google Play on Android), and "Premium since {date}" from `users/{uid}.premium_since` (web only).
   - Primary action: **"Cancel subscription"** — honest, standard destructive styling, always visible; no hidden-friction links.
 - Native + web share the screen; platform-specific behavior lives behind the existing `kIsWeb` fork pattern (same split as `paywall_screen.dart:214-217`).
 
@@ -58,15 +60,15 @@ The cancel flow is a **full screen** (not a bottom sheet) — it holds a 3-step 
    - CTA: "Keep Premium" (primary, returns) + "Continue cancelling" (secondary).
 2. **Pause/save step** (step 2): "Pause instead?" — honest copy: "Pause keeps everything safe — your streak, habits, and world. Resume anytime."
    - **Web:** "Pause for 30 days" → `managePremium(action: "pause")` → screen transitions to a "Premium paused" state.
-   - **Native:** the pause CTA opens the platform manage page (where pause actually lives for Google Play; App Store users can pause via "Cancel Subscription" → "Pause" on eligible subs). Wording adjusts per platform. CTA: "Continue to pause options".
+   - **Native (Android):** the pause CTA opens the Google Play manage page (where pause actually lives). Wording adjusts per platform. CTA: "Continue to pause options".
    - CTA: "Keep Premium" + "Cancel anyway".
 3. **Confirm cancel** (step 3):
    - **Web:** "Cancel Premium" → `managePremium(action: "cancel")` (instant revocation) → success state: "Premium cancelled — your account stays free. Your data and world are safe." (endowment reassurance; no exit survey — user declined it).
-   - **Native:** confirmation dialog copy: "You'll be redirected to the App Store/Google Play to finish cancelling" → `Purchases.showManageSubscriptions()` (RevenueCat SDK) / management URL. The store page performs the actual cancellation; RevenueCat's cancellation webhook + status stream update `isPremiumProvider` live. **No in-app cancel button that disables auto-renew** (App Store policy).
+   - **Native (Android):** confirmation dialog copy: "You'll be redirected to Google Play to finish cancelling" → open `CustomerInfo.managementURL` (RevenueCat SDK). The store page performs the actual cancellation; RevenueCat's cancellation webhook + status stream update `isPremiumProvider` live. **No in-app cancel button that disables auto-renew** (store policy).
 
-### D5 — Native management link via RevenueCat
+### D5 — Native management link via RevenueCat (Android)
 
-- Extend `MonetizationRepository` (`lib/features/monetization/domain/repositories/monetization_repository.dart:7-44`) with `openManageSubscription()` (or `getManagementUrl()`), implemented in `RevenueCatRepository` (`revenue_cat_repository.dart`) via the RevenueCat SDK's manage-subscription API. Native only; web never calls it (guarded by `kIsWeb`, matching the existing `initialize()` early-return pattern at `revenue_cat_repository.dart:30-34`).
+- Extend `MonetizationRepository` (`lib/features/monetization/domain/repositories/monetization_repository.dart:7-44`) with `openManageSubscription()`: implemented in `RevenueCatRepository` (`revenue_cat_repository.dart`) as — get `Purchases.getCustomerInfo()`, use `customerInfo.managementURL` (parsed by `purchases_flutter` 10.3.0, `customer_info_wrapper.dart:56`), and `launchUrl` it externally. Native only; web never calls it (guarded by `kIsWeb`). **No iOS configuration required — `managementURL` comes from the SDK/store, not from app config.**
 
 ### D6 — `managePremium` Cloud Function callable (web revocation + pause)
 
