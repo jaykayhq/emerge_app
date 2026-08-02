@@ -1,29 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
 import 'package:emerge_app/features/blueprints/data/repositories/blueprint_repository.dart';
-import 'package:emerge_app/features/social/data/seeds/official_clubs_seed.dart';
-
-/// Retry-safe seeding of official clubs.
-Future<void> seedOfficialClubs({FirebaseFirestore? firestore}) async {
-  final fs = firestore ?? FirebaseFirestore.instance;
-  try {
-    final existing = await fs.collection('tribes').limit(1).get();
-    if (existing.docs.isNotEmpty) return;
-    final clubsMap = OfficialClubsSeed.getOfficialClubsMap();
-    final batch = fs.batch();
-    for (final entry in clubsMap.entries) {
-      final docRef = fs.collection('tribes').doc(entry.key);
-      batch.set(docRef, {
-        ...entry.value,
-        'id': entry.key,
-        'createdAt': FieldValue.serverTimestamp(),
-      });
-    }
-    await batch.commit();
-  } catch (e) {
-    debugPrint('❌ Error seeding clubs: $e');
-  }
-}
 
 Future<void> seedChallenges({FirebaseFirestore? firestore}) async {
   final fs = firestore ?? FirebaseFirestore.instance;
