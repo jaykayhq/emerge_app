@@ -172,8 +172,6 @@ class _EmergeAppState extends ConsumerState<EmergeApp> {
             unawaited(seedOfficialClubs());
             unawaited(seedChallenges());
             unawaited(seedBlueprints());
-            unawaited(seedCreators());
-            unawaited(seedCreatorBlueprints());
           } else {
             presenceService.stopHeartbeat();
             unawaited(monetizationRepo.reset());

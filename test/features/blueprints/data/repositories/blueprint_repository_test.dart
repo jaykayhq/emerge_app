@@ -32,16 +32,6 @@ const _seedBlueprintIds = [
   'learning_5',
 ];
 
-/// All 6 creator-seed ids, verbatim from the design spec §4.2 table.
-const _creatorSeedIds = [
-  'cb_aria_deep_work',
-  'cb_marcus_morning',
-  'cb_sora_creative',
-  'cb_julian_calm',
-  'cb_naia_devotion',
-  'cb_elias_studio',
-];
-
 void main() {
   group('BlueprintRepository', () {
     test('incrementAdoptionCount increments field on an existing doc', () async {
@@ -147,31 +137,6 @@ void main() {
 
       final snap = await firestore.collection('blueprints').get();
       expect(snap.docs.length, _seedBlueprintIds.length);
-      for (final doc in snap.docs) {
-        expect(
-          doc.data()['recommendedArchetypes'],
-          isA<List>(),
-          reason: '${doc.id} should carry a recommendedArchetypes list',
-        );
-        expect(
-          doc.data()['recommendedArchetypes'],
-          isNotEmpty,
-          reason: '${doc.id} should have a non-empty recommendedArchetypes '
-              'list',
-        );
-      }
-    });
-
-    test(
-        'seedCreatorBlueprintsIfEmpty writes recommendedArchetypes on all creator seeds',
-        () async {
-      final firestore = FakeFirebaseFirestore();
-      final repo = BlueprintRepository(firestore);
-
-      await repo.seedCreatorBlueprintsIfEmpty();
-
-      final snap = await firestore.collection('blueprints').get();
-      expect(snap.docs.length, _creatorSeedIds.length);
       for (final doc in snap.docs) {
         expect(
           doc.data()['recommendedArchetypes'],
