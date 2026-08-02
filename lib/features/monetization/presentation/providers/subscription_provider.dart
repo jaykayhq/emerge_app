@@ -2,8 +2,10 @@ import 'dart:async';
 import 'package:emerge_app/core/utils/app_logger.dart';
 import 'package:emerge_app/features/auth/presentation/providers/auth_providers.dart';
 import 'package:emerge_app/features/monetization/data/repositories/revenue_cat_repository.dart';
+import 'package:emerge_app/features/monetization/data/services/web_premium_service.dart';
 import 'package:emerge_app/features/monetization/domain/repositories/monetization_repository.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 part 'subscription_provider.g.dart';
@@ -25,6 +27,13 @@ class IsPremium extends _$IsPremium {
 
     final user = authState.value;
     if (user == null) return false;
+
+    // Web: RevenueCat is never configured (revenue_cat_repository.dart:29-34).
+    // Premium is read from the Paystack-written `users/{uid}.isPremium` flag
+    // instead (functions/src/payments/paystack.ts:129-136).
+    if (kIsWeb) {
+      return _buildFromFirestore(user.id);
+    }
 
     if (user.id.isNotEmpty) {
       await repo.initialize(uid: user.id);
@@ -84,6 +93,29 @@ class IsPremium extends _$IsPremium {
     if (cached != null) return cached;
 
     return isPremium;
+  }
+
+  /// Web premium status from the `users/{uid}` Firestore doc.
+  ///
+  /// Keeps a live snapshot subscription (the keepAlive provider holds it for
+  /// the app session) so the Paystack webhook update lands without a rebuild,
+  /// and returns the current doc value as the initial result. On read
+  /// failure, falls back to the existing 7-day prefs cache (which is only
+  /// ever written on native) and otherwise reports false — never block.
+  Future<bool> _buildFromFirestore(String uid) async {
+    final firestore = ref.watch(firestoreProvider);
+    final sub = streamWebPremium(firestore, uid).listen((isPremium) {
+      state = AsyncValue.data(isPremium);
+    });
+    ref.onDispose(sub.cancel);
+    try {
+      final snap = await firestore.collection('users').doc(uid).get();
+      return snap.data()?['isPremium'] == true;
+    } catch (e) {
+      AppLogger.w('Web premium Firestore check failed', error: e);
+      final cached = await _readCachedPremiumStatus();
+      return cached ?? false;
+    }
   }
 
   /// Persist premium status for offline fallback.
