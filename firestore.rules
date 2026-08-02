@@ -39,14 +39,6 @@ service cloud.firestore {
              email.matches('^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$');
     }
 
-    // Helper function to rate limit writes
-    function rateLimited() {
-      // Rate limiting: Allow 10 writes per minute per user
-      // Backed by Cloud Functions which set the rateLimitUntil custom claim
-      return !('rateLimitUntil' in request.auth.token) ||
-             request.time.toMillis() > request.auth.token.rateLimitUntil;
-    }
-
     // Helper function to validate user data with enhanced security
     function isValidUser(user) {
       return user.keys().size() <= 80 &&
@@ -181,6 +173,9 @@ service cloud.firestore {
              (!data.keys().hasAny(['photoUrl']) || data.photoUrl is string || data.photoUrl == null) &&
              (!data.keys().hasAny(['archetype']) || data.archetype is string) &&
              (!data.keys().hasAny(['lastUpdated']) || data.lastUpdated is timestamp) &&
+             // Premium fields are server-owned (RevenueCat extension mirrors
+             // entitlement state); clients may never write them.
+             !data.keys().hasAny(['isPremium', 'premium_since']) &&
 
              // Legacy numeric fields at root
              (!data.keys().hasAny(['totalXp']) || data.totalXp is number) &&
@@ -469,8 +464,8 @@ service cloud.firestore {
     // Social Posts (Feed)
     match /posts/{postId} {
       allow read: if isAuthenticated() && resource.data.status != 'deleted';
-      allow create: if isAuthenticated() && isValidPost(request.resource.data) && rateLimited();
-      allow update: if isOwner(resource.data.userId) && isValidPost(request.resource.data) && rateLimited();
+      allow create: if isAuthenticated() && isValidPost(request.resource.data);
+      allow update: if isOwner(resource.data.userId) && isValidPost(request.resource.data);
       allow delete: if isOwner(resource.data.userId);
     }
 
@@ -535,14 +530,19 @@ service cloud.firestore {
       allow read, write: if false;
     }
 
-    // Blueprints — verified creators publish their own (creatorUserId).
+    // Blueprints (habit stacks) — public read; written by admins, verified
+    // creators (their own docs), and the curated 'system' catalog seed
+    // (SP-F v3 backfill writes creatorUserId: 'system' in-app).
     match /blueprints/{blueprintId} {
       allow read: if true;
       allow create: if isAdmin() ||
-        (isVerifiedCreator() && request.resource.data.creatorUserId == request.auth.uid);
+        (isVerifiedCreator() && request.resource.data.creatorUserId == request.auth.uid) ||
+        (isAuthenticated() && request.resource.data.creatorUserId == 'system');
       allow update: if isAdmin() ||
         (isVerifiedCreator() && resource.data.creatorUserId == request.auth.uid &&
-         request.resource.data.creatorUserId == request.auth.uid);
+         request.resource.data.creatorUserId == request.auth.uid) ||
+        (isAuthenticated() && resource.data.creatorUserId == 'system' &&
+         request.resource.data.creatorUserId == 'system');
       allow delete: if isAdmin() ||
         (isVerifiedCreator() && resource.data.creatorUserId == request.auth.uid);
     }
