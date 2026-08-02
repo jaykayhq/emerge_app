@@ -500,6 +500,128 @@ void main() {
       },
     );
 
+    test(
+      'completeHabit() credits challenge XP to Firestore user_stats',
+      () async {
+        final habit = createTestHabit();
+        await repository.createHabit(habit);
+
+        await db.userStatsDao.upsertStats(
+          UserStatsTableCompanion(
+            userId: Value(userId),
+            displayName: Value('Test User'),
+            archetype: Value('athlete'),
+            totalXp: Value(0),
+            level: Value(1),
+            vitalityXp: Value(0),
+          ),
+        );
+
+        // Seed an active challenge that completes today (day 1 of 2):
+        // processHabitCompletion marks it completed and pays its xpReward.
+        await db.challengeProgressDao.insertFromData(
+          challengeId: 'challenge_1',
+          userId: userId,
+          title: 'Test Challenge',
+          attribute: 'vitality',
+          currentDay: 1,
+          totalDays: 2,
+          status: 'active',
+          xpReward: 100,
+          updatedAt: DateTime.now().toIso8601String(),
+        );
+
+        final result = await repository.completeHabit(habit.id, DateTime.now());
+        expect(result.isRight(), true);
+
+        // Guard: the challenge must actually have completed, otherwise the
+        // challenge XP assertion below would pass vacuously.
+        final activeAfter = await db.challengeProgressDao.getActive(userId);
+        expect(activeAfter, isEmpty);
+
+        // Medium habit: base 20 XP + 100 challenge XP = 120.
+        final captured = verify(
+          () => mockSyncEngine.enqueueUpdate(
+            collectionPath: 'user_stats',
+            documentId: userId,
+            data: captureAny(named: 'data'),
+          ),
+        ).captured;
+        final payload = captured.single as Map;
+        expect(
+          payload['avatarStats.totalXp'],
+          {'__type__': 'increment', 'value': 120},
+        );
+        expect(
+          payload['avatarStats.vitalityXp'],
+          {'__type__': 'increment', 'value': 120},
+        );
+        expect(payload['avatarStats.level'], 1);
+        expect(payload['avatarStats.streak'], 1);
+        expect(payload['updatedAt'], isA<String>());
+      },
+    );
+
+    test(
+      'completeHabit() no longer enqueues tribe totalXp/totalHabitsCompleted',
+      () async {
+        final habit = createTestHabit();
+        await repository.createHabit(habit);
+
+        await db.userStatsDao.upsertStats(
+          UserStatsTableCompanion(
+            userId: Value(userId),
+            displayName: Value('Test User'),
+            archetype: Value('athlete'),
+            totalXp: Value(0),
+            level: Value(1),
+            vitalityXp: Value(0),
+          ),
+        );
+
+        // Seed the tribe row so the credit path resolves tribeId and the
+        // (removed) Firestore 'tribes' enqueue would previously have fired.
+        await db.tribeStatsDao.upsertStats(
+          TribeStatsTableCompanion(
+            tribeId: Value('tribeA'),
+            tribeName: Value('Tribe A'),
+            totalXp: Value(0),
+            totalHabitsCompleted: Value(0),
+            totalChallengesCompleted: Value(0),
+            userContributionXp: Value(0),
+            userHabitsCompleted: Value(0),
+            userChallengesCompleted: Value(0),
+            updatedAt: Value(DateTime.now().toIso8601String()),
+          ),
+        );
+
+        final result = await repository.completeHabit(
+          habit.id,
+          DateTime.now(),
+          activeTribeId: 'tribeA',
+        );
+        expect(result.isRight(), true);
+
+        // No client-authoritative tribe total writes (server recalc owns them).
+        verifyNever(
+          () => mockSyncEngine.enqueueUpdate(
+            collectionPath: 'tribes',
+            documentId: any(named: 'documentId'),
+            data: any(named: 'data'),
+          ),
+        );
+
+        // The per-member contributors record is still client-authoritative.
+        verify(
+          () => mockSyncEngine.enqueueSet(
+            collectionPath: 'tribes/tribeA/contributors',
+            documentId: userId,
+            data: any(named: 'data'),
+          ),
+        ).called(1);
+      },
+    );
+
     group('createStarterPack', () {
       test(
         'inserts one habit per blueprint in a single Drift batch',

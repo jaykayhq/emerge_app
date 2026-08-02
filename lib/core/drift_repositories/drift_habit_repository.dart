@@ -13,6 +13,7 @@ import 'package:emerge_app/features/habits/domain/entities/habit_completion_enti
 import 'package:emerge_app/features/habits/domain/repositories/habit_repository.dart';
 import 'package:emerge_app/features/blueprints/domain/models/blueprint.dart';
 import 'package:emerge_app/features/onboarding/domain/models/starter_habit_blueprint.dart';
+import 'package:emerge_app/features/gamification/domain/services/completion_xp_split.dart';
 import 'package:fpdart/fpdart.dart';
 import 'package:flutter/material.dart';
 
@@ -491,38 +492,25 @@ class DriftHabitRepository implements HabitRepository {
         },
       );
 
+      // worldState.entropy is NOT updated here — the GamificationService
+      // zone model is the sole writer via UserStatsController.
       await _syncEngine.enqueueUpdate(
         collectionPath: 'user_stats',
         documentId: statsRow.userId,
-        data: {
-          'avatarStats.totalXp': {
-            '__type__': 'increment',
-            'value': result.xpGained,
-          },
-          'avatarStats.level': newLevel,
-          'avatarStats.streak': result.newStreak,
-          'avatarStats.${attr}Xp': {
-            '__type__': 'increment',
-            'value': result.xpGained,
-          },
-          // worldState.entropy is NOT updated here — the GamificationService
-          // zone model is the sole writer via UserStatsController.
-          'updatedAt': nowStr,
-        },
+        data: buildUserStatsXpPayload(
+          totalDelta: totalXpGained,
+          attr: attr,
+          level: newLevel,
+          streak: result.newStreak,
+          updatedAt: nowStr,
+        ),
       );
 
-      // 4. Update Tribe global stats in Firestore
+      // Tribe totals are NOT written here — Firestore rules deny client
+      // writes to them; the server recalc owns tribe totals (sums
+      // user_stats.totalXp). Only per-member contributor records remain
+      // client-authoritative.
       if (tribeId != null) {
-        await _syncEngine.enqueueUpdate(
-          collectionPath: 'tribes',
-          documentId: tribeId!,
-          data: {
-            'totalXp': {'__type__': 'increment', 'value': result.xpGained},
-            'totalHabitsCompleted': {'__type__': 'increment', 'value': 1},
-            'lastStatsSync': {'__type__': 'serverTimestamp'},
-          },
-        );
-
         // Update per-member contributor subcollection so other users
         // can see each other's contribution stats in the tribe
         await _syncEngine.enqueueSet(
