@@ -6,15 +6,16 @@ jest.mock("firebase-admin", () => {
     const firestoreMock = {
         collection: jest.fn().mockReturnThis(),
         doc: jest.fn().mockReturnThis(),
+        get: jest.fn().mockResolvedValue({ exists: false }),
         set: jest.fn().mockResolvedValue(true),
     };
+    // admin.firestore.FieldValue is a static on the function object.
+    const firestore = jest.fn(() => firestoreMock);
+    (firestore as any).FieldValue = { serverTimestamp: jest.fn(() => "mockTimestamp") };
     return {
         apps: [],
         initializeApp: jest.fn(),
-        firestore: jest.fn(() => firestoreMock),
-        FieldValue: {
-            serverTimestamp: jest.fn(() => "mockTimestamp"),
-        },
+        firestore,
     };
 });
 
@@ -25,7 +26,9 @@ describe("Paystack Webhook", () => {
     it("should process charge.success event and update firestore", async () => {
         const payload = {
             event: "charge.success",
+            id: "evt_test_1",
             data: {
+                reference: "ref_test_1",
                 metadata: {
                     custom_fields: [
                         { variable_name: "user_id", value: "test_uid" },
