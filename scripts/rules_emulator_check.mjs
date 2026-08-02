@@ -263,6 +263,10 @@ await db.doc(TRIBE).set({
   lastStatsSync: admin.firestore.FieldValue.serverTimestamp(),
 });
 check("8d  tribe memberCount +1 but added member != caller", await call("PATCH", A, TRIBE, tribeBody(12, [alice.uid, bob.uid], 0)), 403);
+// 8e mirrors the SP-G D9 remove branch (leaveClub): -1 delta with the caller's
+// uid in the OLD members list (reset to [alice.uid] above), removed from it.
+// 8d was denied so the doc is still memberCount 11 / members [alice.uid] here.
+check("8e  tribe memberCount -1 (caller removed)", await call("PATCH", A, TRIBE, tribeBody(10, [], 0)), 200);
 
 // 9: invite codes — functions-only (admin SDK), clients always denied
 check("9a  creator_invite_codes deny", await call("PATCH", A, "creator_invite_codes/ABCD2345", doc({ creatorUid: alice.uid })), 403);
