@@ -1,4 +1,5 @@
 import 'dart:math' as math;
+import 'package:emerge_app/features/monetization/domain/services/paywall_web_guard.dart';
 import 'package:emerge_app/features/monetization/presentation/providers/paywall_provider.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -31,7 +32,11 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen>
       duration: const Duration(seconds: 4),
     )..repeat();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      ref.read(paywallControllerProvider.notifier).fetchOfferings();
+      // Web uses Paystack pages; RevenueCat is never configured there, so
+      // fetching would only surface a 'RevenueCat not configured' error.
+      if (shouldFetchOfferings(isWeb: kIsWeb)) {
+        ref.read(paywallControllerProvider.notifier).fetchOfferings();
+      }
     });
   }
 
@@ -51,7 +56,8 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen>
       if (next.isSuccess && !(previous?.isSuccess ?? false)) {
         if (context.canPop()) context.pop();
       }
-      if (next.error != null && next.error != previous?.error) {
+      if (shouldShowPaywallErrorSnackBar(isWeb: kIsWeb, error: next.error) &&
+          next.error != previous?.error) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(next.error!), backgroundColor: Colors.red),
         );
