@@ -7,7 +7,7 @@
  * Collections scanned:
  *   - users/{uid}
  *   - user_stats/{uid}
- *   - creator_profiles/{uid}    (skips system-seeded IDs starting with "creator_")
+ *   - creator_profiles/{uid}
  *   - insight_cache/{uid}
  *   - customers/{uid}
  *
@@ -43,9 +43,6 @@ const COLLECTIONS_TO_SCAN = [
   "insight_cache",
   "customers",
 ] as const;
-
-/** Doc IDs with this prefix are system-seeded, not user-owned. */
-const SYSTEM_PREFIXES = ["creator_"];
 
 export const purgeOrphanedUserData = onCall(async (request) => {
   // ── Auth guard: only admins may run this. ──
@@ -100,13 +97,6 @@ export const purgeOrphanedUserData = onCall(async (request) => {
 
     for (const doc of snap.docs) {
       const docId = doc.id;
-
-      // Skip system-seeded IDs (e.g. creator_aria_chen).
-      const isSystem = SYSTEM_PREFIXES.some((prefix) => docId.startsWith(prefix));
-      if (isSystem) {
-        skipped++;
-        continue;
-      }
 
       // Skip if the UID still exists in Auth.
       if (validUids.has(docId)) {
