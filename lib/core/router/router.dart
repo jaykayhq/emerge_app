@@ -44,7 +44,6 @@ import 'package:emerge_app/features/social/presentation/screens/all_tribes_scree
 import 'package:emerge_app/features/monetization/presentation/screens/habit_contract_screen.dart';
 import 'package:emerge_app/features/social/presentation/screens/creator_profile_screen.dart';
 import 'package:emerge_app/features/social/presentation/screens/blueprint_detail_screen.dart';
-import 'package:emerge_app/features/social/presentation/screens/creators_browse_screen.dart';
 import 'package:emerge_app/core/router/creator_routes.dart';
 import 'package:emerge_app/features/blueprints/data/repositories/blueprint_repository.dart';
 import 'package:emerge_app/features/blueprints/domain/models/blueprint.dart';
@@ -368,12 +367,6 @@ GoRouter router(Ref ref) {
           if (extra is Blueprint) return BlueprintDetailScreen(blueprint: extra);
           return _BlueprintByIdLoader(blueprintId: id);
         },
-      ),
-      // /creators — browse all verified creators
-      GoRoute(
-        path: '/creators',
-        parentNavigatorKey: _rootNavigatorKey,
-        builder: (context, state) => const CreatorsBrowseScreen(),
       ),
       GoRoute(
         path: '/challenges',
