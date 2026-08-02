@@ -372,7 +372,8 @@ service cloud.firestore {
       allow read: if isAuthenticated();
       allow create: if isAuthenticated() && isValidTribe(request.resource.data) &&
                      request.resource.data.type != 'official' &&
-                     request.resource.data.type != 'brand';
+                     request.resource.data.type != 'brand' &&
+                     (request.resource.data.type != 'creator' || isVerifiedCreator());
       allow update: if isAuthenticated() && isValidTribe(request.resource.data) && (
         resource.data.createdBy == request.auth.uid ||
         isAdmin() ||
