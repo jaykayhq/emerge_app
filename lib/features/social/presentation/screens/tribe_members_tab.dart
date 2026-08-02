@@ -228,11 +228,16 @@ class TribeLeaderboardSection extends ConsumerWidget {
   final String archetypeName;
   final bool isGlobal;
 
+  /// Member ids of the tribe. When non-empty, users who left are hidden
+  /// from the ranking display (history kept — B10). Empty = unfiltered.
+  final List<String> members;
+
   const TribeLeaderboardSection({
     super.key,
     required this.clubId,
     required this.archetypeName,
     this.isGlobal = false,
+    this.members = const [],
   });
 
   @override
@@ -280,7 +285,10 @@ class TribeLeaderboardSection extends ConsumerWidget {
         const Gap(16),
         leaderboardAsync.when(
           data: (entries) {
-            if (entries.isEmpty) {
+            final visible = members.isEmpty
+                ? entries
+                : entries.where((e) => members.contains(e.userId)).toList();
+            if (visible.isEmpty) {
               return Container(
                 padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
@@ -296,7 +304,7 @@ class TribeLeaderboardSection extends ConsumerWidget {
                 ),
               );
             }
-            final top = entries.length > 5 ? entries.sublist(0, 5) : entries;
+            final top = visible.length > 5 ? visible.sublist(0, 5) : visible;
             return Column(
               children: top
                   .asMap()
@@ -382,12 +390,14 @@ class _TribeMembersTabState extends ConsumerState<TribeMembersTab> {
           const Gap(16),
           ContributorsSection(
             clubId: userClub.id,
+            members: userClub.members,
           ).animate().fadeIn(delay: 300.ms),
           const Gap(32),
           TribeLeaderboardSection(
             clubId: userClub.id,
             archetypeName: profile.archetype.name,
             isGlobal: false,
+            members: userClub.members,
           ).animate().fadeIn(delay: 370.ms),
           const Gap(32),
           SizedBox(

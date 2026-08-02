@@ -1,9 +1,14 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:emerge_app/features/auth/domain/entities/user_extension.dart';
+import 'package:emerge_app/features/social/domain/entities/leaderboard_entry.dart';
 import 'package:emerge_app/features/social/presentation/widgets/tribe_leaderboard_widget.dart';
 import 'package:emerge_app/features/social/domain/models/tribe.dart';
+import 'package:emerge_app/features/social/presentation/providers/leaderboard_provider.dart';
 import 'package:emerge_app/features/social/presentation/providers/tribes_provider.dart';
+import 'package:emerge_app/features/social/presentation/screens/tribe_members_tab.dart'
+    as members_tab;
 import 'package:emerge_app/core/presentation/widgets/emerge_loading_skeleton.dart';
 
 Tribe _tribe(String id, String name, {int totalXp = 1000}) {
@@ -136,4 +141,49 @@ void main() {
     await tester.pump();
     expect(find.text('Your Tribe'), findsOneWidget);
   });
+
+  testWidgets('TribeLeaderboardSection hides leavers when members is provided',
+      (tester) async {
+    const u1 = LeaderboardEntry(
+      userId: 'u1',
+      userName: 'U1',
+      xp: 120,
+      level: 3,
+      archetype: UserArchetype.athlete,
+      rank: 1,
+    );
+    const u2 = LeaderboardEntry(
+      userId: 'u2',
+      userName: 'U2',
+      xp: 80,
+      level: 2,
+      archetype: UserArchetype.athlete,
+      rank: 2,
+    );
+
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          clubLeaderboardProvider('tribeA').overrideWith(
+            (ref) => Stream.value(const [u1, u2]),
+          ),
+        ],
+        child: const MaterialApp(
+          home: Scaffold(
+            body: members_tab.TribeLeaderboardSection(
+              clubId: 'tribeA',
+              archetypeName: 'athlete',
+              members: ['u1'],
+            ),
+          ),
+          ),
+        ),
+      );
+      // The section's rows use flutter_animate (fadeIn/slideX); settle
+      // their timers so the test framework has no pending timers at teardown.
+      await tester.pumpAndSettle();
+
+      expect(find.text('U1'), findsOneWidget);
+      expect(find.text('U2'), findsNothing);
+    });
 }

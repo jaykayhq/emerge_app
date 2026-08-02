@@ -1,7 +1,9 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:emerge_app/core/presentation/widgets/app_error_widget.dart';
 import 'package:emerge_app/core/presentation/widgets/emerge_loading_skeleton.dart';
 import 'package:emerge_app/core/theme/app_theme.dart';
 import 'package:emerge_app/features/gamification/presentation/providers/user_stats_providers.dart';
+import 'package:emerge_app/features/social/domain/models/tribe.dart';
 import 'package:emerge_app/features/social/presentation/providers/friends_leaderboard_provider.dart';
 import 'package:emerge_app/features/social/presentation/providers/leaderboard_provider.dart';
 import 'package:emerge_app/features/social/presentation/providers/tribes_provider.dart';
@@ -16,6 +18,25 @@ export 'package:emerge_app/features/social/presentation/providers/tribes_provide
     show TribeStats;
 export 'package:emerge_app/features/social/presentation/widgets/friends_leaderboard.dart'
     show FriendRankEntry;
+
+/// Remote tribes the user belongs to (`tribes where members arrayContains
+/// userId`).
+///
+/// Firestore-backed on purpose: the Drift-merged `watchUserTribes` path
+/// drops the tribe's `members` array, which this screen needs to hide
+/// users who left the tribe (B10) while keeping their history (D2).
+final userTribesProvider = StreamProvider.family<List<Tribe>, String>((
+  ref,
+  userId,
+) {
+  return FirebaseFirestore.instance
+      .collection('tribes')
+      .where('members', arrayContains: userId)
+      .snapshots()
+      .map(
+        (snap) => snap.docs.map((doc) => Tribe.fromMap(doc.data())).toList(),
+      );
+});
 
 class LeaderboardScreen extends ConsumerStatefulWidget {
   final int initialTabIndex;
@@ -162,6 +183,17 @@ class _TribeLeaderboardTab extends ConsumerWidget {
             membership?.tribeId ?? _archetypeToClubId(profile.archetype.name);
         final leaderboardAsync = ref.watch(clubLeaderboardProvider(clubId));
 
+        // Members of the user's tribe, streamed from the tribe's `members`
+        // array. Leavers keep their history (D2) but must not render (B10).
+        // Unfiltered while there is no active membership (archetype fallback)
+        // or before the members stream has emitted.
+        List<String>? tribeMemberIds;
+        if (membership != null) {
+          tribeMemberIds =
+              ref.watch(userTribesProvider(profile.uid)).value?.firstOrNull
+                  ?.members;
+        }
+
         return Column(
           children: [
             // Tribe Header
@@ -219,7 +251,15 @@ class _TribeLeaderboardTab extends ConsumerWidget {
             ),
             Expanded(
               child: leaderboardAsync.when(
-                data: (entries) => _LeaderboardList(entries: entries),
+                data: (entries) {
+                  final memberIds = tribeMemberIds;
+                  final visible = memberIds == null || memberIds.isEmpty
+                      ? entries
+                      : entries
+                            .where((e) => memberIds.contains(e.userId))
+                            .toList();
+                  return _LeaderboardList(entries: visible);
+                },
                 loading: () =>
                     const EmergeLoadingSkeleton(itemCount: 5, showAvatar: true),
                 error: (err, _) => AppErrorWidget(

@@ -7,9 +7,26 @@ import 'package:emerge_app/features/social/presentation/providers/friends_leader
 import 'package:emerge_app/features/social/presentation/providers/leaderboard_provider.dart';
 import 'package:emerge_app/features/social/presentation/providers/tribes_provider.dart';
 import 'package:emerge_app/features/social/domain/entities/leaderboard_entry.dart';
+import 'package:emerge_app/features/social/domain/models/tribe.dart';
 import 'package:emerge_app/features/gamification/presentation/providers/user_stats_providers.dart';
 import 'package:emerge_app/core/presentation/widgets/emerge_loading_skeleton.dart';
 import 'package:emerge_app/features/auth/domain/entities/user_extension.dart';
+
+Tribe _tribe({List<String> members = const []}) {
+  return Tribe(
+    id: 'tribeA',
+    name: 'Tribe A',
+    description: '',
+    imageUrl: '',
+    memberCount: members.length,
+    ownerId: 'owner',
+    tags: const [],
+    levelRequirement: 0,
+    rank: 1,
+    totalXp: 100,
+    members: members,
+  );
+}
 
 void main() {
   testWidgets('LeaderboardScreen renders loading skeletons', (tester) async {
@@ -107,6 +124,11 @@ void main() {
             clubLeaderboardProvider('morning_warriors').overrideWith(
               (ref) => Stream.value(const [archetypeEntry]),
             ),
+            userTribesProvider('user1').overrideWith(
+              (ref) => Stream.value([
+                _tribe(members: const ['memberA']),
+              ]),
+            ),
           ],
           child: const MaterialApp(
             home: LeaderboardScreen(initialTabIndex: 1),
@@ -175,6 +197,74 @@ void main() {
 
       expect(find.text('Archetype Member'), findsOneWidget);
       expect(find.text('Tribe A Member'), findsNothing);
+    },
+  );
+
+  testWidgets(
+    'tribe leaderboard tab hides users who are no longer members',
+    (tester) async {
+      const tribeAEntry = LeaderboardEntry(
+        userId: 'memberA',
+        userName: 'Tribe A Member',
+        xp: 100,
+        level: 2,
+        archetype: UserArchetype.athlete,
+        rank: 1,
+      );
+      const leaverEntry = LeaderboardEntry(
+        userId: 'leaverX',
+        userName: 'Leaver Member',
+        xp: 90,
+        level: 2,
+        archetype: UserArchetype.athlete,
+        rank: 2,
+      );
+
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            userStatsStreamProvider.overrideWith(
+              (ref) => Stream.value(
+                UserProfile(uid: 'user1', archetype: UserArchetype.athlete),
+              ),
+            ),
+            activeMembershipProvider.overrideWith(
+              (ref) => Stream.value(
+                UserTribeTableData(
+                  userId: 'user1',
+                  tribeId: 'tribeA',
+                  membershipType: 'member',
+                  joinedAt: DateTime.now().toIso8601String(),
+                  isActive: true,
+                ),
+              ),
+            ),
+            clubLeaderboardProvider('tribeA').overrideWith(
+              (ref) => Stream.value(const [tribeAEntry, leaverEntry]),
+            ),
+            clubLeaderboardProvider('morning_warriors').overrideWith(
+              (ref) => const Stream.empty(),
+            ),
+            // The tribe's remote members array lists only memberA — the
+            // leaver's history stays in the leaderboard (D2) but must not
+            // render (B10).
+            userTribesProvider('user1').overrideWith(
+              (ref) => Stream.value([
+                _tribe(members: const ['memberA']),
+              ]),
+            ),
+          ],
+          child: const MaterialApp(
+            home: LeaderboardScreen(initialTabIndex: 1),
+          ),
+        ),
+      );
+
+      await tester.pump(const Duration(seconds: 1));
+      await tester.pump();
+
+      expect(find.text('Tribe A Member'), findsOneWidget);
+      expect(find.text('Leaver Member'), findsNothing);
     },
   );
 }

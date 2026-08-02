@@ -255,7 +255,16 @@ class StatOrb extends StatelessWidget {
 class ContributorsSection extends ConsumerWidget {
   final String clubId;
 
-  const ContributorsSection({super.key, required this.clubId});
+  /// Member ids of the tribe. When non-empty, contributors who left the
+  /// tribe are hidden from the display (their history is kept — B10).
+  /// Empty = unfiltered (creator tribes without a members array).
+  final List<String> members;
+
+  const ContributorsSection({
+    super.key,
+    required this.clubId,
+    this.members = const [],
+  });
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -263,7 +272,12 @@ class ContributorsSection extends ConsumerWidget {
 
     return contributorsAsync.when(
       data: (contributors) {
-        if (contributors.isEmpty) {
+        final visible = members.isEmpty
+            ? contributors
+            : contributors
+                .where((c) => members.contains(c['userId']))
+                .toList();
+        if (visible.isEmpty) {
           return const SizedBox.shrink();
         }
 
@@ -295,9 +309,9 @@ class ContributorsSection extends ConsumerWidget {
               height: 90,
               child: ListView.builder(
                 scrollDirection: Axis.horizontal,
-                itemCount: contributors.length,
+                itemCount: visible.length,
                 itemBuilder: (context, index) {
-                  final c = contributors[index];
+                  final c = visible[index];
                   final name = c['userName'] as String? ?? 'User';
                   final xp = c['contributionCount'] as int? ?? 0;
 
