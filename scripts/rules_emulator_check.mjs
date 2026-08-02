@@ -73,8 +73,25 @@ async function signUp(email) {
     signal: AbortSignal.timeout(TIMEOUT_MS),
   });
   const j = await r.json();
-  if (!j.idToken) throw new Error(`signUp failed for ${email}: ${JSON.stringify(j)}`);
-  return { idToken: j.idToken, refreshToken: j.refreshToken, uid: j.localId };
+  if (j.idToken) {
+    return { idToken: j.idToken, refreshToken: j.refreshToken, uid: j.localId };
+  }
+  // Idempotent re-run against a still-running emulator: the account already
+  // exists, so sign in with the same credentials instead of failing.
+  if (j.error?.message === "EMAIL_EXISTS") {
+    const s = await fetch(`${AUTH}:signInWithPassword${KEY}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email, password: "pass1234", returnSecureToken: true }),
+      signal: AbortSignal.timeout(TIMEOUT_MS),
+    });
+    const sj = await s.json();
+    if (!sj.idToken) {
+      throw new Error(`signIn after EMAIL_EXISTS failed for ${email}: ${JSON.stringify(sj)}`);
+    }
+    return { idToken: sj.idToken, refreshToken: sj.refreshToken, uid: sj.localId };
+  }
+  throw new Error(`signUp failed for ${email}: ${JSON.stringify(j)}`);
 }
 
 // Mint a fresh ID token after setCustomUserClaims. The token returned by
@@ -100,7 +117,7 @@ async function tokenWithClaims(account) {
     signal: AbortSignal.timeout(TIMEOUT_MS),
   });
   const sj = await s.json();
-  if (!sj.idToken) throw new Error(`token refresh failed: ${JSON.stringify(j)}`);
+  if (!sj.idToken) throw new Error(`token refresh failed: ${JSON.stringify(sj)}`);
   return sj.idToken;
 }
 
