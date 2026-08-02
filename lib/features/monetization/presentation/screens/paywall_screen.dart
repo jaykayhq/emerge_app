@@ -2,6 +2,7 @@ import 'dart:math' as math;
 import 'package:emerge_app/features/monetization/domain/models/premium_limit.dart';
 import 'package:emerge_app/features/monetization/domain/services/paywall_web_guard.dart';
 import 'package:emerge_app/features/monetization/presentation/providers/paywall_provider.dart';
+import 'package:emerge_app/features/monetization/presentation/providers/subscription_provider.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -322,8 +323,16 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen>
 
   Future<void> _openPaystackPage(String url) async {
     final uri = Uri.parse(url);
-    if (await canLaunchUrl(uri)) {
-      await launchUrl(uri, mode: LaunchMode.externalApplication);
+    try {
+      if (await canLaunchUrl(uri)) {
+        await launchUrl(uri, mode: LaunchMode.externalApplication);
+      }
+    } finally {
+      // The webhook (`users/{uid}.isPremium`) normally flips the live
+      // Firestore stream within seconds; re-running the provider also
+      // covers races where the doc was written between stream attach and
+      // this return.
+      ref.invalidate(isPremiumProvider);
     }
   }
 
