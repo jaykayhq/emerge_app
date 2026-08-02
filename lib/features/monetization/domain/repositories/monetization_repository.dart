@@ -28,6 +28,12 @@ abstract class MonetizationRepository {
   /// Restore purchases
   Future<Either<String, bool>> restorePurchases();
 
+  /// Open the platform's subscription management page (Google Play on
+  /// Android) so the user can pause/cancel the auto-renewing subscription
+  /// through the store — the only policy-compliant cancellation path.
+  /// Returns Right(true) once the page was opened.
+  Future<Either<String, bool>> openManageSubscription();
+
   /// Get the price string for the premium package
   Future<String?> get premiumPriceString;
 

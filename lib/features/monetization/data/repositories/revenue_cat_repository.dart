@@ -6,6 +6,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:fpdart/fpdart.dart';
 import 'package:purchases_flutter/purchases_flutter.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class RevenueCatRepository implements MonetizationRepository {
   String? _googleApiKey;
@@ -289,6 +290,32 @@ class RevenueCatRepository implements MonetizationRepository {
       return Right(isPremium);
     } on PlatformException catch (e) {
       return Left(e.message ?? 'Restore failed');
+    } catch (e) {
+      return Left(e.toString());
+    }
+  }
+
+  @override
+  Future<Either<String, bool>> openManageSubscription() async {
+    if (!_isConfigured) {
+      return const Left('RevenueCat not configured');
+    }
+    try {
+      final customerInfo = await Purchases.getCustomerInfo();
+      final url = customerInfo.managementURL;
+      if (url == null || url.isEmpty) {
+        return const Left('No subscription management URL available');
+      }
+      final launched = await launchUrl(
+        Uri.parse(url),
+        mode: LaunchMode.externalApplication,
+      );
+      if (!launched) {
+        return const Left('Could not open subscription management page');
+      }
+      return const Right(true);
+    } on PlatformException catch (e) {
+      return Left(e.message ?? 'Failed to open subscription management');
     } catch (e) {
       return Left(e.toString());
     }
