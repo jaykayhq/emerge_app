@@ -40,9 +40,27 @@ void main() {
     expect(stats.memberCount, 5);
   });
 
+  test('start() pulls leaderboard rows by clubId, not tribeId', () async {
+    await firestore.collection('club_leaderboards').add({
+      'userId': 'u1',
+      'userName': 'User1',
+      'clubId': 'tribeA',
+      'xp': 500,
+      'level': 5,
+      'rank': 1,
+    });
+
+    syncer.start('tribeA');
+    await pumpEventQueue();
+
+    final rows = await db.leaderboardEntriesDao.getForTribe('tribeA');
+    expect(rows, isNotEmpty);
+    expect(rows.first.tribeId, 'tribeA');
+  });
+
   test('leaderboard entry upserted from Firestore', () async {
     await firestore.collection('club_leaderboards').add({
-      'tribeId': 't1',
+      'clubId': 't1',
       'userId': 'u1',
       'userName': 'User1',
       'xp': 500,

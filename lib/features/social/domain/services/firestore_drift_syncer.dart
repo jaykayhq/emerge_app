@@ -25,7 +25,7 @@ class FirestoreDriftSyncer {
 
     _leaderboardSub = firestore
         .collection('club_leaderboards')
-        .where('tribeId', isEqualTo: tribeId)
+        .where('clubId', isEqualTo: tribeId)
         .snapshots()
         .listen(
           (snapshot) {
@@ -34,7 +34,7 @@ class FirestoreDriftSyncer {
               final data = doc.data();
               leaderboardDao.upsertEntry(LeaderboardEntriesTableCompanion(
                 id: Value(doc.id),
-                tribeId: Value(data['tribeId'] as String? ?? tribeId),
+                tribeId: Value(data['clubId'] as String? ?? tribeId),
                 userId: Value(data['userId'] as String? ?? ''),
                 userName: Value(data['userName'] as String? ?? ''),
                 xp: Value(data['xp'] as int? ?? 0),
