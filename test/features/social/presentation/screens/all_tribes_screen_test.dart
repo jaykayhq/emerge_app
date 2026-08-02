@@ -11,6 +11,8 @@ import 'package:emerge_app/core/presentation/widgets/emerge_loading_skeleton.dar
 import 'package:emerge_app/features/social/domain/models/tribe.dart';
 import 'package:emerge_app/features/social/domain/services/tribe_membership_service.dart';
 import 'package:emerge_app/features/social/data/services/tribe_stats_service.dart';
+import 'package:emerge_app/features/social/domain/entities/creator_profile.dart';
+import 'package:emerge_app/features/social/presentation/providers/creator_provider.dart';
 
 class MockTribeMembershipService extends Mock implements TribeMembershipService {}
 class MockTribeStatsService extends Mock implements TribeStatsService {}
@@ -27,6 +29,9 @@ void main() {
           ),
           authStateChangesProvider.overrideWith(
             (ref) => Stream.value(emptyUser),
+          ),
+          verifiedCreatorsStreamProvider.overrideWith(
+            (ref) => Stream.value(const <CreatorProfile>[]),
           ),
         ],
         child: const MaterialApp(home: AllTribesScreen()),
@@ -63,6 +68,9 @@ void main() {
           authStateChangesProvider.overrideWith(
             (ref) => Stream.value(emptyUser),
           ),
+          verifiedCreatorsStreamProvider.overrideWith(
+            (ref) => Stream.value(const <CreatorProfile>[]),
+          ),
           cachedTribeStatsProvider('1').overrideWith((ref) {
             return Stream.value(TribeStats(
               memberCount: 100,
@@ -97,6 +105,9 @@ void main() {
           authStateChangesProvider.overrideWith(
             (ref) => Stream.value(emptyUser),
           ),
+          verifiedCreatorsStreamProvider.overrideWith(
+            (ref) => Stream.value(const <CreatorProfile>[]),
+          ),
         ],
         child: const MaterialApp(home: AllTribesScreen()),
       ),
@@ -105,5 +116,62 @@ void main() {
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 500));
     expect(find.text('No tribes available'), findsOneWidget);
+  });
+
+  testWidgets('AllTribesScreen renders the CREATORS section with creator cards',
+      (tester) async {
+    const creator = CreatorProfile(
+      userId: 'creator_test',
+      displayName: 'Test Creator',
+      isVerifiedCreator: true,
+      blueprintCount: 2,
+    );
+
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          allArchetypeClubsProvider.overrideWith(
+            (ref) => Stream.value(<Tribe>[]),
+          ),
+          authStateChangesProvider.overrideWith(
+            (ref) => Stream.value(emptyUser),
+          ),
+          verifiedCreatorsStreamProvider.overrideWith(
+            (ref) => Stream.value(const [creator]),
+          ),
+        ],
+        child: const MaterialApp(home: AllTribesScreen()),
+      ),
+    );
+
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 500));
+    expect(find.text('CREATORS'), findsOneWidget);
+    expect(find.text('Test Creator'), findsOneWidget);
+    expect(find.text('2 blueprints'), findsOneWidget);
+  });
+
+  testWidgets('AllTribesScreen shows the creators empty state when no creators exist',
+      (tester) async {
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          allArchetypeClubsProvider.overrideWith(
+            (ref) => Stream.value(<Tribe>[]),
+          ),
+          authStateChangesProvider.overrideWith(
+            (ref) => Stream.value(emptyUser),
+          ),
+          verifiedCreatorsStreamProvider.overrideWith(
+            (ref) => Stream.value(const <CreatorProfile>[]),
+          ),
+        ],
+        child: const MaterialApp(home: AllTribesScreen()),
+      ),
+    );
+
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 500));
+    expect(find.text('Creators are coming'), findsOneWidget);
   });
 }
