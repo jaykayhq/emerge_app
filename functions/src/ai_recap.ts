@@ -21,17 +21,26 @@ export const generateAiRecap = onCall({
   
   console.log(`[generateAiRecap] Starting for user: ${userId}`);
 
+  // 1. Fetch User Data & Habits
+  const userDoc = await db.collection("users").doc(userId).get();
+  const userData = userDoc.data();
+
+  // PREMIUM GUARD: source of truth is users/{uid} — Paystack webhook
+  // writes isPremium (paystack.ts); the RevenueCat extension writes
+  // subscriptionStatus (revenuecat_events.ts). user_stats.isPremium is
+  // never written and is blocked by rules (SP-H). Thrown before the try
+  // block so the permission-denied reaches the client unwrapped.
+  const isPremium =
+    userData?.isPremium === true || userData?.subscriptionStatus === "active";
+  if (!isPremium) {
+    console.warn(`[generateAiRecap] Non-premium user ${userId} attempted to generate AI recap.`);
+    throw new HttpsError("permission-denied", "AI Insights are a premium feature.");
+  }
+
   try {
-    // 1. Fetch User Data & Habits
-    const userDoc = await db.collection("user_stats").doc(userId).get();
-    const userData = userDoc.data();
-    
-    // PREMIUM GUARD: Only premium users get AI insights
-    const isPremium = userData?.isPremium === true;
-    if (!isPremium) {
-      console.warn(`[generateAiRecap] Non-premium user ${userId} attempted to generate AI recap.`);
-      throw new HttpsError("permission-denied", "AI Insights are a premium feature.");
-    }
+    // Stats doc for recap data (level lives on user_stats; user doc holds
+    // the premium fields above)
+    const statsDoc = await db.collection("user_stats").doc(userId).get();
 
     const habitsSnap = await db.collection("habits").where("userId", "==", userId).get();
     
@@ -181,7 +190,7 @@ export const generateAiRecap = onCall({
       perfectDays: Math.floor(totalCompletions / 2), // Simplified for now
       totalXpEarned: totalCompletions * 20,
       topHabitName: topHabitTitle,
-      currentLevel: userDoc.data()?.level || 1,
+      currentLevel: statsDoc.data()?.level || 1,
       worldGrowthPercentage: 0.05, // Placeholder
       dominantIdentityThisWeek: userDoc.data()?.archetype || "Explorer",
       identityHeadline: insightHeadline,
