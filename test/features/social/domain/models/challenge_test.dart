@@ -270,4 +270,18 @@ void main() {
       }
     });
   });
+
+  group('Challenge model - createdBy/createdAt', () {
+    test('challenge round-trips createdBy and createdAt', () {
+      final c = Challenge(
+        id: 'c1', title: 't', description: 'd', imageUrl: 'u', reward: 'r',
+        participants: 0, daysLeft: 0, totalDays: 7, currentDay: 0, status: ChallengeStatus.active,
+        xpReward: 100, steps: const [], createdBy: 'uid-1', createdAt: DateTime(2026, 8, 1),
+      );
+      final round = Challenge.fromMap(c.toMap(), id: 'c1');
+      expect(round.createdBy, 'uid-1');
+      expect(round.createdAt, DateTime(2026, 8, 1));
+      expect(c.copyWith(title: 't2').createdBy, 'uid-1');
+    });
+  });
 }

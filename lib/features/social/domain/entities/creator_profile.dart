@@ -93,6 +93,7 @@ class CreatorProfile {
   Map<String, dynamic> toMap() {
     final map = <String, dynamic>{
       'userId': userId,
+      'ownerId': userId,
       'bio': bio,
       'specialityTags': specialityTags,
       'isVerifiedCreator': isVerifiedCreator,

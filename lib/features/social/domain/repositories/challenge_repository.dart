@@ -20,6 +20,10 @@ abstract class ChallengeRepository {
   /// Create a solo challenge specific to a user
   Future<void> createSoloChallenge(String userId, Challenge challenge);
 
+  /// Publishes a catalog challenge owned by [createdBy] (verified creators).
+  /// Writes to the server `challenges` collection; returns the new id.
+  Future<String> createCatalogChallenge(Challenge challenge);
+
   /// Update challenge progress with validation
   /// Returns `Left<Failure>` if validation fails (cheating, already complete, etc.)
   /// Returns `Right<Unit>` on success

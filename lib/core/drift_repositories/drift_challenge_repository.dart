@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:emerge_app/core/drift/database.dart';
 import 'package:emerge_app/core/error/failure.dart';
 import 'package:emerge_app/core/game_loop/game_loop_engine.dart';
@@ -247,6 +248,16 @@ class DriftChallengeRepository implements ChallengeRepository {
         'isSolo': true,
       },
     );
+  }
+
+  @override
+  Future<String> createCatalogChallenge(Challenge challenge) async {
+    // Server-side catalog write (rules: verified creator with
+    // createdBy == auth.uid). Mirrors seed_runner.dart's challenges write.
+    final fs = FirebaseFirestore.instance;
+    final ref = fs.collection('challenges').doc();
+    await ref.set(challenge.copyWith(id: ref.id).toMap());
+    return ref.id;
   }
 
   @override

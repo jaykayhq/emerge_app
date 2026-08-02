@@ -76,6 +76,13 @@ class Challenge extends Equatable {
   final String? rewardTitleId;
   final String? rewardNameplateId;
 
+  /// UID of the verified creator who published this catalog challenge.
+  /// Null for legacy/catalog rows that predate creator submissions.
+  final String? createdBy;
+
+  /// When the creator published this catalog challenge.
+  final DateTime? createdAt;
+
   const Challenge({
     required this.id,
     required this.title,
@@ -109,6 +116,8 @@ class Challenge extends Equatable {
     this.isPremium = false,
     this.rewardTitleId,
     this.rewardNameplateId,
+    this.createdBy,
+    this.createdAt,
   });
 
   Challenge copyWith({
@@ -143,6 +152,8 @@ class Challenge extends Equatable {
     bool? isPremium,
     String? rewardTitleId,
     String? rewardNameplateId,
+    String? createdBy,
+    DateTime? createdAt,
   }) {
     return Challenge(
       id: id ?? this.id,
@@ -177,6 +188,8 @@ class Challenge extends Equatable {
       isPremium: isPremium ?? this.isPremium,
       rewardTitleId: rewardTitleId ?? this.rewardTitleId,
       rewardNameplateId: rewardNameplateId ?? this.rewardNameplateId,
+      createdBy: createdBy ?? this.createdBy,
+      createdAt: createdAt ?? this.createdAt,
     );
   }
 
@@ -213,6 +226,8 @@ class Challenge extends Equatable {
       'isPremium': isPremium,
       'rewardTitleId': rewardTitleId,
       'rewardNameplateId': rewardNameplateId,
+      'createdBy': createdBy,
+      'createdAt': createdAt?.toIso8601String(),
       // steps would be a sub-collection or array usually, simplifying for now
       'steps': steps
           .map(
@@ -307,6 +322,10 @@ class Challenge extends Equatable {
       isPremium: map['isPremium'] ?? false,
       rewardTitleId: map['rewardTitleId'],
       rewardNameplateId: map['rewardNameplateId'],
+      createdBy: map['createdBy'],
+      createdAt: map['createdAt'] != null
+          ? DateTime.tryParse(map['createdAt'] as String)
+          : null,
       steps:
           (map['steps'] as List<dynamic>?)
               ?.map(
@@ -356,5 +375,7 @@ class Challenge extends Equatable {
     isPremium,
     rewardTitleId,
     rewardNameplateId,
+    createdBy,
+    createdAt,
   ];
 }
