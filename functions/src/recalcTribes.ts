@@ -162,3 +162,45 @@ export async function recalcTribesInternal(db: admin.firestore.Firestore): Promi
   console.log(`✓ Scalable tribe recalculation finished. Updated ${updatedCount} official clubs.`);
   return updatedCount;
 }
+
+export interface TribeAggregationInput {
+  /** uid -> explicit tribeId from users/{uid}/tribes (collectionGroup). */
+  membershipMap: Map<string, string>;
+  /** uid -> lowercase archetype (may be 'none'). */
+  archetypeMap: Map<string, string>;
+  /** archetype -> official clubId (the 6 official clubs). */
+  clubMap: Record<string, string>;
+  /** uid -> user_stats.avatarStats.totalXp. */
+  userStatsXp: Map<string, number>;
+}
+
+/**
+ * Pure SP-G D10 aggregation: members = explicit membership docs, plus the
+ * official archetype club as a fallback ONLY for users without explicit
+ * membership. XP is summed per member directly (no archetype bucketing).
+ */
+export function aggregateTribeStats(
+  input: TribeAggregationInput,
+): Map<string, { members: string[]; totalXp: number }> {
+  const byTribe = new Map<string, { members: string[]; totalXp: number }>();
+  const ensure = (tribeId: string) => {
+    let entry = byTribe.get(tribeId);
+    if (!entry) {
+      entry = { members: [], totalXp: 0 };
+      byTribe.set(tribeId, entry);
+    }
+    return entry;
+  };
+
+  const uids = new Set([...input.membershipMap.keys(), ...input.archetypeMap.keys()]);
+  for (const uid of uids) {
+    const tribeId =
+      input.membershipMap.get(uid) ??
+      input.clubMap[input.archetypeMap.get(uid) ?? ""];
+    if (!tribeId) continue; // no explicit membership and no official club
+    const entry = ensure(tribeId);
+    entry.members.push(uid);
+    entry.totalXp += input.userStatsXp.get(uid) ?? 0;
+  }
+  return byTribe;
+}
