@@ -1,3 +1,5 @@
+import 'package:emerge_app/core/utils/password_rules.dart';
+
 class AppValidators {
   // Email validation with enhanced security
   static String? validateEmail(String? value) {
@@ -49,46 +51,28 @@ class AppValidators {
       return 'Password is required';
     }
 
-    // ENHANCED: Minimum 12 characters (NIST guidelines - up from 8)
-    if (value.length < 12) {
+    if (value.length < PasswordRules.minLength) {
       return 'Password must be at least 12 characters long';
     }
 
-    // Maximum length requirement
-    if (value.length > 128) {
+    if (value.length > PasswordRules.maxLength) {
       return 'Password is too long';
     }
 
-    // ENHANCED: Check for common weak passwords from leaked databases
-    if (_isCommonPassword(value)) {
+    if (PasswordRules.isCommon(value)) {
       return 'This password is too common. Please choose a stronger one.';
     }
 
-    // Check for character variety
-    bool hasUppercase = value.contains(RegExp(r'[A-Z]'));
-    bool hasLowercase = value.contains(RegExp(r'[a-z]'));
-    bool hasDigits = value.contains(RegExp(r'[0-9]'));
-    bool hasSpecialCharacters = value.contains(
-      RegExp(r'[!@#$%^&*(),.?":{}|<>]'),
-    );
-
-    int strengthScore = 0;
-    if (hasUppercase) strengthScore++;
-    if (hasLowercase) strengthScore++;
-    if (hasDigits) strengthScore++;
-    if (hasSpecialCharacters) strengthScore++;
-
-    if (strengthScore < 3) {
+    if (PasswordRules.characterClasses(value) <
+        PasswordRules.minCharacterClasses) {
       return 'Password must include at least 3 of: uppercase, lowercase, numbers, special characters';
     }
 
-    // Check for sequential characters (e.g., "abc", "123")
-    if (_hasSequentialChars(value)) {
+    if (PasswordRules.hasSequentialChars(value)) {
       return 'Password cannot contain sequential characters (e.g., "abc", "123")';
     }
 
-    // ENHANCED: Check for repeated characters (e.g., "aaa", "111")
-    if (_hasRepeatedChars(value)) {
+    if (PasswordRules.hasRepeatedChars(value)) {
       return 'Password cannot contain repeated characters (e.g., "aaa", "111")';
     }
 
@@ -200,98 +184,6 @@ class AppValidators {
     }
 
     return null;
-  }
-
-  // ENHANCED: Check against common password database (top 100 from leaked databases)
-  static bool _isCommonPassword(String password) {
-    final normalizedPassword = password.toLowerCase();
-
-    final commonPasswords = {
-      'password',
-      '123456',
-      '12345678',
-      'qwerty',
-      'abc123',
-      'password1',
-      '123456789',
-      '1234567',
-      '12345',
-      '1234567890',
-      'iloveyou',
-      'princess',
-      'admin',
-      'welcome',
-      '666666',
-      'football',
-      '111111',
-      '123123',
-      '654321',
-      'password123',
-      'qwerty123',
-      'qwertyuiop',
-      'asdfgh',
-      'zxcvbnm',
-      'letmein',
-      'monkey',
-      'dragon',
-      'baseball',
-      'superman',
-      'master',
-      '2019',
-      '2020',
-      '2021',
-      '2022',
-      '2023',
-      '2024',
-      '2025',
-      '11111111',
-      '00000000',
-      'aaaaaaaa',
-      'passw0rd',
-      'admin123',
-    };
-
-    if (commonPasswords.contains(normalizedPassword)) {
-      return true;
-    }
-
-    for (final common in commonPasswords.take(50)) {
-      if (normalizedPassword.contains(common) &&
-          common.length >= normalizedPassword.length * 0.5) {
-        return true;
-      }
-    }
-
-    return false;
-  }
-
-  // ENHANCED: Check for repeated characters (e.g., "aaa", "111")
-  static bool _hasRepeatedChars(String password) {
-    return RegExp(r'(.)\1{2,}').hasMatch(password);
-  }
-
-  // Check for sequential characters in password
-  static bool _hasSequentialChars(String password) {
-    password = password.toLowerCase();
-
-    // Check for 3+ consecutive characters
-    for (int i = 0; i <= password.length - 3; i++) {
-      int char1 = password.codeUnitAt(i);
-      int char2 = password.codeUnitAt(i + 1);
-      int char3 = password.codeUnitAt(i + 2);
-
-      // Check for ascending sequence (abc, 123)
-      if (char2 == char1 + 1 && char3 == char2 + 1) {
-        return true;
-      }
-
-      // Check for descending sequence (cba, 321)
-      if (char2 == char1 - 1 && char3 == char2 - 1) {
-        return true;
-      }
-    }
-
-    return false;
   }
 
   // Check for excessive repetition
