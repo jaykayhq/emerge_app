@@ -32,8 +32,16 @@ class FakeDriftUserStatsRepository extends DriftUserStatsRepository {
 }
 
 class FakeWorldThemeNotifier extends WorldThemeNotifier {
+  final List<AppWorldTheme> setCalls = [];
+
   @override
   AppWorldTheme build() => AppWorldTheme.nebula;
+
+  @override
+  Future<void> setTheme(AppWorldTheme theme) async {
+    setCalls.add(theme);
+    await super.setTheme(theme); // real guard runs: locked calls no-op
+  }
 }
 
 class FakeIsPremium extends IsPremium {
@@ -84,6 +92,7 @@ Widget createTest({
   FakeSettings? settings,
   bool premium = false,
   CoachAskQuota? quota,
+  FakeWorldThemeNotifier? worldTheme,
 }) {
   return ProviderScope(
     overrides: [
@@ -97,7 +106,7 @@ Widget createTest({
         (ref) => FakeDriftUserStatsRepository(),
       ),
       themeControllerProvider.overrideWithValue(ThemeMode.dark),
-      worldThemeProvider.overrideWith(() => FakeWorldThemeNotifier()),
+      worldThemeProvider.overrideWith(() => worldTheme ?? FakeWorldThemeNotifier()),
       isPremiumProvider.overrideWith(() => FakeIsPremium(premium)),
       worldHealthStreamProvider.overrideWith(
         (ref) => Stream.value(0.5),
@@ -194,6 +203,52 @@ void main() {
 
       await tester.ensureVisible(find.text('Coach asks'));
       expect(find.text('Unlimited coach asks'), findsOneWidget);
+    });
+  });
+
+  group('World theme lock', () {
+    testWidgets('locked tiles show a COMING SOON chip', (tester) async {
+      await tester.pumpWidget(createTest());
+      await tester.pump();
+      await tester.pump();
+
+      await tester.ensureVisible(find.text('Cosmic'));
+      await tester.pump();
+
+      // nebula unlocked; the other five themes locked.
+      expect(find.text('COMING SOON'), findsNWidgets(5));
+    });
+
+    testWidgets('tapping a locked tile shows the snackbar and selects nothing',
+        (tester) async {
+      final worldTheme = FakeWorldThemeNotifier();
+      await tester.pumpWidget(createTest(worldTheme: worldTheme));
+      await tester.pump();
+      await tester.pump();
+
+      await tester.ensureVisible(find.text('Living'));
+      await tester.pump();
+      await tester.tap(find.text('Living'));
+      await tester.pump();
+
+      expect(find.text('Coming soon'), findsOneWidget);
+      expect(worldTheme.setCalls, isEmpty);
+    });
+
+    testWidgets('tapping the unlocked theme selects it without a snackbar',
+        (tester) async {
+      final worldTheme = FakeWorldThemeNotifier();
+      await tester.pumpWidget(createTest(worldTheme: worldTheme));
+      await tester.pump();
+      await tester.pump();
+
+      await tester.ensureVisible(find.text('Cosmic'));
+      await tester.pump();
+      await tester.tap(find.text('Cosmic'));
+      await tester.pump();
+
+      expect(find.text('Coming soon'), findsNothing);
+      expect(worldTheme.setCalls, [AppWorldTheme.nebula]);
     });
   });
 }

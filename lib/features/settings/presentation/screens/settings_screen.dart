@@ -19,6 +19,7 @@ import 'package:cloud_functions/cloud_functions.dart';
 import 'package:emerge_app/core/error/failure.dart';
 import 'package:fpdart/fpdart.dart';
 import 'package:emerge_app/core/domain/models/app_world_theme.dart';
+import 'package:emerge_app/core/domain/services/theme_lock.dart';
 import 'package:emerge_app/core/presentation/providers/world_theme_provider.dart';
 import 'package:emerge_app/features/monetization/presentation/providers/coach_ask_quota_provider.dart';
 import 'package:emerge_app/features/onboarding/presentation/providers/onboarding_provider.dart';
@@ -1357,48 +1358,97 @@ class _WorldThemePicker extends StatelessWidget {
         itemBuilder: (context, index) {
           final theme = AppWorldTheme.values[index];
           final isSelected = theme == selected;
+          final isLocked = ThemeLock.isLocked(theme);
           return GestureDetector(
-            onTap: () => onSelect(theme),
+            onTap: () {
+              if (isLocked) {
+                // Replace, never queue: repeat taps keep a single snackbar.
+                ScaffoldMessenger.maybeOf(context)
+                  ?..hideCurrentSnackBar()
+                  ..showSnackBar(
+                    const SnackBar(
+                      content: Text('Coming soon'),
+                      duration: Duration(milliseconds: 1500),
+                      behavior: SnackBarBehavior.floating,
+                    ),
+                  );
+                return;
+              }
+              onSelect(theme);
+            },
             child: AnimatedContainer(
               duration: const Duration(milliseconds: 200),
               width: 80,
               decoration: BoxDecoration(
                 color: isSelected
                     ? Colors.white.withValues(alpha: 0.15)
-                    : Colors.white.withValues(alpha: 0.05),
+                    : Colors.white.withValues(alpha: isLocked ? 0.03 : 0.05),
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(
                   color: isSelected
                       ? Colors.white.withValues(alpha: 0.6)
-                      : Colors.white.withValues(alpha: 0.15),
+                      : Colors.white.withValues(alpha: isLocked ? 0.1 : 0.15),
                   width: isSelected ? 2 : 1,
                 ),
               ),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
+              child: Stack(
                 children: [
-                  Text(theme.emoji, style: const TextStyle(fontSize: 26)),
-                  const SizedBox(height: 4),
-                  Text(
-                    theme.displayName.split(' ').first,
-                    style: TextStyle(
-                      color: Colors.white.withValues(
-                        alpha: isSelected ? 0.9 : 0.5,
+                  Center(
+                    child: Opacity(
+                      opacity: isLocked ? 0.4 : 1.0,
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(theme.emoji, style: const TextStyle(fontSize: 26)),
+                          const SizedBox(height: 4),
+                          Text(
+                            theme.displayName.split(' ').first,
+                            style: TextStyle(
+                              color: Colors.white.withValues(
+                                alpha: isSelected ? 0.9 : 0.5,
+                              ),
+                              fontSize: 10,
+                              fontWeight: isSelected
+                                  ? FontWeight.bold
+                                  : FontWeight.normal,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                          if (isSelected)
+                            const Padding(
+                              padding: EdgeInsets.only(top: 4),
+                              child: Icon(
+                                Icons.check_circle,
+                                color: Colors.white,
+                                size: 14,
+                              ),
+                            ),
+                        ],
                       ),
-                      fontSize: 10,
-                      fontWeight: isSelected
-                          ? FontWeight.bold
-                          : FontWeight.normal,
                     ),
-                    textAlign: TextAlign.center,
                   ),
-                  if (isSelected)
-                    const Padding(
-                      padding: EdgeInsets.only(top: 4),
-                      child: Icon(
-                        Icons.check_circle,
-                        color: Colors.white,
-                        size: 14,
+                  if (isLocked)
+                    Positioned(
+                      top: 4,
+                      right: 4,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 4,
+                          vertical: 1,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withValues(alpha: 0.12),
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: const Text(
+                          'COMING SOON',
+                          style: TextStyle(
+                            fontSize: 6.5,
+                            color: Colors.white70,
+                            letterSpacing: 0.8,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
                       ),
                     ),
                 ],
