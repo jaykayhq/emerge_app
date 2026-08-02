@@ -47,7 +47,7 @@ Alternative: SP-G before SP-E if data-integrity is the priority (SP-G's plan abs
 3. **SP-G D2:** leave semantics = "Keep everything" (contributions/contributor doc/leaderboard entry preserved; leave-dialog copy fixed). **CONFIRMED by the user directly**
 4. **SP-H:** include the blueprints `'system'` carve-out, dead-function removal (`notifyAchievement` + `onHabitChanged`), and the `isValidStats` deny-list additions. **CONFIRMED**
 
-Execution started 2026-08-02 in the recommended order (SP-C → SP-B → SP-E → SP-F → SP-D → SP-G → SP-H); this index is the coordination source.
+Execution is **deferred — handoff only**. All decisions above are recorded so any future session can execute SP-B…SP-H directly from the plans (each plan is self-contained: TDD tasks, exact commands, commit messages). Recommended order below.
 
 ## ⚠️ CONFIRM-WITH-USER items (decide before executing the affected sub-project)
 
