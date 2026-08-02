@@ -110,7 +110,7 @@ class IsPremium extends _$IsPremium {
     ref.onDispose(sub.cancel);
     try {
       final snap = await firestore.collection('users').doc(uid).get();
-      return snap.data()?['isPremium'] == true;
+      return recordToPremium(snap.data());
     } catch (e) {
       AppLogger.w('Web premium Firestore check failed', error: e);
       final cached = await _readCachedPremiumStatus();

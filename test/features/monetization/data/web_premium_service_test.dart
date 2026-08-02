@@ -44,4 +44,38 @@ void main() {
     expect(values.last, isFalse);
     await sub.cancel();
   });
+
+  test('paused with future premiumEndsAt stays premium', () async {
+    final fdb = FakeFirebaseFirestore();
+    final values = <bool>[];
+    final sub = streamWebPremium(fdb, 'uid-1').listen(values.add);
+
+    await fdb.collection('users').doc('uid-1').set({
+      'isPremium': true,
+      'subscriptionStatus': 'paused',
+      'premiumEndsAt':
+          Timestamp.fromDate(DateTime.now().add(const Duration(days: 30))),
+    });
+    await pumpEventQueue();
+
+    expect(values.last, isTrue);
+    await sub.cancel();
+  });
+
+  test('paused past premiumEndsAt is free', () async {
+    final fdb = FakeFirebaseFirestore();
+    final values = <bool>[];
+    final sub = streamWebPremium(fdb, 'uid-1').listen(values.add);
+
+    await fdb.collection('users').doc('uid-1').set({
+      'isPremium': true,
+      'subscriptionStatus': 'paused',
+      'premiumEndsAt':
+          Timestamp.fromDate(DateTime.now().subtract(const Duration(days: 1))),
+    });
+    await pumpEventQueue();
+
+    expect(values.last, isFalse);
+    await sub.cancel();
+  });
 }
