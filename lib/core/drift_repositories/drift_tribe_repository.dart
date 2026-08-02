@@ -690,24 +690,19 @@ tribeStatsSub = _db.tribeStatsDao
       tags = List<String>.from(remoteData['tags'] ?? const []);
       levelRequirement = (remoteData['levelRequirement'] as int? ?? 0);
       rank = (remoteData['rank'] as int? ?? 0);
-      // For critical fields like XP, member count, etc., we might want to
-      // prefer the higher value (to avoid losing local-only increments)
-      // but for now, let remote be source of truth for most things
-      final remoteXp = (remoteData['totalXp'] as int? ?? 0);
-      final remoteMemberCount = (remoteData['memberCount'] as int? ?? 0);
-      final remoteHabits = (remoteData['totalHabitsCompleted'] as int? ?? 0);
-      final remoteChallenges = (remoteData['totalChallengesCompleted'] as int? ?? 0);
-      
-      // Use max of local and remote for counters to prevent losing local-only updates
-      totalXp = (totalXp > remoteXp) ? totalXp : remoteXp;
-      memberCount = (memberCount > remoteMemberCount) ? memberCount : remoteMemberCount;
+      // SP-G D4: tribe totals are recalc-only (server-authoritative D10) —
+      // prefer remote over local, matching watchArchetypeClubs.emitMerged.
+      // Local Drift keeps updating for instant UI; stale/inflated local
+      // values must never override the recalc'd Firestore numbers.
+      totalXp = (remoteData['totalXp'] as num?)?.toInt() ?? totalXp;
+      memberCount = (remoteData['memberCount'] as num?)?.toInt() ?? memberCount;
       totalHabitsCompleted =
-          (totalHabitsCompleted > remoteHabits) ? totalHabitsCompleted : remoteHabits;
+          (remoteData['totalHabitsCompleted'] as num?)?.toInt() ??
+          totalHabitsCompleted;
       totalChallengesCompleted =
-          (totalChallengesCompleted > remoteChallenges)
-              ? totalChallengesCompleted
-              : remoteChallenges;
-      
+          (remoteData['totalChallengesCompleted'] as num?)?.toInt() ??
+          totalChallengesCompleted;
+
       isVerified = (remoteData['isVerified'] as bool? ?? false);
       archetypeId = (remoteData['archetypeId'] as String?) ?? archetypeId;
     }

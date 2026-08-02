@@ -9,6 +9,7 @@ import 'package:emerge_app/features/social/presentation/widgets/tribe_card.dart'
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:fpdart/fpdart.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mocktail/mocktail.dart';
 
@@ -31,14 +32,36 @@ void main() {
     rank: 1,
     totalXp: 5000,
     archetypeId: 'athlete',
+    members: const [''],
   );
 
-  Widget buildTest() {
+  final unjoinedTribe = Tribe(
+    id: 'morning_warriors',
+    name: 'Morning Warriors',
+    description: 'Early risers unite',
+    imageUrl: '',
+    memberCount: 100,
+    ownerId: '',
+    tags: [],
+    levelRequirement: 0,
+    rank: 1,
+    totalXp: 5000,
+    archetypeId: 'athlete',
+  );
+
+  Widget buildTest({
+    Tribe? cardTribe,
+    MockTribeMembershipService? membership,
+    MockTribeStatsService? stats,
+  }) {
+    final membershipService = membership ?? MockTribeMembershipService();
+    final statsService = stats ?? MockTribeStatsService();
+    final t = cardTribe ?? tribe;
     return ProviderScope(
       overrides: [
         authStateChangesProvider
             .overrideWith((ref) => Stream.value(emptyUser)),
-        cachedTribeStatsProvider('morning_warriors').overrideWith((ref) {
+        cachedTribeStatsProvider(t.id).overrideWith((ref) {
           return Stream.value(TribeStats(
             memberCount: 100,
             totalXp: 5000,
@@ -47,8 +70,8 @@ void main() {
           ));
         }),
         tribeMembershipServiceProvider
-            .overrideWithValue(MockTribeMembershipService()),
-        tribeStatsServiceProvider.overrideWithValue(MockTribeStatsService()),
+            .overrideWithValue(membershipService),
+        tribeStatsServiceProvider.overrideWithValue(statsService),
       ],
       child: MaterialApp.router(
         routerConfig: GoRouter(
@@ -56,7 +79,7 @@ void main() {
           routes: [
             GoRoute(
               path: '/',
-              builder: (_, state) => Scaffold(body: TribeCard(tribe: tribe)),
+              builder: (_, state) => Scaffold(body: TribeCard(tribe: t)),
             ),
             GoRoute(
               path: '/social/tribe/:id',
@@ -84,5 +107,78 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('TRIBE_DETAIL:morning_warriors'), findsOneWidget);
+  });
+
+  testWidgets('leave dialog says contributions stay on the tribe record',
+      (tester) async {
+    await tester.pumpWidget(buildTest());
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 100));
+
+    await tester.tap(find.text('LEAVE'));
+    await tester.pumpAndSettle();
+
+    // The mandated D2 copy (plan verbatim): "Your streak progress stays, and
+    // your contributions remain on the tribe's record." The plan's sketch
+    // needle ('contributions stay') is not a substring of that sentence.
+    expect(find.textContaining('streak progress stays'), findsOneWidget);
+    expect(find.textContaining("tribe's record"), findsOneWidget);
+    expect(find.textContaining('lose your'), findsNothing);
+  });
+
+  testWidgets('leaving does not call syncTribeStats — membership only',
+      (tester) async {
+    final membershipService = MockTribeMembershipService();
+    final statsService = MockTribeStatsService();
+    when(() => membershipService.leaveTribe(any()))
+        .thenAnswer((_) async => Right(null));
+
+    await tester.pumpWidget(buildTest(
+      membership: membershipService,
+      stats: statsService,
+    ));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 100));
+
+    await tester.tap(find.text('LEAVE'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Leave'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Left tribe successfully'), findsOneWidget);
+    verify(() => membershipService.leaveTribe('')).called(1);
+    verifyNoMoreInteractions(membershipService);
+    verifyZeroInteractions(statsService);
+  });
+
+  testWidgets('joining does not call syncTribeStats — membership only',
+      (tester) async {
+    final membershipService = MockTribeMembershipService();
+    final statsService = MockTribeStatsService();
+    when(() => membershipService.joinTribe(
+      userId: any(named: 'userId'),
+      tribeId: any(named: 'tribeId'),
+      type: any(named: 'type'),
+    )).thenAnswer((_) async => Right(null));
+
+    await tester.pumpWidget(buildTest(
+      cardTribe: unjoinedTribe,
+      membership: membershipService,
+      stats: statsService,
+    ));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 100));
+
+    await tester.tap(find.text('JOIN'));
+    await tester.pumpAndSettle();
+
+    expect(find.textContaining('Joined Morning Warriors!'), findsOneWidget);
+    verify(() => membershipService.joinTribe(
+      userId: '',
+      tribeId: 'morning_warriors',
+      type: 'archetype',
+    )).called(1);
+    verifyNoMoreInteractions(membershipService);
+    verifyZeroInteractions(statsService);
   });
 }

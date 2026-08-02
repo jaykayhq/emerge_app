@@ -228,30 +228,6 @@ class TribeStatsService {
       };
     }
   }
-
-  /// Updates the tribe document with calculated stats
-  ///
-  /// This should be called periodically or triggered by user actions
-  /// to keep the tribe document's cached values in sync with reality.
-  Future<void> syncTribeStats(String tribeId) async {
-    try {
-      final stats = await getTribeStats(tribeId);
-
-      await _firestore.collection('tribes').doc(tribeId).update({
-        'memberCount': stats['memberCount'],
-        'totalXp': stats['totalXp'],
-        'totalHabitsCompleted': stats['totalHabitsCompleted'],
-        'totalChallengesCompleted': stats['totalChallengesCompleted'],
-        'lastStatsSync': FieldValue.serverTimestamp(),
-      });
-
-      debugPrint(
-        '✅ Synced stats for tribe $tribeId: ${stats['memberCount']} members, ${stats['totalXp']} XP',
-      );
-    } catch (e) {
-      debugPrint('❌ Error syncing tribe stats for $tribeId: $e');
-    }
-  }
 }
 
 final tribeStatsServiceProvider = Provider<TribeStatsService>((ref) {

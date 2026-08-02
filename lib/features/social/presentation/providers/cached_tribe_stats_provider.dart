@@ -41,25 +41,20 @@ final cachedTribeStatsProvider = StreamProvider.family<TribeStats, String>((
     Map<String, dynamic>? remoteData,
   ) {
     final localTotalXp = localRow?.totalXp ?? 0;
-    final remoteTotalXp = remoteData?['totalXp'] as int? ?? 0;
     final localHabits = localRow?.totalHabitsCompleted ?? 0;
-    final remoteHabits = remoteData?['totalHabitsCompleted'] as int? ?? 0;
     final localChallenges = localRow?.totalChallengesCompleted ?? 0;
-    final remoteChallenges =
-        remoteData?['totalChallengesCompleted'] as int? ?? 0;
     // memberCount can decrease (leave tribe) so use remote if available
     final memberCount =
         remoteData?['memberCount'] as int? ?? localRow?.memberCount ?? 0;
-    // XP/habits/challenges are monotonic — take the higher value so
-    // locally-completed habits are shown immediately, not overridden by
-    // stale Firestore data during the async sync window.
-    final totalXp = localTotalXp > remoteTotalXp ? localTotalXp : remoteTotalXp;
-    final totalHabitsCompleted = localHabits > remoteHabits
-        ? localHabits
-        : remoteHabits;
-    final totalChallengesCompleted = localChallenges > remoteChallenges
-        ? localChallenges
-        : remoteChallenges;
+    // SP-G D4: tribe totals are recalc-only (server-authoritative D10) —
+    // prefer remote values as soon as they arrive. Local Drift totals keep
+    // updating for instant UI; stale/inflated local values must never
+    // override the recalc'd Firestore numbers.
+    final totalXp = remoteData?['totalXp'] as int? ?? localTotalXp;
+    final totalHabitsCompleted =
+        remoteData?['totalHabitsCompleted'] as int? ?? localHabits;
+    final totalChallengesCompleted =
+        remoteData?['totalChallengesCompleted'] as int? ?? localChallenges;
 
     if (!controller.isClosed) {
       controller.add(

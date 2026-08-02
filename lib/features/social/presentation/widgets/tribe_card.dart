@@ -6,7 +6,6 @@ import 'package:emerge_app/features/social/domain/models/tribe.dart';
 import 'package:emerge_app/features/onboarding/presentation/widgets/club_emblem_images.dart';
 import 'package:emerge_app/features/social/presentation/providers/cached_tribe_stats_provider.dart';
 import 'package:emerge_app/features/social/domain/services/tribe_membership_service.dart';
-import 'package:emerge_app/features/social/data/services/tribe_stats_service.dart';
 import 'package:emerge_app/features/auth/presentation/providers/auth_providers.dart';
 import 'package:go_router/go_router.dart';
 
@@ -178,7 +177,6 @@ class _MembershipButton extends ConsumerWidget {
 
     final isMember = tribe.members.contains(user.id);
     final membershipService = ref.read(tribeMembershipServiceProvider);
-    final statsService = ref.read(tribeStatsServiceProvider);
 
     return SizedBox(
       width: double.infinity,
@@ -193,8 +191,8 @@ class _MembershipButton extends ConsumerWidget {
                 builder: (ctx) => AlertDialog(
                   title: const Text('Leave Tribe'),
                   content: const Text(
-                    'Are you sure you want to leave? You will lose your streak progress, '
-                    'accountability partners, and tribe contributions.',
+                    'Are you sure you want to leave? Your streak progress stays, '
+                    'and your contributions remain on the tribe\'s record.',
                   ),
                   actions: [
                     TextButton(
@@ -214,7 +212,6 @@ class _MembershipButton extends ConsumerWidget {
               if (confirmed != true) return;
 
               await membershipService.leaveTribe(user.id);
-              await statsService.syncTribeStats(tribe.id);
               if (context.mounted) {
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(content: Text('Left tribe successfully')),
@@ -226,7 +223,6 @@ class _MembershipButton extends ConsumerWidget {
                 tribeId: tribe.id,
                 type: tribe.archetypeId != null ? 'archetype' : 'creator',
               );
-              await statsService.syncTribeStats(tribe.id);
               if (context.mounted) {
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
