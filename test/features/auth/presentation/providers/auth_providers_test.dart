@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:fake_cloud_firestore/fake_cloud_firestore.dart';
+import 'package:emerge_app/core/drift/database.dart';
 import 'package:emerge_app/core/error/failure.dart';
 import 'package:emerge_app/features/auth/domain/entities/auth_user.dart';
 import 'package:emerge_app/features/auth/domain/repositories/auth_repository.dart';
@@ -12,15 +13,19 @@ import 'package:fpdart/fpdart.dart';
 
 class MockAuthRepository extends Mock implements AuthRepository {}
 
+class MockAppDatabase extends Mock implements AppDatabase {}
+
 ProviderContainer _makeContainer({
   required AuthRepository repo,
   Stream<AuthUser>? userStream,
+  AppDatabase? database,
 }) {
   return ProviderContainer(
     overrides: [
       authRepositoryProvider.overrideWithValue(repo),
       if (userStream != null)
         authStateChangesProvider.overrideWith((ref) => userStream),
+      if (database != null) appDatabaseProvider.overrideWithValue(database),
     ],
   );
 }
@@ -61,6 +66,10 @@ Future<bool> _readFirstBoolState(ProviderContainer container, dynamic provider) 
 }
 
 void main() {
+  // signOutProvider exercises AppDatabase.clearAll(), which opens the Drift
+  // database via path_provider and therefore needs the binding initialized.
+  TestWidgetsFlutterBinding.ensureInitialized();
+
   late MockAuthRepository mockRepo;
 
   setUp(() {
@@ -134,8 +143,10 @@ void main() {
   group('signOutProvider', () {
     test('calls repository signOut', () async {
       when(() => mockRepo.signOut()).thenAnswer((_) async {});
+      final mockDb = MockAppDatabase();
+      when(() => mockDb.clearAll()).thenAnswer((_) async {});
 
-      final container = _makeContainer(repo: mockRepo);
+      final container = _makeContainer(repo: mockRepo, database: mockDb);
       await container.read(signOutProvider.future);
       verify(() => mockRepo.signOut()).called(1);
       container.dispose();

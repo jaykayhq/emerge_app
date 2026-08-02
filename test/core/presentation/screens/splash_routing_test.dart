@@ -162,7 +162,8 @@ void main() {
       );
     });
 
-    test('role=unknown, no creator profile, progress=3 -> home', () {
+    test('role=unknown, no creator profile, progress=3 -> first-habits (step 4)',
+        () {
       expect(
         determineSplashRoute(
           isLoggedIn: true,
@@ -173,7 +174,7 @@ void main() {
           userOnboardingProgress: 3,
           userOnboardingCompletedAt: null,
         ),
-        '/world-map',
+        '/onboarding/first-habits',
       );
     });
 
@@ -230,7 +231,7 @@ void main() {
       );
     });
 
-    test('role=user, progress=2 -> /onboarding/first-habit', () {
+    test('role=user, progress=2 -> /onboarding/club', () {
       expect(
         determineSplashRoute(
           isLoggedIn: true,
@@ -241,11 +242,11 @@ void main() {
           userOnboardingProgress: 2,
           userOnboardingCompletedAt: null,
         ),
-        '/onboarding/first-habit',
+        '/onboarding/club',
       );
     });
 
-    test('role=user, progress=3 -> / (home)', () {
+    test('role=user, progress=3 -> /onboarding/first-habits (step 4)', () {
       expect(
         determineSplashRoute(
           isLoggedIn: true,
@@ -256,7 +257,7 @@ void main() {
           userOnboardingProgress: 3,
           userOnboardingCompletedAt: null,
         ),
-        '/world-map',
+        '/onboarding/first-habits',
       );
     });
 

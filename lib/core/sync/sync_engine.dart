@@ -202,7 +202,7 @@ class EnhancedSyncEngine {
         case 'update':
           _convertTimestamps(data);
           _processMarkers(data);
-          await ref.set(data, SetOptions(merge: true));
+          await ref.update(data);
           break;
         case 'delete':
           await ref.delete();

@@ -13,6 +13,7 @@ void main() {
 
   setUp(() {
     mockSyncEngine = MockSyncEngine();
+    when(() => mockSyncEngine.reviveDeadLetters()).thenAnswer((_) async {});
     capturedListeners = [];
     service = SyncTriggerService(mockSyncEngine, (callback) {
       capturedListeners.add(callback);

@@ -11,6 +11,7 @@ void main() {
   group('SyncTriggerService Provider', () {
     test('SyncTriggerService runs triggerSync without error', () async {
       final engine = MockSyncEngine();
+      when(() => engine.reviveDeadLetters()).thenAnswer((_) async {});
       when(() => engine.processMutationQueue()).thenAnswer((_) async {});
 
       // Create service with a no-op listener
@@ -27,6 +28,7 @@ void main() {
 
     test('stop cancels subscription safely', () {
       final engine = MockSyncEngine();
+      when(() => engine.reviveDeadLetters()).thenAnswer((_) async {});
       final service = SyncTriggerService(engine, (listener) {});
 
       expect(() => service.stop(), returnsNormally);
