@@ -25,6 +25,7 @@ class _CreatorSignUpScreenState extends ConsumerState<CreatorSignUpScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
+  final _inviteCodeController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
   bool _isLoading = false;
   bool _obscurePassword = true;
@@ -36,6 +37,7 @@ class _CreatorSignUpScreenState extends ConsumerState<CreatorSignUpScreen> {
     _emailController.dispose();
     _passwordController.dispose();
     _confirmPasswordController.dispose();
+    _inviteCodeController.dispose();
     super.dispose();
   }
 
@@ -50,6 +52,7 @@ class _CreatorSignUpScreenState extends ConsumerState<CreatorSignUpScreen> {
       _emailController.text.trim(),
       _passwordController.text,
       _usernameController.text.trim(),
+      _inviteCodeController.text.trim(),
     );
     final subscription = ref.listenManual(provider, (previous, next) {});
     try {
@@ -74,7 +77,9 @@ class _CreatorSignUpScreenState extends ConsumerState<CreatorSignUpScreen> {
   Future<void> _signUpWithGoogle() async {
     setState(() => _isLoading = true);
     try {
-      await ref.read(signUpCreatorWithGoogleProvider.future);
+      await ref.read(
+        signUpCreatorWithGoogleProvider(_inviteCodeController.text.trim()).future,
+      );
       if (mounted) {
         context.go('/splash');
       }
@@ -352,6 +357,37 @@ class _CreatorSignUpScreenState extends ConsumerState<CreatorSignUpScreen> {
                   _passwordController.text,
                 ),
               ).animate(delay: 250.ms).fadeIn().slideX(begin: 0.02),
+              const Gap(16),
+
+              // Invite Code
+              TextFormField(
+                controller: _inviteCodeController,
+                textCapitalization: TextCapitalization.characters,
+                style: const TextStyle(color: Colors.white),
+                decoration: InputDecoration(
+                  labelText: 'Invite Code',
+                  labelStyle: const TextStyle(color: Colors.white70),
+                  filled: true,
+                  fillColor: EmergeColors.background.withValues(alpha: 0.5),
+                  enabledBorder: OutlineInputBorder(
+                    borderSide: const BorderSide(color: EmergeColors.hexLine),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderSide: const BorderSide(color: Colors.amber),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  prefixIcon: const Icon(Icons.confirmation_number_outlined, color: Colors.amber),
+                ),
+                validator: (value) {
+                  final v = value?.trim().toUpperCase() ?? '';
+                  if (v.isEmpty) return 'An invite code is required to become a creator';
+                  if (v.length != 8 || !RegExp(r'^[A-Z2-9]{8}$').hasMatch(v)) {
+                    return 'Invite codes are 8 characters (A-Z, 2-9)';
+                  }
+                  return null;
+                },
+              ).animate(delay: 275.ms).fadeIn().slideX(begin: 0.02),
               const Gap(24),
 
               // Submit Button

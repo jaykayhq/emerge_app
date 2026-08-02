@@ -7,8 +7,6 @@ import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_auth/firebase_auth.dart' as firebase_auth;
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:riverpod_annotation/riverpod_annotation.dart';
-import 'package:emerge_app/features/social/presentation/providers/creator_provider.dart';
-import 'package:emerge_app/features/social/domain/entities/creator_profile.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:emerge_app/core/drift/database.dart';
@@ -96,7 +94,13 @@ Future<bool> isCurrentCreator(Ref ref) async {
 }
 
 @Riverpod(keepAlive: true)
-Future<void> signUpCreator(Ref ref, String email, String password, String username) async {
+Future<void> signUpCreator(
+  Ref ref,
+  String email,
+  String password,
+  String username,
+  String inviteCode,
+) async {
   final auth = ref.read(firebaseAuthProvider);
   final credential = await auth.createUserWithEmailAndPassword(
     email: email.trim(),
@@ -108,42 +112,29 @@ Future<void> signUpCreator(Ref ref, String email, String password, String userna
 
   await user.updateDisplayName(username.trim());
 
-  final creatorProfile = CreatorProfile(
-    userId: user.uid,
-    role: 'creator',
-    displayName: username.trim(),
-    isVerifiedCreator: false,
-  );
-
-  await ref.read(creatorRepositoryProvider).updateCreatorProfile(creatorProfile);
-  AppLogger.d('signUpCreator: wrote creator_profiles/${user.uid}');
-
-  try {
-    final functions = FirebaseFunctions.instance;
-    await functions.httpsCallable('setUserRole').call(<String, dynamic>{
-      'role': 'creator',
-    });
-    await user.getIdToken(true);
-  } catch (e, s) {
-    AppLogger.w(
-      'signUpCreator: setUserRole failed; router will fall back to mirror.',
-      error: e,
-      stackTrace: s,
-    );
-  }
+  // Server-side redemption creates creator_profiles (isVerifiedCreator: true)
+  // and sets the role custom claim. The old client-side profile write and the
+  // admin-gated setUserRole call are removed (SP-E).
+  final functions = FirebaseFunctions.instance;
+  await functions.httpsCallable('redeemCreatorInvite').call(<String, dynamic>{
+    'code': inviteCode.trim().toUpperCase(),
+    'displayName': username.trim(),
+  });
+  await user.getIdToken(true);
 }
 
 @Riverpod(keepAlive: true)
-Future<void> signUpCreatorWithGoogle(Ref ref) async {
+Future<void> signUpCreatorWithGoogle(Ref ref, String inviteCode) async {
   final auth = ref.read(firebaseAuthProvider);
   final firestore = ref.read(firestoreProvider);
-  final creatorRepo = ref.read(creatorRepositoryProvider);
 
   firebase_auth.UserCredential userCredential;
 
   if (kIsWeb) {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool('pending_creator_signup', true);
+    // Stashed for the post-redirect redemption in init_app.dart.
+    await prefs.setString('pending_creator_invite_code', inviteCode.trim().toUpperCase());
 
     final googleProvider = firebase_auth.GoogleAuthProvider();
     googleProvider.addScope('email');
@@ -171,27 +162,12 @@ Future<void> signUpCreatorWithGoogle(Ref ref) async {
     throw Exception('This Google account is already registered as a normal user.');
   }
 
-  final creatorProfile = CreatorProfile(
-    userId: user.uid,
-    role: 'creator',
-    displayName: user.displayName ?? user.email?.split('@').first ?? 'Creator',
-    isVerifiedCreator: false,
-  );
-
-  await creatorRepo.updateCreatorProfile(creatorProfile);
-
-  try {
-    final functions = FirebaseFunctions.instance;
-    await functions.httpsCallable('setUserRole').call(<String, dynamic>{
-      'role': 'creator',
-    });
-    await user.getIdToken(true);
-  } catch (e, s) {
-    AppLogger.w(
-      'signUpCreatorWithGoogle: setUserRole failed; '
-      'router will fall back to mirror.',
-      error: e,
-      stackTrace: s,
-    );
-  }
+  // Server-side redemption (same as email path): the creator_profiles doc,
+  // verification flag, and role claim are all function-owned.
+  final functions = FirebaseFunctions.instance;
+  await functions.httpsCallable('redeemCreatorInvite').call(<String, dynamic>{
+    'code': inviteCode.trim().toUpperCase(),
+    'displayName': user.displayName ?? user.email?.split('@').first ?? 'Creator',
+  });
+  await user.getIdToken(true);
 }

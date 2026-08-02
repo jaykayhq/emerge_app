@@ -493,7 +493,7 @@ final class SignUpCreatorProvider
     with $FutureModifier<void>, $FutureProvider<void> {
   SignUpCreatorProvider._({
     required SignUpCreatorFamily super.from,
-    required (String, String, String) super.argument,
+    required (String, String, String, String) super.argument,
   }) : super(
          retry: null,
          name: r'signUpCreatorProvider',
@@ -519,8 +519,14 @@ final class SignUpCreatorProvider
 
   @override
   FutureOr<void> create(Ref ref) {
-    final argument = this.argument as (String, String, String);
-    return signUpCreator(ref, argument.$1, argument.$2, argument.$3);
+    final argument = this.argument as (String, String, String, String);
+    return signUpCreator(
+      ref,
+      argument.$1,
+      argument.$2,
+      argument.$3,
+      argument.$4,
+    );
   }
 
   @override
@@ -534,10 +540,14 @@ final class SignUpCreatorProvider
   }
 }
 
-String _$signUpCreatorHash() => r'17c3985ab9e1ec1a2e63d8f358e13b1f382484e8';
+String _$signUpCreatorHash() => r'8b09a42e3532657bb941682c38645a4fc53c8564';
 
 final class SignUpCreatorFamily extends $Family
-    with $FunctionalFamilyOverride<FutureOr<void>, (String, String, String)> {
+    with
+        $FunctionalFamilyOverride<
+          FutureOr<void>,
+          (String, String, String, String)
+        > {
   SignUpCreatorFamily._()
     : super(
         retry: null,
@@ -547,35 +557,46 @@ final class SignUpCreatorFamily extends $Family
         isAutoDispose: false,
       );
 
-  SignUpCreatorProvider call(String email, String password, String username) =>
-      SignUpCreatorProvider._(
-        argument: (email, password, username),
-        from: this,
-      );
+  SignUpCreatorProvider call(
+    String email,
+    String password,
+    String username,
+    String inviteCode,
+  ) => SignUpCreatorProvider._(
+    argument: (email, password, username, inviteCode),
+    from: this,
+  );
 
   @override
   String toString() => r'signUpCreatorProvider';
 }
 
 @ProviderFor(signUpCreatorWithGoogle)
-final signUpCreatorWithGoogleProvider = SignUpCreatorWithGoogleProvider._();
+final signUpCreatorWithGoogleProvider = SignUpCreatorWithGoogleFamily._();
 
 final class SignUpCreatorWithGoogleProvider
     extends $FunctionalProvider<AsyncValue<void>, void, FutureOr<void>>
     with $FutureModifier<void>, $FutureProvider<void> {
-  SignUpCreatorWithGoogleProvider._()
-    : super(
-        from: null,
-        argument: null,
-        retry: null,
-        name: r'signUpCreatorWithGoogleProvider',
-        isAutoDispose: false,
-        dependencies: null,
-        $allTransitiveDependencies: null,
-      );
+  SignUpCreatorWithGoogleProvider._({
+    required SignUpCreatorWithGoogleFamily super.from,
+    required String super.argument,
+  }) : super(
+         retry: null,
+         name: r'signUpCreatorWithGoogleProvider',
+         isAutoDispose: false,
+         dependencies: null,
+         $allTransitiveDependencies: null,
+       );
 
   @override
   String debugGetCreateSourceHash() => _$signUpCreatorWithGoogleHash();
+
+  @override
+  String toString() {
+    return r'signUpCreatorWithGoogleProvider'
+        ''
+        '($argument)';
+  }
 
   @$internal
   @override
@@ -584,9 +605,39 @@ final class SignUpCreatorWithGoogleProvider
 
   @override
   FutureOr<void> create(Ref ref) {
-    return signUpCreatorWithGoogle(ref);
+    final argument = this.argument as String;
+    return signUpCreatorWithGoogle(ref, argument);
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return other is SignUpCreatorWithGoogleProvider &&
+        other.argument == argument;
+  }
+
+  @override
+  int get hashCode {
+    return argument.hashCode;
   }
 }
 
 String _$signUpCreatorWithGoogleHash() =>
-    r'55e3bedb8df593b1411125b8d9fe4cc912651076';
+    r'05a3bca84f1d3d24fe1639a1a4deea3bc1b2a091';
+
+final class SignUpCreatorWithGoogleFamily extends $Family
+    with $FunctionalFamilyOverride<FutureOr<void>, String> {
+  SignUpCreatorWithGoogleFamily._()
+    : super(
+        retry: null,
+        name: r'signUpCreatorWithGoogleProvider',
+        dependencies: null,
+        $allTransitiveDependencies: null,
+        isAutoDispose: false,
+      );
+
+  SignUpCreatorWithGoogleProvider call(String inviteCode) =>
+      SignUpCreatorWithGoogleProvider._(argument: inviteCode, from: this);
+
+  @override
+  String toString() => r'signUpCreatorWithGoogleProvider';
+}

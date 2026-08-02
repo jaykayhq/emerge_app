@@ -74,6 +74,7 @@ void main() {
     expect(find.text('Email'), findsOneWidget);
     expect(find.text('Password'), findsOneWidget);
     expect(find.text('Confirm Password'), findsOneWidget);
+    expect(find.text('Invite Code'), findsOneWidget);
     expect(find.text('Register as Creator'), findsOneWidget);
     expect(find.text('Sign up with Google'), findsOneWidget);
   });
@@ -90,13 +91,30 @@ void main() {
     expect(find.text('Username is required'), findsOneWidget);
     expect(find.text('Email is required'), findsOneWidget);
     expect(find.text('Password is required'), findsOneWidget);
+    expect(find.text('An invite code is required to become a creator'), findsOneWidget);
+  });
+
+  testWidgets('invite code field validates format', (tester) async {
+    await setMobileViewport(tester);
+
+    await tester.pumpWidget(_buildTest(router: router));
+    await tester.pumpAndSettle();
+
+    await tester.enterText(
+      find.widgetWithText(TextFormField, 'Invite Code'),
+      'bad',
+    );
+    await tester.tap(find.text('Register as Creator'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Invite codes are 8 characters (A-Z, 2-9)'), findsOneWidget);
   });
 
   testWidgets('successful email signup navigates to splash', (tester) async {
     await setMobileViewport(tester);
 
     final overrides = [
-      signUpCreatorProvider('test@example.com', 'Str0ngP@sswd!', 'TestUser')
+      signUpCreatorProvider('test@example.com', 'Str0ngP@sswd!', 'TestUser', 'ABCDEFGH')
           .overrideWith((ref) async {}),
     ];
 
@@ -107,6 +125,7 @@ void main() {
     await tester.enterText(find.byType(TextFormField).at(1), 'test@example.com');
     await tester.enterText(find.byType(TextFormField).at(2), 'Str0ngP@sswd!');
     await tester.enterText(find.byType(TextFormField).at(3), 'Str0ngP@sswd!');
+    await tester.enterText(find.byType(TextFormField).at(4), 'ABCDEFGH');
     await tester.pumpAndSettle();
 
     await tester.tap(find.text('Register as Creator'));
@@ -119,7 +138,7 @@ void main() {
     await setMobileViewport(tester);
 
     final overrides = [
-      signUpCreatorProvider('test@example.com', 'Str0ngP@sswd!', 'TestUser')
+      signUpCreatorProvider('test@example.com', 'Str0ngP@sswd!', 'TestUser', 'ABCDEFGH')
           .overrideWith((ref) async {
             await Future.value();
             throw Exception('Sign up failed');
@@ -133,6 +152,7 @@ void main() {
     await tester.enterText(find.byType(TextFormField).at(1), 'test@example.com');
     await tester.enterText(find.byType(TextFormField).at(2), 'Str0ngP@sswd!');
     await tester.enterText(find.byType(TextFormField).at(3), 'Str0ngP@sswd!');
+    await tester.enterText(find.byType(TextFormField).at(4), 'ABCDEFGH');
     await tester.pumpAndSettle();
 
     await tester.tap(find.text('Register as Creator'));
@@ -146,12 +166,16 @@ void main() {
     await setMobileViewport(tester);
 
     final overrides = [
-      signUpCreatorWithGoogleProvider.overrideWith((ref) async {}),
+      signUpCreatorWithGoogleProvider('ABCDEFGH').overrideWith((ref) async {}),
     ];
 
     await tester.pumpWidget(_buildTest(overrides: overrides, router: router));
     await tester.pumpAndSettle();
 
+    await tester.enterText(
+      find.widgetWithText(TextFormField, 'Invite Code'),
+      'ABCDEFGH',
+    );
     await tester.tap(find.text('Sign up with Google'));
     await tester.pumpAndSettle();
 
@@ -162,7 +186,7 @@ void main() {
     await setMobileViewport(tester);
 
     final overrides = [
-      signUpCreatorWithGoogleProvider.overrideWith((ref) async {
+      signUpCreatorWithGoogleProvider('ABCDEFGH').overrideWith((ref) async {
         await Future<void>.value();
         throw Exception('Google sign-up failed');
       }),
@@ -171,6 +195,10 @@ void main() {
     await tester.pumpWidget(_buildTest(overrides: overrides, router: router));
     await tester.pumpAndSettle();
 
+    await tester.enterText(
+      find.widgetWithText(TextFormField, 'Invite Code'),
+      'ABCDEFGH',
+    );
     await tester.tap(find.text('Sign up with Google'));
     await tester.pumpAndSettle();
 

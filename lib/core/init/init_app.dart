@@ -16,7 +16,6 @@ import 'package:emerge_app/firebase_options.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:cloud_functions/cloud_functions.dart';
-import 'package:emerge_app/features/social/domain/entities/creator_profile.dart';
 
 Future<void> initApp() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -60,8 +59,10 @@ Future<void> initApp() async {
         
         final prefs = await SharedPreferences.getInstance();
         final isCreatorSignup = prefs.getBool('pending_creator_signup') ?? false;
+        final inviteCode = prefs.getString('pending_creator_invite_code');
         if (isCreatorSignup) {
           await prefs.remove('pending_creator_signup');
+          await prefs.remove('pending_creator_invite_code');
         }
 
         // Create Firestore profile if this is a first-time sign-in
@@ -75,24 +76,20 @@ Future<void> initApp() async {
               : user.email?.split('@').first ?? 'User';
 
           if (isCreatorSignup) {
-            final creatorProfile = CreatorProfile(
-              userId: user.uid,
-              role: 'creator',
-              displayName: displayName,
-              avatarUrl: user.photoURL,
-              isVerifiedCreator: false,
-            );
-            await firestore.collection('creator_profiles').doc(user.uid).set(creatorProfile.toMap());
+            // SP-E: server-side redemption — the creator_profiles doc, the
+            // isVerifiedCreator flag, and the role claim are all function-owned.
+            // Client-side profile writes are denied by the rules.
             try {
               final functions = FirebaseFunctions.instance;
-              await functions.httpsCallable('setUserRole').call(<String, dynamic>{
-                'role': 'creator',
+              await functions.httpsCallable('redeemCreatorInvite').call(<String, dynamic>{
+                'code': inviteCode?.trim().toUpperCase() ?? '',
+                'displayName': displayName,
               });
               await user.getIdToken(true);
+              debugPrint('✅ Creator redeemed via invite after Google redirect');
             } catch (e) {
-              debugPrint('⚠️ setUserRole failed on redirect: $e');
+              debugPrint('⚠️ redeemCreatorInvite failed on redirect: $e');
             }
-            debugPrint('✅ Creator profile created for Google sign-in user');
           } else {
             final profile = UserProfile(uid: user.uid, displayName: displayName);
             final profileMap = profile.toMap();

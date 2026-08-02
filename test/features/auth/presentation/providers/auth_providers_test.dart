@@ -199,7 +199,7 @@ void main() {
       );
 
       expect(
-        () => container.read(signUpCreatorProvider('test@example.com', 'password', 'TestUser').future),
+        () => container.read(signUpCreatorProvider('test@example.com', 'password', 'TestUser', 'ABCDEFGH').future),
         throwsA(isA<Exception>()),
       );
       container.dispose();
