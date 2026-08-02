@@ -133,6 +133,22 @@ export const paystackWebhook = onRequest({
                     premium_since: admin.firestore.FieldValue.serverTimestamp(),
                 }, { merge: true });
 
+                // SP-H: mirror the entitlement into custom claims so the
+                // client's claims fallback (subscription_provider.dart:66-80)
+                // works on web too (SP-B D2 deferred this here). Merges —
+                // never clobbers existing claims. Refund/expiry clearing is
+                // future work (the webhook only receives charge.success).
+                try {
+                    const auth = admin.auth();
+                    const userRecord = await auth.getUser(uid);
+                    await auth.setCustomUserClaims(uid, {
+                        ...(userRecord.customClaims ?? {}),
+                        activeEntitlements: ["premium"],
+                    });
+                } catch (claimErr) {
+                    logger.error("Paystack claim sync failed:", claimErr);
+                }
+
                 logger.info(`Successfully upgraded user ${uid} to premium via Paystack.`);
             } catch (err) {
                 logger.error("Firestore Update Error:", err);
