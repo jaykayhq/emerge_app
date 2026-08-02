@@ -90,3 +90,90 @@ export const generateCreatorInviteCode = onCall(async (request) => {
 
   return { code };
 });
+
+export const redeemCreatorInvite = onCall(async (request) => {
+  if (!request.auth) {
+    throw new HttpsError("unauthenticated", "User must be logged in.");
+  }
+  const uid = request.auth.uid;
+  const data = request.data ?? {};
+  const code = typeof data.code === "string" ? data.code.trim().toUpperCase() : "";
+  if (!CODE_PATTERN.test(code)) {
+    throw new HttpsError("invalid-argument", "Invalid invite code format.");
+  }
+  const displayName =
+    typeof data.displayName === "string" && data.displayName.trim() !== ""
+      ? data.displayName.trim().slice(0, 50)
+      : "Creator";
+
+  // Already a creator? (best-effort; the transaction's single-use code is
+  // the real guard against double consumption).
+  const [existingProfile, userRecord] = await Promise.all([
+    db.collection("creator_profiles").doc(uid).get(),
+    admin.auth().getUser(uid),
+  ]);
+  if (
+    existingProfile.exists ||
+    (userRecord.customClaims ?? {}).role === "creator"
+  ) {
+    throw new HttpsError("already-exists", "This account is already a creator.");
+  }
+
+  const codeRef = db.collection("creator_invite_codes").doc(code);
+  const profileRef = db.collection("creator_profiles").doc(uid);
+
+  await db.runTransaction(async (tx) => {
+    const snap = await tx.get(codeRef);
+    if (!snap.exists) {
+      throw new HttpsError("not-found", "Invalid or expired invite code.");
+    }
+    const doc = snap.data()!;
+    if (doc.redeemedBy != null) {
+      throw new HttpsError(
+        "failed-precondition",
+        "This invite code has already been used."
+      );
+    }
+    const expiresAt = doc.expiresAt as admin.firestore.Timestamp | Date | undefined;
+    const expiryMs =
+      expiresAt instanceof Date
+        ? expiresAt.getTime()
+        : expiresAt?.toMillis?.() ?? 0;
+    if (expiryMs < Date.now()) {
+      throw new HttpsError(
+        "failed-precondition",
+        "This invite code has expired."
+      );
+    }
+
+    // Mark + delete in the same transaction (doc-as-lock: a replayed or
+    // failed delete still leaves the redeemedBy marker blocking reuse).
+    tx.set(
+      codeRef,
+      { redeemedBy: uid, redeemedAt: admin.firestore.FieldValue.serverTimestamp() },
+      { merge: true }
+    );
+    tx.delete(codeRef);
+
+    tx.set(profileRef, {
+      userId: uid,
+      ownerId: uid,
+      role: "creator",
+      displayName,
+      isVerifiedCreator: true,
+      bio: "",
+      specialityTags: [],
+      blueprintCount: 0,
+      creatorOnboardingProgress: 0,
+      archetype: "none",
+      createdAt: admin.firestore.FieldValue.serverTimestamp(),
+    });
+  });
+
+  await admin.auth().setCustomUserClaims(uid, {
+    ...(userRecord.customClaims ?? {}),
+    role: "creator",
+  });
+
+  return { ok: true, uid };
+});

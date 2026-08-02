@@ -53,12 +53,14 @@ const CODE_PATTERN = /^[A-Z2-9]{8}$/;
 
 beforeEach(() => {
   jest.clearAllMocks();
-  // Default: caller is a verified creator; every invite-code doc read misses
-  // (no collisions). Tests override per-case.
-  getUser.mockResolvedValue({ customClaims: { role: "creator" } });
-  docGet.mockImplementation((name: string) =>
+  // Default: u1 is a verified creator; any other uid is a plain user with
+  // no profile (redeem/ensure tests drive non-creator callers).
+  getUser.mockImplementation((uid: string) =>
+    Promise.resolve({ customClaims: { role: uid === "u1" ? "creator" : "user" } })
+  );
+  docGet.mockImplementation((name: string, id: string) =>
     Promise.resolve(
-      name === "creator_profiles"
+      name === "creator_profiles" && id === "u1"
         ? { exists: true, data: () => ({ isVerifiedCreator: true }) }
         : { exists: false, data: () => null }
     )
@@ -111,5 +113,114 @@ describe("generateCreatorInviteCode", () => {
     expect(written.creatorUid).toBe("u1");
     expect(written.redeemedBy).toBeNull();
     expect(written.expiresAt).toBeInstanceOf(Date);
+  });
+});
+
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const { redeemCreatorInvite } = require("../src/creator_invites");
+
+describe("redeemCreatorInvite", () => {
+  it("rejects unauthenticated calls", async () => {
+    await expect(
+      redeemCreatorInvite.run({ auth: undefined, data: { code: "ABCDEFGH" } })
+    ).rejects.toHaveProperty("code", "unauthenticated");
+  });
+
+  it("rejects a malformed code", async () => {
+    await expect(
+      redeemCreatorInvite.run({ auth: { uid: "u2" }, data: { code: "abc!" } })
+    ).rejects.toHaveProperty("code", "invalid-argument");
+  });
+
+  it("rejects when the caller is already a creator", async () => {
+    docGet.mockImplementation((name: string, id: string) =>
+      Promise.resolve(
+        name === "creator_profiles" && id === "u2"
+          ? { exists: true, data: () => ({ isVerifiedCreator: true }) }
+          : { exists: false, data: () => null }
+      )
+    );
+    await expect(
+      redeemCreatorInvite.run({ auth: { uid: "u2" }, data: { code: "ABCDEFGH" } })
+    ).rejects.toHaveProperty("code", "already-exists");
+  });
+
+  it("rejects an unknown code", async () => {
+    runTransaction.mockImplementation(async (fn: (tx: unknown) => Promise<void>) => {
+      const tx = {
+        get: jest.fn().mockResolvedValue({ exists: false, data: () => null }),
+        set: jest.fn(),
+        delete: jest.fn(),
+      };
+      await fn(tx);
+    });
+    await expect(
+      redeemCreatorInvite.run({ auth: { uid: "u2" }, data: { code: "ABCDEFGH" } })
+    ).rejects.toHaveProperty("code", "not-found");
+  });
+
+  it("rejects an already-redeemed code", async () => {
+    runTransaction.mockImplementation(async (fn: (tx: unknown) => Promise<void>) => {
+      const tx = {
+        get: jest.fn().mockResolvedValue({
+          exists: true,
+          data: () => ({ creatorUid: "u1", redeemedBy: "other", expiresAt: new Date(Date.now() + 100000) }),
+        }),
+        set: jest.fn(),
+        delete: jest.fn(),
+      };
+      await fn(tx);
+    });
+    await expect(
+      redeemCreatorInvite.run({ auth: { uid: "u2" }, data: { code: "ABCDEFGH" } })
+    ).rejects.toHaveProperty("code", "failed-precondition");
+  });
+
+  it("rejects an expired code", async () => {
+    runTransaction.mockImplementation(async (fn: (tx: unknown) => Promise<void>) => {
+      const tx = {
+        get: jest.fn().mockResolvedValue({
+          exists: true,
+          data: () => ({ creatorUid: "u1", redeemedBy: null, expiresAt: new Date(Date.now() - 1000) }),
+        }),
+        set: jest.fn(),
+        delete: jest.fn(),
+      };
+      await fn(tx);
+    });
+    await expect(
+      redeemCreatorInvite.run({ auth: { uid: "u2" }, data: { code: "ABCDEFGH" } })
+    ).rejects.toHaveProperty("code", "failed-precondition");
+  });
+
+  it("redeems: creates profile, deletes code, sets the role claim", async () => {
+    const txSet = jest.fn();
+    const txDelete = jest.fn();
+    runTransaction.mockImplementation(async (fn: (tx: unknown) => Promise<void>) => {
+      const tx = {
+        get: jest.fn().mockResolvedValue({
+          exists: true,
+          data: () => ({ creatorUid: "u1", redeemedBy: null, expiresAt: new Date(Date.now() + 100000) }),
+        }),
+        set: txSet,
+        delete: txDelete,
+      };
+      await fn(tx);
+    });
+    const result = await redeemCreatorInvite.run({
+      auth: { uid: "u2" },
+      data: { code: "abcdeFGH", displayName: "New Creator" },
+    });
+    expect(result.ok).toBe(true);
+    expect(txDelete).toHaveBeenCalled();
+    const profileWrite = txSet.mock.calls.find(
+      ([, data]: [unknown, Record<string, unknown>]) =>
+        data?.userId === "u2" && data?.isVerifiedCreator === true
+    );
+    expect(profileWrite).toBeDefined();
+    expect(setCustomUserClaims).toHaveBeenCalledWith(
+      "u2",
+      expect.objectContaining({ role: "creator" })
+    );
   });
 });
