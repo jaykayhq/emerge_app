@@ -167,6 +167,8 @@ class _ManagePremiumScreenState extends ConsumerState<ManagePremiumScreen> {
 
   Widget _buildStatusStep() {
     final isPremium = ref.watch(isPremiumProvider).value ?? false;
+    final premiumState = ref.watch(premiumStateProvider);
+    final isPaused = premiumState?.isPaused ?? false;
     final price = ref.watch(_premiumPriceProvider).value;
     final premiumSince = ref.watch(_premiumSinceProvider).value;
 
@@ -174,16 +176,26 @@ class _ManagePremiumScreenState extends ConsumerState<ManagePremiumScreen> {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Text(
-          isPremium ? 'Premium is active' : 'Free plan',
+          isPaused
+              ? 'Premium paused'
+              : (isPremium ? 'Premium is active' : 'Free plan'),
           style: Theme.of(context)
               .textTheme
               .headlineSmall
               ?.copyWith(color: AppTheme.textMainDark, fontWeight: FontWeight.bold),
         ),
         const Gap(8),
-        // Free users own no plan: hide the billing line and the cancel flow,
-        // point them at the paywall instead.
-        if (isPremium)
+        if (isPaused)
+          Text(
+            premiumState?.premiumEndsAt != null
+                ? 'Resumes on ${_formatDate(premiumState!.premiumEndsAt!)} — no charges while paused.'
+                : 'No charges while paused. Your plan resumes automatically.',
+            style: Theme.of(context)
+                .textTheme
+                .bodyMedium
+                ?.copyWith(color: AppTheme.textSecondaryDark),
+          )
+        else if (isPremium)
           Text(
             [
               if (price != null) 'Billed at $price',
@@ -202,7 +214,7 @@ class _ManagePremiumScreenState extends ConsumerState<ManagePremiumScreen> {
                 .bodyMedium
                 ?.copyWith(color: AppTheme.textSecondaryDark),
           ),
-        if (isPremium && premiumSince != null) ...[
+        if (isPremium && !isPaused && premiumSince != null) ...[
           const Gap(8),
           Text(
             'Premium since ${_formatDate(premiumSince)}',
@@ -213,7 +225,17 @@ class _ManagePremiumScreenState extends ConsumerState<ManagePremiumScreen> {
           ),
         ],
         const Gap(32),
-        if (isPremium)
+        if (isPaused)
+          // Paused: no cancel/pause flow — resuming is automatic, and the
+          // pause CTA must not be re-offered to a paused user.
+          Text(
+            'Your plan resumes automatically — nothing to do.',
+            style: Theme.of(context)
+                .textTheme
+                .bodySmall
+                ?.copyWith(color: AppTheme.textSecondaryDark),
+          )
+        else if (isPremium)
           _PrimaryButton(
             label: 'Cancel subscription',
             onPressed: _busy ? null : () => setState(() => _step = _CancelStep.recap),

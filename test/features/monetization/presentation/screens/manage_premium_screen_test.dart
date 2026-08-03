@@ -1,5 +1,6 @@
 import 'package:emerge_app/features/gamification/presentation/providers/user_stats_providers.dart';
 import 'package:emerge_app/features/habits/presentation/providers/habit_providers.dart';
+import 'package:emerge_app/features/monetization/domain/models/premium_state.dart';
 import 'package:emerge_app/features/monetization/domain/repositories/monetization_repository.dart';
 import 'package:emerge_app/features/monetization/presentation/providers/subscription_provider.dart';
 import 'package:emerge_app/features/monetization/presentation/screens/manage_premium_screen.dart';
@@ -79,12 +80,15 @@ ProviderScope _pump({
   required MonetizationRepository repo,
   required ManagePremiumService service,
   bool isPremium = true,
+  PremiumState? premiumState,
 }) {
   return ProviderScope(
     overrides: [
       monetizationRepositoryProvider.overrideWithValue(repo),
       managePremiumServiceProvider.overrideWithValue(service),
       isPremiumProvider.overrideWith(() => _FakeIsPremium(isPremium)),
+      if (premiumState != null)
+        premiumStateProvider.overrideWith((ref) => premiumState),
       userStreakProvider.overrideWith((ref) => Stream.value(0)),
       habitsProvider.overrideWith((ref) => Stream.value(const [])),
     ],
@@ -172,5 +176,25 @@ void main() {
     expect(find.text('Cancel subscription'), findsNothing);
     expect(find.textContaining('Billed at'), findsNothing);
     expect(find.text('Go Premium'), findsOneWidget);
+  });
+
+  testWidgets('paused plan shows the paused status and hides the cancel flow',
+      (tester) async {
+    await tester.pumpWidget(_pump(
+      repo: _FakeMonetizationRepository(),
+      service: _FakeManagePremiumService(),
+      premiumState: PremiumState(
+        isPremium: true,
+        isPaused: true,
+        premiumEndsAt: DateTime(2026, 8, 3),
+      ),
+    ));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Premium paused'), findsOneWidget);
+    expect(find.textContaining('Resumes on'), findsOneWidget);
+    // Paused: no cancel entry, no re-pause offer — resuming is automatic.
+    expect(find.text('Cancel subscription'), findsNothing);
+    expect(find.text('Go Premium'), findsNothing);
   });
 }

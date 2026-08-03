@@ -46,6 +46,15 @@ void main() {
     expect(state.isPremium, isFalse);
   });
 
+  test('active status doc is premium', () {
+    final state = computePremiumState(
+      record: {'isPremium': true, 'subscriptionStatus': 'active'},
+      now: now,
+    );
+    expect(state.isPremium, isTrue);
+    expect(state.isPaused, isFalse);
+  });
+
   test('cancelled doc is free', () {
     final state = computePremiumState(
       record: {
