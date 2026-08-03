@@ -2,6 +2,7 @@ import 'package:emerge_app/core/config/app_config.dart';
 import 'package:emerge_app/core/drift/database.dart';
 import 'package:emerge_app/core/security/app_check_service.dart';
 import 'package:emerge_app/core/services/notification_service.dart';
+import 'package:emerge_app/core/utils/app_logger.dart';
 import 'package:emerge_app/features/auth/domain/entities/user_extension.dart';
 import 'package:emerge_app/features/onboarding/data/repositories/local_settings_repository.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -86,7 +87,7 @@ Future<void> initApp() async {
                 'displayName': displayName,
               });
               await user.getIdToken(true);
-              debugPrint('✅ Creator redeemed via invite after Google redirect');
+              AppLogger.i('Creator redeemed via invite after Google redirect');
             } catch (e) {
               debugPrint('⚠️ redeemCreatorInvite failed on redirect: $e');
             }

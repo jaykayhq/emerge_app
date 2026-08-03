@@ -169,7 +169,9 @@ class _EmergeAppState extends ConsumerState<EmergeApp> {
             unawaited(monetizationRepo.identify(user.id));
 
             // Seed initial data once authenticated - safe as these check for existing data
-            unawaited(seedChallenges());
+            // (seedChallenges was removed: the client write is denied by the
+            // admin-only Firestore rules and failed into a debugPrint catch;
+            // challenges are seeded server-side and by verified creators).
             unawaited(seedBlueprints());
           } else {
             presenceService.stopHeartbeat();

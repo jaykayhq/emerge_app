@@ -257,6 +257,13 @@ class DriftHabitRepository implements HabitRepository {
         // the HabitCompletionUndone event (zone-based model).
 
         await _db.transaction(() async {
+          // Delete every same-day row for this habit, but debit the stats
+          // ONCE (from the most recent row below). This is safe because the
+          // invariant "at most one completion row per habit per day" holds:
+          // a second same-day completion is detected as a duplicate by
+          // processHabitCompletion and routed back into this undo path,
+          // which deletes the earlier row — so todaysForHabit never holds
+          // more than one row in practice.
           for (final c in todaysForHabit) {
             await _db.habitCompletionsDao.deleteById(c.id, statsRow.userId);
           }
