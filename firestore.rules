@@ -28,6 +28,37 @@ service cloud.firestore {
              get(/databases/$(database)/documents/creator_profiles/$(request.auth.uid)).data.isVerifiedCreator == true;
     }
 
+    // The curated 'system' blueprint catalog (SP-H review): the client seed
+    // (`_createSeed` in blueprint_repository.dart) may only create docs at
+    // the 25 seed ids (morning|productivity|fitness|mindfulness|learning_1..5)
+    // and only when the doc is NOT flagged as a creator blueprint — the seed
+    // itself writes isCreatorBlueprint: false, so an absent or false value is
+    // accepted but true (creator-owned semantics) never is.
+    function isSystemSeedId(id) {
+      return id.matches('^(morning|productivity|fitness|mindfulness|learning)_[0-9]+$');
+    }
+
+    function isSystemSeedCreate(data) {
+      return !data.keys().hasAny(['isCreatorBlueprint']) ||
+             data.isCreatorBlueprint == false;
+    }
+
+    // Create-time member-consistency bound for tribes: the join/leave paths
+    // keep memberCount == members.size() on the doc, so any client create
+    // must too. (Official-club memberCounts are server-managed aggregates —
+    // memberCount tracks ALL members while `members` is the active roster —
+    // so the bound applies at create only; the ±1 aggregate branch governs
+    // updates.) A doc without `members` must carry memberCount 0 or none.
+    // Single-expression form — Firestore rules functions cannot use if/return.
+    function hasConsistentMemberCount(tribe) {
+      return (!tribe.keys().hasAny(['members']) &&
+              (!tribe.keys().hasAny(['memberCount']) || tribe.memberCount == 0)) ||
+             (tribe.keys().hasAny(['members']) &&
+              tribe.members is list &&
+              (!tribe.keys().hasAny(['memberCount']) ||
+               tribe.memberCount == tribe.members.size()));
+    }
+
     // Input validation - simplified to avoid false positives
     function sanitizeString(input) {
       return input is string &&
@@ -368,6 +399,7 @@ service cloud.firestore {
     match /tribes/{tribeId} {
       allow read: if isAuthenticated();
       allow create: if isAuthenticated() && isValidTribe(request.resource.data) &&
+                     hasConsistentMemberCount(request.resource.data) &&
                      request.resource.data.type != 'official' &&
                      request.resource.data.type != 'brand' &&
                      (request.resource.data.type != 'creator' || isVerifiedCreator());
@@ -534,17 +566,37 @@ service cloud.firestore {
 
     // Blueprints (habit stacks) — public read; written by admins, verified
     // creators (their own docs), and the curated 'system' catalog seed (the
-    // in-app curated catalog seed (`_createSeed`) writes creatorUserId: 'system').
+    // in-app curated catalog seed (`_createSeed`) writes creatorUserId:
+    // 'system').
+    //
+    // The 'system' carve-out is tightly scoped (SP-H review):
+    //  - create: only at the 25 seed doc ids (isSystemSeedId) and never a
+    //    creator-flagged doc (isSystemSeedCreate) — the seed itself writes
+    //    isCreatorBlueprint: false, so that passes.
+    //  - update: only keys the in-app v3 backfill merge actually writes may
+    //    change. The backfill (seedBlueprintsIfEmpty) merges the full
+    //    Blueprint.toMap() minus createdAt (it explicitly removes createdAt
+    //    before merging, and adds adoptionCount increment(0)), so the
+    //    whitelist below is exactly that key set — verified against
+    //    blueprint_repository.dart / blueprint.dart. Any other key (or the
+    //    'system' owner marker flipping) is admin/creator-owner-only.
     match /blueprints/{blueprintId} {
       allow read: if true;
       allow create: if isAdmin() ||
         (isVerifiedCreator() && request.resource.data.creatorUserId == request.auth.uid) ||
-        (isAuthenticated() && request.resource.data.creatorUserId == 'system');
+        (isAuthenticated() && request.resource.data.creatorUserId == 'system' &&
+         isSystemSeedId(blueprintId) && isSystemSeedCreate(request.resource.data));
       allow update: if isAdmin() ||
         (isVerifiedCreator() && resource.data.creatorUserId == request.auth.uid &&
          request.resource.data.creatorUserId == request.auth.uid) ||
         (isAuthenticated() && resource.data.creatorUserId == 'system' &&
-         request.resource.data.creatorUserId == 'system');
+         request.resource.data.creatorUserId == 'system' &&
+         request.resource.data.diff(resource.data).affectedKeys().hasOnly(
+           ['id', 'creatorUserId', 'creatorName', 'creatorArchetype',
+            'title', 'description', 'habits', 'adoptionCount', 'imageUrl',
+            'category', 'isPremium', 'difficulty', 'creatorBio',
+            'specialityTags', 'creatorHeroImageUrl', 'tribeMemberCount',
+            'isCreatorBlueprint', 'creatorTribeId', 'recommendedArchetypes']));
       allow delete: if isAdmin() ||
         (isVerifiedCreator() && resource.data.creatorUserId == request.auth.uid);
     }
