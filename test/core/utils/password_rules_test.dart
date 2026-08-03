@@ -47,6 +47,33 @@ void main() {
       }
     });
 
+    test('each rule maps to exactly one checklist item (no drift)', () {
+      // A password failing exactly one rule must flip exactly that item —
+      // if a rule is added to the validator without a checklist entry (or
+      // vice versa), the per-predicate candidates below stop being
+      // single-failure and this test fails.
+      const singleFailurePasswords = <String, String>{
+        'At least 12 characters': 'Ab1!aA2bB3c',
+        '3 of 4 character types': 'a1a1a1a1a1a1',
+        'No common or sequential passwords': 'Abcdef123!@#',
+        'No repeated characters': 'aaaa1111BBB!',
+      };
+      expect(
+        PasswordRules.checklistItems,
+        hasLength(singleFailurePasswords.length),
+      );
+      for (final entry in singleFailurePasswords.entries) {
+        for (final item in PasswordRules.checklistItems) {
+          expect(
+            item.passes(entry.value),
+            item.label != entry.key,
+            reason: 'candidate for "${entry.key}" must fail ONLY that item '
+                '(${item.label} expected ${item.label != entry.key})',
+          );
+        }
+      }
+    });
+
     test('isValid requires every checklist item', () {
       expect(PasswordRules.isValid('Tr0ub4dor&3!'), isTrue);
       expect(PasswordRules.isValid('short'), isFalse);
