@@ -116,7 +116,7 @@ class BlueprintRepository {
           title: 'Mindful Awakening',
           description: 'Ease into the day with calm and clarity.',
           image:
-              'https://images.unsplash.com/photo-1545205597-3d9d02e29597?w=800',
+              'https://images.unsplash.com/photo-1528715471579-d1bcf0ba5e83?w=800',
           difficulty: BlueprintDifficulty.beginner,
           habits: ['5 Min Meditation', 'Gratitude Journal', 'Herbal Tea'],
           recommendedArchetypes: const ['stoic'],
