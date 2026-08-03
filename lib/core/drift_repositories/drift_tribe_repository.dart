@@ -446,11 +446,15 @@ class DriftTribeRepository implements TribeRepository {
     // Path C: Tribe master document (atomic members and count).
     // Use a merge-set: `update` fails if the tribe doc doesn't exist
     // remotely yet (locally-seeded clubs), dead-lettering the mutation.
+    // NOTE: `type` is deliberately NOT written here — it is owned by the
+    // tribe's creator (server seed/admin for official clubs, the creator
+    // flow for creator tribes). A join must never overwrite it: writing
+    // 'official' here would silently re-type a creator tribe joined
+    // through this path.
     await _syncEngine.enqueueSet(
       collectionPath: 'tribes',
       documentId: tribeId,
       data: {
-        'type': TribeType.official.name,
         'members': {
           '__type__': 'arrayUnion',
           'values': [userId],
