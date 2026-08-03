@@ -20,10 +20,10 @@ const collection = jest.fn((name: string) => ({
 const firestoreMock = jest.fn(() => ({ collection }));
 (
   firestoreMock as unknown as {
-    FieldValue: { serverTimestamp: () => string };
+    FieldValue: { serverTimestamp: () => string; delete: () => string };
     Timestamp: { fromDate: (d: Date) => Date };
   }
-).FieldValue = { serverTimestamp: () => "SERVER_TIMESTAMP" };
+).FieldValue = { serverTimestamp: () => "SERVER_TIMESTAMP", delete: () => "FIELD_DELETE" };
 (
   firestoreMock as unknown as {
     Timestamp: { fromDate: (d: Date) => Date };
@@ -76,6 +76,8 @@ describe("managePremium", () => {
         isPremium: false,
         subscriptionStatus: "cancelled",
         cancelledAt: "SERVER_TIMESTAMP",
+        // premium_since (web tenure marker) is cleared so it never lies.
+        premium_since: "FIELD_DELETE",
       },
       { merge: true }
     );

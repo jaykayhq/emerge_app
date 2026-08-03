@@ -2,9 +2,10 @@
  * managePremium — pause or cancel a user's premium entitlement.
  *
  * Web premium is a one-time Paystack charge (no recurring billing to stop),
- * so "cancel" is a grant revocation: clears `users/{uid}.isPremium` and the
- * `activeEntitlements` custom claim (merge-safe — never clobbers other
- * claims, mirroring setUserRole.ts). "pause" defers revocation by writing a
+ * so "cancel" is a grant revocation: clears `users/{uid}.isPremium`, the
+ * web-only `premium_since` tenure marker, and the `activeEntitlements`
+ * custom claim (merge-safe — never clobbers other claims, mirroring
+ * setUserRole.ts). "pause" defers revocation by writing a
  * 30-day `premiumEndsAt` window; the client's `computePremiumState` treats a
  * paused doc as premium until that date.
  *
@@ -48,6 +49,9 @@ export const managePremium = onCall<ManagePremiumRequest>(async (request) => {
         isPremium: false,
         subscriptionStatus: "cancelled",
         cancelledAt: now,
+        // premium_since is a web-only tenure marker (manage_premium_screen
+        // reads it); clear it on cancel so the field never lies about tenure.
+        premium_since: admin.firestore.FieldValue.delete(),
       },
       { merge: true }
     );

@@ -28,10 +28,26 @@ export const generateAiRecap = onCall({
   // PREMIUM GUARD: source of truth is users/{uid} — Paystack webhook
   // writes isPremium (paystack.ts); the RevenueCat extension writes
   // subscriptionStatus (revenuecat_events.ts). user_stats.isPremium is
-  // never written and is blocked by rules (SP-H). Thrown before the try
-  // block so the permission-denied reaches the client unwrapped.
-  const isPremium =
-    userData?.isPremium === true || userData?.subscriptionStatus === "active";
+  // never written and is blocked by rules (SP-H). Mirrors the client's
+  // computePremiumState (premium_state.dart): premium iff isPremium == true
+  // AND NOT a paused subscription whose premiumEndsAt has passed. A
+  // paused-and-expired web user keeps isPremium: true in the doc, so without
+  // the pause check this callable would keep granting after the client
+  // already shows free. Thrown before the try block so the
+  // permission-denied reaches the client unwrapped.
+  const premiumEndsAt = userData?.premiumEndsAt as
+    | admin.firestore.Timestamp
+    | Date
+    | undefined;
+  const premiumEndsAtMs =
+    premiumEndsAt instanceof Date
+      ? premiumEndsAt.getTime()
+      : premiumEndsAt?.toMillis?.() ?? null;
+  const pausedAndExpired =
+    userData?.subscriptionStatus === "paused" &&
+    premiumEndsAtMs !== null &&
+    premiumEndsAtMs <= Date.now();
+  const isPremium = userData?.isPremium === true && !pausedAndExpired;
   if (!isPremium) {
     console.warn(`[generateAiRecap] Non-premium user ${userId} attempted to generate AI recap.`);
     throw new HttpsError("permission-denied", "AI Insights are a premium feature.");

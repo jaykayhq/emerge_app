@@ -85,6 +85,45 @@ describe("Paystack Webhook claim sync (SP-H)", () => {
         });
     });
 
+    it("preserves pre-existing entitlements instead of clobbering them (Fix 9)", async () => {
+        const { req } = signedRequest("ref_claims_2");
+        const res = {
+            status: jest.fn().mockReturnThis(),
+            send: jest.fn(),
+        } as any;
+
+        const auth = admin.auth() as any;
+        auth.getUser.mockResolvedValue({
+            customClaims: { role: "user", activeEntitlements: ["beta", "early_access"] },
+        });
+
+        await paystackWebhook(req, res);
+
+        expect(auth.setCustomUserClaims).toHaveBeenCalledWith("test_uid", {
+            role: "user",
+            activeEntitlements: ["beta", "early_access", "premium"],
+        });
+    });
+
+    it("does not duplicate premium when it is already an entitlement (Fix 9)", async () => {
+        const { req } = signedRequest("ref_claims_3");
+        const res = {
+            status: jest.fn().mockReturnThis(),
+            send: jest.fn(),
+        } as any;
+
+        const auth = admin.auth() as any;
+        auth.getUser.mockResolvedValue({
+            customClaims: { activeEntitlements: ["premium"] },
+        });
+
+        await paystackWebhook(req, res);
+
+        expect(auth.setCustomUserClaims).toHaveBeenCalledWith("test_uid", {
+            activeEntitlements: ["premium"],
+        });
+    });
+
     it("should not write claims again for a duplicate webhook (same reference)", async () => {
         const { req } = signedRequest("ref_dup_1");
         const res = {

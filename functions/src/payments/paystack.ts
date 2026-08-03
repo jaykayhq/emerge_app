@@ -135,15 +135,22 @@ export const paystackWebhook = onRequest({
 
                 // SP-H: mirror the entitlement into custom claims so the
                 // client's claims fallback (subscription_provider.dart:66-80)
-                // works on web too (SP-B D2 deferred this here). Merges —
-                // never clobbers existing claims. Refund/expiry clearing is
-                // future work (the webhook only receives charge.success).
+                // works on web too (SP-B D2 deferred this here). Merge-safe —
+                // preserve existing entitlements and add 'premium' if absent
+                // (the filter-then-set pattern from managePremium.ts) so a
+                // user with other entitlements is never clobbered.
                 try {
                     const auth = admin.auth();
                     const userRecord = await auth.getUser(uid);
+                    const existingClaims = userRecord.customClaims ?? {};
+                    const entitlements = Array.isArray(existingClaims.activeEntitlements)
+                        ? (existingClaims.activeEntitlements as string[])
+                        : [];
                     await auth.setCustomUserClaims(uid, {
-                        ...(userRecord.customClaims ?? {}),
-                        activeEntitlements: ["premium"],
+                        ...existingClaims,
+                        activeEntitlements: entitlements.includes("premium")
+                            ? entitlements
+                            : [...entitlements, "premium"],
                     });
                 } catch (claimErr) {
                     logger.error("Paystack claim sync failed:", claimErr);
