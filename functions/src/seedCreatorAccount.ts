@@ -104,6 +104,11 @@ export async function seedCreatorAccountHandler(
 
 /** HTTP trigger. Export is commented out in index.ts by default (seedReviewerAccount precedent). */
 export const seedCreatorAccount = onRequest(
-  { secrets: ["CREATOR_EMAIL", "CREATOR_PASSWORD", "ADMIN_SECRET"] },
+  {
+    secrets: ["CREATOR_EMAIL", "CREATOR_PASSWORD", "ADMIN_SECRET"],
+    // Public HTTP so the ADMIN_SECRET header guard is reachable; the
+    // handler fails closed (403/500) without the correct secret.
+    invoker: "public",
+  },
   seedCreatorAccountHandler
 );
