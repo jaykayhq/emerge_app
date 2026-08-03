@@ -20,8 +20,12 @@ Stream<bool> streamWebPremium(FirebaseFirestore firestore, String uid) {
 }
 
 /// Firestore-layer mapping: Timestamp -> DateTime, then the pure decision.
-/// Public so `IsPremium._buildFromFirestore` reuses it for the initial read.
-bool recordToPremium(Map<String, dynamic>? data) {
+/// `now` is injectable so the pause/expiry evaluation is testable without a
+/// fake clock (production defaults to [DateTime.now]).
+PremiumState premiumStateFromRecord(
+  Map<String, dynamic>? data, {
+  DateTime Function()? now,
+}) {
   final endsAtRaw = data?['premiumEndsAt'];
   final parsed = <String, dynamic>{
     ...?data,
@@ -32,5 +36,10 @@ bool recordToPremium(Map<String, dynamic>? data) {
               ? endsAtRaw
               : DateTime.tryParse(endsAtRaw.toString()),
   };
-  return computePremiumState(record: parsed, now: DateTime.now()).isPremium;
+  return computePremiumState(record: parsed, now: (now ?? DateTime.now)());
 }
+
+/// Whether the record currently grants premium (see [premiumStateFromRecord]).
+/// Public so `IsPremium` reuses it for the initial read.
+bool recordToPremium(Map<String, dynamic>? data, {DateTime Function()? now}) =>
+    premiumStateFromRecord(data, now: now).isPremium;

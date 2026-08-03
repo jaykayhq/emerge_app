@@ -4,9 +4,11 @@ import 'package:emerge_app/core/utils/app_logger.dart';
 import 'package:emerge_app/features/auth/presentation/providers/auth_providers.dart';
 import 'package:emerge_app/features/monetization/data/repositories/revenue_cat_repository.dart';
 import 'package:emerge_app/features/monetization/data/services/web_premium_service.dart';
+import 'package:emerge_app/features/monetization/domain/models/premium_state.dart';
 import 'package:emerge_app/features/monetization/domain/repositories/monetization_repository.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 part 'subscription_provider.g.dart';
@@ -21,6 +23,29 @@ class IsPremium extends _$IsPremium {
   static const _cacheKey = 'cached_premium_status';
   static const _cacheTimestampKey = 'cached_premium_timestamp';
 
+  /// Injectable clock for the pause-end machinery (test seam). Production
+  /// defaults to [DateTime.now]; tests advance a mutable fake instead of
+  /// sleeping, so the end-date drop is verifiable without waiting.
+  DateTime Function() now = DateTime.now;
+
+  /// Injectable `users/{uid}` doc-data stream (test seam). Production
+  /// default follows the live snapshot data; tests drive emissions and
+  /// stream errors without Firebase.
+  Stream<Map<String, dynamic>?> Function(FirebaseFirestore firestore, String uid)
+      docDataStream = (firestore, uid) => firestore
+          .collection('users')
+          .doc(uid)
+          .snapshots()
+          .map((snap) => snap.data());
+
+  Timer? _pauseEndTimer;
+  PremiumState? _latestPremiumState;
+
+  /// Whether the web (Firestore doc) premium path applies. `kIsWeb` is a
+  /// compile-time constant (always false under `flutter test`), so tests
+  /// subclass [IsPremium] and force this true to exercise the web path.
+  bool get isWeb => kIsWeb;
+
   @override
   Future<bool> build() async {
     final repo = ref.watch(monetizationRepositoryProvider);
@@ -32,7 +57,7 @@ class IsPremium extends _$IsPremium {
     // Web: RevenueCat is never configured (revenue_cat_repository.dart:29-34).
     // Premium is read from the Paystack-written `users/{uid}.isPremium` flag
     // instead (functions/src/payments/paystack.ts:129-136).
-    if (kIsWeb) {
+    if (isWeb) {
       return _buildFromFirestore(user.id);
     }
 
@@ -105,19 +130,52 @@ class IsPremium extends _$IsPremium {
   /// ever written on native) and otherwise reports false — never block.
   Future<bool> _buildFromFirestore(String uid) async {
     final firestore = ref.watch(firestoreProvider);
-    final sub = streamWebPremium(firestore, uid).listen((isPremium) {
-      state = AsyncValue.data(isPremium);
-    });
+    final sub = docDataStream(firestore, uid).listen(
+      (data) {
+        _applyWebState(data);
+        // The stream only re-emits on doc CHANGES — time passage alone never
+        // triggers one. A pause written mid-session (Manage Premium → Pause)
+        // re-emits and lands here: keep the pause-end timer in sync with the
+        // doc on EVERY emission so a paused user drops at `premiumEndsAt`
+        // without relaunching, and no stale timer outlives a resume/cancel.
+        _schedulePauseEndTimer(firestore, uid, data);
+      },
+      onError: (Object error, StackTrace stackTrace) {
+        // Keep the last known state — a transient Firestore stream error
+        // must never flip a paying user to free mid-session.
+        AppLogger.w(
+          'Web premium stream error — keeping last known state',
+          error: error,
+          stackTrace: stackTrace,
+        );
+      },
+    );
     ref.onDispose(sub.cancel);
+    ref.onDispose(_cancelPauseEndTimer);
     try {
       final snap = await firestore.collection('users').doc(uid).get();
+      _applyWebState(snap.data());
       _schedulePauseEndTimer(firestore, uid, snap.data());
-      return recordToPremium(snap.data());
+      return premiumStateFromRecord(snap.data(), now: now).isPremium;
     } catch (e) {
       AppLogger.w('Web premium Firestore check failed', error: e);
       final cached = await _readCachedPremiumStatus();
       return cached ?? false;
     }
+  }
+
+  /// Applies a web doc state: remembers the richer [PremiumState] (re-exposed
+  /// through [premiumStateProvider] for paused UI) and pushes the bool into
+  /// this provider.
+  void _applyWebState(Map<String, dynamic>? data) {
+    final premium = premiumStateFromRecord(data, now: now);
+    _latestPremiumState = premium;
+    // Bump the revision BEFORE the bool so [premiumStateProvider] rebuilds
+    // even when the bool is unchanged (e.g. a mid-session pause keeps
+    // isPremium true but flips isPaused) — Riverpod suppresses notifies on
+    // value-equal AsyncData.
+    ref.read(premiumStateRevisionProvider.notifier).bump();
+    state = AsyncValue.data(premium.isPremium);
   }
 
   /// Web Firestore streams only re-emit on doc CHANGES — time passage alone
@@ -126,32 +184,37 @@ class IsPremium extends _$IsPremium {
   /// the pause end (+1s): on fire, re-read the doc, push the fresh status,
   /// and re-schedule while the doc is still paused with a future end date
   /// (covers repeated pauses; each pause writes now+30d, so a single timer
-  /// stays under Dart's ~24.7-day Timer cap). No timer when there is no end
-  /// date (indefinite pause) or it is not in the future.
+  /// stays under Dart's ~24.7-day Timer cap). Always cancels any previous
+  /// timer first — emissions re-schedule, they never stack. No timer when
+  /// there is no end date (indefinite pause) or it is not in the future.
   void _schedulePauseEndTimer(
     FirebaseFirestore firestore,
     String uid,
     Map<String, dynamic>? data,
   ) {
+    _cancelPauseEndTimer();
     final endsAt = _parsePauseEndsAt(data);
-    if (endsAt == null || !endsAt.isAfter(DateTime.now())) return;
-    final timer = Timer(
-      endsAt.difference(DateTime.now()) + const Duration(seconds: 1),
+    final nowValue = now();
+    if (endsAt == null || !endsAt.isAfter(nowValue)) return;
+    _pauseEndTimer = Timer(
+      endsAt.difference(nowValue) + const Duration(seconds: 1),
       () => _checkPauseEnd(firestore, uid),
     );
-    ref.onDispose(timer.cancel);
+  }
+
+  void _cancelPauseEndTimer() {
+    _pauseEndTimer?.cancel();
+    _pauseEndTimer = null;
   }
 
   Future<void> _checkPauseEnd(FirebaseFirestore firestore, String uid) async {
     try {
       final snap = await firestore.collection('users').doc(uid).get();
-      state = AsyncValue.data(recordToPremium(snap.data()));
-      final data = snap.data();
-      if (data?['subscriptionStatus'] == 'paused' &&
-          _parsePauseEndsAt(data) != null) {
-        // The future-end-date guard lives in `_schedulePauseEndTimer`.
-        _schedulePauseEndTimer(firestore, uid, data);
-      }
+      _applyWebState(snap.data());
+      // Re-schedule while still paused with a future end date; the future-
+      // end-date guard and the cancel-first behavior live in
+      // `_schedulePauseEndTimer`.
+      _schedulePauseEndTimer(firestore, uid, snap.data());
     } catch (e) {
       AppLogger.w('Web premium pause-end re-check failed', error: e);
     }
@@ -166,6 +229,12 @@ class IsPremium extends _$IsPremium {
     if (raw is DateTime) return raw;
     return null;
   }
+
+  /// Latest richer [PremiumState] observed on the web path. The doc stream
+  /// lives in this provider, so the rich state is re-exposed rather than
+  /// re-subscribed. Null on native (RevenueCat owns the state there) and
+  /// before the first web doc read.
+  PremiumState? get latestPremiumState => _latestPremiumState;
 
   /// Persist premium status for offline fallback.
   Future<void> _cachePremiumStatus(bool isPremium) async {
@@ -241,3 +310,27 @@ class DailyLoginBonus extends _$DailyLoginBonus {
   /// yyyy-MM-dd for the current local date.
   String _todayKey() => DateTime.now().toIso8601String().substring(0, 10);
 }
+
+/// Bumped on every web doc emission so [premiumStateProvider] rebuilds even
+/// when the premium BOOL is unchanged (Riverpod suppresses notifies on
+/// value-equal AsyncData; a mid-session pause keeps isPremium true while
+/// isPaused flips).
+class PremiumStateRevision extends Notifier<int> {
+  @override
+  int build() => 0;
+
+  void bump() => state++;
+}
+
+final premiumStateRevisionProvider =
+    NotifierProvider<PremiumStateRevision, int>(PremiumStateRevision.new);
+
+/// Web premium state for UI that needs more than the bool — the paused
+/// status and resume date (Manage Premium). Tracks [isPremiumProvider] so it
+/// updates with every doc emission; null on native (where RevenueCat owns
+/// the state) and before the first web doc read.
+final premiumStateProvider = Provider<PremiumState?>((ref) {
+  ref.watch(isPremiumProvider);
+  ref.watch(premiumStateRevisionProvider);
+  return ref.read(isPremiumProvider.notifier).latestPremiumState;
+});
