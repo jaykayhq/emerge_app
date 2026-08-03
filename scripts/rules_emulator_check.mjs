@@ -18,7 +18,7 @@
  *
  * No new npm deps: global fetch + the admin SDK from functions/node_modules.
  */
-import { fileURLToPath } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
 
 const AUTH_HOST = "http://127.0.0.1:9099";
 const FS_HOST = "http://127.0.0.1:8080";
@@ -58,8 +58,14 @@ if (!(await reachable(`${FS}/blueprints/__probe__`))) {
 // --- admin SDK (functions/node_modules; env vars must precede the import) ----
 process.env.FIRESTORE_EMULATOR_HOST = "127.0.0.1:8080";
 process.env.FIREBASE_AUTH_EMULATOR_HOST = "127.0.0.1:9099";
+// pathToFileURL: dynamic import() requires a file:// URL — fileURLToPath alone
+// yields a Windows drive path (C:\...) that ESM rejects (ERR_UNSUPPORTED_ESM_URL_SCHEME).
 const admin = (
-  await import(fileURLToPath(new URL("../functions/node_modules/firebase-admin/lib/index.js", import.meta.url)))
+  await import(
+    pathToFileURL(
+      fileURLToPath(new URL("../functions/node_modules/firebase-admin/lib/index.js", import.meta.url))
+    ).href
+  )
 ).default;
 if (admin.apps.length === 0) admin.initializeApp({ projectId: PROJECT_ID });
 const db = admin.firestore();
@@ -162,11 +168,17 @@ const CLEANUP = [
   "creator_profiles/creator_demo",
   "blueprints/alice_bp",
   "blueprints/bob_bp",
+  "blueprints/alice_bp2",
+  "blueprints/bob_bp2",
   "blueprints/morning_9",
   "challenges/c_alice",
   "challenges/c_bob",
+  "challenges/c_bob2",
   "tribes/alice_creator_tribe",
+  "tribes/alice_creator_tribe2",
+  "tribes/alice_creator_tribe3",
   "tribes/bob_creator_tribe",
+  "tribes/legacy_tribe",
   "posts/p1",
   "creator_invite_codes/ABCD2345",
   "invite_codes/ABC123",
@@ -177,11 +189,19 @@ for (const p of CLEANUP) {
 
 const alice = await signUp("alice@test.dev");
 const bob = await signUp("bob@test.dev");
-console.log(`[setup] alice uid ${alice.uid}, bob uid ${bob.uid}`);
+const adminAcct = await signUp("admin@test.dev");
+console.log(`[setup] alice uid ${alice.uid}, bob uid ${bob.uid}, admin uid ${adminAcct.uid}`);
 
 await admin.auth().setCustomUserClaims(alice.uid, { role: "creator" });
 alice.idToken = await tokenWithClaims(alice);
 console.log("[setup] alice role:creator claim set + token refreshed");
+
+await admin.auth().setCustomUserClaims(adminAcct.uid, { admin: true });
+adminAcct.idToken = await tokenWithClaims(adminAcct);
+console.log("[setup] admin admin:true claim set + token refreshed");
+
+// Membership-doc row target (uid-dependent path — cleaned after signUp).
+await db.doc(`users/${alice.uid}/tribes/creator_tribe_x`).delete().catch(() => {});
 
 // Verified creator profile — needed by isVerifiedCreator() (role claim + doc).
 await db.collection("creator_profiles").doc(alice.uid).set({
@@ -208,6 +228,14 @@ await db.doc(`users/${alice.uid}/habit_completions/c1`).delete().catch(() => {})
 
 const A = alice.idToken;
 const B = bob.idToken;
+const ADM = adminAcct.idToken;
+
+// Admin-seeded docs for update/delete rows (the rules bypass seeding paths).
+await db.doc("blueprints/alice_bp2").set({ creatorUserId: alice.uid, title: "t" });
+await db.doc("blueprints/bob_bp2").set({ creatorUserId: bob.uid, title: "t" });
+await db.doc("challenges/c_bob2").set({ createdBy: bob.uid, status: "active" });
+// Legacy tribe with NO `members` field (Fix 8c — must not crash the ±1 branch).
+await db.doc("tribes/legacy_tribe").set({ name: "Legacy", type: "official", memberCount: 5 });
 
 // --- matrix ------------------------------------------------------------------
 // 1: blueprints — public read; writes only for admins / verified creators / 'system' seed
@@ -228,19 +256,45 @@ check("3   user_stats isPremium write", await call("PATCH", A, `user_stats/${ali
 check("4a  creator_profiles create by normal user", await call("PATCH", B, "creator_profiles/bob_uid", doc({ userId: "bob_uid", ownerId: "bob_uid" })), 403);
 check("4b  creator_ prefix create by normal user", await call("PATCH", B, "creator_profiles/creator_demo", doc({ userId: "creator_demo" })), 403);
 check("4c  creator_profiles flip isVerifiedCreator", await call("PATCH", A, `creator_profiles/${alice.uid}`, doc({ isVerifiedCreator: false })), 403);
+// 4d: owner-onboarding update-allow row (mirror of 4a-4c): whitelisted
+// non-privileged keys (displayName) update by the owner succeed. The body
+// carries the full doc because the emulator evaluates a partial PATCH body
+// as a full replace; only displayName differs from the seeded profile, so
+// affectedKeys = {displayName} under both real-merge and replace semantics.
+check("4d  creator_profiles owner update whitelisted key", await call("PATCH", A, `creator_profiles/${alice.uid}`, doc({ userId: alice.uid, ownerId: alice.uid, role: "creator", isVerifiedCreator: true, displayName: "Alice Updated" })), 200);
 
-// 5: blueprints — verified-creator + 'system' catalog carve-out (SP-H-1)
+// 5: blueprints — verified-creator + 'system' catalog carve-out (SP-H-1).
+// The 'system' carve-out is now id-scoped (seed ids only) and update-scoped
+// (backfill key whitelist) — see firestore.rules isSystemSeedId/SeedCreate.
 check("5a  blueprints non-verified write", await call("PATCH", B, "blueprints/bob_bp", doc({ creatorUserId: bob.uid })), 403);
 check("5b  blueprints verified creator write", await call("PATCH", A, "blueprints/alice_bp", doc({ creatorUserId: alice.uid })), 200);
 check("5c  blueprints system catalog seed by normal user", await call("PATCH", B, "blueprints/morning_9", doc({ creatorUserId: "system" })), 200);
+check("5d  blueprints system create non-seed id denied", await call("PATCH", B, "blueprints/evil_bp", doc({ creatorUserId: "system" })), 403);
+check("5e  blueprints system create isCreatorBlueprint denied", await call("PATCH", B, "blueprints/morning_10", doc({ creatorUserId: "system", isCreatorBlueprint: true })), 403);
+// morning_9 now exists (5c): updates on it must be backfill-key-scoped.
+check("5f  blueprints system update createdAt (non-backfill key) denied", await call("PATCH", B, "blueprints/morning_9", doc({ creatorUserId: "system", createdAt: new Date() })), 403);
+check("5g  blueprints system update recommendedArchetypes (backfill key) allowed", await call("PATCH", B, "blueprints/morning_9", doc({ creatorUserId: "system", recommendedArchetypes: ["athlete", "stoic"] })), 200);
+// NOTE: title IS in the backfill whitelist (the v3 merge rewrites the whole
+// toMap minus createdAt), so a title change is allowed by design.
+check("5h  blueprints system update title (in backfill whitelist) allowed", await call("PATCH", B, "blueprints/morning_9", doc({ creatorUserId: "system", title: "Catalog Title" })), 200);
+check("5i  blueprints system update memberCount (non-backfill key) denied", await call("PATCH", B, "blueprints/morning_9", doc({ creatorUserId: "system", memberCount: 5 })), 403);
+// Verified-creator blueprint UPDATE rows (Fix 8b).
+check("5j  blueprints verified creator updates own allowed", await call("PATCH", A, "blueprints/alice_bp2", doc({ creatorUserId: alice.uid, title: "v2" })), 200);
+check("5k  blueprints unverified updates own denied", await call("PATCH", B, "blueprints/bob_bp2", doc({ creatorUserId: bob.uid, title: "v2" })), 403);
 
 // 6: challenges — verified creators may add their own (createdBy == uid)
 check("6   challenges verified creator write", await call("PATCH", A, "challenges/c_alice", doc({ createdBy: alice.uid })), 200);
 check("6b  challenges non-verified write", await call("PATCH", B, "challenges/c_bob", doc({ createdBy: bob.uid })), 403);
+// Verified-creator challenge UPDATE rows (Fix 8b).
+check("6c  challenges verified creator updates own allowed", await call("PATCH", A, "challenges/c_alice", doc({ createdBy: alice.uid, title: "updated" })), 200);
+check("6d  challenges unverified updates own denied", await call("PATCH", B, "challenges/c_bob2", doc({ createdBy: bob.uid, title: "x" })), 403);
 
-// 7: tribes — creator-type creation gated on verified creators
+// 7: tribes — creator-type creation gated on verified creators + create-time
+// memberCount == members.size() bound (Fix 6).
 check("7a  tribe creator type by non-verified", await call("PATCH", B, "tribes/bob_creator_tribe", doc({ name: "B", type: "creator" })), 403);
-check("7b  tribe creator type by verified", await call("PATCH", A, "tribes/alice_creator_tribe", doc({ name: "A", type: "creator", members: [], memberCount: 1 })), 200);
+check("7b  tribe creator type by verified", await call("PATCH", A, "tribes/alice_creator_tribe", doc({ name: "A", type: "creator", members: [], memberCount: 0 })), 200);
+check("7c  tribe create memberCount mismatch denied", await call("PATCH", A, "tribes/alice_creator_tribe3", doc({ name: "A", type: "creator", members: [alice.uid], memberCount: 999999 })), 403);
+check("7d  tribe create consistent memberCount allowed", await call("PATCH", A, "tribes/alice_creator_tribe2", doc({ name: "A", type: "creator", members: [alice.uid], memberCount: 1 })), 200);
 
 // 8: tribes — aggregate membership writes: keys, ±1 delta, caller == added member
 const TRIBE = "tribes/morning_warriors";
@@ -268,6 +322,11 @@ check("8d  tribe memberCount +1 but added member != caller", await call("PATCH",
 // 8d was denied so the doc is still memberCount 11 / members [alice.uid] here.
 check("8e  tribe memberCount -1 (caller removed)", await call("PATCH", A, TRIBE, tribeBody(10, [], 0)), 200);
 
+// 8f: legacy tribe WITHOUT a `members` field (Fix 8c) — the ±1 aggregate
+// branch requires 'members' in resource.data; a missing field must deny
+// cleanly (not crash the rules engine into a 5xx).
+check("8f  legacy tribe without members field update denied", await call("PATCH", B, "tribes/legacy_tribe", doc({ name: "Legacy", type: "official", memberCount: 6, members: [bob.uid] })), 403);
+
 // 9: invite codes — functions-only (admin SDK), clients always denied
 check("9a  creator_invite_codes deny", await call("PATCH", A, "creator_invite_codes/ABCD2345", doc({ creatorUid: alice.uid })), 403);
 check("9b  invite_codes deny", await call("PATCH", A, "invite_codes/ABC123", doc({ userId: alice.uid })), 403);
@@ -279,6 +338,17 @@ check("10b posts create", await call("PATCH", A, "posts/p1", doc({ content: "hi"
 
 // 11: club_leaderboards — self entries (entryId prefix uid_)
 check("11  club_leaderboards self write", await call("PATCH", A, `club_leaderboards/${alice.uid}_morning_warriors`, doc({ userId: alice.uid, clubId: "morning_warriors", xp: 10 })), 200);
+
+// 12: users/{uid}/tribes membership docs (Fix 8d) — the recalc source of
+// truth; owner may write their own (ensureCreatorTribe + joinTribe both do),
+// other users never.
+check("12a membership doc write by owner", await call("PATCH", A, `users/${alice.uid}/tribes/creator_tribe_x`, doc({ tribeId: "creator_tribe_x", membershipType: "creator", isActive: true, joinedAt: new Date() })), 200);
+check("12b membership doc write by other", await call("PATCH", B, `users/${alice.uid}/tribes/creator_tribe_x`, doc({ tribeId: "creator_tribe_x", isActive: true })), 403);
+
+// 13: admin + delete rows (Fix 8e)
+check("13a admin deletes a blueprint", await call("DELETE", ADM, "blueprints/alice_bp2", null), 200);
+check("13b creator deletes own blueprint", await call("DELETE", A, "blueprints/alice_bp", null), 200);
+check("13c unverified cannot delete blueprints", await call("DELETE", B, "blueprints/bob_bp2", null), 403);
 
 // --- summary -----------------------------------------------------------------
 console.log(results.join("\n"));
