@@ -18,6 +18,39 @@ export const CODE_LENGTH = 8;
 export const CODE_TTL_MS = 7 * 24 * 60 * 60 * 1000; // 7 days
 export const MAX_OUTSTANDING_CODES = 10;
 export const CODE_PATTERN = /^[A-Z2-9]{8}$/;
+/**
+ * Cap on docs fetched when locating a creator's tribe. The lookup queries
+ * the single auto-indexed `type == 'creator'` field (no composite index
+ * exists for createdBy+type, SP-H §5.1) and filters createdBy in memory, so
+ * the scan must be bounded.
+ */
+export const CREATOR_TRIBE_SCAN_LIMIT = 100;
+
+/**
+ * Expiry timestamp (ms) of a doc field that is a Firestore Timestamp or a
+ * JS Date. Returns 0 when absent/unparseable — callers decide how to treat
+ * unknown expiry (redeem: expired; generate: expired, so garbage codes never
+ * hold quota forever).
+ */
+export function codeExpiryMs(value: unknown): number {
+  if (value instanceof Date) return value.getTime();
+  const ts = value as { toMillis?: () => number } | undefined;
+  return ts?.toMillis?.() ?? 0;
+}
+
+/**
+ * Finds the id of a creator's own tribe among fetched `type == 'creator'`
+ * docs. Pure in-memory filter (SP-H §5.1) so the query never needs a
+ * composite index: the callable queries one auto-indexed field and applies
+ * the createdBy equality here.
+ */
+export function findCreatorTribe(
+  docs: Array<{ id: string; data: () => Record<string, unknown> }>,
+  uid: string
+): string | null {
+  const match = docs.find((doc) => doc.data().createdBy === uid);
+  return match ? match.id : null;
+}
 
 export async function isVerifiedCreator(uid: string): Promise<boolean> {
   const [userRecord, profile] = await Promise.all([
@@ -53,21 +86,49 @@ export const generateCreatorInviteCode = onCall(async (request) => {
   }
 
   // Outstanding count: query by creatorUid (Firestore cannot filter
-  // `== null`), filter redeemedBy in memory. Redeemed codes are deleted,
-  // so in practice every doc under creatorUid is outstanding.
+  // `== null`), filter redeemedBy AND expiry in memory (SP-H review: expired
+  // codes must not hold quota forever — a creator who generated 10 codes and
+  // let them lapse can generate again). Expired codes for this creator are
+  // also deleted best-effort below so the quota frees itself.
   const snapshot = await db
     .collection("creator_invite_codes")
     .where("creatorUid", "==", uid)
     .get();
+  const nowMs = Date.now();
+  const expiredIds: string[] = [];
   let outstanding = 0;
   snapshot.forEach((doc) => {
-    if (doc.data().redeemedBy == null) outstanding++;
+    const data = doc.data();
+    // A code without a parseable expiresAt is un-redeemable garbage (the
+    // redeem path treats it as expired) — count it as expired so it can
+    // neither hold quota nor linger.
+    if (codeExpiryMs(data.expiresAt) <= nowMs) {
+      expiredIds.push(doc.id);
+      return;
+    }
+    if (data.redeemedBy == null) outstanding++;
   });
   if (outstanding >= MAX_OUTSTANDING_CODES) {
     throw new HttpsError(
       "resource-exhausted",
       `You have ${MAX_OUTSTANDING_CODES} outstanding invite codes — redeem them or wait for expiry.`
     );
+  }
+
+  // Best-effort cleanup of this creator's expired codes (the count above
+  // already excludes them; a failed delete just retries next generate).
+  if (expiredIds.length > 0) {
+    const batch = db.batch();
+    for (const id of expiredIds) {
+      batch.delete(db.collection("creator_invite_codes").doc(id));
+    }
+    try {
+      await batch.commit();
+    } catch (err) {
+      console.warn(
+        `[generateCreatorInviteCode] expired-code cleanup failed: ${err}`
+      );
+    }
   }
 
   // Collision-retry (≤5 attempts; 32^8 space makes this vanishingly rare).
@@ -112,10 +173,28 @@ export const redeemCreatorInvite = onCall(async (request) => {
     db.collection("creator_profiles").doc(uid).get(),
     admin.auth().getUser(uid),
   ]);
-  if (
-    existingProfile.exists ||
-    (userRecord.customClaims ?? {}).role === "creator"
-  ) {
+  const existingClaims = userRecord.customClaims ?? {};
+  if (existingProfile.exists || existingClaims.role === "creator") {
+    // Recovery path (SP-H review): setCustomUserClaims runs AFTER the
+    // transaction commits, so a claim-set failure leaves a committed profile
+    // with no claim — retry would otherwise be bricked by this branch (the
+    // code is already consumed and the profile already exists). If the
+    // committed profile is this user's own verified creator profile and the
+    // claim is missing, re-issue the claim and succeed. The profile shape
+    // below is exactly what the transaction writes (ownerId == uid,
+    // isVerifiedCreator: true), so a foreign profile can never be claimed.
+    if (
+      existingClaims.role !== "creator" &&
+      existingProfile.exists &&
+      existingProfile.data()?.ownerId === uid &&
+      existingProfile.data()?.isVerifiedCreator === true
+    ) {
+      await admin.auth().setCustomUserClaims(uid, {
+        ...existingClaims,
+        role: "creator",
+      });
+      return { ok: true, uid, recovered: true };
+    }
     throw new HttpsError("already-exists", "This account is already a creator.");
   }
 
@@ -134,12 +213,7 @@ export const redeemCreatorInvite = onCall(async (request) => {
         "This invite code has already been used."
       );
     }
-    const expiresAt = doc.expiresAt as admin.firestore.Timestamp | Date | undefined;
-    const expiryMs =
-      expiresAt instanceof Date
-        ? expiresAt.getTime()
-        : expiresAt?.toMillis?.() ?? 0;
-    if (expiryMs < Date.now()) {
+    if (codeExpiryMs(doc.expiresAt) < Date.now()) {
       throw new HttpsError(
         "failed-precondition",
         "This invite code has expired."
@@ -195,16 +269,19 @@ export const ensureCreatorTribe = onCall(async (request) => {
       ? data.blueprintId.trim()
       : null;
 
-  const existing = await db
+  // SP-H §5.1: no composite index exists for (createdBy, type), so query the
+  // single auto-indexed `type` field over a bounded set and filter createdBy
+  // in memory. A creator owns at most one tribe, so the scan is safe.
+  const snapshot = await db
     .collection("tribes")
-    .where("createdBy", "==", uid)
     .where("type", "==", "creator")
-    .limit(1)
+    .limit(CREATOR_TRIBE_SCAN_LIMIT)
     .get();
+  const existingTribeId = findCreatorTribe(snapshot.docs, uid);
 
   let tribeId: string;
   let created = false;
-  if (existing.empty) {
+  if (existingTribeId == null) {
     const profile = await db.collection("creator_profiles").doc(uid).get();
     const displayName = (profile.data()?.displayName as string) ?? "Creator";
     const archetype = (profile.data()?.archetype as string) ?? "none";
@@ -229,8 +306,29 @@ export const ensureCreatorTribe = onCall(async (request) => {
       .doc(uid)
       .set({ tribeId, ownerId: uid }, { merge: true });
   } else {
-    tribeId = existing.docs[0].id;
+    tribeId = existingTribeId;
   }
+
+  // Explicit membership doc for the creator (SP-H review): aggregateTribeStats
+  // builds tribe members EXCLUSIVELY from users/{uid}/tribes membership docs,
+  // so without this the recalc drops the creator from their own tribe the
+  // moment a second user joins. Same shape as the client join path
+  // (tribe_membership_service.dart: {tribeId, joinedAt, membershipType,
+  // isActive}); merge keeps a re-run idempotent and repairs legacy creators.
+  await db
+    .collection("users")
+    .doc(uid)
+    .collection("tribes")
+    .doc(tribeId)
+    .set(
+      {
+        tribeId,
+        joinedAt: admin.firestore.FieldValue.serverTimestamp(),
+        membershipType: "creator",
+        isActive: true,
+      },
+      { merge: true }
+    );
 
   if (blueprintId) {
     const bp = await db.collection("blueprints").doc(blueprintId).get();
