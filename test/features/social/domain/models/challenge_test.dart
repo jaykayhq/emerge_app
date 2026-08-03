@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:emerge_app/features/social/domain/models/challenge.dart';
 import 'package:emerge_app/features/social/domain/models/challenge_catalog.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -282,6 +283,45 @@ void main() {
       expect(round.createdBy, 'uid-1');
       expect(round.createdAt, DateTime(2026, 8, 1));
       expect(c.copyWith(title: 't2').createdBy, 'uid-1');
+    });
+
+    group('fromMap createdAt parsing', () {
+      Map<String, dynamic> mapWith(Object? createdAt) => {
+        'title': 'Test',
+        'description': 'Desc',
+        'imageUrl': 'img.png',
+        'reward': '100xp',
+        'participants': 0,
+        'daysLeft': 7,
+        'totalDays': 7,
+        'currentDay': 0,
+        'status': 'active',
+        'xpReward': 100,
+        'category': 'fitness',
+        'affiliateNetwork': 'none',
+        'createdBy': 'uid-1',
+        'createdAt': createdAt,
+        'steps': <Map<String, dynamic>>[],
+      };
+
+      test('parses a Firestore Timestamp createdAt (serverTimestamp materialization)',
+          () {
+        final ts = Timestamp.fromDate(DateTime.utc(2026, 8, 2, 10, 30));
+        final challenge = Challenge.fromMap(mapWith(ts), id: 'c1');
+        // Timestamp.toDate() yields a local-time DateTime; compare instants.
+        expect(challenge.createdAt!.toUtc(), DateTime.utc(2026, 8, 2, 10, 30));
+      });
+
+      test('parses an ISO-8601 string createdAt (app-written docs)', () {
+        final iso = '2026-08-02T10:30:00.000';
+        final challenge = Challenge.fromMap(mapWith(iso), id: 'c1');
+        expect(challenge.createdAt, DateTime.parse(iso));
+      });
+
+      test('is null-safe when createdAt is missing', () {
+        final challenge = Challenge.fromMap(mapWith(null), id: 'c1');
+        expect(challenge.createdAt, isNull);
+      });
     });
   });
 }

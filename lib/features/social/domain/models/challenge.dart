@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:equatable/equatable.dart';
 
 enum ChallengeStatus { featured, active, completed }
@@ -323,9 +324,15 @@ class Challenge extends Equatable {
       rewardTitleId: map['rewardTitleId'],
       rewardNameplateId: map['rewardNameplateId'],
       createdBy: map['createdBy'],
-      createdAt: map['createdAt'] != null
-          ? DateTime.tryParse(map['createdAt'] as String)
-          : null,
+      // Server-written docs materialize createdAt as a Firestore Timestamp
+      // (FieldValue.serverTimestamp); app-written docs use ISO strings.
+      // Handle both and stay null-safe instead of casting blindly.
+      createdAt: () {
+        final createdAtRaw = map['createdAt'];
+        return createdAtRaw is Timestamp
+            ? createdAtRaw.toDate()
+            : DateTime.tryParse(createdAtRaw as String? ?? '');
+      }(),
       steps:
           (map['steps'] as List<dynamic>?)
               ?.map(
