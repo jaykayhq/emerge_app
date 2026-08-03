@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:emerge_app/core/deletion/sync_status.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:emerge_app/core/drift/database.dart';
 import 'package:emerge_app/core/services/connectivity_service.dart';
@@ -10,7 +11,20 @@ import 'package:emerge_app/features/auth/presentation/providers/auth_providers.d
 
 final enhancedSyncEngineProvider = Provider<EnhancedSyncEngine>((ref) {
   final mutationQueue = ref.watch(mutationQueueDaoProvider);
-  return EnhancedSyncEngine(mutationQueue, FirebaseFirestore.instance);
+  return EnhancedSyncEngine(
+    mutationQueue,
+    FirebaseFirestore.instance,
+    // Auth seam: skip flushes while signed out and scope every mutation to
+    // its enqueuing user (AGENTS.md shared-device rule). Read at call time —
+    // never capture auth state in the singleton.
+    currentUserId: () {
+      try {
+        return FirebaseAuth.instance.currentUser?.uid;
+      } catch (_) {
+        return null;
+      }
+    },
+  );
 });
 
 final syncMetricsProvider = Provider<SyncMetrics>((ref) {

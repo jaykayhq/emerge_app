@@ -70,7 +70,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.withExecutor(super.executor);
 
   @override
-  int get schemaVersion => 13;
+  int get schemaVersion => 14;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -139,6 +139,12 @@ class AppDatabase extends _$AppDatabase {
       if (from < 13) {
         // Persist the habit's emoji (imageUrl) so cards render it after reload.
         await m.addColumn(habitsTable, habitsTable.imageUrl);
+      }
+      if (from < 14) {
+        // Owner uid on queued mutations (shared-device isolation, AGENTS.md).
+        // Legacy rows keep NULL — they are this device's own pre-migration
+        // data and flush for whoever signs in next.
+        await m.addColumn(mutationQueueTable, mutationQueueTable.userId);
       }
     },
     beforeOpen: (details) async {

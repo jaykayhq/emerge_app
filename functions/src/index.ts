@@ -264,6 +264,7 @@ export * from "./payments/paystack";
 export * from "./creator_invites";
 export { managePremium } from "./managePremium";
 export * from "./seedCreatorAccount";   // enabled 2026-08-03: default creator bootstrap (SP-E Task 4)
+export * from "./repairBlueprintCatalog"; // enabled 2026-08-03: one-off catalog ownership repair + v1 purge
 export { setUserRole } from "./setUserRole";
 export { purgeOrphanedUserData } from "./purgeOrphanedUserData";
 export { createStarterPack } from "./create_starter_pack";

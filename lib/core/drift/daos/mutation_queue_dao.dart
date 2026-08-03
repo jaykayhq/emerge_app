@@ -23,6 +23,7 @@ class MutationQueueDao extends DatabaseAccessor<AppDatabase>
     required String operation,
     String? dataJson,
     String? idempotencyKey,
+    String? userId,
   }) async {
     if (idempotencyKey != null) {
       final existing = await (select(mutationQueueTable)
@@ -37,18 +38,30 @@ class MutationQueueDao extends DatabaseAccessor<AppDatabase>
         operation: Value(operation),
         dataJson: Value(dataJson),
         idempotencyKey: Value(idempotencyKey),
+        userId: Value(userId),
         createdAt: Value(DateTime.now().toIso8601String()),
         status: const Value('pending'),
       ),
     );
   }
 
-  Future<List<MutationQueueTableData>> getDue(String nowIso) {
+  Future<List<MutationQueueTableData>> getDue(String nowIso,
+      {String? userId}) {
+    // userId == null (no auth seam wired) keeps legacy flush-everything
+    // behavior; otherwise only the current user's rows (plus pre-migration
+    // null rows, which are this device's own data) are due.
+    final where = userId == null
+        ? (MutationQueueTable t) =>
+            t.status.equals('pending') &
+            (t.nextRetryAt.isNull() |
+                t.nextRetryAt.isSmallerOrEqualValue(nowIso))
+        : (MutationQueueTable t) =>
+            t.status.equals('pending') &
+            (t.nextRetryAt.isNull() |
+                t.nextRetryAt.isSmallerOrEqualValue(nowIso)) &
+            (t.userId.isNull() | t.userId.equals(userId));
     return (select(mutationQueueTable)
-          ..where((t) =>
-              t.status.equals('pending') &
-              (t.nextRetryAt.isNull() |
-                  t.nextRetryAt.isSmallerOrEqualValue(nowIso)))
+          ..where(where)
           ..orderBy([(t) => OrderingTerm(expression: t.createdAt)]))
         .get();
   }
@@ -93,9 +106,14 @@ class MutationQueueDao extends DatabaseAccessor<AppDatabase>
     );
   }
 
-  Future<List<MutationQueueTableData>> getDeadLetters() async {
-    return (select(mutationQueueTable)..where((t) => t.status.equals('dead')))
-        .get();
+  Future<List<MutationQueueTableData>> getDeadLetters({String? userId}) async {
+    final query = userId == null
+        ? (select(mutationQueueTable)..where((t) => t.status.equals('dead')))
+        : (select(mutationQueueTable)
+              ..where((t) =>
+                  t.status.equals('dead') &
+                  (t.userId.isNull() | t.userId.equals(userId))));
+    return query.get();
   }
 
   Future<void> updateStatus(int id, String status) async {

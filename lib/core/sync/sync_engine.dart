@@ -14,6 +14,7 @@ class EnhancedSyncEngine {
   final FirebaseFirestore _firestore;
   final SyncMetrics _metrics;
   final MutationApplier? applier;
+  final String? Function()? _currentUserIdFn;
 
   final int maxRetries;
   final int breakerThreshold;
@@ -35,7 +36,13 @@ class EnhancedSyncEngine {
     this.breakerThreshold = 5,
     this.baseBackoff = const Duration(seconds: 1),
     Duration? maxBackoff,
+    // Auth seam (AGENTS.md: never cache mutable auth state in a singleton).
+    // When wired, the engine skips flushing while signed out and only ever
+    // applies the CURRENT user's rows. When null (tests, legacy callers)
+    // the engine keeps flush-everything behavior.
+    String? Function()? currentUserId,
   })  : _metrics = metrics ?? SyncMetrics(),
+        _currentUserIdFn = currentUserId,
         capBackoff = maxBackoff ?? const Duration(minutes: 5);
 
   SyncMetrics get metrics => _metrics;
@@ -62,6 +69,7 @@ class EnhancedSyncEngine {
     required String operation,
     Map<String, dynamic>? data,
     String? idempotencyKey,
+    String? userId,
   }) async {
     _metrics.recordEnqueued();
     await _mutationQueue.enqueue(
@@ -70,6 +78,7 @@ class EnhancedSyncEngine {
       operation: operation,
       dataJson: data != null ? jsonEncode(data) : null,
       idempotencyKey: idempotencyKey,
+      userId: userId ?? _currentUserIdFn?.call(),
     );
   }
 
@@ -104,12 +113,19 @@ class EnhancedSyncEngine {
       AppLogger.d('SyncEngine: Already processing, skipping');
       return;
     }
+    // Auth gate: a signed-out flush can only fail with permission-denied.
+    // Skipping (instead of dropping) keeps rows queued for the next sign-in.
+    final uid = _currentUserIdFn?.call();
+    if (_currentUserIdFn != null && uid == null) {
+      AppLogger.d('SyncEngine: Signed out, skipping mutation flush');
+      return;
+    }
     _isProcessing = true;
     _setStatus(SyncStatus.processing);
     final sw = Stopwatch()..start();
     try {
       final nowIso = DateTime.now().toIso8601String();
-      final mutations = await _mutationQueue.getDue(nowIso);
+      final mutations = await _mutationQueue.getDue(nowIso, userId: uid);
       _metrics.queueDepth = mutations.length;
       for (final mutation in mutations) {
         final ok = applier != null
@@ -160,7 +176,11 @@ class EnhancedSyncEngine {
 
   /// Revives dead-lettered mutations for retry. Called on app startup and connectivity restore.
   Future<void> reviveDeadLetters() async {
-    final deadMutations = await _mutationQueue.getDeadLetters();
+    // Same auth gate as the flush: reviving while signed out re-queues rows
+    // that are guaranteed to fail, burning retries on every boot.
+    final uid = _currentUserIdFn?.call();
+    if (_currentUserIdFn != null && uid == null) return;
+    final deadMutations = await _mutationQueue.getDeadLetters(userId: uid);
     if (deadMutations.isEmpty) return;
 
     AppLogger.d(

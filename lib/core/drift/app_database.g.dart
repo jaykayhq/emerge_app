@@ -5930,6 +5930,15 @@ class $MutationQueueTableTable extends MutationQueueTable
       'PRIMARY KEY AUTOINCREMENT',
     ),
   );
+  static const VerificationMeta _userIdMeta = const VerificationMeta('userId');
+  @override
+  late final GeneratedColumn<String> userId = GeneratedColumn<String>(
+    'user_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   static const VerificationMeta _collectionPathMeta = const VerificationMeta(
     'collectionPath',
   );
@@ -6043,6 +6052,7 @@ class $MutationQueueTableTable extends MutationQueueTable
   @override
   List<GeneratedColumn> get $columns => [
     id,
+    userId,
     collectionPath,
     documentId,
     operation,
@@ -6068,6 +6078,12 @@ class $MutationQueueTableTable extends MutationQueueTable
     final data = instance.toColumns(true);
     if (data.containsKey('id')) {
       context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('user_id')) {
+      context.handle(
+        _userIdMeta,
+        userId.isAcceptableOrUnknown(data['user_id']!, _userIdMeta),
+      );
     }
     if (data.containsKey('collection_path')) {
       context.handle(
@@ -6159,6 +6175,10 @@ class $MutationQueueTableTable extends MutationQueueTable
         DriftSqlType.int,
         data['${effectivePrefix}id'],
       )!,
+      userId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}user_id'],
+      ),
       collectionPath: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}collection_path'],
@@ -6211,6 +6231,11 @@ class $MutationQueueTableTable extends MutationQueueTable
 class MutationQueueTableData extends DataClass
     implements Insertable<MutationQueueTableData> {
   final int id;
+
+  /// Owner uid at enqueue time (AGENTS.md shared-device rule). Null on rows
+  /// enqueued before the v14 migration; those are treated as this device's
+  /// legacy data and flush for whoever signs in.
+  final String? userId;
   final String collectionPath;
   final String documentId;
   final String operation;
@@ -6223,6 +6248,7 @@ class MutationQueueTableData extends DataClass
   final String status;
   const MutationQueueTableData({
     required this.id,
+    this.userId,
     required this.collectionPath,
     required this.documentId,
     required this.operation,
@@ -6238,6 +6264,9 @@ class MutationQueueTableData extends DataClass
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
     map['id'] = Variable<int>(id);
+    if (!nullToAbsent || userId != null) {
+      map['user_id'] = Variable<String>(userId);
+    }
     map['collection_path'] = Variable<String>(collectionPath);
     map['document_id'] = Variable<String>(documentId);
     map['operation'] = Variable<String>(operation);
@@ -6262,6 +6291,9 @@ class MutationQueueTableData extends DataClass
   MutationQueueTableCompanion toCompanion(bool nullToAbsent) {
     return MutationQueueTableCompanion(
       id: Value(id),
+      userId: userId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(userId),
       collectionPath: Value(collectionPath),
       documentId: Value(documentId),
       operation: Value(operation),
@@ -6290,6 +6322,7 @@ class MutationQueueTableData extends DataClass
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return MutationQueueTableData(
       id: serializer.fromJson<int>(json['id']),
+      userId: serializer.fromJson<String?>(json['userId']),
       collectionPath: serializer.fromJson<String>(json['collectionPath']),
       documentId: serializer.fromJson<String>(json['documentId']),
       operation: serializer.fromJson<String>(json['operation']),
@@ -6307,6 +6340,7 @@ class MutationQueueTableData extends DataClass
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return <String, dynamic>{
       'id': serializer.toJson<int>(id),
+      'userId': serializer.toJson<String?>(userId),
       'collectionPath': serializer.toJson<String>(collectionPath),
       'documentId': serializer.toJson<String>(documentId),
       'operation': serializer.toJson<String>(operation),
@@ -6322,6 +6356,7 @@ class MutationQueueTableData extends DataClass
 
   MutationQueueTableData copyWith({
     int? id,
+    Value<String?> userId = const Value.absent(),
     String? collectionPath,
     String? documentId,
     String? operation,
@@ -6334,6 +6369,7 @@ class MutationQueueTableData extends DataClass
     String? status,
   }) => MutationQueueTableData(
     id: id ?? this.id,
+    userId: userId.present ? userId.value : this.userId,
     collectionPath: collectionPath ?? this.collectionPath,
     documentId: documentId ?? this.documentId,
     operation: operation ?? this.operation,
@@ -6350,6 +6386,7 @@ class MutationQueueTableData extends DataClass
   MutationQueueTableData copyWithCompanion(MutationQueueTableCompanion data) {
     return MutationQueueTableData(
       id: data.id.present ? data.id.value : this.id,
+      userId: data.userId.present ? data.userId.value : this.userId,
       collectionPath: data.collectionPath.present
           ? data.collectionPath.value
           : this.collectionPath,
@@ -6377,6 +6414,7 @@ class MutationQueueTableData extends DataClass
   String toString() {
     return (StringBuffer('MutationQueueTableData(')
           ..write('id: $id, ')
+          ..write('userId: $userId, ')
           ..write('collectionPath: $collectionPath, ')
           ..write('documentId: $documentId, ')
           ..write('operation: $operation, ')
@@ -6394,6 +6432,7 @@ class MutationQueueTableData extends DataClass
   @override
   int get hashCode => Object.hash(
     id,
+    userId,
     collectionPath,
     documentId,
     operation,
@@ -6410,6 +6449,7 @@ class MutationQueueTableData extends DataClass
       identical(this, other) ||
       (other is MutationQueueTableData &&
           other.id == this.id &&
+          other.userId == this.userId &&
           other.collectionPath == this.collectionPath &&
           other.documentId == this.documentId &&
           other.operation == this.operation &&
@@ -6425,6 +6465,7 @@ class MutationQueueTableData extends DataClass
 class MutationQueueTableCompanion
     extends UpdateCompanion<MutationQueueTableData> {
   final Value<int> id;
+  final Value<String?> userId;
   final Value<String> collectionPath;
   final Value<String> documentId;
   final Value<String> operation;
@@ -6437,6 +6478,7 @@ class MutationQueueTableCompanion
   final Value<String> status;
   const MutationQueueTableCompanion({
     this.id = const Value.absent(),
+    this.userId = const Value.absent(),
     this.collectionPath = const Value.absent(),
     this.documentId = const Value.absent(),
     this.operation = const Value.absent(),
@@ -6450,6 +6492,7 @@ class MutationQueueTableCompanion
   });
   MutationQueueTableCompanion.insert({
     this.id = const Value.absent(),
+    this.userId = const Value.absent(),
     required String collectionPath,
     required String documentId,
     required String operation,
@@ -6466,6 +6509,7 @@ class MutationQueueTableCompanion
        createdAt = Value(createdAt);
   static Insertable<MutationQueueTableData> custom({
     Expression<int>? id,
+    Expression<String>? userId,
     Expression<String>? collectionPath,
     Expression<String>? documentId,
     Expression<String>? operation,
@@ -6479,6 +6523,7 @@ class MutationQueueTableCompanion
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
+      if (userId != null) 'user_id': userId,
       if (collectionPath != null) 'collection_path': collectionPath,
       if (documentId != null) 'document_id': documentId,
       if (operation != null) 'operation': operation,
@@ -6494,6 +6539,7 @@ class MutationQueueTableCompanion
 
   MutationQueueTableCompanion copyWith({
     Value<int>? id,
+    Value<String?>? userId,
     Value<String>? collectionPath,
     Value<String>? documentId,
     Value<String>? operation,
@@ -6507,6 +6553,7 @@ class MutationQueueTableCompanion
   }) {
     return MutationQueueTableCompanion(
       id: id ?? this.id,
+      userId: userId ?? this.userId,
       collectionPath: collectionPath ?? this.collectionPath,
       documentId: documentId ?? this.documentId,
       operation: operation ?? this.operation,
@@ -6525,6 +6572,9 @@ class MutationQueueTableCompanion
     final map = <String, Expression>{};
     if (id.present) {
       map['id'] = Variable<int>(id.value);
+    }
+    if (userId.present) {
+      map['user_id'] = Variable<String>(userId.value);
     }
     if (collectionPath.present) {
       map['collection_path'] = Variable<String>(collectionPath.value);
@@ -6563,6 +6613,7 @@ class MutationQueueTableCompanion
   String toString() {
     return (StringBuffer('MutationQueueTableCompanion(')
           ..write('id: $id, ')
+          ..write('userId: $userId, ')
           ..write('collectionPath: $collectionPath, ')
           ..write('documentId: $documentId, ')
           ..write('operation: $operation, ')
@@ -12363,6 +12414,7 @@ typedef $$LeaderboardEntriesTableTableProcessedTableManager =
 typedef $$MutationQueueTableTableCreateCompanionBuilder =
     MutationQueueTableCompanion Function({
       Value<int> id,
+      Value<String?> userId,
       required String collectionPath,
       required String documentId,
       required String operation,
@@ -12377,6 +12429,7 @@ typedef $$MutationQueueTableTableCreateCompanionBuilder =
 typedef $$MutationQueueTableTableUpdateCompanionBuilder =
     MutationQueueTableCompanion Function({
       Value<int> id,
+      Value<String?> userId,
       Value<String> collectionPath,
       Value<String> documentId,
       Value<String> operation,
@@ -12400,6 +12453,11 @@ class $$MutationQueueTableTableFilterComposer
   });
   ColumnFilters<int> get id => $composableBuilder(
     column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get userId => $composableBuilder(
+    column: $table.userId,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -12468,6 +12526,11 @@ class $$MutationQueueTableTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get userId => $composableBuilder(
+    column: $table.userId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<String> get collectionPath => $composableBuilder(
     column: $table.collectionPath,
     builder: (column) => ColumnOrderings(column),
@@ -12530,6 +12593,9 @@ class $$MutationQueueTableTableAnnotationComposer
   });
   GeneratedColumn<int> get id =>
       $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get userId =>
+      $composableBuilder(column: $table.userId, builder: (column) => column);
 
   GeneratedColumn<String> get collectionPath => $composableBuilder(
     column: $table.collectionPath,
@@ -12613,6 +12679,7 @@ class $$MutationQueueTableTableTableManager
           updateCompanionCallback:
               ({
                 Value<int> id = const Value.absent(),
+                Value<String?> userId = const Value.absent(),
                 Value<String> collectionPath = const Value.absent(),
                 Value<String> documentId = const Value.absent(),
                 Value<String> operation = const Value.absent(),
@@ -12625,6 +12692,7 @@ class $$MutationQueueTableTableTableManager
                 Value<String> status = const Value.absent(),
               }) => MutationQueueTableCompanion(
                 id: id,
+                userId: userId,
                 collectionPath: collectionPath,
                 documentId: documentId,
                 operation: operation,
@@ -12639,6 +12707,7 @@ class $$MutationQueueTableTableTableManager
           createCompanionCallback:
               ({
                 Value<int> id = const Value.absent(),
+                Value<String?> userId = const Value.absent(),
                 required String collectionPath,
                 required String documentId,
                 required String operation,
@@ -12651,6 +12720,7 @@ class $$MutationQueueTableTableTableManager
                 Value<String> status = const Value.absent(),
               }) => MutationQueueTableCompanion.insert(
                 id: id,
+                userId: userId,
                 collectionPath: collectionPath,
                 documentId: documentId,
                 operation: operation,

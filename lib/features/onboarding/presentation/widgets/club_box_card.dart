@@ -123,17 +123,18 @@ class ClubBoxCard extends StatelessWidget {
                             ),
                           ),
                           const SizedBox(width: 4),
-                          Flexible(
-                            child: Text(
-                              activityStatus,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: GoogleFonts.splineSans(
-                                color: activityStatus.contains('Active')
-                                    ? Colors.greenAccent
-                                    : Colors.grey,
-                                fontSize: 11,
-                              ),
+                          // Inside a FittedBox the child is measured with
+                          // unbounded width, so no flex widgets are allowed
+                          // here — FittedBox scales the row down as a whole.
+                          Text(
+                            activityStatus,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: GoogleFonts.splineSans(
+                              color: activityStatus.contains('Active')
+                                  ? Colors.greenAccent
+                                  : Colors.grey,
+                              fontSize: 11,
                             ),
                           ),
                         ],
