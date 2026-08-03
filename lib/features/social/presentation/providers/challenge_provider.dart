@@ -114,3 +114,27 @@ final tribeChallengesProvider = StreamProvider<List<Challenge>>((ref) {
     error: (_, _) => Stream.value([]),
   );
 });
+
+/// Catalog challenges authored by [uid] (verified creators).
+///
+/// The create-challenge dialog writes creator-authored challenges to the
+/// Firestore `challenges` collection (see
+/// [DriftChallengeRepository.createCatalogChallenge]) — every other client
+/// read path only consults the static [ChallengeCatalog], so this Firestore
+/// stream is the read path that makes published challenges visible again.
+/// Firestore rules allow the query: reads on `challenges` are public and the
+/// docs carry the `createdBy` field set at creation time.
+final creatorAuthoredChallengesProvider =
+    StreamProvider.autoDispose.family<List<Challenge>, String>((ref, uid) {
+  if (uid.isEmpty) return Stream.value([]);
+  final firestore = ref.watch(firestoreProvider);
+  return firestore
+      .collection('challenges')
+      .where('createdBy', isEqualTo: uid)
+      .snapshots()
+      .map(
+        (snap) => snap.docs
+            .map((doc) => Challenge.fromMap(doc.data(), id: doc.id))
+            .toList(),
+      );
+});

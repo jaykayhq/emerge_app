@@ -38,6 +38,7 @@ class CreatorTribeManagementTab extends ConsumerWidget {
           }
           return _TribeManagementView(
             tribeId: profile.tribeId!,
+            creatorUid: uid,
             ref: ref,
           );
         },
@@ -105,13 +106,21 @@ class CreatorTribeManagementTab extends ConsumerWidget {
 // ── Tribe Management View ────────────────────────────────────────────────────
 class _TribeManagementView extends ConsumerWidget {
   final String tribeId;
+  final String creatorUid;
   final WidgetRef ref;
 
-  const _TribeManagementView({required this.tribeId, required this.ref});
+  const _TribeManagementView({
+    required this.tribeId,
+    required this.creatorUid,
+    required this.ref,
+  });
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final statsAsync = ref.watch(realTimeTribeStatsProvider(tribeId));
+    final myChallengesAsync = ref.watch(
+      creatorAuthoredChallengesProvider(creatorUid),
+    );
 
     return ListView(
       padding: const EdgeInsets.all(16),
@@ -188,6 +197,38 @@ class _TribeManagementView extends ConsumerWidget {
               behavior: SnackBarBehavior.floating,
             ),
           ),
+        ),
+
+        const Gap(24),
+
+        // ── Creator-Published Challenges ──────────────────────────────
+        // Read path for challenges published via "Create Challenge": the
+        // dialog writes to Firestore `challenges` (createdBy == uid), so
+        // this section streams them back so creators can see their work.
+        Text(
+          'MY CHALLENGES',
+          style: TextStyle(
+            color: Colors.white54,
+            fontSize: 11,
+            fontWeight: FontWeight.bold,
+            letterSpacing: 1.5,
+          ),
+        ),
+        const Gap(12),
+        myChallengesAsync.when(
+          data: (challenges) {
+            if (challenges.isEmpty) {
+              return const _EmptyChallengesCard();
+            }
+            return Column(
+              children: [
+                for (final challenge in challenges)
+                  _ChallengeCard(challenge: challenge),
+              ],
+            );
+          },
+          loading: () => const EmergeLoadingSkeleton(itemCount: 1),
+          error: (e, st) => const SizedBox.shrink(),
         ),
 
         const Gap(24),
@@ -312,6 +353,7 @@ class _TribeManagementView extends ConsumerWidget {
       await ref.read(challengeRepositoryProvider).createCatalogChallenge(challenge);
       ref.invalidate(allChallengesProvider);
       ref.invalidate(featuredChallengesProvider);
+      ref.invalidate(creatorAuthoredChallengesProvider(creatorUid));
     }
 
     showDialog<void>(
@@ -568,6 +610,81 @@ class _NoTribeState extends StatelessWidget {
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+// ── Challenge Card ───────────────────────────────────────────────────────────
+class _ChallengeCard extends StatelessWidget {
+  final Challenge challenge;
+
+  const _ChallengeCard({required this.challenge});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.04),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.white10),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 40,
+            height: 40,
+            decoration: BoxDecoration(
+              color: Colors.amber.withValues(alpha: 0.15),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: const Icon(
+              Icons.emoji_events_rounded,
+              color: Colors.amber,
+              size: 20,
+            ),
+          ),
+          const Gap(12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(challenge.title,
+                    style: const TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 14)),
+                Text(
+                  '${challenge.totalDays} days · ${challenge.xpReward} XP',
+                  style: const TextStyle(color: Colors.white54, fontSize: 12),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ── Empty Challenges Card ────────────────────────────────────────────────────
+class _EmptyChallengesCard extends StatelessWidget {
+  const _EmptyChallengesCard();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.04),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.white10),
+      ),
+      child: const Text(
+        'No challenges published yet. Use "Create Challenge" above to launch your first one.',
+        style: TextStyle(color: Colors.white38, fontSize: 13),
       ),
     );
   }

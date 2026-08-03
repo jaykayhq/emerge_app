@@ -107,6 +107,12 @@ void main() {
             ),
           ),
         ),
+        // The MY CHALLENGES section streams from Firestore; resolve it to an
+        // empty list here so the loading skeleton (which animates forever)
+        // never blocks pumpAndSettle in the dialog flow.
+        creatorAuthoredChallengesProvider.overrideWith(
+          (ref, uid) => Stream.value([]),
+        ),
         challengeRepositoryProvider.overrideWithValue(repo),
       ],
       child: const MaterialApp(home: CreatorTribeManagementTab()),

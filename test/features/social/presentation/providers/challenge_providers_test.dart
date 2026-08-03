@@ -1,3 +1,6 @@
+import 'dart:async';
+
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:emerge_app/features/auth/domain/entities/auth_user.dart';
 import 'package:emerge_app/features/auth/domain/entities/user_extension.dart';
 import 'package:emerge_app/features/auth/presentation/providers/auth_providers.dart';
@@ -5,6 +8,7 @@ import 'package:emerge_app/features/gamification/presentation/providers/user_sta
 import 'package:emerge_app/features/social/domain/models/challenge.dart';
 import 'package:emerge_app/features/social/domain/repositories/challenge_repository.dart';
 import 'package:emerge_app/features/social/presentation/providers/challenge_provider.dart';
+import 'package:fake_cloud_firestore/fake_cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
@@ -132,6 +136,93 @@ void main() {
       );
       expect(result, isA<List>());
       container.dispose();
+    });
+  });
+
+  group('creatorAuthoredChallengesProvider', () {
+    Map<String, dynamic> challengeMap({required String createdBy}) => {
+      'title': 'Creator Challenge',
+      'description': 'Desc',
+      'imageUrl': 'img.png',
+      'reward': '100xp',
+      'participants': 0,
+      'daysLeft': 7,
+      'totalDays': 7,
+      'currentDay': 0,
+      'status': 'active',
+      'xpReward': 100,
+      'category': 'fitness',
+      'affiliateNetwork': 'none',
+      'createdBy': createdBy,
+      'createdAt': Timestamp.fromDate(DateTime(2026, 8, 1)),
+      'steps': <Map<String, dynamic>>[],
+    };
+
+    Future<List<Challenge>> streamFirst(
+      StreamProvider<List<Challenge>> provider,
+      ProviderContainer container,
+    ) {
+      final completer = Completer<List<Challenge>>();
+      final sub = container.listen(provider, (_, next) {
+        if (next.hasValue && !completer.isCompleted) {
+          completer.complete(next.requireValue);
+        }
+      });
+      return completer.future.then((v) {
+        sub.close();
+        return v;
+      });
+    }
+
+    test('streams only challenges authored by the given uid', () async {
+      final fakeFirestore = FakeFirebaseFirestore();
+      await fakeFirestore.collection('challenges').doc('mine').set(
+        challengeMap(createdBy: 'creator-1'),
+      );
+      await fakeFirestore.collection('challenges').doc('theirs').set(
+        challengeMap(createdBy: 'creator-2'),
+      );
+
+      final container = ProviderContainer(
+        overrides: [firestoreProvider.overrideWithValue(fakeFirestore)],
+      );
+      addTearDown(container.dispose);
+
+      final challenges = await streamFirst(
+        creatorAuthoredChallengesProvider('creator-1'),
+        container,
+      );
+
+      expect(challenges, hasLength(1));
+      expect(challenges.single.createdBy, 'creator-1');
+      expect(challenges.single.title, 'Creator Challenge');
+      // Server-written docs materialize createdAt as a Timestamp; the
+      // provider's fromMap path must parse it without crashing.
+      expect(challenges.single.createdAt, DateTime(2026, 8, 1));
+    });
+
+    test('emits empty list when the creator has no challenges', () async {
+      final fakeFirestore = FakeFirebaseFirestore();
+      final container = ProviderContainer(
+        overrides: [firestoreProvider.overrideWithValue(fakeFirestore)],
+      );
+      addTearDown(container.dispose);
+
+      final challenges = await streamFirst(
+        creatorAuthoredChallengesProvider('creator-1'),
+        container,
+      );
+      expect(challenges, isEmpty);
+    });
+
+    test('returns empty stream for an empty uid', () async {
+      final container = ProviderContainer();
+      addTearDown(container.dispose);
+      final challenges = await streamFirst(
+        creatorAuthoredChallengesProvider(''),
+        container,
+      );
+      expect(challenges, isEmpty);
     });
   });
 }
