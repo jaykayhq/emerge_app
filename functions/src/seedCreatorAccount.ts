@@ -1,7 +1,8 @@
 /**
  * seedCreatorAccount — one-off bootstrap for the default creator account (SP-E
- * D2, option a). Guarded by ADMIN_SECRET; credentials live in function
- * secrets (CREATOR_EMAIL / CREATOR_PASSWORD) and are delivered out-of-band.
+ * D2, option a). Guarded by ADMIN_SECRET; credentials and the guard secret
+ * live in function secrets (CREATOR_EMAIL / CREATOR_PASSWORD / ADMIN_SECRET)
+ * and are delivered out-of-band.
  *
  * Creates (or repairs) the creator auth user, sets the `role: creator` claim,
  * writes a verified creator_profiles doc with onboarding marked complete (so
@@ -12,6 +13,7 @@
  */
 import { onRequest } from "firebase-functions/v2/https";
 import * as admin from "firebase-admin";
+import { generateCode } from "./creator_invites";
 
 if (admin.apps.length === 0) {
   admin.initializeApp();
@@ -27,6 +29,13 @@ export async function seedCreatorAccountHandler(
   req: { headers: Record<string, string | string[] | undefined> },
   res: { status(code: number): { json(body: unknown): void } }
 ): Promise<void> {
+  // Fail closed: ADMIN_SECRET must be mounted (secrets list below). Without
+  // this guard the old `!==` comparison passed when the header AND the env
+  // var were both undefined, letting anyone bootstrap the creator account.
+  if (!process.env.ADMIN_SECRET) {
+    res.status(500).json({ error: "ADMIN_SECRET is not configured." });
+    return;
+  }
   const rawHeader = req.headers.authorization;
   const header = Array.isArray(rawHeader) ? rawHeader[0] : rawHeader;
   const adminSecret = header?.replace("Bearer ", "");
@@ -75,10 +84,10 @@ export async function seedCreatorAccountHandler(
       createdAt: admin.firestore.FieldValue.serverTimestamp(),
     });
 
-    // One ready invite code so the default creator can immediately onboard others.
-    const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
-    let code = "";
-    for (let i = 0; i < 8; i++) code += chars[Math.floor(Math.random() * chars.length)];
+    // One ready invite code so the default creator can immediately onboard
+    // others. Reuses the invite-code generator (crypto-secure randomInt, no
+    // ambiguous chars) instead of Math.random.
+    const code = generateCode();
     await db.collection("creator_invite_codes").doc(code).set({
       creatorUid: uid,
       createdAt: admin.firestore.FieldValue.serverTimestamp(),
@@ -95,6 +104,6 @@ export async function seedCreatorAccountHandler(
 
 /** HTTP trigger. Export is commented out in index.ts by default (seedReviewerAccount precedent). */
 export const seedCreatorAccount = onRequest(
-  { secrets: ["CREATOR_EMAIL", "CREATOR_PASSWORD"] },
+  { secrets: ["CREATOR_EMAIL", "CREATOR_PASSWORD", "ADMIN_SECRET"] },
   seedCreatorAccountHandler
 );

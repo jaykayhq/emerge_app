@@ -62,6 +62,22 @@ describe("seedCreatorAccountHandler", () => {
     expect(res.status).toHaveBeenCalledWith(403);
   });
 
+  it("fails closed when ADMIN_SECRET is not configured (Fix 4)", async () => {
+    delete process.env.ADMIN_SECRET;
+    const res = { status: jest.fn().mockReturnThis(), json: jest.fn() };
+    await seedCreatorAccountHandler(
+      { headers: { authorization: "Bearer anything" } },
+      res
+    );
+    expect(res.status).toHaveBeenCalledWith(500);
+    expect(res.json).toHaveBeenCalledWith(
+      expect.objectContaining({ error: expect.any(String) })
+    );
+    // Never proceeds to auth/profile/code work.
+    expect(getUserByEmail).not.toHaveBeenCalled();
+    expect(docSet).not.toHaveBeenCalled();
+  });
+
   it("rejects a wrong admin secret", async () => {
     process.env.ADMIN_SECRET = "s3cret";
     const res = { status: jest.fn().mockReturnThis(), json: jest.fn() };
@@ -92,6 +108,10 @@ describe("seedCreatorAccountHandler", () => {
       expect.objectContaining({ role: "creator" })
     );
     expect(docSet).toHaveBeenCalled();
+    // Invite code comes from the shared crypto-secure generator
+    // (generateCode in creator_invites.ts) — 8 ambiguity-free chars.
+    const call = res.json.mock.calls[0][0] as { inviteCode: string };
+    expect(call.inviteCode).toMatch(/^[A-Z2-9]{8}$/);
   });
 
   it("reuses an existing account and rotates its password", async () => {
