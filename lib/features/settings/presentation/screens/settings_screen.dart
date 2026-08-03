@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:emerge_app/features/monetization/presentation/providers/subscription_provider.dart';
+import 'package:emerge_app/features/monetization/domain/models/premium_limit.dart';
 import 'package:emerge_app/core/presentation/widgets/world_background.dart';
 import 'dart:ui';
 import 'package:emerge_app/core/constants/gamification_constants.dart';
@@ -378,13 +379,15 @@ class SettingsScreen extends ConsumerWidget {
                       .watch(coachAskQuotaControllerProvider)
                       .value
                       ?.remaining;
+                  final coachAskLimit =
+                      LimitsCatalog.forFeature('coachAsk')?.freeValue ?? 3;
                   return _buildListTile(
                     context,
                     Icons.auto_awesome_outlined,
                     'Coach asks',
                     subtitle: isPremium
                         ? 'Unlimited coach asks'
-                        : '${remaining ?? 3} of 3 coach asks left today',
+                        : '${remaining ?? coachAskLimit} of $coachAskLimit coach asks left today',
                     onTap: isPremium ? null : () => context.push('/paywall'),
                   );
                 },

@@ -1,5 +1,6 @@
 import 'package:emerge_app/features/habits/presentation/providers/habit_providers.dart';
 import 'package:emerge_app/features/monetization/domain/models/premium_limit.dart';
+import 'package:emerge_app/features/monetization/domain/services/coach_ask_quota.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
@@ -34,15 +35,14 @@ void main() {
       expect(LimitsCatalog.habits.freeValue, kDefaultFreeHabitLimit);
     });
 
-    test('themes has no premium dialog and is not premium-bypassed', () {
-      expect(LimitsCatalog.themes.dialogCopyKey, isNull);
-      expect(LimitsCatalog.themes.premiumBypasses, isFalse);
+    test('coachAsk matches the runtime quota limit', () {
+      // Guardrail: CoachAskQuota (runtime enforcement) and the catalog must
+      // not diverge.
+      expect(LimitsCatalog.coachAsk.freeValue, CoachAskQuota.freeDailyLimit);
     });
 
-    test('dialog keys exist for the dialog-backed limits only', () {
-      expect(LimitsCatalog.habits.dialogCopyKey, 'habit');
-      expect(LimitsCatalog.clubs.dialogCopyKey, 'club');
-      expect(LimitsCatalog.coachAsk.dialogCopyKey, 'coachAsk');
+    test('themes is not premium-bypassed', () {
+      expect(LimitsCatalog.themes.premiumBypasses, isFalse);
     });
 
     test('forFeature finds known keys and misses unknown ones', () {

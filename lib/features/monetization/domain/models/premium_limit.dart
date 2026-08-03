@@ -1,6 +1,6 @@
 /// One enforced free-tier limit, as listed on the paywall and in
 /// docs/FREEMIUM_MODEL.md. Deliberately UI-free: the presentation layer
-/// resolves icons/colors/dialog enums from [featureKey] / [dialogCopyKey].
+/// resolves icons/colors/dialog enums from [featureKey].
 class FreeTierLimit {
   /// Stable key: 'habits' | 'clubs' | 'coachAsk' | 'themes'.
   final String featureKey;
@@ -14,11 +14,6 @@ class FreeTierLimit {
   /// Whether premium removes this cap. False for themes: SP-C locks them
   /// as 'coming soon' for everyone — not a premium bypass.
   final bool premiumBypasses;
-
-  /// Key into `PremiumLimitType` (premium_limit_dialog.dart) or null when
-  /// the limit has no premium dialog (themes). The dialog enum lives in the
-  /// presentation layer; the catalog only carries the key string.
-  final String? dialogCopyKey;
 
   /// Paywall offer headline, e.g. 'UNLIMITED HABITS'.
   final String paywallTitle;
@@ -34,7 +29,6 @@ class FreeTierLimit {
     required this.freeValue,
     required this.unit,
     required this.premiumBypasses,
-    required this.dialogCopyKey,
     required this.paywallTitle,
     required this.paywallSubtitle,
     required this.enforcedBy,
@@ -53,7 +47,6 @@ class LimitsCatalog {
     freeValue: 5,
     unit: 'active habits',
     premiumBypasses: true,
-    dialogCopyKey: 'habit',
     paywallTitle: 'UNLIMITED HABITS',
     paywallSubtitle: 'Free: 5 active habits · Premium: no cap',
     enforcedBy: 'remote_config',
@@ -64,7 +57,6 @@ class LimitsCatalog {
     freeValue: 1,
     unit: 'club',
     premiumBypasses: true,
-    dialogCopyKey: 'club',
     paywallTitle: 'UNLIMITED CLUBS',
     paywallSubtitle: 'Free: 1 club · Premium: no cap',
     enforcedBy: 'code',
@@ -75,7 +67,6 @@ class LimitsCatalog {
     freeValue: 3,
     unit: 'coach asks/day',
     premiumBypasses: true,
-    dialogCopyKey: 'coachAsk',
     paywallTitle: 'UNLIMITED COACH ASKS',
     paywallSubtitle: 'Free: 3 asks/day · Premium: unlimited',
     enforcedBy: 'code',
@@ -87,7 +78,6 @@ class LimitsCatalog {
     freeValue: 1,
     unit: 'world theme',
     premiumBypasses: false,
-    dialogCopyKey: null,
     paywallTitle: 'MORE WORLD THEMES',
     paywallSubtitle: 'Free: 1 theme · 5 more coming soon',
     enforcedBy: 'SP-C',
