@@ -281,6 +281,7 @@ void main() {
           challengeId: 'challenge789',
           challengeTitle: 'Design Sprint',
           xpReward: 100,
+          level: 1,
         );
 
         verify(
@@ -290,6 +291,31 @@ void main() {
             data: any(named: 'data'),
           ),
         ).called(2); // Global and Club
+      });
+
+      test('leaderboard write keeps the real level (no reset to 1)', () async {
+        final leaderboardRepo = RecordingLeaderboardRepository();
+        final service = SocialActivityService(
+          syncEngine: mockSyncEngine,
+          activityDao: mockActivityDao,
+          leaderboardRepo: leaderboardRepo,
+        );
+
+        await service.logChallengeComplete(
+          userId: 'u1',
+          userName: 'A',
+          archetype: 'creator',
+          challengeId: 'ch1',
+          challengeTitle: 'C',
+          xpReward: 100,
+          level: 5, // user is level 5 before this challenge completes
+          clubId: 'my_tribe',
+        );
+
+        expect(leaderboardRepo.updateCalls, hasLength(1));
+        expect(leaderboardRepo.updateCalls.first.level, 5);
+        expect(leaderboardRepo.updateCalls.first.isIncrement, true);
+        expect(leaderboardRepo.lastClubId, 'my_tribe');
       });
     });
 

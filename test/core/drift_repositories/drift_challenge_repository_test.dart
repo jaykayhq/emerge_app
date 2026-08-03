@@ -65,6 +65,7 @@ void main() {
         challengeId: any(named: 'challengeId'),
         challengeTitle: any(named: 'challengeTitle'),
         xpReward: any(named: 'xpReward'),
+        level: any(named: 'level'),
         clubId: any(named: 'clubId'),
       ),
     ).thenAnswer((_) async {});
@@ -322,7 +323,53 @@ void main() {
             challengeId: 'c1',
             challengeTitle: any(named: 'challengeTitle'),
             xpReward: 50,
+            level: any(named: 'level'),
             clubId: 'tribeA',
+          ),
+        ).called(1);
+      },
+    );
+
+    test(
+      'completing a challenge threads the post-reward level (no level-1 clobber)',
+      () async {
+        await db.challengeProgressDao.insertFromData(
+          challengeId: 'c1',
+          userId: userId,
+          title: 'T',
+          attribute: 'vitality',
+          totalDays: 3,
+          xpReward: 50,
+          joinedAt: DateTime.now().toIso8601String(),
+          updatedAt: DateTime.now().toIso8601String(),
+        );
+
+        // totalXp 2000 => level 5. Reward of 50 keeps the user at level 5,
+        // which must be the level passed to the leaderboard write.
+        await db.userStatsDao.upsertStats(
+          UserStatsTableCompanion(
+            userId: Value(userId),
+            displayName: Value('Test User'),
+            totalXp: Value(2000),
+            level: Value(5),
+            vitalityXp: Value(2000),
+          ),
+        );
+
+        await repository.updateProgress(userId, 'c1', 1);
+        await repository.updateProgress(userId, 'c1', 2);
+        await repository.updateProgress(userId, 'c1', 3);
+
+        verify(
+          () => mockSocialService.logChallengeComplete(
+            userId: userId,
+            userName: any(named: 'userName'),
+            archetype: any(named: 'archetype'),
+            challengeId: 'c1',
+            challengeTitle: any(named: 'challengeTitle'),
+            xpReward: 50,
+            level: 5,
+            clubId: any(named: 'clubId'),
           ),
         ).called(1);
       },

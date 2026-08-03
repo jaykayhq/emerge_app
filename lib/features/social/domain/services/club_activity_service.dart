@@ -282,6 +282,12 @@ class SocialActivityService {
   }
 
   /// Logs a challenge completion to social activity feeds.
+  ///
+  /// [level] is the user's level AFTER the reward was credited (computed by
+  /// the caller from user stats). The leaderboard increment path writes
+  /// `level` as an ABSOLUTE value (locally and remotely), so a hardcoded 1
+  /// here would clobber the leaderboard level display on every challenge
+  /// completion until the next habit completion.
   Future<void> logChallengeComplete({
     required String userId,
     required String userName,
@@ -289,6 +295,7 @@ class SocialActivityService {
     required String challengeId,
     required String challengeTitle,
     required int xpReward,
+    required int level,
     String? clubId,
   }) async {
     try {
@@ -364,7 +371,7 @@ class SocialActivityService {
       await _leaderboardRepo.updateUserScore(
         userId,
         xp: xpReward,
-        level: 1, // XP only update, level handled by user stats
+        level: level,
         archetype: UserArchetype.values.firstWhere(
           (e) => e.name.toLowerCase() == archetype.toLowerCase(),
           orElse: () => UserArchetype.none,

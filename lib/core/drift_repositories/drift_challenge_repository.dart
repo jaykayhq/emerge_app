@@ -142,6 +142,9 @@ class DriftChallengeRepository implements ChallengeRepository {
             challengeId: challengeId,
             challengeTitle: challenge.title ?? '',
             xpReward: result.xpReward!,
+            // Pass the post-reward level so the leaderboard increment keeps
+            // the user's real level instead of resetting the display to 1.
+            level: newLevel,
             clubId: activeTribeId,
           );
         }
