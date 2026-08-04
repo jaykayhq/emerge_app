@@ -63,6 +63,43 @@ void main() {
     expect(find.text('field'), findsOneWidget);
   });
 
+  testWidgets(
+    'renders without an enclosing Scaffold (host provides its own Material)',
+    (tester) async {
+      // The host's internal transparent Material must cover the card's
+      // InkWell/IconButton even when the screen has no Scaffold ancestor —
+      // the shared helper always wraps in a Scaffold, masking that crash.
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            localSettingsRepositoryProvider.overrideWithValue(
+              _FakeSettings(tutorialsEnabled: true),
+            ),
+          ],
+          child: MaterialApp(
+            home: NarratorGuideHost(
+              nodeId: 'habit_create',
+              targets: {'name_field': fabKey},
+              child: Align(
+                alignment: Alignment.topCenter,
+                child: SizedBox(
+                  key: fabKey,
+                  width: 100,
+                  height: 40,
+                  child: const Text('field'),
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.pump(); // post-frame gate resolves, card builds
+      await tester.pump(const Duration(milliseconds: 400)); // typewriter ticks
+      expect(find.textContaining('Start here'), findsOneWidget);
+      expect(find.text('field'), findsOneWidget);
+    },
+  );
+
   testWidgets('does not show when tutorials are disabled', (tester) async {
     await tester.pumpWidget(
       host(settings: _FakeSettings(tutorialsEnabled: false)),

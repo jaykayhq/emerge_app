@@ -14,7 +14,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 /// glides between steps (200ms); scrolls of the target's scrollable re-resolve
 /// rects instantly (except during the 200ms post-advance glide window). A
 /// target that is unmounted or off-screen yields no hole — the card-only step
-/// still advances.
+/// still advances. A target that mounts after its step started (e.g. a
+/// stream-gated subtree) gains its hole on the next frame, without waiting
+/// for a scroll or an advance.
 class NarratorGuideHost extends ConsumerStatefulWidget {
   final String nodeId;
   final Map<String, GlobalKey> targets;
@@ -35,6 +37,7 @@ class _NarratorGuideHostState extends ConsumerState<NarratorGuideHost> {
   bool _visible = false;
   int _step = 0;
   bool _animateHole = false;
+  bool _holeAvailable = false;
   final List<ScrollPosition> _scrollPositions = [];
 
   List<NarratorGuideStep> get _steps =>
@@ -114,8 +117,21 @@ class _NarratorGuideHostState extends ConsumerState<NarratorGuideHost> {
       // subtrees), and Scrollable.maybeOf only walks ancestors — re-attach
       // scroll listeners after every build while showing. The
       // ScrollPosition-identity dedupe keeps this idempotent.
+      //
+      // A late-mounting target's own rebuild doesn't touch the host, so also
+      // re-resolve the current step's rect here: a step that started card-only
+      // gains its hole as soon as its target exists, without waiting for a
+      // scroll or an advance. `_holeAvailable` guards the setState so the
+      // every-frame callback stays quiescent once the hole is up.
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted) _attachScrollListeners();
+        if (!mounted) return;
+        _attachScrollListeners();
+        final step = _visible && _step < _steps.length ? _steps[_step] : null;
+        if (step != null &&
+            !_holeAvailable &&
+            _rectFor(step.targetKey) != null) {
+          setState(() => _holeAvailable = true);
+        }
       });
     }
 
@@ -161,8 +177,11 @@ class _NarratorGuideHostState extends ConsumerState<NarratorGuideHost> {
       // (TweenAnimationBuilder also requires a non-null tween end, so a
       // vanished target must bypass the animated builder entirely.) Clear the
       // glide flag here too — with no animated builder, onEnd never fires, and
-      // a target re-mounting mid-step must jump, not glide.
+      // a target re-mounting mid-step must jump, not glide. Also clear
+      // `_holeAvailable` so the post-frame callback can re-arm the setState
+      // that restores the hole once the target comes back.
       _animateHole = false;
+      _holeAvailable = false;
       return const CustomPaint(painter: SpotlightPainter());
     }
     return TweenAnimationBuilder<Rect?>(

@@ -87,47 +87,40 @@ void main() {
       expect(find.byType(ConstellationLines), findsOneWidget);
     });
 
-    testWidgets(
-      'handles first-visit check without crashing when already seen',
-      (tester) async {
-        // hasSeenNarratorGuide_world_map is set to true in setUp,
-        // so neither the narrator nor the node guide should show
-        await tester.pumpWidget(
-          ProviderScope(
-            overrides: [
-              userStatsStreamProvider.overrideWith(
-                (ref) => const Stream.empty(),
-              ),
-              worldThemeProvider.overrideWith(WorldThemeNotifier.new),
-              worldHealthStreamProvider.overrideWith(
-                (ref) => Stream.value(0.5),
-              ),
-              worldEntropyStreamProvider.overrideWith(
-                (ref) => Stream.value(0.0),
-              ),
-              companionRepositoryProvider.overrideWith(
-                (ref) => CompanionRepository(),
-              ),
-            ],
-            child: const MaterialApp(home: WorldMapScreen()),
-          ),
-        );
-        await tester.pump();
-        await tester.pump(const Duration(milliseconds: 900));
+    testWidgets('handles first-visit check without crashing when already seen', (
+      tester,
+    ) async {
+      // hasSeenNarratorGuide_world_map is set to true in setUp,
+      // so the narrator guide should not show
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            userStatsStreamProvider.overrideWith((ref) => const Stream.empty()),
+            worldThemeProvider.overrideWith(WorldThemeNotifier.new),
+            worldHealthStreamProvider.overrideWith((ref) => Stream.value(0.5)),
+            worldEntropyStreamProvider.overrideWith((ref) => Stream.value(0.0)),
+            companionRepositoryProvider.overrideWith(
+              (ref) => CompanionRepository(),
+            ),
+          ],
+          child: const MaterialApp(home: WorldMapScreen()),
+        ),
+      );
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 900));
 
-        // Screen renders without narrator dialog
-        expect(find.text('EMERGE'), findsNothing);
-        // ...and without the node-guide overlay (node marked seen in setUp).
-        expect(find.text('Your Living World'), findsNothing);
-      },
-    );
+      // Screen renders without narrator dialog
+      expect(find.text('EMERGE'), findsNothing);
+      // ...and without the narrator-guide overlay (node marked seen in setUp).
+      expect(find.text('NARRATOR'), findsNothing);
+    });
 
     testWidgets('skips narrator check when isFirstLaunch is true', (
       tester,
     ) async {
       SharedPreferences.setMockInitialValues({
         'companion_visited_/world-map': true,
-        // Node unseen — the node guide IS due here (positive branch).
+        // Node unseen — the narrator guide IS due here (positive branch).
         'hasSeenNarratorGuide_world_map': false,
         'isFirstLaunch': true,
         'tutorialsEnabled': true,
