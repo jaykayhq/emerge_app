@@ -1,4 +1,3 @@
-import 'package:emerge_app/features/narrator/presentation/providers/narrator_guide_controller.dart';
 import 'package:emerge_app/features/narrator/presentation/widgets/narrator_guide_host.dart';
 import 'package:emerge_app/features/narrator/presentation/widgets/spotlight_painter.dart';
 import 'package:emerge_app/features/onboarding/data/repositories/local_settings_repository.dart';
@@ -112,7 +111,7 @@ void main() {
     await tester.pumpWidget(host(settings: settings));
     await tester.pump(); // post-frame gate resolves, card builds
     await tester.pump(const Duration(milliseconds: 400));
-    await tester.tap(find.byIcon(Icons.close));
+    await tester.tap(find.byIcon(Icons.close_rounded));
     await tester.pump(const Duration(milliseconds: 400));
     expect(find.textContaining('Start here'), findsNothing);
     expect(settings.recorded, contains('habit_create'));

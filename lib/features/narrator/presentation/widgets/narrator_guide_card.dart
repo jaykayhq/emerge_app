@@ -1,5 +1,6 @@
-import 'package:emerge_app/core/theme/emerge_colors.dart';
+import 'package:emerge_app/core/presentation/widgets/glassmorphism_card.dart';
 import 'package:emerge_app/core/presentation/widgets/typewriter_text.dart';
+import 'package:emerge_app/core/theme/emerge_colors.dart';
 import 'package:flutter/material.dart';
 
 /// Bottom narrator card for a first-visit guide step: the script types out,
@@ -36,24 +37,10 @@ class _NarratorGuideCardState extends State<NarratorGuideCard> {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    return GlassmorphismCard(
+      margin: EdgeInsets.zero,
+      glowColor: EmergeColors.teal,
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: EmergeColors.violet.withValues(alpha: 0.5)),
-        gradient: LinearGradient(
-          colors: [
-            EmergeColors.violet.withValues(alpha: 0.28),
-            const Color(0xFF12122A).withValues(alpha: 0.92),
-          ],
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: EmergeColors.violet.withValues(alpha: 0.3),
-            blurRadius: 20,
-          ),
-        ],
-      ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -78,7 +65,12 @@ class _NarratorGuideCardState extends State<NarratorGuideCard> {
               ),
               IconButton(
                 onPressed: widget.onSkip,
-                icon: const Icon(Icons.close, size: 18, color: Colors.white54),
+                tooltip: 'Skip guide',
+                icon: const Icon(
+                  Icons.close_rounded,
+                  size: 18,
+                  color: Colors.white54,
+                ),
               ),
             ],
           ),
@@ -90,25 +82,33 @@ class _NarratorGuideCardState extends State<NarratorGuideCard> {
           const SizedBox(height: 12),
           Align(
             alignment: Alignment.centerRight,
-            child: GestureDetector(
-              onTap: _typingDone ? widget.onAdvance : null,
-              child: Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 18,
-                  vertical: 10,
-                ),
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(12),
-                  color: _typingDone
-                      ? EmergeColors.teal
-                      : Colors.white.withValues(alpha: 0.08),
-                ),
-                child: Text(
-                  _isLast ? 'Got it' : 'Next →',
-                  style: TextStyle(
-                    color: _typingDone ? Colors.white : Colors.white38,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 13,
+            child: Semantics(
+              button: true,
+              enabled: _typingDone,
+              label: _isLast ? 'Got it' : 'Next',
+              child: InkWell(
+                onTap: _typingDone ? widget.onAdvance : null,
+                borderRadius: BorderRadius.circular(12),
+                child: Container(
+                  constraints: const BoxConstraints(minHeight: 48),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 18,
+                    vertical: 8,
+                  ),
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(12),
+                    color: _typingDone
+                        ? EmergeColors.teal
+                        : Colors.white.withValues(alpha: 0.08),
+                  ),
+                  child: Text(
+                    _isLast ? 'Got it' : 'Next →',
+                    style: TextStyle(
+                      color: _typingDone ? Colors.white : Colors.white38,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 13,
+                    ),
                   ),
                 ),
               ),
