@@ -1,9 +1,18 @@
 import 'dart:async';
 
+import 'package:emerge_app/core/presentation/widgets/typewriter_text.dart';
 import 'package:emerge_app/core/theme/emerge_colors.dart';
 import 'package:emerge_app/features/narrator/domain/models/narrator_line.dart';
 import 'package:emerge_app/features/narrator/domain/models/narrator_trigger.dart';
 import 'package:flutter/material.dart';
+
+/// One tappable chip on a milestone card (e.g. "Log Reflection").
+class NarratorMilestoneAction {
+  final String label;
+  final VoidCallback onTap;
+
+  const NarratorMilestoneAction({required this.label, required this.onTap});
+}
 
 /// Slide-up milestone card. Non-blocking. Auto-dismisses after [autoDismissAfter].
 class NarratorMilestoneCard extends StatefulWidget {
@@ -11,6 +20,7 @@ class NarratorMilestoneCard extends StatefulWidget {
   final NarratorTrigger trigger;
   final Duration autoDismissAfter;
   final VoidCallback? onDismissed;
+  final List<NarratorMilestoneAction>? actions;
 
   const NarratorMilestoneCard({
     super.key,
@@ -18,6 +28,7 @@ class NarratorMilestoneCard extends StatefulWidget {
     required this.trigger,
     this.autoDismissAfter = const Duration(seconds: 6),
     this.onDismissed,
+    this.actions,
   });
 
   @override
@@ -122,14 +133,40 @@ class _NarratorMilestoneCardState extends State<NarratorMilestoneCard> {
                     ],
                   ),
                   const SizedBox(height: 4),
-                  Text(
-                    widget.line.text,
-                    style: const TextStyle(
-                      fontSize: 15,
-                      color: Colors.white,
-                      height: 1.4,
+                  TypewriterText(text: widget.line.text, onComplete: () {}),
+                  if (widget.actions != null && widget.actions!.isNotEmpty) ...[
+                    const SizedBox(height: 10),
+                    Wrap(
+                      spacing: 8,
+                      children: [
+                        for (final action in widget.actions!)
+                          GestureDetector(
+                            onTap: action.onTap,
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 12,
+                                vertical: 6,
+                              ),
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(10),
+                                color: Colors.white.withValues(alpha: 0.18),
+                                border: Border.all(
+                                  color: Colors.white.withValues(alpha: 0.3),
+                                ),
+                              ),
+                              child: Text(
+                                action.label,
+                                style: const TextStyle(
+                                  fontSize: 12,
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                          ),
+                      ],
                     ),
-                  ),
+                  ],
                 ],
               ),
             ),
@@ -145,14 +182,14 @@ class _NarratorMilestoneCardState extends State<NarratorMilestoneCard> {
   }
 
   String _labelFor(NarratorTrigger t) => switch (t) {
-        NarratorTrigger.onFireState => 'ON FIRE',
-        NarratorTrigger.levelUp => 'LEVEL UP',
-        NarratorTrigger.streakBreakFirstMiss => 'STREAK',
-        NarratorTrigger.longAbsence => 'WELCOME BACK',
-        NarratorTrigger.weeklyRecap => 'WEEKLY RECAP',
-        NarratorTrigger.morningBriefEarlyDays => 'GOOD MORNING',
-        NarratorTrigger.eveningReflection => 'EVENING',
-        NarratorTrigger.onboardingPostArchetype => 'WELCOME',
-        NarratorTrigger.askNarrator => 'YOU ASKED',
-      };
+    NarratorTrigger.onFireState => 'ON FIRE',
+    NarratorTrigger.levelUp => 'LEVEL UP',
+    NarratorTrigger.streakBreakFirstMiss => 'STREAK',
+    NarratorTrigger.longAbsence => 'WELCOME BACK',
+    NarratorTrigger.weeklyRecap => 'WEEKLY RECAP',
+    NarratorTrigger.morningBriefEarlyDays => 'GOOD MORNING',
+    NarratorTrigger.eveningReflection => 'EVENING',
+    NarratorTrigger.onboardingPostArchetype => 'WELCOME',
+    NarratorTrigger.askNarrator => 'YOU ASKED',
+  };
 }
