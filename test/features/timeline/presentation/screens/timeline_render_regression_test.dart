@@ -70,7 +70,7 @@ void main() {
     // timeline and swallows the pointer events the scroll assertions need.
     SharedPreferences.setMockInitialValues({
       'companion_visited_/timeline': true,
-      'hasSeenNodeGuide_timeline': true,
+      'hasSeenNarratorGuide_timeline': true,
       'evening_reflection_${now.year}_${now.month}_${now.day}': true,
     });
     final repo = CompanionRepository();

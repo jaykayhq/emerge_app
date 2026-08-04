@@ -39,7 +39,7 @@ void main() {
     // swallow the taps this suite performs).
     SharedPreferences.setMockInitialValues({
       'tutorialsEnabled': true,
-      'hasSeenNodeGuide_habit_create': true,
+      'hasSeenNarratorGuide_habit_create': true,
     });
     await LocalSettingsRepository().init();
   });

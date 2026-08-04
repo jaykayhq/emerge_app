@@ -32,7 +32,7 @@ class _FakeQuota extends CoachAskQuotaController {
 Future<void> seedCoachGuideSeen() async {
   SharedPreferences.setMockInitialValues({
     'tutorialsEnabled': true,
-    'hasSeenNodeGuide_coach': true,
+    'hasSeenNarratorGuide_coach': true,
   });
   await LocalSettingsRepository().init();
 }
@@ -168,6 +168,6 @@ void main() {
     expect(find.text('3 of 3 coach asks left today'), findsOneWidget);
 
     final prefs = await SharedPreferences.getInstance();
-    expect(prefs.getBool('hasSeenNodeGuide_coach'), isTrue);
+    expect(prefs.getBool('hasSeenNarratorGuide_coach'), isTrue);
   });
 }

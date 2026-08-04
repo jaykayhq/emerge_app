@@ -21,8 +21,8 @@ void main() {
     SharedPreferences.setMockInitialValues({
       'companion_visited_/world-map': true,
       // Node-id key (underscore) — the legacy hyphenated key is ignored by
-      // getHasSeenNodeGuide and would let the guide render unasserted.
-      'hasSeenNodeGuide_world_map': true,
+      // getHasSeenNarratorGuide and would let the guide render unasserted.
+      'hasSeenNarratorGuide_world_map': true,
       'isFirstLaunch': false,
       'tutorialsEnabled': true,
     });
@@ -95,7 +95,7 @@ void main() {
 
     testWidgets('handles first-visit check without crashing when already seen',
         (tester) async {
-      // hasSeenNodeGuide_world_map is set to true in setUp,
+      // hasSeenNarratorGuide_world_map is set to true in setUp,
       // so neither the narrator nor the node guide should show
       await tester.pumpWidget(
         ProviderScope(
@@ -132,7 +132,7 @@ void main() {
       SharedPreferences.setMockInitialValues({
         'companion_visited_/world-map': true,
         // Node unseen — the node guide IS due here (positive branch).
-        'hasSeenNodeGuide_world_map': false,
+        'hasSeenNarratorGuide_world_map': false,
         'isFirstLaunch': true,
         'tutorialsEnabled': true,
       });

@@ -96,7 +96,7 @@ void main() {
       (tester) async {
     SharedPreferences.setMockInitialValues({
       'tutorialsEnabled': true,
-      'hasSeenNodeGuide_coach': true,
+      'hasSeenNarratorGuide_coach': true,
     });
     await tester.pumpWidget(host());
     await tester.tap(find.text('Open coach'));
