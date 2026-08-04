@@ -185,6 +185,17 @@ void main() {
       expect(prefs.getBool('hasSeenNodeGuide_challenges'), isNull);
     });
 
+    test('is idempotent — second run is a no-op', () async {
+      SharedPreferences.setMockInitialValues({
+        'hasSeenNodeGuide_challenges': true,
+      });
+      final repo = LocalSettingsRepository();
+      await repo.init();
+      await repo.migrateNarratorGuideFlags();
+      await repo.migrateNarratorGuideFlags();
+      expect(await repo.getHasSeenNarratorGuide('challenges'), true);
+    });
+
     test(
       'a false legacy key is removed without writing a narrator flag',
       () async {

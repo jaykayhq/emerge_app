@@ -190,9 +190,7 @@ class LocalSettingsRepository {
     current[trigger] = when;
     await _setString(
       _keyRecentNarratorTriggers,
-      jsonEncode(
-        current.map((k, v) => MapEntry(k.name, v.toIso8601String())),
-      ),
+      jsonEncode(current.map((k, v) => MapEntry(k.name, v.toIso8601String()))),
     );
   }
 
@@ -239,6 +237,7 @@ class LocalSettingsRepository {
   /// keys that exist; never overwrites an already-seen narrator flag.
   Future<void> migrateNarratorGuideFlags() async {
     final keys = _getKeys().where((k) => k.startsWith('hasSeenNodeGuide_'));
+    if (keys.isEmpty) return;
     for (final key in keys) {
       final nodeId = key.substring('hasSeenNodeGuide_'.length);
       final keyWasSeen = _getBool(key);
