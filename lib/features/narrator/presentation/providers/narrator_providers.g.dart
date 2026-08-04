@@ -187,65 +187,6 @@ final class LatestNarratorInsightProvider
 String _$latestNarratorInsightHash() =>
     r'6f654a581a85f7d264343cbe03b7c286b854755f';
 
-/// Notifier that manages the currently active Narrator appearance.
-
-@ProviderFor(NarratorStateNotifier)
-final narratorStateProvider = NarratorStateNotifierProvider._();
-
-/// Notifier that manages the currently active Narrator appearance.
-final class NarratorStateNotifierProvider
-    extends $NotifierProvider<NarratorStateNotifier, NarratorState> {
-  /// Notifier that manages the currently active Narrator appearance.
-  NarratorStateNotifierProvider._()
-    : super(
-        from: null,
-        argument: null,
-        retry: null,
-        name: r'narratorStateProvider',
-        isAutoDispose: true,
-        dependencies: null,
-        $allTransitiveDependencies: null,
-      );
-
-  @override
-  String debugGetCreateSourceHash() => _$narratorStateNotifierHash();
-
-  @$internal
-  @override
-  NarratorStateNotifier create() => NarratorStateNotifier();
-
-  /// {@macro riverpod.override_with_value}
-  Override overrideWithValue(NarratorState value) {
-    return $ProviderOverride(
-      origin: this,
-      providerOverride: $SyncValueProvider<NarratorState>(value),
-    );
-  }
-}
-
-String _$narratorStateNotifierHash() =>
-    r'afc6beefd2864c5f52b8ffdc66c8c8019058583a';
-
-/// Notifier that manages the currently active Narrator appearance.
-
-abstract class _$NarratorStateNotifier extends $Notifier<NarratorState> {
-  NarratorState build();
-  @$mustCallSuper
-  @override
-  WhenComplete runBuild() {
-    final ref = this.ref as $Ref<NarratorState, NarratorState>;
-    final element =
-        ref.element
-            as $ClassProviderElement<
-              AnyNotifier<NarratorState, NarratorState>,
-              NarratorState,
-              Object?,
-              Object?
-            >;
-    return element.handleCreate(ref, build);
-  }
-}
-
 @ProviderFor(lineResolver)
 final lineResolverProvider = LineResolverProvider._();
 
