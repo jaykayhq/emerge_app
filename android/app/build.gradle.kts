@@ -67,6 +67,15 @@ android {
             configure<CrashlyticsExtension> {
                 mappingFileUploadEnabled = false
             }
+            // Release ships arm64-only (see pipeline: --target-platform
+            // android-arm64). Third-party AARs (dartjni, androidx.graphics.path,
+            // datastore) bypass NDK abiFilters and would leave stray v7a/x86_64
+            // libs that make Play advertise ABIs the app can't run on.
+            packaging {
+                jniLibs {
+                    excludes += listOf("lib/armeabi-v7a/**", "lib/x86_64/**")
+                }
+            }
             // IMPORTANT: Use production signing keys for release builds
             signingConfig = signingConfigs.getByName("release")
 

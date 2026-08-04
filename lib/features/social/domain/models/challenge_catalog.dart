@@ -9,7 +9,7 @@ class ChallengeCatalog {
       title: 'The Deep Work Protocol',
       description:
           'Master your cognitive capacity. Complete 14 days of distraction-free deep work sessions in your flow state.',
-      imageUrl: 'assets/images/challenges/deep_work_protocol.png',
+      imageUrl: 'assets/images/challenges/deep_work_protocol.jpg',
       reward: '800 XP & Neural Link Emblem',
       participants: 1240,
       daysLeft: 14,
@@ -41,7 +41,7 @@ class ChallengeCatalog {
       title: 'The System Reset',
       description:
           'Regulate your nervous system. 10 days of analog evenings and sunset rituals to reclaim your focus.',
-      imageUrl: 'assets/images/challenges/system_reset.png',
+      imageUrl: 'assets/images/challenges/system_reset.jpg',
       reward: '600 XP & Zen Spark',
       participants: 850,
       daysLeft: 10,
@@ -69,7 +69,7 @@ class ChallengeCatalog {
       title: 'Creation First Initiative',
       description:
           'Shift from consumer to creator. Produce one meaningful artifact every morning before checking any feed.',
-      imageUrl: 'assets/images/challenges/creation_first.png',
+      imageUrl: 'assets/images/challenges/creation_first.jpg',
       reward: '500 XP & Maker Mark',
       participants: 2100,
       daysLeft: 7,
@@ -94,7 +94,7 @@ class ChallengeCatalog {
       title: 'The Titan Endurance',
       description:
           'Forge physical resilience. 21 days of progressive physical mastery and recovery discipline.',
-      imageUrl: 'assets/images/challenges/titan_endurance.png',
+      imageUrl: 'assets/images/challenges/titan_endurance.jpg',
       reward: '1000 XP & Titan Sigil',
       participants: 560,
       daysLeft: 21,
