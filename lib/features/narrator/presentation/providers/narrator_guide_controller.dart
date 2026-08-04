@@ -18,7 +18,8 @@ class NarratorGuideController {
   NarratorGuideController({required this.ref});
   final Ref ref;
 
-  LocalSettingsRepository get _repo => ref.read(localSettingsRepositoryProvider);
+  LocalSettingsRepository get _repo =>
+      ref.read(localSettingsRepositoryProvider);
 
   Future<bool> shouldShow(String nodeId) async {
     if (!_repo.isTutorialsEnabled()) return false;

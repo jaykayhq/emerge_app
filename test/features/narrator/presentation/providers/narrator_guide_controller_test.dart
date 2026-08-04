@@ -25,18 +25,18 @@ class _FakeSettings extends LocalSettingsRepository {
 
 void main() {
   ProviderContainer container(_FakeSettings settings) => ProviderContainer(
-        overrides: [
-          localSettingsRepositoryProvider.overrideWithValue(settings),
-        ],
-      );
+    overrides: [localSettingsRepositoryProvider.overrideWithValue(settings)],
+  );
 
-  test('shouldShow is true on first visit when tutorials are enabled',
-      () async {
-    final c = container(_FakeSettings(tutorialsEnabled: true));
-    addTearDown(c.dispose);
-    final controller = c.read(narratorGuideControllerProvider);
-    expect(await controller.shouldShow('timeline'), true);
-  });
+  test(
+    'shouldShow is true on first visit when tutorials are enabled',
+    () async {
+      final c = container(_FakeSettings(tutorialsEnabled: true));
+      addTearDown(c.dispose);
+      final controller = c.read(narratorGuideControllerProvider);
+      expect(await controller.shouldShow('timeline'), true);
+    },
+  );
 
   test('shouldShow is false when tutorials are disabled', () async {
     final c = container(_FakeSettings(tutorialsEnabled: false));
