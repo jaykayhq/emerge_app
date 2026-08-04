@@ -10,6 +10,7 @@ import 'package:emerge_app/features/habits/presentation/providers/dashboard_stat
 import 'package:emerge_app/features/habits/presentation/providers/habit_providers.dart';
 import 'package:emerge_app/features/monetization/presentation/providers/subscription_provider.dart';
 import 'package:emerge_app/features/narrator/domain/models/narrator_line.dart';
+import 'package:emerge_app/features/narrator/domain/models/narrator_note.dart';
 import 'package:emerge_app/features/narrator/domain/models/narrator_trigger.dart';
 import 'package:emerge_app/features/narrator/presentation/providers/narrator_providers.dart';
 import 'package:emerge_app/features/narrator/presentation/widgets/narrator_guide_card.dart';
@@ -34,11 +35,9 @@ final _emptyProfile = UserProfile(uid: 'test');
 void main() {
   setUp(() async {
     // Seed the narrator-guide 'seen' flag (the timeline host checks
-    // `hasSeenNarratorGuide_timeline`; the legacy companion_visited_ flag no
-    // longer suppresses it) so the first-visit coach mark never overlays the
-    // timeline during the test.
+    // `hasSeenNarratorGuide_timeline`) so the first-visit coach mark never
+    // overlays the timeline during the test.
     SharedPreferences.setMockInitialValues({
-      'companion_visited_/timeline': true,
       'hasSeenNarratorGuide_timeline': true,
     });
     final repo = CompanionRepository();
@@ -118,8 +117,90 @@ void main() {
       expect(find.byType(NarratorGuideCard), findsNothing);
     });
 
+    testWidgets(
+      'pending milestone REPLACE: a second set swaps the line; clear() '
+      'never re-shows a dismissed overlay',
+      (tester) async {
+        await tester.pumpWidget(
+          ProviderScope(
+            overrides: [
+              dashboardStateProvider.overrideWithValue(DashboardState()),
+              habitsProvider.overrideWith((ref) => const Stream.empty()),
+              userStatsStreamProvider.overrideWith(
+                (ref) => Stream.value(_emptyProfile),
+              ),
+              worldThemeProvider.overrideWith(WorldThemeNotifier.new),
+              worldHealthStreamProvider.overrideWith(
+                (ref) => Stream.value(0.5),
+              ),
+              worldEntropyStreamProvider.overrideWith(
+                (ref) => Stream.value(0.0),
+              ),
+              companionRepositoryProvider.overrideWith(
+                (ref) => CompanionRepository(),
+              ),
+              isPremiumProvider.overrideWith(() => TestIsPremium(false)),
+            ],
+            child: const MaterialApp(home: TimelineScreen()),
+          ),
+        );
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 600));
+
+        final container = ProviderScope.containerOf(
+          tester.element(find.byType(TimelineScreen)),
+        );
+
+        // First set: the card slides up with Line A.
+        container
+            .read(pendingMilestoneProvider.notifier)
+            .set(
+              PendingMilestoneLine(
+                line: const GenericLine('Line A'),
+                trigger: NarratorTrigger.streakBreakFirstMiss,
+              ),
+            );
+        await tester.pump();
+        // Let the typewriter finish typing Line A (~0.2s at 35 cps).
+        await tester.pump(const Duration(milliseconds: 600));
+        expect(find.byType(NarratorMilestoneCard), findsOneWidget);
+        expect(find.text('Line A'), findsOneWidget);
+
+        // REPLACE path: a second set while the card is up must swap the line
+        // (the old show-once listener ignored any set after the first).
+        container
+            .read(pendingMilestoneProvider.notifier)
+            .set(
+              PendingMilestoneLine(
+                line: const GenericLine('Line B'),
+                trigger: NarratorTrigger.streakBreakFirstMiss,
+              ),
+            );
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 600));
+        expect(find.text('Line B'), findsOneWidget);
+        expect(find.text('Line A'), findsNothing);
+
+        // The overlay only goes away via dismissal: this trigger has no
+        // action chips, so let the 6s auto-dismiss timer fire.
+        await tester.pump(const Duration(seconds: 6));
+        await tester.pump(const Duration(milliseconds: 400));
+        expect(find.byType(NarratorMilestoneCard), findsNothing);
+
+        // clear() must never re-show a dismissed overlay.
+        container.read(pendingMilestoneProvider.notifier).clear();
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 400));
+        expect(find.byType(NarratorMilestoneCard), findsNothing);
+      },
+    );
+
     testWidgets('evening reflection milestone offers Log Reflection / Skip and '
         'dismisses on Log Reflection', (tester) async {
+      // In-memory Drift database for the note recorded by 'Log Reflection';
+      // closed when the test ends so no handle leaks across tests.
+      final db = AppDatabase.withExecutor(NativeDatabase.memory());
+      addTearDown(() => db.close());
       await tester.pumpWidget(
         ProviderScope(
           overrides: [
@@ -139,9 +220,7 @@ void main() {
             // in-memory database keeps that action off the filesystem in
             // tests (the LazyDatabase singleton would otherwise hit
             // getApplicationDocumentsDirectory -> MissingPluginException).
-            appDatabaseProvider.overrideWithValue(
-              AppDatabase.withExecutor(NativeDatabase.memory()),
-            ),
+            appDatabaseProvider.overrideWithValue(db),
           ],
           child: const MaterialApp(home: TimelineScreen()),
         ),
@@ -179,6 +258,14 @@ void main() {
 
       expect(find.byType(NarratorMilestoneCard), findsNothing);
       expect(find.text('Log Reflection'), findsNothing);
+
+      // The tap must have recorded the reflection through Drift, and the
+      // recorded note is the newest one.
+      final notes = await container
+          .read(narratorLocalDatasourceProvider)
+          .getRecentNotes(limit: 10);
+      expect(notes, isNotEmpty);
+      expect(notes.first.type, NarratorNoteType.reflectionLogged);
     });
   });
 }
