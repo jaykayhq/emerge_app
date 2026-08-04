@@ -83,16 +83,16 @@ class NarratorStateNotifier extends _$NarratorStateNotifier {
 /// Maps a Dart [NarratorTrigger] enum name (snake_case) to the camelCase
 /// string expected by the `fillNarratorSlots` Cloud Function.
 String _triggerToApiName(NarratorTrigger trigger) => switch (trigger) {
-      NarratorTrigger.onboardingPostArchetype => 'onboardingPostArchetype',
-      NarratorTrigger.morningBriefEarlyDays => 'morningBriefEarlyDays',
-      NarratorTrigger.streakBreakFirstMiss => 'streakBreakFirstMiss',
-      NarratorTrigger.onFireState => 'onFireState',
-      NarratorTrigger.levelUp => 'levelUp',
-      NarratorTrigger.weeklyRecap => 'weeklyRecap',
-      NarratorTrigger.longAbsence => 'longAbsence',
-      NarratorTrigger.eveningReflection => 'eveningReflection',
-      NarratorTrigger.askNarrator => 'dailyInsight',
-    };
+  NarratorTrigger.onboardingPostArchetype => 'onboardingPostArchetype',
+  NarratorTrigger.morningBriefEarlyDays => 'morningBriefEarlyDays',
+  NarratorTrigger.streakBreakFirstMiss => 'streakBreakFirstMiss',
+  NarratorTrigger.onFireState => 'onFireState',
+  NarratorTrigger.levelUp => 'levelUp',
+  NarratorTrigger.weeklyRecap => 'weeklyRecap',
+  NarratorTrigger.longAbsence => 'longAbsence',
+  NarratorTrigger.eveningReflection => 'eveningReflection',
+  NarratorTrigger.askNarrator => 'dailyInsight',
+};
 
 @Riverpod(keepAlive: true)
 NarratorLineResolver lineResolver(Ref ref) {
@@ -143,3 +143,22 @@ class PendingMilestone extends _$PendingMilestone {
   void clear() => state = null;
 }
 
+/// Session-scoped: the Day Card has been dismissed for this app session.
+@riverpod
+class NarratorCardDismissed extends _$NarratorCardDismissed {
+  @override
+  bool build() => false;
+
+  void dismiss() => state = true;
+  void restore() => state = false;
+}
+
+/// Session-scoped: bump to ask the Day Card to expand and focus its ask
+/// field (driven by the timeline header avatar tap).
+@riverpod
+class NarratorAskFocus extends _$NarratorAskFocus {
+  @override
+  int build() => 0;
+
+  void request() => state++;
+}

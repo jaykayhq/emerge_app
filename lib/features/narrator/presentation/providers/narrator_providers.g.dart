@@ -350,3 +350,124 @@ abstract class _$PendingMilestone extends $Notifier<PendingMilestoneLine?> {
     return element.handleCreate(ref, build);
   }
 }
+
+/// Session-scoped: the Day Card has been dismissed for this app session.
+
+@ProviderFor(NarratorCardDismissed)
+final narratorCardDismissedProvider = NarratorCardDismissedProvider._();
+
+/// Session-scoped: the Day Card has been dismissed for this app session.
+final class NarratorCardDismissedProvider
+    extends $NotifierProvider<NarratorCardDismissed, bool> {
+  /// Session-scoped: the Day Card has been dismissed for this app session.
+  NarratorCardDismissedProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'narratorCardDismissedProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$narratorCardDismissedHash();
+
+  @$internal
+  @override
+  NarratorCardDismissed create() => NarratorCardDismissed();
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(bool value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<bool>(value),
+    );
+  }
+}
+
+String _$narratorCardDismissedHash() =>
+    r'4046a44b0a5fbb5c483aad6e901fa1ebae054df2';
+
+/// Session-scoped: the Day Card has been dismissed for this app session.
+
+abstract class _$NarratorCardDismissed extends $Notifier<bool> {
+  bool build();
+  @$mustCallSuper
+  @override
+  WhenComplete runBuild() {
+    final ref = this.ref as $Ref<bool, bool>;
+    final element =
+        ref.element
+            as $ClassProviderElement<
+              AnyNotifier<bool, bool>,
+              bool,
+              Object?,
+              Object?
+            >;
+    return element.handleCreate(ref, build);
+  }
+}
+
+/// Session-scoped: bump to ask the Day Card to expand and focus its ask
+/// field (driven by the timeline header avatar tap).
+
+@ProviderFor(NarratorAskFocus)
+final narratorAskFocusProvider = NarratorAskFocusProvider._();
+
+/// Session-scoped: bump to ask the Day Card to expand and focus its ask
+/// field (driven by the timeline header avatar tap).
+final class NarratorAskFocusProvider
+    extends $NotifierProvider<NarratorAskFocus, int> {
+  /// Session-scoped: bump to ask the Day Card to expand and focus its ask
+  /// field (driven by the timeline header avatar tap).
+  NarratorAskFocusProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'narratorAskFocusProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$narratorAskFocusHash();
+
+  @$internal
+  @override
+  NarratorAskFocus create() => NarratorAskFocus();
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(int value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<int>(value),
+    );
+  }
+}
+
+String _$narratorAskFocusHash() => r'09084e1bfb754e5b8af9f488ebf9c99980c2fd12';
+
+/// Session-scoped: bump to ask the Day Card to expand and focus its ask
+/// field (driven by the timeline header avatar tap).
+
+abstract class _$NarratorAskFocus extends $Notifier<int> {
+  int build();
+  @$mustCallSuper
+  @override
+  WhenComplete runBuild() {
+    final ref = this.ref as $Ref<int, int>;
+    final element =
+        ref.element
+            as $ClassProviderElement<
+              AnyNotifier<int, int>,
+              int,
+              Object?,
+              Object?
+            >;
+    return element.handleCreate(ref, build);
+  }
+}
