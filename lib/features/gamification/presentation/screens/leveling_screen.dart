@@ -2,7 +2,7 @@ import 'package:emerge_app/core/presentation/widgets/growth_background.dart';
 import 'package:emerge_app/core/theme/app_theme.dart';
 import 'package:emerge_app/features/gamification/presentation/providers/user_stats_providers.dart';
 import 'package:emerge_app/core/constants/gamification_constants.dart';
-import 'package:emerge_app/features/tutorials/presentation/widgets/node_guide_host.dart';
+import 'package:emerge_app/features/narrator/presentation/widgets/narrator_guide_host.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -17,6 +17,11 @@ class LevelingScreen extends ConsumerStatefulWidget {
 }
 
 class _LevelingScreenState extends ConsumerState<LevelingScreen> {
+  // Narrator guide targets: the level header (app bar) and the XP progress
+  // bar.
+  final GlobalKey _levelHeaderKey = GlobalKey();
+  final GlobalKey _levelBarKey = GlobalKey();
+
   @override
   void initState() {
     super.initState();
@@ -27,12 +32,19 @@ class _LevelingScreenState extends ConsumerState<LevelingScreen> {
     final statsAsync = ref.watch(userStatsStreamProvider);
     final theme = Theme.of(context);
 
-    return NodeGuideHost(
+    return NarratorGuideHost(
       nodeId: 'leveling',
+      targets: {'level_header': _levelHeaderKey, 'level_bar': _levelBarKey},
       child: GrowthBackground(
-        appBar: AppBar(
-          title: const Text('Level Progress'),
-          backgroundColor: Colors.transparent,
+        appBar: PreferredSize(
+          preferredSize: const Size.fromHeight(kToolbarHeight),
+          child: KeyedSubtree(
+            key: _levelHeaderKey,
+            child: AppBar(
+              title: const Text('Level Progress'),
+              backgroundColor: Colors.transparent,
+            ),
+          ),
         ),
         child: statsAsync.when(
           data: (profile) {
@@ -112,11 +124,16 @@ class _LevelingScreenState extends ConsumerState<LevelingScreen> {
                       const Gap(12),
                       ClipRRect(
                         borderRadius: BorderRadius.circular(8),
-                        child: LinearProgressIndicator(
-                          value: progress,
-                          minHeight: 16,
-                          backgroundColor: AppTheme.surfaceDark,
-                          valueColor: AlwaysStoppedAnimation(AppTheme.primary),
+                        child: KeyedSubtree(
+                          key: _levelBarKey,
+                          child: LinearProgressIndicator(
+                            value: progress,
+                            minHeight: 16,
+                            backgroundColor: AppTheme.surfaceDark,
+                            valueColor: AlwaysStoppedAnimation(
+                              AppTheme.primary,
+                            ),
+                          ),
                         ),
                       ),
                     ],

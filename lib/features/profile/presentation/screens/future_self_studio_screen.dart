@@ -19,7 +19,7 @@ import 'package:emerge_app/features/profile/presentation/widgets/synergy_status_
 import 'package:emerge_app/features/profile/presentation/widgets/synergy_card.dart';
 import 'package:emerge_app/features/profile/presentation/widgets/emerge_splash_reveal.dart';
 import 'package:emerge_app/features/monetization/presentation/providers/subscription_provider.dart';
-import 'package:emerge_app/features/tutorials/presentation/widgets/node_guide_host.dart';
+import 'package:emerge_app/features/narrator/presentation/widgets/narrator_guide_host.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -64,6 +64,10 @@ class FutureSelfStudioScreen extends ConsumerStatefulWidget {
 class _FutureSelfStudioScreenState
     extends ConsumerState<FutureSelfStudioScreen> {
   int? _previousStreak;
+  // Narrator guide targets: the studio header (sliver app bar) and the
+  // primary EMERGE action area.
+  final GlobalKey _studioHeaderKey = GlobalKey();
+  final GlobalKey _generateButtonKey = GlobalKey();
 
   @override
   void initState() {
@@ -75,8 +79,12 @@ class _FutureSelfStudioScreenState
     final statsAsync = ref.watch(userStatsStreamProvider);
     final isRecovering = ref.watch(recoveryAnimatingProvider);
 
-    return NodeGuideHost(
+    return NarratorGuideHost(
       nodeId: 'future_self',
+      targets: {
+        'studio_header': _studioHeaderKey,
+        'generate_button': _generateButtonKey,
+      },
       child: statsAsync.when(
         data: (profile) {
           final stats = profile.avatarStats;
@@ -121,82 +129,85 @@ class _FutureSelfStudioScreenState
             child: CustomScrollView(
               slivers: [
                 // App Bar
-                SliverAppBar(
-                  backgroundColor: Colors.transparent,
-                  floating: true,
-                  actions: [
-                    IconButton(
-                      icon: const Icon(
-                        Icons.settings,
-                        color: AppTheme.textMainDark,
-                      ),
-                      onPressed: () => context.push('/profile/settings'),
-                    ),
-                  ],
-                  title: Column(
-                    children: [
-                      Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(
-                            'FUTURE SELF',
-                            style: Theme.of(context).textTheme.titleMedium
-                                ?.copyWith(
-                                  color: AppTheme.textMainDark,
-                                  fontWeight: FontWeight.bold,
-                                  letterSpacing: 2,
-                                ),
-                          ),
-                          const SizedBox(width: 8),
-                          Consumer(
-                            builder: (context, ref, _) {
-                              final isPremium =
-                                  ref.watch(isPremiumProvider).value ?? false;
-                              if (!isPremium) return const SizedBox.shrink();
-                              return Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 6,
-                                  vertical: 2,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: Colors.amber,
-                                  borderRadius: BorderRadius.circular(4),
-                                ),
-                                child: const Text(
-                                  'PRO',
-                                  style: TextStyle(
-                                    color: Colors.black,
-                                    fontSize: 8,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                              );
-                            },
-                          ),
-                        ],
-                      ),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 4,
+                KeyedSubtree(
+                  key: _studioHeaderKey,
+                  child: SliverAppBar(
+                    backgroundColor: Colors.transparent,
+                    floating: true,
+                    actions: [
+                      IconButton(
+                        icon: const Icon(
+                          Icons.settings,
+                          color: AppTheme.textMainDark,
                         ),
-                        decoration: BoxDecoration(
-                          color: accentColor.withValues(alpha: 0.2),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Text(
-                          '● IDENTITY CALIBRATED',
-                          style: Theme.of(context).textTheme.labelSmall
-                              ?.copyWith(
-                                color: accentColor,
-                                fontSize: 10,
-                                fontWeight: FontWeight.w500,
-                              ),
-                        ),
+                        onPressed: () => context.push('/profile/settings'),
                       ),
                     ],
+                    title: Column(
+                      children: [
+                        Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              'FUTURE SELF',
+                              style: Theme.of(context).textTheme.titleMedium
+                                  ?.copyWith(
+                                    color: AppTheme.textMainDark,
+                                    fontWeight: FontWeight.bold,
+                                    letterSpacing: 2,
+                                  ),
+                            ),
+                            const SizedBox(width: 8),
+                            Consumer(
+                              builder: (context, ref, _) {
+                                final isPremium =
+                                    ref.watch(isPremiumProvider).value ?? false;
+                                if (!isPremium) return const SizedBox.shrink();
+                                return Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 6,
+                                    vertical: 2,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: Colors.amber,
+                                    borderRadius: BorderRadius.circular(4),
+                                  ),
+                                  child: const Text(
+                                    'PRO',
+                                    style: TextStyle(
+                                      color: Colors.black,
+                                      fontSize: 8,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                );
+                              },
+                            ),
+                          ],
+                        ),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 4,
+                          ),
+                          decoration: BoxDecoration(
+                            color: accentColor.withValues(alpha: 0.2),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Text(
+                            '● IDENTITY CALIBRATED',
+                            style: Theme.of(context).textTheme.labelSmall
+                                ?.copyWith(
+                                  color: accentColor,
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    centerTitle: true,
                   ),
-                  centerTitle: true,
                 ),
 
                 // Identity header (archetype + level)
@@ -496,31 +507,34 @@ class _FutureSelfStudioScreenState
                 SliverToBoxAdapter(
                   child: Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 16),
-                    child: profile.hasEmerged
-                        ? _EmergedStateCard(
-                            accentColor: accentColor,
-                            phase: SilhouetteEvolutionState.phaseFromLevel(
-                              stats.level,
+                    child: KeyedSubtree(
+                      key: _generateButtonKey,
+                      child: profile.hasEmerged
+                          ? _EmergedStateCard(
+                              accentColor: accentColor,
+                              phase: SilhouetteEvolutionState.phaseFromLevel(
+                                stats.level,
+                              ),
+                            )
+                          : _EmergeButton(
+                              level: effectiveLevel,
+                              onPressed: () {
+                                // Show splash reveal then persist emerge to Firestore
+                                EmergeSplashReveal.show(
+                                  context,
+                                  primaryColor: accentColor,
+                                  onComplete: () async {
+                                    // Persist emerge state via controller
+                                    await ref
+                                        .read(userStatsControllerProvider)
+                                        .emerge();
+                                  },
+                                );
+                              },
+                              accentColor: accentColor,
+                              nextPhaseTitle: 'The Construct',
                             ),
-                          )
-                        : _EmergeButton(
-                            level: effectiveLevel,
-                            onPressed: () {
-                              // Show splash reveal then persist emerge to Firestore
-                              EmergeSplashReveal.show(
-                                context,
-                                primaryColor: accentColor,
-                                onComplete: () async {
-                                  // Persist emerge state via controller
-                                  await ref
-                                      .read(userStatsControllerProvider)
-                                      .emerge();
-                                },
-                              );
-                            },
-                            accentColor: accentColor,
-                            nextPhaseTitle: 'The Construct',
-                          ),
+                    ),
                   ),
                 ),
 

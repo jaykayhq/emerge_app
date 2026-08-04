@@ -15,7 +15,7 @@ import 'package:emerge_app/features/world_map/presentation/widgets/ambient_parti
 import 'package:emerge_app/features/world_map/presentation/widgets/constellation_lines.dart';
 import 'package:emerge_app/features/world_map/utils/ring_layout_geometry.dart';
 import 'package:emerge_app/features/habits/domain/entities/habit.dart';
-import 'package:emerge_app/features/tutorials/presentation/widgets/node_guide_host.dart';
+import 'package:emerge_app/features/narrator/presentation/widgets/narrator_guide_host.dart';
 import 'package:emerge_app/features/world_map/presentation/widgets/world_state_hud.dart';
 import 'package:emerge_app/features/world_map/presentation/widgets/world_status_panel.dart';
 
@@ -31,6 +31,9 @@ class WorldMapScreen extends ConsumerStatefulWidget {
 class _WorldMapScreenState extends ConsumerState<WorldMapScreen> {
   Timer? _navTimer;
   bool _showStatus = false;
+  // Narrator guide targets: the world body (ring layout) and the header HUD.
+  final GlobalKey _mapBodyKey = GlobalKey();
+  final GlobalKey _mapHeaderKey = GlobalKey();
 
   @override
   void initState() {
@@ -70,8 +73,9 @@ class _WorldMapScreenState extends ConsumerState<WorldMapScreen> {
     final displayName =
         ref.watch(userStatsStreamProvider).value?.displayName ?? '';
 
-    return NodeGuideHost(
+    return NarratorGuideHost(
       nodeId: 'world_map',
+      targets: {'map_body': _mapBodyKey, 'map_header': _mapHeaderKey},
       child: Scaffold(
         body: healthAsync.when(
           loading: () =>
@@ -83,88 +87,97 @@ class _WorldMapScreenState extends ConsumerState<WorldMapScreen> {
           ),
           data: (health) {
             final entropy = entropyAsync.value ?? 0.0;
-            return LayoutBuilder(
-              builder: (context, constraints) {
-                final size = Size(constraints.maxWidth, constraints.maxHeight);
-                final center = Offset(size.width / 2, size.height / 2);
-                final attributes = HabitAttribute.values;
-                final nodeCount = attributes.length;
-                const radius = 140.0;
-                final nodePositions = calculateRingNodePositions(
-                  size: size,
-                  radius: radius,
-                  nodeCount: nodeCount,
-                );
+            return KeyedSubtree(
+              key: _mapBodyKey,
+              child: LayoutBuilder(
+                builder: (context, constraints) {
+                  final size = Size(
+                    constraints.maxWidth,
+                    constraints.maxHeight,
+                  );
+                  final center = Offset(size.width / 2, size.height / 2);
+                  final attributes = HabitAttribute.values;
+                  final nodeCount = attributes.length;
+                  const radius = 140.0;
+                  final nodePositions = calculateRingNodePositions(
+                    size: size,
+                    radius: radius,
+                    nodeCount: nodeCount,
+                  );
 
-                return Stack(
-                  fit: StackFit.expand,
-                  children: [
-                    NebulaBackground(
-                      healthState: WorldHealthState.fromHealth(health),
-                      entropy: entropy,
-                      primaryColor: Theme.of(context).colorScheme.primary,
-                      accentColor: Theme.of(context).colorScheme.secondary,
-                    ),
-                    const AmbientParticles(particleCount: 50),
-                    ConstellationLines(
-                      center: center,
-                      nodePositions: nodePositions,
-                    ),
-                    Center(
-                      child: WorldRingLayout(
-                        radius: radius,
-                        focusAttribute: widget.focusAttribute,
-                        onNodeTap: (attr) =>
-                            context.go('/world-map/attribute/${attr.name}'),
+                  return Stack(
+                    fit: StackFit.expand,
+                    children: [
+                      NebulaBackground(
+                        healthState: WorldHealthState.fromHealth(health),
+                        entropy: entropy,
+                        primaryColor: Theme.of(context).colorScheme.primary,
+                        accentColor: Theme.of(context).colorScheme.secondary,
                       ),
-                    ),
-                    if (_showStatus)
-                      const Positioned(
+                      const AmbientParticles(particleCount: 50),
+                      ConstellationLines(
+                        center: center,
+                        nodePositions: nodePositions,
+                      ),
+                      Center(
+                        child: WorldRingLayout(
+                          radius: radius,
+                          focusAttribute: widget.focusAttribute,
+                          onNodeTap: (attr) =>
+                              context.go('/world-map/attribute/${attr.name}'),
+                        ),
+                      ),
+                      if (_showStatus)
+                        const Positioned(
+                          left: 0,
+                          right: 0,
+                          top: 0,
+                          bottom: 0,
+                          child: Align(
+                            alignment: Alignment(0, 0.34),
+                            child: WorldStatusPanel(),
+                          ),
+                        ),
+                      Positioned(
+                        top: 0,
                         left: 0,
                         right: 0,
-                        top: 0,
-                        bottom: 0,
-                        child: Align(
-                          alignment: Alignment(0, 0.34),
-                          child: WorldStatusPanel(),
-                        ),
-                      ),
-                    Positioned(
-                      top: 0,
-                      left: 0,
-                      right: 0,
-                      // SafeArea here consumes the top inset, so the nested
-                      // SafeArea inside EmergeHeader becomes a no-op (no
-                      // double insets) and the HUD stays inside SafeArea.
-                      child: SafeArea(
-                        bottom: false,
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            EmergeHeader(
-                              displayName: displayName,
-                              onAvatarTap: () => context.push('/profile'),
-                              onUpgradeTap: () => context.push('/paywall'),
-                            ),
-                            Padding(
-                              padding: const EdgeInsets.only(top: 16.0),
-                              child: Align(
-                                alignment: Alignment.topCenter,
-                                child: GestureDetector(
-                                  onTap: () => setState(
-                                    () => _showStatus = !_showStatus,
-                                  ),
-                                  child: const WorldStateHUD(),
+                        // SafeArea here consumes the top inset, so the nested
+                        // SafeArea inside EmergeHeader becomes a no-op (no
+                        // double insets) and the HUD stays inside SafeArea.
+                        child: KeyedSubtree(
+                          key: _mapHeaderKey,
+                          child: SafeArea(
+                            bottom: false,
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                EmergeHeader(
+                                  displayName: displayName,
+                                  onAvatarTap: () => context.push('/profile'),
+                                  onUpgradeTap: () => context.push('/paywall'),
                                 ),
-                              ),
+                                Padding(
+                                  padding: const EdgeInsets.only(top: 16.0),
+                                  child: Align(
+                                    alignment: Alignment.topCenter,
+                                    child: GestureDetector(
+                                      onTap: () => setState(
+                                        () => _showStatus = !_showStatus,
+                                      ),
+                                      child: const WorldStateHUD(),
+                                    ),
+                                  ),
+                                ),
+                              ],
                             ),
-                          ],
+                          ),
                         ),
                       ),
-                    ),
-                  ],
-                );
-              },
+                    ],
+                  );
+                },
+              ),
             );
           },
         ),

@@ -8,7 +8,7 @@ import 'package:emerge_app/features/social/presentation/screens/challenge_detail
 import 'package:emerge_app/features/social/presentation/screens/create_solo_challenge_dialog.dart';
 import 'package:emerge_app/features/social/presentation/widgets/challenges_skeleton.dart';
 import 'package:emerge_app/features/social/presentation/widgets/quest_card_stitch.dart';
-import 'package:emerge_app/features/tutorials/presentation/widgets/node_guide_host.dart';
+import 'package:emerge_app/features/narrator/presentation/widgets/narrator_guide_host.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
@@ -36,6 +36,9 @@ class _ChallengesScreenState extends ConsumerState<ChallengesScreen> {
 
   final GlobalKey _filterKey = GlobalKey();
   final GlobalKey _createKey = GlobalKey();
+  // Narrator guide targets: the create/join FAB and the challenge list body.
+  final GlobalKey _joinFabKey = GlobalKey();
+  final GlobalKey _challengeListKey = GlobalKey();
 
   @override
   Widget build(BuildContext context) {
@@ -65,47 +68,54 @@ class _ChallengesScreenState extends ConsumerState<ChallengesScreen> {
       );
     }
 
-    final content = Container(
-      decoration: widget.showAppBar
-          ? BoxDecoration(gradient: AppTheme.cosmicGradient)
-          : null,
-      child: SafeArea(
-        top: widget.showAppBar,
-        child: Stack(
-          children: [
-            // Main content - hidden during initial load
-            Opacity(
-              opacity: bundleAsync.isLoading ? 0.0 : 1.0,
-              child: IgnorePointer(
-                ignoring: bundleAsync.isLoading,
-                child: _buildContent(bundleAsync.value),
+    final content = KeyedSubtree(
+      key: _challengeListKey,
+      child: Container(
+        decoration: widget.showAppBar
+            ? BoxDecoration(gradient: AppTheme.cosmicGradient)
+            : null,
+        child: SafeArea(
+          top: widget.showAppBar,
+          child: Stack(
+            children: [
+              // Main content - hidden during initial load
+              Opacity(
+                opacity: bundleAsync.isLoading ? 0.0 : 1.0,
+                child: IgnorePointer(
+                  ignoring: bundleAsync.isLoading,
+                  child: _buildContent(bundleAsync.value),
+                ),
               ),
-            ),
-            // Unified skeleton loader during initial load
-            if (bundleAsync.isLoading) const ChallengesSkeletonLoader(),
-          ],
+              // Unified skeleton loader during initial load
+              if (bundleAsync.isLoading) const ChallengesSkeletonLoader(),
+            ],
+          ),
         ),
       ),
     );
 
     if (!widget.showAppBar) return content;
 
-    return NodeGuideHost(
+    return NarratorGuideHost(
       nodeId: 'challenges',
+      targets: {'join_fab': _joinFabKey, 'challenge_list': _challengeListKey},
       child: Scaffold(
         backgroundColor: EmergeColors.background,
-        floatingActionButton: FloatingActionButton(
-          onPressed: () {
-            showDialog(
-              context: context,
-              barrierDismissible: true,
-              barrierColor: Colors.black.withValues(alpha: 0.6),
-              builder: (context) => const CreateSoloChallengeDialog(),
-            );
-          },
-          backgroundColor: EmergeColors.teal,
-          foregroundColor: Colors.black,
-          child: Icon(Icons.add_rounded, size: 32, key: _createKey),
+        floatingActionButton: KeyedSubtree(
+          key: _joinFabKey,
+          child: FloatingActionButton(
+            onPressed: () {
+              showDialog(
+                context: context,
+                barrierDismissible: true,
+                barrierColor: Colors.black.withValues(alpha: 0.6),
+                builder: (context) => const CreateSoloChallengeDialog(),
+              );
+            },
+            backgroundColor: EmergeColors.teal,
+            foregroundColor: Colors.black,
+            child: Icon(Icons.add_rounded, size: 32, key: _createKey),
+          ),
         ),
         body: content,
       ),

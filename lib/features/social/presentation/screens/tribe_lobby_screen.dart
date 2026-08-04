@@ -21,7 +21,7 @@ import 'package:emerge_app/features/social/presentation/widgets/tribe_live_compa
 import 'package:emerge_app/features/social/presentation/widgets/tribe_pulse_status_row.dart';
 import 'package:emerge_app/features/social/presentation/widgets/tribe_quests_for_you_section.dart';
 import 'package:emerge_app/features/social/presentation/widgets/tribe_your_quests_section.dart';
-import 'package:emerge_app/features/tutorials/presentation/widgets/node_guide_host.dart';
+import 'package:emerge_app/features/narrator/presentation/widgets/narrator_guide_host.dart';
 
 /// Tribe lobby — the canonical social hub (dual hub: tribe + friends).
 ///
@@ -46,6 +46,10 @@ class TribeLobbyScreen extends ConsumerStatefulWidget {
 }
 
 class _TribeLobbyScreenState extends ConsumerState<TribeLobbyScreen> {
+  // Narrator guide targets: the members circle and the bottom action bar.
+  final GlobalKey _memberListKey = GlobalKey();
+  final GlobalKey _lobbyActionsKey = GlobalKey();
+
   @override
   Widget build(BuildContext context) {
     final profileAsync = ref.watch(userStatsStreamProvider);
@@ -55,149 +59,160 @@ class _TribeLobbyScreenState extends ConsumerState<TribeLobbyScreen> {
     final canPop = Navigator.of(context).canPop();
 
     Widget lobby() => SafeArea(
-          child: clubsAsync.when(
-            data: (clubs) => profileAsync.when(
-              data: (profile) {
-                final userClub = _resolveUserClub(clubs, profile);
-                if (userClub == null) {
-                  return const _ErrorState(message: 'No tribe found.');
-                }
+      child: clubsAsync.when(
+        data: (clubs) => profileAsync.when(
+          data: (profile) {
+            final userClub = _resolveUserClub(clubs, profile);
+            if (userClub == null) {
+              return const _ErrorState(message: 'No tribe found.');
+            }
 
-                    final archetypeTheme = ArchetypeTheme.forArchetype(
-                      profile.archetype,
-                    );
-                    final momentumPct =
-                        (profile.momentumScore.clamp(0.0, 1.0) * 100).round();
+            final archetypeTheme = ArchetypeTheme.forArchetype(
+              profile.archetype,
+            );
+            final momentumPct = (profile.momentumScore.clamp(0.0, 1.0) * 100)
+                .round();
 
-                    return CustomScrollView(
-                      physics: const BouncingScrollPhysics(),
-                      slivers: [
-                        const SliverToBoxAdapter(child: Gap(12)),
-                        SliverToBoxAdapter(
-                          child: _Hero(
-                            userClub: userClub,
-                            archetypeTheme: archetypeTheme,
-                          ),
-                        ),
-                        SliverToBoxAdapter(
-                          child: Padding(
-                            padding: const EdgeInsets.fromLTRB(20, 24, 20, 0),
-                            child: _StatsBar(
-                              userClub: userClub,
-                              profile: profile,
-                              momentumPct: momentumPct,
-                            ),
-                          ),
-                        ),
-                        const SliverToBoxAdapter(child: Gap(20)),
-                        SliverToBoxAdapter(
-                          child: TribePulseStatusRow(
-                            userClub: userClub,
-                            profile: profile,
-                          ),
-                        ),
-                        const SliverToBoxAdapter(child: Gap(8)),
-                        const SliverToBoxAdapter(child: TribeCircleSection()),
-                        const SliverToBoxAdapter(child: Gap(8)),
-                        SliverToBoxAdapter(
-                          child: TribeLiveCompact(
-                            clubId: userClub.id,
-                            profile: profile,
-                          ),
-                        ),
-                        SliverToBoxAdapter(
-                          child: TribeBlueprintsSection(tribe: userClub),
-                        ),
-                        const SliverToBoxAdapter(
-                          child: TribeYourQuestsSection(),
-                        ),
-                        const SliverToBoxAdapter(child: Gap(4)),
-                        const SliverToBoxAdapter(
-                          child: TribeQuestsForYouSection(),
-                        ),
-                        const SliverToBoxAdapter(child: Gap(24)),
-                      ],
-                    );
-                  },
-                  loading: () => const _LobbyLoading(),
-                  error: (_, _) => AppErrorWidget(
-                    message: 'Could not load profile.',
-                    onRetry: () => ref.invalidate(userStatsStreamProvider),
+            return CustomScrollView(
+              physics: const BouncingScrollPhysics(),
+              slivers: [
+                const SliverToBoxAdapter(child: Gap(12)),
+                SliverToBoxAdapter(
+                  child: _Hero(
+                    userClub: userClub,
+                    archetypeTheme: archetypeTheme,
                   ),
                 ),
-                loading: () => const _LobbyLoading(),
-                error: (_, _) => AppErrorWidget(
-                  message: 'Could not load tribes.',
-                  onRetry: () => ref.invalidate(allArchetypeClubsProvider),
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(20, 24, 20, 0),
+                    child: _StatsBar(
+                      userClub: userClub,
+                      profile: profile,
+                      momentumPct: momentumPct,
+                    ),
+                  ),
                 ),
-              ),
+                const SliverToBoxAdapter(child: Gap(20)),
+                SliverToBoxAdapter(
+                  child: TribePulseStatusRow(
+                    userClub: userClub,
+                    profile: profile,
+                  ),
+                ),
+                const SliverToBoxAdapter(child: Gap(8)),
+                SliverToBoxAdapter(
+                  child: KeyedSubtree(
+                    key: _memberListKey,
+                    child: TribeCircleSection(),
+                  ),
+                ),
+                const SliverToBoxAdapter(child: Gap(8)),
+                SliverToBoxAdapter(
+                  child: TribeLiveCompact(
+                    clubId: userClub.id,
+                    profile: profile,
+                  ),
+                ),
+                SliverToBoxAdapter(
+                  child: TribeBlueprintsSection(tribe: userClub),
+                ),
+                const SliverToBoxAdapter(child: TribeYourQuestsSection()),
+                const SliverToBoxAdapter(child: Gap(4)),
+                const SliverToBoxAdapter(child: TribeQuestsForYouSection()),
+                const SliverToBoxAdapter(child: Gap(24)),
+              ],
             );
+          },
+          loading: () => const _LobbyLoading(),
+          error: (_, _) => AppErrorWidget(
+            message: 'Could not load profile.',
+            onRetry: () => ref.invalidate(userStatsStreamProvider),
+          ),
+        ),
+        loading: () => const _LobbyLoading(),
+        error: (_, _) => AppErrorWidget(
+          message: 'Could not load tribes.',
+          onRetry: () => ref.invalidate(allArchetypeClubsProvider),
+        ),
+      ),
+    );
 
-    return NodeGuideHost(
+    return NarratorGuideHost(
       nodeId: 'tribe_lobby',
+      targets: {
+        'member_list': _memberListKey,
+        'lobby_actions': _lobbyActionsKey,
+      },
       child: Scaffold(
-      backgroundColor: Colors.transparent,
-      body: Stack(
-        children: [
-          if (canPop)
-            lobby()
-          else
-            AppBackToHome(homeRoute: '/world-map', child: lobby()),
-          // Top-left back arrow — shown only when the lobby was pushed onto
-          // the stack (e.g. from the All Tribes grid). Hidden when the lobby
-          // is the Social tab's root (no history to go back to). Rendered
-          // outside AppBackToHome so its pop is not blocked by that wrapper's
-          // PopScope(canPop: false), which only redirects the system back.
-          if (canPop)
-            Positioned(
-              top: 8,
-              left: 12,
-              child: SafeArea(
-                child: _BackButton(
-                  onPressed: () => Navigator.of(context).pop(),
+        backgroundColor: Colors.transparent,
+        body: Stack(
+          children: [
+            if (canPop)
+              lobby()
+            else
+              AppBackToHome(homeRoute: '/world-map', child: lobby()),
+            // Top-left back arrow — shown only when the lobby was pushed onto
+            // the stack (e.g. from the All Tribes grid). Hidden when the lobby
+            // is the Social tab's root (no history to go back to). Rendered
+            // outside AppBackToHome so its pop is not blocked by that wrapper's
+            // PopScope(canPop: false), which only redirects the system back.
+            if (canPop)
+              Positioned(
+                top: 8,
+                left: 12,
+                child: SafeArea(
+                  child: _BackButton(
+                    onPressed: () => Navigator.of(context).pop(),
+                  ),
                 ),
               ),
-            ),
-        ],
-      ),
-      bottomNavigationBar: profileAsync.value == null
-          ? null
-          : SafeArea(
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(20, 12, 20, 16),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: OutlinedButton.icon(
-                        icon: const Icon(Icons.emoji_events_rounded, size: 16),
-                        label: const Text('CHALLENGES'),
-                        style: OutlinedButton.styleFrom(
-                          foregroundColor: Colors.white70,
-                          side: const BorderSide(color: Colors.white24),
-                          padding: const EdgeInsets.symmetric(vertical: 22),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(28),
-                          ),
-                          textStyle: const TextStyle(
-                            fontWeight: FontWeight.bold,
-                            letterSpacing: 2,
+          ],
+        ),
+        bottomNavigationBar: profileAsync.value == null
+            ? null
+            : SafeArea(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 12, 20, 16),
+                  child: KeyedSubtree(
+                    key: _lobbyActionsKey,
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: OutlinedButton.icon(
+                            icon: const Icon(
+                              Icons.emoji_events_rounded,
+                              size: 16,
+                            ),
+                            label: const Text('CHALLENGES'),
+                            style: OutlinedButton.styleFrom(
+                              foregroundColor: Colors.white70,
+                              side: const BorderSide(color: Colors.white24),
+                              padding: const EdgeInsets.symmetric(vertical: 22),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(28),
+                              ),
+                              textStyle: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                                letterSpacing: 2,
+                              ),
+                            ),
+                            onPressed: () => context.push('/challenges'),
                           ),
                         ),
-                        onPressed: () => context.push('/challenges'),
-                      ),
+                        const Gap(12),
+                        Expanded(
+                          child: EmergePrimaryButton(
+                            label: 'SWITCH TRIBES',
+                            leadingIcon: Icons.swap_horiz,
+                            onPressed: () => context.push('/social/all'),
+                          ),
+                        ),
+                      ],
                     ),
-                    const Gap(12),
-                    Expanded(
-                      child: EmergePrimaryButton(
-                        label: 'SWITCH TRIBES',
-                        leadingIcon: Icons.swap_horiz,
-                        onPressed: () => context.push('/social/all'),
-                      ),
-                    ),
-                  ],
+                  ),
                 ),
               ),
-            ),
       ),
     );
   }

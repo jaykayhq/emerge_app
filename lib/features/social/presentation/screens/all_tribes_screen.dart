@@ -9,7 +9,7 @@ import 'package:emerge_app/features/social/presentation/providers/creator_provid
 import 'package:emerge_app/features/social/presentation/providers/tribes_provider.dart';
 import 'package:emerge_app/features/social/presentation/widgets/creator_card.dart';
 import 'package:emerge_app/features/social/presentation/widgets/tribe_card.dart';
-import 'package:emerge_app/features/tutorials/presentation/widgets/node_guide_host.dart';
+import 'package:emerge_app/features/narrator/presentation/widgets/narrator_guide_host.dart';
 
 class AllTribesScreen extends ConsumerStatefulWidget {
   const AllTribesScreen({super.key});
@@ -19,6 +19,10 @@ class AllTribesScreen extends ConsumerStatefulWidget {
 }
 
 class _AllTribesScreenState extends ConsumerState<AllTribesScreen> {
+  // Narrator guide targets: the tribes header (app bar) and the tribe grid.
+  final GlobalKey _tribesHeaderKey = GlobalKey();
+  final GlobalKey _tribeListKey = GlobalKey();
+
   @override
   void initState() {
     super.initState();
@@ -29,98 +33,111 @@ class _AllTribesScreenState extends ConsumerState<AllTribesScreen> {
     final tribesAsync = ref.watch(allArchetypeClubsProvider);
     final creatorsAsync = ref.watch(verifiedCreatorsStreamProvider);
 
-    return NodeGuideHost(
+    return NarratorGuideHost(
       nodeId: 'all_tribes',
+      targets: {'tribes_header': _tribesHeaderKey, 'tribe_list': _tribeListKey},
       child: Scaffold(
         backgroundColor: Colors.transparent,
-        appBar: AppBar(
-          title: const Text(
-            'ALL TRIBES',
-            style: TextStyle(
-              color: Colors.white,
-              fontWeight: FontWeight.bold,
-              letterSpacing: 2,
+        appBar: PreferredSize(
+          preferredSize: const Size.fromHeight(kToolbarHeight),
+          child: KeyedSubtree(
+            key: _tribesHeaderKey,
+            child: AppBar(
+              title: const Text(
+                'ALL TRIBES',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: 2,
+                ),
+              ),
+              backgroundColor: Colors.transparent,
+              elevation: 0,
+              leading: IconButton(
+                icon: const Icon(
+                  Icons.arrow_back_ios_new,
+                  color: Colors.white,
+                  size: 20,
+                ),
+                onPressed: () => Navigator.of(context).pop(),
+              ),
             ),
-          ),
-          backgroundColor: Colors.transparent,
-          elevation: 0,
-          leading: IconButton(
-            icon: const Icon(
-              Icons.arrow_back_ios_new,
-              color: Colors.white,
-              size: 20,
-            ),
-            onPressed: () => Navigator.of(context).pop(),
           ),
         ),
         body: tribesAsync.when(
           data: (tribes) {
-            return RefreshIndicator(
-              onRefresh: () async {
-                ref.invalidate(allArchetypeClubsProvider);
-              },
-              child: CustomScrollView(
-                physics: const BouncingScrollPhysics(),
-                slivers: [
-                  // ── CREATORS ──
-                  const SliverToBoxAdapter(
-                    child: Padding(
-                      padding: EdgeInsets.fromLTRB(20, 24, 20, 12),
-                      child: Text(
-                        'CREATORS',
-                        style: TextStyle(
-                          color: EmergeColors.nebulaPrimary,
-                          fontSize: 12,
-                          fontWeight: FontWeight.bold,
-                          letterSpacing: 2,
-                        ),
-                      ),
-                    ),
-                  ),
-                  SliverToBoxAdapter(child: _creatorsBody(creatorsAsync)),
-                  // ── TRIBES ──
-                  const SliverToBoxAdapter(
-                    child: Padding(
-                      padding: EdgeInsets.fromLTRB(20, 24, 20, 12),
-                      child: Text(
-                        'TRIBES',
-                        style: TextStyle(
-                          color: EmergeColors.nebulaPrimary,
-                          fontSize: 12,
-                          fontWeight: FontWeight.bold,
-                          letterSpacing: 2,
-                        ),
-                      ),
-                    ),
-                  ),
-                  if (tribes.isEmpty)
-                    const SliverFillRemaining(
-                      hasScrollBody: false,
-                      child: Center(
+            return KeyedSubtree(
+              key: _tribeListKey,
+              child: RefreshIndicator(
+                onRefresh: () async {
+                  ref.invalidate(allArchetypeClubsProvider);
+                },
+                child: CustomScrollView(
+                  physics: const BouncingScrollPhysics(),
+                  slivers: [
+                    // ── CREATORS ──
+                    const SliverToBoxAdapter(
+                      child: Padding(
+                        padding: EdgeInsets.fromLTRB(20, 24, 20, 12),
                         child: Text(
-                          'No tribes available',
-                          style: TextStyle(color: Colors.white70),
-                        ),
-                      ),
-                    )
-                  else
-                    SliverPadding(
-                      padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
-                      sliver: SliverGrid(
-                        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount:
-                              MediaQuery.of(context).size.width > 600 ? 3 : 2,
-                          mainAxisSpacing: 12,
-                          crossAxisSpacing: 12,
-                          childAspectRatio: 0.72,
-                        ),
-                        delegate: SliverChildBuilderDelegate(
-                          (context, index) => TribeCard(tribe: tribes[index]),
-                          childCount: tribes.length,
+                          'CREATORS',
+                          style: TextStyle(
+                            color: EmergeColors.nebulaPrimary,
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                            letterSpacing: 2,
+                          ),
                         ),
                       ),
                     ),
-                ],
+                    SliverToBoxAdapter(child: _creatorsBody(creatorsAsync)),
+                    // ── TRIBES ──
+                    const SliverToBoxAdapter(
+                      child: Padding(
+                        padding: EdgeInsets.fromLTRB(20, 24, 20, 12),
+                        child: Text(
+                          'TRIBES',
+                          style: TextStyle(
+                            color: EmergeColors.nebulaPrimary,
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                            letterSpacing: 2,
+                          ),
+                        ),
+                      ),
+                    ),
+                    if (tribes.isEmpty)
+                      const SliverFillRemaining(
+                        hasScrollBody: false,
+                        child: Center(
+                          child: Text(
+                            'No tribes available',
+                            style: TextStyle(color: Colors.white70),
+                          ),
+                        ),
+                      )
+                    else
+                      SliverPadding(
+                        padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
+                        sliver: SliverGrid(
+                          gridDelegate:
+                              SliverGridDelegateWithFixedCrossAxisCount(
+                                crossAxisCount:
+                                    MediaQuery.of(context).size.width > 600
+                                    ? 3
+                                    : 2,
+                                mainAxisSpacing: 12,
+                                crossAxisSpacing: 12,
+                                childAspectRatio: 0.72,
+                              ),
+                          delegate: SliverChildBuilderDelegate(
+                            (context, index) => TribeCard(tribe: tribes[index]),
+                            childCount: tribes.length,
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
               ),
             );
           },

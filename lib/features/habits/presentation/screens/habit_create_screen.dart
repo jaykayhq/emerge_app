@@ -13,7 +13,7 @@ import 'package:emerge_app/features/habits/presentation/widgets/identity_sentenc
 import 'package:emerge_app/features/monetization/presentation/widgets/premium_limit_dialog.dart';
 import 'package:emerge_app/features/timeline/presentation/widgets/habit_timeline_section.dart'
     show attributeColor;
-import 'package:emerge_app/features/tutorials/presentation/widgets/node_guide_host.dart';
+import 'package:emerge_app/features/narrator/presentation/widgets/narrator_guide_host.dart';
 import 'package:emerge_app/features/world_map/presentation/widgets/nebula_background.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -120,6 +120,10 @@ class HabitCreateScreen extends ConsumerStatefulWidget {
 
 class _HabitCreateScreenState extends ConsumerState<HabitCreateScreen> {
   bool _saving = false;
+  // Narrator guide targets: the hero sentence card (where the habit's name is
+  // set) and the FORGE HABIT CTA that persists the habit.
+  final GlobalKey _nameFieldKey = GlobalKey();
+  final GlobalKey _createButtonKey = GlobalKey();
 
   @override
   Widget build(BuildContext context) {
@@ -133,8 +137,9 @@ class _HabitCreateScreenState extends ConsumerState<HabitCreateScreen> {
 
     // Nebula backdrop behind the glass form (matches the timeline's world
     // theme so the slide-up page never flashes a flat background).
-    return NodeGuideHost(
+    return NarratorGuideHost(
       nodeId: 'habit_create',
+      targets: {'name_field': _nameFieldKey, 'create_button': _createButtonKey},
       child: Stack(
         children: [
           const Positioned.fill(
@@ -160,22 +165,25 @@ class _HabitCreateScreenState extends ConsumerState<HabitCreateScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   // 1. Hero sentence card
-                  GlassmorphismCard(
-                    margin: EdgeInsets.zero,
-                    padding: const EdgeInsets.all(20),
-                    glowColor: EmergeColors.teal,
-                    glassOpacity: 0.06,
-                    child: IdentitySentenceBuilder(
-                      emoji: form.emoji,
-                      action: form.title,
-                      time: effectiveTime,
-                      location: form.location,
-                      frequency: form.frequency,
-                      onEmojiTap: () => _showEmojiSheet(form.emoji),
-                      onActionTap: () => _showActionSheet(suggestions),
-                      onTimeTap: _showTimeSheet,
-                      onLocationTap: _showLocationSheet,
-                      onFrequencyTap: _showFrequencySheet,
+                  KeyedSubtree(
+                    key: _nameFieldKey,
+                    child: GlassmorphismCard(
+                      margin: EdgeInsets.zero,
+                      padding: const EdgeInsets.all(20),
+                      glowColor: EmergeColors.teal,
+                      glassOpacity: 0.06,
+                      child: IdentitySentenceBuilder(
+                        emoji: form.emoji,
+                        action: form.title,
+                        time: effectiveTime,
+                        location: form.location,
+                        frequency: form.frequency,
+                        onEmojiTap: () => _showEmojiSheet(form.emoji),
+                        onActionTap: () => _showActionSheet(suggestions),
+                        onTimeTap: _showTimeSheet,
+                        onLocationTap: _showLocationSheet,
+                        onFrequencyTap: _showFrequencySheet,
+                      ),
                     ),
                   ),
                   const Gap(20),
@@ -224,39 +232,42 @@ class _HabitCreateScreenState extends ConsumerState<HabitCreateScreen> {
                   const Gap(24),
 
                   // 4. Create button
-                  SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton(
-                      onPressed: form.title.trim().isEmpty || _saving
-                          ? null
-                          : _createHabit,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: EmergeColors.teal,
-                        foregroundColor: const Color(0xFF05100B),
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                        disabledBackgroundColor: EmergeColors.teal.withValues(
-                          alpha: 0.3,
+                  KeyedSubtree(
+                    key: _createButtonKey,
+                    child: SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton(
+                        onPressed: form.title.trim().isEmpty || _saving
+                            ? null
+                            : _createHabit,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: EmergeColors.teal,
+                          foregroundColor: const Color(0xFF05100B),
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          disabledBackgroundColor: EmergeColors.teal.withValues(
+                            alpha: 0.3,
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16),
+                          ),
                         ),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16),
-                        ),
+                        child: _saving
+                            ? const SizedBox(
+                                height: 20,
+                                width: 20,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  color: Color(0xFF05100B),
+                                ),
+                              )
+                            : const Text(
+                                'FORGE HABIT',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 16,
+                                ),
+                              ),
                       ),
-                      child: _saving
-                          ? const SizedBox(
-                              height: 20,
-                              width: 20,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                color: Color(0xFF05100B),
-                              ),
-                            )
-                          : const Text(
-                              'FORGE HABIT',
-                              style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 16,
-                              ),
-                            ),
                     ),
                   ),
                 ],
