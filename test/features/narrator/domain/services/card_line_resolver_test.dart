@@ -22,6 +22,13 @@ void main() {
       expect(dayStatusLine(day), '2 left today — start with Read 10 pages.');
     });
 
+    test('remaining without a name stays simple', () {
+      expect(
+        dayStatusLine(const DayStatus(completed: 1, total: 3, streak: 0)),
+        '2 left today.',
+      );
+    });
+
     test('all done with a streak names the streak', () {
       expect(
         dayStatusLine(const DayStatus(completed: 3, total: 3, streak: 4)),
@@ -61,6 +68,15 @@ void main() {
       final line = resolveCardLine(
         pendingLine: null,
         insightText: null,
+        day: day,
+      );
+      expect(line!.text, '2 left today — start with Read 10 pages.');
+    });
+
+    test('empty-string insight falls through to day status', () {
+      final line = resolveCardLine(
+        pendingLine: null,
+        insightText: '',
         day: day,
       );
       expect(line!.text, '2 left today — start with Read 10 pages.');
