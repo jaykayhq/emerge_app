@@ -64,9 +64,9 @@ Habit _habit({
 void main() {
   setUp(() async {
     final now = DateTime.now();
-    // Suppress the evening-reflection NarratorSheet (fires for hour >= 18)
-    // so the modal doesn't cover the timeline during the test. Also seed the
-    // node-guide 'seen' flag so the first-visit coach mark never overlays the
+    // Suppress the evening-reflection milestone card (fires for hour >= 18)
+    // so it never covers the timeline during the test. Also seed the
+    // narrator-guide 'seen' flag so the first-visit guide never overlays the
     // timeline and swallows the pointer events the scroll assertions need.
     SharedPreferences.setMockInitialValues({
       'companion_visited_/timeline': true,

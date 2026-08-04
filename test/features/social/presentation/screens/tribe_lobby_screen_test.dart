@@ -35,8 +35,8 @@ final _testProfile = UserProfile(
   avatarStats: const UserAvatarStats(streak: 7),
 );
 
-/// Tutorials always off — the lobby is wrapped in a [NodeGuideHost], and the
-/// first-visit coach mark overlay would swallow the taps these tests drive.
+/// Tutorials always off — the lobby is wrapped in a [NarratorGuideHost], and the
+/// first-visit narrator guide overlay would swallow the taps these tests drive.
 class _NoTutorialsSettings extends LocalSettingsRepository {
   @override
   bool isTutorialsEnabled() => false;
