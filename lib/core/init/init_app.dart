@@ -199,6 +199,7 @@ Future<void> initApp() async {
     () async {
       try {
         await LocalSettingsRepository().init();
+        await LocalSettingsRepository().migrateNarratorGuideFlags();
         await LocalSettingsRepository().migrateVisitedFlags();
         debugPrint('✅ Local Settings initialized');
       } catch (e) {

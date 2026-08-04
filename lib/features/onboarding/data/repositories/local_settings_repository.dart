@@ -102,12 +102,12 @@ class LocalSettingsRepository {
     await _setString(_keyLastChallengeRefreshDate, date);
   }
 
-  Future<bool> getHasSeenNodeGuide(String nodeId) async {
-    return _getBool('hasSeenNodeGuide_$nodeId');
+  Future<bool> getHasSeenNarratorGuide(String nodeId) async {
+    return _getBool('hasSeenNarratorGuide_$nodeId');
   }
 
-  Future<void> setHasSeenNodeGuide(String nodeId) async {
-    await _setBool('hasSeenNodeGuide_$nodeId', true);
+  Future<void> setHasSeenNarratorGuide(String nodeId) async {
+    await _setBool('hasSeenNarratorGuide_$nodeId', true);
   }
 
   // --- Tutorials toggle (replaces legacy per-screen tutorials) -----------
@@ -121,9 +121,9 @@ class LocalSettingsRepository {
     await _setBool(_keyTutorialsEnabled, enabled);
   }
 
-  /// Clears all per-node "seen" flags so tutorials re-appear next visit.
+  /// Clears all per-node "seen" flags so guides re-appear next visit.
   Future<void> resetTutorials() async {
-    final keys = _getKeys().where((k) => k.startsWith('hasSeenNodeGuide_'));
+    final keys = _getKeys().where((k) => k.startsWith('hasSeenNarratorGuide_'));
     for (final key in keys) {
       await _remove(key);
     }
@@ -206,9 +206,9 @@ class LocalSettingsRepository {
     }
   }
 
-  /// Migrates legacy companion visited flags into the node-guide system.
+  /// Migrates legacy companion visited flags into the narrator-guide system.
   /// Idempotent: only migrates keys that exist; never overwrites already-seen
-  /// node flags. Legacy flags for retired nodes (e.g. the blueprints page's
+  /// guide flags. Legacy flags for retired nodes (e.g. the blueprints page's
   /// `/discover`) are dropped, not migrated.
   Future<void> migrateVisitedFlags() async {
     final keys = _getKeys().where((k) => k.startsWith('companion_visited_'));
@@ -226,9 +226,25 @@ class LocalSettingsRepository {
       final nodeId = routeToNode[route];
       final keyWasSeen = _getBool(key);
       final nodeAlreadySeen =
-          nodeId != null && _getBool('hasSeenNodeGuide_$nodeId');
+          nodeId != null && _getBool('hasSeenNarratorGuide_$nodeId');
       if (nodeId != null && keyWasSeen && !nodeAlreadySeen) {
-        await _setBool('hasSeenNodeGuide_$nodeId', true);
+        await _setBool('hasSeenNarratorGuide_$nodeId', true);
+      }
+      await _remove(key);
+    }
+  }
+
+  /// Migrates the SP-A node-guide seen flags (`hasSeenNodeGuide_*`) to the
+  /// narrator-guide keys (`hasSeenNarratorGuide_*`). Idempotent: only copies
+  /// keys that exist; never overwrites an already-seen narrator flag.
+  Future<void> migrateNarratorGuideFlags() async {
+    final keys = _getKeys().where((k) => k.startsWith('hasSeenNodeGuide_'));
+    for (final key in keys) {
+      final nodeId = key.substring('hasSeenNodeGuide_'.length);
+      final keyWasSeen = _getBool(key);
+      final nodeAlreadySeen = _getBool('hasSeenNarratorGuide_$nodeId');
+      if (keyWasSeen && !nodeAlreadySeen) {
+        await _setBool('hasSeenNarratorGuide_$nodeId', true);
       }
       await _remove(key);
     }

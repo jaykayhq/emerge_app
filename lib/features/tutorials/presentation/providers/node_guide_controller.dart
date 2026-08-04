@@ -22,10 +22,10 @@ class NodeGuideController {
 
   Future<bool> shouldShow(String nodeId) async {
     if (!_repo.isTutorialsEnabled()) return false;
-    return !(await _repo.getHasSeenNodeGuide(nodeId));
+    return !(await _repo.getHasSeenNarratorGuide(nodeId));
   }
 
   Future<void> markSeen(String nodeId) async {
-    await _repo.setHasSeenNodeGuide(nodeId);
+    await _repo.setHasSeenNarratorGuide(nodeId);
   }
 }

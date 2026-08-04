@@ -15,10 +15,10 @@ class _FakeSettings extends LocalSettingsRepository {
   bool isTutorialsEnabled() => tutorialsEnabled;
 
   @override
-  Future<bool> getHasSeenNodeGuide(String nodeId) async => seen.contains(nodeId);
+  Future<bool> getHasSeenNarratorGuide(String nodeId) async => seen.contains(nodeId);
 
   @override
-  Future<void> setHasSeenNodeGuide(String nodeId) async {
+  Future<void> setHasSeenNarratorGuide(String nodeId) async {
     recorded.add(nodeId);
   }
 }

@@ -123,10 +123,10 @@ class FakeSettings extends LocalSettingsRepository {
   }
 
   @override
-  Future<bool> getHasSeenNodeGuide(String nodeId) async => false;
+  Future<bool> getHasSeenNarratorGuide(String nodeId) async => false;
 
   @override
-  Future<void> setHasSeenNodeGuide(String nodeId) async {}
+  Future<void> setHasSeenNarratorGuide(String nodeId) async {}
 }
 
 class FakeCoachAskQuota extends CoachAskQuotaController {

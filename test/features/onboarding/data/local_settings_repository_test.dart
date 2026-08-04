@@ -10,7 +10,7 @@ void main() {
     SharedPreferences.setMockInitialValues({});
   });
 
-  test('migrates companion visited flags to node-guide flags', () async {
+  test('migrates companion visited flags to narrator-guide flags', () async {
     SharedPreferences.setMockInitialValues({
       'companion_visited_/timeline': true,
       'companion_visited_/challenges': true,
@@ -21,13 +21,13 @@ void main() {
     await repo.init();
     await repo.migrateVisitedFlags();
 
-    expect(await repo.getHasSeenNodeGuide('timeline'), isTrue);
-    expect(await repo.getHasSeenNodeGuide('challenges'), isTrue);
+    expect(await repo.getHasSeenNarratorGuide('timeline'), isTrue);
+    expect(await repo.getHasSeenNarratorGuide('challenges'), isTrue);
     // The discover node died with the blueprints page in SP-F: its legacy
-    // flag must not migrate into a node-guide flag.
-    expect(await repo.getHasSeenNodeGuide('discover'), isFalse);
+    // flag must not migrate into a narrator-guide flag.
+    expect(await repo.getHasSeenNarratorGuide('discover'), isFalse);
     // False legacy flags do not migrate.
-    expect(await repo.getHasSeenNodeGuide('tribes'), isFalse);
+    expect(await repo.getHasSeenNarratorGuide('tribes'), isFalse);
 
     // Legacy keys are always removed, whether or not they migrated.
     final keys = (await SharedPreferences.getInstance()).getKeys();
@@ -40,7 +40,7 @@ void main() {
   test('does not overwrite an existing seen flag', () async {
     SharedPreferences.setMockInitialValues({
       'companion_visited_/timeline': true,
-      'hasSeenNodeGuide_timeline': true,
+      'hasSeenNarratorGuide_timeline': true,
     });
     final repo = LocalSettingsRepository();
     await repo.init();
@@ -48,7 +48,7 @@ void main() {
     // Pins the no-overwrite invariant: both flags start true, so this test
     // cannot observe a redundant write (setting true over true is
     // value-invisible); the guard in migrateVisitedFlags is what matters.
-    expect(await repo.getHasSeenNodeGuide('timeline'), isTrue);
+    expect(await repo.getHasSeenNarratorGuide('timeline'), isTrue);
   });
 
   test('is idempotent — second run is a no-op', () async {
@@ -59,7 +59,7 @@ void main() {
     await repo.init();
     await repo.migrateVisitedFlags();
     await repo.migrateVisitedFlags();
-    expect(await repo.getHasSeenNodeGuide('challenges'), isTrue);
+    expect(await repo.getHasSeenNarratorGuide('challenges'), isTrue);
   });
 
   test('removes unknown-route legacy flags without creating a node flag',
@@ -72,10 +72,10 @@ void main() {
     await repo.migrateVisitedFlags();
 
     // '/insights' is not in the migration map: the legacy key is still
-    // removed, but no hasSeenNodeGuide_insights flag is created.
+    // removed, but no hasSeenNarratorGuide_insights flag is created.
     final keys = (await SharedPreferences.getInstance()).getKeys();
     expect(keys.contains('companion_visited_/insights'), isFalse);
-    expect(await repo.getHasSeenNodeGuide('insights'), isFalse);
+    expect(await repo.getHasSeenNarratorGuide('insights'), isFalse);
   });
 
   test('app installed-at round-trips', () async {
@@ -146,5 +146,77 @@ void main() {
     await repo.init();
 
     expect(await repo.getRecentNarratorTriggers(), isEmpty);
+  });
+
+  group('migrateNarratorGuideFlags', () {
+    test('migrates hasSeenNodeGuide_* to hasSeenNarratorGuide_*', () async {
+      SharedPreferences.setMockInitialValues({
+        'hasSeenNodeGuide_timeline': true,
+        'hasSeenNodeGuide_world_map': true,
+      });
+      final repo = LocalSettingsRepository();
+      await repo.init();
+      await repo.migrateNarratorGuideFlags();
+
+      expect(await repo.getHasSeenNarratorGuide('timeline'), true);
+      expect(await repo.getHasSeenNarratorGuide('world_map'), true);
+      final prefs = await SharedPreferences.getInstance();
+      expect(prefs.getBool('hasSeenNodeGuide_timeline'), isNull);
+      expect(prefs.getBool('hasSeenNodeGuide_world_map'), isNull);
+    });
+
+    test('never overwrites an already-seen narrator flag', () async {
+      SharedPreferences.setMockInitialValues({
+        'hasSeenNodeGuide_challenges': true,
+        'hasSeenNarratorGuide_challenges': true,
+      });
+      final repo = LocalSettingsRepository();
+      await repo.init();
+      await repo.migrateNarratorGuideFlags();
+
+      expect(await repo.getHasSeenNarratorGuide('challenges'), true);
+      final prefs = await SharedPreferences.getInstance();
+      expect(prefs.getBool('hasSeenNodeGuide_challenges'), isNull);
+    });
+
+    test('an absent narrator flag is migrated even when the old key is false',
+        () async {
+      // Stored `false` and absent are indistinguishable in prefs — the
+      // migration's guard only protects an already-true narrator flag.
+      SharedPreferences.setMockInitialValues({
+        'hasSeenNodeGuide_challenges': true,
+        'hasSeenNarratorGuide_challenges': true,
+      });
+      final repo = LocalSettingsRepository();
+      await repo.init();
+      await repo.migrateNarratorGuideFlags();
+      expect(await repo.getHasSeenNarratorGuide('challenges'), true);
+    });
+
+    test('writes nothing when no legacy keys exist', () async {
+      SharedPreferences.setMockInitialValues({});
+      final repo = LocalSettingsRepository();
+      await repo.init();
+      await repo.migrateNarratorGuideFlags();
+      expect(await repo.getHasSeenNarratorGuide('timeline'), false);
+    });
+  });
+
+  group('resetTutorials', () {
+    test('clears narrator guide flags, not other prefs', () async {
+      SharedPreferences.setMockInitialValues({
+        'hasSeenNarratorGuide_timeline': true,
+        'hasSeenNarratorGuide_leveling': true,
+        'tutorialsEnabled': true,
+      });
+      final repo = LocalSettingsRepository();
+      await repo.init();
+      await repo.resetTutorials();
+
+      expect(await repo.getHasSeenNarratorGuide('timeline'), false);
+      expect(await repo.getHasSeenNarratorGuide('leveling'), false);
+      final prefs = await SharedPreferences.getInstance();
+      expect(prefs.getBool('tutorialsEnabled'), true);
+    });
   });
 }
