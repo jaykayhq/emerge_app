@@ -58,7 +58,8 @@ void main() {
     await tester.pumpWidget(
       host(settings: _FakeSettings(tutorialsEnabled: true)),
     );
-    await tester.pump(const Duration(milliseconds: 400)); // post-frame + show
+    await tester.pump(); // post-frame gate resolves, card builds
+    await tester.pump(const Duration(milliseconds: 400)); // typewriter ticks
     expect(find.textContaining('Start here'), findsOneWidget);
     expect(find.text('field'), findsOneWidget);
   });
@@ -67,6 +68,7 @@ void main() {
     await tester.pumpWidget(
       host(settings: _FakeSettings(tutorialsEnabled: false)),
     );
+    await tester.pump(); // post-frame gate resolves (nothing to show)
     await tester.pump(const Duration(milliseconds: 400));
     expect(find.textContaining('Start here'), findsNothing);
   });
@@ -77,6 +79,7 @@ void main() {
         settings: _FakeSettings(tutorialsEnabled: true, seen: {'habit_create'}),
       ),
     );
+    await tester.pump(); // post-frame gate resolves (nothing to show)
     await tester.pump(const Duration(milliseconds: 400));
     expect(find.textContaining('Start here'), findsNothing);
   });
@@ -86,11 +89,16 @@ void main() {
   ) async {
     final settings = _FakeSettings(tutorialsEnabled: true);
     await tester.pumpWidget(host(settings: settings));
-    await tester.pump(const Duration(milliseconds: 400));
+    await tester.pump(); // post-frame gate resolves, card builds
+    await tester.pump(const Duration(milliseconds: 400)); // typewriter ticks
     // Let the first script finish typing.
     await tester.pump(const Duration(seconds: 2));
     await tester.tap(find.text('Next →'));
+    await tester.pump(); // script swap rebuild
     await tester.pump(const Duration(milliseconds: 400));
+    // Let the second script finish typing ('press this' is mid-script and
+    // needs ~857ms at 35 cps).
+    await tester.pump(const Duration(seconds: 2));
     expect(find.textContaining('press this'), findsOneWidget);
     await tester.pump(const Duration(seconds: 2));
     await tester.tap(find.text('Got it'));
@@ -102,6 +110,7 @@ void main() {
   testWidgets('Skip dismisses and marks seen', (tester) async {
     final settings = _FakeSettings(tutorialsEnabled: true);
     await tester.pumpWidget(host(settings: settings));
+    await tester.pump(); // post-frame gate resolves, card builds
     await tester.pump(const Duration(milliseconds: 400));
     await tester.tap(find.byIcon(Icons.close));
     await tester.pump(const Duration(milliseconds: 400));
@@ -115,6 +124,7 @@ void main() {
     await tester.pumpWidget(
       host(settings: _FakeSettings(tutorialsEnabled: true)),
     );
+    await tester.pump(); // post-frame gate resolves, card builds
     await tester.pump(const Duration(milliseconds: 400));
     final painter = tester
         .widgetList<CustomPaint>(find.byType(CustomPaint))

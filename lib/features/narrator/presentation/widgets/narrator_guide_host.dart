@@ -14,13 +14,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 /// glides between steps (200ms); scrolls of the target's scrollable re-resolve
 /// rects instantly. A target that is unmounted or off-screen yields no hole —
 /// the card-only step still advances.
-///
-/// The overlay shows from the very first frame (the gate is checked in a
-/// post-frame callback, so a disabled or already-seen guide is removed before
-/// the next frame) — this lets the typewriter start typing immediately instead
-/// of waiting a frame for the gate. All step cards stay mounted (offstage) so
-/// advancing never restarts a script mid-typing; each card types its own
-/// script once in the background and is revealed when its turn comes.
 class NarratorGuideHost extends ConsumerStatefulWidget {
   final String nodeId;
   final Map<String, GlobalKey> targets;
@@ -38,10 +31,7 @@ class NarratorGuideHost extends ConsumerStatefulWidget {
 }
 
 class _NarratorGuideHostState extends ConsumerState<NarratorGuideHost> {
-  // Optimistic: the overlay is on the tree from the first frame so the
-  // typewriter gets a head start; the gate check right after that frame hides
-  // it again when the guide must not show.
-  bool _visible = true;
+  bool _visible = false;
   int _step = 0;
   bool _animateHole = false;
   final List<ScrollPosition> _scrollPositions = [];
@@ -57,14 +47,9 @@ class _NarratorGuideHostState extends ConsumerState<NarratorGuideHost> {
 
   Future<void> _maybeShow() async {
     final controller = ref.read(narratorGuideControllerProvider);
-    if (!mounted) return;
-    if (await controller.shouldShow(widget.nodeId)) {
-      // Rebuild so the spotlight re-resolves target rects now that the
-      // wrapped screen's widgets (and their GlobalKeys) are mounted.
+    if (await controller.shouldShow(widget.nodeId) && mounted) {
       setState(() => _visible = true);
       _attachScrollListeners();
-    } else {
-      setState(() => _visible = false);
     }
   }
 
@@ -129,20 +114,12 @@ class _NarratorGuideHostState extends ConsumerState<NarratorGuideHost> {
             left: 16,
             right: 16,
             bottom: 24 + MediaQuery.paddingOf(context).bottom,
-            child: Stack(
-              children: [
-                for (var i = 0; i < steps.length; i++)
-                  Offstage(
-                    offstage: i != _step,
-                    child: NarratorGuideCard(
-                      script: steps[i].script,
-                      stepIndex: i,
-                      stepCount: steps.length,
-                      onAdvance: _advance,
-                      onSkip: _finish,
-                    ),
-                  ),
-              ],
+            child: NarratorGuideCard(
+              script: step.script,
+              stepIndex: _step,
+              stepCount: steps.length,
+              onAdvance: _advance,
+              onSkip: _finish,
             ),
           ),
       ],
@@ -157,6 +134,8 @@ class _NarratorGuideHostState extends ConsumerState<NarratorGuideHost> {
     final end = _rectFor(step.targetKey);
     if (end == null) {
       // Target unmounted or off-screen: card-only step, no hole.
+      // (TweenAnimationBuilder also requires a non-null tween end, so a
+      // vanished target must bypass the animated builder entirely.)
       return const CustomPaint(painter: SpotlightPainter());
     }
     return TweenAnimationBuilder<Rect?>(
@@ -177,9 +156,8 @@ class _NarratorGuideHostState extends ConsumerState<NarratorGuideHost> {
   }
 }
 
-/// Null-safe rect tween: first step (null begin) jumps straight to the hole.
-/// `TweenAnimationBuilder` requires a non-null `end`, so the host only passes
-/// tweens for steps whose target rect resolved.
+/// Null-safe rect tween: first step (null begin) jumps straight to the hole;
+/// a vanished target (null end) hides the hole without animating.
 class _RectTween extends Tween<Rect?> {
   _RectTween({required super.begin, required super.end});
 
