@@ -178,7 +178,7 @@ class _TimelineScreenState extends ConsumerState<TimelineScreen> {
     PendingMilestoneLine? prev,
     PendingMilestoneLine? next,
   ) {
-    if (prev == null && next != null) {
+    if (next != null) {
       setState(() {
         _pendingOverlayLine = next;
         _showOverlay = true;
@@ -187,6 +187,7 @@ class _TimelineScreenState extends ConsumerState<TimelineScreen> {
   }
 
   void _dismissMilestone() {
+    if (!mounted) return;
     setState(() {
       _showOverlay = false;
       _pendingOverlayLine = null;
@@ -390,19 +391,19 @@ class _TimelineScreenState extends ConsumerState<TimelineScreen> {
                           NarratorMilestoneAction(
                             label: 'Log Reflection',
                             onTap: () {
-                              final completed = ref
+                              final now = DateTime.now();
+                              final habits = ref
                                   .read(dashboardStateProvider)
-                                  .habits
+                                  .habits;
+                              final completed = habits
                                   .where(
                                     (h) =>
-                                        h.isActiveOnDay(DateTime.now()) &&
-                                        h.isCompletedOn(DateTime.now()),
+                                        h.isActiveOnDay(now) &&
+                                        h.isCompletedOn(now),
                                   )
                                   .length;
-                              final total = ref
-                                  .read(dashboardStateProvider)
-                                  .habits
-                                  .where((h) => h.isActiveOnDay(DateTime.now()))
+                              final total = habits
+                                  .where((h) => h.isActiveOnDay(now))
                                   .length;
                               ref
                                   .read(narratorLocalDatasourceProvider)
