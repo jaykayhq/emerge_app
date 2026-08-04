@@ -54,10 +54,10 @@ NarratorUserStats _stats({
 void main() {
   group('NarratorTriggerEngine — removed triggers never fire', () {
     /// These enum values were deleted from NarratorTrigger. If any caller
-    /// tries to construct a [NarratorAppearance] with one of them, the code
-    /// won't compile. This test guards the contract at runtime: even if a
-    /// caller smuggles in a forbidden value via reflection or external
-    /// config, the engine must not produce it.
+    /// tries to resolve a [NarratorTrigger] through the engine and feed it to
+    /// a line resolver, the code won't compile. This test guards the contract
+    /// at runtime: even if a caller smuggles in a forbidden value via
+    /// reflection or external config, the engine must not produce it.
     test(
       'shouldTrigger only ever returns one of the 9 surviving enum values',
       () {
