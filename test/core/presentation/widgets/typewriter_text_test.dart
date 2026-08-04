@@ -225,5 +225,24 @@ void main() {
       await tester.pump(const Duration(seconds: 5));
       expect(completed, 1);
     });
+    testWidgets('applies an explicit style', (tester) async {
+      const style = TextStyle(color: Color(0xFF112233));
+      await tester.pumpWidget(
+        const MaterialApp(
+          home: Scaffold(
+            body: TypewriterText(
+              text: 'Hi',
+              style: style,
+              charsPerSecond: 1000,
+            ),
+          ),
+        ),
+      );
+      await tester.pump(const Duration(milliseconds: 200));
+      expect(
+        tester.widget<Text>(find.byType(Text).first).style?.color,
+        const Color(0xFF112233),
+      );
+    });
   });
 }

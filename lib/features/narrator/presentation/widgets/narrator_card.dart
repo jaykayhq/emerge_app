@@ -221,6 +221,7 @@ class _NarratorCardState extends ConsumerState<NarratorCard> {
           TypewriterText(
             key: ValueKey('card-line-${line.text}'),
             text: line.text,
+            style: const TextStyle(color: Colors.white, height: 1.5),
           ),
           const SizedBox(height: 10),
           Wrap(
@@ -323,6 +324,7 @@ class _NarratorCardState extends ConsumerState<NarratorCard> {
             TypewriterText(
               key: ValueKey('reply-${_replyLine!.text}'),
               text: _replyLine!.text,
+              style: const TextStyle(color: Colors.white, height: 1.5),
             ),
           ],
         ],

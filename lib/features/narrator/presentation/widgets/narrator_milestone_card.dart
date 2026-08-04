@@ -133,7 +133,15 @@ class _NarratorMilestoneCardState extends State<NarratorMilestoneCard> {
                     ],
                   ),
                   const SizedBox(height: 4),
-                  TypewriterText(text: widget.line.text, onComplete: () {}),
+                  TypewriterText(
+                    text: widget.line.text,
+                    style: const TextStyle(
+                      fontSize: 15,
+                      color: Colors.white,
+                      height: 1.4,
+                    ),
+                    onComplete: () {},
+                  ),
                   if (widget.actions != null && widget.actions!.isNotEmpty) ...[
                     const SizedBox(height: 10),
                     Wrap(

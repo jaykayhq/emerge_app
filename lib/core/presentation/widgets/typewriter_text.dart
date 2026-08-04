@@ -20,6 +20,7 @@ class TypewriterText extends StatefulWidget {
   final String text;
   final int charsPerSecond;
   final bool showCaret;
+  final TextStyle? style;
   final VoidCallback? onComplete;
 
   const TypewriterText({
@@ -27,6 +28,7 @@ class TypewriterText extends StatefulWidget {
     required this.text,
     this.charsPerSecond = 35,
     this.showCaret = true,
+    this.style,
     this.onComplete,
   });
 
@@ -169,6 +171,7 @@ class _TypewriterTextState extends State<TypewriterText>
                       ),
                   ],
                 ),
+                style: widget.style,
               );
             },
           ),

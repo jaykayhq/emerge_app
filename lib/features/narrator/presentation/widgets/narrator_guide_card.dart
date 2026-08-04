@@ -77,6 +77,7 @@ class _NarratorGuideCardState extends State<NarratorGuideCard> {
           const SizedBox(height: 4),
           TypewriterText(
             text: widget.script,
+            style: const TextStyle(color: Colors.white, height: 1.5),
             onComplete: () => setState(() => _typingDone = true),
           ),
           const SizedBox(height: 12),
