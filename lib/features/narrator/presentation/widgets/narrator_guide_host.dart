@@ -119,25 +119,34 @@ class _NarratorGuideHostState extends ConsumerState<NarratorGuideHost> {
       });
     }
 
-    return Stack(
-      children: [
-        widget.child,
-        if (step != null)
-          Positioned.fill(child: _spotlight(steps, step, reduceMotion)),
-        if (step != null)
-          Positioned(
-            left: 16,
-            right: 16,
-            bottom: 24 + MediaQuery.paddingOf(context).bottom,
-            child: NarratorGuideCard(
-              script: step.script,
-              stepIndex: _step,
-              stepCount: steps.length,
-              onAdvance: _advance,
-              onSkip: _finish,
+    // The guide card and its InkWell/IconButton need a Material ancestor. The
+    // host's Stack sits beside the screen's Scaffold (which may wrap the
+    // screen's content or live above it in the route), so give the overlay a
+    // self-contained transparent Material — visually a no-op, but it keeps the
+    // card from crashing with "No Material widget found" on screens whose
+    // Scaffold is nested elsewhere.
+    return Material(
+      type: MaterialType.transparency,
+      child: Stack(
+        children: [
+          widget.child,
+          if (step != null)
+            Positioned.fill(child: _spotlight(steps, step, reduceMotion)),
+          if (step != null)
+            Positioned(
+              left: 16,
+              right: 16,
+              bottom: 24 + MediaQuery.paddingOf(context).bottom,
+              child: NarratorGuideCard(
+                script: step.script,
+                stepIndex: _step,
+                stepCount: steps.length,
+                onAdvance: _advance,
+                onSkip: _finish,
+              ),
             ),
-          ),
-      ],
+        ],
+      ),
     );
   }
 
