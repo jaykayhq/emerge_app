@@ -11,6 +11,7 @@ import 'package:emerge_app/features/gamification/presentation/providers/user_sta
 import 'package:emerge_app/features/habits/presentation/providers/habit_providers.dart';
 import 'package:emerge_app/features/habits/presentation/providers/dashboard_state_provider.dart';
 import 'package:emerge_app/features/monetization/presentation/providers/subscription_provider.dart';
+import 'package:emerge_app/features/onboarding/data/repositories/local_settings_repository.dart';
 import 'package:emerge_app/features/timeline/presentation/screens/timeline_screen.dart';
 import 'package:emerge_app/features/world_map/presentation/providers/world_health_provider.dart';
 
@@ -25,33 +26,35 @@ final _emptyProfile = UserProfile(uid: 'test');
 
 void main() {
   setUp(() async {
+    // Seed the narrator-guide 'seen' flag (the timeline host checks
+    // `hasSeenNarratorGuide_timeline`; the legacy companion_visited_ flag no
+    // longer suppresses it) so the first-visit coach mark never overlays the
+    // timeline during the test.
     SharedPreferences.setMockInitialValues({
       'companion_visited_/timeline': true,
+      'hasSeenNarratorGuide_timeline': true,
     });
     final repo = CompanionRepository();
     await repo.init();
+    final settings = LocalSettingsRepository();
+    await settings.init();
   });
 
   group('TimelineScreen', () {
-    testWidgets('shows loading indicator when habits stream is pending',
-        (tester) async {
+    testWidgets('shows loading indicator when habits stream is pending', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         ProviderScope(
           overrides: [
             dashboardStateProvider.overrideWithValue(DashboardState()),
-            habitsProvider.overrideWith(
-              (ref) => const Stream.empty(),
-            ),
+            habitsProvider.overrideWith((ref) => const Stream.empty()),
             userStatsStreamProvider.overrideWith(
               (ref) => Stream.value(_emptyProfile),
             ),
             worldThemeProvider.overrideWith(WorldThemeNotifier.new),
-            worldHealthStreamProvider.overrideWith(
-              (ref) => Stream.value(0.5),
-            ),
-            worldEntropyStreamProvider.overrideWith(
-              (ref) => Stream.value(0.0),
-            ),
+            worldHealthStreamProvider.overrideWith((ref) => Stream.value(0.5)),
+            worldEntropyStreamProvider.overrideWith((ref) => Stream.value(0.0)),
             companionRepositoryProvider.overrideWith(
               (ref) => CompanionRepository(),
             ),
@@ -71,19 +74,13 @@ void main() {
         ProviderScope(
           overrides: [
             dashboardStateProvider.overrideWithValue(DashboardState()),
-            habitsProvider.overrideWith(
-              (ref) => const Stream.empty(),
-            ),
+            habitsProvider.overrideWith((ref) => const Stream.empty()),
             userStatsStreamProvider.overrideWith(
               (ref) => Stream.value(_emptyProfile),
             ),
             worldThemeProvider.overrideWith(WorldThemeNotifier.new),
-            worldHealthStreamProvider.overrideWith(
-              (ref) => Stream.value(0.5),
-            ),
-            worldEntropyStreamProvider.overrideWith(
-              (ref) => Stream.value(0.0),
-            ),
+            worldHealthStreamProvider.overrideWith((ref) => Stream.value(0.5)),
+            worldEntropyStreamProvider.overrideWith((ref) => Stream.value(0.0)),
             companionRepositoryProvider.overrideWith(
               (ref) => CompanionRepository(),
             ),

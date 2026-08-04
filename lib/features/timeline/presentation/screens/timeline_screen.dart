@@ -36,16 +36,14 @@ import 'package:emerge_app/features/narrator/domain/models/narrator_line.dart';
 import 'package:emerge_app/features/reflections/presentation/widgets/habit_options_sheet.dart';
 import 'package:emerge_app/features/narrator/domain/models/narrator_note.dart';
 import 'package:emerge_app/features/narrator/presentation/providers/narrator_providers.dart';
+import 'package:emerge_app/features/narrator/presentation/widgets/narrator_card.dart';
+import 'package:emerge_app/features/narrator/presentation/widgets/narrator_guide_host.dart';
 import 'package:emerge_app/features/narrator/presentation/widgets/narrator_milestone_card.dart';
-import 'package:emerge_app/features/narrator/presentation/widgets/narrator_summary_card.dart';
 import 'package:emerge_app/features/narrator/presentation/widgets/narrator_avatar.dart';
-import 'package:emerge_app/features/narrator/presentation/widgets/narrator_sheet.dart';
-import 'package:emerge_app/features/narrator/domain/models/narrator_appearance.dart';
 import 'package:emerge_app/features/narrator/domain/models/narrator_trigger.dart';
-import 'package:emerge_app/features/narrator/domain/services/narrator_trigger_engine.dart';
 import 'package:emerge_app/features/narrator/domain/services/narrator_open_evaluator.dart';
+import 'package:emerge_app/features/narrator/domain/services/narrator_trigger_engine.dart';
 import 'package:emerge_app/features/onboarding/presentation/providers/onboarding_provider.dart';
-import 'package:emerge_app/features/tutorials/presentation/widgets/node_guide_host.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 /// Main daily screen - the habit command center
@@ -67,23 +65,17 @@ class _TimelineScreenState extends ConsumerState<TimelineScreen> {
   PendingMilestoneLine? _pendingOverlayLine;
   final GlobalKey<AllDoneCelebrationState> _celebrationKey =
       GlobalKey<AllDoneCelebrationState>();
-
-  static const _eveningAppearance = NarratorAppearance(
-    trigger: NarratorTrigger.eveningReflection,
-    shellText:
-        'Evening check-in. How did your habits serve you today? Take a moment to reflect on what worked and what you\'ll adjust tomorrow.',
-    buttonA: 'Log Reflection',
-    buttonB: 'Skip',
-    line: GenericLine(
-      'Evening check-in. How did your habits serve you today? Take a moment to reflect on what worked and what you\'ll adjust tomorrow.',
-    ),
-  );
+  final GlobalKey _fabGuideKey = GlobalKey();
+  final GlobalKey _ringGuideKey = GlobalKey();
+  final GlobalKey _cardGuideKey = GlobalKey();
 
   @override
   void initState() {
     super.initState();
     _checkEveningReflection();
-    WidgetsBinding.instance.addPostFrameCallback((_) => _evaluateNarratorOnOpen());
+    WidgetsBinding.instance.addPostFrameCallback(
+      (_) => _evaluateNarratorOnOpen(),
+    );
   }
 
   /// Ambient narrator evaluation on timeline open: computes the trigger via
@@ -124,8 +116,10 @@ class _TimelineScreenState extends ConsumerState<TimelineScreen> {
       now: now,
       installedAt: installedAt,
       lastOpenAt: lastOpen,
-      momentumScore: ((profile?.avatarStats.momentumScore ?? 0) / 100)
-          .clamp(0.0, 1.0),
+      momentumScore: ((profile?.avatarStats.momentumScore ?? 0) / 100).clamp(
+        0.0,
+        1.0,
+      ),
       consecutiveActiveDays: 0, // not exposed on the profile
       currentStreak: bestStreak,
       longestStreak: bestStreak,
@@ -192,6 +186,14 @@ class _TimelineScreenState extends ConsumerState<TimelineScreen> {
     }
   }
 
+  void _dismissMilestone() {
+    setState(() {
+      _showOverlay = false;
+      _pendingOverlayLine = null;
+    });
+    ref.read(pendingMilestoneProvider.notifier).clear();
+  }
+
   @override
   void dispose() {
     super.dispose();
@@ -229,41 +231,17 @@ class _TimelineScreenState extends ConsumerState<TimelineScreen> {
       await prefs.setBool(key, true);
       if (!mounted) return;
 
-      NarratorSheet.show(
-        context,
-        _eveningAppearance,
-        onResponse: (buttonLabel, typedText) {
-          ref
-              .read(narratorLocalDatasourceProvider)
-              .recordNote(
-                type: NarratorNoteType.reflectionLogged,
-                data: {
-                  'completedCount': completedToday,
-                  'totalHabits': totalHabits,
-                  'response': buttonLabel,
-                  if (typedText != null && typedText.isNotEmpty)
-                    'typedNote': typedText,
-                },
-              );
-        },
-      );
+      ref
+          .read(pendingMilestoneProvider.notifier)
+          .set(
+            PendingMilestoneLine(
+              line: const GenericLine(
+                'Evening check-in. How did your habits serve you today? Take a moment to reflect on what worked and what you\'ll adjust tomorrow.',
+              ),
+              trigger: NarratorTrigger.eveningReflection,
+            ),
+          );
     });
-  }
-
-  void _openCoach() {
-    NarratorSheet.show(
-      context,
-      NarratorAppearance(
-        // Resolver hook: keeps the engine the single source of truth for
-        // trigger resolution (askNarrator is user-driven, no cooldown).
-        trigger: NarratorTriggerEngine.resolveAskNarratorTrigger(),
-        shellText: 'Ask your coach anything.',
-        buttonA: 'Later',
-        buttonB: 'Later',
-        line: const GenericLine('Ask your coach anything.'),
-      ),
-      showAskField: true,
-    );
   }
 
   Map<String, List<Habit>> _groupHabitsByTimeOfDay(List<Habit> habits) {
@@ -322,8 +300,13 @@ class _TimelineScreenState extends ConsumerState<TimelineScreen> {
       }
     });
 
-    return NodeGuideHost(
+    return NarratorGuideHost(
       nodeId: 'timeline',
+      targets: {
+        'fab': _fabGuideKey,
+        'ring': _ringGuideKey,
+        'card': _cardGuideKey,
+      },
       child: WorldBackground(
         useSafeArea: false,
         themeOverride: AppWorldTheme.nebula,
@@ -355,30 +338,38 @@ class _TimelineScreenState extends ConsumerState<TimelineScreen> {
               child: Stack(
                 alignment: Alignment.center,
                 children: [
-                  Consumer(
-                    builder: (context, ref, _) {
-                      final fraction = ref.watch(completionFractionProvider);
-                      return SizedBox(
-                        width: 64,
-                        height: 64,
-                        child: CircularProgressIndicator(
-                          value: fraction,
-                          strokeWidth: 3,
-                          strokeCap: StrokeCap.round,
-                          backgroundColor: Colors.white.withValues(alpha: 0.1),
-                          valueColor: AlwaysStoppedAnimation<Color>(
-                            _ringColor(fraction),
+                  KeyedSubtree(
+                    key: _ringGuideKey,
+                    child: Consumer(
+                      builder: (context, ref, _) {
+                        final fraction = ref.watch(completionFractionProvider);
+                        return SizedBox(
+                          width: 64,
+                          height: 64,
+                          child: CircularProgressIndicator(
+                            value: fraction,
+                            strokeWidth: 3,
+                            strokeCap: StrokeCap.round,
+                            backgroundColor: Colors.white.withValues(
+                              alpha: 0.1,
+                            ),
+                            valueColor: AlwaysStoppedAnimation<Color>(
+                              _ringColor(fraction),
+                            ),
                           ),
-                        ),
-                      );
-                    },
+                        );
+                      },
+                    ),
                   ),
-                  FloatingActionButton(
-                    heroTag: 'timeline_create_habit',
-                    backgroundColor: EmergeColors.teal,
-                    tooltip: 'Log Habit',
-                    onPressed: () => context.push('/timeline/create-habit'),
-                    child: const Icon(Icons.add, color: Colors.white),
+                  KeyedSubtree(
+                    key: _fabGuideKey,
+                    child: FloatingActionButton(
+                      heroTag: 'timeline_create_habit',
+                      backgroundColor: EmergeColors.teal,
+                      tooltip: 'Log Habit',
+                      onPressed: () => context.push('/timeline/create-habit'),
+                      child: const Icon(Icons.add, color: Colors.white),
+                    ),
                   ),
                 ],
               ),
@@ -392,13 +383,47 @@ class _TimelineScreenState extends ConsumerState<TimelineScreen> {
                 child: NarratorMilestoneCard(
                   line: _pendingOverlayLine!.line,
                   trigger: _pendingOverlayLine!.trigger,
-                  onDismissed: () {
-                    setState(() {
-                      _showOverlay = false;
-                      _pendingOverlayLine = null;
-                    });
-                    ref.read(pendingMilestoneProvider.notifier).clear();
-                  },
+                  actions:
+                      _pendingOverlayLine!.trigger ==
+                          NarratorTrigger.eveningReflection
+                      ? [
+                          NarratorMilestoneAction(
+                            label: 'Log Reflection',
+                            onTap: () {
+                              final completed = ref
+                                  .read(dashboardStateProvider)
+                                  .habits
+                                  .where(
+                                    (h) =>
+                                        h.isActiveOnDay(DateTime.now()) &&
+                                        h.isCompletedOn(DateTime.now()),
+                                  )
+                                  .length;
+                              final total = ref
+                                  .read(dashboardStateProvider)
+                                  .habits
+                                  .where((h) => h.isActiveOnDay(DateTime.now()))
+                                  .length;
+                              ref
+                                  .read(narratorLocalDatasourceProvider)
+                                  .recordNote(
+                                    type: NarratorNoteType.reflectionLogged,
+                                    data: {
+                                      'completedCount': completed,
+                                      'totalHabits': total,
+                                      'response': 'Log Reflection',
+                                    },
+                                  );
+                              _dismissMilestone();
+                            },
+                          ),
+                          NarratorMilestoneAction(
+                            label: 'Skip',
+                            onTap: _dismissMilestone,
+                          ),
+                        ]
+                      : null,
+                  onDismissed: _dismissMilestone,
                 ),
               ),
             // Peak-End all-done celebration: full-screen glow + narrator line.
@@ -432,7 +457,10 @@ class _TimelineScreenState extends ConsumerState<TimelineScreen> {
             showToday: _isToday(_selectedDate),
             onAvatarTap: () => context.push('/profile'),
             onUpgradeTap: () => context.push('/paywall'),
-            trailing: NarratorAvatar(onTap: _openCoach),
+            trailing: NarratorAvatar(
+              onTap: () =>
+                  ref.read(narratorAskFocusProvider.notifier).request(),
+            ),
           ),
         ),
 
@@ -555,7 +583,7 @@ class _TimelineScreenState extends ConsumerState<TimelineScreen> {
 
         const SliverToBoxAdapter(child: SizedBox(height: 24)),
 
-        const SliverToBoxAdapter(child: NarratorSummaryCard()),
+        SliverToBoxAdapter(child: NarratorCard(key: _cardGuideKey)),
 
         const SliverToBoxAdapter(child: SizedBox(height: 12)),
 
