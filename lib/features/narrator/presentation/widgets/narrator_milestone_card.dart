@@ -7,6 +7,9 @@ import 'package:emerge_app/features/narrator/domain/models/narrator_trigger.dart
 import 'package:flutter/material.dart';
 
 /// One tappable chip on a milestone card (e.g. "Log Reflection").
+///
+/// The card auto-dismisses after 6s; action handlers are expected to dismiss
+/// the card (or the card will linger once the timer is cancelled).
 class NarratorMilestoneAction {
   final String label;
   final VoidCallback onTap;
@@ -140,7 +143,6 @@ class _NarratorMilestoneCardState extends State<NarratorMilestoneCard> {
                       color: Colors.white,
                       height: 1.4,
                     ),
-                    onComplete: () {},
                   ),
                   if (widget.actions != null && widget.actions!.isNotEmpty) ...[
                     const SizedBox(height: 10),
@@ -148,29 +150,14 @@ class _NarratorMilestoneCardState extends State<NarratorMilestoneCard> {
                       spacing: 8,
                       children: [
                         for (final action in widget.actions!)
-                          GestureDetector(
-                            onTap: action.onTap,
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 12,
-                                vertical: 6,
-                              ),
-                              decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(10),
-                                color: Colors.white.withValues(alpha: 0.18),
-                                border: Border.all(
-                                  color: Colors.white.withValues(alpha: 0.3),
-                                ),
-                              ),
-                              child: Text(
-                                action.label,
-                                style: const TextStyle(
-                                  fontSize: 12,
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ),
+                          _ActionChip(
+                            label: action.label,
+                            onTap: () {
+                              // The 6s auto-dismiss timer must not fire in the
+                              // middle of handling a chip tap.
+                              _timer?.cancel();
+                              action.onTap();
+                            },
                           ),
                       ],
                     ),
@@ -200,4 +187,60 @@ class _NarratorMilestoneCardState extends State<NarratorMilestoneCard> {
     NarratorTrigger.onboardingPostArchetype => 'WELCOME',
     NarratorTrigger.askNarrator => 'YOU ASKED',
   };
+}
+
+/// One tappable action chip (e.g. "Log Reflection"). Keeps a pressed state
+/// so the tap has visible feedback without an InkWell ripple (the opaque
+/// gradient would hide a ripple painted on the host Material behind it).
+class _ActionChip extends StatefulWidget {
+  final String label;
+  final VoidCallback onTap;
+
+  const _ActionChip({required this.label, required this.onTap});
+
+  @override
+  State<_ActionChip> createState() => _ActionChipState();
+}
+
+class _ActionChipState extends State<_ActionChip> {
+  bool _pressed = false;
+
+  void _setPressed(bool value) {
+    if (_pressed != value) setState(() => _pressed = value);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Semantics(
+      button: true,
+      label: widget.label,
+      excludeSemantics: true,
+      child: GestureDetector(
+        onTapDown: (_) => _setPressed(true),
+        onTapUp: (_) => _setPressed(false),
+        onTapCancel: () => _setPressed(false),
+        onTap: widget.onTap,
+        child: Container(
+          constraints: const BoxConstraints(minHeight: 44),
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+          alignment: Alignment.center,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(10),
+            color: _pressed
+                ? Colors.white.withValues(alpha: 0.32)
+                : Colors.white.withValues(alpha: 0.18),
+            border: Border.all(color: Colors.white.withValues(alpha: 0.3)),
+          ),
+          child: Text(
+            widget.label,
+            style: const TextStyle(
+              fontSize: 12,
+              color: Colors.white,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
 }
