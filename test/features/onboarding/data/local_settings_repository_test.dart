@@ -62,21 +62,23 @@ void main() {
     expect(await repo.getHasSeenNarratorGuide('challenges'), isTrue);
   });
 
-  test('removes unknown-route legacy flags without creating a node flag',
-      () async {
-    SharedPreferences.setMockInitialValues({
-      'companion_visited_/insights': true,
-    });
-    final repo = LocalSettingsRepository();
-    await repo.init();
-    await repo.migrateVisitedFlags();
+  test(
+    'removes unknown-route legacy flags without creating a node flag',
+    () async {
+      SharedPreferences.setMockInitialValues({
+        'companion_visited_/insights': true,
+      });
+      final repo = LocalSettingsRepository();
+      await repo.init();
+      await repo.migrateVisitedFlags();
 
-    // '/insights' is not in the migration map: the legacy key is still
-    // removed, but no hasSeenNarratorGuide_insights flag is created.
-    final keys = (await SharedPreferences.getInstance()).getKeys();
-    expect(keys.contains('companion_visited_/insights'), isFalse);
-    expect(await repo.getHasSeenNarratorGuide('insights'), isFalse);
-  });
+      // '/insights' is not in the migration map: the legacy key is still
+      // removed, but no hasSeenNarratorGuide_insights flag is created.
+      final keys = (await SharedPreferences.getInstance()).getKeys();
+      expect(keys.contains('companion_visited_/insights'), isFalse);
+      expect(await repo.getHasSeenNarratorGuide('insights'), isFalse);
+    },
+  );
 
   test('app installed-at round-trips', () async {
     final repo = LocalSettingsRepository();
@@ -109,8 +111,10 @@ void main() {
     final first = DateTime(2026, 8, 1, 7, 0);
     final second = DateTime(2026, 8, 1, 8, 0);
     await repo.recordNarratorTrigger(NarratorTrigger.longAbsence, first);
-    await repo.recordNarratorTrigger(NarratorTrigger.streakBreakFirstMiss,
-        second);
+    await repo.recordNarratorTrigger(
+      NarratorTrigger.streakBreakFirstMiss,
+      second,
+    );
 
     final loaded = await repo.getRecentNarratorTriggers();
     expect(loaded, {
@@ -119,34 +123,36 @@ void main() {
     });
   });
 
-  test('recent narrator triggers tolerate unknown names and bad JSON',
-      () async {
-    SharedPreferences.setMockInitialValues({
-      'narrator_recent_triggers':
-          '{"longAbsence":"2026-08-01T07:00:00.000",'
-              '"totallyUnknownTrigger":"2026-08-01T08:00:00.000",'
-              '"morningBriefEarlyDays":"not-a-date"}',
-    });
-    final repo = LocalSettingsRepository();
-    await repo.init();
+  test(
+    'recent narrator triggers tolerate unknown names and bad JSON',
+    () async {
+      SharedPreferences.setMockInitialValues({
+        'narrator_recent_triggers':
+            '{"longAbsence":"2026-08-01T07:00:00.000",'
+            '"totallyUnknownTrigger":"2026-08-01T08:00:00.000",'
+            '"morningBriefEarlyDays":"not-a-date"}',
+      });
+      final repo = LocalSettingsRepository();
+      await repo.init();
 
-    final loaded = await repo.getRecentNarratorTriggers();
-    // Unknown trigger name skipped; unparseable timestamp skipped.
-    expect(loaded, {
-      NarratorTrigger.longAbsence: DateTime(2026, 8, 1, 7),
-    });
-  });
+      final loaded = await repo.getRecentNarratorTriggers();
+      // Unknown trigger name skipped; unparseable timestamp skipped.
+      expect(loaded, {NarratorTrigger.longAbsence: DateTime(2026, 8, 1, 7)});
+    },
+  );
 
-  test('recent narrator triggers degrade to empty on storage failure',
-      () async {
-    SharedPreferences.setMockInitialValues({
-      'narrator_recent_triggers': '{{{not json',
-    });
-    final repo = LocalSettingsRepository();
-    await repo.init();
+  test(
+    'recent narrator triggers degrade to empty on storage failure',
+    () async {
+      SharedPreferences.setMockInitialValues({
+        'narrator_recent_triggers': '{{{not json',
+      });
+      final repo = LocalSettingsRepository();
+      await repo.init();
 
-    expect(await repo.getRecentNarratorTriggers(), isEmpty);
-  });
+      expect(await repo.getRecentNarratorTriggers(), isEmpty);
+    },
+  );
 
   group('migrateNarratorGuideFlags', () {
     test('migrates hasSeenNodeGuide_* to hasSeenNarratorGuide_*', () async {
@@ -179,19 +185,21 @@ void main() {
       expect(prefs.getBool('hasSeenNodeGuide_challenges'), isNull);
     });
 
-    test('an absent narrator flag is migrated even when the old key is false',
-        () async {
-      // Stored `false` and absent are indistinguishable in prefs — the
-      // migration's guard only protects an already-true narrator flag.
-      SharedPreferences.setMockInitialValues({
-        'hasSeenNodeGuide_challenges': true,
-        'hasSeenNarratorGuide_challenges': true,
-      });
-      final repo = LocalSettingsRepository();
-      await repo.init();
-      await repo.migrateNarratorGuideFlags();
-      expect(await repo.getHasSeenNarratorGuide('challenges'), true);
-    });
+    test(
+      'a false legacy key is removed without writing a narrator flag',
+      () async {
+        SharedPreferences.setMockInitialValues({
+          'hasSeenNodeGuide_challenges': false,
+        });
+        final repo = LocalSettingsRepository();
+        await repo.init();
+        await repo.migrateNarratorGuideFlags();
+
+        expect(await repo.getHasSeenNarratorGuide('challenges'), false);
+        final prefs = await SharedPreferences.getInstance();
+        expect(prefs.getBool('hasSeenNodeGuide_challenges'), isNull);
+      },
+    );
 
     test('writes nothing when no legacy keys exist', () async {
       SharedPreferences.setMockInitialValues({});
