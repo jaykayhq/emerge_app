@@ -31,11 +31,11 @@ import 'package:fpdart/fpdart.dart';
 import 'package:purchases_flutter/purchases_flutter.dart';
 
 class _MockAppDatabase extends Mock implements AppDatabase {}
+
 class _MockSyncEngine extends Mock implements EnhancedSyncEngine {}
 
 class FakeDriftUserStatsRepository extends DriftUserStatsRepository {
-  FakeDriftUserStatsRepository()
-      : super(_MockAppDatabase(), _MockSyncEngine());
+  FakeDriftUserStatsRepository() : super(_MockAppDatabase(), _MockSyncEngine());
 }
 
 class FakeWorldThemeNotifier extends WorldThemeNotifier {
@@ -65,21 +65,27 @@ class _FakeMonetizationRepository implements MonetizationRepository {
     openManageCalls++;
     return const Right(true);
   }
+
   // Unused members — fail loudly if touched.
   @override
-  Future<Either<String, Map<String, String>>> getConsumablePrices(List<String> productIds) async => const Left('unused');
+  Future<Either<String, Map<String, String>>> getConsumablePrices(
+    List<String> productIds,
+  ) async => const Left('unused');
   @override
   Future<Either<String, bool>> get isPremium async => const Right(true);
   @override
-  Future<Either<String, Offerings>> getOfferings() async => const Left('unused');
+  Future<Either<String, Offerings>> getOfferings() async =>
+      const Left('unused');
   @override
   Future<void> identify(String uid) async {}
   @override
   Future<void> initialize({String? uid}) async {}
   @override
-  Future<Either<String, bool>> purchaseConsumable(String productId) async => const Left('unused');
+  Future<Either<String, bool>> purchaseConsumable(String productId) async =>
+      const Left('unused');
   @override
-  Future<Either<String, bool>> purchasePremium([Package? package]) async => const Right(true);
+  Future<Either<String, bool>> purchasePremium([Package? package]) async =>
+      const Right(true);
   @override
   Future<Either<String, bool>> restorePurchases() async => const Right(true);
   @override
@@ -92,7 +98,10 @@ class _FakeMonetizationRepository implements MonetizationRepository {
 
 class _FakeCaller implements ManagePremiumCaller {
   @override
-  Future<Map<String, dynamic>> call(String name, Map<String, dynamic> data) async {
+  Future<Map<String, dynamic>> call(
+    String name,
+    Map<String, dynamic> data,
+  ) async {
     return {'ok': true};
   }
 }
@@ -108,7 +117,7 @@ class _FakeManagePremiumService extends ManagePremiumService {
 }
 
 /// In-memory settings store for the Tutorials section tests (mirrors
-/// test/features/tutorials/presentation/node_guide_host_test.dart).
+/// test/features/narrator/presentation/widgets/narrator_guide_host_test.dart).
 class FakeSettings extends LocalSettingsRepository {
   FakeSettings({required this.tutorialsEnabled});
   final bool tutorialsEnabled;
@@ -137,7 +146,11 @@ class FakeCoachAskQuota extends CoachAskQuotaController {
   Future<CoachAskQuota> build() async => quota;
 }
 
-final testUser = AuthUser(id: 'test-uid', email: 'test@example.com', displayName: 'Test User');
+final testUser = AuthUser(
+  id: 'test-uid',
+  email: 'test@example.com',
+  displayName: 'Test User',
+);
 
 final testProfile = UserProfile(
   uid: 'test-uid',
@@ -153,17 +166,15 @@ Widget createTest({
 }) {
   return ProviderScope(
     overrides: [
-      authStateChangesProvider.overrideWith(
-        (ref) => const Stream.empty(),
-      ),
-      userStatsStreamProvider.overrideWith(
-        (ref) => Stream.value(testProfile),
-      ),
+      authStateChangesProvider.overrideWith((ref) => const Stream.empty()),
+      userStatsStreamProvider.overrideWith((ref) => Stream.value(testProfile)),
       userStatsRepositoryProvider.overrideWith(
         (ref) => FakeDriftUserStatsRepository(),
       ),
       themeControllerProvider.overrideWithValue(ThemeMode.dark),
-      worldThemeProvider.overrideWith(() => worldTheme ?? FakeWorldThemeNotifier()),
+      worldThemeProvider.overrideWith(
+        () => worldTheme ?? FakeWorldThemeNotifier(),
+      ),
       isPremiumProvider.overrideWith(() => FakeIsPremium(premium)),
       habitsProvider.overrideWith((ref) => Stream.value(const [])),
       userStreakProvider.overrideWith((ref) => Stream.value(0)),
@@ -173,12 +184,8 @@ Widget createTest({
       managePremiumServiceProvider.overrideWithValue(
         _FakeManagePremiumService(),
       ),
-      worldHealthStreamProvider.overrideWith(
-        (ref) => Stream.value(0.5),
-      ),
-      worldEntropyStreamProvider.overrideWith(
-        (ref) => Stream.value(0.0),
-      ),
+      worldHealthStreamProvider.overrideWith((ref) => Stream.value(0.5)),
+      worldEntropyStreamProvider.overrideWith((ref) => Stream.value(0.0)),
       if (settings != null)
         localSettingsRepositoryProvider.overrideWithValue(settings),
       coachAskQuotaControllerProvider.overrideWith(
@@ -194,9 +201,7 @@ Widget createTest({
     ],
     child: router != null
         ? MaterialApp.router(routerConfig: router)
-        : const MaterialApp(
-            home: SettingsScreen(),
-          ),
+        : const MaterialApp(home: SettingsScreen()),
   );
 }
 
@@ -225,8 +230,9 @@ void main() {
     expect(find.text('Dark Mode'), findsOneWidget);
   });
 
-  testWidgets('Manage Subscription tile navigates to manage premium',
-      (tester) async {
+  testWidgets('Manage Subscription tile navigates to manage premium', (
+    tester,
+  ) async {
     final router = GoRouter(
       initialLocation: '/settings',
       routes: [
@@ -249,43 +255,47 @@ void main() {
   });
 
   group('Tutorials section', () {
-    testWidgets('renders toggle, replay tiles and the coach quota row',
-        (tester) async {
+    testWidgets('renders toggle, replay tiles and the coach quota row', (
+      tester,
+    ) async {
       final settings = FakeSettings(tutorialsEnabled: true);
       await tester.pumpWidget(createTest(settings: settings));
       await tester.pump();
       await tester.pump();
 
       // Toggle defaults on with the "shown once" subtitle.
-      expect(find.text('Show first-visit guides'), findsOneWidget);
+      expect(find.text('Show narrator guides'), findsOneWidget);
       expect(find.text('Guides shown once on each screen'), findsOneWidget);
 
       // Replay tiles.
-      expect(find.text('Replay first-visit guides'), findsOneWidget);
+      expect(find.text('Replay narrator guides'), findsOneWidget);
       expect(find.text('Replay onboarding'), findsOneWidget);
 
       // Quota row: usedToday 1 of 3 free asks -> 2 left.
       expect(find.text('2 of 3 coach asks left today'), findsOneWidget);
     });
 
-    testWidgets('toggling the switch disables tutorials and flips the subtitle',
-        (tester) async {
-      final settings = FakeSettings(tutorialsEnabled: true);
-      await tester.pumpWidget(createTest(settings: settings));
-      await tester.pump();
-      await tester.pump();
+    testWidgets(
+      'toggling the switch disables tutorials and flips the subtitle',
+      (tester) async {
+        final settings = FakeSettings(tutorialsEnabled: true);
+        await tester.pumpWidget(createTest(settings: settings));
+        await tester.pump();
+        await tester.pump();
 
-      await tester.ensureVisible(find.text('Show first-visit guides'));
-      await tester.tap(find.text('Show first-visit guides'));
-      await tester.pump();
-      await tester.pump();
+        await tester.ensureVisible(find.text('Show narrator guides'));
+        await tester.tap(find.text('Show narrator guides'));
+        await tester.pump();
+        await tester.pump();
 
-      expect(settings.recorded, [false]);
-      expect(find.text('Guides hidden'), findsOneWidget);
-    });
+        expect(settings.recorded, [false]);
+        expect(find.text('Guides hidden'), findsOneWidget);
+      },
+    );
 
-    testWidgets('premium override shows the unlimited coach-ask quota',
-        (tester) async {
+    testWidgets('premium override shows the unlimited coach-ask quota', (
+      tester,
+    ) async {
       final settings = FakeSettings(tutorialsEnabled: true);
       await tester.pumpWidget(createTest(settings: settings, premium: true));
       await tester.pump();
@@ -309,24 +319,27 @@ void main() {
       expect(find.text('COMING SOON'), findsNWidgets(5));
     });
 
-    testWidgets('tapping a locked tile shows the snackbar and selects nothing',
-        (tester) async {
-      final worldTheme = FakeWorldThemeNotifier();
-      await tester.pumpWidget(createTest(worldTheme: worldTheme));
-      await tester.pump();
-      await tester.pump();
+    testWidgets(
+      'tapping a locked tile shows the snackbar and selects nothing',
+      (tester) async {
+        final worldTheme = FakeWorldThemeNotifier();
+        await tester.pumpWidget(createTest(worldTheme: worldTheme));
+        await tester.pump();
+        await tester.pump();
 
-      await tester.ensureVisible(find.text('Living'));
-      await tester.pump();
-      await tester.tap(find.text('Living'));
-      await tester.pump();
+        await tester.ensureVisible(find.text('Living'));
+        await tester.pump();
+        await tester.tap(find.text('Living'));
+        await tester.pump();
 
-      expect(find.text('Coming soon'), findsOneWidget);
-      expect(worldTheme.setCalls, isEmpty);
-    });
+        expect(find.text('Coming soon'), findsOneWidget);
+        expect(worldTheme.setCalls, isEmpty);
+      },
+    );
 
-    testWidgets('tapping the unlocked theme selects it without a snackbar',
-        (tester) async {
+    testWidgets('tapping the unlocked theme selects it without a snackbar', (
+      tester,
+    ) async {
       final worldTheme = FakeWorldThemeNotifier();
       await tester.pumpWidget(createTest(worldTheme: worldTheme));
       await tester.pump();

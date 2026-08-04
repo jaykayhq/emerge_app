@@ -21,7 +21,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 /// Typed day-line (pending milestone → latest insight → computed day status),
 /// glanceable status chips (streak, remaining today), and an inline coach
 /// ask that reuses the premium quota + Groq plumbing that used to live in
-/// NarratorSheet.
+/// a dedicated narrator sheet (now removed).
 class NarratorCard extends ConsumerStatefulWidget {
   const NarratorCard({super.key, this.coach});
 

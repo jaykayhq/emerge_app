@@ -443,6 +443,8 @@ database.habitDao.watchAll().watchWhere((t) => t.userId.equals(userId));
 | `animationMedium` | 200ms | Standard micro-interactions, button feedback |
 | `animationSlow` | 300ms | Screen transitions, card expansions |
 | Maximum (Material 3 cap) | 550ms | Complex sequences — never exceed this |
+| Narrator typewriter pace | 35 chars/sec | Typed narrator lines (tap-to-skip; instant under reduced motion) |
+| Spotlight hole glide | 200ms easeInOut | Guide spotlight movement between steps |
 
 ### 6.2 Animation Guidelines
 
@@ -779,14 +781,14 @@ Banners appear below the AppBar and persist until dismissed. Only one banner at 
 
 ### 11.5 The Narrator as Feedback
 
-The Narrator is the app's character-driven feedback system — see `docs/design/narrator-ux.md` for full spec. Key rules:
+The Narrator is the app's guide — one voice across first-visit tutorials, the Day Card, event milestones, and the coach ask:
 
-- Narrator fires on ≤9 triggers (down from 13)
-- Typewriter animation is removed everywhere — text renders instantly
+- The narrator owns first-visit tutorials: a typed script walks 2–4 steps per screen while a spotlight hole highlights the exact section each line explains (see `docs/superpowers/specs/2026-08-04-narrator-is-the-guide-design.md`)
+- Narrator text types out at ~35 chars/sec with a blinking caret; tap-to-skip completes instantly; reduced motion renders instantly (never unskippable)
 - Free users see generic lines; Pro users see personalized data-grounded lines
 - The Narrator never interrupts onboarding
-- The persistent `NarratorAvatar` (44dp, top-right of timeline) is the only always-visible narrator surface
-- Tap avatar → sheet opens instantly (≤200ms perceived)
+- The Day Card (timeline) is the always-visible narrator surface: typed day-line, streak/remaining chips, inline coach ask (3 free/day, unlimited for Pro)
+- Event moments (streak break, level up, evening) surface as non-blocking typed milestone cards, never modals
 
 ---
 
@@ -848,7 +850,7 @@ Maintain engagement through unpredictable positive events:
 | Streak shaming | Creates guilt, reduces retention | Momentum system with forgiveness |
 | Confirmation dialogs for habitual actions | Adds friction to repeated behavior | Undo in SnackBar |
 | Full-screen loading spinners | Opaque, anxiety-inducing | Skeleton loaders with content shape |
-| Typewriter text anywhere | Feels slow, dated, AI-generated | Instant render or shimmer-then-fallback |
+| Unskippable typewriter text | Feels slow, blocks fast readers | ~35 cps with tap-to-skip; instant under reduced motion |
 | Narrator on every app open | Desensitizes user, kills signal | 9 triggers max, cooldown enforced |
 
 ---

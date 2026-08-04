@@ -334,7 +334,7 @@ class SettingsScreen extends ConsumerWidget {
                   child: Icon(Icons.school_outlined, color: EmergeColors.teal),
                 ),
                 title: Text(
-                  'Show first-visit guides',
+                  'Show narrator guides',
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                     fontWeight: FontWeight.w500,
                     color: AppTheme.textMainDark,
@@ -360,7 +360,7 @@ class SettingsScreen extends ConsumerWidget {
               _buildListTile(
                 context,
                 Icons.replay_outlined,
-                'Replay first-visit guides',
+                'Replay narrator guides',
                 subtitle: 'Shows every guide again on next visit',
                 onTap: () => _showReplayGuidesDialog(context, ref),
               ),
@@ -373,8 +373,7 @@ class SettingsScreen extends ConsumerWidget {
               ),
               Consumer(
                 builder: (context, ref, _) {
-                  final isPremium =
-                      ref.watch(isPremiumProvider).value ?? false;
+                  final isPremium = ref.watch(isPremiumProvider).value ?? false;
                   final remaining = ref
                       .watch(coachAskQuotaControllerProvider)
                       .value
@@ -912,11 +911,11 @@ class SettingsScreen extends ConsumerWidget {
       builder: (context) => AlertDialog(
         backgroundColor: AppTheme.surfaceDark,
         title: const Text(
-          'Replay first-visit guides?',
+          'Replay narrator guides?',
           style: TextStyle(color: Colors.white),
         ),
         content: const Text(
-          'All first-visit guides will show again the next time you visit each screen.',
+          'All narrator guides will show again the next time you visit each screen.',
           style: TextStyle(color: Colors.white70),
         ),
         actions: [
@@ -929,9 +928,7 @@ class SettingsScreen extends ConsumerWidget {
           ),
           ElevatedButton(
             onPressed: () async {
-              await ref
-                  .read(tutorialSettingProvider.notifier)
-                  .resetTutorials();
+              await ref.read(tutorialSettingProvider.notifier).resetTutorials();
               if (!context.mounted) return;
               Navigator.pop(context);
               ScaffoldMessenger.of(context).showSnackBar(
@@ -940,8 +937,7 @@ class SettingsScreen extends ConsumerWidget {
                 ),
               );
             },
-            style:
-                ElevatedButton.styleFrom(backgroundColor: EmergeColors.teal),
+            style: ElevatedButton.styleFrom(backgroundColor: EmergeColors.teal),
             child: const Text(
               'RESET',
               style: TextStyle(
@@ -987,8 +983,7 @@ class SettingsScreen extends ConsumerWidget {
               Navigator.pop(context);
               context.go('/timeline'); // redirect takes over from here
             },
-            style:
-                ElevatedButton.styleFrom(backgroundColor: EmergeColors.teal),
+            style: ElevatedButton.styleFrom(backgroundColor: EmergeColors.teal),
             child: const Text(
               'REPLAY',
               style: TextStyle(
@@ -1218,15 +1213,17 @@ class SettingsScreen extends ConsumerWidget {
                           ),
                         );
                         try {
-                          final authUser =
-                              ref.read(authStateChangesProvider).value;
+                          final authUser = ref
+                              .read(authStateChangesProvider)
+                              .value;
                           final userId = authUser?.id;
                           if (userId == null) throw Exception('Not signed in');
 
                           // 1. Server-first: purge remote with idempotent key.
                           //    Local data is wiped ONLY after the server confirms.
-                          final deletionService =
-                              ref.read(deletionServiceProvider);
+                          final deletionService = ref.read(
+                            deletionServiceProvider,
+                          );
                           final result = await deletionService
                               .deleteAccount(
                                 userId: userId,
@@ -1238,10 +1235,11 @@ class SettingsScreen extends ConsumerWidget {
                               )
                               .timeout(
                                 const Duration(seconds: 60),
-                                onTimeout: () =>
-                                    const Left(ServerFailure(
-                                  'Deletion took too long. Local data kept.',
-                                )),
+                                onTimeout: () => const Left(
+                                  ServerFailure(
+                                    'Deletion took too long. Local data kept.',
+                                  ),
+                                ),
                               );
 
                           if (context.mounted) {
@@ -1391,7 +1389,10 @@ class _WorldThemePicker extends StatelessWidget {
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Text(theme.emoji, style: const TextStyle(fontSize: 26)),
+                          Text(
+                            theme.emoji,
+                            style: const TextStyle(fontSize: 26),
+                          ),
                           const SizedBox(height: 4),
                           Text(
                             theme.displayName.split(' ').first,

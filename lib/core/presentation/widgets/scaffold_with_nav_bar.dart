@@ -17,7 +17,7 @@ import 'package:go_router/go_router.dart';
 ///
 /// Note: The companion system has been superseded by the Narrator.
 /// Companion overlay rendering is removed — the Narrator handles all
-/// inline guidance via NarratorSheet / NarratorSummaryCard.
+/// inline guidance via the Narrator Day Card and typed milestone cards.
 class ScaffoldWithNavBar extends ConsumerWidget {
   final StatefulNavigationShell navigationShell;
 
@@ -34,13 +34,8 @@ class ScaffoldWithNavBar extends ConsumerWidget {
     });
 
     return Scaffold(
-      body: WorldBackground(
-        useSafeArea: false,
-        child: navigationShell,
-      ),
-      bottomNavigationBar: EmergeBottomNav(
-        navigationShell: navigationShell,
-      ),
+      body: WorldBackground(useSafeArea: false, child: navigationShell),
+      bottomNavigationBar: EmergeBottomNav(navigationShell: navigationShell),
     );
   }
 

@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 /// 44dp persistent narrator avatar. Idle: subtle pulse.
-/// Has-pending-line: green status dot. Tap → opens NarratorSheet via callback.
+/// Has-pending-line: green status dot. Tap → focuses the Day Card's coach ask.
 class NarratorAvatar extends ConsumerStatefulWidget {
   final VoidCallback? onTap;
   const NarratorAvatar({super.key, this.onTap});
@@ -20,9 +20,10 @@ class _NarratorAvatarState extends ConsumerState<NarratorAvatar>
     duration: const Duration(seconds: 2),
   )..repeat(reverse: true);
 
-  late final Animation<double> _pulse = Tween<double>(begin: 0.97, end: 1.03).animate(
-    CurvedAnimation(parent: _ctrl, curve: Curves.easeInOut),
-  );
+  late final Animation<double> _pulse = Tween<double>(
+    begin: 0.97,
+    end: 1.03,
+  ).animate(CurvedAnimation(parent: _ctrl, curve: Curves.easeInOut));
 
   @override
   void dispose() {
@@ -65,7 +66,10 @@ class _NarratorAvatarState extends ConsumerState<NarratorAvatar>
                     ),
                   ),
                   child: const Center(
-                    child: Text('✦', style: TextStyle(fontSize: 14, color: Colors.white)),
+                    child: Text(
+                      '✦',
+                      style: TextStyle(fontSize: 14, color: Colors.white),
+                    ),
                   ),
                 ),
               ),
@@ -82,7 +86,10 @@ class _NarratorAvatarState extends ConsumerState<NarratorAvatar>
                   shape: BoxShape.circle,
                   color: EmergeColors.teal,
                   boxShadow: [
-                    BoxShadow(color: EmergeColors.teal.withValues(alpha: 0.6), blurRadius: 6),
+                    BoxShadow(
+                      color: EmergeColors.teal.withValues(alpha: 0.6),
+                      blurRadius: 6,
+                    ),
                   ],
                 ),
               ),
