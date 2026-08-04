@@ -213,8 +213,10 @@ class _ActionChipState extends State<_ActionChip> {
   Widget build(BuildContext context) {
     return Semantics(
       button: true,
+      container: true,
       label: widget.label,
       excludeSemantics: true,
+      onTap: widget.onTap,
       child: GestureDetector(
         onTapDown: (_) => _setPressed(true),
         onTapUp: (_) => _setPressed(false),

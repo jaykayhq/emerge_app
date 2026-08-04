@@ -1,3 +1,5 @@
+import 'dart:ui' show SemanticsAction;
+
 import 'package:emerge_app/features/narrator/domain/models/narrator_line.dart';
 import 'package:emerge_app/features/narrator/domain/models/narrator_trigger.dart';
 import 'package:emerge_app/features/narrator/presentation/widgets/narrator_milestone_card.dart';
@@ -111,5 +113,75 @@ void main() {
     );
     await tester.pump(const Duration(seconds: 7)); // past the 6s auto-dismiss
     expect(dismissed, true);
+  });
+
+  // Semantics are enabled by default in testWidgets (semanticsEnabled: true).
+  testWidgets('chip is individually activatable via semantics', (tester) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: NarratorMilestoneCard(
+            line: line,
+            trigger: NarratorTrigger.eveningReflection,
+            actions: [
+              NarratorMilestoneAction(label: 'Log Reflection', onTap: () {}),
+            ],
+          ),
+        ),
+      ),
+    );
+    final semantics = tester.getSemantics(find.text('Log Reflection'));
+    expect(semantics.getSemanticsData().hasAction(SemanticsAction.tap), true);
+    expect(semantics.label, contains('Log Reflection'));
+  });
+
+  testWidgets('chip tap cancels the auto-dismiss timer', (tester) async {
+    var tapped = '';
+    var dismissed = false;
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: NarratorMilestoneCard(
+            line: line,
+            trigger: NarratorTrigger.eveningReflection,
+            actions: [
+              NarratorMilestoneAction(
+                label: 'Log Reflection',
+                onTap: () => tapped = 'log',
+              ),
+            ],
+            onDismissed: () => dismissed = true,
+          ),
+        ),
+      ),
+    );
+    await tester.pump(const Duration(seconds: 2)); // finish typing
+    await tester.tap(find.text('Log Reflection'));
+    await tester.pump();
+    expect(tapped, 'log');
+    // The tap cancelled the auto-dismiss timer: the card lingers well past
+    // the 6s mark instead of being dismissed.
+    await tester.pump(const Duration(seconds: 7));
+    expect(dismissed, false);
+    expect(tapped, 'log');
+  });
+
+  testWidgets('renders a PersonalLine with the PERSONAL badge', (tester) async {
+    await tester.pumpWidget(
+      const MaterialApp(
+        home: Scaffold(
+          body: NarratorMilestoneCard(
+            line: PersonalLine(
+              text: '14-day streak — Tuesday strongest.',
+              dataBasis: 'x',
+            ),
+            trigger: NarratorTrigger.onFireState,
+          ),
+        ),
+      ),
+    );
+    await tester.pump(const Duration(seconds: 2)); // finish typing
+    expect(find.text('14-day streak — Tuesday strongest.'), findsOneWidget);
+    expect(find.text('PERSONAL'), findsOneWidget);
   });
 }
