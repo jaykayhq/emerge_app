@@ -130,6 +130,9 @@ void main() {
         .map((p) => p.painter)
         .whereType<SpotlightPainter>()
         .first;
+    final targetBox = fabKey.currentContext!.findRenderObject() as RenderBox;
+    final targetRect = targetBox.localToGlobal(Offset.zero) & targetBox.size;
     expect(painter.holeRect, isNotNull);
+    expect(painter.holeRect!.contains(targetRect.center), true);
   });
 }

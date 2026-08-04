@@ -12,8 +12,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 /// `RenderBox.localToGlobal` (the overlay Stack sits in the same coordinate
 /// space as the screen), so no route/Overlay indirection is needed. The hole
 /// glides between steps (200ms); scrolls of the target's scrollable re-resolve
-/// rects instantly. A target that is unmounted or off-screen yields no hole —
-/// the card-only step still advances.
+/// rects instantly (except during the 200ms post-advance glide window). A
+/// target that is unmounted or off-screen yields no hole — the card-only step
+/// still advances.
 class NarratorGuideHost extends ConsumerStatefulWidget {
   final String nodeId;
   final Map<String, GlobalKey> targets;
@@ -94,7 +95,11 @@ class _NarratorGuideHostState extends ConsumerState<NarratorGuideHost> {
   }
 
   Future<void> _finish() async {
-    await ref.read(narratorGuideControllerProvider).markSeen(widget.nodeId);
+    try {
+      await ref.read(narratorGuideControllerProvider).markSeen(widget.nodeId);
+    } catch (_) {
+      // Best-effort: never block dismissal on storage failure.
+    }
     if (mounted) setState(() => _visible = false);
   }
 
@@ -103,6 +108,16 @@ class _NarratorGuideHostState extends ConsumerState<NarratorGuideHost> {
     final steps = _steps;
     final step = _visible && _step < steps.length ? steps[_step] : null;
     final reduceMotion = MediaQuery.disableAnimationsOf(context);
+
+    if (_visible) {
+      // Targets may mount after the first frame (e.g. stream-gated list
+      // subtrees), and Scrollable.maybeOf only walks ancestors — re-attach
+      // scroll listeners after every build while showing. The
+      // ScrollPosition-identity dedupe keeps this idempotent.
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _attachScrollListeners();
+      });
+    }
 
     return Stack(
       children: [
@@ -135,7 +150,10 @@ class _NarratorGuideHostState extends ConsumerState<NarratorGuideHost> {
     if (end == null) {
       // Target unmounted or off-screen: card-only step, no hole.
       // (TweenAnimationBuilder also requires a non-null tween end, so a
-      // vanished target must bypass the animated builder entirely.)
+      // vanished target must bypass the animated builder entirely.) Clear the
+      // glide flag here too — with no animated builder, onEnd never fires, and
+      // a target re-mounting mid-step must jump, not glide.
+      _animateHole = false;
       return const CustomPaint(painter: SpotlightPainter());
     }
     return TweenAnimationBuilder<Rect?>(
