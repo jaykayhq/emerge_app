@@ -3,6 +3,9 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:emerge_app/features/habits/domain/entities/habit.dart';
 import 'package:emerge_app/features/habits/presentation/screens/streak_recovery_screen.dart';
+import 'package:emerge_app/features/narrator/presentation/widgets/narrator_milestone_card.dart';
+import 'package:emerge_app/features/onboarding/data/repositories/local_settings_repository.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
   final habit = Habit(
@@ -27,6 +30,18 @@ void main() {
     await tester.pump();
   }
 
+  /// Seats the narrator-guide controller's storage: the screen reads
+  /// [LocalSettingsRepository] via `localSettingsRepositoryProvider`, whose
+  /// SharedPreferences-backed reads only pick up seeded values once `init()`
+  /// has populated the cached store.
+  Future<void> seedSettings({required bool seenGuide}) async {
+    SharedPreferences.setMockInitialValues({
+      'tutorialsEnabled': true,
+      if (seenGuide) 'hasSeenNarratorGuide_streak_recovery': true,
+    });
+    await LocalSettingsRepository().init();
+  }
+
   testWidgets('displays habit title, xp, messaging, and icon', (tester) async {
     await tester.pumpWidget(buildScreen(habit: habit));
     await pumpWithNarratorDelay(tester);
@@ -44,14 +59,6 @@ void main() {
   testWidgets('pops on CONTINUE tap', (tester) async {
     await tester.pumpWidget(buildScreen(habit: habit));
     await pumpWithNarratorDelay(tester);
-
-    // Close NarratorSheet modal first so CONTINUE is reachable
-    final barrier = find.byType(ModalBarrier);
-    if (barrier.evaluate().isNotEmpty) {
-      await tester.tap(barrier.last);
-      await tester.pump();
-      await tester.pump(const Duration(milliseconds: 300));
-    }
 
     // Tap CONTINUE — may throw if route can't pop since we're on home,
     // but we verify the screen handles the tap without crashing
@@ -83,5 +90,48 @@ void main() {
 
     expect(find.textContaining('Meditate 5 mins'), findsOneWidget);
     expect(find.text('50'), findsOneWidget);
+  });
+
+  testWidgets('shows the streak-break message once the guide has been seen', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(390, 844);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.reset);
+    await seedSettings(seenGuide: true);
+
+    await tester.pumpWidget(buildScreen(habit: habit));
+    await pumpWithNarratorDelay(tester);
+
+    expect(find.byType(NarratorMilestoneCard), findsOneWidget);
+  });
+
+  testWidgets('stays hidden while the guide is due', (tester) async {
+    tester.view.physicalSize = const Size(375, 667);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.reset);
+    await seedSettings(seenGuide: false);
+
+    await tester.pumpWidget(buildScreen(habit: habit));
+    await pumpWithNarratorDelay(tester);
+
+    expect(find.byType(NarratorMilestoneCard), findsNothing);
+  });
+
+  testWidgets('auto-dismisses after 6s', (tester) async {
+    tester.view.physicalSize = const Size(390, 844);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.reset);
+    await seedSettings(seenGuide: true);
+
+    await tester.pumpWidget(buildScreen(habit: habit));
+    await pumpWithNarratorDelay(tester);
+    expect(find.byType(NarratorMilestoneCard), findsOneWidget);
+
+    // The card types its line; pumping past the auto-dismiss window is enough
+    // (the card removes itself via onDismissed).
+    await tester.pump(const Duration(seconds: 7));
+    await tester.pump();
+    expect(find.byType(NarratorMilestoneCard), findsNothing);
   });
 }

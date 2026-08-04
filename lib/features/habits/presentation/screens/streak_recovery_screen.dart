@@ -36,11 +36,11 @@ class _StreakRecoveryScreenState extends ConsumerState<StreakRecoveryScreen> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      _showNarrator();
+      _maybeShowMilestoneMessage();
     });
   }
 
-  Future<void> _showNarrator() async {
+  Future<void> _maybeShowMilestoneMessage() async {
     // Wait a brief moment for the screen to settle.
     await Future.delayed(const Duration(milliseconds: 600));
     if (!mounted) return;
@@ -57,43 +57,38 @@ class _StreakRecoveryScreenState extends ConsumerState<StreakRecoveryScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // NarratorGuideCard uses IconButton/InkWell, which need a Material
-    // ancestor. The guide card sits beside the Scaffold in the host's Stack
-    // (the Scaffold's own Material only covers its body), so provide a
-    // transparent one here.
-    return Material(
-      type: MaterialType.transparency,
-      child: NarratorGuideHost(
-        nodeId: 'streak_recovery',
-        targets: {
-          'momentum_visual': _momentumKey,
-          'restart_cta': _restartCtaKey,
-        },
-        child: Scaffold(
-          backgroundColor: AppTheme.backgroundDark,
-          body: Stack(
-            children: [
-              // Background blur/particles
-              Positioned.fill(
-                child: ImageFiltered(
-                  imageFilter: ImageFilter.blur(sigmaX: 50, sigmaY: 50),
-                  child: Container(
-                    decoration: BoxDecoration(
-                      gradient: RadialGradient(
-                        colors: [
-                          AppTheme.vitalityGreen.withValues(alpha: 0.3),
-                          Colors.transparent,
-                        ],
-                        radius: 1.5,
-                      ),
+    return NarratorGuideHost(
+      nodeId: 'streak_recovery',
+      targets: {'momentum_visual': _momentumKey, 'restart_cta': _restartCtaKey},
+      child: Scaffold(
+        backgroundColor: AppTheme.backgroundDark,
+        body: Stack(
+          children: [
+            // Background blur/particles
+            Positioned.fill(
+              child: ImageFiltered(
+                imageFilter: ImageFilter.blur(sigmaX: 50, sigmaY: 50),
+                child: Container(
+                  decoration: BoxDecoration(
+                    gradient: RadialGradient(
+                      colors: [
+                        AppTheme.vitalityGreen.withValues(alpha: 0.3),
+                        Colors.transparent,
+                      ],
+                      radius: 1.5,
                     ),
                   ),
                 ),
               ),
-              SafeArea(
-                child: Center(
+            ),
+            SafeArea(
+              child: Center(
+                child: SingleChildScrollView(
                   child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 32.0),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 32.0,
+                      vertical: 24.0,
+                    ),
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
@@ -184,6 +179,18 @@ class _StreakRecoveryScreenState extends ConsumerState<StreakRecoveryScreen> {
                             ),
                           ),
                         ),
+                        if (_showMessage) ...[
+                          const SizedBox(height: 16),
+                          NarratorMilestoneCard(
+                            line: const GenericLine(
+                              'You missed a step. But you did not stop. That is what separates the dedicated from the dreamers.',
+                            ),
+                            trigger: NarratorTrigger.streakBreakFirstMiss,
+                            onDismissed: () =>
+                                setState(() => _showMessage = false),
+                          ),
+                          const SizedBox(height: 16),
+                        ],
                         const SizedBox(height: 64),
                         KeyedSubtree(
                           key: _restartCtaKey,
@@ -217,21 +224,8 @@ class _StreakRecoveryScreenState extends ConsumerState<StreakRecoveryScreen> {
                   ),
                 ),
               ),
-              if (_showMessage)
-                Positioned(
-                  left: 0,
-                  right: 0,
-                  bottom: 24 + MediaQuery.paddingOf(context).bottom,
-                  child: NarratorMilestoneCard(
-                    line: const GenericLine(
-                      'You missed a step. But you did not stop. That is what separates the dedicated from the dreamers.',
-                    ),
-                    trigger: NarratorTrigger.streakBreakFirstMiss,
-                    onDismissed: () => setState(() => _showMessage = false),
-                  ),
-                ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
