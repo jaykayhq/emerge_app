@@ -153,12 +153,14 @@ class NarratorCardDismissed extends _$NarratorCardDismissed {
   void restore() => state = false;
 }
 
-/// Session-scoped: bump to ask the Day Card to expand and focus its ask
-/// field (driven by the timeline header avatar tap).
+/// Session-scoped: latched request to expand and focus the Day Card's ask
+/// field (driven by the timeline header avatar tap). Stays true until the
+/// card consumes it, so a bump while the card is unmounted replays on mount.
 @riverpod
 class NarratorAskFocus extends _$NarratorAskFocus {
   @override
-  int build() => 0;
+  bool build() => false;
 
-  void request() => state++;
+  void request() => state = true;
+  void consume() => state = false;
 }

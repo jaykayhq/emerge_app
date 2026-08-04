@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:emerge_app/core/presentation/widgets/glassmorphism_card.dart';
 import 'package:emerge_app/core/presentation/widgets/typewriter_text.dart';
 import 'package:emerge_app/core/theme/emerge_colors.dart';
@@ -21,7 +23,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 /// ask that reuses the premium quota + Groq plumbing that used to live in
 /// NarratorSheet.
 class NarratorCard extends ConsumerStatefulWidget {
-  const NarratorCard({super.key});
+  const NarratorCard({super.key, this.coach});
+
+  /// Injectable coach for the premium ask path (test seam). Defaults to the
+  /// real [GroqAiService] when null.
+  final Future<String> Function(String context, String question)? coach;
 
   @override
   ConsumerState<NarratorCard> createState() => _NarratorCardState();
@@ -64,10 +70,13 @@ class _NarratorCardState extends ConsumerState<NarratorCard> {
     setState(() => _askOpen = true);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
-      Scrollable.ensureVisible(
-        _rootKey.currentContext!,
-        duration: const Duration(milliseconds: 200),
-      );
+      final ctx = _rootKey.currentContext;
+      if (ctx != null) {
+        Scrollable.ensureVisible(
+          ctx,
+          duration: const Duration(milliseconds: 200),
+        );
+      }
       _askFocus.requestFocus();
     });
   }
@@ -81,6 +90,7 @@ class _NarratorCardState extends ConsumerState<NarratorCard> {
     try {
       final quotaCtrl = ref.read(coachAskQuotaControllerProvider.notifier);
       final quota = await ref.read(coachAskQuotaControllerProvider.future);
+      if (!mounted) return;
       if (!quota.canAsk) {
         if (mounted) {
           showPremiumLimitDialog(context, limitType: PremiumLimitType.coachAsk);
@@ -99,8 +109,10 @@ class _NarratorCardState extends ConsumerState<NarratorCard> {
                   '${profile.avatarStats.totalXp} total XP, '
                   'archetype ${profile.archetype.name}, '
                   'streak ${profile.avatarStats.streak}';
-        final groq = GroqAiService();
-        final advice = await groq.getCoachAdvice(context, question);
+        final advice =
+            await (widget.coach ??
+                (ctx, q) =>
+                    GroqAiService().getCoachAdvice(ctx, q))(context, question);
         line = PersonalLine(text: advice, dataBasis: 'groq_coach');
       } else {
         line = GenericLine(
@@ -138,9 +150,18 @@ class _NarratorCardState extends ConsumerState<NarratorCard> {
     if (ref.watch(narratorCardDismissedProvider)) {
       return const SizedBox.shrink();
     }
-    ref.listen(narratorAskFocusProvider, (previous, next) {
-      if (next > (previous ?? 0)) _openAskFromAvatar();
-    });
+    ref.listenManual(narratorAskFocusProvider, (previous, next) {
+      if (next == true) {
+        _openAskFromAvatar();
+        // Clear the latch off the build phase: the fireImmediately replay
+        // fires mid-build, and Riverpod forbids provider mutations there.
+        scheduleMicrotask(() {
+          if (mounted) {
+            ref.read(narratorAskFocusProvider.notifier).consume();
+          }
+        });
+      }
+    }, fireImmediately: true);
 
     final pendingLine = ref.watch(pendingMilestoneProvider)?.line;
     final insightAsync = ref.watch(latestNarratorInsightProvider);
@@ -167,7 +188,7 @@ class _NarratorCardState extends ConsumerState<NarratorCard> {
     );
     if (line == null) return const SizedBox.shrink();
 
-    final isPersonal = line is PersonalLine;
+    final isPersonal = line is PersonalLine || _replyLine is PersonalLine;
     final remaining = active.length - completed;
 
     return GlassmorphismCard(
@@ -211,6 +232,7 @@ class _NarratorCardState extends ConsumerState<NarratorCard> {
                   ),
                 ),
               IconButton(
+                tooltip: 'Dismiss card',
                 onPressed: () =>
                     ref.read(narratorCardDismissedProvider.notifier).dismiss(),
                 icon: const Icon(Icons.close, size: 18, color: Colors.white38),
@@ -243,30 +265,31 @@ class _NarratorCardState extends ConsumerState<NarratorCard> {
           ),
           const SizedBox(height: 12),
           if (!_askOpen)
-            GestureDetector(
-              onTap: () => setState(() => _askOpen = true),
-              child: Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 8,
-                ),
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(10),
-                  color: Colors.white.withValues(alpha: 0.06),
-                  border: Border.all(
-                    color: Colors.white.withValues(alpha: 0.14),
+            Material(
+              color: Colors.transparent,
+              child: InkWell(
+                onTap: () {
+                  setState(() => _askOpen = true);
+                  _askFocus.requestFocus();
+                },
+                borderRadius: BorderRadius.circular(10),
+                child: Container(
+                  constraints: const BoxConstraints(minHeight: 44),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 8,
                   ),
-                ),
-                child: const Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(Icons.edit_outlined, size: 14, color: Colors.white54),
-                    SizedBox(width: 6),
-                    Text(
-                      '✎ Ask the narrator',
-                      style: TextStyle(fontSize: 12, color: Colors.white70),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(10),
+                    color: Colors.white.withValues(alpha: 0.06),
+                    border: Border.all(
+                      color: Colors.white.withValues(alpha: 0.14),
                     ),
-                  ],
+                  ),
+                  child: const Text(
+                    '✎ Ask the narrator',
+                    style: TextStyle(fontSize: 12, color: Colors.white70),
+                  ),
                 ),
               ),
             )

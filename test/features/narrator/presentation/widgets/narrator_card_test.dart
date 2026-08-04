@@ -35,7 +35,10 @@ class _FakeIsPremium extends IsPremium {
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
-  Future<ProviderContainer> container({List<Habit> habits = const []}) async {
+  Future<ProviderContainer> container({
+    List<Habit> habits = const [],
+    bool premium = false,
+  }) async {
     // NOTE: no SharedPreferences.setMockInitialValues({}) here — that would
     // wipe the per-test quota seeds set before container() is called (the
     // lazy keepAlive coachAskQuotaControllerProvider reads prefs on first
@@ -48,16 +51,22 @@ void main() {
           (ref) => Stream.value(UserProfile(uid: 'u')),
         ),
         latestNarratorInsightProvider.overrideWith((ref) async => null),
-        isPremiumProvider.overrideWith(() => _FakeIsPremium(false)),
+        isPremiumProvider.overrideWith(() => _FakeIsPremium(premium)),
       ],
     );
   }
 
-  Future<void> pumpCard(WidgetTester tester, ProviderContainer c) async {
+  Future<void> pumpCard(
+    WidgetTester tester,
+    ProviderContainer c, {
+    Future<String> Function(String context, String question)? coach,
+  }) async {
     await tester.pumpWidget(
       UncontrolledProviderScope(
         container: c,
-        child: const MaterialApp(home: Scaffold(body: NarratorCard())),
+        child: MaterialApp(
+          home: Scaffold(body: NarratorCard(coach: coach)),
+        ),
       ),
     );
     // Let the typed line finish (no pumpAndSettle — blinking caret).
@@ -112,6 +121,8 @@ void main() {
       find.textContaining('One miss is a slip, not a fall'),
       findsOneWidget,
     );
+    // The free ask consumed one of the day's three asks.
+    expect(find.text('2 of 3 coach asks left today'), findsOneWidget);
   });
 
   testWidgets('exhausted quota opens the premium limit dialog', (tester) async {
@@ -130,5 +141,53 @@ void main() {
       find.text("You've used your 3 free coach asks today"),
       findsOneWidget,
     );
+  });
+
+  testWidgets('premium ask with injected coach shows personal advice', (
+    tester,
+  ) async {
+    SharedPreferences.setMockInitialValues({
+      'coach_asks_${CoachAskQuota.dateKeyFor(DateTime.now())}': 0,
+    });
+    final c = await container(premium: true);
+    addTearDown(c.dispose);
+    await pumpCard(tester, c, coach: (ctx, q) async => 'Personal advice');
+    await tester.tap(find.text('✎ Ask the narrator'));
+    await tester.pump();
+    await tester.enterText(find.byType(TextField), 'help me');
+    await tester.tap(find.byIcon(Icons.send));
+    await tester.pump();
+    await tester.pump(const Duration(seconds: 2)); // coach + typed reply
+    expect(find.textContaining('Personal advice'), findsOneWidget);
+    expect(find.text('DATA-GROUNDED'), findsOneWidget);
+    expect(find.text('Unlimited coach asks'), findsOneWidget);
+  });
+
+  testWidgets('premium coach failure falls back to the generic reply', (
+    tester,
+  ) async {
+    SharedPreferences.setMockInitialValues({
+      'coach_asks_${CoachAskQuota.dateKeyFor(DateTime.now())}': 0,
+    });
+    final c = await container(premium: true);
+    addTearDown(c.dispose);
+    await pumpCard(tester, c, coach: (ctx, q) async => throw Exception('x'));
+    await tester.tap(find.text('✎ Ask the narrator'));
+    await tester.pump();
+    await tester.enterText(find.byType(TextField), 'hi');
+    await tester.tap(find.byIcon(Icons.send));
+    await tester.pump();
+    await tester.pump(const Duration(seconds: 2)); // failure + typed reply
+    expect(find.textContaining("I'm here — keep going."), findsOneWidget);
+  });
+
+  testWidgets('latched ask-focus request replays on mount', (tester) async {
+    final c = await container();
+    addTearDown(c.dispose);
+    // Bump while the card is unmounted: the request must latch and replay
+    // when the card mounts, expanding the ask field.
+    c.read(narratorAskFocusProvider.notifier).request();
+    await pumpCard(tester, c);
+    expect(find.byType(TextField), findsOneWidget);
   });
 }

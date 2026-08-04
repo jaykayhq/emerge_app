@@ -410,18 +410,21 @@ abstract class _$NarratorCardDismissed extends $Notifier<bool> {
   }
 }
 
-/// Session-scoped: bump to ask the Day Card to expand and focus its ask
-/// field (driven by the timeline header avatar tap).
+/// Session-scoped: latched request to expand and focus the Day Card's ask
+/// field (driven by the timeline header avatar tap). Stays true until the
+/// card consumes it, so a bump while the card is unmounted replays on mount.
 
 @ProviderFor(NarratorAskFocus)
 final narratorAskFocusProvider = NarratorAskFocusProvider._();
 
-/// Session-scoped: bump to ask the Day Card to expand and focus its ask
-/// field (driven by the timeline header avatar tap).
+/// Session-scoped: latched request to expand and focus the Day Card's ask
+/// field (driven by the timeline header avatar tap). Stays true until the
+/// card consumes it, so a bump while the card is unmounted replays on mount.
 final class NarratorAskFocusProvider
-    extends $NotifierProvider<NarratorAskFocus, int> {
-  /// Session-scoped: bump to ask the Day Card to expand and focus its ask
-  /// field (driven by the timeline header avatar tap).
+    extends $NotifierProvider<NarratorAskFocus, bool> {
+  /// Session-scoped: latched request to expand and focus the Day Card's ask
+  /// field (driven by the timeline header avatar tap). Stays true until the
+  /// card consumes it, so a bump while the card is unmounted replays on mount.
   NarratorAskFocusProvider._()
     : super(
         from: null,
@@ -441,30 +444,31 @@ final class NarratorAskFocusProvider
   NarratorAskFocus create() => NarratorAskFocus();
 
   /// {@macro riverpod.override_with_value}
-  Override overrideWithValue(int value) {
+  Override overrideWithValue(bool value) {
     return $ProviderOverride(
       origin: this,
-      providerOverride: $SyncValueProvider<int>(value),
+      providerOverride: $SyncValueProvider<bool>(value),
     );
   }
 }
 
-String _$narratorAskFocusHash() => r'09084e1bfb754e5b8af9f488ebf9c99980c2fd12';
+String _$narratorAskFocusHash() => r'a30ac32fd87ffd6238d4372ecaedc09fe8f1edcc';
 
-/// Session-scoped: bump to ask the Day Card to expand and focus its ask
-/// field (driven by the timeline header avatar tap).
+/// Session-scoped: latched request to expand and focus the Day Card's ask
+/// field (driven by the timeline header avatar tap). Stays true until the
+/// card consumes it, so a bump while the card is unmounted replays on mount.
 
-abstract class _$NarratorAskFocus extends $Notifier<int> {
-  int build();
+abstract class _$NarratorAskFocus extends $Notifier<bool> {
+  bool build();
   @$mustCallSuper
   @override
   WhenComplete runBuild() {
-    final ref = this.ref as $Ref<int, int>;
+    final ref = this.ref as $Ref<bool, bool>;
     final element =
         ref.element
             as $ClassProviderElement<
-              AnyNotifier<int, int>,
-              int,
+              AnyNotifier<bool, bool>,
+              bool,
               Object?,
               Object?
             >;
