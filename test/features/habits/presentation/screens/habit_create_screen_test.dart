@@ -37,6 +37,41 @@ Widget _createTestWidget() {
   );
 }
 
+/// Wraps the screen in a [Consumer] that watches [authStateChangesProvider] —
+/// `_createHabit` reads its `.value` synchronously, but `ref.read` alone
+/// doesn't subscribe a StreamProvider in Riverpod 3, so nothing else in the
+/// screen tree would materialize the auth stream. Captures the forged habit
+/// via [onCapture] instead of persisting it.
+Widget _createTestWidgetWithCapture(ValueChanged<Habit?> onCapture) {
+  return createScreenUnderTest(
+    screen: Consumer(
+      builder: (context, ref, _) {
+        ref.watch(authStateChangesProvider);
+        return const HabitCreateScreen();
+      },
+    ),
+    overrides: [
+      smartDefaultsProvider.overrideWith(
+        (ref) => const SmartDefaults(
+          time: TimeOfDay(hour: 7, minute: 0),
+          attribute: HabitAttribute.vitality,
+          difficulty: HabitDifficulty.easy,
+          timerMinutes: 5,
+        ),
+      ),
+      habitSuggestionsProvider.overrideWith(
+        (ref) => const <String>['Drink water', 'Meditate'],
+      ),
+      authStateChangesProvider.overrideWith(
+        (ref) => Stream.value(const AuthUser(id: 'u1', email: 'u@x.com')),
+      ),
+      createHabitProvider.overrideWith((ref, habit) async {
+        onCapture(habit);
+      }),
+    ],
+  );
+}
+
 void main() {
   setUp(() async {
     // Suppress the first-visit node guide (its full-screen overlay would
@@ -141,38 +176,7 @@ void main() {
         (tester) async {
       Habit? captured;
       await tester.pumpWidget(
-        createScreenUnderTest(
-          // `_createHabit` reads `authStateChangesProvider.value` synchronously,
-          // but `ref.read` alone doesn't subscribe a StreamProvider in
-          // Riverpod 3 — nothing else in this screen tree watches auth.
-          // Watch it here so the stream value is ready before FORGE HABIT.
-          screen: Consumer(
-            builder: (context, ref, _) {
-              ref.watch(authStateChangesProvider);
-              return const HabitCreateScreen();
-            },
-          ),
-          overrides: [
-            smartDefaultsProvider.overrideWith(
-              (ref) => const SmartDefaults(
-                time: TimeOfDay(hour: 7, minute: 0),
-                attribute: HabitAttribute.vitality,
-                difficulty: HabitDifficulty.easy,
-                timerMinutes: 5,
-              ),
-            ),
-            habitSuggestionsProvider.overrideWith(
-              (ref) => const <String>['Drink water', 'Meditate'],
-            ),
-            authStateChangesProvider.overrideWith(
-              (ref) =>
-                  Stream.value(const AuthUser(id: 'u1', email: 'u@x.com')),
-            ),
-            createHabitProvider.overrideWith((ref, habit) async {
-              captured = habit;
-            }),
-          ],
-        ),
+        _createTestWidgetWithCapture((habit) => captured = habit),
       );
       await tester.pump();
 
@@ -282,6 +286,49 @@ void main() {
       );
       expect(targetField.controller!.text, '30');
       expect(find.text('Enter a valid target above 0.'), findsNothing);
+    });
+  });
+
+  group('HabitCreateScreen - integration persistence', () {
+    testWidgets('forges a habit with the selected integration fields',
+        (tester) async {
+      Habit? captured;
+      await tester.pumpWidget(
+        _createTestWidgetWithCapture((habit) => captured = habit),
+      );
+      await tester.pump();
+
+      // Title via typeahead.
+      await tester.tap(find.text('action'));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 350));
+      await tester.enterText(find.byType(TextField), 'med');
+      await tester.pump();
+      await tester.tap(find.text('Meditate'));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 350));
+
+      // Pick Screen Time Limit = 45.
+      await tester.tap(find.text('NO INTEGRATION'));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 350));
+      await tester.tap(find.text('Screen Time Limit'));
+      await tester.pump();
+      await tester.enterText(
+        find.byKey(const Key('integration_target_field')),
+        '45',
+      );
+      await tester.tap(find.text('CONFIRM'));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 350));
+
+      await tester.tap(find.text('FORGE HABIT'));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 350));
+
+      expect(captured, isNotNull);
+      expect(captured!.integrationType, HabitIntegrationType.screenTimeLimit);
+      expect(captured!.integrationTarget, 45);
     });
   });
 }

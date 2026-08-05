@@ -848,6 +848,8 @@ class _HabitCreateScreenState extends ConsumerState<HabitCreateScreen> {
       reward: 'Complete and enjoy your progress!',
       timerDurationMinutes: form.timerMinutes,
       imageUrl: form.emoji,
+      integrationType: form.integrationType,
+      integrationTarget: form.integrationTarget,
     );
 
     try {
