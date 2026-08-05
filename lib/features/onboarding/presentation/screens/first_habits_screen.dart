@@ -2,7 +2,6 @@ import 'package:emerge_app/core/theme/archetype_theme.dart';
 import 'package:emerge_app/core/utils/app_logger.dart';
 import 'package:emerge_app/features/auth/domain/entities/user_extension.dart';
 import 'package:emerge_app/features/auth/presentation/providers/auth_providers.dart';
-import 'package:emerge_app/features/habits/domain/entities/habit.dart';
 import 'package:emerge_app/features/habits/presentation/providers/habit_providers.dart';
 import 'package:emerge_app/features/onboarding/domain/models/starter_habit_blueprint.dart';
 import 'package:emerge_app/features/onboarding/presentation/providers/onboarding_state_notifier.dart';
@@ -32,6 +31,7 @@ class FirstHabitsScreen extends ConsumerStatefulWidget {
 
 class _FirstHabitsScreenState extends ConsumerState<FirstHabitsScreen> {
   bool _isSaving = false;
+  final Set<String> _selectedIds = {};
 
   Future<void> _onStartJourney() async {
     if (_isSaving) return;
@@ -53,12 +53,12 @@ class _FirstHabitsScreenState extends ConsumerState<FirstHabitsScreen> {
       clubTags: state.joinedClubId != null
           ? [state.joinedClubId!]
           : const [],
-    );
+    ).where((b) => _selectedIds.contains(b.id)).toList();
 
     if (blueprints.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('No starter habits for this archetype yet.'),
+          content: Text('Pick at least one starter habit.'),
         ),
       );
       return;
@@ -116,8 +116,7 @@ class _FirstHabitsScreenState extends ConsumerState<FirstHabitsScreen> {
         index: index,
         archetype: ref.read(enhancedOnboardingProvider).selectedArchetype ?? UserArchetype.none,
         onSave: (customTitle, customCue) {
-          // Navigate to habit editor or update the blueprint locally
-          // For now, just show confirmation
+          setState(() => _selectedIds.add(blueprint.id));
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text('Habit "${customTitle ?? blueprint.title}" saved with cue: ${customCue ?? blueprint.shortCue}')),
           );
@@ -204,7 +203,16 @@ class _FirstHabitsScreenState extends ConsumerState<FirstHabitsScreen> {
                           child: _BlueprintCard(
                             index: i,
                             blueprint: blueprints[i],
-                            onTap: () => _onHabitTap(blueprints[i], i),
+                            isSelected: _selectedIds.contains(blueprints[i].id),
+                            onTap: () {
+                              setState(() {
+                                if (!_selectedIds.add(blueprints[i].id)) {
+                                  _selectedIds.remove(blueprints[i].id);
+                                }
+                              });
+                              HapticFeedback.selectionClick();
+                            },
+                            onCustomizeTap: () => _onHabitTap(blueprints[i], i),
                           ),
                         ),
                       const Gap(80),
@@ -213,7 +221,9 @@ class _FirstHabitsScreenState extends ConsumerState<FirstHabitsScreen> {
                 ),
               ),
               _BottomBar(
-                canContinue: blueprints.isNotEmpty && !_isSaving,
+                canContinue: blueprints.isNotEmpty &&
+                    !_isSaving &&
+                    _selectedIds.isNotEmpty,
                 isSaving: _isSaving,
                 onContinue: _onStartJourney,
               ),
@@ -267,25 +277,35 @@ class _Header extends StatelessWidget {
 class _BlueprintCard extends StatelessWidget {
   final int index;
   final StarterHabitBlueprint blueprint;
+  final bool isSelected;
   final VoidCallback? onTap;
+  final VoidCallback? onCustomizeTap;
 
   const _BlueprintCard({
     required this.index,
     required this.blueprint,
+    required this.isSelected,
     this.onTap,
+    this.onCustomizeTap,
   });
 
   @override
   Widget build(BuildContext context) {
+    const accent = Color(0xFF2BEE79);
     return GestureDetector(
       onTap: onTap,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
         padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha: 0.05),
+          color: isSelected
+              ? accent.withValues(alpha: 0.08)
+              : Colors.white.withValues(alpha: 0.05),
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: Colors.white10),
+          border: Border.all(
+            color: isSelected ? accent : Colors.white10,
+            width: isSelected ? 1.5 : 1,
+          ),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -296,18 +316,20 @@ class _BlueprintCard extends StatelessWidget {
                   width: 36,
                   height: 36,
                   decoration: BoxDecoration(
-                    color: const Color(0xFF2BEE79).withValues(alpha: 0.2),
+                    color: accent.withValues(alpha: 0.2),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   alignment: Alignment.center,
-                  child: Text(
-                    '${index + 1}',
-                    style: GoogleFonts.splineSans(
-                      color: const Color(0xFF2BEE79),
-                      fontSize: 16,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
+                  child: isSelected
+                      ? const Icon(Icons.check, color: accent, size: 20)
+                      : Text(
+                          '${index + 1}',
+                          style: GoogleFonts.splineSans(
+                            color: accent,
+                            fontSize: 16,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
                 ),
                 const Gap(16),
                 Expanded(
@@ -320,10 +342,11 @@ class _BlueprintCard extends StatelessWidget {
                     ),
                   ),
                 ),
-                Icon(
-                  Icons.chevron_right,
-                  color: Colors.white38,
-                  size: 20,
+                IconButton(
+                  onPressed: onCustomizeTap,
+                  icon: const Icon(Icons.tune, color: Colors.white54),
+                  tooltip: 'Customize',
+                  visualDensity: VisualDensity.compact,
                 ),
               ],
             ),
@@ -454,28 +477,10 @@ class _HabitDetailSheetState extends ConsumerState<_HabitDetailSheet> {
   Future<void> _save() async {
     if (_isSaving) return;
     setState(() => _isSaving = true);
-    
-    // Create the habit from the blueprint with customizations
-    final user = ref.read(authStateChangesProvider).value;
-    if (user != null && user.isNotEmpty) {
-      final repository = ref.read(habitRepositoryProvider);
-      final now = DateTime.now();
-      
-      final habit = Habit(
-        id: '${widget.blueprint.id}_${widget.index}_${now.millisecondsSinceEpoch}',
-        userId: user.id,
-        title: _titleController.text.trim().isEmpty ? widget.blueprint.title : _titleController.text.trim(),
-        cue: _cueController.text.trim().isEmpty ? widget.blueprint.shortCue : _cueController.text.trim(),
-        difficulty: HabitDifficulty.easy,
-        attribute: widget.blueprint.attribute,
-        identityTags: ['onboarding', widget.archetype.name, widget.blueprint.id],
-        frequency: HabitFrequency.daily,
-        createdAt: now,
-      );
-      
-      await repository.createHabit(habit);
-    }
-    
+    // The detail sheet only previews/edits the blueprint locally; the pack is
+    // persisted once by _onStartJourney. No repository call here — creating a
+    // habit directly would double-create for selected cards.
+    await Future<void>.delayed(const Duration(milliseconds: 200));
     if (mounted) {
       Navigator.pop(context);
       widget.onSave(
