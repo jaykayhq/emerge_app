@@ -8,6 +8,7 @@ import 'package:emerge_app/core/error/failure.dart';
 import 'package:emerge_app/core/game_loop/game_loop_engine.dart';
 import 'package:emerge_app/core/sync/sync_engine.dart';
 import 'package:emerge_app/features/habits/domain/entities/habit.dart';
+import 'package:emerge_app/features/habits/domain/services/habit_time_slots.dart';
 import 'package:emerge_app/features/habits/domain/models/habit_activity.dart';
 import 'package:emerge_app/features/habits/domain/entities/habit_completion_entity.dart';
 import 'package:emerge_app/features/habits/domain/repositories/habit_repository.dart';
@@ -741,6 +742,9 @@ class DriftHabitRepository implements HabitRepository {
             identityTags: [...tagSet, blueprint.id],
             frequency: HabitFrequency.daily,
             createdAt: now,
+            timeOfDayPreference: timeOfDayPreferenceFrom(
+              timelineSlotKeyForCue(blueprint.shortCue),
+            ),
           );
 
           await _db.habitsDao.insertFromData(
@@ -754,6 +758,7 @@ class DriftHabitRepository implements HabitRepository {
             createdAt: habit.createdAt.toIso8601String(),
             updatedAt: now.toIso8601String(),
             imageUrl: habit.imageUrl,
+            timeOfDayPreference: habit.timeOfDayPreference?.name,
           );
 
           created.add(habit);
