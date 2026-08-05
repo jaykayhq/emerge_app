@@ -190,4 +190,22 @@ void main() {
     await pumpCard(tester, c);
     expect(find.byType(TextField), findsOneWidget);
   });
+
+  testWidgets(
+      'quota hint stays "X of 3" regardless of how many habits exist',
+      (tester) async {
+    SharedPreferences.setMockInitialValues({
+      'coach_asks_${CoachAskQuota.dateKeyFor(DateTime.now())}': 0,
+    });
+    // 8 habits — the exact scenario that previously displayed "8 of 8".
+    final c = await container(
+      habits: List.generate(8, (i) => _habit('Habit $i')),
+    );
+    addTearDown(c.dispose);
+    await pumpCard(tester, c);
+    // The hint renders inside the expanded ask UI.
+    await tester.tap(find.text('✎ Ask the narrator'));
+    await tester.pump();
+    expect(find.text('3 of 3 coach asks left today'), findsOneWidget);
+  });
 }

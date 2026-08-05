@@ -71,4 +71,38 @@ void main() {
       expect(quota.usedToday, 2);
     });
   });
+
+  group('flat free tier', () {
+    test('free daily limit is exactly 3', () {
+      expect(CoachAskQuota.freeDailyLimit, 3);
+    });
+
+    test('canAsk is false once usedToday reaches the limit', () {
+      const atLimit = CoachAskQuota(
+        dateKey: '2026-08-05',
+        usedToday: 3,
+        isPremium: false,
+      );
+      const over = CoachAskQuota(
+        dateKey: '2026-08-05',
+        usedToday: 4,
+        isPremium: false,
+      );
+      expect(atLimit.canAsk, isFalse);
+      expect(over.canAsk, isFalse);
+      expect(over.remaining, 0);
+    });
+
+    test('the quota has no habit-count input', () {
+      // The quota model is a pure (dateKey, usedToday, isPremium) triple.
+      // This test exists to prevent anyone from re-introducing habit-count
+      // scaling that regressed the UI to "8 of 8" when the user had 8 habits.
+      const q = CoachAskQuota(
+        dateKey: '2026-08-05',
+        usedToday: 0,
+        isPremium: false,
+      );
+      expect(q.remaining, 3);
+    });
+  });
 }
