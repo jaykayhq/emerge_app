@@ -196,4 +196,32 @@ void main() {
       expect(captured!.reminderTime, const TimeOfDay(hour: 7, minute: 0));
     });
   });
+
+  group('HabitCreateScreen - integrations', () {
+    testWidgets('integration pill opens the sheet and applies a steps target',
+        (tester) async {
+      await tester.pumpWidget(_createTestWidget());
+      await tester.pump();
+
+      expect(find.text('NO INTEGRATION'), findsOneWidget);
+
+      await tester.tap(find.text('NO INTEGRATION'));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 350));
+
+      expect(find.text('LINK INTEGRATION'), findsOneWidget);
+      await tester.tap(find.text('Health Steps'));
+      await tester.pump();
+
+      await tester.enterText(
+        find.byKey(const Key('integration_target_field')),
+        '10000',
+      );
+      await tester.tap(find.text('CONFIRM'));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 350));
+
+      expect(find.text('STEPS 10000'), findsOneWidget);
+    });
+  });
 }

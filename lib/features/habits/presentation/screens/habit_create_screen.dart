@@ -37,6 +37,8 @@ class HabitFormData {
   final HabitDifficulty difficulty;
   final HabitAttribute attribute;
   final String twoMinuteVersion;
+  final HabitIntegrationType integrationType;
+  final int? integrationTarget;
 
   const HabitFormData({
     required this.title,
@@ -49,6 +51,8 @@ class HabitFormData {
     required this.difficulty,
     required this.attribute,
     required this.twoMinuteVersion,
+    this.integrationType = HabitIntegrationType.none,
+    this.integrationTarget,
   });
 
   static const empty = HabitFormData(
@@ -75,6 +79,8 @@ class HabitFormData {
     HabitDifficulty? difficulty,
     HabitAttribute? attribute,
     String? twoMinuteVersion,
+    HabitIntegrationType? integrationType,
+    int? integrationTarget,
   }) {
     return HabitFormData(
       title: title ?? this.title,
@@ -87,6 +93,8 @@ class HabitFormData {
       difficulty: difficulty ?? this.difficulty,
       attribute: attribute ?? this.attribute,
       twoMinuteVersion: twoMinuteVersion ?? this.twoMinuteVersion,
+      integrationType: integrationType ?? this.integrationType,
+      integrationTarget: integrationTarget ?? this.integrationTarget,
     );
   }
 }
@@ -108,6 +116,8 @@ class HabitCreateState extends _$HabitCreateState {
   void updateAttribute(HabitAttribute a) =>
       state = state.copyWith(attribute: a);
   void updateTwoMinute(String v) => state = state.copyWith(twoMinuteVersion: v);
+  void updateIntegration(HabitIntegrationType type, int? target) =>
+      state = state.copyWith(integrationType: type, integrationTarget: target);
 
   void reset() => state = HabitFormData.empty;
 }
@@ -218,6 +228,15 @@ class _HabitCreateScreenState extends ConsumerState<HabitCreateScreen> {
                         label: '${form.timerMinutes} min',
                         isSelected: true,
                         onTap: () => _showTimerSheet(form.timerMinutes),
+                      ),
+                      // Integration pill
+                      _SecondaryPill(
+                        label: _integrationLabel(form),
+                        isSelected: true,
+                        color: form.integrationType == HabitIntegrationType.none
+                            ? null
+                            : EmergeColors.teal,
+                        onTap: _showIntegrationSheet,
                       ),
                     ],
                   ),
@@ -624,7 +643,129 @@ class _HabitCreateScreenState extends ConsumerState<HabitCreateScreen> {
     );
   }
 
+  void _showIntegrationSheet() {
+    final form = ref.read(habitCreateStateProvider);
+    var selected = form.integrationType;
+    final targetController = TextEditingController(
+      text: form.integrationTarget?.toString() ??
+          (selected == HabitIntegrationType.healthSteps
+              ? '10000'
+              : selected == HabitIntegrationType.screenTimeLimit
+                  ? '30'
+                  : ''),
+    );
+    showModalBottomSheet<void>(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setSheetState) => _GlassSheet(
+          title: 'LINK INTEGRATION',
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              _IntegrationOption(
+                label: 'No Integration',
+                icon: Icons.block,
+                isSelected: selected == HabitIntegrationType.none,
+                onTap: () {
+                  setSheetState(() => selected = HabitIntegrationType.none);
+                },
+              ),
+              _IntegrationOption(
+                label: 'Health Steps',
+                icon: Icons.directions_walk,
+                isSelected: selected == HabitIntegrationType.healthSteps,
+                onTap: () {
+                  setSheetState(
+                    () => selected = HabitIntegrationType.healthSteps,
+                  );
+                },
+              ),
+              _IntegrationOption(
+                label: 'Screen Time Limit',
+                icon: Icons.phone_android_outlined,
+                isSelected: selected == HabitIntegrationType.screenTimeLimit,
+                onTap: () {
+                  setSheetState(
+                    () => selected = HabitIntegrationType.screenTimeLimit,
+                  );
+                },
+              ),
+              if (selected != HabitIntegrationType.none) ...[
+                const Gap(12),
+                TextField(
+                  key: const Key('integration_target_field'),
+                  controller: targetController,
+                  keyboardType: TextInputType.number,
+                  style: const TextStyle(color: Colors.white),
+                  decoration: InputDecoration(
+                    hintText: selected == HabitIntegrationType.healthSteps
+                        ? 'Daily step goal (e.g. 10000)'
+                        : 'Daily screen time limit in minutes (e.g. 30)',
+                    hintStyle: TextStyle(
+                      color: Colors.white.withValues(alpha: 0.38),
+                    ),
+                    filled: true,
+                    fillColor: Colors.white.withValues(alpha: 0.06),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                ),
+                const Gap(8),
+                Text(
+                  'Requires the matching permission — enable it under '
+                  'Settings > Integrations & Data.',
+                  style: TextStyle(
+                    color: Colors.white.withValues(alpha: 0.45),
+                    fontSize: 11,
+                  ),
+                ),
+              ],
+              const Gap(16),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: () {
+                    final target = int.tryParse(targetController.text.trim());
+                    if (selected == HabitIntegrationType.none) {
+                      ref
+                          .read(habitCreateStateProvider.notifier)
+                          .updateIntegration(HabitIntegrationType.none, null);
+                    } else if (target != null && target > 0) {
+                      ref
+                          .read(habitCreateStateProvider.notifier)
+                          .updateIntegration(selected, target);
+                    }
+                    Navigator.pop(ctx);
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: EmergeColors.teal,
+                    foregroundColor: const Color(0xFF05100B),
+                  ),
+                  child: const Text('CONFIRM'),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   // ─── Habit Creation Logic ───────────────────────────────────────────────
+
+  String _integrationLabel(HabitFormData form) {
+    switch (form.integrationType) {
+      case HabitIntegrationType.healthSteps:
+        return 'STEPS ${form.integrationTarget ?? 10000}';
+      case HabitIntegrationType.screenTimeLimit:
+        return 'SCREEN ${form.integrationTarget ?? 30} MIN';
+      case HabitIntegrationType.none:
+        return 'NO INTEGRATION';
+    }
+  }
 
   Future<void> _createHabit() async {
     final form = ref.read(habitCreateStateProvider);
@@ -708,6 +849,49 @@ class _HabitCreateScreenState extends ConsumerState<HabitCreateScreen> {
 }
 
 // ─── Private Helper Widgets ────────────────────────────────────────────────
+
+/// Option row for the integration picker sheet.
+class _IntegrationOption extends StatelessWidget {
+  final String label;
+  final IconData icon;
+  final bool isSelected;
+  final VoidCallback onTap;
+
+  const _IntegrationOption({
+    required this.label,
+    required this.icon,
+    required this.isSelected,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.transparent,
+      child: ListTile(
+        leading: Icon(
+          icon,
+          color: isSelected ? EmergeColors.teal : Colors.white54,
+        ),
+        title: Text(
+          label,
+          style: TextStyle(
+            color: isSelected ? EmergeColors.teal : Colors.white,
+            fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+          ),
+        ),
+        trailing: isSelected
+            ? const Icon(
+                Icons.check_circle,
+                color: EmergeColors.teal,
+                size: 20,
+              )
+            : null,
+        onTap: onTap,
+      ),
+    );
+  }
+}
 
 /// Small glass pill for secondary options (difficulty, attribute, timer).
 class _SecondaryPill extends StatelessWidget {
