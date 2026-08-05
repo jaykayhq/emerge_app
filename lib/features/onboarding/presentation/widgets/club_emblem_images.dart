@@ -1,51 +1,52 @@
-/// Curated, verified emblem images for club cards (Plan 5).
+/// Curated, bundled emblem images for club cards (Plan 5).
 ///
 /// The Firestore `Tribe.imageUrl` is frequently empty for seeded/archetype
 /// clubs, which left the club cards showing only a fallback icon. This helper
-/// provides a themed Unsplash image per archetype, plus a deterministic
+/// provides a themed bundled asset per archetype, plus a deterministic
 /// generic pool for creator/custom clubs (keyed by club id so a given club
 /// always shows the same image).
 ///
-/// All URLs were verified (HTTP 200, `image/jpeg`, valid JPEG magic bytes)
-/// on 2026-07-26. They use Unsplash's images CDN with fixed photo IDs and a
-/// width/quality/crop transform, so they are stable direct-image links
-/// (not the unsplash.com/random redirect, which can change or rate-limit).
+/// Assets were generated for the Emerge brand (cosmic purple + neon green,
+/// stylized 2D game art) and live in `assets/images/clubs/`.
 library;
+
+/// True when [imageUrl] points at a bundled asset (render with `Image.asset`)
+/// rather than a remote URL (render with `Image.network`).
+bool isBundledEmblem(String? imageUrl) {
+  return imageUrl?.startsWith('assets/') ?? false;
+}
 
 /// Themed emblem per archetype id (matches `UserArchetype` enum names).
 const Map<String, String> _archetypeEmblems = {
   // Athlete — strength / movement
-  'athlete':
-      'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=400&q=80&fit=crop',
+  'athlete': 'assets/images/clubs/emblem_athlete.webp',
   // Creator — art / making
-  'creator':
-      'https://images.unsplash.com/photo-1513364776144-60967b0f800f?w=400&q=80&fit=crop',
+  'creator': 'assets/images/clubs/emblem_creator.webp',
   // Scholar — books / study
-  'scholar':
-      'https://images.unsplash.com/photo-1524995997946-a1c2e315a42f?w=400&q=80&fit=crop',
+  'scholar': 'assets/images/clubs/emblem_scholar.webp',
   // Stoic — calm mountains
-  'stoic':
-      'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=400&q=80&fit=crop',
+  'stoic': 'assets/images/clubs/emblem_stoic.webp',
   // Zealot — forest / devotion
-  'zealot':
-      'https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=400&q=80&fit=crop',
+  'zealot': 'assets/images/clubs/emblem_zealot.webp',
 };
 
 /// Deterministic generic pool for clubs without a themed archetype
-/// (e.g. creator clubs). Verified Unsplash direct-image links.
+/// (e.g. creator clubs). Bundled assets, one distinct badge each.
 const List<String> _genericEmblems = [
-  'https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=400&q=80&fit=crop', // community/team
-  'https://images.unsplash.com/photo-1517649763962-0c623066013b?w=400&q=80&fit=crop', // sport
-  'https://images.unsplash.com/photo-1499750310107-5fef28a66643?w=400&q=80&fit=crop', // writing/creative
-  'https://images.unsplash.com/photo-1481627834876-b7833e8f5570?w=400&q=80&fit=crop', // library
-  'https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?w=400&q=80&fit=crop', // calm nature
-  'https://images.unsplash.com/photo-1494972308805-463bc619d34e?w=400&q=80&fit=crop', // meditation
+  'assets/images/clubs/emblem_generic_0.webp', // community/team
+  'assets/images/clubs/emblem_generic_1.webp', // trophy / achievement
+  'assets/images/clubs/emblem_generic_2.webp', // writing / creative
+  'assets/images/clubs/emblem_generic_3.webp', // library / study
+  'assets/images/clubs/emblem_generic_4.webp', // calm nature
+  'assets/images/clubs/emblem_generic_5.webp', // meditation / lantern
 ];
 
 /// Resolves an emblem image URL for a club card.
 ///
 /// Preference order:
-///   1. The club's own [existingImageUrl] (Firestore), when non-empty.
+///   1. The club's own [existingImageUrl] (Firestore), when non-empty —
+///      except legacy Unsplash stock links from earlier seeds, which are
+///      replaced by the curated bundled emblems.
 ///   2. A themed emblem for [archetypeId], when it matches a known archetype.
 ///   3. A deterministic generic emblem chosen by [clubId] (stable per club).
 String clubEmblemImageUrl({
@@ -53,8 +54,10 @@ String clubEmblemImageUrl({
   String? archetypeId,
   required String clubId,
 }) {
-  if (existingImageUrl != null && existingImageUrl.trim().isNotEmpty) {
-    return existingImageUrl.trim();
+  final existing = existingImageUrl?.trim() ?? '';
+  if (existing.isNotEmpty &&
+      !existing.startsWith('https://images.unsplash.com/')) {
+    return existing;
   }
 
   final key = archetypeId?.trim().toLowerCase();

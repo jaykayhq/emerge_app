@@ -88,14 +88,15 @@ void main() {
       expect(snap.docs, isNotEmpty);
     });
 
-    test('seedBlueprintsIfEmpty skips seeding when v3 data already exists',
+    test('seedBlueprintsIfEmpty skips seeding when v4 data already exists',
         () async {
       final firestore = FakeFirebaseFirestore();
-      // Pre-seed a v3 document: sentinel doc exists AND carries the field.
-      await firestore
-          .collection('blueprints')
-          .doc('morning_1')
-          .set({'title': 'Existing', 'recommendedArchetypes': ['athlete']});
+      // Pre-seed a v4 document: sentinel doc exists AND carries the
+      // bundled-artwork imageUrl (v4 marker).
+      await firestore.collection('blueprints').doc('morning_1').set({
+        'title': 'Existing',
+        'imageUrl': 'assets/images/blueprints/morning_1.webp',
+      });
 
       final repo = BlueprintRepository(firestore);
       await repo.seedBlueprintsIfEmpty();
@@ -104,6 +105,31 @@ void main() {
       final snap = await firestore.collection('blueprints').get();
       expect(snap.docs.length, 1);
       expect(snap.docs.first.data()['title'], 'Existing');
+    });
+
+    test(
+        'seedBlueprintsIfEmpty backfills v3 docs with bundled artwork without clobbering live data',
+        () async {
+      final firestore = FakeFirebaseFirestore();
+      // Pre-seed a v3 document: sentinel doc exists with the old remote
+      // imageUrl (Unsplash) — must be backfilled to the bundled asset.
+      await firestore.collection('blueprints').doc('morning_1').set({
+        'title': 'Existing',
+        'adoptionCount': 7,
+        'recommendedArchetypes': ['athlete'],
+        'imageUrl': 'https://images.unsplash.com/photo-1?w=800',
+      });
+
+      final repo = BlueprintRepository(firestore);
+      await repo.seedBlueprintsIfEmpty();
+
+      final snap = await firestore.collection('blueprints').get();
+      expect(snap.docs.length, _seedBlueprintIds.length);
+      final morning1 = snap.docs.firstWhere((d) => d.id == 'morning_1').data();
+      expect(morning1['imageUrl'], 'assets/images/blueprints/morning_1.webp');
+      // Live data survives the merge.
+      expect(morning1['adoptionCount'], 7);
+      expect(morning1['recommendedArchetypes'], isA<List>());
     });
 
     test(

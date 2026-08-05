@@ -1,12 +1,18 @@
 import 'package:emerge_app/core/presentation/widgets/world_background.dart';
+import 'package:emerge_app/core/services/daily_insight_generator.dart';
+import 'package:emerge_app/core/services/notification_service.dart';
 import 'package:emerge_app/core/theme/app_theme.dart';
 import 'package:emerge_app/features/auth/domain/entities/user_extension.dart';
 import 'package:emerge_app/features/gamification/data/repositories/user_stats_repository.dart';
 import 'package:emerge_app/features/gamification/presentation/providers/user_stats_providers.dart';
+import 'package:emerge_app/features/habits/data/services/habit_reminder_sync.dart';
+import 'package:emerge_app/features/habits/presentation/providers/habit_providers.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
 import 'package:emerge_app/core/theme/emerge_colors.dart';
+import 'dart:async';
 
 class NotificationSettingsScreen extends ConsumerWidget {
   const NotificationSettingsScreen({super.key});
@@ -282,5 +288,41 @@ class NotificationSettingsScreen extends ConsumerWidget {
     if (profile == null || profile.uid.isEmpty) return;
     final updatedProfile = profile.copyWith(settings: settings);
     await ref.read(userStatsRepositoryProvider).saveUserStats(updatedProfile);
+
+    // Apply client-managed notification side effects immediately so toggles
+    // take effect without waiting for the next login resync.
+    unawaited(_applyNotificationEffects(ref, updatedProfile));
+  }
+
+  Future<void> _applyNotificationEffects(
+    WidgetRef ref,
+    UserProfile profile,
+  ) async {
+    if (kIsWeb) return;
+    final notificationService = ref.read(notificationServiceProvider);
+    final settings = profile.settings;
+
+    // Daily AI insight: schedule when enabled, cancel otherwise.
+    if (settings.notificationsEnabled && settings.aiInsights) {
+      final insight = generateDailyInsight(
+        level: profile.avatarStats.level,
+        streak: profile.avatarStats.streak,
+        totalXp: profile.avatarStats.totalXp,
+      );
+      await notificationService.scheduleDailyInsight(
+        profile.uid,
+        insight,
+        profile.archetype,
+      );
+    } else {
+      await notificationService.cancelDailyInsight(profile.uid);
+    }
+
+    // Re-schedule habit reminders (idempotent; no-op when reminders are off).
+    await resyncHabitReminders(
+      notificationService: notificationService,
+      habitRepository: ref.read(habitRepositoryProvider),
+      profile: profile,
+    );
   }
 }

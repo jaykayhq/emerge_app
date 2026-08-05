@@ -64,4 +64,11 @@ describe("dead triggers removed (SP-H)", () => {
   it("no longer exports notifyAchievement", () => {
     expect(index.notifyAchievement).toBeUndefined();
   });
+  it("no longer exports sendDailyInsights (moved client-side)", () => {
+    expect(index.sendDailyInsights).toBeUndefined();
+  });
+  it("no longer exports getTemplateMessage or sendNotification", () => {
+    expect(index.getTemplateMessage).toBeUndefined();
+    expect(index.sendNotification).toBeUndefined();
+  });
 });

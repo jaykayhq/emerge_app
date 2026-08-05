@@ -1,4 +1,5 @@
 import 'package:emerge_app/core/constants/gamification_constants.dart';
+import 'dart:async';
 import 'package:emerge_app/core/deletion/deletion_providers.dart';
 import 'package:emerge_app/core/drift/database.dart';
 import 'package:emerge_app/core/drift_repositories/repositories_barrel.dart';
@@ -6,7 +7,7 @@ import 'package:emerge_app/core/game_loop/game_loop_engine.dart';
 import 'package:emerge_app/core/services/remote_config_service.dart';
 import 'package:emerge_app/core/sync/sync_providers.dart';
 import 'package:emerge_app/core/utils/app_logger.dart';
-import 'package:flutter/foundation.dart' show debugPrint;
+import 'package:flutter/foundation.dart' show debugPrint, kIsWeb;
 import 'package:emerge_app/features/auth/presentation/providers/auth_providers.dart';
 
 import 'package:emerge_app/features/habits/domain/entities/habit.dart';
@@ -15,6 +16,7 @@ import 'package:emerge_app/features/habits/domain/models/habit_completion_result
 import 'package:emerge_app/features/habits/domain/repositories/habit_repository.dart';
 import 'package:emerge_app/features/habits/domain/services/variable_reward_service.dart';
 import 'package:emerge_app/features/habits/domain/services/momentum_service.dart';
+import 'package:emerge_app/features/habits/data/repositories/habit_notification_repository_provider.dart';
 import 'package:emerge_app/features/habits/presentation/providers/cue_providers.dart';
 import 'package:emerge_app/features/monetization/presentation/providers/subscription_provider.dart';
 import 'package:emerge_app/features/gamification/presentation/providers/user_stats_providers.dart';
@@ -193,6 +195,8 @@ Future<void> createHabit(Ref ref, Habit habit) async {
       },
       (_) {
         AppLogger.i('Successfully created habit: ${habit.id}');
+        // Schedule welcome + recurring reminder locally (non-blocking).
+        unawaited(_scheduleHabitNotifications(ref, habit));
       },
     );
   } catch (e, s) {
@@ -348,4 +352,26 @@ Future<List<HabitActivity>> habitActivity(
   if (user == null) return [];
 
   return repository.getActivity(user.id, start, end);
+}
+
+/// Schedules the welcome + recurring reminder for a freshly created habit,
+/// gated by the user's notification settings (Drift-first, offline-safe).
+///
+/// Awaits the stats stream instead of reading `.value` synchronously: right
+/// after sign-in (onboarding creates habits) the stream is still loading, so
+/// `.value` is null and the schedule would silently no-op.
+Future<void> _scheduleHabitNotifications(Ref ref, Habit habit) async {
+  if (kIsWeb) return;
+  try {
+    final profile = await ref.read(userStatsStreamProvider.future);
+    if (profile.uid.isEmpty) return;
+    await ref.read(notificationRepositoryProvider).scheduleHabitNotifications(
+      habit,
+      profile.archetype,
+      notificationsEnabled: profile.settings.notificationsEnabled,
+      habitRemindersEnabled: profile.settings.habitReminders,
+    );
+  } catch (e, s) {
+    AppLogger.e('Failed to schedule habit notifications', e, s);
+  }
 }

@@ -71,14 +71,19 @@ class DriftTribeRepository implements TribeRepository {
             (OfficialClubsSeed.getOfficialClubsMap()[row.tribeId]?['description']
                     as String? ??
                 '');
-        // Distinct per-tribe image: remote first, then the seed catalog
-        // (each seeded club carries its own Unsplash image).
+        // Distinct per-tribe image: remote first, then the seed catalog.
+        // Legacy Unsplash links (written by the old server seed) count as
+        // stale — the bundled seed artwork wins for official clubs, so the
+        // curated per-club assets actually render. Real custom images (any
+        // other URL) still take precedence.
         final seedImage = OfficialClubsSeed
             .getOfficialClubsMap()[row.tribeId]?['imageUrl'] as String?;
         final remoteImage = remote?['imageUrl'] as String?;
-        final imageUrl = (remoteImage != null && remoteImage.isNotEmpty)
-            ? remoteImage
-            : (seedImage ?? '');
+        final isLegacyRemote = remoteImage == null ||
+            remoteImage.isEmpty ||
+            remoteImage.startsWith('https://images.unsplash.com/');
+        final imageUrl =
+            isLegacyRemote ? (seedImage ?? '') : remoteImage!;
         final members = List<String>.from(remote?['members'] ?? const []);
 
         return Tribe(

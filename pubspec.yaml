@@ -133,6 +133,8 @@ flutter:
     - assets/icons/
     - assets/images/
     - assets/images/avatars/
+    - assets/images/blueprints/
+    - assets/images/clubs/
     - assets/images/challenges/
     - assets/images/levels/
     - assets/images/levels/athlete/

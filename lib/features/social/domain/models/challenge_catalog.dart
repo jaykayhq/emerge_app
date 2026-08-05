@@ -134,7 +134,7 @@ class ChallengeCatalog {
       description:
           'Zero tolerance for mediocrity. 30 days of uncompromising discipline across all life dimensions.',
       imageUrl:
-          'https://images.unsplash.com/photo-1504384308090-c894fdcc538d?q=80&w=1000',
+          'assets/images/challenges/quest_absolute_protocol.webp',
       reward: '1500 XP & Zenith Seal',
       participants: 320,
       daysLeft: 30,
@@ -185,7 +185,7 @@ class ChallengeCatalog {
         'title': 'The Spartan Morning',
         'description': '30s cold shower + 15min fasted mobility work.',
         'imageUrl':
-            'https://images.unsplash.com/photo-1517836357463-d25dfeac3438?q=80&w=1000',
+            'assets/images/challenges/quest_daily_spartan_morning.webp',
         'category': ChallengeCategory.fitness,
       },
       {
@@ -193,7 +193,7 @@ class ChallengeCatalog {
         'description':
             '30 minutes of steady-state cardio at conversational pace.',
         'imageUrl':
-            'https://images.unsplash.com/photo-1538805060514-97d9cc17730c?q=80&w=1000',
+            'assets/images/challenges/quest_daily_zone2.webp',
         'category': ChallengeCategory.fitness,
       },
     ],
@@ -203,7 +203,7 @@ class ChallengeCatalog {
         'description':
             'Identify a deeply held belief and write 3 counter-arguments for it.',
         'imageUrl':
-            'https://images.unsplash.com/photo-1456513080510-7bf3a84b82f8?q=80&w=1000',
+            'assets/images/challenges/quest_daily_socratic.webp',
         'category': ChallengeCategory.learning,
       },
       {
@@ -211,7 +211,7 @@ class ChallengeCatalog {
         'description':
             'Learn one new concept in your field and explain it to a "child".',
         'imageUrl':
-            'https://images.unsplash.com/photo-1503676260728-1c00da094a0b?q=80&w=1000',
+            'assets/images/challenges/quest_daily_micro_insight.webp',
         'category': ChallengeCategory.learning,
       },
     ],
@@ -221,7 +221,7 @@ class ChallengeCatalog {
         'description':
             'Build a basic prototype or draft of a new idea in under 4 hours.',
         'imageUrl':
-            'https://images.unsplash.com/photo-1499750310107-5fef28a66643?q=80&w=1000',
+            'assets/images/challenges/quest_daily_4h_mvp.webp',
         'category': ChallengeCategory.productivity,
       },
       {
@@ -229,7 +229,7 @@ class ChallengeCatalog {
         'description':
             'Produce a 15-minute raw sketch or brainstorming mind-map.',
         'imageUrl':
-            'https://images.unsplash.com/photo-1513364776144-60967b0f800f?q=80&w=1000',
+            'assets/images/challenges/quest_daily_visual_flow.webp',
         'category': ChallengeCategory.productivity,
       },
     ],
@@ -239,7 +239,7 @@ class ChallengeCatalog {
         'description':
             'Zero digital entertainment for 24 hours. Focus on stillness.',
         'imageUrl':
-            'https://images.unsplash.com/photo-1506126613408-eca07ce68773?q=80&w=1000',
+            'assets/images/challenges/quest_daily_dopamine_detox.webp',
         'category': ChallengeCategory.mindfulness,
       },
       {
@@ -247,7 +247,7 @@ class ChallengeCatalog {
         'description':
             'Contemplate a loss you fear and find 3 ways you would adapt.',
         'imageUrl':
-            'https://images.unsplash.com/photo-1518531933037-91b2f5f229cc?q=80&w=1000',
+            'assets/images/challenges/quest_daily_negative_visualization.webp',
         'category': ChallengeCategory.mindfulness,
       },
     ],
@@ -257,7 +257,7 @@ class ChallengeCatalog {
         'description':
             'Complete your single most important task before 10 AM. No exceptions.',
         'imageUrl':
-            'https://images.unsplash.com/photo-1497215728101-856f4ea42174?q=80&w=1000',
+            'assets/images/challenges/quest_daily_monastic_hour.webp',
         'category': ChallengeCategory.productivity,
       },
       {
@@ -265,7 +265,7 @@ class ChallengeCatalog {
         'description':
             'One hour of intense work with zero notifications and zero speaking.',
         'imageUrl':
-            'https://images.unsplash.com/photo-1504384308090-c894fdcc538d?q=80&w=1000',
+            'assets/images/challenges/quest_absolute_protocol.webp',
         'category': ChallengeCategory.productivity,
       },
     ],
@@ -316,18 +316,12 @@ class ChallengeCatalog {
     final template = templates[dayOfWeek % templates.length];
 
     final String archetypeDefaultImage = switch (archetypeId.toLowerCase()) {
-      'athlete' =>
-        'https://images.unsplash.com/photo-1517836357463-d25dfeac3438?q=80&w=1000',
-      'scholar' =>
-        'https://images.unsplash.com/photo-1456513080510-7bf3a84b82f8?q=80&w=1000',
-      'creator' =>
-        'https://images.unsplash.com/photo-1499750310107-5fef28a66643?q=80&w=1000',
-      'stoic' =>
-        'https://images.unsplash.com/photo-1506126613408-eca07ce68773?q=80&w=1000',
-      'zealot' =>
-        'https://images.unsplash.com/photo-1497215728101-856f4ea42174?q=80&w=1000',
-      _ =>
-        'https://images.unsplash.com/photo-1497215728101-856f4ea42174?q=80&w=1000',
+      'athlete' => 'assets/images/challenges/quest_cat_fitness.webp',
+      'scholar' => 'assets/images/challenges/quest_cat_learning.webp',
+      'creator' => 'assets/images/challenges/quest_cat_creation.webp',
+      'stoic' => 'assets/images/challenges/quest_cat_mindfulness.webp',
+      'zealot' => 'assets/images/challenges/quest_absolute_protocol.webp',
+      _ => 'assets/images/challenges/quest_cat_creation.webp',
     };
 
     return Challenge(

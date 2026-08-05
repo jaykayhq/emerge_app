@@ -1,9 +1,8 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 
-/// Shared blueprint artwork that resolves a URL into either a network image
-/// or the branded gradient fallback. Asset paths are no longer supported —
-/// they resolve to the fallback.
+/// Shared blueprint artwork that resolves a URL into a network image, a
+/// bundled asset, or the branded gradient fallback.
 class BlueprintArtwork extends StatelessWidget {
   final String? imageUrl;
   final bool useCachedNetworkImage;
@@ -14,17 +13,32 @@ class BlueprintArtwork extends StatelessWidget {
     this.useCachedNetworkImage = false,
   });
 
-  /// Returns [url] only when it points at a remote image; local paths and
-  /// null/empty values resolve to null so the branded fallback renders.
+  /// Returns [url] only when it points at a remote image or a bundled
+  /// asset; null/empty values resolve to null so the branded fallback
+  /// renders.
   String? _resolve(String? url) {
     if (url == null || url.isEmpty) return null;
-    return url.startsWith('http://') || url.startsWith('https://') ? url : null;
+    final trimmed = url.trim();
+    if (trimmed.startsWith('http://') ||
+        trimmed.startsWith('https://') ||
+        trimmed.startsWith('assets/')) {
+      return trimmed;
+    }
+    return null;
   }
 
   @override
   Widget build(BuildContext context) {
     final resolved = _resolve(imageUrl);
     if (resolved == null) return const _Fallback();
+
+    if (resolved.startsWith('assets/')) {
+      return Image.asset(
+        resolved,
+        fit: BoxFit.cover,
+        errorBuilder: (context, error, stackTrace) => const _Fallback(),
+      );
+    }
 
     if (useCachedNetworkImage) {
       return CachedNetworkImage(

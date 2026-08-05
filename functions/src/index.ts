@@ -254,7 +254,8 @@ export const applyDailyTribeRecalculation = onSchedule("0 3 * * *", async (event
 export * from "./challenges";
 // export * from "./seed_templates";
 export * from "./refreshQuarterlyChallenges";
-export * from "./habit_notifications";
+// Daily AI insights moved client-side (NotificationService.scheduleDailyInsight).
+// export * from "./habit_notifications";
 // export * from "./seedReviewerAccount";
 export * from "./accountDeletion";
 export * from "./cleanupUserData";

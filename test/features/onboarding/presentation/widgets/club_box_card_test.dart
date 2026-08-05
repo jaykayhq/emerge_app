@@ -68,4 +68,24 @@ void main() {
     await tester.tap(find.text('Sunrise Ritual'));
     expect(tapped, isTrue);
   });
+
+  testWidgets('renders bundled asset emblem when imageUrl is an assets path',
+      (tester) async {
+    await tester.pumpWidget(wrap(
+      ClubBoxCard(
+        title: 'Morning Warriors',
+        imageUrl: 'assets/images/clubs/morning_warriors.webp',
+        memberCount: 120,
+        activityStatus: '🔥 Active',
+        typeTag: 'ARCHETYPE',
+        onTap: () => {},
+      ),
+    ));
+
+    final image = tester.widget<Image>(find.byType(Image));
+    expect(
+      (image.image as AssetImage).assetName,
+      'assets/images/clubs/morning_warriors.webp',
+    );
+  });
 }

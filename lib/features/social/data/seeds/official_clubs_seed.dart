@@ -12,7 +12,7 @@ class OfficialClubsSeed {
       'description':
           '5AM workouts to start your day with energy and discipline',
       'imageUrl':
-          'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=800',
+          'assets/images/clubs/morning_warriors.webp',
       'archetypeId': 'athlete',
       'type': 'official',
       'levelRequirement': 1,
@@ -32,7 +32,7 @@ class OfficialClubsSeed {
       'description':
           'Nutrition challenges for plant-based athletes and wellness enthusiasts',
       'imageUrl':
-          'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=800',
+          'assets/images/clubs/plant_based_tribe.webp',
       'archetypeId': 'athlete',
       'type': 'official',
       'levelRequirement': 1,
@@ -52,7 +52,7 @@ class OfficialClubsSeed {
       'description':
           'High-intensity interval training challenges for maximum burn',
       'imageUrl':
-          'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=800',
+          'assets/images/clubs/hiit_heroes.webp',
       'archetypeId': 'athlete',
       'type': 'official',
       'levelRequirement': 5,
@@ -73,7 +73,7 @@ class OfficialClubsSeed {
       'name': 'Deep Work Society',
       'description': '90-minute focus blocks for profound productivity',
       'imageUrl':
-          'https://images.unsplash.com/photo-1434030216411-0b793f4b4173?w=800',
+          'assets/images/clubs/deep_work_society.webp',
       'archetypeId': 'scholar',
       'type': 'official',
       'levelRequirement': 1,
@@ -93,7 +93,7 @@ class OfficialClubsSeed {
       'description':
           'Reading habits and book discussions for late-night learners',
       'imageUrl':
-          'https://images.unsplash.com/photo-1476275466078-4007374efbbe?w=800',
+          'assets/images/clubs/night_owl_readers.webp',
       'archetypeId': 'scholar',
       'type': 'official',
       'levelRequirement': 1,
@@ -113,7 +113,7 @@ class OfficialClubsSeed {
       'description':
           'Daily language practice challenges with native speaker exchanges',
       'imageUrl':
-          'https://images.unsplash.com/photo-1543109740-4bdb38fda756?w=800',
+          'assets/images/clubs/language_learners.webp',
       'archetypeId': 'scholar',
       'type': 'official',
       'levelRequirement': 3,
@@ -134,7 +134,7 @@ class OfficialClubsSeed {
       'name': 'Mindful Masters',
       'description': '21-day meditation challenges for inner peace and clarity',
       'imageUrl':
-          'https://images.unsplash.com/photo-1506126613408-eca07ce68773?w=800',
+          'assets/images/clubs/mindful_masters.webp',
       'archetypeId': 'stoic',
       'type': 'official',
       'levelRequirement': 1,
@@ -153,7 +153,7 @@ class OfficialClubsSeed {
       'name': 'Digital Detox Weekend',
       'description': 'Weekly screen-free challenges to reconnect with reality',
       'imageUrl':
-          'https://images.unsplash.com/photo-1516035069371-29a1b244cc32?w=800',
+          'assets/images/clubs/digital_detox_weekend.webp',
       'archetypeId': 'stoic',
       'type': 'official',
       'levelRequirement': 1,
@@ -172,7 +172,7 @@ class OfficialClubsSeed {
       'name': 'Gratitude Circle',
       'description': 'Daily gratitude journaling for positive mindset shifts',
       'imageUrl':
-          'https://images.unsplash.com/photo-1517836357463-d25dfeac3438?w=800',
+          'assets/images/clubs/gratitude_circle.webp',
       'archetypeId': 'stoic',
       'type': 'official',
       'levelRequirement': 1,
@@ -193,7 +193,7 @@ class OfficialClubsSeed {
       'name': 'Creative Collective',
       'description': 'Ship something every day - build your creative muscle',
       'imageUrl':
-          'https://images.unsplash.com/photo-1513364776144-60967b0f800f?w=800',
+          'assets/images/clubs/creative_collective.webp',
       'archetypeId': 'creator',
       'type': 'official',
       'levelRequirement': 1,
@@ -212,7 +212,7 @@ class OfficialClubsSeed {
       'name': 'Music Practice 21',
       'description': '21-day instrument practice challenges for musicians',
       'imageUrl':
-          'https://images.unsplash.com/photo-1511379938547-c1f69419868d?w=800',
+          'assets/images/clubs/music_practice_21.webp',
       'archetypeId': 'creator',
       'type': 'official',
       'levelRequirement': 3,
@@ -233,7 +233,7 @@ class OfficialClubsSeed {
       'name': 'Lunar Seekers',
       'description': 'Scripture study and daily prayer for spiritual growth',
       'imageUrl':
-          'https://images.unsplash.com/photo-1507692049790-de58290a4334?w=800',
+          'assets/images/clubs/lunar_seekers.webp',
       'archetypeId': 'zealot',
       'type': 'official',
       'levelRequirement': 1,
@@ -252,7 +252,7 @@ class OfficialClubsSeed {
       'name': 'Breathwork Circle',
       'description': 'Daily breathwork and meditation for spiritual connection',
       'imageUrl':
-          'https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?w=800',
+          'assets/images/clubs/breathwork_circle.webp',
       'archetypeId': 'zealot',
       'type': 'official',
       'levelRequirement': 1,
@@ -273,7 +273,7 @@ class OfficialClubsSeed {
       'name': 'Financial Freedom',
       'description': 'Money habits, savings challenges, and wealth building',
       'imageUrl':
-          'https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?w=800',
+          'assets/images/clubs/financial_freedom.webp',
       'archetypeId': null, // All archetypes
       'type': 'official',
       'levelRequirement': 1,

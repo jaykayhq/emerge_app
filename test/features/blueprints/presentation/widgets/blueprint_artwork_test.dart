@@ -19,13 +19,14 @@ void main() {
       expect(find.byType(Image), findsNothing);
     });
 
-    testWidgets('renders branded fallback icon for asset-style local path', (tester) async {
+    testWidgets('renders bundled asset image when imageUrl is an assets path', (tester) async {
       await tester.pumpWidget(
-        wrap(const BlueprintArtwork(imageUrl: 'images/blueprints/blueprint_morning.png')),
+        wrap(const BlueprintArtwork(imageUrl: 'assets/images/blueprints/morning_1.png')),
       );
 
-      expect(find.byIcon(Icons.auto_awesome_rounded), findsOneWidget);
-      expect(find.byType(Image), findsNothing);
+      final image = tester.widget<Image>(find.byType(Image));
+      final provider = image.image as AssetImage;
+      expect(provider.assetName, 'assets/images/blueprints/morning_1.png');
     });
 
     testWidgets('renders network image when imageUrl is an https URL', (tester) async {

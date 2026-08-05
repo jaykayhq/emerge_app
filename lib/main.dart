@@ -6,6 +6,7 @@ import 'package:emerge_app/core/router/router.dart';
 import 'package:emerge_app/core/theme/app_theme.dart';
 import 'package:emerge_app/core/theme/theme_provider.dart';
 import 'package:emerge_app/core/services/notification_service.dart';
+import 'package:emerge_app/core/services/daily_insight_generator.dart';
 import 'package:emerge_app/core/presentation/widgets/offline_banner.dart';
 import 'package:emerge_app/core/presentation/widgets/web_update_banner.dart';
 import 'package:flutter/material.dart';
@@ -20,6 +21,8 @@ import 'package:emerge_app/core/theme/archetype_theme.dart';
 import 'package:emerge_app/core/presentation/providers/online_presence_provider.dart';
 import 'package:emerge_app/features/auth/domain/entities/user_extension.dart';
 import 'package:emerge_app/features/auth/presentation/providers/auth_providers.dart';
+import 'package:emerge_app/features/habits/data/services/habit_reminder_sync.dart';
+import 'package:emerge_app/features/habits/presentation/providers/habit_providers.dart';
 import 'package:emerge_app/features/gamification/presentation/providers/user_stats_providers.dart';
 import 'package:emerge_app/features/monetization/presentation/providers/subscription_provider.dart';
 import 'package:emerge_app/core/sync/sync_providers.dart';
@@ -129,14 +132,38 @@ class EmergeApp extends ConsumerStatefulWidget {
   ConsumerState<EmergeApp> createState() => _EmergeAppState();
 }
 
-class _EmergeAppState extends ConsumerState<EmergeApp> {
+class _EmergeAppState extends ConsumerState<EmergeApp>
+    with WidgetsBindingObserver {
+  /// Last signed-in user id — used to refresh notification schedules (and
+  /// thus the daily insight body) when the app returns to the foreground.
+  String? _notificationsUserId;
+
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _heavyInitialization();
     });
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    // Resync on resume so the daily insight body reflects fresh stats
+    // instead of replaying the message frozen at schedule time.
+    if (state == AppLifecycleState.resumed) {
+      final userId = _notificationsUserId;
+      if (userId != null) {
+        unawaited(_resyncNotifications(userId));
+      }
+    }
   }
 
   void _heavyInitialization() {
@@ -154,6 +181,42 @@ class _EmergeAppState extends ConsumerState<EmergeApp> {
     }
   }
 
+  /// Resyncs client-managed notifications for [userId] on every login:
+  /// - daily AI insight (idempotent same-id replace; cancelled when off)
+  /// - recurring reminders for existing habits with a set reminder time
+  /// Gated by the user's notification settings from Drift.
+  Future<void> _resyncNotifications(String userId) async {
+    if (kIsWeb) return;
+    final profile = await ref.read(userStatsStreamProvider.future);
+    if (profile.uid.isEmpty) return;
+    final settings = profile.settings;
+    final notificationService = ref.read(notificationServiceProvider);
+
+    // 1. Daily AI insight
+    if (settings.notificationsEnabled && settings.aiInsights) {
+      final insight = generateDailyInsight(
+        level: profile.avatarStats.level,
+        streak: profile.avatarStats.streak,
+        totalXp: profile.avatarStats.totalXp,
+      );
+      await notificationService.scheduleDailyInsight(
+        userId,
+        insight,
+        profile.archetype,
+      );
+    } else {
+      await notificationService.cancelDailyInsight(userId);
+    }
+
+    // 2. Habit reminders for existing habits (new habits are scheduled by
+    // createHabit; this covers pre-existing habits and reinstalls).
+    await resyncHabitReminders(
+      notificationService: notificationService,
+      habitRepository: ref.read(habitRepositoryProvider),
+      profile: profile,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     // Listen to auth state changes to start/stop heartbeat and sync monetization identity
@@ -164,6 +227,7 @@ class _EmergeAppState extends ConsumerState<EmergeApp> {
       next.when(
         data: (user) {
           if (user.id.isNotEmpty) {
+            _notificationsUserId = user.id;
             // User signed in - start heartbeat and identify in RevenueCat
             presenceService.startHeartbeat(user.id);
             unawaited(monetizationRepo.identify(user.id));
@@ -173,7 +237,13 @@ class _EmergeAppState extends ConsumerState<EmergeApp> {
             // admin-only Firestore rules and failed into a debugPrint catch;
             // challenges are seeded server-side and by verified creators).
             unawaited(seedBlueprints());
+
+            // Client-managed notifications (replaces the Cloud Scheduler's
+            // daily-insight push): resync on every login so schedules exist
+            // after reinstall and reflect current settings.
+            unawaited(_resyncNotifications(user.id));
           } else {
+            _notificationsUserId = null;
             presenceService.stopHeartbeat();
             unawaited(monetizationRepo.reset());
           }

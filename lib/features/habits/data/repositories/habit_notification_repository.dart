@@ -25,12 +25,20 @@ class HabitNotificationRepository {
        _auth = auth,
        _syncEngine = syncEngine;
 
-  /// Create notification schedule for a new habit
+  /// Create notification schedule for a new habit.
+  ///
+  /// Gated by the user's notification settings (passed in from Drift so the
+  /// decision works offline-first): [notificationsEnabled] controls the
+  /// one-shot welcome; [habitRemindersEnabled] controls the recurring
+  /// reminder.
   Future<void> scheduleHabitNotifications(
     Habit habit,
-    UserArchetype archetype,
-  ) async {
+    UserArchetype archetype, {
+    bool notificationsEnabled = true,
+    bool habitRemindersEnabled = true,
+  }) async {
     if (kIsWeb) return;
+    if (!notificationsEnabled) return;
 
     final userId = _auth.currentUser?.uid;
     if (userId == null) return;
@@ -48,7 +56,22 @@ class HabitNotificationRepository {
       archetypeNudges: archetypeNudges,
     );
 
-    // 2. Schedule recurring reminder
+    // 2. Schedule recurring reminder (skipped when habit reminders are off)
+    if (!habitRemindersEnabled) {
+      await _syncEngine.enqueueSet(
+        collectionPath: 'users/$userId/notificationSchedules',
+        documentId: habit.id,
+        data: HabitNotificationSchedule(
+          habitId: habit.id,
+          userId: userId,
+          archetype: archetype,
+          welcomeNotified: true,
+          createdAt: DateTime.now(),
+        ).toMap(),
+      );
+      return;
+    }
+
     final reminderTime =
         habit.reminderTime ??
         TimeOfDay(

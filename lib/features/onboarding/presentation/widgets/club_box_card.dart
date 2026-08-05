@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:emerge_app/features/onboarding/presentation/widgets/club_emblem_images.dart';
 
 /// Compact box card for the onboarding club grid (Plan 5, Task 6).
 ///
@@ -58,7 +59,17 @@ class ClubBoxCard extends StatelessWidget {
                   ),
                 ),
                 child: (imageUrl != null && imageUrl!.isNotEmpty)
-                    ? Image.network(
+                    ? (isBundledEmblem(imageUrl)
+                        ? Image.asset(
+                            imageUrl!,
+                            fit: BoxFit.cover,
+                            width: double.infinity,
+                            height: double.infinity,
+                            // Bundled emblems never fail; fall back anyway.
+                            errorBuilder: (context, error, stackTrace) =>
+                                _EmblemFallback(accent: accent),
+                          )
+                        : Image.network(
                         imageUrl!,
                         fit: BoxFit.cover,
                         width: double.infinity,
@@ -87,7 +98,7 @@ class ClubBoxCard extends StatelessWidget {
                         // icon on the gradient if the network image fails.
                         errorBuilder: (context, error, stackTrace) =>
                             _EmblemFallback(accent: accent),
-                      )
+                      ))
                     : _EmblemFallback(accent: accent),
               ),
             ),

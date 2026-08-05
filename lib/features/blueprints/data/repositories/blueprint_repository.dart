@@ -53,30 +53,32 @@ class BlueprintRepository {
   }
 
   /// Current seed version — bump when seed data changes to force re-seed
-  static const int _seedVersion = 3;
+  static const int _seedVersion = 4;
 
   Future<void> seedBlueprintsIfEmpty() async {
     try {
-      // Skip only when the sentinel doc exists AND already carries v3
-      // curation data. A bare sentinel (v2 seed) must be backfilled.
-      final v3Check = await _firestore
+      // Skip only when the sentinel doc exists AND already carries v4
+      // artwork. A v3 doc (remote Unsplash image) must be backfilled so
+      // every install renders the bundled blueprint images.
+      final v4Check = await _firestore
           .collection('blueprints')
           .doc('morning_1')
           .get();
-      final isV3 =
-          v3Check.exists && v3Check.data()?['recommendedArchetypes'] is List;
+      final isV4 = v4Check.exists &&
+          (v4Check.data()?['imageUrl'] as String? ?? '')
+              .startsWith('assets/images/blueprints/');
 
-      if (isV3) {
+      if (isV4) {
         AppLogger.i(
           'BlueprintRepository: Blueprints already seeded (v$_seedVersion).',
         );
         return;
       }
 
-      // Backfilling v2 docs: merge must not clobber live-doc adoption counts
-      // or creation timestamps, so increment(0) is a no-op for counters and
-      // createdAt is left untouched on existing docs.
-      final backfilling = v3Check.exists;
+      // Backfilling existing docs: merge must not clobber live-doc adoption
+      // counts or creation timestamps, so increment(0) is a no-op for
+      // counters and createdAt is left untouched on existing docs.
+      final backfilling = v4Check.exists;
 
       // Note: Old archetype blueprints (v1) remain in Firestore but are
       // filtered out in the UI by allowed categories list. Server-side
@@ -90,7 +92,7 @@ class BlueprintRepository {
           title: 'Sunrise Ritual',
           description: 'Start your day with intention, light, and hydration.',
           image:
-              'https://images.unsplash.com/photo-1506126613408-eca07ce68773?w=800',
+              'assets/images/blueprints/morning_1.webp',
           difficulty: BlueprintDifficulty.beginner,
           habits: [
             'Wake Up at 6 AM',
@@ -105,7 +107,7 @@ class BlueprintRepository {
           title: 'Power Morning',
           description: 'An energizing morning routine to dominate your day.',
           image:
-              'https://images.unsplash.com/photo-1513506003901-1e6a229e2d15?w=800',
+              'assets/images/blueprints/morning_2.webp',
           difficulty: BlueprintDifficulty.intermediate,
           habits: ['Cold Shower', 'Stretch Routine', 'High-Protein Breakfast'],
           recommendedArchetypes: const ['athlete'],
@@ -116,7 +118,7 @@ class BlueprintRepository {
           title: 'Mindful Awakening',
           description: 'Ease into the day with calm and clarity.',
           image:
-              'https://images.unsplash.com/photo-1528715471579-d1bcf0ba5e83?w=800',
+              'assets/images/blueprints/morning_3.webp',
           difficulty: BlueprintDifficulty.beginner,
           habits: ['5 Min Meditation', 'Gratitude Journal', 'Herbal Tea'],
           recommendedArchetypes: const ['stoic'],
@@ -127,7 +129,7 @@ class BlueprintRepository {
           title: 'Early Bird Stack',
           description: 'Rise before the world and claim your quiet hours.',
           image:
-              'https://images.unsplash.com/photo-1490818387583-1baba5e638af?w=800',
+              'assets/images/blueprints/morning_4.webp',
           difficulty: BlueprintDifficulty.advanced,
           habits: ['Wake at 5 AM', 'Deep Work Block', 'No Phone for 1 Hour'],
           recommendedArchetypes: const ['scholar', 'zealot'],
@@ -138,7 +140,7 @@ class BlueprintRepository {
           title: 'Morning Mobility',
           description: 'Loosen up and prepare your body for the day ahead.',
           image:
-              'https://images.unsplash.com/photo-1552196563-55cd4e45efb3?w=800',
+              'assets/images/blueprints/morning_5.webp',
           difficulty: BlueprintDifficulty.intermediate,
           habits: ['Dynamic Stretching', 'Foam Rolling', 'Posture Check'],
           recommendedArchetypes: const ['athlete'],
@@ -151,7 +153,7 @@ class BlueprintRepository {
           title: 'Deep Work Protocol',
           description: 'Train your focus for uninterrupted deep work sessions.',
           image:
-              'https://images.unsplash.com/photo-1483058712412-4245e9b90334?w=800',
+              'assets/images/blueprints/productivity_1.webp',
           difficulty: BlueprintDifficulty.advanced,
           habits: ['90 Min Deep Work', 'Phone on DND', 'Task Batching'],
           recommendedArchetypes: const ['scholar', 'zealot'],
@@ -163,7 +165,7 @@ class BlueprintRepository {
           description:
               'A century-old productivity system for daily prioritization.',
           image:
-              'https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?w=800',
+              'assets/images/blueprints/productivity_2.webp',
           difficulty: BlueprintDifficulty.beginner,
           habits: [
             'Write Top 6 Tasks',
@@ -178,7 +180,7 @@ class BlueprintRepository {
           title: 'Time Block Master',
           description: 'Schedule every hour of your day with purpose.',
           image:
-              'https://images.unsplash.com/photo-1506784983877-45594efa4cbe?w=800',
+              'assets/images/blueprints/productivity_3.webp',
           difficulty: BlueprintDifficulty.intermediate,
           habits: [
             'Plan Tomorrow Tonight',
@@ -193,7 +195,7 @@ class BlueprintRepository {
           title: 'Digital Declutter',
           description: 'Clear digital noise and reclaim your attention.',
           image:
-              'https://images.unsplash.com/photo-1517694712202-14dd9538aa97?w=800',
+              'assets/images/blueprints/productivity_4.webp',
           difficulty: BlueprintDifficulty.intermediate,
           habits: ['Unsubscribe from Junk', 'Organize Files', 'App Purge'],
           recommendedArchetypes: const ['stoic', 'scholar'],
@@ -204,7 +206,7 @@ class BlueprintRepository {
           title: 'Pomodoro Flow',
           description: 'Harness the Pomodoro technique for sustained output.',
           image:
-              'https://images.unsplash.com/photo-1499750310107-5fef28a66643?w=800',
+              'assets/images/blueprints/productivity_5.webp',
           difficulty: BlueprintDifficulty.beginner,
           habits: ['25 Min Focus Sprint', '5 Min Break', 'Track Pomodoros'],
           recommendedArchetypes: const ['scholar', 'athlete'],
@@ -217,7 +219,7 @@ class BlueprintRepository {
           title: 'Bodyweight Foundation',
           description: 'Build strength with just your body weight.',
           image:
-              'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=800',
+              'assets/images/blueprints/fitness_1.webp',
           difficulty: BlueprintDifficulty.beginner,
           habits: ['Push-Ups', 'Bodyweight Squats', 'Plank Hold'],
           recommendedArchetypes: const ['athlete'],
@@ -228,7 +230,7 @@ class BlueprintRepository {
           title: 'Cardio Builder',
           description: 'Improve cardiovascular endurance step by step.',
           image:
-              'https://images.unsplash.com/photo-1476480862126-209bfaa8edc8?w=800',
+              'assets/images/blueprints/fitness_2.webp',
           difficulty: BlueprintDifficulty.intermediate,
           habits: ['20 Min Run', 'Jump Rope', 'Cool Down Stretch'],
           recommendedArchetypes: const ['athlete'],
@@ -239,7 +241,7 @@ class BlueprintRepository {
           title: 'Flexibility & Mobility',
           description: 'Increase range of motion and prevent injury.',
           image:
-              'https://images.unsplash.com/photo-1571019614242-c5c5dee9f50b?w=800',
+              'assets/images/blueprints/fitness_3.webp',
           difficulty: BlueprintDifficulty.beginner,
           habits: ['Hamstring Stretch', 'Hip Openers', 'Spine Twists'],
           recommendedArchetypes: const ['athlete', 'stoic'],
@@ -250,7 +252,7 @@ class BlueprintRepository {
           title: 'Iron Will',
           description: 'A progressive strength training blueprint.',
           image:
-              'https://images.unsplash.com/photo-1532029837206-abbe2b7620e3?w=800',
+              'assets/images/blueprints/fitness_4.webp',
           difficulty: BlueprintDifficulty.advanced,
           habits: ['Deadlifts', 'Overhead Press', 'Pull-Ups'],
           recommendedArchetypes: const ['athlete', 'zealot'],
@@ -261,7 +263,7 @@ class BlueprintRepository {
           title: 'Active Recovery',
           description: 'Rest days that keep you moving and healing.',
           image:
-              'https://images.unsplash.com/photo-1517836357463-d25dfeac3438?w=800',
+              'assets/images/blueprints/fitness_5.webp',
           difficulty: BlueprintDifficulty.beginner,
           habits: ['Brisk Walk', 'Light Yoga', 'Hydration Focus'],
           recommendedArchetypes: const ['athlete', 'stoic'],
@@ -274,7 +276,7 @@ class BlueprintRepository {
           title: 'Daily Meditation',
           description: 'Build a consistent meditation practice from scratch.',
           image:
-              'https://images.unsplash.com/photo-1508672019048-805c876b67e2?w=800',
+              'assets/images/blueprints/mindfulness_1.webp',
           difficulty: BlueprintDifficulty.beginner,
           habits: ['5 Min Breath Focus', 'Body Scan', 'Loving Kindness'],
           recommendedArchetypes: const ['stoic'],
@@ -285,7 +287,7 @@ class BlueprintRepository {
           title: 'Digital Sabbath',
           description: 'Weekly disconnection to recharge your mind.',
           image:
-              'https://images.unsplash.com/photo-1499209974431-9dddcece7f88?w=800',
+              'assets/images/blueprints/mindfulness_2.webp',
           difficulty: BlueprintDifficulty.advanced,
           habits: ['No Screens for 4 Hours', 'Nature Walk', 'Analog Activity'],
           recommendedArchetypes: const ['stoic', 'scholar'],
@@ -296,7 +298,7 @@ class BlueprintRepository {
           title: 'Gratitude Practice',
           description: 'Rewire your brain for appreciation and abundance.',
           image:
-              'https://images.unsplash.com/photo-1489710437720-ebb67ec84dd2?w=800',
+              'assets/images/blueprints/mindfulness_3.webp',
           difficulty: BlueprintDifficulty.beginner,
           habits: ['Write 3 Gratitudes', 'Thank Someone', 'Savor a Moment'],
           recommendedArchetypes: const ['stoic', 'zealot'],
@@ -307,7 +309,7 @@ class BlueprintRepository {
           title: 'Stress Shield',
           description: 'Daily practices to build resilience against stress.',
           image:
-              'https://images.unsplash.com/photo-1506126613408-eca07ce68773?w=800',
+              'assets/images/blueprints/mindfulness_4.webp',
           difficulty: BlueprintDifficulty.intermediate,
           habits: ['Box Breathing', 'Progressive Relaxation', 'Journaling'],
           recommendedArchetypes: const ['stoic'],
@@ -319,7 +321,7 @@ class BlueprintRepository {
           description:
               'A calming ritual to signal your body it is time to rest.',
           image:
-              'https://images.unsplash.com/photo-1511295742362-92c96b1cf484?w=800',
+              'assets/images/blueprints/mindfulness_5.webp',
           difficulty: BlueprintDifficulty.beginner,
           habits: [
             'No Screens 30 Min Before Bed',
@@ -336,7 +338,7 @@ class BlueprintRepository {
           title: 'Daily Reader',
           description: 'Read consistently and compound knowledge.',
           image:
-              'https://images.unsplash.com/photo-1456513080510-7bf3a84b82f8?w=800',
+              'assets/images/blueprints/learning_1.webp',
           difficulty: BlueprintDifficulty.beginner,
           habits: ['Read 20 Pages', 'Take Notes', 'Summarize Key Idea'],
           recommendedArchetypes: const ['scholar'],
@@ -347,7 +349,7 @@ class BlueprintRepository {
           title: 'Skill Sprint',
           description: 'Learn a new skill with focused daily practice.',
           image:
-              'https://images.unsplash.com/photo-1434030216411-0b793f4b4173?w=800',
+              'assets/images/blueprints/learning_2.webp',
           difficulty: BlueprintDifficulty.intermediate,
           habits: [
             '30 Min Deliberate Practice',
@@ -362,7 +364,7 @@ class BlueprintRepository {
           title: 'Curious Mind',
           description: 'Feed your curiosity across diverse topics.',
           image:
-              'https://images.unsplash.com/photo-1507842217343-583bb7270b66?w=800',
+              'assets/images/blueprints/learning_3.webp',
           difficulty: BlueprintDifficulty.beginner,
           habits: [
             'Watch a Documentary',
@@ -377,7 +379,7 @@ class BlueprintRepository {
           title: 'Memory Master',
           description: 'Strengthen recall with spaced repetition.',
           image:
-              'https://images.unsplash.com/photo-1517077304055-6e89abbf09b0?w=800',
+              'assets/images/blueprints/learning_4.webp',
           difficulty: BlueprintDifficulty.intermediate,
           habits: [
             'Review Flashcards',
@@ -393,7 +395,7 @@ class BlueprintRepository {
           description:
               'Finish online courses with structure and accountability.',
           image:
-              'https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=800',
+              'assets/images/blueprints/learning_5.webp',
           difficulty: BlueprintDifficulty.advanced,
           habits: ['Watch One Lesson', 'Do the Assignment', 'Write Reflection'],
           recommendedArchetypes: const ['scholar', 'zealot'],

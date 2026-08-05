@@ -70,15 +70,15 @@ class _CreateSoloChallengeDialogState
         description: _descController.text.trim(),
         imageUrl: switch (_category) {
           ChallengeCategory.fitness =>
-            'https://images.unsplash.com/photo-1517836357463-d25dfeac3438?q=80&w=1000',
+            'assets/images/challenges/quest_cat_fitness.webp',
           ChallengeCategory.learning =>
-            'https://images.unsplash.com/photo-1456513080510-7bf3a84b82f8?q=80&w=1000',
+            'assets/images/challenges/quest_cat_learning.webp',
           ChallengeCategory.productivity =>
-            'https://images.unsplash.com/photo-1499750310107-5fef28a66643?q=80&w=1000',
+            'assets/images/challenges/quest_cat_productivity.webp',
           ChallengeCategory.mindfulness =>
-            'https://images.unsplash.com/photo-1506126613408-eca07ce68773?q=80&w=1000',
+            'assets/images/challenges/quest_cat_mindfulness.webp',
           _ =>
-            'https://images.unsplash.com/photo-1497215728101-856f4ea42174?q=80&w=1000',
+            'assets/images/challenges/quest_cat_creation.webp',
         },
         reward: '${_durationDays * 10} XP',
         participants: 1, // You are the first participant

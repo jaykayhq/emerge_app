@@ -113,6 +113,22 @@ class _ChallengeDetailScreenState extends ConsumerState<ChallengeDetailScreen> {
                                           ? Image.asset(
                                               challenge.imageUrl,
                                               fit: BoxFit.cover,
+                                              errorBuilder:
+                                                  (
+                                                    context,
+                                                    error,
+                                                    stackTrace,
+                                                  ) => Container(
+                                                    color: AppTheme.surfaceDark,
+                                                    child: const Center(
+                                                      child: Icon(
+                                                        Icons
+                                                            .image_not_supported_outlined,
+                                                        size: 48,
+                                                        color: Colors.white24,
+                                                      ),
+                                                    ),
+                                                  ),
                                             )
                                           : Image.network(
                                               challenge.imageUrl,

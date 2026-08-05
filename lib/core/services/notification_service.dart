@@ -552,7 +552,15 @@ class NotificationService {
   Future<void> cancelHabitNotifications(String habitId) async {
     if (kIsWeb) return;
     try {
+      // Cancel every id family this habit can schedule: the daily/weekly
+      // reminder, per-day reminders (specificDays), the snoozed follow-up,
+      // and the streak warning. Cancelling unscheduled ids is a no-op.
       await _localNotifications.cancel(id: habitId.hashCode);
+      for (var day = 1; day <= 7; day++) {
+        await _localNotifications.cancel(id: '${habitId}_$day'.hashCode);
+      }
+      await _localNotifications.cancel(id: '${habitId}_snoozed'.hashCode);
+      await _localNotifications.cancel(id: '${habitId}_streak'.hashCode);
       debugPrint('Cancelled notifications for habit: $habitId');
     } catch (e) {
       debugPrint('Error cancelling habit notifications: $e');
@@ -686,8 +694,10 @@ class NotificationService {
     }
   }
 
-  /// Sends daily AI insight notification
-  Future<void> sendDailyInsight(
+  /// Schedules the daily AI insight notification (client-side replacement
+  /// for the Cloud Scheduler's `sendDailyInsights`). Fires at 08:00 daily;
+  /// scheduling again with the same id replaces any prior schedule.
+  Future<void> scheduleDailyInsight(
     String userId,
     String insight,
     UserArchetype archetype,
@@ -696,10 +706,11 @@ class NotificationService {
     try {
       final greeting = NotificationTemplates.aiInsightGreeting(archetype);
 
-      await _localNotifications.show(
+      await _localNotifications.zonedSchedule(
         id: 'insight_$userId'.hashCode,
         title: 'Daily Insight',
         body: '$greeting\n\n$insight',
+        scheduledDate: _nextInsightTime(),
         notificationDetails: const NotificationDetails(
           android: AndroidNotificationDetails(
             NotificationChannels.aiInsights,
@@ -711,12 +722,41 @@ class NotificationService {
           ),
           iOS: DarwinNotificationDetails(),
         ),
+        androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
+        matchDateTimeComponents: DateTimeComponents.time,
         payload: '/profile',
       );
-      debugPrint('Daily insight sent for user: $userId');
+      debugPrint('Daily insight scheduled for user: $userId');
     } catch (e) {
-      debugPrint('Error sending daily insight: $e');
+      debugPrint('Error scheduling daily insight: $e');
     }
+  }
+
+  /// Cancels the scheduled daily AI insight for [userId].
+  Future<void> cancelDailyInsight(String userId) async {
+    if (kIsWeb) return;
+    try {
+      await _localNotifications.cancel(id: 'insight_$userId'.hashCode);
+    } catch (e) {
+      debugPrint('Error cancelling daily insight: $e');
+    }
+  }
+
+  /// Next 08:00 local — today if not past, else tomorrow. The app pins the
+  /// local timezone to UTC (see initialize), matching the old 08:00 UTC cron.
+  tz.TZDateTime _nextInsightTime() {
+    final now = tz.TZDateTime.now(tz.local);
+    tz.TZDateTime scheduledDate = tz.TZDateTime(
+      tz.local,
+      now.year,
+      now.month,
+      now.day,
+      8,
+    );
+    if (scheduledDate.isBefore(now)) {
+      scheduledDate = scheduledDate.add(const Duration(days: 1));
+    }
+    return scheduledDate;
   }
 
   /// Sends level up notification

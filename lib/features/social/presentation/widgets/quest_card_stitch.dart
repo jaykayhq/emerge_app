@@ -59,6 +59,9 @@ class QuestCardStitch extends StatelessWidget {
                                     ? Image.asset(
                                         challenge.imageUrl,
                                         fit: BoxFit.cover,
+                                        errorBuilder:
+                                            (context, error, stackTrace) =>
+                                                _buildImageFallback(),
                                       )
                                     : Image.network(
                                         challenge.imageUrl,

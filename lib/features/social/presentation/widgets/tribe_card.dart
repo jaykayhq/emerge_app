@@ -26,6 +26,7 @@ class TribeCard extends ConsumerWidget {
       archetypeId: tribe.archetypeId,
       clubId: tribe.id,
     );
+    final isAsset = isBundledEmblem(imageUrl);
 
     return Container(
       decoration: BoxDecoration(
@@ -54,7 +55,22 @@ class TribeCard extends ConsumerWidget {
                     end: Alignment.bottomRight,
                   ),
                 ),
-                child: Image.network(
+                child: isAsset
+                    ? Image.asset(
+                        imageUrl,
+                        fit: BoxFit.cover,
+                        width: double.infinity,
+                        height: double.infinity,
+                        errorBuilder: (context, error, stackTrace) =>
+                            const Center(
+                          child: Icon(
+                            Icons.groups,
+                            size: 36,
+                            color: EmergeColors.teal,
+                          ),
+                        ),
+                      )
+                    : Image.network(
                   imageUrl,
                   fit: BoxFit.cover,
                   width: double.infinity,
