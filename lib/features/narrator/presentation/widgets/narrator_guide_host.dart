@@ -1,3 +1,4 @@
+import 'package:emerge_app/features/narrator/domain/services/guide_card_placement.dart';
 import 'package:emerge_app/features/narrator/domain/services/narrator_guide_registry.dart';
 import 'package:emerge_app/features/narrator/presentation/providers/narrator_guide_controller.dart';
 import 'package:emerge_app/features/narrator/presentation/widgets/narrator_guide_card.dart';
@@ -39,6 +40,8 @@ class _NarratorGuideHostState extends ConsumerState<NarratorGuideHost> {
   bool _animateHole = false;
   bool _holeAvailable = false;
   final List<ScrollPosition> _scrollPositions = [];
+
+  static const double _guideCardEstimatedHeight = 160;
 
   List<NarratorGuideStep> get _steps =>
       NarratorGuideRegistry.forNode(widget.nodeId)?.steps ?? const [];
@@ -148,20 +151,36 @@ class _NarratorGuideHostState extends ConsumerState<NarratorGuideHost> {
           widget.child,
           if (step != null)
             Positioned.fill(child: _spotlight(steps, step, reduceMotion)),
-          if (step != null)
-            Positioned(
-              left: 16,
-              right: 16,
-              bottom: 24 + MediaQuery.paddingOf(context).bottom,
-              child: NarratorGuideCard(
-                script: step.script,
-                stepIndex: _step,
-                stepCount: steps.length,
-                onAdvance: _advance,
-                onSkip: _finish,
-              ),
-            ),
+          if (step != null) _buildGuideCard(step),
         ],
+      ),
+    );
+  }
+
+  Widget _buildGuideCard(NarratorGuideStep step) {
+    final targetRect = _rectFor(step.targetKey);
+    final screenSize = MediaQuery.sizeOf(context);
+    final topInset = MediaQuery.paddingOf(context).top;
+    final bottomInset = MediaQuery.paddingOf(context).bottom;
+    final position = guideCardPositionFor(
+      targetRect: targetRect,
+      screenSize: screenSize,
+      cardHeight: _guideCardEstimatedHeight,
+      margin: 16,
+      topInset: topInset,
+      bottomInset: bottomInset,
+    );
+    return Positioned(
+      left: 16,
+      right: 16,
+      top: position.top,
+      bottom: position.bottom,
+      child: NarratorGuideCard(
+        script: step.script,
+        stepIndex: _step,
+        stepCount: _steps.length,
+        onAdvance: _advance,
+        onSkip: _finish,
       ),
     );
   }

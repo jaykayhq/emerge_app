@@ -1,3 +1,4 @@
+import 'package:emerge_app/features/narrator/presentation/widgets/narrator_guide_card.dart';
 import 'package:emerge_app/features/narrator/presentation/widgets/narrator_guide_host.dart';
 import 'package:emerge_app/features/narrator/presentation/widgets/spotlight_painter.dart';
 import 'package:emerge_app/features/onboarding/data/repositories/local_settings_repository.dart';
@@ -171,5 +172,45 @@ void main() {
     final targetRect = targetBox.localToGlobal(Offset.zero) & targetBox.size;
     expect(painter.holeRect, isNotNull);
     expect(painter.holeRect!.contains(targetRect.center), true);
+  });
+
+  testWidgets('guide card renders clear of a low target instead of covering it',
+      (tester) async {
+    final targetKey = GlobalKey();
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          localSettingsRepositoryProvider.overrideWithValue(
+            _FakeSettings(tutorialsEnabled: true),
+          ),
+        ],
+        child: MaterialApp(
+          home: Scaffold(
+            body: NarratorGuideHost(
+              nodeId: 'habit_create',
+              targets: {'name_field': targetKey},
+              child: Align(
+                alignment: Alignment.bottomCenter,
+                child: Container(
+                  key: targetKey,
+                  width: 120,
+                  height: 60,
+                  color: Colors.red,
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pump(); // post-frame gate resolves, card builds
+    await tester.pump(const Duration(milliseconds: 400)); // typewriter ticks
+
+    final cardFinder = find.byType(NarratorGuideCard);
+    expect(cardFinder, findsOneWidget);
+    final cardBox = tester.getRect(cardFinder);
+    final targetBox = tester.getRect(find.byKey(targetKey));
+    // The card must not overlap the spotlighted element.
+    expect(cardBox.overlaps(targetBox), isFalse);
   });
 }
