@@ -117,4 +117,43 @@ void main() {
     expect(ids, contains('athlete.walk.10min'));
     expect(ids, isNot(contains('athlete.warmup.breath')));
   });
+
+  testWidgets('customized title reaches the created pack', (tester) async {
+    final repo = _CapturingHabitRepository();
+    final c = await container(repo);
+    addTearDown(c.dispose);
+    await pump(tester, c);
+
+    final card = find.ancestor(
+      of: find.text('Drink one glass of water'),
+      matching: find.byType(AnimatedContainer),
+    );
+    await tester.tap(
+      find.descendant(of: card, matching: find.byIcon(Icons.tune)),
+    );
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 300));
+
+    await tester.enterText(
+      find.widgetWithText(TextField, 'Habit Title'),
+      'Morning hydration ritual',
+    );
+    await tester.tap(find.text('SAVE HABIT'));
+    await tester.pump(const Duration(milliseconds: 300)); // _save delay + pop
+    await tester.pump(const Duration(milliseconds: 300)); // sheet exit animation
+    // Let any post-save snackbar fully expire so it can't obscure the CTA.
+    await tester.pump(const Duration(seconds: 4));
+    await tester.pump(const Duration(seconds: 1));
+
+    await tester.tap(find.text('10-minute walk outside'));
+    await tester.pump();
+
+    await tester.tap(find.text('START MY JOURNEY'));
+    await tester.pump();
+    await tester.pump(const Duration(seconds: 5));
+
+    final byId = {for (final b in repo.createdBlueprints) b.id: b.title};
+    expect(byId['athlete.hydration.glass'], 'Morning hydration ritual');
+    expect(byId['athlete.walk.10min'], '10-minute walk outside');
+  });
 }

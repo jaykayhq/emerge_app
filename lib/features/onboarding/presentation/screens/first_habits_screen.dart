@@ -32,6 +32,22 @@ class FirstHabitsScreen extends ConsumerStatefulWidget {
 class _FirstHabitsScreenState extends ConsumerState<FirstHabitsScreen> {
   bool _isSaving = false;
   final Set<String> _selectedIds = {};
+  final Map<String, ({String? title, String? cue})> _customizations = {};
+
+  StarterHabitBlueprint _applyCustomizations(StarterHabitBlueprint blueprint) {
+    final c = _customizations[blueprint.id];
+    if (c == null) return blueprint;
+    return StarterHabitBlueprint(
+      id: blueprint.id,
+      title: c.title ?? blueprint.title,
+      shortCue: c.cue ?? blueprint.shortCue,
+      attribute: blueprint.attribute,
+      archetype: blueprint.archetype,
+      interestCategories: blueprint.interestCategories,
+      clubTags: blueprint.clubTags,
+      sourceAttribution: blueprint.sourceAttribution,
+    );
+  }
 
   Future<void> _onStartJourney() async {
     if (_isSaving) return;
@@ -47,13 +63,14 @@ class _FirstHabitsScreenState extends ConsumerState<FirstHabitsScreen> {
       return;
     }
 
-    final blueprints = StarterHabitBlueprint.forPersonalization(
+    final selected = StarterHabitBlueprint.forPersonalization(
       archetype: archetype,
       interestIds: state.interests,
       clubTags: state.joinedClubId != null
           ? [state.joinedClubId!]
           : const [],
     ).where((b) => _selectedIds.contains(b.id)).toList();
+    final blueprints = selected.map(_applyCustomizations).toList(growable: false);
 
     if (blueprints.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -112,14 +129,16 @@ class _FirstHabitsScreenState extends ConsumerState<FirstHabitsScreen> {
       backgroundColor: Colors.transparent,
       isScrollControlled: true,
       builder: (context) => _HabitDetailSheet(
-        blueprint: blueprint,
+        blueprint: _applyCustomizations(blueprint),
         index: index,
         archetype: ref.read(enhancedOnboardingProvider).selectedArchetype ?? UserArchetype.none,
         onSave: (customTitle, customCue) {
-          setState(() => _selectedIds.add(blueprint.id));
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Habit "${customTitle ?? blueprint.title}" saved with cue: ${customCue ?? blueprint.shortCue}')),
-          );
+          setState(() {
+            _selectedIds.add(blueprint.id);
+            if (customTitle != null || customCue != null) {
+              _customizations[blueprint.id] = (title: customTitle, cue: customCue);
+            }
+          });
         },
       ),
     );
@@ -204,6 +223,8 @@ class _FirstHabitsScreenState extends ConsumerState<FirstHabitsScreen> {
                             index: i,
                             blueprint: blueprints[i],
                             isSelected: _selectedIds.contains(blueprints[i].id),
+                            customTitle: _customizations[blueprints[i].id]?.title,
+                            customCue: _customizations[blueprints[i].id]?.cue,
                             onTap: () {
                               setState(() {
                                 if (!_selectedIds.add(blueprints[i].id)) {
@@ -278,6 +299,8 @@ class _BlueprintCard extends StatelessWidget {
   final int index;
   final StarterHabitBlueprint blueprint;
   final bool isSelected;
+  final String? customTitle;
+  final String? customCue;
   final VoidCallback? onTap;
   final VoidCallback? onCustomizeTap;
 
@@ -285,6 +308,8 @@ class _BlueprintCard extends StatelessWidget {
     required this.index,
     required this.blueprint,
     required this.isSelected,
+    this.customTitle,
+    this.customCue,
     this.onTap,
     this.onCustomizeTap,
   });
@@ -334,7 +359,7 @@ class _BlueprintCard extends StatelessWidget {
                 const Gap(16),
                 Expanded(
                   child: Text(
-                    blueprint.title,
+                    customTitle ?? blueprint.title,
                     style: GoogleFonts.splineSans(
                       color: Colors.white,
                       fontSize: 17,
@@ -360,7 +385,7 @@ class _BlueprintCard extends StatelessWidget {
                 ),
                 const Gap(6),
                 Text(
-                  blueprint.shortCue,
+                  customCue ?? blueprint.shortCue,
                   style: GoogleFonts.splineSans(
                     color: Colors.white70,
                     fontSize: 14,
@@ -481,14 +506,12 @@ class _HabitDetailSheetState extends ConsumerState<_HabitDetailSheet> {
     // persisted once by _onStartJourney. No repository call here — creating a
     // habit directly would double-create for selected cards.
     await Future<void>.delayed(const Duration(milliseconds: 200));
-    if (mounted) {
-      Navigator.pop(context);
-      widget.onSave(
-        _titleController.text.trim().isEmpty ? null : _titleController.text.trim(),
-        _cueController.text.trim().isEmpty ? null : _cueController.text.trim(),
-      );
-    }
-    setState(() => _isSaving = false);
+    if (!mounted) return;
+    Navigator.pop(context);
+    widget.onSave(
+      _titleController.text.trim().isEmpty ? null : _titleController.text.trim(),
+      _cueController.text.trim().isEmpty ? null : _cueController.text.trim(),
+    );
   }
 
   @override
