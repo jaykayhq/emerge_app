@@ -38,6 +38,8 @@ void main() {
       expect(timelineSlotKeyForCue('After waking up'), 'morning');
       expect(timelineSlotKeyForCue('After breakfast'), 'morning');
       expect(timelineSlotKeyForCue('Morning coffee'), 'morning');
+      expect(timelineSlotKeyForCue('Before workout'), 'morning');
+      expect(timelineSlotKeyForCue('Before training'), 'morning');
     });
 
     test('recognizes lunch/afternoon keywords', () {
@@ -56,6 +58,8 @@ void main() {
 
     test('defaults to morning when no keyword matches', () {
       expect(timelineSlotKeyForCue('During your run'), 'morning');
+      expect(timelineSlotKeyForCue(''), 'morning');
+      expect(timelineSlotKeyForCue('   '), 'morning');
     });
   });
 

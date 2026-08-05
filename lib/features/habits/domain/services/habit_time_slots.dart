@@ -11,14 +11,18 @@ const List<String> timelineSlotKeys = [
 ];
 
 /// Keyword table for `StarterHabitBlueprint.shortCue` → slot.
-/// The rest/`anytime` keywords are matched FIRST so cues like
-/// "Evening reflection" land in "Before Bed", not "After Work".
 const Map<String, List<String>> _cueKeywords = {
   'anytime': ['bed', 'night', 'reflection', 'journal', 'relax', 'sleep'],
-  'morning': ['wake', 'breakfast', 'coffee', 'morning', 'shower', 'sunrise', 'rise'],
+  'morning': ['wake', 'breakfast', 'coffee', 'morning', 'shower', 'sunrise', 'rise', 'workout', 'train'],
   'afternoon': ['lunch', 'noon', 'midday', 'afternoon'],
   'evening': ['work', 'dinner', 'evening', 'commute'],
 };
+
+/// Slot lookup order, highest priority first. 'anytime' is checked first so
+/// cues like "Evening reflection" land in "Before Bed", not "After Work".
+/// 'morning' precedes 'evening' so "Before workout" resolves to 'morning'
+/// rather than matching the 'work' in 'workout'.
+const List<String> _cueKeywordOrder = ['anytime', 'morning', 'afternoon', 'evening'];
 
 /// Maps a clock time to the timeline slot key:
 /// 4:00–11:59 morning · 12:00–16:59 afternoon · 17:00–20:59 evening ·
@@ -36,9 +40,9 @@ String timelineSlotKeyFor(TimeOfDay? time) {
 /// timeline slot via keyword match; falls back to 'morning'.
 String timelineSlotKeyForCue(String shortCue) {
   final cue = shortCue.toLowerCase();
-  // Iterate the keyword table directly so the rest/'anytime' keywords
-  // (listed first) win over 'evening' in cues like "Evening reflection".
-  for (final slot in _cueKeywords.keys) {
+  // Iterate in explicit priority order (see `_cueKeywordOrder`) rather than
+  // relying on map insertion order.
+  for (final slot in _cueKeywordOrder) {
     for (final keyword in _cueKeywords[slot]!) {
       if (cue.contains(keyword)) return slot;
     }
