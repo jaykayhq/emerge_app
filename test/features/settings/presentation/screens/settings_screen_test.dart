@@ -264,11 +264,11 @@ void main() {
       await tester.pump();
 
       // Toggle defaults on with the "shown once" subtitle.
-      expect(find.text('Show narrator guides'), findsOneWidget);
+      expect(find.text('Show coach guides'), findsOneWidget);
       expect(find.text('Guides shown once on each screen'), findsOneWidget);
 
       // Replay tiles.
-      expect(find.text('Replay narrator guides'), findsOneWidget);
+      expect(find.text('Replay coach guides'), findsOneWidget);
       expect(find.text('Replay onboarding'), findsOneWidget);
 
       // Quota row: usedToday 1 of 3 free asks -> 2 left.
@@ -283,8 +283,8 @@ void main() {
         await tester.pump();
         await tester.pump();
 
-        await tester.ensureVisible(find.text('Show narrator guides'));
-        await tester.tap(find.text('Show narrator guides'));
+        await tester.ensureVisible(find.text('Show coach guides'));
+        await tester.tap(find.text('Show coach guides'));
         await tester.pump();
         await tester.pump();
 

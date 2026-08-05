@@ -334,7 +334,7 @@ class SettingsScreen extends ConsumerWidget {
                   child: Icon(Icons.school_outlined, color: EmergeColors.teal),
                 ),
                 title: Text(
-                  'Show narrator guides',
+                  'Show coach guides',
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                     fontWeight: FontWeight.w500,
                     color: AppTheme.textMainDark,
@@ -360,7 +360,7 @@ class SettingsScreen extends ConsumerWidget {
               _buildListTile(
                 context,
                 Icons.replay_outlined,
-                'Replay narrator guides',
+                'Replay coach guides',
                 subtitle: 'Shows every guide again on next visit',
                 onTap: () => _showReplayGuidesDialog(context, ref),
               ),
@@ -911,11 +911,11 @@ class SettingsScreen extends ConsumerWidget {
       builder: (context) => AlertDialog(
         backgroundColor: AppTheme.surfaceDark,
         title: const Text(
-          'Replay narrator guides?',
+          'Replay coach guides?',
           style: TextStyle(color: Colors.white),
         ),
         content: const Text(
-          'All narrator guides will show again the next time you visit each screen.',
+          'All coach guides will show again the next time you visit each screen.',
           style: TextStyle(color: Colors.white70),
         ),
         actions: [

@@ -112,7 +112,7 @@ void main() {
       // Screen renders without narrator dialog
       expect(find.text('EMERGE'), findsNothing);
       // ...and without the narrator-guide overlay (node marked seen in setUp).
-      expect(find.text('NARRATOR'), findsNothing);
+      expect(find.text('COACH'), findsNothing);
     });
 
     testWidgets('skips narrator check when isFirstLaunch is true', (
@@ -148,7 +148,7 @@ void main() {
       // No narrator dialog shown (first launch skips tutorial)
       expect(find.text('EMERGE'), findsNothing);
       // Guide IS due (node unseen) — the narrator guide card appears.
-      expect(find.text('NARRATOR'), findsOneWidget);
+      expect(find.text('COACH'), findsOneWidget);
     });
   });
 }

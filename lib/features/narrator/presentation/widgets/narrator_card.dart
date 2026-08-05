@@ -202,7 +202,7 @@ class _NarratorCardState extends ConsumerState<NarratorCard> {
               const _CardAvatar(),
               const SizedBox(width: 10),
               const Text(
-                'NARRATOR',
+                'COACH',
                 style: TextStyle(
                   fontSize: 10,
                   letterSpacing: 2.5,
@@ -287,7 +287,7 @@ class _NarratorCardState extends ConsumerState<NarratorCard> {
                     ),
                   ),
                   child: const Text(
-                    '✎ Ask the narrator',
+                    '✎ Ask the coach',
                     style: TextStyle(fontSize: 12, color: Colors.white70),
                   ),
                 ),
