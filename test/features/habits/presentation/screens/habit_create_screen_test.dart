@@ -330,5 +330,56 @@ void main() {
       expect(captured!.integrationType, HabitIntegrationType.screenTimeLimit);
       expect(captured!.integrationTarget, 45);
     });
+
+    testWidgets('No Integration clears a previously applied integration target',
+        (tester) async {
+      Habit? captured;
+      await tester.pumpWidget(
+        _createTestWidgetWithCapture((habit) => captured = habit),
+      );
+      await tester.pump();
+
+      // Title via typeahead.
+      await tester.tap(find.text('action'));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 350));
+      await tester.enterText(find.byType(TextField), 'med');
+      await tester.pump();
+      await tester.tap(find.text('Meditate'));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 350));
+
+      // Apply Screen Time Limit = 45.
+      await tester.tap(find.text('NO INTEGRATION'));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 350));
+      await tester.tap(find.text('Screen Time Limit'));
+      await tester.pump();
+      await tester.enterText(
+        find.byKey(const Key('integration_target_field')),
+        '45',
+      );
+      await tester.tap(find.text('CONFIRM'));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 350));
+
+      // Reopen the sheet and pick No Integration.
+      await tester.tap(find.text('SCREEN 45 MIN'));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 350));
+      await tester.tap(find.text('No Integration'));
+      await tester.pump();
+      await tester.tap(find.text('CONFIRM'));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 350));
+
+      await tester.tap(find.text('FORGE HABIT'));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 350));
+
+      expect(captured, isNotNull);
+      expect(captured!.integrationType, HabitIntegrationType.none);
+      expect(captured!.integrationTarget, isNull);
+    });
   });
 }

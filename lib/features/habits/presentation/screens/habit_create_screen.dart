@@ -81,6 +81,7 @@ class HabitFormData {
     String? twoMinuteVersion,
     HabitIntegrationType? integrationType,
     int? integrationTarget,
+    bool clearIntegrationTarget = false,
   }) {
     return HabitFormData(
       title: title ?? this.title,
@@ -94,7 +95,9 @@ class HabitFormData {
       attribute: attribute ?? this.attribute,
       twoMinuteVersion: twoMinuteVersion ?? this.twoMinuteVersion,
       integrationType: integrationType ?? this.integrationType,
-      integrationTarget: integrationTarget ?? this.integrationTarget,
+      integrationTarget: clearIntegrationTarget
+          ? null
+          : (integrationTarget ?? this.integrationTarget),
     );
   }
 }
@@ -117,7 +120,11 @@ class HabitCreateState extends _$HabitCreateState {
       state = state.copyWith(attribute: a);
   void updateTwoMinute(String v) => state = state.copyWith(twoMinuteVersion: v);
   void updateIntegration(HabitIntegrationType type, int? target) =>
-      state = state.copyWith(integrationType: type, integrationTarget: target);
+      state = state.copyWith(
+        integrationType: type,
+        integrationTarget: target,
+        clearIntegrationTarget: type == HabitIntegrationType.none,
+      );
 
   void reset() => state = HabitFormData.empty;
 }
