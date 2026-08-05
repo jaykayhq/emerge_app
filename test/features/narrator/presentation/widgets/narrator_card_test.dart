@@ -203,6 +203,8 @@ void main() {
     );
     addTearDown(c.dispose);
     await pumpCard(tester, c);
+    // Prove the premise: the 8 habits are actually rendered.
+    expect(find.text('8 left today'), findsOneWidget);
     // The hint renders inside the expanded ask UI.
     await tester.tap(find.text('✎ Ask the narrator'));
     await tester.pump();
