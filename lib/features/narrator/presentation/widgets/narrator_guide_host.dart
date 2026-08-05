@@ -40,8 +40,8 @@ class _NarratorGuideHostState extends ConsumerState<NarratorGuideHost> {
   bool _animateHole = false;
   bool _holeAvailable = false;
   final List<ScrollPosition> _scrollPositions = [];
-
-  static const double _guideCardEstimatedHeight = 160;
+  final GlobalKey _cardKey = GlobalKey();
+  double? _cardHeight;
 
   List<NarratorGuideStep> get _steps =>
       NarratorGuideRegistry.forNode(widget.nodeId)?.steps ?? const [];
@@ -87,6 +87,29 @@ class _NarratorGuideHostState extends ConsumerState<NarratorGuideHost> {
     final box = ctx?.findRenderObject();
     if (box is! RenderBox || !box.attached) return null;
     return box.localToGlobal(Offset.zero) & box.size;
+  }
+
+  /// Conservative first-frame estimate of the guide card height (before the
+  /// card has laid out). Over-estimating is safe: it only adds gap above the
+  /// target; under-estimating would let the card overlap it.
+  double _estimateGuideCardHeight(String script) {
+    final textScale = MediaQuery.textScalerOf(context).scale(1.0);
+    final availableWidth = MediaQuery.sizeOf(context).width - 48;
+    final charsPerLine = (availableWidth / 6).floor().clamp(10, 70);
+    final lineCount = (script.length / charsPerLine).ceil().clamp(1, 8);
+    return (230 + lineCount * 26) * textScale;
+  }
+
+  void _measureCardHeight() {
+    if (!mounted) return;
+    final ctx = _cardKey.currentContext;
+    if (ctx == null) return;
+    final box = ctx.findRenderObject();
+    if (box is! RenderBox || !box.attached) return;
+    final height = box.size.height;
+    if (_cardHeight != height) {
+      setState(() => _cardHeight = height);
+    }
   }
 
   void _advance() {
@@ -136,6 +159,9 @@ class _NarratorGuideHostState extends ConsumerState<NarratorGuideHost> {
           setState(() => _holeAvailable = true);
         }
       });
+      if (step != null) {
+        WidgetsBinding.instance.addPostFrameCallback((_) => _measureCardHeight());
+      }
     }
 
     // The guide card and its InkWell/IconButton need a Material ancestor. The
@@ -162,10 +188,11 @@ class _NarratorGuideHostState extends ConsumerState<NarratorGuideHost> {
     final screenSize = MediaQuery.sizeOf(context);
     final topInset = MediaQuery.paddingOf(context).top;
     final bottomInset = MediaQuery.paddingOf(context).bottom;
+    final cardHeight = _cardHeight ?? _estimateGuideCardHeight(step.script);
     final position = guideCardPositionFor(
       targetRect: targetRect,
       screenSize: screenSize,
-      cardHeight: _guideCardEstimatedHeight,
+      cardHeight: cardHeight,
       margin: 16,
       topInset: topInset,
       bottomInset: bottomInset,
@@ -176,6 +203,7 @@ class _NarratorGuideHostState extends ConsumerState<NarratorGuideHost> {
       top: position.top,
       bottom: position.bottom,
       child: NarratorGuideCard(
+        key: _cardKey,
         script: step.script,
         stepIndex: _step,
         stepCount: _steps.length,

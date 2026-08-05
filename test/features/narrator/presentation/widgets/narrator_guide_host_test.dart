@@ -205,12 +205,14 @@ void main() {
     );
     await tester.pump(); // post-frame gate resolves, card builds
     await tester.pump(const Duration(milliseconds: 400)); // typewriter ticks
+    await tester.pump(); // measure callback repositions using the real height
 
     final cardFinder = find.byType(NarratorGuideCard);
     expect(cardFinder, findsOneWidget);
     final cardBox = tester.getRect(cardFinder);
     final targetBox = tester.getRect(find.byKey(targetKey));
-    // The card must not overlap the spotlighted element.
+    // The card must sit clear of — strictly above — the spotlighted element.
     expect(cardBox.overlaps(targetBox), isFalse);
+    expect(cardBox.bottom, lessThanOrEqualTo(targetBox.top + 1));
   });
 }
