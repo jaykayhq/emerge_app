@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:emerge_app/features/narrator/domain/services/guide_card_placement.dart';
 import 'package:emerge_app/features/narrator/domain/services/narrator_guide_registry.dart';
 import 'package:emerge_app/features/narrator/presentation/providers/narrator_guide_controller.dart';
@@ -42,6 +44,7 @@ class _NarratorGuideHostState extends ConsumerState<NarratorGuideHost> {
   final List<ScrollPosition> _scrollPositions = [];
   final GlobalKey _cardKey = GlobalKey();
   double? _cardHeight;
+  Timer? _measureTimer;
 
   List<NarratorGuideStep> get _steps =>
       NarratorGuideRegistry.forNode(widget.nodeId)?.steps ?? const [];
@@ -57,6 +60,13 @@ class _NarratorGuideHostState extends ConsumerState<NarratorGuideHost> {
     if (await controller.shouldShow(widget.nodeId) && mounted) {
       setState(() => _visible = true);
       _attachScrollListeners();
+      // The card grows while the typewriter wraps to extra lines, and the
+      // host has no rebuild per tick — re-measure periodically so the card
+      // is repositioned as it grows, then goes quiet once the height
+      // stabilizes (`_measureCardHeight` setStates only on change).
+      _measureTimer = Timer.periodic(const Duration(milliseconds: 120), (_) {
+        _measureCardHeight();
+      });
     }
   }
 
@@ -76,6 +86,7 @@ class _NarratorGuideHostState extends ConsumerState<NarratorGuideHost> {
 
   @override
   void dispose() {
+    _measureTimer?.cancel();
     for (final position in _scrollPositions) {
       position.removeListener(_onScroll);
     }
@@ -124,6 +135,7 @@ class _NarratorGuideHostState extends ConsumerState<NarratorGuideHost> {
   }
 
   Future<void> _finish() async {
+    _measureTimer?.cancel();
     try {
       await ref.read(narratorGuideControllerProvider).markSeen(widget.nodeId);
     } catch (_) {
