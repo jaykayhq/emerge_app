@@ -233,9 +233,7 @@ class _HabitCreateScreenState extends ConsumerState<HabitCreateScreen> {
                       _SecondaryPill(
                         label: _integrationLabel(form),
                         isSelected: true,
-                        color: form.integrationType == HabitIntegrationType.none
-                            ? null
-                            : EmergeColors.teal,
+                        color: EmergeColors.teal,
                         onTap: _showIntegrationSheet,
                       ),
                     ],
@@ -646,6 +644,7 @@ class _HabitCreateScreenState extends ConsumerState<HabitCreateScreen> {
   void _showIntegrationSheet() {
     final form = ref.read(habitCreateStateProvider);
     var selected = form.integrationType;
+    var targetError = '';
     final targetController = TextEditingController(
       text: form.integrationTarget?.toString() ??
           (selected == HabitIntegrationType.healthSteps
@@ -659,97 +658,127 @@ class _HabitCreateScreenState extends ConsumerState<HabitCreateScreen> {
       backgroundColor: Colors.transparent,
       isScrollControlled: true,
       builder: (ctx) => StatefulBuilder(
-        builder: (ctx, setSheetState) => _GlassSheet(
-          title: 'LINK INTEGRATION',
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              _IntegrationOption(
-                label: 'No Integration',
-                icon: Icons.block,
-                isSelected: selected == HabitIntegrationType.none,
-                onTap: () {
-                  setSheetState(() => selected = HabitIntegrationType.none);
-                },
-              ),
-              _IntegrationOption(
-                label: 'Health Steps',
-                icon: Icons.directions_walk,
-                isSelected: selected == HabitIntegrationType.healthSteps,
-                onTap: () {
-                  setSheetState(
-                    () => selected = HabitIntegrationType.healthSteps,
-                  );
-                },
-              ),
-              _IntegrationOption(
-                label: 'Screen Time Limit',
-                icon: Icons.phone_android_outlined,
-                isSelected: selected == HabitIntegrationType.screenTimeLimit,
-                onTap: () {
-                  setSheetState(
-                    () => selected = HabitIntegrationType.screenTimeLimit,
-                  );
-                },
-              ),
-              if (selected != HabitIntegrationType.none) ...[
-                const Gap(12),
-                TextField(
-                  key: const Key('integration_target_field'),
-                  controller: targetController,
-                  keyboardType: TextInputType.number,
-                  style: const TextStyle(color: Colors.white),
-                  decoration: InputDecoration(
-                    hintText: selected == HabitIntegrationType.healthSteps
-                        ? 'Daily step goal (e.g. 10000)'
-                        : 'Daily screen time limit in minutes (e.g. 30)',
-                    hintStyle: TextStyle(
-                      color: Colors.white.withValues(alpha: 0.38),
-                    ),
-                    filled: true,
-                    fillColor: Colors.white.withValues(alpha: 0.06),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
+        builder: (ctx, setSheetState) {
+          void selectType(HabitIntegrationType type) {
+            setSheetState(() {
+              selected = type;
+              targetError = '';
+              // Reset the target to the newly selected type's default; keep
+              // an applied target only when re-selecting its own type.
+              targetController.text = switch (type) {
+                HabitIntegrationType.healthSteps =>
+                  form.integrationType == HabitIntegrationType.healthSteps &&
+                          form.integrationTarget != null
+                      ? form.integrationTarget!.toString()
+                      : '10000',
+                HabitIntegrationType.screenTimeLimit =>
+                  form.integrationType == HabitIntegrationType.screenTimeLimit &&
+                          form.integrationTarget != null
+                      ? form.integrationTarget!.toString()
+                      : '30',
+                HabitIntegrationType.none => '',
+              };
+            });
+          }
+
+          return _GlassSheet(
+            title: 'LINK INTEGRATION',
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                _IntegrationOption(
+                  label: 'No Integration',
+                  icon: Icons.block,
+                  isSelected: selected == HabitIntegrationType.none,
+                  onTap: () => selectType(HabitIntegrationType.none),
+                ),
+                _IntegrationOption(
+                  label: 'Health Steps',
+                  icon: Icons.directions_walk,
+                  isSelected: selected == HabitIntegrationType.healthSteps,
+                  onTap: () => selectType(HabitIntegrationType.healthSteps),
+                ),
+                _IntegrationOption(
+                  label: 'Screen Time Limit',
+                  icon: Icons.phone_android_outlined,
+                  isSelected: selected == HabitIntegrationType.screenTimeLimit,
+                  onTap: () => selectType(HabitIntegrationType.screenTimeLimit),
+                ),
+                if (selected != HabitIntegrationType.none) ...[
+                  const Gap(12),
+                  TextField(
+                    key: const Key('integration_target_field'),
+                    controller: targetController,
+                    keyboardType: TextInputType.number,
+                    style: const TextStyle(color: Colors.white),
+                    decoration: InputDecoration(
+                      hintText: selected == HabitIntegrationType.healthSteps
+                          ? 'Daily step goal (e.g. 10000)'
+                          : 'Daily screen time limit in minutes (e.g. 30)',
+                      hintStyle: TextStyle(
+                        color: Colors.white.withValues(alpha: 0.38),
+                      ),
+                      filled: true,
+                      fillColor: Colors.white.withValues(alpha: 0.06),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
                     ),
                   ),
-                ),
-                const Gap(8),
-                Text(
-                  'Requires the matching permission — enable it under '
-                  'Settings > Integrations & Data.',
-                  style: TextStyle(
-                    color: Colors.white.withValues(alpha: 0.45),
-                    fontSize: 11,
+                  const Gap(8),
+                  Text(
+                    'Requires the matching permission — enable it under '
+                    'Settings > Integrations & Data.',
+                    style: TextStyle(
+                      color: Colors.white.withValues(alpha: 0.45),
+                      fontSize: 11,
+                    ),
+                  ),
+                ],
+                if (targetError.isNotEmpty) ...[
+                  const Gap(8),
+                  Text(
+                    targetError,
+                    style: const TextStyle(
+                      color: Color(0xFFEF5350),
+                      fontSize: 12,
+                    ),
+                  ),
+                ],
+                const Gap(16),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: () {
+                      final target = int.tryParse(targetController.text.trim());
+                      if (selected == HabitIntegrationType.none) {
+                        ref
+                            .read(habitCreateStateProvider.notifier)
+                            .updateIntegration(HabitIntegrationType.none, null);
+                        Navigator.pop(ctx);
+                      } else if (target != null && target > 0) {
+                        ref
+                            .read(habitCreateStateProvider.notifier)
+                            .updateIntegration(selected, target);
+                        Navigator.pop(ctx);
+                      } else {
+                        // Invalid target — keep the sheet open and surface why.
+                        setSheetState(() {
+                          targetError = 'Enter a valid target above 0.';
+                        });
+                      }
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: EmergeColors.teal,
+                      foregroundColor: const Color(0xFF05100B),
+                    ),
+                    child: const Text('CONFIRM'),
                   ),
                 ),
               ],
-              const Gap(16),
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: () {
-                    final target = int.tryParse(targetController.text.trim());
-                    if (selected == HabitIntegrationType.none) {
-                      ref
-                          .read(habitCreateStateProvider.notifier)
-                          .updateIntegration(HabitIntegrationType.none, null);
-                    } else if (target != null && target > 0) {
-                      ref
-                          .read(habitCreateStateProvider.notifier)
-                          .updateIntegration(selected, target);
-                    }
-                    Navigator.pop(ctx);
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: EmergeColors.teal,
-                    foregroundColor: const Color(0xFF05100B),
-                  ),
-                  child: const Text('CONFIRM'),
-                ),
-              ),
-            ],
-          ),
-        ),
+            ),
+          );
+        },
       ),
     );
   }

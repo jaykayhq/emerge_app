@@ -223,5 +223,65 @@ void main() {
 
       expect(find.text('STEPS 10000'), findsOneWidget);
     });
+
+    testWidgets('invalid target keeps the sheet open and shows an error',
+        (tester) async {
+      await tester.pumpWidget(_createTestWidget());
+      await tester.pump();
+
+      await tester.tap(find.text('NO INTEGRATION'));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 350));
+
+      await tester.tap(find.text('Health Steps'));
+      await tester.pump();
+
+      await tester.enterText(
+        find.byKey(const Key('integration_target_field')),
+        '0',
+      );
+      await tester.tap(find.text('CONFIRM'));
+      await tester.pump();
+
+      // Sheet stays open and the inline error is shown.
+      expect(find.text('LINK INTEGRATION'), findsOneWidget);
+      expect(find.text('Enter a valid target above 0.'), findsOneWidget);
+      // Nothing was applied — the pill is unchanged.
+      expect(find.text('NO INTEGRATION'), findsOneWidget);
+      expect(find.text('STEPS 0'), findsNothing);
+    });
+
+    testWidgets('switching integration type resets target and clears the error',
+        (tester) async {
+      await tester.pumpWidget(_createTestWidget());
+      await tester.pump();
+
+      await tester.tap(find.text('NO INTEGRATION'));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 350));
+
+      await tester.tap(find.text('Health Steps'));
+      await tester.pump();
+
+      // Enter an invalid target and confirm → error appears.
+      await tester.enterText(
+        find.byKey(const Key('integration_target_field')),
+        '0',
+      );
+      await tester.tap(find.text('CONFIRM'));
+      await tester.pump();
+      expect(find.text('Enter a valid target above 0.'), findsOneWidget);
+
+      // Switching to Screen Time Limit resets the field to its default and
+      // clears the error.
+      await tester.tap(find.text('Screen Time Limit'));
+      await tester.pump();
+
+      final targetField = tester.widget<TextField>(
+        find.byKey(const Key('integration_target_field')),
+      );
+      expect(targetField.controller!.text, '30');
+      expect(find.text('Enter a valid target above 0.'), findsNothing);
+    });
   });
 }
