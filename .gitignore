@@ -78,3 +78,6 @@ scripts/run_emulator.sh
 
 # Visual companion brainstorm sessions
 .superpowers/
+
+# Local dev tool scratch data
+.freebuff/
