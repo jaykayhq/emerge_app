@@ -1,5 +1,8 @@
+import 'package:emerge_app/features/auth/domain/entities/auth_user.dart';
+import 'package:emerge_app/features/auth/presentation/providers/auth_providers.dart';
 import 'package:emerge_app/features/habits/domain/entities/habit.dart';
 import 'package:emerge_app/features/habits/domain/services/smart_defaults_service.dart';
+import 'package:emerge_app/features/habits/presentation/providers/habit_providers.dart';
 import 'package:emerge_app/features/habits/presentation/providers/habit_suggestions_provider.dart';
 import 'package:emerge_app/features/habits/presentation/providers/smart_defaults_provider.dart';
 import 'package:emerge_app/features/habits/presentation/screens/habit_create_screen.dart'
@@ -8,6 +11,7 @@ import 'package:emerge_app/features/habits/presentation/widgets/identity_sentenc
 import 'package:emerge_app/features/onboarding/data/repositories/local_settings_repository.dart';
 import 'package:emerge_app/features/world_map/presentation/widgets/nebula_background.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../../../helpers/widget_test_utils.dart';
@@ -129,6 +133,67 @@ void main() {
       expect(find.text('WHAT ACTION?'), findsNothing);
       expect(find.text('💖'), findsOneWidget);
       expect(find.text('Metta Meditation'), findsOneWidget);
+    });
+  });
+
+  group('HabitCreateScreen - time-of-day persistence', () {
+    testWidgets('stores timeOfDayPreference derived from the reminder time',
+        (tester) async {
+      Habit? captured;
+      await tester.pumpWidget(
+        createScreenUnderTest(
+          // `_createHabit` reads `authStateChangesProvider.value` synchronously,
+          // but `ref.read` alone doesn't subscribe a StreamProvider in
+          // Riverpod 3 — nothing else in this screen tree watches auth.
+          // Watch it here so the stream value is ready before FORGE HABIT.
+          screen: Consumer(
+            builder: (context, ref, _) {
+              ref.watch(authStateChangesProvider);
+              return const HabitCreateScreen();
+            },
+          ),
+          overrides: [
+            smartDefaultsProvider.overrideWith(
+              (ref) => const SmartDefaults(
+                time: TimeOfDay(hour: 7, minute: 0),
+                attribute: HabitAttribute.vitality,
+                difficulty: HabitDifficulty.easy,
+                timerMinutes: 5,
+              ),
+            ),
+            habitSuggestionsProvider.overrideWith(
+              (ref) => const <String>['Drink water', 'Meditate'],
+            ),
+            authStateChangesProvider.overrideWith(
+              (ref) =>
+                  Stream.value(const AuthUser(id: 'u1', email: 'u@x.com')),
+            ),
+            createHabitProvider.overrideWith((ref, habit) async {
+              captured = habit;
+            }),
+          ],
+        ),
+      );
+      await tester.pump();
+
+      // Fill the title via the typeahead (this also enables FORGE HABIT).
+      await tester.tap(find.text('action'));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 350));
+      await tester.enterText(find.byType(TextField), 'med');
+      await tester.pump();
+      await tester.tap(find.text('Meditate'));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 350));
+
+      await tester.tap(find.text('FORGE HABIT'));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 350));
+
+      expect(captured, isNotNull);
+      // Smart default time is 7:00 AM → morning.
+      expect(captured!.timeOfDayPreference, TimeOfDayPreference.morning);
+      expect(captured!.reminderTime, const TimeOfDay(hour: 7, minute: 0));
     });
   });
 }

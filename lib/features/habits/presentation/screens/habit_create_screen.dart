@@ -3,6 +3,7 @@ import 'package:emerge_app/core/theme/emerge_colors.dart';
 import 'package:emerge_app/core/utils/app_logger.dart';
 import 'package:emerge_app/features/auth/presentation/providers/auth_providers.dart';
 import 'package:emerge_app/features/habits/domain/entities/habit.dart';
+import 'package:emerge_app/features/habits/domain/services/habit_time_slots.dart';
 import 'package:emerge_app/features/habits/presentation/providers/habit_providers.dart';
 import 'package:emerge_app/features/habits/presentation/providers/habit_recommendations_provider.dart';
 import 'package:emerge_app/features/habits/presentation/providers/habit_suggestions_provider.dart';
@@ -663,6 +664,9 @@ class _HabitCreateScreenState extends ConsumerState<HabitCreateScreen> {
       frequency: frequency,
       specificDays: specificDays,
       reminderTime: form.reminderTime ?? defaults.time,
+      timeOfDayPreference: timeOfDayPreferenceFrom(
+        timelineSlotKeyFor(form.reminderTime ?? defaults.time),
+      ),
       location: form.location.isNotEmpty ? form.location : null,
       attribute: form.attribute,
       createdAt: DateTime.now(),
