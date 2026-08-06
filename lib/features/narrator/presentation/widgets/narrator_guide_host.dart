@@ -1,3 +1,6 @@
+import 'dart:async';
+
+import 'package:emerge_app/features/narrator/domain/services/guide_card_placement.dart';
 import 'package:emerge_app/features/narrator/domain/services/narrator_guide_registry.dart';
 import 'package:emerge_app/features/narrator/presentation/providers/narrator_guide_controller.dart';
 import 'package:emerge_app/features/narrator/presentation/widgets/narrator_guide_card.dart';
@@ -39,6 +42,9 @@ class _NarratorGuideHostState extends ConsumerState<NarratorGuideHost> {
   bool _animateHole = false;
   bool _holeAvailable = false;
   final List<ScrollPosition> _scrollPositions = [];
+  final GlobalKey _cardKey = GlobalKey();
+  double? _cardHeight;
+  Timer? _measureTimer;
 
   List<NarratorGuideStep> get _steps =>
       NarratorGuideRegistry.forNode(widget.nodeId)?.steps ?? const [];
@@ -54,6 +60,13 @@ class _NarratorGuideHostState extends ConsumerState<NarratorGuideHost> {
     if (await controller.shouldShow(widget.nodeId) && mounted) {
       setState(() => _visible = true);
       _attachScrollListeners();
+      // The card grows while the typewriter wraps to extra lines, and the
+      // host has no rebuild per tick — re-measure periodically so the card
+      // is repositioned as it grows, then goes quiet once the height
+      // stabilizes (`_measureCardHeight` setStates only on change).
+      _measureTimer = Timer.periodic(const Duration(milliseconds: 120), (_) {
+        _measureCardHeight();
+      });
     }
   }
 
@@ -73,6 +86,7 @@ class _NarratorGuideHostState extends ConsumerState<NarratorGuideHost> {
 
   @override
   void dispose() {
+    _measureTimer?.cancel();
     for (final position in _scrollPositions) {
       position.removeListener(_onScroll);
     }
@@ -84,6 +98,29 @@ class _NarratorGuideHostState extends ConsumerState<NarratorGuideHost> {
     final box = ctx?.findRenderObject();
     if (box is! RenderBox || !box.attached) return null;
     return box.localToGlobal(Offset.zero) & box.size;
+  }
+
+  /// Conservative first-frame estimate of the guide card height (before the
+  /// card has laid out). Over-estimating is safe: it only adds gap above the
+  /// target; under-estimating would let the card overlap it.
+  double _estimateGuideCardHeight(String script) {
+    final textScale = MediaQuery.textScalerOf(context).scale(1.0);
+    final availableWidth = MediaQuery.sizeOf(context).width - 48;
+    final charsPerLine = (availableWidth / 6).floor().clamp(10, 70);
+    final lineCount = (script.length / charsPerLine).ceil().clamp(1, 8);
+    return (230 + lineCount * 26) * textScale;
+  }
+
+  void _measureCardHeight() {
+    if (!mounted) return;
+    final ctx = _cardKey.currentContext;
+    if (ctx == null) return;
+    final box = ctx.findRenderObject();
+    if (box is! RenderBox || !box.attached) return;
+    final height = box.size.height;
+    if (_cardHeight != height) {
+      setState(() => _cardHeight = height);
+    }
   }
 
   void _advance() {
@@ -98,6 +135,7 @@ class _NarratorGuideHostState extends ConsumerState<NarratorGuideHost> {
   }
 
   Future<void> _finish() async {
+    _measureTimer?.cancel();
     try {
       await ref.read(narratorGuideControllerProvider).markSeen(widget.nodeId);
     } catch (_) {
@@ -133,6 +171,9 @@ class _NarratorGuideHostState extends ConsumerState<NarratorGuideHost> {
           setState(() => _holeAvailable = true);
         }
       });
+      if (step != null) {
+        WidgetsBinding.instance.addPostFrameCallback((_) => _measureCardHeight());
+      }
     }
 
     // The guide card and its InkWell/IconButton need a Material ancestor. The
@@ -148,20 +189,38 @@ class _NarratorGuideHostState extends ConsumerState<NarratorGuideHost> {
           widget.child,
           if (step != null)
             Positioned.fill(child: _spotlight(steps, step, reduceMotion)),
-          if (step != null)
-            Positioned(
-              left: 16,
-              right: 16,
-              bottom: 24 + MediaQuery.paddingOf(context).bottom,
-              child: NarratorGuideCard(
-                script: step.script,
-                stepIndex: _step,
-                stepCount: steps.length,
-                onAdvance: _advance,
-                onSkip: _finish,
-              ),
-            ),
+          if (step != null) _buildGuideCard(step),
         ],
+      ),
+    );
+  }
+
+  Widget _buildGuideCard(NarratorGuideStep step) {
+    final targetRect = _rectFor(step.targetKey);
+    final screenSize = MediaQuery.sizeOf(context);
+    final topInset = MediaQuery.paddingOf(context).top;
+    final bottomInset = MediaQuery.paddingOf(context).bottom;
+    final cardHeight = _cardHeight ?? _estimateGuideCardHeight(step.script);
+    final position = guideCardPositionFor(
+      targetRect: targetRect,
+      screenSize: screenSize,
+      cardHeight: cardHeight,
+      margin: 16,
+      topInset: topInset,
+      bottomInset: bottomInset,
+    );
+    return Positioned(
+      left: 16,
+      right: 16,
+      top: position.top,
+      bottom: position.bottom,
+      child: NarratorGuideCard(
+        key: _cardKey,
+        script: step.script,
+        stepIndex: _step,
+        stepCount: _steps.length,
+        onAdvance: _advance,
+        onSkip: _finish,
       ),
     );
   }

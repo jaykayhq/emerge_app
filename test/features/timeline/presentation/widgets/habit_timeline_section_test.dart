@@ -263,4 +263,58 @@ void main() {
       expect(find.text('VIT'), findsOneWidget);
     });
   });
+
+  group('HierarchicalHabitTimeline - section titles', () {
+    Widget section({required String slot, required List<Habit> habits}) {
+      return MaterialApp(
+        home: Scaffold(
+          body: HierarchicalHabitTimeline(
+            groupedHabits: {slot: habits},
+            selectedDate: DateTime.now(),
+            onHabitTap: (_) {},
+            onHabitToggle: (_) {},
+            onTimerTap: (_) async => null,
+            onMenuTap: (_) {},
+          ),
+        ),
+      );
+    }
+
+    testWidgets('shows intuitive section names', (tester) async {
+      final now = DateTime.now();
+      final h = Habit(
+        id: 'h1',
+        userId: 'u1',
+        title: 'X',
+        createdAt: now,
+        timeOfDayPreference: TimeOfDayPreference.morning,
+      );
+      await tester.pumpWidget(section(slot: 'morning', habits: [h]));
+      expect(find.text('After I Wake Up'), findsOneWidget);
+
+      await tester.pumpWidget(
+        section(
+          slot: 'afternoon',
+          habits: [h.copyWith(timeOfDayPreference: TimeOfDayPreference.afternoon)],
+        ),
+      );
+      expect(find.text('During Lunch'), findsOneWidget);
+
+      await tester.pumpWidget(
+        section(
+          slot: 'evening',
+          habits: [h.copyWith(timeOfDayPreference: TimeOfDayPreference.evening)],
+        ),
+      );
+      expect(find.text('After Work'), findsOneWidget);
+
+      await tester.pumpWidget(
+        section(
+          slot: 'anytime',
+          habits: [h.copyWith(timeOfDayPreference: TimeOfDayPreference.anytime)],
+        ),
+      );
+      expect(find.text('Before Bed'), findsOneWidget);
+    });
+  });
 }

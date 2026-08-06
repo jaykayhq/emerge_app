@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:emerge_app/features/habits/domain/entities/habit.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
@@ -61,6 +62,40 @@ void main() {
         'createdAt': Timestamp.fromDate(created),
       });
       expect(habit.createdAt, equals(created));
+    });
+  });
+
+  group('timelineSection', () {
+    test('returns the stored preference when set', () {
+      final habit = Habit(
+        id: 'h1',
+        userId: 'u1',
+        title: 'Read',
+        createdAt: DateTime.now(),
+        timeOfDayPreference: TimeOfDayPreference.morning,
+      );
+      expect(habit.timelineSection, 'morning');
+    });
+
+    test('derives the slot from reminderTime for legacy habits', () {
+      final habit = Habit(
+        id: 'h1',
+        userId: 'u1',
+        title: 'Read',
+        createdAt: DateTime.now(),
+        reminderTime: const TimeOfDay(hour: 19, minute: 0),
+      );
+      expect(habit.timelineSection, 'evening');
+    });
+
+    test('falls back to anytime (Before Bed) when neither is set', () {
+      final habit = Habit(
+        id: 'h1',
+        userId: 'u1',
+        title: 'Read',
+        createdAt: DateTime.now(),
+      );
+      expect(habit.timelineSection, 'anytime');
     });
   });
 }

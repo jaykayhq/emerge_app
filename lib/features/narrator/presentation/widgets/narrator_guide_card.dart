@@ -50,7 +50,7 @@ class _NarratorGuideCardState extends State<NarratorGuideCard> {
               const _GuideAvatar(),
               const SizedBox(width: 8),
               const Text(
-                'NARRATOR',
+                'COACH',
                 style: TextStyle(
                   fontSize: 10,
                   letterSpacing: 2.5,

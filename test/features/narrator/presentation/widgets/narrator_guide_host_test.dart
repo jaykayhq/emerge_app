@@ -1,3 +1,4 @@
+import 'package:emerge_app/features/narrator/presentation/widgets/narrator_guide_card.dart';
 import 'package:emerge_app/features/narrator/presentation/widgets/narrator_guide_host.dart';
 import 'package:emerge_app/features/narrator/presentation/widgets/spotlight_painter.dart';
 import 'package:emerge_app/features/onboarding/data/repositories/local_settings_repository.dart';
@@ -172,4 +173,99 @@ void main() {
     expect(painter.holeRect, isNotNull);
     expect(painter.holeRect!.contains(targetRect.center), true);
   });
+
+  testWidgets('guide card renders clear of a low target instead of covering it',
+      (tester) async {
+    final targetKey = GlobalKey();
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          localSettingsRepositoryProvider.overrideWithValue(
+            _FakeSettings(tutorialsEnabled: true),
+          ),
+        ],
+        child: MaterialApp(
+          home: Scaffold(
+            body: NarratorGuideHost(
+              nodeId: 'habit_create',
+              targets: {'name_field': targetKey},
+              child: Align(
+                alignment: Alignment.bottomCenter,
+                child: Container(
+                  key: targetKey,
+                  width: 120,
+                  height: 60,
+                  color: Colors.red,
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pump(); // post-frame gate resolves, card builds
+    await tester.pump(const Duration(milliseconds: 400)); // typewriter ticks
+    await tester.pump(); // measure callback repositions using the real height
+
+    final cardFinder = find.byType(NarratorGuideCard);
+    expect(cardFinder, findsOneWidget);
+    final cardBox = tester.getRect(cardFinder);
+    final targetBox = tester.getRect(find.byKey(targetKey));
+    // The card must sit clear of — strictly above — the spotlighted element.
+    expect(cardBox.overlaps(targetBox), isFalse);
+    expect(cardBox.bottom, lessThanOrEqualTo(targetBox.top + 1));
+  });
+
+  testWidgets(
+    'card stays clear of a low target on a phone-width multi-line script',
+    (tester) async {
+      tester.view.physicalSize = const Size(390, 844);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+
+      final targetKey = GlobalKey();
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            localSettingsRepositoryProvider.overrideWithValue(
+              _FakeSettings(tutorialsEnabled: true),
+            ),
+          ],
+          child: MaterialApp(
+            home: Scaffold(
+              body: NarratorGuideHost(
+                nodeId: 'habit_create',
+                targets: {'name_field': targetKey},
+                child: Align(
+                  alignment: Alignment.bottomCenter,
+                  child: Container(
+                    key: targetKey,
+                    width: 120,
+                    height: 60,
+                    color: Colors.red,
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.pump(); // post-frame gate resolves, card builds
+      await tester.pump(); // host settles at the one-line height (hole + measure go quiet)
+      // Type the script out across frames. The host has no reason to rebuild
+      // while the typewriter wraps to extra lines, so without a re-measure
+      // the card's bottom creeps past the target.
+      await tester.pump(const Duration(milliseconds: 500));
+      await tester.pump(const Duration(milliseconds: 500));
+      await tester.pump(const Duration(milliseconds: 500));
+      await tester.pump(const Duration(milliseconds: 500));
+      await tester.pump(); // final frame settles
+
+      final cardBox = tester.getRect(find.byType(NarratorGuideCard));
+      final targetBox = tester.getRect(find.byKey(targetKey));
+      expect(cardBox.overlaps(targetBox), isFalse);
+      expect(cardBox.bottom, lessThanOrEqualTo(targetBox.top + 1));
+    },
+  );
 }

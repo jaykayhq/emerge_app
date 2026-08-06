@@ -179,13 +179,13 @@ class _HabitCategorySection extends StatelessWidget {
   String get _categoryTitle {
     switch (slot) {
       case 'morning':
-        return 'After You Wake Up';
+        return 'After I Wake Up';
       case 'afternoon':
         return 'During Lunch';
       case 'evening':
-        return 'Before Bed';
+        return 'After Work';
       case 'anytime':
-        return 'Scheduled for Anytime';
+        return 'Before Bed';
       default:
         return slot;
     }

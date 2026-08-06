@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:emerge_app/features/habits/domain/services/habit_time_slots.dart';
 import 'package:equatable/equatable.dart';
 import 'package:flutter/material.dart';
 
@@ -355,10 +356,13 @@ class Habit extends Equatable {
 
 extension HabitExtension on Habit {
   String? get timelineSection {
-    if (timeOfDayPreference == null) {
-      return null;
+    // Stored preference is authoritative. Legacy habits (preference null)
+    // derive the slot from their reminder time so every habit lands in a
+    // named section — no data migration required.
+    if (timeOfDayPreference != null) {
+      return timeOfDayPreference!.name;
     }
-    return timeOfDayPreference!.name;
+    return timelineSlotKeyFor(reminderTime);
   }
 
   /// Canonical "is this habit active on the given day?" logic.

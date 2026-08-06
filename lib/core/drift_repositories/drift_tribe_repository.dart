@@ -83,7 +83,7 @@ class DriftTribeRepository implements TribeRepository {
             remoteImage.isEmpty ||
             remoteImage.startsWith('https://images.unsplash.com/');
         final imageUrl =
-            isLegacyRemote ? (seedImage ?? '') : remoteImage!;
+            isLegacyRemote ? (seedImage ?? '') : remoteImage;
         final members = List<String>.from(remote?['members'] ?? const []);
 
         return Tribe(

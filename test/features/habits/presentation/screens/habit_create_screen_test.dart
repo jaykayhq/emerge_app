@@ -1,5 +1,8 @@
+import 'package:emerge_app/features/auth/domain/entities/auth_user.dart';
+import 'package:emerge_app/features/auth/presentation/providers/auth_providers.dart';
 import 'package:emerge_app/features/habits/domain/entities/habit.dart';
 import 'package:emerge_app/features/habits/domain/services/smart_defaults_service.dart';
+import 'package:emerge_app/features/habits/presentation/providers/habit_providers.dart';
 import 'package:emerge_app/features/habits/presentation/providers/habit_suggestions_provider.dart';
 import 'package:emerge_app/features/habits/presentation/providers/smart_defaults_provider.dart';
 import 'package:emerge_app/features/habits/presentation/screens/habit_create_screen.dart'
@@ -8,6 +11,7 @@ import 'package:emerge_app/features/habits/presentation/widgets/identity_sentenc
 import 'package:emerge_app/features/onboarding/data/repositories/local_settings_repository.dart';
 import 'package:emerge_app/features/world_map/presentation/widgets/nebula_background.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../../../helpers/widget_test_utils.dart';
@@ -29,6 +33,41 @@ Widget _createTestWidget() {
       habitSuggestionsProvider.overrideWith(
         (ref) => const <String>['Drink water', 'Meditate'],
       ),
+    ],
+  );
+}
+
+/// Wraps the screen in a [Consumer] that watches [authStateChangesProvider] —
+/// `_createHabit` reads its `.value` synchronously, but `ref.read` alone
+/// doesn't subscribe a StreamProvider in Riverpod 3, so nothing else in the
+/// screen tree would materialize the auth stream. Captures the forged habit
+/// via [onCapture] instead of persisting it.
+Widget _createTestWidgetWithCapture(ValueChanged<Habit?> onCapture) {
+  return createScreenUnderTest(
+    screen: Consumer(
+      builder: (context, ref, _) {
+        ref.watch(authStateChangesProvider);
+        return const HabitCreateScreen();
+      },
+    ),
+    overrides: [
+      smartDefaultsProvider.overrideWith(
+        (ref) => const SmartDefaults(
+          time: TimeOfDay(hour: 7, minute: 0),
+          attribute: HabitAttribute.vitality,
+          difficulty: HabitDifficulty.easy,
+          timerMinutes: 5,
+        ),
+      ),
+      habitSuggestionsProvider.overrideWith(
+        (ref) => const <String>['Drink water', 'Meditate'],
+      ),
+      authStateChangesProvider.overrideWith(
+        (ref) => Stream.value(const AuthUser(id: 'u1', email: 'u@x.com')),
+      ),
+      createHabitProvider.overrideWith((ref, habit) async {
+        onCapture(habit);
+      }),
     ],
   );
 }
@@ -129,6 +168,218 @@ void main() {
       expect(find.text('WHAT ACTION?'), findsNothing);
       expect(find.text('💖'), findsOneWidget);
       expect(find.text('Metta Meditation'), findsOneWidget);
+    });
+  });
+
+  group('HabitCreateScreen - time-of-day persistence', () {
+    testWidgets('stores timeOfDayPreference derived from the reminder time',
+        (tester) async {
+      Habit? captured;
+      await tester.pumpWidget(
+        _createTestWidgetWithCapture((habit) => captured = habit),
+      );
+      await tester.pump();
+
+      // Fill the title via the typeahead (this also enables FORGE HABIT).
+      await tester.tap(find.text('action'));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 350));
+      await tester.enterText(find.byType(TextField), 'med');
+      await tester.pump();
+      await tester.tap(find.text('Meditate'));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 350));
+
+      await tester.tap(find.text('FORGE HABIT'));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 350));
+
+      expect(captured, isNotNull);
+      // Smart default time is 7:00 AM → morning.
+      expect(captured!.timeOfDayPreference, TimeOfDayPreference.morning);
+      expect(captured!.reminderTime, const TimeOfDay(hour: 7, minute: 0));
+    });
+  });
+
+  group('HabitCreateScreen - integrations', () {
+    testWidgets('integration pill opens the sheet and applies a steps target',
+        (tester) async {
+      await tester.pumpWidget(_createTestWidget());
+      await tester.pump();
+
+      expect(find.text('NO INTEGRATION'), findsOneWidget);
+
+      await tester.tap(find.text('NO INTEGRATION'));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 350));
+
+      expect(find.text('LINK INTEGRATION'), findsOneWidget);
+      await tester.tap(find.text('Health Steps'));
+      await tester.pump();
+
+      await tester.enterText(
+        find.byKey(const Key('integration_target_field')),
+        '10000',
+      );
+      await tester.tap(find.text('CONFIRM'));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 350));
+
+      expect(find.text('STEPS 10000'), findsOneWidget);
+    });
+
+    testWidgets('invalid target keeps the sheet open and shows an error',
+        (tester) async {
+      await tester.pumpWidget(_createTestWidget());
+      await tester.pump();
+
+      await tester.tap(find.text('NO INTEGRATION'));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 350));
+
+      await tester.tap(find.text('Health Steps'));
+      await tester.pump();
+
+      await tester.enterText(
+        find.byKey(const Key('integration_target_field')),
+        '0',
+      );
+      await tester.tap(find.text('CONFIRM'));
+      await tester.pump();
+
+      // Sheet stays open and the inline error is shown.
+      expect(find.text('LINK INTEGRATION'), findsOneWidget);
+      expect(find.text('Enter a valid target above 0.'), findsOneWidget);
+      // Nothing was applied — the pill is unchanged.
+      expect(find.text('NO INTEGRATION'), findsOneWidget);
+      expect(find.text('STEPS 0'), findsNothing);
+    });
+
+    testWidgets('switching integration type resets target and clears the error',
+        (tester) async {
+      await tester.pumpWidget(_createTestWidget());
+      await tester.pump();
+
+      await tester.tap(find.text('NO INTEGRATION'));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 350));
+
+      await tester.tap(find.text('Health Steps'));
+      await tester.pump();
+
+      // Enter an invalid target and confirm → error appears.
+      await tester.enterText(
+        find.byKey(const Key('integration_target_field')),
+        '0',
+      );
+      await tester.tap(find.text('CONFIRM'));
+      await tester.pump();
+      expect(find.text('Enter a valid target above 0.'), findsOneWidget);
+
+      // Switching to Screen Time Limit resets the field to its default and
+      // clears the error.
+      await tester.tap(find.text('Screen Time Limit'));
+      await tester.pump();
+
+      final targetField = tester.widget<TextField>(
+        find.byKey(const Key('integration_target_field')),
+      );
+      expect(targetField.controller!.text, '30');
+      expect(find.text('Enter a valid target above 0.'), findsNothing);
+    });
+  });
+
+  group('HabitCreateScreen - integration persistence', () {
+    testWidgets('forges a habit with the selected integration fields',
+        (tester) async {
+      Habit? captured;
+      await tester.pumpWidget(
+        _createTestWidgetWithCapture((habit) => captured = habit),
+      );
+      await tester.pump();
+
+      // Title via typeahead.
+      await tester.tap(find.text('action'));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 350));
+      await tester.enterText(find.byType(TextField), 'med');
+      await tester.pump();
+      await tester.tap(find.text('Meditate'));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 350));
+
+      // Pick Screen Time Limit = 45.
+      await tester.tap(find.text('NO INTEGRATION'));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 350));
+      await tester.tap(find.text('Screen Time Limit'));
+      await tester.pump();
+      await tester.enterText(
+        find.byKey(const Key('integration_target_field')),
+        '45',
+      );
+      await tester.tap(find.text('CONFIRM'));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 350));
+
+      await tester.tap(find.text('FORGE HABIT'));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 350));
+
+      expect(captured, isNotNull);
+      expect(captured!.integrationType, HabitIntegrationType.screenTimeLimit);
+      expect(captured!.integrationTarget, 45);
+    });
+
+    testWidgets('No Integration clears a previously applied integration target',
+        (tester) async {
+      Habit? captured;
+      await tester.pumpWidget(
+        _createTestWidgetWithCapture((habit) => captured = habit),
+      );
+      await tester.pump();
+
+      // Title via typeahead.
+      await tester.tap(find.text('action'));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 350));
+      await tester.enterText(find.byType(TextField), 'med');
+      await tester.pump();
+      await tester.tap(find.text('Meditate'));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 350));
+
+      // Apply Screen Time Limit = 45.
+      await tester.tap(find.text('NO INTEGRATION'));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 350));
+      await tester.tap(find.text('Screen Time Limit'));
+      await tester.pump();
+      await tester.enterText(
+        find.byKey(const Key('integration_target_field')),
+        '45',
+      );
+      await tester.tap(find.text('CONFIRM'));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 350));
+
+      // Reopen the sheet and pick No Integration.
+      await tester.tap(find.text('SCREEN 45 MIN'));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 350));
+      await tester.tap(find.text('No Integration'));
+      await tester.pump();
+      await tester.tap(find.text('CONFIRM'));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 350));
+
+      await tester.tap(find.text('FORGE HABIT'));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 350));
+
+      expect(captured, isNotNull);
+      expect(captured!.integrationType, HabitIntegrationType.none);
+      expect(captured!.integrationTarget, isNull);
     });
   });
 }

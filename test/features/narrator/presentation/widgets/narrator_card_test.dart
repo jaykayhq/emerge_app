@@ -110,7 +110,7 @@ void main() {
     final c = await container();
     addTearDown(c.dispose);
     await pumpCard(tester, c);
-    await tester.tap(find.text('✎ Ask the narrator'));
+    await tester.tap(find.text('✎ Ask the coach'));
     await tester.pump();
     await tester.enterText(find.byType(TextField), 'hi');
     await tester.tap(find.byIcon(Icons.send));
@@ -132,7 +132,7 @@ void main() {
     final c = await container();
     addTearDown(c.dispose);
     await pumpCard(tester, c);
-    await tester.tap(find.text('✎ Ask the narrator'));
+    await tester.tap(find.text('✎ Ask the coach'));
     await tester.pump();
     await tester.enterText(find.byType(TextField), 'hi');
     await tester.tap(find.byIcon(Icons.send));
@@ -152,7 +152,7 @@ void main() {
     final c = await container(premium: true);
     addTearDown(c.dispose);
     await pumpCard(tester, c, coach: (ctx, q) async => 'Personal advice');
-    await tester.tap(find.text('✎ Ask the narrator'));
+    await tester.tap(find.text('✎ Ask the coach'));
     await tester.pump();
     await tester.enterText(find.byType(TextField), 'help me');
     await tester.tap(find.byIcon(Icons.send));
@@ -172,7 +172,7 @@ void main() {
     final c = await container(premium: true);
     addTearDown(c.dispose);
     await pumpCard(tester, c, coach: (ctx, q) async => throw Exception('x'));
-    await tester.tap(find.text('✎ Ask the narrator'));
+    await tester.tap(find.text('✎ Ask the coach'));
     await tester.pump();
     await tester.enterText(find.byType(TextField), 'hi');
     await tester.tap(find.byIcon(Icons.send));
@@ -189,5 +189,25 @@ void main() {
     c.read(narratorAskFocusProvider.notifier).request();
     await pumpCard(tester, c);
     expect(find.byType(TextField), findsOneWidget);
+  });
+
+  testWidgets(
+      'quota hint stays "X of 3" regardless of how many habits exist',
+      (tester) async {
+    SharedPreferences.setMockInitialValues({
+      'coach_asks_${CoachAskQuota.dateKeyFor(DateTime.now())}': 0,
+    });
+    // 8 habits — the exact scenario that previously displayed "8 of 8".
+    final c = await container(
+      habits: List.generate(8, (i) => _habit('Habit $i')),
+    );
+    addTearDown(c.dispose);
+    await pumpCard(tester, c);
+    // Prove the premise: the 8 habits are actually rendered.
+    expect(find.text('8 left today'), findsOneWidget);
+    // The hint renders inside the expanded ask UI.
+    await tester.tap(find.text('✎ Ask the coach'));
+    await tester.pump();
+    expect(find.text('3 of 3 coach asks left today'), findsOneWidget);
   });
 }
