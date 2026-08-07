@@ -40,4 +40,44 @@ void main() {
     expect(find.text('Step Two'), findsOneWidget);
     expect(find.text('JOIN QUEST'), findsOneWidget);
   });
+
+  testWidgets('shows sponsor reward card with claim button for completed sponsored challenge', (
+    tester,
+  ) async {
+    final sponsored = Challenge(
+      id: 'test_sponsored',
+      title: 'Sponsored Challenge',
+      description: 'A sponsored challenge',
+      imageUrl: '',
+      reward: 'Voucher',
+      participants: 50,
+      daysLeft: 0,
+      totalDays: 7,
+      currentDay: 7,
+      status: ChallengeStatus.completed,
+      xpReward: 250,
+      steps: [
+        ChallengeStep(day: 1, title: 'Step One', description: 'Do step one'),
+      ],
+      category: ChallengeCategory.fitness,
+      sponsor: 'Nike',
+      isSponsored: true,
+      affiliateUrl: 'https://example.com/reward',
+      rewardDescription: '20% off Nike',
+      affiliateNetwork: AffiliateNetwork.direct,
+    );
+
+    await tester.pumpWidget(
+      ProviderScope(
+        child: MaterialApp(
+          home: ChallengeDetailScreen(challenge: sponsored),
+        ),
+      ),
+    );
+    await tester.pump(const Duration(seconds: 2));
+
+    expect(find.text('SPONSOR REWARD'), findsOneWidget);
+    expect(find.text('20% off Nike'), findsOneWidget);
+    expect(find.text('CLAIM REWARD'), findsOneWidget);
+  });
 }
