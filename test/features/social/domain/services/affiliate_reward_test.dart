@@ -64,6 +64,14 @@ void main() {
       expect(reward!.title, 'Exclusive gear');
       expect(reward.sponsor, 'Sponsor');
     });
+
+    test('falls back to the generic sponsor-reward literal when all text is empty', () {
+      final reward = affiliateRewardFor(
+        _challenge(rewardDescription: null, reward: '', sponsor: null),
+      );
+      expect(reward!.title, 'Sponsor reward');
+      expect(reward.sponsor, 'Sponsor');
+    });
   });
 
   group('affiliateRewardClaimable', () {
@@ -89,6 +97,24 @@ void main() {
           _challenge(status: ChallengeStatus.active, currentDay: 3, totalDays: 7),
         ),
         isFalse,
+      );
+    });
+
+    test('false for a never-started challenge (both days default to zero)', () {
+      expect(
+        affiliateRewardClaimable(
+          _challenge(status: ChallengeStatus.featured, currentDay: 0, totalDays: 0),
+        ),
+        isFalse,
+      );
+    });
+
+    test('true from status alone even before the final day', () {
+      expect(
+        affiliateRewardClaimable(
+          _challenge(status: ChallengeStatus.completed, currentDay: 3, totalDays: 7),
+        ),
+        isTrue,
       );
     });
   });

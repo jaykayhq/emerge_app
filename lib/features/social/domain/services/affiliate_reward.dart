@@ -43,5 +43,6 @@ AffiliateReward? affiliateRewardFor(Challenge challenge) {
 /// Whether a challenge's sponsor reward may be claimed (the quest is finished).
 bool affiliateRewardClaimable(Challenge challenge) {
   return challenge.status == ChallengeStatus.completed ||
-      challenge.currentDay >= challenge.totalDays;
+      (challenge.totalDays > 0 &&
+          challenge.currentDay >= challenge.totalDays);
 }
