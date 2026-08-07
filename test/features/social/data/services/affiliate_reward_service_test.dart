@@ -92,4 +92,44 @@ void main() {
 
     expect(ok, isFalse);
   });
+
+  test('includes partner_id when the challenge has an affiliate partner id', () async {
+    final challengeWithPartner = Challenge(
+      id: 'c2',
+      title: 'Hydration Quest',
+      description: 'desc',
+      imageUrl: '',
+      reward: 'Voucher',
+      participants: 10,
+      daysLeft: 0,
+      totalDays: 7,
+      currentDay: 7,
+      status: ChallengeStatus.completed,
+      xpReward: 250,
+      steps: [],
+      category: ChallengeCategory.nutrition,
+      sponsor: 'Jumia',
+      isSponsored: true,
+      affiliateUrl: 'https://example.com/jumia',
+      rewardDescription: '15% off',
+      affiliatePartnerId: 'jumia_partner_1',
+      affiliateNetwork: AffiliateNetwork.direct,
+    );
+    Map<String, Object>? loggedParams;
+    final service = AffiliateRewardService(
+      openUrl: (uri) async => true,
+      logEvent: (name, params) async {
+        loggedParams = params;
+      },
+    );
+
+    final ok = await service.claimReward(
+      challenge: challengeWithPartner,
+      reward: affiliateRewardFor(challengeWithPartner)!,
+    );
+
+    expect(ok, isTrue);
+    expect(loggedParams!['partner_id'], 'jumia_partner_1');
+    expect(loggedParams!.containsKey('user_id'), isFalse);
+  });
 }

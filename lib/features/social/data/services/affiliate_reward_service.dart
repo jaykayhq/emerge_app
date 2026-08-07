@@ -48,7 +48,7 @@ class AffiliateRewardService {
         AnalyticsParameters.affiliateNetwork: reward.network.name,
         AnalyticsParameters.rewardDescription: reward.title,
         AnalyticsParameters.hasAffiliate: true,
-        if (userId != null) AnalyticsParameters.userId: userId,
+        AnalyticsParameters.userId: ?userId,
         if (challenge.affiliatePartnerId != null)
           AnalyticsParameters.partnerId: challenge.affiliatePartnerId!,
       });
