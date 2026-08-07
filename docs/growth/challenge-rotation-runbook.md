@@ -4,6 +4,8 @@
 
 **How to use:** Paste this file's path to an agent ("Execute `docs/growth/challenge-rotation-runbook.md`") or follow it yourself. It is self-contained: if the `scripts/rotation/` files do not exist yet, the agent creates them from Step 0, then runs the rotation.
 
+**CI mode (GitHub Actions → Kilo agent, `.github/workflows/ai-rotation.yml`):** the same runbook runs daily on a headless Kilo agent. In CI, the Firebase credential arrives as the `FIREBASE_SERVICE_ACCOUNT_JSON` env var — write it to `$HOME/firebase-sa.json` and `export GOOGLE_APPLICATION_CREDENTIALS=$HOME/firebase-sa.json` for every command that needs it, instead of a local path. polli uses `POLLINATIONS_API_KEY`. If polli is unavailable, skip generation and use the template's fallback `imageUrl` — never block the run on images.
+
 **Related:** implementation plan `docs/superpowers/plans/2026-08-07-server-challenge-feed-and-cron-rotation.md` (optional reading; not required to run this runbook).
 
 ---
