@@ -639,14 +639,14 @@ test("rotates imageUrl per week from the image pool", () => {
   const monday = new Date("2026-08-10T00:00:00Z");
   const nextMonday = new Date("2026-08-17T00:00:00Z");
   const planA = computeRotation({
-    templates: [template("q1")],
+    templates: [template("q1", { imageUrl: "" })],
     existing: [],
     partners: [],
     config: { enabled: true, featuredLimit: 1, imagePool: pool },
     now: monday,
   });
   const planB = computeRotation({
-    templates: [template("q1")],
+    templates: [template("q1", { imageUrl: "" })],
     existing: [],
     partners: [],
     config: { enabled: true, featuredLimit: 1, imagePool: pool },
@@ -654,6 +654,17 @@ test("rotates imageUrl per week from the image pool", () => {
   });
   assert.equal(planA.upserts[0].challenge.imageUrl, "https://img.example/1.jpg");
   assert.equal(planB.upserts[0].challenge.imageUrl, "https://img.example/2.jpg");
+});
+
+test("prefers an explicit template imageUrl over the pool", () => {
+  const plan = computeRotation({
+    templates: [template("q1", { imageUrl: "https://img.example/uploaded.jpg" })],
+    existing: [],
+    partners: [],
+    config: { enabled: true, featuredLimit: 1, imagePool: ["https://img.example/1.jpg"] },
+    now: NOW,
+  });
+  assert.equal(plan.upserts[0].challenge.imageUrl, "https://img.example/uploaded.jpg");
 });
 
 test("skips writes when an existing doc is already up to date", () => {
@@ -724,8 +735,11 @@ function computeExpiredIds(challenges, now) {
 }
 
 function pickImage(template, imagePool, week, index) {
+  // A template-resolved image (e.g. a local polli file uploaded to Storage by
+  // the driver) takes priority; the pool only rotates when no image is set.
+  if (template.imageUrl) return template.imageUrl;
   if (imagePool.length > 0) return imagePool[(week + index) % imagePool.length];
-  return template.imageUrl;
+  return "";
 }
 
 /**
@@ -870,12 +884,22 @@ Create `scripts/rotation/templates.js` — curated templates; `partnerId` links 
  * Curated server-published challenge templates.
  *
  * The rotation driver upserts these into the `challenges` collection. To change
- * a challenge's title/reward/links/images, edit this file (or better: the
- * `config/challengeRotation` doc's imagePool) — no app release required.
+ * a challenge's title/reward/links, edit this file — no app release required.
+ *
+ * `imageFile` names a file in `scripts/rotation/images/` (e.g. generated with
+ * `polli gen image "<prompt>" --output scripts/rotation/images/<name>`). The
+ * driver uploads it to Firebase Storage each run and points imageUrl at the
+ * public URL. If the file is absent, `imageUrl` below is used as a fallback.
  *
  * `partnerId` must match a doc id in the `affiliatePartners` collection; the
  * driver copies the partner's name/logo/network/commission/affiliateUrl over
  * the template fields when present.
+ *
+ * !!! affiliateUrl must be YOUR tagged link — the URL you get from the network
+ * after joining (e.g. amazon.com/dp/ASIN?tag=yourname-20, your CJ/ShareASale
+ * tracking link, your Jumia publisher link, or a brand's direct deal). A bare
+ * storefront URL pays you nothing. Keep them in affiliatePartners docs so the
+ * rotation picks them up without editing code.
  */
 const TEMPLATES = [
   {
@@ -889,11 +913,12 @@ const TEMPLATES = [
     xpReward: 700,
     reward: "700 XP & Morning Warrior Emblem",
     rewardDescription: "15% off your first order",
+    imageFile: "morning_protocol.jpg",
     imageUrl:
       "https://images.unsplash.com/photo-1506126613408-eca07ce68773?w=800",
     partnerId: "headspace",
     affiliateNetwork: "direct",
-    affiliateUrl: "https://example.com/reward/headspace",
+    affiliateUrl: "https://example.com/reward/headspace", // REPLACE with your tagged link
     steps: [
       { day: 1, title: "Hydrate First", description: "500ml water before coffee.", isCompleted: false },
       { day: 7, title: "One Week In", description: "Your routine is taking shape.", isCompleted: false },
@@ -911,11 +936,12 @@ const TEMPLATES = [
     xpReward: 900,
     reward: "900 XP & Reader's Quill",
     rewardDescription: "30 days free on us",
+    imageFile: "read_20.jpg",
     imageUrl:
       "https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?w=800",
     partnerId: "audible",
     affiliateNetwork: "direct",
-    affiliateUrl: "https://example.com/reward/audible",
+    affiliateUrl: "https://example.com/reward/audible", // REPLACE with your tagged link
     steps: [
       { day: 1, title: "Start Small", description: "20 minutes, one book.", isCompleted: false },
       { day: 10, title: "Halfway", description: "You are a reader now.", isCompleted: false },
@@ -933,11 +959,12 @@ const TEMPLATES = [
     xpReward: 1200,
     reward: "1200 XP & Golden Running Shoes",
     rewardDescription: "20% off your next pair",
+    imageFile: "movement_30.jpg",
     imageUrl:
       "https://images.unsplash.com/photo-1552664730-d307ca884978?w=800",
     partnerId: "nike",
     affiliateNetwork: "direct",
-    affiliateUrl: "https://example.com/reward/nike",
+    affiliateUrl: "https://example.com/reward/nike", // REPLACE with your tagged link
     steps: [
       { day: 1, title: "Show Up", description: "10 minutes counts.", isCompleted: false },
       { day: 15, title: "Halfway", description: "Fifteen in a row.", isCompleted: false },
@@ -967,8 +994,32 @@ Create `scripts/rotation/index.js` (mirrors `scripts/seed_onboarding_catalog.js`
  *     node scripts/rotation/index.js
  */
 const admin = require("firebase-admin");
-const { computeRotation } = require("./lib/rotation");
+const fs = require("fs");
+const path = require("path");
+const { computeRotation, weekIndex } = require("./lib/rotation");
 const { TEMPLATES } = require("./templates");
+
+/**
+ * Uploads a template's local image (from scripts/rotation/images/) to the
+ * Firebase Storage bucket and returns the public URL, or null when the file is
+ * missing (caller falls back to template.imageUrl / the image pool).
+ */
+async function resolveTemplateImage(template, week) {
+  if (!template.imageFile) return null;
+  const local = path.join(__dirname, "images", template.imageFile);
+  if (!fs.existsSync(local)) {
+    console.log(`Image missing for ${template.id}: ${local} — using fallback`);
+    return null;
+  }
+  const bucket = admin.storage().bucket();
+  const ext = path.extname(local);
+  const dest = bucket.file(`challenges/images/${template.id}/${week}${ext}`);
+  await dest.save(fs.readFileSync(local), {
+    contentType: ext === ".png" ? "image/png" : "image/jpeg",
+    metadata: { cacheControl: "public, max-age=31536000, immutable" },
+  });
+  return dest.publicUrl();
+}
 
 async function main() {
   if (admin.apps.length === 0) {
@@ -976,6 +1027,7 @@ async function main() {
   }
   const db = admin.firestore();
   const now = new Date();
+  const week = weekIndex(now);
 
   const configDoc = await db
     .collection("config")
@@ -993,11 +1045,18 @@ async function main() {
   const partners =
     partnersSnap?.docs.map((d) => ({ id: d.id, ...d.data() })) ?? [];
 
+  // Resolve local polli images first so they take priority in the rotation.
+  const templates = [];
+  for (const t of TEMPLATES) {
+    const uploaded = await resolveTemplateImage(t, week);
+    templates.push(uploaded ? { ...t, imageUrl: uploaded } : t);
+  }
+
   const existingSnap = await db.collection("challenges").get();
   const existing = existingSnap.docs.map((d) => ({ id: d.id, ...d.data() }));
 
   const plan = computeRotation({
-    templates: TEMPLATES,
+    templates,
     existing,
     partners,
     config,
@@ -1102,16 +1161,42 @@ jobs:
         run: node scripts/rotation/index.js
 ```
 
-- [ ] **Step 4: Verify the pure logic still passes**
+- [ ] **Step 4: Allow public reads on challenge images (Storage rules)**
+
+The app loads challenge images via `NetworkImage`, so the Storage bucket must allow public reads for the `challenges/` prefix. Admin writes (the driver) bypass rules. Replace `storage.rules` with:
+
+```
+rules_version = '2';
+
+// Challenge artwork is public (the app renders these URLs directly);
+// writes stay admin-only (the rotation script uses the Admin SDK).
+service firebase.storage {
+  match /b/{bucket}/o {
+    match /challenges/{allPaths=**} {
+      allow read: if true;
+      allow write: if false;
+    }
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}
+```
+
+Deploy once (one-time, not part of the cron): `firebase deploy --only storage`
+
+> **Note:** the service account behind `FIREBASE_SERVICE_ACCOUNT_TRADEFLASH_L2966` needs `roles/storage.objectAdmin` (or `objectCreator` + `objectViewer`) on the project to upload. Verify/assign it in Google Cloud Console IAM if the first cron run's upload step fails with 403.
+
+- [ ] **Step 5: Verify the pure logic still passes**
 
 Run: `node --test scripts/rotation/test/rotation.test.js`
-Expected: PASS (7 tests)
+Expected: PASS (8 tests — added the explicit-image-over-pool test)
 
-- [ ] **Step 5: Commit**
+- [ ] **Step 6: Commit**
 
 ```bash
-git add scripts/rotation/ .github/workflows/rotate-challenges.yml
-git commit -m "feat(cron): daily challenge rotation driver and GitHub Actions workflow"
+git add scripts/rotation/ storage.rules .github/workflows/rotate-challenges.yml
+git commit -m "feat(cron): daily challenge rotation driver, polli image upload, and workflow"
 ```
 
 ---
@@ -1133,10 +1218,17 @@ Document:
     "imagePool": ["https://.../img1.jpg", "https://.../img2.jpg", "https://.../img3.jpg"]
   }
   ```
-- How to change images/affiliate links per partner: update the `affiliatePartners/{id}` doc fields `logoUrl` and `affiliateUrl`; the next cron run copies them onto the challenge.
+- **How to change challenge images (polli workflow, all in this workspace):**
+  1. Generate: `polli gen image "<prompt>" --output scripts/rotation/images/morning_protocol.jpg`
+  2. The file must match the template's `imageFile` name in `scripts/rotation/templates.js`.
+  3. Commit the image; the next cron run uploads it to Storage and repoints `imageUrl`.
+  - When no local file exists, `imagePool` (config) or the template's `imageUrl` fallback is used.
+- **How to change affiliate links (this is how you get paid):**
+  - Put your REAL tagged links in the `affiliatePartners/{id}` doc under `affiliateUrl` (e.g. Amazon `?tag=yourname-20`, your CJ/ShareASale tracking link, your Jumia publisher link, or a direct brand deal). The cron copies them onto the challenge each run. Never use a bare storefront URL — the network attributes nothing without your tag.
+  - Payout model: networks pay commission on purchases attributed to your tag (Amazon/Jumia ~24h attribution, Impact/CJ/ShareASale ~30 days), on their payout schedule once you cross their minimum (Amazon $10, CJ/SAS ~$50). `direct` = you invoice brands (Paystack handles NGN). At current scale expect ≈$0; the mechanic is the C-track pitch asset.
 - How to run locally: `GOOGLE_APPLICATION_CREDENTIALS=path/to/serviceAccount.json node scripts/rotation/index.js`.
-- Billing note: GitHub Actions free-tier cron; zero Firebase function invocations; writes are batched; unchanged challenges are skipped (no-op writes avoided).
-- Security note: never commit service account keys (see Task B4).
+- Billing note: GitHub Actions free-tier cron; zero Firebase function invocations; writes are batched; unchanged challenges are skipped (no-op writes avoided); images upload only when `imageFile` changes (week-versioned paths).
+- Security note: never commit service account keys (see Task B5).
 
 - [ ] **Step 2: Commit**
 
@@ -1147,7 +1239,7 @@ git commit -m "docs(growth): challenge rotation config guide"
 
 ---
 
-### Task B4: Remove the committed service-account key (security)
+### Task B5: Remove the committed service-account key (security)
 
 **Files:**
 - Modify: `.gitignore`
@@ -1186,7 +1278,7 @@ git commit -m "chore(security): stop tracking the Firebase service-account key"
 
 ---
 
-### Task B5: End-to-end verification
+### Task B6: End-to-end verification
 
 **Files:** none (verification + deployment only)
 
