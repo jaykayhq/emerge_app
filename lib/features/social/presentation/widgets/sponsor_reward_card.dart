@@ -1,3 +1,5 @@
+import 'dart:ui';
+
 import 'package:emerge_app/core/theme/emerge_colors.dart';
 import 'package:emerge_app/features/social/domain/models/challenge.dart';
 import 'package:emerge_app/features/social/domain/services/affiliate_reward.dart';
@@ -23,18 +25,29 @@ class SponsorRewardCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(20),
-        gradient: LinearGradient(
-          colors: [
-            EmergeColors.yellow.withValues(alpha: 0.12),
-            Colors.white.withValues(alpha: 0.04),
-          ],
-        ),
-        border: Border.all(color: EmergeColors.yellow.withValues(alpha: 0.35)),
-      ),
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(20),
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
+        child: Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(20),
+            gradient: LinearGradient(
+              colors: [
+                EmergeColors.yellow.withValues(alpha: 0.12),
+                Colors.white.withValues(alpha: 0.04),
+              ],
+            ),
+            border: Border.all(color: EmergeColors.yellow.withValues(alpha: 0.35)),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.25),
+                blurRadius: 20,
+                offset: const Offset(0, 8),
+              ),
+            ],
+          ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -112,6 +125,8 @@ class SponsorRewardCard extends StatelessWidget {
               ),
             ),
         ],
+        ),
+      ),
       ),
     ).animate().fadeIn(delay: 450.ms).slideY(begin: 0.05);
   }
