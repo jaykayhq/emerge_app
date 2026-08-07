@@ -8,6 +8,7 @@ import 'package:emerge_app/features/social/domain/models/challenge_catalog.dart'
 import 'package:emerge_app/features/social/domain/repositories/challenge_repository.dart';
 import 'package:emerge_app/features/social/presentation/providers/tribes_provider.dart';
 import 'package:emerge_app/core/sync/sync_providers.dart';
+import 'package:emerge_app/features/social/data/services/affiliate_reward_service.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
@@ -19,6 +20,10 @@ final challengeRepositoryProvider = Provider<ChallengeRepository>((ref) {
   final syncEngine = ref.watch(enhancedSyncEngineProvider);
   final socialService = ref.watch(socialActivityServiceProvider);
   return DriftChallengeRepository(db, engine, syncEngine, socialService);
+});
+
+final affiliateRewardServiceProvider = Provider<AffiliateRewardService>((ref) {
+  return AffiliateRewardService();
 });
 
 @Riverpod(keepAlive: true)

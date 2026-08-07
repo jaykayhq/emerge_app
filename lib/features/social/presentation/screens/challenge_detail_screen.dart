@@ -13,7 +13,6 @@ import 'package:emerge_app/features/social/domain/models/challenge.dart';
 import 'package:emerge_app/features/social/presentation/providers/challenge_provider.dart';
 import 'package:emerge_app/features/social/presentation/providers/challenge_bundle_provider.dart';
 import 'package:emerge_app/features/social/presentation/widgets/quest_confirmation_sheet.dart';
-import 'package:emerge_app/features/social/data/services/affiliate_reward_service.dart';
 import 'package:emerge_app/features/social/domain/services/affiliate_reward.dart';
 import 'package:emerge_app/features/social/presentation/widgets/sponsor_reward_card.dart';
 import 'package:flutter/material.dart';
@@ -34,6 +33,9 @@ class ChallengeDetailScreen extends ConsumerStatefulWidget {
 }
 
 class _ChallengeDetailScreenState extends ConsumerState<ChallengeDetailScreen> {
+  /// Guards against duplicate claim taps (duplicate affiliate click events).
+  bool _claimingReward = false;
+
   @override
   Widget build(BuildContext context) {
     final challenge = widget.challenge;
@@ -693,13 +695,16 @@ class _ChallengeDetailScreenState extends ConsumerState<ChallengeDetailScreen> {
     Challenge challenge,
     AffiliateReward reward,
   ) async {
+    if (_claimingReward) return;
     final user = ref.read(authStateChangesProvider).value;
-    final service = AffiliateRewardService();
+    final service = ref.read(affiliateRewardServiceProvider);
+    _claimingReward = true;
     final launched = await service.claimReward(
       challenge: challenge,
       reward: reward,
       userId: user?.id,
     );
+    _claimingReward = false;
     if (!launched && screenContext.mounted) {
       ScaffoldMessenger.of(screenContext).showSnackBar(
         const SnackBar(
