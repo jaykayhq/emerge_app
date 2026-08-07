@@ -706,12 +706,7 @@ class _ChallengeDetailScreenState extends ConsumerState<ChallengeDetailScreen> {
     );
     _claimingReward = false;
     if (!launched && screenContext.mounted) {
-      ScaffoldMessenger.of(screenContext).showSnackBar(
-        const SnackBar(
-          content: Text('Could not open the reward link. Try again later.'),
-          backgroundColor: Colors.red,
-        ),
-      );
+      _showError(screenContext, 'Could not open the reward link. Try again later.');
     }
   }
 

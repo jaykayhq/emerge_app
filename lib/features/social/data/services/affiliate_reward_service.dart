@@ -28,18 +28,18 @@ class AffiliateRewardService {
   ) =>
       FirebaseAnalytics.instance.logEvent(name: name, parameters: parameters);
 
-  /// Validates the reward URL, records [AnalyticsEvents.affiliateLinkClicked],
-  /// then opens the link. Returns whether the link was opened.
+  /// Validates the reward URL, records [AnalyticsEvents.affiliateLinkClicked]
+  /// best-effort, then opens the link. Returns whether the link was opened.
   Future<bool> claimReward({
     required Challenge challenge,
     required AffiliateReward reward,
     String? userId,
   }) async {
+    final uri = Uri.tryParse(reward.url);
+    if (uri == null || (uri.scheme != 'http' && uri.scheme != 'https')) {
+      return false;
+    }
     try {
-      final uri = Uri.tryParse(reward.url);
-      if (uri == null || (uri.scheme != 'http' && uri.scheme != 'https')) {
-        return false;
-      }
       await _logEvent(AnalyticsEvents.affiliateLinkClicked, {
         AnalyticsParameters.challengeId: challenge.id,
         AnalyticsParameters.challengeName: challenge.title,
@@ -52,6 +52,10 @@ class AffiliateRewardService {
         if (challenge.affiliatePartnerId != null)
           AnalyticsParameters.partnerId: challenge.affiliatePartnerId!,
       });
+    } catch (_) {
+      // Telemetry is best-effort — never let it veto a legitimate claim.
+    }
+    try {
       return _openUrl(uri);
     } catch (_) {
       return false;

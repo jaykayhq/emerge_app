@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -169,5 +171,60 @@ void main() {
     await tester.pump();
 
     expect(find.text('Could not open the reward link. Try again later.'), findsOneWidget);
+  });
+
+  testWidgets('duplicate claim taps log a single affiliate click', (tester) async {
+    final sponsored = Challenge(
+      id: 'test_sponsored',
+      title: 'Sponsored Challenge',
+      description: 'A sponsored challenge',
+      imageUrl: '',
+      reward: 'Voucher',
+      participants: 50,
+      daysLeft: 0,
+      totalDays: 7,
+      currentDay: 7,
+      status: ChallengeStatus.completed,
+      xpReward: 250,
+      steps: [
+        ChallengeStep(day: 1, title: 'Step One', description: 'Do step one'),
+      ],
+      category: ChallengeCategory.fitness,
+      sponsor: 'Nike',
+      isSponsored: true,
+      affiliateUrl: 'https://example.com/reward',
+      rewardDescription: '20% off Nike',
+      affiliateNetwork: AffiliateNetwork.direct,
+    );
+    final completer = Completer<bool>();
+    var clickCount = 0;
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          affiliateRewardServiceProvider.overrideWithValue(
+            AffiliateRewardService(
+              openUrl: (uri) {
+                clickCount++;
+                return completer.future;
+              },
+              logEvent: (name, params) async {},
+            ),
+          ),
+        ],
+        child: MaterialApp(
+          home: ChallengeDetailScreen(challenge: sponsored),
+        ),
+      ),
+    );
+    await tester.pump(const Duration(seconds: 2));
+
+    await tester.tap(find.text('CLAIM REWARD'));
+    await tester.pump();
+    await tester.tap(find.text('CLAIM REWARD'));
+    await tester.pump();
+    completer.complete(true);
+    await tester.pump();
+
+    expect(clickCount, 1);
   });
 }

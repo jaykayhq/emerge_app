@@ -132,4 +132,49 @@ void main() {
     expect(loggedParams!['partner_id'], 'jumia_partner_1');
     expect(loggedParams!.containsKey('user_id'), isFalse);
   });
+
+  test('opens the url even when analytics logging fails', () async {
+    var opened = false;
+    final service = AffiliateRewardService(
+      openUrl: (uri) async {
+        opened = true;
+        return true;
+      },
+      logEvent: (name, params) async => throw StateError('analytics down'),
+    );
+
+    final ok = await service.claimReward(
+      challenge: _challenge,
+      reward: affiliateRewardFor(_challenge)!,
+    );
+
+    expect(ok, isTrue);
+    expect(opened, isTrue);
+  });
+
+  test('does not log or open when the scheme is invalid', () async {
+    var opened = false;
+    var logged = false;
+    final service = AffiliateRewardService(
+      openUrl: (uri) async {
+        opened = true;
+        return true;
+      },
+      logEvent: (name, params) async {
+        logged = true;
+      },
+    );
+    const reward = AffiliateReward(
+      url: 'javascript:alert(1)',
+      title: 'x',
+      sponsor: 'y',
+      network: AffiliateNetwork.none,
+    );
+
+    final ok = await service.claimReward(challenge: _challenge, reward: reward);
+
+    expect(ok, isFalse);
+    expect(opened, isFalse);
+    expect(logged, isFalse);
+  });
 }
