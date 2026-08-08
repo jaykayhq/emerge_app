@@ -1,6 +1,4 @@
-const setCustomUserClaims = jest.fn().mockResolvedValue(undefined);
 const updateUser = jest.fn().mockResolvedValue(undefined);
-const getUser = jest.fn();
 const docGet = jest.fn();
 const docSet = jest.fn();
 const runTransaction = jest.fn();
@@ -30,25 +28,28 @@ jest.mock("firebase-admin", () => ({
   apps: [],
   initializeApp: jest.fn(),
   firestore: firestoreMock,
-  auth: () => ({ getUser, updateUser, setCustomUserClaims }),
+  auth: () => ({ updateUser }),
 }));
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const ft = require("firebase-functions-test")();
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports
-const { claimUsername } = require("../src/usernames");
+const { claimUsername, validateUsername } = require("../src/usernames");
 
 beforeEach(() => {
   jest.clearAllMocks();
   docGet.mockImplementation((name: string, id: string) =>
     Promise.resolve({ exists: false, data: () => null })
   );
-  getUser.mockResolvedValue({
-    uid: "u1",
-    email: "a@b.com",
-    displayName: "OldName",
-    customClaims: {},
+});
+
+describe("validateUsername", () => {
+  it("requires a non-empty value", () => {
+    expect(validateUsername("")).toBe("Username is required");
+    expect(validateUsername("   ")).toBe("Username is required");
+    expect(validateUsername(null)).toBe("Username is required");
+    expect(validateUsername(undefined)).toBe("Username is required");
   });
 });
 
@@ -91,7 +92,26 @@ describe("claimUsername", () => {
     expect(updateUser).toHaveBeenCalledWith("u1", { displayName: "Aria_Star" });
   });
 
-  it("rejects when the username is already taken", async () => {
+  it("still returns ok when the auth displayName update fails", async () => {
+    runTransaction.mockImplementation(async (cb: (tx: unknown) => Promise<void>) => {
+      const tx = {
+        get: () => Promise.resolve({ exists: false, data: () => null }),
+        set: docSet,
+      };
+      await cb(tx);
+    });
+    updateUser.mockRejectedValueOnce(new Error("Auth API down"));
+
+    const res = await claimUsername.run({
+      auth: { uid: "u1", token: {} },
+      data: { username: "Aria_Star" },
+    });
+
+    expect(res).toEqual({ ok: true, username: "Aria_Star" });
+    expect(updateUser).toHaveBeenCalledTimes(1);
+  });
+
+  it("rejects when the username is taken by someone else", async () => {
     runTransaction.mockImplementation(async (cb: (tx: unknown) => Promise<void>) => {
       const tx = {
         get: () => Promise.resolve({ exists: true, data: () => ({ uid: "other" }) }),
@@ -102,5 +122,23 @@ describe("claimUsername", () => {
     await expect(
       claimUsername.run({ auth: { uid: "u1", token: {} }, data: { username: "Aria_Star" } })
     ).rejects.toHaveProperty("code", "already-exists");
+  });
+
+  it("succeeds idempotently when the caller already owns the username", async () => {
+    runTransaction.mockImplementation(async (cb: (tx: unknown) => Promise<void>) => {
+      const tx = {
+        get: () => Promise.resolve({ exists: true, data: () => ({ uid: "u1" }) }),
+        set: docSet,
+      };
+      await cb(tx);
+    });
+
+    const res = await claimUsername.run({
+      auth: { uid: "u1", token: {} },
+      data: { username: "Aria_Star" },
+    });
+
+    expect(res).toEqual({ ok: true, username: "Aria_Star" });
+    expect(updateUser).toHaveBeenCalledWith("u1", { displayName: "Aria_Star" });
   });
 });

@@ -19,7 +19,12 @@ const BLOCKED_USERNAMES = new Set([
   "undefined",
 ]);
 
-export function validateUsername(value: string): string | null {
+export function validateUsername(
+  value: string | null | undefined
+): string | null {
+  if (typeof value !== "string" || value.trim().length === 0) {
+    return "Username is required";
+  }
   const username = value.trim();
   if (username.length < 3) return "Username must be at least 3 characters long";
   if (username.length > 30) return "Username is too long";
@@ -57,7 +62,10 @@ export const claimUsername = onCall(async (request) => {
 
   await db.runTransaction(async (tx) => {
     const existing = await tx.get(nameRef);
-    if (existing.exists) {
+    const owner = existing.data()?.uid;
+    // Own-claim retries after an ambiguous network failure must succeed, not
+    // hit already-exists on a doc the caller already owns.
+    if (existing.exists && owner !== uid) {
       throw new HttpsError(
         "already-exists",
         "This username is already taken. Please choose another."
@@ -70,7 +78,17 @@ export const claimUsername = onCall(async (request) => {
     tx.set(userRef, { displayName: username }, { merge: true });
   });
 
-  await admin.auth().updateUser(uid, { displayName: username });
+  // Best-effort: users/{uid}.displayName (committed in the tx) is the app's
+  // source of truth; the Auth displayName is cosmetic, so a failure here must
+  // not strand the claim — the lock doc is already committed.
+  try {
+    await admin.auth().updateUser(uid, { displayName: username });
+  } catch (err) {
+    console.error(
+      `[claimUsername] auth displayName update failed for ${uid}:`,
+      err
+    );
+  }
 
   return { ok: true, username };
 });
