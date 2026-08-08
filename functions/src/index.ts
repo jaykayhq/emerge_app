@@ -49,7 +49,8 @@ export const getAuraInsight = onCall(async (request) => {
     const now = Date.now();
     const CACHE_DURATION_MS = 900000; // 15 mins
 
-    if (cacheData.timestamp && (now - cacheData.timestamp.toDate().getTime()) < CACHE_DURATION_MS) {
+    if (cacheData.timestamp &&
+        (now - cacheData.timestamp.toDate().getTime()) < CACHE_DURATION_MS) {
       return {
         insight: cacheData.insight,
         level: cacheData.level,
@@ -60,7 +61,11 @@ export const getAuraInsight = onCall(async (request) => {
 
   const userStatsDoc = await db.collection("user_stats").doc(userId).get();
   if (!userStatsDoc.exists) {
-    return { insight: "Start your journey by completing your first habit!", level: 1, streak: 0 };
+    return {
+      insight: "Start your journey by completing your first habit!",
+      level: 1,
+      streak: 0
+    };
   }
 
   const stats = userStatsDoc.data()!;
@@ -69,10 +74,15 @@ export const getAuraInsight = onCall(async (request) => {
   const streak = avatarStats.streak || stats.streak || 0;
 
   let insight = "";
-  if (streak >= 7) insight = `Amazing! Your ${streak}-day streak shows real commitment.`;
-  else if (streak >= 3) insight = `${streak} days strong! Keep building momentum.`;
-  else if (level > 1) insight = `Level ${level} achieved! Progress over perfection.`;
-  else insight = "Every expert was once a beginner. Start with one habit.";
+  if (streak >= 7) {
+    insight = `Amazing! Your ${streak}-day streak shows real commitment.`;
+  } else if (streak >= 3) {
+    insight = `${streak} days strong! Keep building momentum.`;
+  } else if (level > 1) {
+    insight = `Level ${level} achieved! Progress over perfection.`;
+  } else {
+    insight = "Every expert was once a beginner. Start with one habit.";
+  }
 
   const result = { insight, level, streak };
   await db.collection("insight_cache").doc(userId).set({
@@ -87,31 +97,33 @@ export const getAuraInsight = onCall(async (request) => {
  * Daily behavioral decay: Increases entropy and resets daily flags.
  * Runs at midnight UTC.
  */
-export const applyDailyDecayScheduled = onSchedule("0 0 * * *", async (event) => {
-  console.log("Applying daily behavioral decay at midnight UTC");
+export const applyDailyDecayScheduled = onSchedule(
+  "0 0 * * *",
+  async (_event) => {
+    console.log("Applying daily behavioral decay at midnight UTC");
   
-  const usersSnapshot = await db.collection("user_stats").get();
-  const batch = db.batch();
+    const usersSnapshot = await db.collection("user_stats").get();
+    const batch = db.batch();
   
-  usersSnapshot.forEach((doc: admin.firestore.QueryDocumentSnapshot) => {
-    const data = doc.data();
-    const currentWorldState = data.worldState || {};
-    const currentEntropy = currentWorldState.entropy || 0;
+    usersSnapshot.forEach((doc: admin.firestore.QueryDocumentSnapshot) => {
+      const data = doc.data();
+      const currentWorldState = data.worldState || {};
+      const currentEntropy = currentWorldState.entropy || 0;
     
-    // Increase entropy by 0.05 daily (approx 20 days to full decay if inactive)
-    const newEntropy = Math.min(1.0, currentEntropy + 0.05);
+      // Entropy +0.05 daily (~20 days to full decay if inactive)
+      const newEntropy = Math.min(1.0, currentEntropy + 0.05);
     
-    batch.set(doc.ref, {
-      worldState: {
-        ...currentWorldState,
-        entropy: newEntropy,
-      }
-    }, { merge: true });
+      batch.set(doc.ref, {
+        worldState: {
+          ...currentWorldState,
+          entropy: newEntropy,
+        }
+      }, { merge: true });
+    });
+  
+    await batch.commit();
+    console.log(`Successfully applied decay to ${usersSnapshot.size} users.`);
   });
-  
-  await batch.commit();
-  console.log(`Successfully applied decay to ${usersSnapshot.size} users.`);
-});
 
 /**
  * AI Coach - Groq Proxy (Gen 2)
@@ -133,7 +145,12 @@ export const getGroqCoachAdvice = onCall({
   }
 
   const groqApiKey = process.env.GROQ_API_KEY;
-  if (!groqApiKey) return { advice: "Keep building consistent habits — progress over perfection." };
+  if (!groqApiKey) {
+    return {
+      advice:
+        "Keep building consistent habits — progress over perfection.",
+    };
+  }
 
   try {
     const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
@@ -145,18 +162,36 @@ export const getGroqCoachAdvice = onCall({
       body: JSON.stringify({
         model: "llama-3.1-8b-instant",
         messages: [
-          { role: "system", content: "You are Koa, a motivational habit coach in the Emerge app. You help users build healthy habits through encouragement, practical tips, and accountability. Keep responses concise (2-3 sentences), warm, and actionable. Never discuss topics outside habit formation and personal growth." },
-          { role: "user", content: userContext ? `Context about my progress: ${userContext}\n\nMy question: ${userMessage}` : userMessage },
+          {
+            role: "system",
+            content:
+              "You are Koa, a motivational habit coach in the Emerge app. " +
+              "You help users build healthy habits through encouragement, " +
+              "practical tips, and accountability. Keep responses concise " +
+              "(2-3 sentences), warm, and actionable. Never discuss topics " +
+              "outside habit formation and personal growth.",
+          },
+          {
+            role: "user",
+            content: userContext
+              ? `Context about my progress: ${userContext}` +
+                `\n\nMy question: ${userMessage}`
+              : userMessage,
+          },
         ],
         max_tokens: 256,
         temperature: 0.7,
       }),
     });
 
-    if (!response.ok) return { advice: "Your consistency is your superpower. Keep going!" };
+    if (!response.ok) {
+      return { advice: "Your consistency is your superpower. Keep going!" };
+    }
 
-    const result = await response.json() as any;
-    const advice = result.choices?.[0]?.message?.content?.trim() ?? "Every small step counts.";
+    const result = await response.json();
+    const advice =
+      result.choices?.[0]?.message?.content?.trim() ??
+      "Every small step counts.";
     return { advice };
   } catch (error) {
     console.error("Groq proxy error:", error);
@@ -167,94 +202,107 @@ export const getGroqCoachAdvice = onCall({
 /**
  * Daily momentum decay (Behavioral Entropy Engine - Gen 2)
  */
-export const applyDailyMomentumDecay = onSchedule("0 2 * * *", async (event) => {
-  console.log("Daily momentum decay starting at:", event.scheduleTime);
-  const today = new Date(event.scheduleTime);
-  const todayStr = today.toISOString().split("T")[0];
+export const applyDailyMomentumDecay = onSchedule(
+  "0 2 * * *",
+  async (event) => {
+    console.log("Daily momentum decay starting at:", event.scheduleTime);
+    const today = new Date(event.scheduleTime);
+    const todayStr = today.toISOString().split("T")[0];
 
-  const habitsSnap = await db.collection("habits").where("isArchived", "==", false).get();
-  if (habitsSnap.empty) return;
+    const habitsSnap = await db
+      .collection("habits")
+      .where("isArchived", "==", false)
+      .get();
+    if (habitsSnap.empty) return;
 
-  const BATCH_SIZE = 450;
-  let batch = db.batch();
-  let batchCount = 0;
+    const BATCH_SIZE = 450;
+    let batch = db.batch();
+    let batchCount = 0;
 
-  for (const doc of habitsSnap.docs) {
-    const data = doc.data();
-    const lastCompletedDate = data.lastCompletedDate as admin.firestore.Timestamp | undefined;
+    for (const doc of habitsSnap.docs) {
+      const data = doc.data();
+      const lastCompletedDate = data.lastCompletedDate as
+      | admin.firestore.Timestamp
+      | undefined;
 
-    let completedToday = false;
-    if (lastCompletedDate) {
-      completedToday = lastCompletedDate.toDate().toISOString().split("T")[0] === todayStr;
-    }
+      let completedToday = false;
+      if (lastCompletedDate) {
+        completedToday =
+        lastCompletedDate.toDate().toISOString().split("T")[0] === todayStr;
+      }
 
-    if (completedToday) continue;
+      if (completedToday) continue;
 
-    const currentMomentum = (data.momentumScore as number) ?? 0;
-    const consecutiveMisses = (data.consecutiveMisses as number) ?? 0;
-    const contractActive = (data.contractActive as boolean) ?? false;
+      const currentMomentum = (data.momentumScore as number) ?? 0;
+      const consecutiveMisses = (data.consecutiveMisses as number) ?? 0;
+      const contractActive = (data.contractActive as boolean) ?? false;
 
-    const missDecay = contractActive ? 15 : (consecutiveMisses > 0 ? 5 : 2);
-    const newMomentum = Math.max(0, currentMomentum - missDecay);
-    const newConsecutiveMisses = consecutiveMisses + 1;
+      const missDecay = contractActive ? 15 : (consecutiveMisses > 0 ? 5 : 2);
+      const newMomentum = Math.max(0, currentMomentum - missDecay);
+      const newConsecutiveMisses = consecutiveMisses + 1;
 
-    batch.update(doc.ref, {
-      momentumScore: newMomentum,
-      consecutiveMisses: newConsecutiveMisses,
-    });
+      batch.update(doc.ref, {
+        momentumScore: newMomentum,
+        consecutiveMisses: newConsecutiveMisses,
+      });
 
-    if (contractActive && consecutiveMisses === 0) {
-      const statsRef = db.collection("user_stats").doc(data.userId);
-      try {
-        const statsDoc = await statsRef.get();
-        if (statsDoc.exists) {
-          const statsData = statsDoc.data()!;
-          const level = statsData.avatarStats?.level ?? 1;
-          const currentTotalXp = statsData.avatarStats?.totalXp ?? 0;
-          const xpLoss = Math.floor(level * 500 * 0.05);
-          const levelMinXp = (level - 1) * 500;
-          const newTotalXp = Math.max(levelMinXp, currentTotalXp - xpLoss);
+      if (contractActive && consecutiveMisses === 0) {
+        const statsRef = db.collection("user_stats").doc(data.userId);
+        try {
+          const statsDoc = await statsRef.get();
+          if (statsDoc.exists) {
+            const statsData = statsDoc.data()!;
+            const level = statsData.avatarStats?.level ?? 1;
+            const currentTotalXp = statsData.avatarStats?.totalXp ?? 0;
+            const xpLoss = Math.floor(level * 500 * 0.05);
+            const levelMinXp = (level - 1) * 500;
+            const newTotalXp = Math.max(levelMinXp, currentTotalXp - xpLoss);
 
-          batch.update(statsRef, {
-            "avatarStats.totalXp": newTotalXp,
-            "worldState.entropy": admin.firestore.FieldValue.increment(0.1),
-            "worldState.activeEvents": admin.firestore.FieldValue.arrayUnion({
-              type: "contract_broken",
-              timestamp: admin.firestore.FieldValue.serverTimestamp(),
-              habitId: doc.id,
-              title: "Identity Breach",
-              description: `Social contract for '${data.title}' broken. Identity stability compromised.`
-            })
-          });
+            batch.update(statsRef, {
+              "avatarStats.totalXp": newTotalXp,
+              "worldState.entropy": admin.firestore.FieldValue.increment(0.1),
+              "worldState.activeEvents": admin.firestore.FieldValue.arrayUnion({
+                type: "contract_broken",
+                timestamp: admin.firestore.FieldValue.serverTimestamp(),
+                habitId: doc.id,
+                title: "Identity Breach",
+                description:
+                `Social contract for '${data.title}' broken. ` +
+                "Identity stability compromised.",
+              })
+            });
+          }
+        } catch (err) {
+          console.error(`Error applying penalty: ${err}`);
         }
-      } catch (err) {
-        console.error(`Error applying penalty: ${err}`);
+      }
+
+      batchCount++;
+      if (batchCount >= BATCH_SIZE) {
+        await batch.commit();
+        batch = db.batch();
+        batchCount = 0;
       }
     }
 
-    batchCount++;
-    if (batchCount >= BATCH_SIZE) {
-      await batch.commit();
-      batch = db.batch();
-      batchCount = 0;
-    }
-  }
-
-  if (batchCount > 0) await batch.commit();
-});
+    if (batchCount > 0) await batch.commit();
+  });
 
 // ============================================================================
 // SUB-MODULE EXPORTS
 // ============================================================================
-export const applyDailyTribeRecalculation = onSchedule("0 3 * * *", async (event) => {
-  console.log("Starting scheduled tribe recalculation...");
-  await recalcTribesInternal(db);
-});
+export const applyDailyTribeRecalculation = onSchedule(
+  "0 3 * * *",
+  async (_event) => {
+    console.log("Starting scheduled tribe recalculation...");
+    await recalcTribesInternal(db);
+  });
 
 export * from "./challenges";
 // export * from "./seed_templates";
 export * from "./refreshQuarterlyChallenges";
-// Daily AI insights moved client-side (NotificationService.scheduleDailyInsight).
+// Daily AI insights moved client-side
+// (NotificationService.scheduleDailyInsight).
 // export * from "./habit_notifications";
 // export * from "./seedReviewerAccount";
 export * from "./accountDeletion";
@@ -263,11 +311,13 @@ export * from "./ai_recap";
 export * from "./revenuecat_events";
 export * from "./payments/paystack";
 export * from "./creator_invites";
-export * from "./email_verification";
+export { enforceEmailGracePeriod } from "./email_verification";
 export * from "./usernames";
 export { managePremium } from "./managePremium";
-export * from "./seedCreatorAccount";   // enabled 2026-08-03: default creator bootstrap (SP-E Task 4)
-export * from "./repairBlueprintCatalog"; // enabled 2026-08-03: one-off catalog ownership repair + v1 purge
+export * from "./seedCreatorAccount"; // enabled 2026-08-03:
+// default creator bootstrap (SP-E Task 4)
+export * from "./repairBlueprintCatalog"; // enabled 2026-08-03:
+// one-off catalog ownership repair + v1 purge
 export { setUserRole } from "./setUserRole";
 export { purgeOrphanedUserData } from "./purgeOrphanedUserData";
 export { createStarterPack } from "./create_starter_pack";

@@ -570,12 +570,6 @@ service cloud.firestore {
       allow read, write: if false;
     }
 
-    // Email verification codes — functions only (Admin SDK bypasses rules).
-    // Clients must never read, create, or consume codes directly.
-    match /email_verifications/{uid} {
-      allow read, write: if false;
-    }
-
     // Username claims — functions only (Admin SDK bypasses rules).
     // Doc id is the lowercased username; claims are server-authoritative.
     match /usernames/{username} {
