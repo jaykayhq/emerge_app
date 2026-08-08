@@ -163,10 +163,14 @@ Widget createTest({
   CoachAskQuota? quota,
   FakeWorldThemeNotifier? worldTheme,
   GoRouter? router,
+  AuthUser? authUser,
 }) {
   return ProviderScope(
     overrides: [
-      authStateChangesProvider.overrideWith((ref) => const Stream.empty()),
+      authStateChangesProvider.overrideWith(
+        (ref) =>
+            authUser != null ? Stream.value(authUser) : const Stream.empty(),
+      ),
       userStatsStreamProvider.overrideWith((ref) => Stream.value(testProfile)),
       userStatsRepositoryProvider.overrideWith(
         (ref) => FakeDriftUserStatsRepository(),
@@ -352,6 +356,48 @@ void main() {
 
       expect(find.text('Coming soon'), findsNothing);
       expect(worldTheme.setCalls, [AppWorldTheme.nebula]);
+    });
+  });
+
+  group('Verify email tile', () {
+    testWidgets('unverified user sees the tile', (tester) async {
+      await tester.pumpWidget(
+        createTest(
+          authUser: AuthUser(
+            id: 'u1',
+            email: 'a@b.com',
+            emailVerified: false,
+          ),
+        ),
+      );
+      await tester.pump();
+      await tester.pump();
+
+      expect(find.text('Verify your email'), findsOneWidget);
+    });
+
+    testWidgets('verified user does not see the tile', (tester) async {
+      await tester.pumpWidget(
+        createTest(
+          authUser: AuthUser(
+            id: 'u1',
+            email: 'a@b.com',
+            emailVerified: true,
+          ),
+        ),
+      );
+      await tester.pump();
+      await tester.pump();
+
+      expect(find.text('Verify your email'), findsNothing);
+    });
+
+    testWidgets('signed-out user does not see the tile', (tester) async {
+      await tester.pumpWidget(createTest());
+      await tester.pump();
+      await tester.pump();
+
+      expect(find.text('Verify your email'), findsNothing);
     });
   });
 }
