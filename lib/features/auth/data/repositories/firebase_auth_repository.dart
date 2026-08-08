@@ -22,8 +22,13 @@ const String _kRoleUser = 'user';
 class FirebaseAuthRepository implements AuthRepository {
   final FirebaseAuth _firebaseAuth;
   final FirebaseFirestore _firestore;
+  final FirebaseFunctions _functions;
 
-  FirebaseAuthRepository(this._firebaseAuth, this._firestore) {
+  FirebaseAuthRepository(
+    this._firebaseAuth,
+    this._firestore,
+    this._functions,
+  ) {
     if (!kIsWeb) {
       GoogleSignIn.instance.initialize();
     }
@@ -39,8 +44,7 @@ class FirebaseAuthRepository implements AuthRepository {
   /// a perf/UX improvement, not a correctness requirement.
   Future<void> _assignRoleAndRefresh(User user, String role) async {
     try {
-      final functions = FirebaseFunctions.instance;
-      await functions.httpsCallable('setUserRole').call(<String, dynamic>{
+      await _functions.httpsCallable('setUserRole').call(<String, dynamic>{
         'role': role,
       });
       await user.getIdToken(true);
@@ -392,8 +396,7 @@ class FirebaseAuthRepository implements AuthRepository {
     try {
       // Call the server-side deleteMyAccount function which uses Admin SDK
       // to wipe all user data across Firestore AND delete the Auth account.
-      final functions = FirebaseFunctions.instance;
-      final result = await functions.httpsCallable('deleteMyAccount').call();
+      final result = await _functions.httpsCallable('deleteMyAccount').call();
 
       if (result.data != null && (result.data as Map)['success'] == true) {
         return const Right(null);
@@ -416,7 +419,7 @@ class FirebaseAuthRepository implements AuthRepository {
   @override
   Future<Either<Failure, void>> sendEmailVerificationCode() async {
     try {
-      await FirebaseFunctions.instance
+      await _functions
           .httpsCallable('sendEmailVerificationCode')
           .call();
       return const Right(null);
@@ -432,7 +435,7 @@ class FirebaseAuthRepository implements AuthRepository {
   @override
   Future<Either<Failure, void>> verifyEmailCode(String code) async {
     try {
-      await FirebaseFunctions.instance
+      await _functions
           .httpsCallable('verifyEmailCode')
           .call(<String, dynamic>{'code': code.trim()});
       // Force a token refresh so emailVerified propagates to the
@@ -459,7 +462,7 @@ class FirebaseAuthRepository implements AuthRepository {
       return Left(AuthFailure(usernameError));
     }
     try {
-      await FirebaseFunctions.instance
+      await _functions
           .httpsCallable('claimUsername')
           .call(<String, dynamic>{'username': username.trim()});
       // Force a token refresh so the server-side username claim propagates to

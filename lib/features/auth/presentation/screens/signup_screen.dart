@@ -57,7 +57,7 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
         username: _usernameController.text.trim(),
       );
 
-      await result.fold((error) => throw Exception(error), (user) async {
+      await result.fold((error) => throw Exception(error.message), (user) async {
         // Create User Profile with initial onboarding state
         final onboardingState = ref.read(onboardingStateControllerProvider);
 
@@ -105,7 +105,7 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
     } catch (e) {
       if (mounted) {
         final errorMessage = e.toString();
-        if (errorMessage.contains('email-already-in-use')) {
+        if (errorMessage.toLowerCase().contains('already in use')) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: const Text(

@@ -16,9 +16,7 @@ import '../../../../helpers/mocks/auth_mocks.dart';
 Widget _buildTest(AuthRepository repo) {
   return createScreenUnderTest(
     screen: const SignUpScreen(),
-    overrides: [
-      authRepositoryProvider.overrideWithValue(repo),
-    ],
+    overrides: [authRepositoryProvider.overrideWithValue(repo)],
   );
 }
 
@@ -71,17 +69,22 @@ void main() {
     await setMobileViewport(tester);
 
     final completer = Completer<Either<Failure, AuthUser>>();
-    when(() => mockAuth.signUpWithEmailAndPassword(
-      email: any(named: 'email'),
-      password: any(named: 'password'),
-      username: any(named: 'username'),
-    )).thenAnswer((_) async => completer.future);
+    when(
+      () => mockAuth.signUpWithEmailAndPassword(
+        email: any(named: 'email'),
+        password: any(named: 'password'),
+        username: any(named: 'username'),
+      ),
+    ).thenAnswer((_) async => completer.future);
 
     await tester.pumpWidget(_buildTest(mockAuth));
     await tester.pumpAndSettle();
 
     await tester.enterText(find.byType(TextFormField).at(0), 'TestUser');
-    await tester.enterText(find.byType(TextFormField).at(1), 'test@example.com');
+    await tester.enterText(
+      find.byType(TextFormField).at(1),
+      'test@example.com',
+    );
     await tester.enterText(find.byType(TextFormField).at(2), 'Str0ngP@sswd!');
     await tester.enterText(find.byType(TextFormField).at(3), 'Str0ngP@sswd!');
     await tester.pumpAndSettle();
@@ -95,16 +98,21 @@ void main() {
     await tester.pumpAndSettle();
   });
 
-  testWidgets('unverified signup calls the repository and does not crash',
-      (tester) async {
+  testWidgets('unverified signup calls the repository and does not crash', (
+    tester,
+  ) async {
     await setMobileViewport(tester);
-    when(() => mockAuth.signUpWithEmailAndPassword(
-      email: any(named: 'email'),
-      password: any(named: 'password'),
-      username: any(named: 'username'),
-    )).thenAnswer((_) async => right<Failure, AuthUser>(
-      AuthUser(id: 'u1', email: 't@example.com', displayName: 'TestUser'),
-    ));
+    when(
+      () => mockAuth.signUpWithEmailAndPassword(
+        email: any(named: 'email'),
+        password: any(named: 'password'),
+        username: any(named: 'username'),
+      ),
+    ).thenAnswer(
+      (_) async => right<Failure, AuthUser>(
+        AuthUser(id: 'u1', email: 't@example.com', displayName: 'TestUser'),
+      ),
+    );
 
     await tester.pumpWidget(_buildTest(mockAuth));
     await tester.pumpAndSettle();
@@ -126,19 +134,25 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('shows error on auth failure', (tester) async {    await setMobileViewport(tester);
+  testWidgets('shows error on auth failure', (tester) async {
+    await setMobileViewport(tester);
 
-    when(() => mockAuth.signUpWithEmailAndPassword(
-      email: any(named: 'email'),
-      password: any(named: 'password'),
-      username: any(named: 'username'),
-    )).thenAnswer((_) async => left(AuthFailure('Email already in use')));
+    when(
+      () => mockAuth.signUpWithEmailAndPassword(
+        email: any(named: 'email'),
+        password: any(named: 'password'),
+        username: any(named: 'username'),
+      ),
+    ).thenAnswer((_) async => left(AuthFailure('Email already in use')));
 
     await tester.pumpWidget(_buildTest(mockAuth));
     await tester.pumpAndSettle();
 
     await tester.enterText(find.byType(TextFormField).at(0), 'TestUser');
-    await tester.enterText(find.byType(TextFormField).at(1), 'test@example.com');
+    await tester.enterText(
+      find.byType(TextFormField).at(1),
+      'test@example.com',
+    );
     await tester.enterText(find.byType(TextFormField).at(2), 'Str0ngP@sswd!');
     await tester.enterText(find.byType(TextFormField).at(3), 'Str0ngP@sswd!');
     await tester.pumpAndSettle();
@@ -149,8 +163,9 @@ void main() {
     expect(find.byType(SnackBar), findsOneWidget);
   });
 
-  testWidgets('errors appear only after interacting with a field',
-      (tester) async {
+  testWidgets('errors appear only after interacting with a field', (
+    tester,
+  ) async {
     await setMobileViewport(tester);
 
     await tester.pumpWidget(_buildTest(mockAuth));
@@ -170,8 +185,9 @@ void main() {
     );
   });
 
-  testWidgets('password checklist appears while typing, not on confirm field',
-      (tester) async {
+  testWidgets('password checklist appears while typing, not on confirm field', (
+    tester,
+  ) async {
     await setMobileViewport(tester);
 
     await tester.pumpWidget(_buildTest(mockAuth));

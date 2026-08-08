@@ -23,6 +23,7 @@ AuthRepository authRepository(Ref ref) {
   return FirebaseAuthRepository(
     ref.watch(firebaseAuthProvider),
     ref.watch(firestoreProvider),
+    FirebaseFunctions.instance,
   );
 }
 
