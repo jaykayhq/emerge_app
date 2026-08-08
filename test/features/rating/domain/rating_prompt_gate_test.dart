@@ -36,6 +36,21 @@ void main() {
       );
     });
 
+    test('does not ask again in the same version even after cooldown expires', () {
+      expect(
+        RatingPromptGate.shouldAsk(
+          signal: RatingPromptSignal.sevenDayStreak,
+          now: now,
+          lastAskedAt: now.subtract(const Duration(days: 120)),
+          versionAskedFor: '1.0.7+12',
+          dontAskAgain: false,
+          currentVersion: '1.0.7+12',
+          cooldown: cooldown,
+        ),
+        isFalse,
+      );
+    });
+
     test('asks again in a newer version after cooldown', () {
       expect(
         RatingPromptGate.shouldAsk(
@@ -81,18 +96,18 @@ void main() {
       );
     });
 
-    test('cooldown expiry re-enables asking (new version)', () {
+    test('does not ask when lastAskedAt is in the future (clock skew)', () {
       expect(
         RatingPromptGate.shouldAsk(
-          signal: RatingPromptSignal.emergeReveal,
+          signal: RatingPromptSignal.sevenDayStreak,
           now: now,
-          lastAskedAt: DateTime(2026, 4, 1),
-          versionAskedFor: '1.0.5+9',
+          lastAskedAt: now.add(const Duration(days: 1)),
+          versionAskedFor: '1.0.6+11',
           dontAskAgain: false,
           currentVersion: '1.0.7+12',
           cooldown: cooldown,
         ),
-        isTrue,
+        isFalse,
       );
     });
   });

@@ -5,9 +5,12 @@ enum RatingPromptSignal { sevenDayStreak, challengeCompleted, emergeReveal }
 class RatingPromptGate {
   const RatingPromptGate._();
 
-  static const Duration defaultCooldown = Duration(days: 90);
+  static const Duration standardCooldown = Duration(days: 90);
 
   /// True when the prompt should be shown for [signal].
+  ///
+  /// [signal] is currently advisory — all signals qualify equally. It is
+  /// reserved for future per-signal rules.
   ///
   /// Rules:
   /// - never ask if the user opted out ([dontAskAgain])
