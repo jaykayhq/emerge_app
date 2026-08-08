@@ -311,6 +311,20 @@ service cloud.firestore {
       allow update: if isOwner(userId) && isValidStats(request.resource.data);
     }
 
+    // User feedback (low-rating flow) — owner-write, admin-read.
+    match /feedback/{uid} {
+      allow read: if isOwner(uid);
+      allow write: if isOwner(uid) &&
+        request.resource.data.keys().hasAll(['userId', 'message', 'rating', 'createdAt']) &&
+        request.resource.data.userId == request.auth.uid &&
+        request.resource.data.message is string &&
+        request.resource.data.message.size() <= 2000 &&
+        request.resource.data.rating is number &&
+        request.resource.data.rating >= 1 &&
+        request.resource.data.rating <= 5 &&
+        request.resource.data.createdAt is timestamp;
+    }
+
     // AI Insight Cache (written by Cloud Function, read by owner)
     match /insight_cache/{userId} {
       allow read: if isOwner(userId);
