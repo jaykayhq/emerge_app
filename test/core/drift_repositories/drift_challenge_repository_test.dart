@@ -474,6 +474,63 @@ void main() {
       },
     );
 
+    test(
+      'getUserChallenges propagates sponsor fields from the catalog template',
+      () async {
+        const sponsoredTemplate = Challenge(
+          id: 'srv_sponsored',
+          title: 'Sponsored Quest',
+          description: 'desc',
+          imageUrl: '',
+          reward: 'Voucher',
+          participants: 10,
+          daysLeft: 7,
+          totalDays: 7,
+          currentDay: 0,
+          status: ChallengeStatus.featured,
+          xpReward: 250,
+          steps: [],
+          category: ChallengeCategory.fitness,
+          sponsor: 'Nike',
+          isSponsored: true,
+          affiliateUrl: 'https://example.com/reward',
+          rewardDescription: '20% off Nike',
+          affiliateNetwork: AffiliateNetwork.direct,
+          affiliatePartnerId: 'nike_partner',
+        );
+
+        final repoWithLookup = DriftChallengeRepository(
+          db,
+          LocalGameLoopEngine(),
+          mockSyncEngine,
+          mockSocialService,
+          catalogLookup: (id) =>
+              id == 'srv_sponsored' ? sponsoredTemplate : null,
+        );
+
+        await db.challengeProgressDao.insertFromData(
+          challengeId: 'srv_sponsored',
+          userId: userId,
+          title: sponsoredTemplate.title,
+          attribute: 'vitality',
+          totalDays: sponsoredTemplate.totalDays,
+          xpReward: sponsoredTemplate.xpReward,
+          joinedAt: DateTime.now().toIso8601String(),
+          updatedAt: DateTime.now().toIso8601String(),
+        );
+
+        final challenges = await repoWithLookup.getUserChallenges(userId);
+        expect(challenges, hasLength(1));
+        final rebuilt = challenges.single;
+        expect(rebuilt.isSponsored, isTrue);
+        expect(rebuilt.affiliateUrl, 'https://example.com/reward');
+        expect(rebuilt.sponsor, 'Nike');
+        expect(rebuilt.rewardDescription, '20% off Nike');
+        expect(rebuilt.affiliateNetwork, AffiliateNetwork.direct);
+        expect(rebuilt.affiliatePartnerId, 'nike_partner');
+      },
+    );
+
     test('getChallenges() returns featured challenges from catalog', () async {
       final challenges = await repository.getChallenges(featuredOnly: true);
 
