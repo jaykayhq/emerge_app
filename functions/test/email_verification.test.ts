@@ -3,6 +3,7 @@
  * Run with: cd functions && npm run build && npx jest \
  * test/email_verification.test.ts
  */
+const getUser = jest.fn();
 const queryGet = jest.fn();
 const batchSet = jest.fn();
 const batchCommit = jest.fn().mockResolvedValue(undefined);
@@ -24,15 +25,17 @@ const collection = jest.fn((name: string) => ({
 }));
 
 const firestoreMock = jest.fn(() => ({ collection, batch }));
-(firestoreMock as unknown as { FieldValue: { serverTimestamp: () => string } })
+(firestoreMock as unknown as { FieldValue: { serverTimestamp: () => string; delete: () => string } })
   .FieldValue = {
   serverTimestamp: () => "SERVER_TIMESTAMP",
+  delete: () => "FIELD_DELETE",
 };
 
 jest.mock("firebase-admin", () => ({
   apps: [],
   initializeApp: jest.fn(),
   firestore: firestoreMock,
+  auth: () => ({ getUser }),
 }));
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports
@@ -50,12 +53,15 @@ const makeDoc = (id: string, data: Record<string, unknown>) => ({
   data: () => data,
 });
 
-const unverifiedOld = () =>
-  makeDoc("u1", { createdAt: new Date(Date.now() - 8 * 86400_000) });
+const sentOld = () =>
+  makeDoc("u1", {
+    emailVerificationSentAt: new Date(Date.now() - 8 * 86400_000),
+  });
 
 beforeEach(() => {
   jest.clearAllMocks();
   queryGet.mockResolvedValue({ size: 0, empty: true, docs: [] });
+  getUser.mockResolvedValue({ emailVerified: false });
 });
 
 describe("enforceEmailGracePeriodInternal", () => {
@@ -63,13 +69,15 @@ describe("enforceEmailGracePeriodInternal", () => {
   // database.batch() (the paginated batch seam) resolves to the shared mock.
   const database = firestoreMock() as never;
 
-  it("locks unverified users older than the grace period", async () => {
+  it("locks unverified users past the grace period", async () => {
     queryGet.mockResolvedValue({
       size: 1,
       empty: false,
-      docs: [unverifiedOld()],
+      docs: [sentOld()],
     });
+    getUser.mockResolvedValue({ emailVerified: false });
     await enforceEmailGracePeriodInternal(database, Date.now());
+    expect(getUser).toHaveBeenCalledWith("u1");
     expect(batch).toHaveBeenCalled();
     expect(batchSet).toHaveBeenCalledWith(
       expect.objectContaining({ id: "u1" }),
@@ -79,33 +87,63 @@ describe("enforceEmailGracePeriodInternal", () => {
     expect(batchCommit).toHaveBeenCalled();
   });
 
-  it("skips verified users", async () => {
+  it("does not lock verified users (authoritative auth flag)", async () => {
     queryGet.mockResolvedValue({
       size: 1,
       empty: false,
-      docs: [
-        makeDoc("u1", {
-          createdAt: new Date(Date.now() - 8 * 86400_000),
-          emailVerified: true,
-        }),
-      ],
+      docs: [sentOld()],
     });
+    getUser.mockResolvedValue({ emailVerified: true });
     await enforceEmailGracePeriodInternal(database, Date.now());
     expect(batchSet).not.toHaveBeenCalled();
     expect(batchCommit).not.toHaveBeenCalled();
   });
 
-  it("skips users already locked", async () => {
+  it("clears a stale lock for a user who verified after being locked", async () => {
     queryGet.mockResolvedValue({
       size: 1,
       empty: false,
       docs: [
         makeDoc("u1", {
-          createdAt: new Date(Date.now() - 8 * 86400_000),
+          emailVerificationSentAt: new Date(Date.now() - 8 * 86400_000),
           emailLockedAt: "SERVER_TIMESTAMP",
         }),
       ],
     });
+    getUser.mockResolvedValue({ emailVerified: true });
+    await enforceEmailGracePeriodInternal(database, Date.now());
+    expect(batchSet).toHaveBeenCalledWith(
+      expect.objectContaining({ id: "u1" }),
+      { emailLockedAt: "FIELD_DELETE" },
+      { merge: true }
+    );
+    expect(batchCommit).toHaveBeenCalled();
+  });
+
+  it("skips users who are still locked and still unverified", async () => {
+    queryGet.mockResolvedValue({
+      size: 1,
+      empty: false,
+      docs: [
+        makeDoc("u1", {
+          emailVerificationSentAt: new Date(Date.now() - 8 * 86400_000),
+          emailLockedAt: "SERVER_TIMESTAMP",
+        }),
+      ],
+    });
+    getUser.mockResolvedValue({ emailVerified: false });
+    await enforceEmailGracePeriodInternal(database, Date.now());
+    expect(batchSet).not.toHaveBeenCalled();
+    expect(batchCommit).not.toHaveBeenCalled();
+  });
+
+  it("skips candidates whose auth record is missing", async () => {
+    queryGet.mockResolvedValue({
+      size: 1,
+      empty: false,
+      docs: [sentOld()],
+    });
+    getUser.mockRejectedValue(new Error("no user"));
     await enforceEmailGracePeriodInternal(database, Date.now());
     expect(batchSet).not.toHaveBeenCalled();
     expect(batchCommit).not.toHaveBeenCalled();
@@ -113,7 +151,9 @@ describe("enforceEmailGracePeriodInternal", () => {
 
   it("pages through full pages via limit and startAfter", async () => {
     const firstPage = Array.from({ length: GRACE_PAGE_SIZE }, (_, i) =>
-      makeDoc(`u${i}`, { createdAt: new Date(Date.now() - 8 * 86400_000) })
+      makeDoc(`u${i}`, {
+        emailVerificationSentAt: new Date(Date.now() - 8 * 86400_000),
+      })
     );
     queryGet
       .mockResolvedValueOnce({
@@ -124,7 +164,7 @@ describe("enforceEmailGracePeriodInternal", () => {
       .mockResolvedValueOnce({
         size: 1,
         empty: false,
-        docs: [unverifiedOld()],
+        docs: [sentOld()],
       });
     await enforceEmailGracePeriodInternal(database, Date.now());
     expect(queryGet).toHaveBeenCalledTimes(2);
@@ -137,7 +177,7 @@ describe("enforceEmailGracePeriodInternal", () => {
     queryGet.mockResolvedValue({
       size: 1,
       empty: false,
-      docs: [unverifiedOld()],
+      docs: [sentOld()],
     });
     await enforceEmailGracePeriodInternal(database, Date.now());
     expect(queryGet).toHaveBeenCalledTimes(1);

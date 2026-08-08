@@ -19,6 +19,12 @@ class _MockUser extends Mock implements User {}
 
 class _MockUserCredential extends Mock implements UserCredential {}
 
+class _MockCollectionReference extends Mock
+    implements CollectionReference<Map<String, dynamic>> {}
+
+class _MockDocumentReference extends Mock
+    implements DocumentReference<Map<String, dynamic>> {}
+
 /// Stand-in for the platform's Google Sign-In implementation. The repo's
 /// constructor calls `GoogleSignIn.instance.initialize()`, which would
 /// otherwise hit the placeholder implementation and throw UnimplementedError.
@@ -155,6 +161,26 @@ void main() {
 
       expect(result.isRight(), isTrue);
       verify(() => user.sendEmailVerification()).called(1);
+    });
+
+    test('mirrors emailVerificationSentAt so the grace-lock job can find it',
+        () async {
+      when(() => auth.currentUser).thenReturn(user);
+      when(() => user.sendEmailVerification()).thenAnswer((_) async {});
+      final usersCollection = _MockCollectionReference();
+      final userDoc = _MockDocumentReference();
+      when(() => firestore.collection('users')).thenReturn(usersCollection);
+      when(() => usersCollection.doc('u1')).thenReturn(userDoc);
+      when(() => userDoc.set(any(), any())).thenAnswer((_) async {});
+
+      final repo = buildRepo();
+      final result = await repo.sendVerificationEmail();
+
+      expect(result.isRight(), isTrue);
+      final data = verify(() => userDoc.set(captureAny(), any()))
+          .captured
+          .single as Map<String, dynamic>;
+      expect(data.containsKey('emailVerificationSentAt'), isTrue);
     });
 
     test('returns Left when no user is signed in', () async {

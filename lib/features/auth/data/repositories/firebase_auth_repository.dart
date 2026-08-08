@@ -418,6 +418,21 @@ class FirebaseAuthRepository implements AuthRepository {
     }
     try {
       await user.sendEmailVerification();
+      // Record when the verification link was sent so the daily grace-period
+      // lock can find this account and measure the 7-day window from here.
+      try {
+        await _firestore
+            .collection('users')
+            .doc(user.uid)
+            .set(
+              {
+                'emailVerificationSentAt': FieldValue.serverTimestamp(),
+              },
+              SetOptions(merge: true),
+            );
+      } catch (e, s) {
+        AppLogger.w('emailVerificationSentAt mirror failed', error: e, stackTrace: s);
+      }
       return const Right(null);
     } on FirebaseAuthException catch (e) {
       AppLogger.w('sendVerificationEmail failed', error: e);
