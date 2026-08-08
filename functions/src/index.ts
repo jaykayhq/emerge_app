@@ -320,5 +320,6 @@ export * from "./repairBlueprintCatalog"; // enabled 2026-08-03:
 // one-off catalog ownership repair + v1 purge
 export { setUserRole } from "./setUserRole";
 export { purgeOrphanedUserData } from "./purgeOrphanedUserData";
+export { backfillUsernames } from "./backfill_usernames";
 export { createStarterPack } from "./create_starter_pack";
 export { seedOnboardingCatalog } from "./seed_starter_habits";
