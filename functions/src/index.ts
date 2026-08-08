@@ -323,3 +323,4 @@ export { purgeOrphanedUserData } from "./purgeOrphanedUserData";
 export { backfillUsernames } from "./backfill_usernames";
 export { createStarterPack } from "./create_starter_pack";
 export { seedOnboardingCatalog } from "./seed_starter_habits";
+export { sendWelcomeEmail, enforceReengagementDrip } from "./marketing_email";
