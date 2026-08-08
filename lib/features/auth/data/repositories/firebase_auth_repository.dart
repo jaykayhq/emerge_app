@@ -71,12 +71,6 @@ class FirebaseAuthRepository implements AuthRepository {
         );
       case 'invalid-argument':
         return AuthFailure(e.message ?? 'Invalid input. Please try again.');
-      case 'resource-exhausted':
-        return AuthFailure(e.message ?? 'Too many attempts. Please wait and try again.');
-      case 'failed-precondition':
-        return AuthFailure(e.message ?? 'This code has expired. Please request a new one.');
-      case 'not-found':
-        return const AuthFailure('No verification code found. Please request a new one.');
       case 'internal':
         return ServerFailure(e.message ?? 'Something went wrong. Please try again.');
       default:
@@ -417,40 +411,19 @@ class FirebaseAuthRepository implements AuthRepository {
   }
 
   @override
-  Future<Either<Failure, void>> sendEmailVerificationCode() async {
-    try {
-      await _functions
-          .httpsCallable('sendEmailVerificationCode')
-          .call();
-      return const Right(null);
-    } on FirebaseFunctionsException catch (e) {
-      AppLogger.w('sendEmailVerificationCode failed', error: e);
-      return Left(_mapFunctionsError(e));
-    } catch (e, s) {
-      AppLogger.e('sendEmailVerificationCode failed', e, s);
-      return Left(ServerFailure(e.toString()));
+  Future<Either<Failure, void>> sendVerificationEmail() async {
+    final user = _firebaseAuth.currentUser;
+    if (user == null) {
+      return const Left(AuthFailure('User not logged in'));
     }
-  }
-
-  @override
-  Future<Either<Failure, void>> verifyEmailCode(String code) async {
     try {
-      await _functions
-          .httpsCallable('verifyEmailCode')
-          .call(<String, dynamic>{'code': code.trim()});
-      // Force a token refresh so emailVerified propagates to the
-      // idTokenChanges()-backed user stream immediately.
-      try {
-        await _firebaseAuth.currentUser?.getIdToken(true);
-      } catch (e, s) {
-        AppLogger.w('token refresh after verify failed', error: e, stackTrace: s);
-      }
+      await user.sendEmailVerification();
       return const Right(null);
-    } on FirebaseFunctionsException catch (e) {
-      AppLogger.w('verifyEmailCode failed', error: e);
-      return Left(_mapFunctionsError(e));
+    } on FirebaseAuthException catch (e) {
+      AppLogger.w('sendVerificationEmail failed', error: e);
+      return Left(AuthFailure(e.message ?? 'Could not send the verification email.'));
     } catch (e, s) {
-      AppLogger.e('verifyEmailCode failed', e, s);
+      AppLogger.e('sendVerificationEmail failed', e, s);
       return Left(ServerFailure(e.toString()));
     }
   }
@@ -482,6 +455,9 @@ class FirebaseAuthRepository implements AuthRepository {
     }
   }
 
+  /// Reloads the current user so `emailVerified` reflects a verification link
+  /// that was clicked (possibly outside the app) and the user has returned.
+  /// Used by the verify screen's "I've verified" action and settings.
   @override
   Future<Either<Failure, bool>> checkEmailVerified() async {
     final user = _firebaseAuth.currentUser;

@@ -99,24 +99,8 @@ class FakeAuthRepository implements AuthRepository {
   }
 
   @override
-  Future<Either<Failure, void>> sendEmailVerificationCode() async {
+  Future<Either<Failure, void>> sendVerificationEmail() async {
     await Future.delayed(const Duration(milliseconds: 500));
-    return const Right(null);
-  }
-
-  @override
-  Future<Either<Failure, void>> verifyEmailCode(String code) async {
-    if (_currentUser == AuthUser.empty) {
-      return const Left(AuthFailure('User not logged in'));
-    }
-    _currentUser = AuthUser(
-      id: _currentUser.id,
-      email: _currentUser.email,
-      displayName: _currentUser.displayName,
-      photoUrl: _currentUser.photoUrl,
-      emailVerified: true,
-    );
-    _controller.add(_currentUser);
     return const Right(null);
   }
 

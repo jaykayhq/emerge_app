@@ -19,9 +19,8 @@ class VerifyEmailScreen extends ConsumerStatefulWidget {
 }
 
 class _VerifyEmailScreenState extends ConsumerState<VerifyEmailScreen> {
-  final _codeController = TextEditingController();
-  bool _isVerifying = false;
   bool _isSending = false;
+  bool _isChecking = false;
   String? _error;
   String? _info;
   int _cooldown = 0;
@@ -31,25 +30,24 @@ class _VerifyEmailScreenState extends ConsumerState<VerifyEmailScreen> {
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) => _sendCode());
+    WidgetsBinding.instance.addPostFrameCallback((_) => _sendLink());
   }
 
   @override
   void dispose() {
     _cooldownTimer?.cancel();
-    _codeController.dispose();
     super.dispose();
   }
 
-  Future<void> _sendCode() async {
+  Future<void> _sendLink() async {
+    if (_isSending) return;
     setState(() {
       _isSending = true;
       _error = null;
       _info = null;
     });
-    final result = await ref
-        .read(authRepositoryProvider)
-        .sendEmailVerificationCode();
+    final result =
+        await ref.read(authRepositoryProvider).sendVerificationEmail();
     if (!mounted) return;
     result.fold(
       (failure) => setState(() {
@@ -58,7 +56,7 @@ class _VerifyEmailScreenState extends ConsumerState<VerifyEmailScreen> {
       }),
       (_) => setState(() {
         _isSending = false;
-        _info = 'We sent a 6-digit code to your email.';
+        _info = 'Verification link sent — check your inbox.';
         _startCooldown();
       }),
     );
@@ -78,30 +76,32 @@ class _VerifyEmailScreenState extends ConsumerState<VerifyEmailScreen> {
     });
   }
 
-  Future<void> _verify() async {
-    if (_isVerifying || _isSending) return;
-    final code = _codeController.text.trim();
-    if (code.length != 6) {
-      setState(() => _error = 'Enter the 6-digit code.');
-      return;
-    }
+  Future<void> _checkVerified() async {
+    if (_isChecking || _isSending) return;
     setState(() {
-      _isVerifying = true;
+      _isChecking = true;
       _error = null;
     });
-    final result =
-        await ref.read(authRepositoryProvider).verifyEmailCode(code);
+    final result = await ref.read(authRepositoryProvider).checkEmailVerified();
     if (!mounted) return;
     result.fold(
       (failure) => setState(() {
         _error = failure.message;
-        _isVerifying = false;
+        _isChecking = false;
       }),
-      (_) {
+      (verified) {
         _cooldownTimer?.cancel();
         setState(() {
-          _isVerifying = false;
-          _info = 'Email verified!';
+          _isChecking = false;
+          if (verified) {
+            // The auth stream listener below navigates once the reloaded
+            // user (emailVerified: true) hits the stream — the guard on
+            // _navigatedOnVerify prevents double navigation.
+            _info = 'Verified — taking you to the app.';
+          } else {
+            _error = 'Not verified yet — check your inbox (and spam) '
+                'for the link, then try again.';
+          }
         });
       },
     );
@@ -110,10 +110,10 @@ class _VerifyEmailScreenState extends ConsumerState<VerifyEmailScreen> {
   @override
   Widget build(BuildContext context) {
     // Navigate once verification flips the auth stream. The stream delivery
-    // lags the verifyEmailCode call (idTokenChanges), so we react to the
-    // state transition instead of navigating eagerly — eager navigation races
-    // decideRedirect, which still reads emailVerified as false and bounces
-    // back to /verify-email.
+    // lags the reload in checkEmailVerified (idTokenChanges), so we react to
+    // the state transition instead of navigating eagerly — eager navigation
+    // races decideRedirect, which still reads emailVerified as false and
+    // bounces back to /verify-email.
     ref.listen<AsyncValue<AuthUser>>(authStateChangesProvider, (prev, next) {
       final verified = next.value?.emailVerified ?? false;
       if (verified && !_navigatedOnVerify) {
@@ -196,8 +196,11 @@ class _VerifyEmailScreenState extends ConsumerState<VerifyEmailScreen> {
           const Gap(8),
           Text(
             isLocked
-                ? 'Your 7-day verification window has passed. Enter a new code to unlock your account.'
-                : 'We sent a 6-digit code to ${authUser.email.isEmpty ? 'your email' : authUser.email}.',
+                ? 'Your 7-day verification window has passed. Resend the '
+                    'link and verify to unlock your account.'
+                : 'We sent a verification link to '
+                    '${authUser.email.isEmpty ? 'your email' : authUser.email}. '
+                    'Open it and click the link to confirm your account.',
             textAlign: TextAlign.center,
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                   color: AppTheme.textSecondaryDark,
@@ -218,52 +221,31 @@ class _VerifyEmailScreenState extends ConsumerState<VerifyEmailScreen> {
                   textAlign: TextAlign.center,
                   style: const TextStyle(color: Colors.redAccent)),
             ),
-          Semantics(
-            textField: true,
-            label: 'Verification code',
-            child: TextField(
-              controller: _codeController,
-              keyboardType: TextInputType.number,
-              maxLength: 6,
-              textAlign: TextAlign.center,
-              style: const TextStyle(
-                  color: AppTheme.textMainDark,
-                  fontSize: 22,
-                  letterSpacing: 6),
-              decoration: InputDecoration(
-                hintText: '000000',
-                counterText: '',
-                filled: true,
-                fillColor: AppTheme.surfaceDark,
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: const BorderSide(color: EmergeColors.hexLine),
-                ),
-              ),
-            ),
-          ),
           const Gap(16),
-          FilledButton(
-            onPressed: (_isVerifying || _isSending) ? null : _verify,
-            style: FilledButton.styleFrom(
-              backgroundColor: EmergeColors.teal,
-              padding: const EdgeInsets.symmetric(vertical: 16),
+          Semantics(
+            label: 'I have verified my email',
+            child: FilledButton(
+              onPressed: (_isChecking || _isSending) ? null : _checkVerified,
+              style: FilledButton.styleFrom(
+                backgroundColor: EmergeColors.teal,
+                padding: const EdgeInsets.symmetric(vertical: 16),
+              ),
+              child: _isChecking
+                  ? const SizedBox(
+                      height: 20,
+                      width: 20,
+                      child: CircularProgressIndicator(
+                          strokeWidth: 2, color: Colors.black))
+                  : const Text("I've verified — continue",
+                      style: TextStyle(
+                          fontWeight: FontWeight.bold, color: Colors.black)),
             ),
-            child: _isVerifying
-                ? const SizedBox(
-                    height: 20,
-                    width: 20,
-                    child: CircularProgressIndicator(
-                        strokeWidth: 2, color: Colors.black))
-                : const Text('Verify',
-                    style: TextStyle(
-                        fontWeight: FontWeight.bold, color: Colors.black)),
           ),
           const Gap(12),
           OutlinedButton(
-            onPressed: (_cooldown > 0 || _isSending) ? null : _sendCode,
+            onPressed: (_cooldown > 0 || _isSending) ? null : _sendLink,
             child: Text(
-              _cooldown > 0 ? 'Resend code in ${_cooldown}s' : 'Resend code',
+              _cooldown > 0 ? 'Resend link in ${_cooldown}s' : 'Resend link',
             ),
           ),
         ],

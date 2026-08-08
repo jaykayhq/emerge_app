@@ -27,43 +27,61 @@ void main() {
   setUp(() {
     mockAuth = MockAuthRepository();
     when(() => mockAuth.user).thenAnswer((_) => const Stream.empty());
-    when(() => mockAuth.sendEmailVerificationCode())
+    when(() => mockAuth.sendVerificationEmail())
         .thenAnswer((_) async => const Right<Failure, void>(null));
-    when(() => mockAuth.verifyEmailCode(any()))
-        .thenAnswer((_) async => const Right<Failure, void>(null));
+    when(() => mockAuth.checkEmailVerified())
+        .thenAnswer((_) async => const Right<Failure, bool>(true));
   });
 
-  testWidgets('renders code entry and verify button', (tester) async {
+  testWidgets('renders check-your-email title and actions', (tester) async {
     await tester.pumpWidget(_buildTest(mockAuth));
     await tester.pumpAndSettle();
+    // Let the resend cooldown elapse so the label is the plain "Resend link".
+    await tester.pump(const Duration(seconds: 61));
 
     expect(find.text('Verify your email'), findsOneWidget);
-    expect(find.byType(TextField), findsOneWidget);
-    expect(find.text('Verify'), findsOneWidget);
+    expect(find.text("I've verified — continue"), findsOneWidget);
+    expect(find.text('Resend link'), findsOneWidget);
   });
 
-  testWidgets('sends the code on load and surfaces failures', (tester) async {
-    when(() => mockAuth.sendEmailVerificationCode()).thenAnswer(
-        (_) async => Left<Failure, void>(AuthFailure('Too many codes sent recently. Try again later.')));
+  testWidgets('sends the verification email on load and surfaces failures',
+      (tester) async {
+    when(() => mockAuth.sendVerificationEmail()).thenAnswer(
+        (_) async => Left<Failure, void>(
+            AuthFailure('Too many emails sent recently. Try again later.')));
     await tester.pumpWidget(_buildTest(mockAuth));
     await tester.pumpAndSettle();
 
-    expect(find.textContaining('Too many codes'), findsOneWidget);
+    expect(find.textContaining('Too many emails'), findsOneWidget);
   });
 
-  testWidgets('verifies a code and shows success', (tester) async {
+  testWidgets('continue when already verified shows confirmation',
+      (tester) async {
     await tester.pumpWidget(_buildTest(mockAuth));
     await tester.pumpAndSettle();
 
-    await tester.enterText(find.byType(TextField), '123456');
-    await tester.tap(find.text('Verify'));
+    await tester.tap(find.text("I've verified — continue"));
     await tester.pumpAndSettle();
 
-    verify(() => mockAuth.verifyEmailCode('123456')).called(1);
-    expect(find.textContaining('verified'), findsWidgets);
+    verify(() => mockAuth.checkEmailVerified()).called(1);
+    expect(find.textContaining('taking you to the app'), findsOneWidget);
   });
 
-  testWidgets('shows locked variant when past the grace period', (tester) async {
+  testWidgets('continue when not yet verified shows retry guidance',
+      (tester) async {
+    when(() => mockAuth.checkEmailVerified())
+        .thenAnswer((_) async => const Right<Failure, bool>(false));
+    await tester.pumpWidget(_buildTest(mockAuth));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text("I've verified — continue"));
+    await tester.pumpAndSettle();
+
+    expect(find.textContaining('Not verified yet'), findsOneWidget);
+  });
+
+  testWidgets('shows locked variant when past the grace period',
+      (tester) async {
     await tester.pumpWidget(_buildTest(
       mockAuth,
       overrides: [
@@ -74,18 +92,5 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Account locked — verify your email'), findsOneWidget);
-  });
-
-  testWidgets('rejects a short code without calling the repository',
-      (tester) async {
-    await tester.pumpWidget(_buildTest(mockAuth));
-    await tester.pumpAndSettle();
-
-    await tester.enterText(find.byType(TextField), '12');
-    await tester.tap(find.text('Verify'));
-    await tester.pumpAndSettle();
-
-    verifyNever(() => mockAuth.verifyEmailCode(any()));
-    expect(find.text('Enter the 6-digit code.'), findsOneWidget);
   });
 }

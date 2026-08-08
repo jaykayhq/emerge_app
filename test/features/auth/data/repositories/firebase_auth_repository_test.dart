@@ -143,6 +143,33 @@ void main() {
       verifyNever(() => user.delete());
     });
   });
+
+  group('sendVerificationEmail', () {
+    test('sends the native verification email via the current user',
+        () async {
+      when(() => auth.currentUser).thenReturn(user);
+      when(() => user.sendEmailVerification()).thenAnswer((_) async {});
+
+      final repo = buildRepo();
+      final result = await repo.sendVerificationEmail();
+
+      expect(result.isRight(), isTrue);
+      verify(() => user.sendEmailVerification()).called(1);
+    });
+
+    test('returns Left when no user is signed in', () async {
+      when(() => auth.currentUser).thenReturn(null);
+
+      final repo = buildRepo();
+      final result = await repo.sendVerificationEmail();
+
+      expect(result.isLeft(), isTrue);
+      result.fold(
+        (failure) => expect(failure.message, contains('logged in')),
+        (_) => fail('expected a failure'),
+      );
+    });
+  });
 }
 
 class _MockHttpsCallableResult extends Mock implements HttpsCallableResult {}
