@@ -33,7 +33,10 @@ async function run(): Promise<void> {
       const nameRef = db.collection("usernames").doc(candidate);
       const existing = await nameRef.get();
       if (!existing.exists) {
-        batch.set(nameRef, { uid, claimedAt: admin.firestore.FieldValue.serverTimestamp() });
+        batch.set(nameRef, {
+          uid,
+          claimedAt: admin.firestore.FieldValue.serverTimestamp(),
+        });
         claimed++;
         break;
       }
@@ -54,7 +57,9 @@ async function run(): Promise<void> {
     }
   }
   await batch.commit();
-  console.log(`[backfill] claimed=${claimed} skipped=${skipped} collisions=${collisions}`);
+  console.log(
+    `[backfill] claimed=${claimed} skipped=${skipped} collisions=${collisions}`
+  );
 }
 
 run()
