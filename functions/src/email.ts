@@ -1,6 +1,6 @@
 /**
- * Shared transactional-email helper (Resend). Reused by the verification
- * code flow (Task 2) and, later, sub-project 3's marketing drip.
+ * Sends a transactional email via Resend. The calling Cloud Function MUST
+ * declare `secrets: ["RESEND_API_KEY"]` or the key will be undefined here.
  * RESEND_API_KEY lives in function secrets — never client-visible.
  */
 import axios from "axios";
@@ -24,6 +24,12 @@ export async function sendEmail(payload: EmailPayload): Promise<void> {
       subject: payload.subject,
       html: payload.html,
     },
-    { headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" } }
+    {
+      timeout: 10_000,
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+        "Content-Type": "application/json",
+      },
+    }
   );
 }
