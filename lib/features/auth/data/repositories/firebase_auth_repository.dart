@@ -60,7 +60,11 @@ class FirebaseAuthRepository implements AuthRepository {
       case 'unauthenticated':
         return const AuthFailure('Please log in again before continuing.');
       case 'already-exists':
-        return const AuthFailure('This username is already taken. Please choose another.');
+        return AuthFailure(
+          e.message?.isNotEmpty == true
+              ? e.message!
+              : 'This username is already taken. Please choose another.',
+        );
       case 'invalid-argument':
         return AuthFailure(e.message ?? 'Invalid input. Please try again.');
       case 'resource-exhausted':
@@ -416,8 +420,13 @@ class FirebaseAuthRepository implements AuthRepository {
       await FirebaseFunctions.instance
           .httpsCallable('verifyEmailCode')
           .call(<String, dynamic>{'code': code.trim()});
-      // Refresh the local Auth user so emailVerified propagates to the stream.
-      await _firebaseAuth.currentUser?.reload();
+      // Force a token refresh so emailVerified propagates to the
+      // idTokenChanges()-backed user stream immediately.
+      try {
+        await _firebaseAuth.currentUser?.getIdToken(true);
+      } catch (e, s) {
+        AppLogger.w('token refresh after verify failed', error: e, stackTrace: s);
+      }
       return const Right(null);
     } on FirebaseFunctionsException catch (e) {
       AppLogger.w('verifyEmailCode failed', error: e);
@@ -430,11 +439,21 @@ class FirebaseAuthRepository implements AuthRepository {
 
   @override
   Future<Either<Failure, void>> claimUsername(String username) async {
+    final usernameError = AppValidators.validateUsername(username);
+    if (usernameError != null) {
+      return Left(AuthFailure(usernameError));
+    }
     try {
       await FirebaseFunctions.instance
           .httpsCallable('claimUsername')
           .call(<String, dynamic>{'username': username.trim()});
-      await _firebaseAuth.currentUser?.reload();
+      // Force a token refresh so the server-side username claim propagates to
+      // the idTokenChanges()-backed user stream immediately.
+      try {
+        await _firebaseAuth.currentUser?.getIdToken(true);
+      } catch (e, s) {
+        AppLogger.w('token refresh after username claim failed', error: e, stackTrace: s);
+      }
       return const Right(null);
     } on FirebaseFunctionsException catch (e) {
       AppLogger.w('claimUsername failed', error: e);
@@ -451,7 +470,15 @@ class FirebaseAuthRepository implements AuthRepository {
     if (user == null) {
       return const Left(AuthFailure('User not logged in'));
     }
-    await user.reload();
-    return Right(user.emailVerified);
+    try {
+      await user.reload();
+      // reload() replaces FirebaseAuth.currentUser on native; re-read it so
+      // emailVerified is fresh on all platforms.
+      final updated = _firebaseAuth.currentUser;
+      return Right(updated?.emailVerified ?? user.emailVerified);
+    } catch (e, s) {
+      AppLogger.e('checkEmailVerified failed', e, s);
+      return Left(ServerFailure(e.toString()));
+    }
   }
 }
