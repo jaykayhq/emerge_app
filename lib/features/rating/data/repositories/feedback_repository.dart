@@ -1,6 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:emerge_app/core/error/failure.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fpdart/fpdart.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
@@ -26,8 +25,8 @@ class FeedbackRepository {
         'userId': userId,
         'rating': rating,
         'message': message.trim(),
-        if (appVersion != null) 'appVersion': appVersion,
-        if (platform != null) 'platform': platform,
+        'appVersion': ?appVersion,
+        'platform': ?platform,
         'createdAt': FieldValue.serverTimestamp(),
       });
       return const Right(null);
