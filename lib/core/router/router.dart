@@ -73,6 +73,8 @@ class RedirectContext {
   final int? userOnboardingProgress; // null = no user_stats doc yet
   final DateTime? userOnboardingCompletedAt;
   final CreatorOnboardingState? creatorOnboarding; // null = not a creator
+  final bool? emailVerified; // null = unknown; false = unverified
+  final DateTime? emailLockedAt; // null = within grace period
 
   const RedirectContext({
     required this.isLoggedIn,
@@ -81,6 +83,8 @@ class RedirectContext {
     required this.userOnboardingProgress,
     required this.userOnboardingCompletedAt,
     required this.creatorOnboarding,
+    this.emailVerified,
+    this.emailLockedAt,
   });
 }
 
@@ -188,6 +192,19 @@ String? decideRedirect({
 
   // 6. Normal user branch.
   if (ctx.role == UserRole.user) {
+    // Email verification gate. During the 7-day grace period an unverified
+    // user may finish onboarding; once emailLockedAt is set (past grace),
+    // every surface except /verify-email and auth paths is blocked.
+    final unverified = ctx.emailVerified == false;
+    final locked = ctx.emailLockedAt != null;
+    if (unverified) {
+      if (currentPath == '/verify-email') return null;
+      if (isOnAuthPath || isOnNormalOnboardingPath || isOnCreatorOnboardingPath) {
+        return locked ? '/verify-email' : null;
+      }
+      return '/verify-email';
+    }
+
     // Creators-only paths are forbidden here.
     if (isOnCreatorPath || isOnCreatorOnboardingPath) {
       return '/onboarding/identity-studio';
@@ -250,6 +267,7 @@ GoRouter router(Ref ref) {
   ref.listen(currentCreatorOnboardingProvider, (_, _) => refreshNotifier.value++);
   ref.listen(userStatsStreamProvider, (_, _) => refreshNotifier.value++);
   ref.listen(onboardingControllerProvider, (_, _) => refreshNotifier.value++);
+  ref.listen(currentEmailLockedAtProvider, (_, _) => refreshNotifier.value++);
 
   return GoRouter(
     navigatorKey: _rootNavigatorKey,
@@ -279,6 +297,19 @@ GoRouter router(Ref ref) {
       final creatorOnboardingAsync = ref.read(currentCreatorOnboardingProvider);
       final userStatsAsync = ref.read(userStatsStreamProvider);
 
+      // Email lock read is guarded too: if the provider isn't ready during
+      // build, treat the user as within the grace period rather than throwing.
+      DateTime? emailLockedAt;
+      try {
+        final emailLockedAtAsync = ref.read(currentEmailLockedAtProvider);
+        emailLockedAt = emailLockedAtAsync is AsyncData
+            ? emailLockedAtAsync.value
+            : null;
+      } catch (e) {
+        debugPrint(
+            '[Router] emailLockedAt provider not ready during redirect, deferring: $e');
+      }
+
       final role = roleAsync is AsyncData ? roleAsync.value : null;
       final creatorOnboarding = creatorOnboardingAsync is AsyncData
           ? creatorOnboardingAsync.value
@@ -294,6 +325,8 @@ GoRouter router(Ref ref) {
           userOnboardingProgress: userStats?.onboardingProgress,
           userOnboardingCompletedAt: userStats?.onboardingCompletedAt,
           creatorOnboarding: creatorOnboarding,
+          emailVerified: authState.value?.emailVerified,
+          emailLockedAt: emailLockedAt,
         ),
       );
     },

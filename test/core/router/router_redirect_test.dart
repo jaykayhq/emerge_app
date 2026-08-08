@@ -436,4 +436,91 @@ void main() {
       );
     });
   });
+
+  group('email verification gate', () {
+    RedirectContext unverifiedCtx({DateTime? emailLockedAt}) {
+      return RedirectContext(
+        isLoggedIn: true,
+        role: UserRole.user,
+        isFirstLaunch: false,
+        userOnboardingProgress: 4,
+        userOnboardingCompletedAt: DateTime(2026, 1, 1),
+        creatorOnboarding: null,
+        emailVerified: false,
+        emailLockedAt: emailLockedAt,
+      );
+    }
+
+    test('unverified normal user on a shell path -> /verify-email', () {
+      expect(
+        decideRedirect(currentPath: '/timeline', ctx: unverifiedCtx()),
+        '/verify-email',
+      );
+    });
+
+    test('unverified normal user on /verify-email -> stays', () {
+      expect(
+        decideRedirect(currentPath: '/verify-email', ctx: unverifiedCtx()),
+        isNull,
+      );
+    });
+
+    test('unverified normal user mid-onboarding -> stays (grace period)', () {
+      final ctx = RedirectContext(
+        isLoggedIn: true,
+        role: UserRole.user,
+        isFirstLaunch: false,
+        userOnboardingProgress: 1,
+        userOnboardingCompletedAt: null,
+        creatorOnboarding: null,
+        emailVerified: false,
+        emailLockedAt: null,
+      );
+      expect(
+        decideRedirect(currentPath: '/onboarding/interests', ctx: ctx),
+        isNull,
+      );
+    });
+
+    test('locked (past grace) user on onboarding -> /verify-email', () {
+      expect(
+        decideRedirect(
+          currentPath: '/onboarding/interests',
+          ctx: unverifiedCtx(emailLockedAt: DateTime(2026, 1, 8)),
+        ),
+        '/verify-email',
+      );
+    });
+
+    test('verified normal user is unaffected', () {
+      const ctx = RedirectContext(
+        isLoggedIn: true,
+        role: UserRole.user,
+        isFirstLaunch: false,
+        userOnboardingProgress: 4,
+        userOnboardingCompletedAt: null,
+        creatorOnboarding: null,
+        emailVerified: true,
+        emailLockedAt: null,
+      );
+      expect(decideRedirect(currentPath: '/timeline', ctx: ctx), isNull);
+    });
+
+    test('creator is never gated by email verification', () {
+      final ctx = RedirectContext(
+        isLoggedIn: true,
+        role: UserRole.creator,
+        isFirstLaunch: false,
+        userOnboardingProgress: null,
+        userOnboardingCompletedAt: null,
+        creatorOnboarding: CreatorOnboardingState.empty,
+        emailVerified: false,
+        emailLockedAt: null,
+      );
+      expect(
+        decideRedirect(currentPath: '/world-map', ctx: ctx),
+        '/onboarding/creator/archetype',
+      );
+    });
+  });
 }

@@ -129,3 +129,16 @@ final currentCreatorOnboardingProvider =
     completedAt: profile.creatorOnboardingCompletedAt,
   );
 });
+
+/// Reads `users/{uid}.emailLockedAt` (server-written when the 7-day
+/// verification grace period expires). Null when not locked.
+final currentEmailLockedAtProvider = FutureProvider<DateTime?>((ref) async {
+  final authUser = await ref.watch(authStateChangesProvider.future);
+  if (authUser.isEmpty) return null;
+  final firestore = FirebaseFirestore.instance;
+  final doc = await firestore.collection('users').doc(authUser.id).get();
+  final raw = doc.data()?['emailLockedAt'];
+  if (raw is Timestamp) return raw.toDate();
+  if (raw is DateTime) return raw;
+  return null;
+});
