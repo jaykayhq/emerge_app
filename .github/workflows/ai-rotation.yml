@@ -31,7 +31,12 @@ jobs:
       - name: Install Kilo CLI + polli
         run: |
           npm install -g @kilocode/cli
-          npm install -g polli
+          npm install -g @pollinations/cli@latest
+
+      - name: Authenticate polli
+        env:
+          POLLINATIONS_API_KEY: ${{ secrets.POLLINATIONS_API_KEY }}
+        run: printf '%s' "$POLLINATIONS_API_KEY" | polli auth login --with-token
 
       - name: Run AI rotation agent
         env:
