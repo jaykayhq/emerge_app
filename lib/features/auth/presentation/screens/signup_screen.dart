@@ -93,8 +93,11 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
           (error) => throw Exception('Failed to create profile: $error'),
           (_) async {
             if (mounted) {
-              // Navigate to onboarding - user will complete all steps before dashboard
-              context.go('/onboarding/identity-studio');
+              if (user.emailVerified) {
+                context.go('/onboarding/identity-studio');
+              } else {
+                context.go('/verify-email');
+              }
             }
           },
         );
@@ -189,7 +192,11 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
           await profileRepo.createProfile(profile);
 
           if (mounted) {
-            context.go('/onboarding/identity-studio');
+            context.go(
+              user.emailVerified
+                  ? '/onboarding/identity-studio'
+                  : '/verify-email',
+            );
           }
         },
       );

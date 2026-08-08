@@ -95,8 +95,38 @@ void main() {
     await tester.pumpAndSettle();
   });
 
-  testWidgets('shows error on auth failure', (tester) async {
+  testWidgets('unverified signup calls the repository and does not crash',
+      (tester) async {
     await setMobileViewport(tester);
+    when(() => mockAuth.signUpWithEmailAndPassword(
+      email: any(named: 'email'),
+      password: any(named: 'password'),
+      username: any(named: 'username'),
+    )).thenAnswer((_) async => right<Failure, AuthUser>(
+      AuthUser(id: 'u1', email: 't@example.com', displayName: 'TestUser'),
+    ));
+
+    await tester.pumpWidget(_buildTest(mockAuth));
+    await tester.pumpAndSettle();
+
+    await tester.enterText(find.byType(TextFormField).at(0), 'TestUser');
+    await tester.enterText(find.byType(TextFormField).at(1), 't@example.com');
+    await tester.enterText(find.byType(TextFormField).at(2), 'Str0ngP@sswd!');
+    await tester.enterText(find.byType(TextFormField).at(3), 'Str0ngP@sswd!');
+    await tester.tap(find.text('Sign Up'));
+    await tester.pumpAndSettle();
+
+    verify(
+      () => mockAuth.signUpWithEmailAndPassword(
+        email: 't@example.com',
+        password: 'Str0ngP@sswd!',
+        username: 'TestUser',
+      ),
+    ).called(1);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('shows error on auth failure', (tester) async {    await setMobileViewport(tester);
 
     when(() => mockAuth.signUpWithEmailAndPassword(
       email: any(named: 'email'),

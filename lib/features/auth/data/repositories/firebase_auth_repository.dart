@@ -177,6 +177,21 @@ class FirebaseAuthRepository implements AuthRepository {
         return const Left(AuthFailure('User creation failed'));
       }
 
+      // Claim the globally-unique username. On collision we delete the
+      // just-created auth account (client SDK allows self-delete) and return
+      // the error so the form can retry with a different name — no orphaned
+      // Firestore docs, no half-registered account.
+      final claim = await claimUsername(sanitizedUsername);
+      final claimFailure = claim.fold<Failure?>((f) => f, (_) => null);
+      if (claimFailure != null) {
+        try {
+          await user.delete();
+        } catch (_) {
+          // Best-effort rollback; deleteMyAccount remains the cleanup path.
+        }
+        return Left(claimFailure);
+      }
+
       // Update display name (username) - use sanitized version
       await user.updateDisplayName(sanitizedUsername);
       await user.reload(); // Reload to get updated info
