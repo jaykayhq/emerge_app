@@ -14,6 +14,8 @@ import 'package:emerge_app/features/social/presentation/providers/challenge_prov
 import 'package:emerge_app/features/social/presentation/providers/challenge_bundle_provider.dart';
 import 'package:emerge_app/features/social/presentation/widgets/quest_confirmation_sheet.dart';
 import 'package:emerge_app/features/social/domain/services/affiliate_reward.dart';
+import 'package:emerge_app/features/rating/domain/rating_prompt_gate.dart';
+import 'package:emerge_app/features/rating/presentation/providers/rating_prompt_provider.dart';
 import 'package:emerge_app/features/social/presentation/widgets/sponsor_reward_card.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -680,6 +682,13 @@ class _ChallengeDetailScreenState extends ConsumerState<ChallengeDetailScreen> {
       ref.invalidate(userStatsStreamProvider);
       ref.invalidate(recapRefreshCounterProvider);
       final isCompleted = newProgress >= challenge.totalDays;
+      // Peak-satisfaction prompt on challenge completion; the gate's version +
+      // cooldown rules make this effectively one-shot per version.
+      if (isCompleted && screenContext.mounted) {
+        ref.read(ratingPromptControllerProvider).notifyMilestone(
+              RatingPromptSignal.challengeCompleted,
+            );
+      }
       _showSuccess(
         screenContext,
         isCompleted

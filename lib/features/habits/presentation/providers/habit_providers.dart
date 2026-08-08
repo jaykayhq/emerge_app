@@ -22,6 +22,8 @@ import 'package:emerge_app/features/monetization/presentation/providers/subscrip
 import 'package:emerge_app/features/gamification/presentation/providers/user_stats_providers.dart';
 import 'package:emerge_app/features/gamification/presentation/providers/recap_hub_provider.dart';
 import 'package:emerge_app/features/narrator/domain/models/narrator_trigger.dart';
+import 'package:emerge_app/features/rating/domain/rating_prompt_gate.dart';
+import 'package:emerge_app/features/rating/presentation/providers/rating_prompt_provider.dart';
 import 'package:emerge_app/features/social/presentation/providers/tribes_provider.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
@@ -266,6 +268,14 @@ Future<HabitCompletionResult> completeHabit(Ref ref, String habitId) async {
                       .read(cueNotifierProvider.notifier)
                       .queueMilestoneCue(habit, newStreak);
                 }
+              }
+
+              // Peak-satisfaction prompt: exactly streak 7 only, so the rating
+              // dialog never re-pings on later milestones in this version.
+              if (newStreak == 7 && ref.mounted) {
+                ref.read(ratingPromptControllerProvider).notifyMilestone(
+                      RatingPromptSignal.sevenDayStreak,
+                    );
               }
 
               final momentumAfter = habit.momentumScore + 10 > 100
