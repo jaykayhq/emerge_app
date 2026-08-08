@@ -120,6 +120,23 @@ final tribeChallengesProvider = StreamProvider<List<Challenge>>((ref) {
   );
 });
 
+/// Server-published challenge catalog (public read per Firestore rules).
+/// Only live statuses are surfaced; expired entries are filtered here so the
+/// feed never shows retired challenges.
+final publicChallengesProvider =
+    StreamProvider.autoDispose<List<Challenge>>((ref) {
+  final firestore = ref.watch(firestoreProvider);
+  return firestore.collection('challenges').snapshots().map(
+        (snap) => snap.docs
+            .where((doc) {
+              final status = doc.data()['status'] as String?;
+              return status == 'featured' || status == 'active';
+            })
+            .map((doc) => Challenge.fromMap(doc.data(), id: doc.id))
+            .toList(),
+      );
+});
+
 /// Catalog challenges authored by [uid] (verified creators).
 ///
 /// The create-challenge dialog writes creator-authored challenges to the
