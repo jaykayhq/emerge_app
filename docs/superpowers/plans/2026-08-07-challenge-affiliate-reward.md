@@ -89,6 +89,14 @@ void main() {
       expect(reward!.title, 'Exclusive gear');
       expect(reward.sponsor, 'Sponsor');
     });
+
+    test('falls back to the generic sponsor-reward literal when all text is empty', () {
+      final reward = affiliateRewardFor(
+        _challenge(rewardDescription: null, reward: '', sponsor: null),
+      );
+      expect(reward!.title, 'Sponsor reward');
+      expect(reward.sponsor, 'Sponsor');
+    });
   });
 
   group('affiliateRewardClaimable', () {
@@ -114,6 +122,24 @@ void main() {
           _challenge(status: ChallengeStatus.active, currentDay: 3, totalDays: 7),
         ),
         isFalse,
+      );
+    });
+
+    test('false for a never-started challenge (both days default to zero)', () {
+      expect(
+        affiliateRewardClaimable(
+          _challenge(status: ChallengeStatus.featured, currentDay: 0, totalDays: 0),
+        ),
+        isFalse,
+      );
+    });
+
+    test('true from status alone even before the final day', () {
+      expect(
+        affiliateRewardClaimable(
+          _challenge(status: ChallengeStatus.completed, currentDay: 3, totalDays: 7),
+        ),
+        isTrue,
       );
     });
   });
@@ -175,14 +201,15 @@ AffiliateReward? affiliateRewardFor(Challenge challenge) {
 /// Whether a challenge's sponsor reward may be claimed (the quest is finished).
 bool affiliateRewardClaimable(Challenge challenge) {
   return challenge.status == ChallengeStatus.completed ||
-      challenge.currentDay >= challenge.totalDays;
+      (challenge.totalDays > 0 &&
+          challenge.currentDay >= challenge.totalDays);
 }
 ```
 
 - [ ] **Step 4: Run test to verify it passes**
 
 Run: `flutter test test/features/social/domain/services/affiliate_reward_test.dart`
-Expected: PASS (all 7 tests)
+Expected: PASS (all 10 tests)
 
 - [ ] **Step 5: Commit**
 
@@ -341,18 +368,18 @@ class AffiliateRewardService {
   ) =>
       FirebaseAnalytics.instance.logEvent(name: name, parameters: parameters);
 
-  /// Validates the reward URL, records [AnalyticsEvents.affiliateLinkClicked],
-  /// then opens the link. Returns whether the link was opened.
+  /// Validates the reward URL, records [AnalyticsEvents.affiliateLinkClicked]
+  /// best-effort, then opens the link. Returns whether the link was opened.
   Future<bool> claimReward({
     required Challenge challenge,
     required AffiliateReward reward,
     String? userId,
   }) async {
+    final uri = Uri.tryParse(reward.url);
+    if (uri == null || (uri.scheme != 'http' && uri.scheme != 'https')) {
+      return false;
+    }
     try {
-      final uri = Uri.tryParse(reward.url);
-      if (uri == null || (uri.scheme != 'http' && uri.scheme != 'https')) {
-        return false;
-      }
       await _logEvent(AnalyticsEvents.affiliateLinkClicked, {
         AnalyticsParameters.challengeId: challenge.id,
         AnalyticsParameters.challengeName: challenge.title,
@@ -365,12 +392,19 @@ class AffiliateRewardService {
         if (challenge.affiliatePartnerId != null)
           AnalyticsParameters.partnerId: challenge.affiliatePartnerId!,
       });
+    } catch (_) {
+      // Telemetry is best-effort — never let it veto a legitimate claim.
+    }
+    try {
       return _openUrl(uri);
     } catch (_) {
       return false;
     }
   }
 }
+```
+
+> **Final-review addendum (2026-08-07):** `_logEvent` was originally awaited inside the same try/catch as `_openUrl`, so a telemetry failure would block the reward open and surface a misleading "try again later" snackbar. The open is now attempted regardless; only the open's own failure returns false.
 ```
 
 - [ ] **Step 4: Run test to verify it passes**
@@ -755,13 +789,16 @@ with:
     Challenge challenge,
     AffiliateReward reward,
   ) async {
+    if (_claimingReward) return;
     final user = ref.read(authStateChangesProvider).value;
-    final service = AffiliateRewardService();
+    final service = ref.read(affiliateRewardServiceProvider);
+    _claimingReward = true;
     final launched = await service.claimReward(
       challenge: challenge,
       reward: reward,
       userId: user?.id,
     );
+    _claimingReward = false;
     if (!launched && screenContext.mounted) {
       ScaffoldMessenger.of(screenContext).showSnackBar(
         const SnackBar(
@@ -772,6 +809,23 @@ with:
     }
   }
 ```
+
+5. Declare the claim-in-progress flag on the State class (next to the existing fields at the top of `_ChallengeDetailScreenState`):
+
+```dart
+  /// Guards against duplicate claim taps (duplicate affiliate click events).
+  bool _claimingReward = false;
+```
+
+6. Add the service provider to `lib/features/social/presentation/providers/challenge_provider.dart` (follow the plain-`Provider` style of `challengeRepositoryProvider`) with the matching import for `AffiliateRewardService`:
+
+```dart
+final affiliateRewardServiceProvider = Provider<AffiliateRewardService>((ref) {
+  return AffiliateRewardService();
+});
+```
+
+> **Post-review addendum (2026-08-07):** Steps 5-6 exist because inline `AffiliateRewardService()` construction dropped the injectable seam established in Tasks 1-3, leaving the claim/failure path untestable at the screen level and unguarded against double taps. `ref.read(affiliateRewardServiceProvider)` restores the seam (screen tests override the provider with injected fakes) and `_claimingReward` prevents duplicate `affiliate_link_clicked` events. The Task 4 commit should now include `challenge_provider.dart`.
 
 - [ ] **Step 4: Run tests to verify they pass**
 
