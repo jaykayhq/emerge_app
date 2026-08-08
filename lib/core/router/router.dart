@@ -193,8 +193,9 @@ String? decideRedirect({
   // 6. Normal user branch.
   if (ctx.role == UserRole.user) {
     // Email verification gate. During the 7-day grace period an unverified
-    // user may finish onboarding; once emailLockedAt is set (past grace),
-    // every surface except /verify-email and auth paths is blocked.
+    // user may finish onboarding and use auth surfaces; once emailLockedAt
+    // is set (past grace) every surface except /verify-email itself is
+    // blocked — locked users can only verify.
     final unverified = ctx.emailVerified == false;
     final locked = ctx.emailLockedAt != null;
     if (unverified) {
@@ -299,6 +300,7 @@ GoRouter router(Ref ref) {
 
       // Email lock read is guarded too: if the provider isn't ready during
       // build, treat the user as within the grace period rather than throwing.
+      // Error ⇒ treat as within grace; a stale lock only relaxes an already-gated path.
       DateTime? emailLockedAt;
       try {
         final emailLockedAtAsync = ref.read(currentEmailLockedAtProvider);

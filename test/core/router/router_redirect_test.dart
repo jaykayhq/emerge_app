@@ -506,6 +506,37 @@ void main() {
       expect(decideRedirect(currentPath: '/timeline', ctx: ctx), isNull);
     });
 
+    test('unverified within grace on /login -> stays (grace exemption)', () {
+      final ctx = RedirectContext(
+        isLoggedIn: true,
+        role: UserRole.user,
+        isFirstLaunch: false,
+        userOnboardingProgress: 4,
+        userOnboardingCompletedAt: null,
+        creatorOnboarding: null,
+        emailVerified: false,
+        emailLockedAt: null,
+      );
+      expect(decideRedirect(currentPath: '/login', ctx: ctx), isNull);
+    });
+
+    test('locked user on /login -> /verify-email', () {
+      final ctx = RedirectContext(
+        isLoggedIn: true,
+        role: UserRole.user,
+        isFirstLaunch: false,
+        userOnboardingProgress: 4,
+        userOnboardingCompletedAt: null,
+        creatorOnboarding: null,
+        emailVerified: false,
+        emailLockedAt: DateTime(2026, 1, 8),
+      );
+      expect(
+        decideRedirect(currentPath: '/login', ctx: ctx),
+        '/verify-email',
+      );
+    });
+
     test('creator is never gated by email verification', () {
       final ctx = RedirectContext(
         isLoggedIn: true,
