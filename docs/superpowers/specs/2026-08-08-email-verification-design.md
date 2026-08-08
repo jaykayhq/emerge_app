@@ -1,6 +1,6 @@
 # Email Verification (Grace-Period) & Username Uniqueness — Design
 
-**Date:** 2026-08-08
+**Date:** 2026-08-08 (rev. 2026-08-08 — delivery switched to Firebase-native link, per developer decision)
 **App:** Emerge — Identity-First Habit Formation
 
 ---
@@ -43,62 +43,52 @@ This sub-project ships **#1 (verification)**, the first of four planned subsyste
 
 ## 3. Data Model
 
-Two new Firestore collections, both **functions-only** (rules deny client read/write, mirroring `creator_invite_codes`):
+One new Firestore collection, **functions-only** (rules deny client read/write, mirroring `creator_invite_codes`). The `email_verifications` collection from the original rev was removed with the code system — verification is Firebase's native link flow.
 
 ```
-email_verifications/{uid}
-  codeHash:    string          // SHA-256(salt + code), never the raw code
-  codeSalt:    string
-  expiresAt:   timestamp       // 10-minute TTL
-  attempts:    number          // max 5 per code, then requires re-send
-  lastSentAt:  timestamp
-  resendCount: number          // 5/hour, 20/day
-  createdAt:   timestamp
-  verified:    bool
-
 usernames/{usernameLowercase}
   uid:         string          // claims the name; doc id is the key
   claimedAt:   timestamp
 ```
 
-Mirrored fields on the existing `users/{uid}` doc (server-written via Admin SDK):
+Mirrored fields on the existing `users/{uid}` doc (written by the client best-effort after the native link verifies, or by the grace-lock function):
 - `emailVerified: bool`
 - `emailLockedAt: timestamp` (set when the 7-day grace period expires)
 
-Firebase Auth `emailVerified` flag is the **source of truth** (native flag, set by Admin SDK on code success — never via the client).
+Firebase Auth `emailVerified` flag is the **source of truth** (native flag, set by Firebase when the user clicks the verification link — never by the client).
 
 ---
 
 ## 4. Cloud Functions — `functions/src/email_verification.ts`
 
-Server-authoritative, modeled on `creator_invites.ts` (hash-at-rest, doc-as-lock, rules deny client access).
+Server-authoritative. **Rev 2026-08-08:** the code-delivery callables were removed —
+verification now uses **Firebase Auth's native `sendEmailVerification()` link flow**
+(developer decision: zero cost, no provider). The client calls `sendEmailVerification()`
+on the Firebase user; Firebase emails a click-to-verify link; Firebase sets the
+`emailVerified` flag server-side; the app refreshes the user and the router gate
+releases. Only the grace-period lock remains as a Cloud Function.
 
 ### 4.1 `sendEmailVerificationCode` (onCall)
 
-1. Requires auth. Throws `unauthenticated` otherwise.
-2. Rate-limit: `resendCount >= 5/hour` or `>= 20/day` → `resource-exhausted`.
-3. Generate a 6-digit code from `CODE_CHARS` (`0-9`, no ambiguous chars needed — digits only, `Math.floor(Math.random()*10)` or `randomInt` from `node:crypto`, matching the repo's `randomInt` usage).
-4. Store `{ codeHash: sha256(salt+code), codeSalt, expiresAt: now+10min, attempts: 0, ... }` in `email_verifications/{uid}` (merge).
-5. Send email via Resend REST API (`POST https://api.resend.com/emails` using the existing `axios` dependency; `RESEND_API_KEY` from functions env, never client-visible).
-6. Return `{ ok: true, expiresInSeconds: 600 }`.
+REMOVED in rev 2026-08-08. Replaced by the Firebase SDK's native
+`FirebaseAuth.currentUser.sendEmailVerification()` (client-side call, no custom
+function, no secret). The `email_verifications` collection is obsolete.
 
 ### 4.2 `verifyEmailCode` (onCall)
 
-1. Requires auth. Validates 6-digit numeric format (`invalid-argument`).
-2. Read `email_verifications/{uid}`; missing or expired (`expiresAt < now`) → `not-found` / `failed-precondition` with re-send guidance.
-3. `attempts >= 5` → `resource-exhausted`, require re-send.
-4. Constant-time compare (`crypto.timingSafeEqual`) of `sha256(salt+submitted)` vs `codeHash`. On mismatch: increment `attempts`, throw `invalid-argument` ("wrong code").
-5. On match (single-use): delete the code doc (or mark `verified: true` + clear hash) **and** in a transaction:
-   - Admin SDK `updateUser(uid, { emailVerified: true })` — sets the Auth flag (the gate for the router).
-   - `users/{uid}` merge: `{ emailVerified: true, emailLockedAt: FieldValue.delete() }` (clears any prior lock).
-6. Fire-and-forget the "Welcome — you're verified" email (Section 7).
-7. Return `{ ok: true }`.
+REMOVED in rev 2026-08-08. Firebase processes the click-to-verify link and sets
+`emailVerified` server-side; the client re-reads the flag via the auth stream
+after `getIdToken(true)`. On verification the client also mirrors
+`users/{uid}.emailVerified: true` (best-effort, for the grace-lock mirror).
 
 ### 4.3 `enforceEmailGracePeriod` (onSchedule, daily)
 
-1. Query users created > 7 days ago with `emailVerified != true` (requires a composite index on `users` for `createdAt` + `emailVerified`; note index creation in the plan).
+1. Query users created > 7 days ago with `emailVerified != true` (single-field
+   `createdAt` range; `emailVerified` filtering happens in memory — no composite
+   index required).
 2. For each: merge `users/{uid}` `{ emailLockedAt: FieldValue.serverTimestamp() }`.
-3. Re-verified users get the lock cleared by 4.2 step 5.
+3. Re-verified users get the lock cleared when the client mirrors
+   `emailVerified: true` (or by the next daily run skipping them).
 
 ### 4.4 `claimUsername` (onCall)
 
@@ -110,15 +100,9 @@ Server-authoritative, modeled on `creator_invites.ts` (hash-at-rest, doc-as-lock
 
 ### 4.5 Shared email helper — `functions/src/email.ts`
 
-```ts
-export async function sendEmail(opts: {
-  to: string;
-  subject: string;
-  html: string;
-}): Promise<void>  // axios POST to Resend; throws on failure, logged
-```
-
-Reused by 4.1, 4.2 (welcome), and later sub-project 3.
+REMOVED in rev 2026-08-08 — no custom email sending remains; the app uses
+Firebase's native verification email. Sub-project 3 (marketing email) must
+re-open the provider decision independently.
 
 ---
 
@@ -146,15 +130,19 @@ Extend `RedirectContext` (`lib/core/router/router.dart:77`) with:
 - `emailVerified: bool?`
 - `emailLockedAt: DateTime?`
 
-New `decideRedirect` branch (pure, follows the existing TDD pattern, **no `ref.watch` inside redirect**): authenticated + role `user` + `emailVerified == false` → hold current path, redirect to `/verify-email`. When `emailLockedAt != null`, the same screen renders in "locked" mode (with re-send + code entry). Verified users pass through to the shell as today.
+New `decideRedirect` branch (pure, follows the existing TDD pattern, **no `ref.watch` inside redirect**): authenticated + role `user` + `emailVerified == false` → hold current path, redirect to `/verify-email`. When `emailLockedAt != null`, the same screen renders in "locked" mode (with a re-send link). Verified users pass through to the shell as today.
 
 Watch `emailVerified` outside the redirect closure (e.g. the auth stream / user provider), `ref.read` inside with `try/catch` returning `null` on failure (web DDC race guard, per AGENTS.md).
 
 ### 5.4 `VerifyEmailScreen` (new, top-level route `/verify-email`)
 
-- Shows the account email, a 6-digit OTP field, "Send code" (auto-fires on entry, cooldown timer for re-send), "wrong code / expired / locked" states with actionable copy, and a "verified" success state that resumes the held path (`context.go` to the held location or onboarding).
+**Rev 2026-08-08:** now a "check your email" screen, not an OTP field.
+
+- On load: calls `FirebaseAuth.currentUser.sendEmailVerification()` (native link) with a cooldown for re-send.
+- Shows the account email and "We sent a verification link to …". A "I've verified — continue" action re-reads the auth state (`getIdToken(true)` + stream) and resumes when `emailVerified == true`.
+- The auth stream `ref.listen` auto-advances the moment Firebase sets `emailVerified` (user clicks the link in a foreground session), with a one-shot guard.
+- Locked mode (past grace): same screen, locked copy, still lets the user re-send + continue.
 - Styling follows `signup_screen.dart` (glass surface, `EmergeColors`, `ResponsiveLayout` for tablet).
-- Reads held path from the router state so the user returns where they were headed.
 
 ### 5.5 Settings (optional surface, low-risk)
 
@@ -164,23 +152,21 @@ A small "Verify your email" tile in Settings when `emailVerified == false`, navi
 
 ## 6. Firestore Rules
 
-Add to `firestore.rules` (both collections deny client access, matching `creator_invite_codes`):
+Add to `firestore.rules` (one deny block; `email_verifications` was removed with the code system):
 
 ```firestore
-match /email_verifications/{uid} {
-  allow read, write: if false;
-}
-
 match /usernames/{username} {
   allow read, write: if false;
 }
 ```
 
+The `users/{uid}` update rule additionally forbids client writes to `emailVerified` / `emailLockedAt` (server-owned mirror fields).
+
 ---
 
 ## 7. Post-Verification Email
 
-On `verifyEmailCode` success, fire `sendEmail` with a "Welcome to Emerge — you're verified" HTML template (branded, minimal). This is the seam where sub-project 3 hooks the marketing drip later; the helper is shared so no rework.
+REMOVED in rev 2026-08-08 — the native link flow has no custom welcome email hook. The marketing welcome email moves entirely to sub-project 3, which re-opens the email-provider decision independently.
 
 ---
 
@@ -195,8 +181,8 @@ New script `functions/src/backfill_usernames.ts` (one-off, run via `npm run` scr
 
 ## 9. Error Handling & Security
 
-- **Codes:** hashed + salted at rest (never stored plaintext), constant-time compare, single-use, 10-min TTL, 5-attempt cap, rate-limited resend (5/hr, 20/day). Attacker cannot brute-force a 6-digit code within the TTL (10^6 space, 5 attempts, constant-time).
-- **Secrets:** `RESEND_API_KEY` in functions env/config only — never in client code or Firestore rules.
+- **Verification:** Firebase's native `sendEmailVerification()` flow — no codes, hashes, TTLs, or custom secrets. Firebase enforces its own resend/rate limits. The `emailVerified` flag is set server-side by Firebase; the client never writes it (rules forbid).
+- **Secrets:** none for this feature. (Sub-project 3 marketing email will re-open the provider decision.)
 - **Username squatting:** doc-id-as-lock transaction; claim and displayName write are the same atomic operation; no client-write path exists (rules deny).
 - **Grace lock:** server-written `emailLockedAt`; client only reads it. Re-verification clears it atomically.
 - **fpdart:** all repository returns are `Either<Failure, T>`; Cloud Function errors map to user-facing messages via `.fold`.
@@ -232,17 +218,17 @@ Order: failing test → watch fail → minimal implementation → refactor. No p
 
 ## 11. Rollout & Operations
 
-1. Deploy functions (`firebase deploy --only functions`), including `RESEND_API_KEY` config and the new composite index on `users`.
-2. Run `backfill_usernames` once.
+1. Deploy functions (`firebase deploy --only functions`) and rules (`firebase deploy --only firestore:rules`). No secret setup needed for this feature.
+2. Run `backfill_usernames` once (requires `GOOGLE_APPLICATION_CREDENTIALS`).
 3. Release app update (web + stores).
-4. Verify: signup a fresh email/password account → code arrives → verify → welcome email → after (optionally shortened, dev) grace period, login locks.
-5. Sub-project 3 (marketing drip) later reuses `email.ts`.
+4. Verify: signup a fresh email/password account → Firebase sends the verification link → click it → `emailVerified` flips → router gate releases → after (optionally shortened, dev) grace period, login locks.
+5. Sub-project 3 (marketing drip) is planned separately with its own provider decision.
 
 ---
 
 ## 12. Open Items / Assumptions
 
-- **Resend** free tier (3,000/mo, 100/day) is the chosen provider — confirmed by the developer. API key provisioning is ops, not code.
-- Composite index `users (createdAt asc, emailVerified asc)` required by `enforceEmailGracePeriod` — create during function deploy.
+- Verification delivery is **Firebase Auth's native link flow** (rev 2026-08-08) — zero cost, no provider, no custom secret.
+- The grace-lock query uses a single-field `createdAt` range; `emailVerified` filtering happens in memory, so no composite index is required.
 - Grace period is a hard-coded 7 days in the scheduled function; consider a `RemoteConfig`/env value only if a later change asks for it (YAGNI now).
 - Google sign-in path (web redirect + native) remains unchanged; its accounts are considered verified at creation (Firebase sets `emailVerified` for Google federated accounts).
