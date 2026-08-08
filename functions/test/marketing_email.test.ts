@@ -98,9 +98,11 @@ const makeQuery = (): QueryMock => ({
   startAfter: jest.fn(() => makeQuery()),
 });
 
+const whereMock = jest.fn(() => makeQuery());
+
 const firestoreMock = () => ({
   collection: jest.fn(() => ({
-    where: jest.fn(() => makeQuery()),
+    where: whereMock,
     doc: jest.fn((id: string) => ({ id })),
   })),
   batch,
@@ -133,6 +135,11 @@ describe("enforceReengagementDripInternal", () => {
       })],
     });
     await enforceReengagementDripInternal(firestoreMock(), nowMs);
+    expect(whereMock).toHaveBeenCalledWith(
+      "createdAt",
+      "<=",
+      expect.any(Date)
+    );
     expect(axiosPost).toHaveBeenCalledTimes(1);
     const [, body] = axiosPost.mock.calls[0];
     expect(body.to).toBe("a@b.com");
@@ -172,6 +179,7 @@ describe("enforceReengagementDripInternal", () => {
     });
     await enforceReengagementDripInternal(firestoreMock(), nowMs);
     expect(axiosPost).not.toHaveBeenCalled();
+    expect(batchSet).not.toHaveBeenCalled();
   });
 
   it("skips users with no valid email", async () => {
@@ -185,6 +193,7 @@ describe("enforceReengagementDripInternal", () => {
     });
     await enforceReengagementDripInternal(firestoreMock(), nowMs);
     expect(axiosPost).not.toHaveBeenCalled();
+    expect(batchSet).not.toHaveBeenCalled();
   });
 
   it("does not mark users whose send failed", async () => {
@@ -199,6 +208,7 @@ describe("enforceReengagementDripInternal", () => {
       })],
     });
     await enforceReengagementDripInternal(firestoreMock(), nowMs);
+    expect(axiosPost).toHaveBeenCalledTimes(1);
     expect(batchSet).not.toHaveBeenCalled();
     expect(batchCommit).not.toHaveBeenCalled();
   });
