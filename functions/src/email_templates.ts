@@ -11,9 +11,18 @@ const buttonStyles =
   "display:inline-block;margin-top:20px;padding:14px 28px;border-radius:12px;" +
   "background:#2DD4BF;color:#0A0A1A;font-weight:bold;text-decoration:none";
 
+function escapeHtml(value: string): string {
+  return value
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
 function safeName(name: string | undefined): string {
   const trimmed = (name ?? "").trim();
-  return trimmed.length > 0 ? trimmed : "friend";
+  return trimmed.length > 0 ? escapeHtml(trimmed) : "friend";
 }
 
 export function buildWelcomeHtml(name?: string): string {

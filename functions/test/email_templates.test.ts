@@ -1,4 +1,7 @@
-import { buildWelcomeHtml, buildReengagementHtml } from "../src/email_templates";
+import {
+  buildWelcomeHtml,
+  buildReengagementHtml,
+} from "../src/email_templates";
 
 describe("email templates", () => {
   it("welcome html includes the display name and CTA", () => {
@@ -15,7 +18,15 @@ describe("email templates", () => {
   });
 
   it("handles a missing name gracefully", () => {
-    expect(buildWelcomeHtml(undefined)).toContain("Welcome");
+    expect(buildWelcomeHtml(undefined)).toContain("friend");
+    expect(buildWelcomeHtml("")).toContain("friend");
+    expect(buildWelcomeHtml("   ")).toContain("friend");
     expect(buildWelcomeHtml("")).not.toContain("undefined");
+  });
+
+  it("escapes special characters in the display name", () => {
+    const html = buildWelcomeHtml("<script>alert(1)</script>");
+    expect(html).not.toContain("<script>");
+    expect(html).toContain("&lt;script&gt;");
   });
 });
