@@ -42,7 +42,7 @@ Put **your real tagged links** in the `affiliatePartners/{id}` Firestore doc und
 ## Deployment notes
 
 - **Storage rules** (one-time): `firebase deploy --only storage` after the rules change, so uploaded images are publicly readable.
-- **Service account**: the GitHub secret `FIREBASE_SERVICE_ACCOUNT_TRADEFLASH_L2966` needs `roles/storage.objectAdmin` (or `objectCreator` + `objectViewer`) if the upload step 403s.
+- **Service account**: the GitHub secret `FIREBASE_SERVICE_ACCOUNT_TRADEFLASH_L2966` needs `roles/datastore.user` (Firestore read/write) and `roles/storage.objectAdmin` (or `objectCreator` + `objectViewer`) in Google Cloud Console IAM — otherwise the rotation writes fail and image uploads 403.
 - **No scheduled functions** are involved — the workflow uses the Admin SDK directly (zero function invocations; batched writes; unchanged challenges are skipped).
 
 ## Security

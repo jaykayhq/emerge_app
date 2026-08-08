@@ -493,7 +493,9 @@ git commit -m "chore(rotation): refresh challenge content"
 
 ## Troubleshooting
 
-- **403 on image upload:** the service account lacks Storage permission → grant `roles/storage.objectAdmin` in Google Cloud Console IAM.
+- **Firestore writes fail / "lacks Firestore IAM permissions":** grant the service account behind `FIREBASE_SERVICE_ACCOUNT_TRADEFLASH_L2966` the **Cloud Datastore User** role (`roles/datastore.user`) in Google Cloud Console (IAM → IAM). Firestore uses Datastore IAM roles.
+- **403 on image upload:** the service account lacks Storage permission → grant `roles/storage.objectAdmin` (or `objectCreator` + `objectViewer`) in Google Cloud Console IAM.
+- **Images 403 in the app:** `storage.rules` public-read for `challenges/**` must be deployed once: `firebase deploy --only storage`.
 - **`challenges` never changes:** check `config/challengeRotation.enabled` is `true` and that templates' fields actually differ from the existing docs (the script skips no-op writes).
 - **Image not updating:** confirm the polli output filename matches the template's `imageFile` exactly.
 
