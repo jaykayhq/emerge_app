@@ -3,6 +3,7 @@ import 'package:emerge_app/features/gamification/presentation/providers/user_sta
 import 'package:emerge_app/features/social/domain/models/challenge.dart';
 import 'package:emerge_app/features/social/domain/models/challenge_bundle.dart';
 import 'package:emerge_app/features/social/domain/models/challenge_catalog.dart';
+import 'package:emerge_app/features/social/domain/services/challenge_feed_merger.dart';
 import 'package:emerge_app/features/social/presentation/providers/challenge_provider.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
@@ -31,6 +32,12 @@ class ChallengeBundle extends _$ChallengeBundle {
         ? 'athlete'
         : profile.archetype.name;
 
+    // Server-published challenges merge ahead of the catalog when present;
+    // the catalog still renders instantly (offline-first) until the stream
+    // emits.
+    final serverChallenges =
+        ref.watch(publicChallengesProvider).value ?? const <Challenge>[];
+
     // Single batch fetch - all data in one async operation
     // This prevents the cascade of rebuilds from multiple independent providers
     final results = await Future.wait<dynamic>([
@@ -44,16 +51,25 @@ class ChallengeBundle extends _$ChallengeBundle {
       repository.getChallengesByArchetype(archetypeName),
     ]);
 
-    // Also fetch general featured challenges available to all users
-    final featuredChallenges = await repository.getChallenges(
-      featuredOnly: true,
+    final featuredChallenges = mergeChallengeSources(
+      server: serverChallenges
+          .where((c) => c.status == ChallengeStatus.featured)
+          .toList(),
+      catalog: await repository.getChallenges(featuredOnly: true),
     );
 
     return ChallengeBundleData(
       weeklySpotlight: results[0] as Challenge?,
       dailyQuest: results[1] as Challenge?,
       userChallenges: results[2] as List<Challenge>,
-      archetypeChallenges: results[3] as List<Challenge>,
+      archetypeChallenges: mergeChallengeSources(
+        server: serverChallenges
+            .where(
+              (c) => c.archetypeId == null || c.archetypeId == archetypeName,
+            )
+            .toList(),
+        catalog: results[3] as List<Challenge>,
+      ),
       featuredChallenges: featuredChallenges,
     );
   }

@@ -83,7 +83,12 @@ final challengeByIdProvider = FutureProvider.family<Challenge?, String>((
   id,
 ) async {
   final repository = ref.read(challengeRepositoryProvider);
-  return repository.getChallengeById(id);
+  final catalog = await repository.getChallengeById(id);
+  if (catalog != null) return catalog;
+  final firestore = ref.read(firestoreProvider);
+  final doc = await firestore.collection('challenges').doc(id).get();
+  if (!doc.exists) return null;
+  return Challenge.fromMap(doc.data()!, id: doc.id);
 });
 
 final filteredChallengesProvider =
