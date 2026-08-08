@@ -5,12 +5,14 @@ class AuthUser extends Equatable {
   final String email;
   final String? displayName;
   final String? photoUrl;
+  final bool emailVerified;
 
   const AuthUser({
     required this.id,
     required this.email,
     this.displayName,
     this.photoUrl,
+    this.emailVerified = false,
   });
 
   static const empty = AuthUser(id: '', email: '');
@@ -19,5 +21,5 @@ class AuthUser extends Equatable {
   bool get isNotEmpty => this != AuthUser.empty;
 
   @override
-  List<Object?> get props => [id, email, displayName, photoUrl];
+  List<Object?> get props => [id, email, displayName, photoUrl, emailVerified];
 }

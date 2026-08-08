@@ -55,6 +55,27 @@ class FirebaseAuthRepository implements AuthRepository {
     }
   }
 
+  Failure _mapFunctionsError(FirebaseFunctionsException e) {
+    switch (e.code) {
+      case 'unauthenticated':
+        return const AuthFailure('Please log in again before continuing.');
+      case 'already-exists':
+        return const AuthFailure('This username is already taken. Please choose another.');
+      case 'invalid-argument':
+        return AuthFailure(e.message ?? 'Invalid input. Please try again.');
+      case 'resource-exhausted':
+        return AuthFailure(e.message ?? 'Too many attempts. Please wait and try again.');
+      case 'failed-precondition':
+        return AuthFailure(e.message ?? 'This code has expired. Please request a new one.');
+      case 'not-found':
+        return const AuthFailure('No verification code found. Please request a new one.');
+      case 'internal':
+        return ServerFailure(e.message ?? 'Something went wrong. Please try again.');
+      default:
+        return ServerFailure(e.message ?? 'Something went wrong. Please try again.');
+    }
+  }
+
   @override
   Stream<AuthUser> get user {
     return _firebaseAuth.idTokenChanges().map((firebaseUser) {
@@ -65,6 +86,7 @@ class FirebaseAuthRepository implements AuthRepository {
         id: firebaseUser.uid,
         email: firebaseUser.email ?? '',
         displayName: firebaseUser.displayName,
+        emailVerified: firebaseUser.emailVerified,
       );
     });
   }
@@ -99,6 +121,7 @@ class FirebaseAuthRepository implements AuthRepository {
           id: user.uid,
           email: user.email ?? '',
           displayName: user.displayName,
+          emailVerified: user.emailVerified,
         ),
       );
     } on FirebaseAuthException catch (e) {
@@ -185,6 +208,7 @@ class FirebaseAuthRepository implements AuthRepository {
           id: updatedUser?.uid ?? user.uid,
           email: updatedUser?.email ?? user.email ?? '',
           displayName: updatedUser?.displayName ?? sanitizedUsername,
+          emailVerified: updatedUser?.emailVerified ?? user.emailVerified,
         ),
       );
     } on FirebaseAuthException catch (e) {
@@ -276,6 +300,7 @@ class FirebaseAuthRepository implements AuthRepository {
           id: user.uid,
           email: user.email ?? '',
           displayName: user.displayName,
+          emailVerified: user.emailVerified,
         ),
       );
     } on FirebaseAuthException catch (e) {
@@ -367,5 +392,66 @@ class FirebaseAuthRepository implements AuthRepository {
       AppLogger.e('Delete account failed', e, s);
       return Left(ServerFailure(e.toString()));
     }
+  }
+
+  @override
+  Future<Either<Failure, void>> sendEmailVerificationCode() async {
+    try {
+      await FirebaseFunctions.instance
+          .httpsCallable('sendEmailVerificationCode')
+          .call();
+      return const Right(null);
+    } on FirebaseFunctionsException catch (e) {
+      AppLogger.w('sendEmailVerificationCode failed', error: e);
+      return Left(_mapFunctionsError(e));
+    } catch (e, s) {
+      AppLogger.e('sendEmailVerificationCode failed', e, s);
+      return Left(ServerFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, void>> verifyEmailCode(String code) async {
+    try {
+      await FirebaseFunctions.instance
+          .httpsCallable('verifyEmailCode')
+          .call(<String, dynamic>{'code': code.trim()});
+      // Refresh the local Auth user so emailVerified propagates to the stream.
+      await _firebaseAuth.currentUser?.reload();
+      return const Right(null);
+    } on FirebaseFunctionsException catch (e) {
+      AppLogger.w('verifyEmailCode failed', error: e);
+      return Left(_mapFunctionsError(e));
+    } catch (e, s) {
+      AppLogger.e('verifyEmailCode failed', e, s);
+      return Left(ServerFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, void>> claimUsername(String username) async {
+    try {
+      await FirebaseFunctions.instance
+          .httpsCallable('claimUsername')
+          .call(<String, dynamic>{'username': username.trim()});
+      await _firebaseAuth.currentUser?.reload();
+      return const Right(null);
+    } on FirebaseFunctionsException catch (e) {
+      AppLogger.w('claimUsername failed', error: e);
+      return Left(_mapFunctionsError(e));
+    } catch (e, s) {
+      AppLogger.e('claimUsername failed', e, s);
+      return Left(ServerFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, bool>> checkEmailVerified() async {
+    final user = _firebaseAuth.currentUser;
+    if (user == null) {
+      return const Left(AuthFailure('User not logged in'));
+    }
+    await user.reload();
+    return Right(user.emailVerified);
   }
 }
