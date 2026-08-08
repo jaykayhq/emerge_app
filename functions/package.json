@@ -11,6 +11,7 @@
     "deploy": "firebase deploy --only functions",
     "logs": "firebase functions:log",
     "seed": "node lib/seed.js",
+    "backfill:usernames": "node lib/backfill_usernames.js",
     "test": "jest --coverage",
     "test:watch": "jest --watch"
   },
