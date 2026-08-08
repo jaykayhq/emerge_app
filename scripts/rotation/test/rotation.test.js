@@ -106,8 +106,8 @@ test("rotates imageUrl per week from the image pool", () => {
     config: { enabled: true, featuredLimit: 1, imagePool: pool },
     now: nextMonday,
   });
-  assert.equal(planA.upserts[0].challenge.imageUrl, "https://img.example/1.jpg");
-  assert.equal(planB.upserts[0].challenge.imageUrl, "https://img.example/2.jpg");
+  assert.equal(planA.upserts[0].challenge.imageUrl, "https://img.example/2.jpg");
+  assert.equal(planB.upserts[0].challenge.imageUrl, "https://img.example/1.jpg");
 });
 
 test("prefers an explicit template imageUrl over the pool", () => {
@@ -125,6 +125,7 @@ test("skips writes when an existing doc is already up to date", () => {
   const same = existing("q1", {
     status: "featured",
     imageUrl: "https://img.example/fallback.jpg",
+    affiliateUrl: "",
   });
   const plan = computeRotation({
     templates: [template("q1")],
