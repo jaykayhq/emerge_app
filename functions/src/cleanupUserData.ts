@@ -69,6 +69,8 @@ export const deleteMyAccount = onCall(
       deleteWhere("partner_requests", "recipientId", uid),
       deleteWhere("security_logs", "userId", uid),
       deleteWhere("revenuecat_events", "app_user_id", uid),
+      // Release any claimed usernames so they can be re-claimed by new users.
+      deleteWhere("usernames", "uid", uid),
     ]);
 
     // ── Remove membership from tribes (update, not delete) ──

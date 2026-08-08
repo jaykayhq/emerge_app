@@ -318,11 +318,17 @@ service cloud.firestore {
     }
 
     // User Profiles (Archetype, Attributes, etc.)
+    // `emailVerified` / `emailLockedAt` are server-owned (written by the
+    // email-verification Cloud Functions via Admin SDK). Clients may only
+    // READ them; any update touching them is denied so a user can never
+    // spoof verification or clear their own grace-period lock.
     match /users/{userId} {
       allow read: if isOwner(userId);
       allow create: if isOwner(userId) && isValidUser(request.resource.data);
       allow update: if isOwner(userId) && (
-        isValidUser(request.resource.data) || 
+        (isValidUser(request.resource.data) &&
+         !request.resource.data.diff(resource.data).affectedKeys()
+           .hasAny(['emailVerified', 'emailLockedAt'])) ||
         (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['fcmToken']))
       );
       allow delete: if isOwner(userId);
