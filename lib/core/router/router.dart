@@ -5,6 +5,7 @@ import 'package:emerge_app/features/auth/presentation/providers/auth_providers.d
 import 'package:emerge_app/features/auth/presentation/providers/role_provider.dart';
 import 'package:emerge_app/features/auth/presentation/screens/login_screen.dart';
 import 'package:emerge_app/features/auth/presentation/screens/signup_screen.dart';
+import 'package:emerge_app/features/auth/presentation/screens/verify_email_screen.dart';
 import 'package:emerge_app/features/gamification/presentation/providers/user_stats_providers.dart';
 import 'package:emerge_app/features/world_map/presentation/screens/world_map_screen.dart';
 import 'package:emerge_app/features/timeline/presentation/screens/timeline_screen.dart';
@@ -383,6 +384,10 @@ GoRouter router(Ref ref) {
         builder: (context, state) => const WorldRevealScreen(),
       ),
       GoRoute(path: '/login', builder: (context, state) => const LoginScreen()),
+      GoRoute(
+        path: '/verify-email',
+        builder: (context, state) => const VerifyEmailScreen(),
+      ),
       GoRoute(
         path: '/signup',
         builder: (context, state) => const SignUpScreen(),
