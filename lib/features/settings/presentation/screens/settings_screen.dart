@@ -108,6 +108,8 @@ class SettingsScreen extends ConsumerWidget {
                 onTap:
                     () {}, // Email usually not editable directly without re-auth
               ),
+              if (!(authUser?.emailVerified ?? true))
+                _buildVerifyEmailTile(context),
               _buildListTile(
                 context,
                 Icons.lock_outline,
@@ -484,7 +486,7 @@ class SettingsScreen extends ConsumerWidget {
             const SizedBox(height: 16),
             Center(
               child: Text(
-                'Version 1.0.6+12',
+                'Version 1.0.7+12',
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
                   color: AppTheme.textSecondaryDark,
                   fontSize: 12,
@@ -739,6 +741,37 @@ class SettingsScreen extends ConsumerWidget {
           const SizedBox(width: 8),
           const Icon(Icons.chevron_right, color: AppTheme.textSecondaryDark),
         ],
+      ),
+    );
+  }
+
+  Widget _buildVerifyEmailTile(BuildContext context) {
+    return ListTile(
+      onTap: () => context.push('/verify-email'),
+      leading: Container(
+        padding: const EdgeInsets.all(8),
+        decoration: BoxDecoration(
+          color: Colors.amber.withValues(alpha: 0.1),
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: const Icon(Icons.verified_outlined, color: Colors.amber),
+      ),
+      title: Text(
+        'Verify your email',
+        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+          fontWeight: FontWeight.w500,
+          color: AppTheme.textMainDark,
+        ),
+      ),
+      subtitle: Text(
+        'Confirm your email address to secure your account.',
+        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+          color: AppTheme.textSecondaryDark,
+        ),
+      ),
+      trailing: const Icon(
+        Icons.chevron_right,
+        color: AppTheme.textSecondaryDark,
       ),
     );
   }
