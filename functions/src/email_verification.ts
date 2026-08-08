@@ -76,7 +76,10 @@ export const sendEmailVerificationCode = onCall(
       const lastSent = emailCodeExpiryMs(
         (data.lastSentAt as { toMillis?: () => number } | Date | undefined)
       );
-      if (resendCount >= RESEND_DAY_LIMIT) {
+      // Day window is bounded by lastSentAt: a user who hit 20 sends over a
+      // week (last one > 24h ago) can request again — resendCount is a
+      // lifetime accumulator, not a rolling counter.
+      if (nowMs - lastSent < DAY_MS && resendCount >= RESEND_DAY_LIMIT) {
         throw new HttpsError(
           "resource-exhausted",
           "Daily resend limit reached."
@@ -92,14 +95,14 @@ export const sendEmailVerificationCode = onCall(
 
     const code = generateEmailCode();
     const salt = makeSalt();
+    // Atomic resendCount bump (FieldValue.increment inside a single set):
+    // concurrent sends can't clobber each other's count.
     await ref.set({
       codeHash: hashCode(code, salt),
       codeSalt: salt,
       expiresAt: new Date(nowMs + EMAIL_CODE_TTL_MS),
       attempts: 0,
-      resendCount:
-        (existing.exists ? (existing.data()?.resendCount as number) ?? 0 : 0) +
-        1,
+      resendCount: admin.firestore.FieldValue.increment(1),
       lastSentAt: admin.firestore.FieldValue.serverTimestamp(),
       createdAt: admin.firestore.FieldValue.serverTimestamp(),
     });
@@ -178,11 +181,9 @@ export const verifyEmailCode = onCall(
       );
 
     if (!ok) {
-      // Merge-set preserves the code doc while bumping the attempt counter.
-      await ref.set(
-        { attempts: ((doc.attempts as number) ?? 0) + 1 },
-        { merge: true }
-      );
+      // Atomic attempt bump — two concurrent wrong guesses can't both write
+      // the same N+1 and weaken the brute-force cap.
+      await ref.update({ attempts: admin.firestore.FieldValue.increment(1) });
       throw new HttpsError(
         "invalid-argument",
         "Incorrect code. Please try again."
@@ -200,7 +201,10 @@ export const verifyEmailCode = onCall(
     );
     await ref.delete();
 
-    // Fire-and-forget welcome email — never blocks verification success.
+    // The welcome email is AWAITED (not fire-and-forget): a Gen 2 instance
+    // may be frozen immediately after the response, so the awaited send keeps
+    // it alive to finish. Errors are swallowed so verification still succeeds,
+    // and the 5s timeout bounds the tail so a slow Resend can't stretch it.
     try {
       const userRecord = await admin.auth().getUser(uid);
       await sendEmail({
@@ -209,6 +213,7 @@ export const verifyEmailCode = onCall(
         html:
           "<p>Your email is verified. Welcome aboard — " +
           "your journey begins now.</p>",
+        timeoutMs: 5000,
       });
     } catch (err) {
       console.error(`[verifyEmailCode] welcome email failed for ${uid}:`, err);
@@ -218,31 +223,53 @@ export const verifyEmailCode = onCall(
   }
 );
 
+// Page size stays under Firestore's 500-write batch cap; the bounded loop
+// guards against a runaway job on a pathological dataset.
+const GRACE_PAGE_SIZE = 400;
+const GRACE_MAX_PAGES = 100;
+
 /** Testable body of the scheduled lock; wrapped by onSchedule below. */
 export async function enforceEmailGracePeriodInternal(
   database: typeof db,
   nowMs: number
 ): Promise<void> {
   const cutoff = new Date(nowMs - GRACE_PERIOD_MS);
-  const snap = await database
-    .collection("users")
-    .where("createdAt", "<=", cutoff)
-    .get();
-  const batch = admin.firestore().batch();
-  let changed = 0;
-  for (const doc of snap.docs) {
-    const data = doc.data();
-    if (data.emailVerified !== true && data.emailLockedAt == null) {
-      batch.set(
-        database.collection("users").doc(doc.id),
-        { emailLockedAt: admin.firestore.FieldValue.serverTimestamp() },
-        { merge: true }
-      );
-      changed++;
+  let lastDoc: admin.firestore.QueryDocumentSnapshot | undefined;
+  for (let page = 0; page < GRACE_MAX_PAGES; page++) {
+    let query = database
+      .collection("users")
+      .where("createdAt", "<=", cutoff)
+      .limit(GRACE_PAGE_SIZE);
+    if (lastDoc) {
+      query = query.startAfter(lastDoc);
     }
-  }
-  if (changed > 0) {
-    await batch.commit();
+    const snap = await query.get();
+    if (snap.empty) {
+      break;
+    }
+    const batch = database.batch();
+    let changed = 0;
+    for (const doc of snap.docs) {
+      const data = doc.data();
+      if (data.emailVerified !== true && data.emailLockedAt == null) {
+        batch.set(
+          database.collection("users").doc(doc.id),
+          { emailLockedAt: admin.firestore.FieldValue.serverTimestamp() },
+          { merge: true }
+        );
+        changed++;
+      }
+    }
+    if (changed > 0) {
+      await batch.commit();
+    }
+    console.log(
+      `[enforceEmailGracePeriod] page ${page + 1}: ${changed} locked`
+    );
+    lastDoc = snap.docs[snap.docs.length - 1];
+    if (snap.docs.length < GRACE_PAGE_SIZE) {
+      break;
+    }
   }
 }
 

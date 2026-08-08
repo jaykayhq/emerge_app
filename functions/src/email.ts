@@ -9,6 +9,8 @@ export interface EmailPayload {
   to: string;
   subject: string;
   html: string;
+  /** Optional axios timeout; defaults to 10s. */
+  timeoutMs?: number;
 }
 
 export async function sendEmail(payload: EmailPayload): Promise<void> {
@@ -25,7 +27,7 @@ export async function sendEmail(payload: EmailPayload): Promise<void> {
       html: payload.html,
     },
     {
-      timeout: 10_000,
+      timeout: payload.timeoutMs ?? 10_000,
       headers: {
         Authorization: `Bearer ${apiKey}`,
         "Content-Type": "application/json",

@@ -3,13 +3,18 @@
  * Run with: cd functions && npm run build && npx jest test/email_verification.test.ts
  */
 // Stub axios (same pattern as email.test.ts) so sendEmail resolves offline;
-// the verification functions treat email delivery as fire-and-forget.
-jest.mock("axios", () => ({ post: jest.fn().mockResolvedValue({ status: 200 }) }));
+// the failed-send test below rejects a single call to prove the code doc is
+// cleaned up when delivery fails.
+const axiosPost = jest.fn().mockResolvedValue({ status: 200 });
+jest.mock("axios", () => ({
+  post: (...args: unknown[]) => axiosPost(...args),
+}));
 
 const updateUser = jest.fn().mockResolvedValue(undefined);
 const getUser = jest.fn();
 const docGet = jest.fn();
 const docSet = jest.fn();
+const docUpdate = jest.fn();
 const docDelete = jest.fn();
 const queryGet = jest.fn();
 const runTransaction = jest.fn();
@@ -22,14 +27,21 @@ const collection = jest.fn((name: string) => ({
     id: id ?? "auto-1",
     get: jest.fn(() => docGet(name, id)),
     set: docSet,
+    update: docUpdate,
     delete: docDelete,
   })),
   where: jest.fn(() => ({
     where: jest.fn(() => ({
       get: queryGet,
-      limit: jest.fn(() => ({ get: queryGet })),
+      limit: jest.fn(() => ({
+        get: queryGet,
+        startAfter: jest.fn(() => ({ get: queryGet })),
+      })),
     })),
-    limit: jest.fn(() => ({ get: queryGet })),
+    limit: jest.fn(() => ({
+      get: queryGet,
+      startAfter: jest.fn(() => ({ get: queryGet })),
+    })),
     get: queryGet,
   })),
 }));
@@ -40,10 +52,15 @@ const firestoreMock = jest.fn(() => ({ collection, runTransaction, batch }));
     FieldValue: {
       serverTimestamp: () => string;
       delete: () => string;
+      increment: (n: number) => { __increment: number };
     };
     Timestamp: { fromDate: (d: Date) => Date; now: () => Date };
   }
-).FieldValue = { serverTimestamp: () => "SERVER_TIMESTAMP", delete: () => "FIELD_DELETE" };
+).FieldValue = {
+  serverTimestamp: () => "SERVER_TIMESTAMP",
+  delete: () => "FIELD_DELETE",
+  increment: (n: number) => ({ __increment: n }),
+};
 (
   firestoreMock as unknown as {
     Timestamp: { fromDate: (d: Date) => Date; now: () => Date };
@@ -118,7 +135,49 @@ describe("sendEmailVerificationCode", () => {
     expect(typeof data.codeHash).toBe("string");
     expect(data.expiresAt).toBeInstanceOf(Date);
     expect(data.attempts).toBe(0);
-    expect(data.resendCount).toBe(1);
+    // resendCount is bumped atomically so concurrent sends can't clobber it.
+    expect(data.resendCount).toEqual({ __increment: 1 });
+  });
+
+  it("rejects when over the daily-window resend limit", async () => {
+    getUser.mockResolvedValue({ email: "a@b.com", emailVerified: false });
+    docGet.mockImplementation((name: string, id: string) =>
+      Promise.resolve({
+        exists: true,
+        data: () => ({
+          resendCount: 20,
+          lastSentAt: new Date(Date.now() - 60_000),
+          attempts: 0,
+        }),
+      })
+    );
+    await expect(
+      sendEmailVerificationCode.run({
+        auth: { uid: "u1", token: {} },
+        data: {},
+      })
+    ).rejects.toHaveProperty("code", "resource-exhausted");
+  });
+
+  it("allows a resend once the last send is older than the day window", async () => {
+    getUser.mockResolvedValue({ email: "a@b.com", emailVerified: false });
+    // resendCount is a lifetime accumulator; the day window is bounded by
+    // lastSentAt, so 20 lifetime sends with the last one > 24h ago pass.
+    docGet.mockImplementation((name: string, id: string) =>
+      Promise.resolve({
+        exists: true,
+        data: () => ({
+          resendCount: 20,
+          lastSentAt: new Date(Date.now() - 2 * 86400_000),
+          attempts: 0,
+        }),
+      })
+    );
+    const res = await sendEmailVerificationCode.run({
+      auth: { uid: "u1", token: {} },
+      data: {},
+    });
+    expect(res).toMatchObject({ ok: true });
   });
 
   it("rejects when the email is already verified", async () => {
@@ -129,6 +188,18 @@ describe("sendEmailVerificationCode", () => {
         data: {},
       })
     ).rejects.toHaveProperty("code", "already-exists");
+  });
+
+  it("deletes the code doc and fails when the email cannot be sent", async () => {
+    getUser.mockResolvedValue({ email: "a@b.com", emailVerified: false });
+    axiosPost.mockRejectedValueOnce(new Error("Resend down"));
+    await expect(
+      sendEmailVerificationCode.run({
+        auth: { uid: "u1", token: {} },
+        data: {},
+      })
+    ).rejects.toHaveProperty("code", "internal");
+    expect(docDelete).toHaveBeenCalledTimes(1);
   });
 });
 
@@ -188,7 +259,7 @@ describe("verifyEmailCode", () => {
     ).rejects.toHaveProperty("code", "failed-precondition");
   });
 
-  it("rejects a wrong code and increments attempts", async () => {
+  it("rejects a wrong code and increments attempts atomically", async () => {
     docGet.mockResolvedValue({
       exists: true,
       data: () => ({
@@ -202,18 +273,35 @@ describe("verifyEmailCode", () => {
     await expect(
       verifyEmailCode.run({ auth: { uid: "u1", token: {} }, data: { code: "111111" } })
     ).rejects.toHaveProperty("code", "invalid-argument");
-    // A write bumped the attempts counter on the code doc.
-    const updateCalls = docSet.mock.calls.filter(
-      (c: unknown[]) =>
-        c[0] &&
-        typeof c[0] === "object" &&
-        (c[0] as Record<string, unknown>).attempts !== undefined
-    );
-    expect(updateCalls.length).toBeGreaterThan(0);
+    // The attempt counter is bumped atomically via update(), so concurrent
+    // wrong guesses can't both write the same N+1.
+    expect(docUpdate).toHaveBeenCalledWith({
+      attempts: { __increment: 1 },
+    });
+  });
+
+  it("rejects once the max attempt count is reached", async () => {
+    docGet.mockResolvedValue({
+      exists: true,
+      data: () => ({
+        codeHash: "x",
+        codeSalt: "y",
+        expiresAt: new Date(Date.now() + 60_000),
+        attempts: 5,
+        resendCount: 1,
+      }),
+    });
+    await expect(
+      verifyEmailCode.run({ auth: { uid: "u1", token: {} }, data: { code: "123456" } })
+    ).rejects.toHaveProperty("code", "resource-exhausted");
   });
 });
 
 describe("enforceEmailGracePeriodInternal", () => {
+  // The injected database must be the firestoreMock() instance so that
+  // database.batch() (the paginated batch seam) resolves to the shared mock.
+  const database = firestoreMock() as never;
+
   it("locks unverified users older than the grace period", async () => {
     queryGet.mockResolvedValue({
       size: 1,
@@ -226,7 +314,8 @@ describe("enforceEmailGracePeriodInternal", () => {
       ],
       forEach: jest.fn(),
     });
-    await enforceEmailGracePeriodInternal({ collection } as never, Date.now());
+    await enforceEmailGracePeriodInternal(database, Date.now());
+    expect(batch).toHaveBeenCalled();
     expect(batchSet).toHaveBeenCalled();
     expect(batchCommit).toHaveBeenCalled();
   });
@@ -243,7 +332,7 @@ describe("enforceEmailGracePeriodInternal", () => {
       ],
       forEach: jest.fn(),
     });
-    await enforceEmailGracePeriodInternal({ collection } as never, Date.now());
+    await enforceEmailGracePeriodInternal(database, Date.now());
     expect(batchSet).not.toHaveBeenCalled();
     expect(batchCommit).not.toHaveBeenCalled();
   });

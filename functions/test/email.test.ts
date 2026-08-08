@@ -27,6 +27,7 @@ describe("sendEmail", () => {
       html: "<p>Hi</p>",
     });
     expect(config.headers.Authorization).toBe("Bearer re_test_123");
+    expect(config.timeout).toBe(10_000);
   });
 
   it("propagates API errors", async () => {
