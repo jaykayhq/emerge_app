@@ -28,19 +28,26 @@ async function resolveTemplateImage(template, week) {
     console.log(`Image missing for ${template.id}: ${local} — using fallback`);
     return null;
   }
-  const bucket = admin.storage().bucket();
-  const ext = path.extname(local);
-  const dest = bucket.file(`challenges/images/${template.id}/${week}${ext}`);
-  await dest.save(fs.readFileSync(local), {
-    contentType: ext === ".png" ? "image/png" : "image/jpeg",
-    metadata: { cacheControl: "public, max-age=31536000, immutable" },
-  });
-  return dest.publicUrl();
+  try {
+    const bucket = admin.storage().bucket();
+    const ext = path.extname(local);
+    const dest = bucket.file(`challenges/images/${template.id}/${week}${ext}`);
+    await dest.save(fs.readFileSync(local), {
+      contentType: ext === ".png" ? "image/png" : "image/jpeg",
+      metadata: { cacheControl: "public, max-age=31536000, immutable" },
+    });
+    return dest.publicUrl();
+  } catch (error) {
+    console.log(`Image upload failed for ${template.id} — using fallback`, error.message);
+    return null;
+  }
 }
 
 async function main() {
   if (admin.apps.length === 0) {
-    admin.initializeApp();
+    admin.initializeApp({
+      storageBucket: process.env.FIREBASE_STORAGE_BUCKET,
+    });
   }
   const db = admin.firestore();
   const now = new Date();
