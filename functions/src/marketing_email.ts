@@ -30,7 +30,8 @@ export const sendWelcomeEmail = onDocumentCreated(
     const uid = event.params.uid;
     const email = typeof data.email === "string" ? data.email : "";
 
-    // Skip seed/system docs and anything that isn't a real consumer account.
+    // Skip seed/system docs and admin accounts. Defensive: no current
+    // users/{uid} writer produces these — keep the guard anyway.
     if (data.creatorUserId === "system" || data.isAdmin === true) {
       return;
     }
@@ -54,10 +55,12 @@ export const sendWelcomeEmail = onDocumentCreated(
 );
 
 // Drip parameters.
-const DRIP_SINCE_MS = 3 * 24 * 60 * 60 * 1000; // signed up >= 3 days ago
-const DRIP_ACTIVE_WINDOW_MS = 7 * 24 * 60 * 60 * 1000; // active within last 7d
-const DRIP_PAGE_SIZE = 400;
-const DRIP_MAX_PAGES = 100;
+export const DRIP_SINCE_MS = 3 * 24 * 60 * 60 * 1000; // signed up >= 3 days ago
+export const DRIP_ACTIVE_WINDOW_MS = 7 * 24 * 60 * 60 * 1000; // active 7d
+// Page size small enough that a page of sequential sends commits within the
+// function timeout even if several sends stall (10s axios timeout each).
+export const DRIP_PAGE_SIZE = 100;
+export const DRIP_MAX_PAGES = 100;
 
 function toMillis(value: unknown): number {
   if (value instanceof Date) return value.getTime();
@@ -121,7 +124,12 @@ export async function enforceReengagementDripInternal(
       }
     }
     if (changed > 0) {
-      await batch.commit();
+      try {
+        await batch.commit();
+      } catch (err) {
+        console.error(`[drip] page ${page + 1} commit failed:`, err);
+        throw err; // rethrow so Cloud Scheduler retries — no data loss
+      }
     }
     console.log(`[drip] page ${page + 1}: ${changed} emails sent`);
     lastDoc = snap.docs[snap.docs.length - 1];
@@ -132,7 +140,11 @@ export async function enforceReengagementDripInternal(
 }
 
 export const enforceReengagementDrip = onSchedule(
-  { schedule: "0 6 * * *", secrets: ["RESEND_API_KEY"] },
+  {
+    schedule: "0 6 * * *",
+    timeoutSeconds: 540,
+    secrets: ["RESEND_API_KEY"],
+  },
   async () => {
     console.log("Running re-engagement drip");
     await enforceReengagementDripInternal(db, Date.now());
