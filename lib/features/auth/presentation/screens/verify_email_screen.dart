@@ -26,6 +26,7 @@ class _VerifyEmailScreenState extends ConsumerState<VerifyEmailScreen> {
   String? _info;
   int _cooldown = 0;
   Timer? _cooldownTimer;
+  bool _navigatedOnVerify = false;
 
   @override
   void initState() {
@@ -44,6 +45,7 @@ class _VerifyEmailScreenState extends ConsumerState<VerifyEmailScreen> {
     setState(() {
       _isSending = true;
       _error = null;
+      _info = null;
     });
     final result = await ref
         .read(authRepositoryProvider)
@@ -77,6 +79,7 @@ class _VerifyEmailScreenState extends ConsumerState<VerifyEmailScreen> {
   }
 
   Future<void> _verify() async {
+    if (_isVerifying || _isSending) return;
     final code = _codeController.text.trim();
     if (code.length != 6) {
       setState(() => _error = 'Enter the 6-digit code.');
@@ -95,23 +98,40 @@ class _VerifyEmailScreenState extends ConsumerState<VerifyEmailScreen> {
         _isVerifying = false;
       }),
       (_) {
+        _cooldownTimer?.cancel();
         setState(() {
           _isVerifying = false;
           _info = 'Email verified!';
         });
-        // Router's decideRedirect now lets the user through; land on a shell
-        // path and let the router resolve onboarding/dashboard.
-        try {
-          context.go('/timeline');
-        } catch (_) {
-          // No router in this harness (pure widget tests) — safe to ignore.
-        }
       },
     );
   }
 
   @override
   Widget build(BuildContext context) {
+    // Navigate once verification flips the auth stream. The stream delivery
+    // lags the verifyEmailCode call (idTokenChanges), so we react to the
+    // state transition instead of navigating eagerly — eager navigation races
+    // decideRedirect, which still reads emailVerified as false and bounces
+    // back to /verify-email.
+    ref.listen<AsyncValue<AuthUser>>(authStateChangesProvider, (prev, next) {
+      final verified = next.value?.emailVerified ?? false;
+      if (verified && !_navigatedOnVerify) {
+        _navigatedOnVerify = true;
+        _cooldownTimer?.cancel();
+        if (mounted) {
+          try {
+            context.go('/timeline');
+          } catch (_) {
+            // No router in the test harness — safe to ignore.
+          }
+        }
+      }
+    });
+
+    // Loading/error fall back to "unlocked" — treat as within the grace
+    // period, consistent with the router's guarded read. A stale lock only
+    // relaxes an already-gated path.
     final emailLockedAt = ref.watch(currentEmailLockedAtProvider).value;
     final isLocked = emailLockedAt != null;
 
@@ -120,16 +140,23 @@ class _VerifyEmailScreenState extends ConsumerState<VerifyEmailScreen> {
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: AppTheme.textMainDark),
-          onPressed: () {
-            try {
-              context.pop();
-            } catch (_) {
-              // No router in this harness — safe to ignore.
-            }
-          },
-        ),
+        // Locked users arrive via a redirect bounce; a back arrow that pops
+        // back into a gated surface would just re-trigger the redirect loop.
+        automaticallyImplyLeading: false,
+        leading: isLocked
+            ? null
+            : IconButton(
+                icon: const Icon(Icons.arrow_back,
+                    color: AppTheme.textMainDark),
+                tooltip: 'Back',
+                onPressed: () {
+                  try {
+                    context.pop();
+                  } catch (_) {
+                    // No router in this harness — safe to ignore.
+                  }
+                },
+              ),
       ),
       body: ResponsiveLayout(
         mobile: _buildBody(context, isLocked),
@@ -191,21 +218,27 @@ class _VerifyEmailScreenState extends ConsumerState<VerifyEmailScreen> {
                   textAlign: TextAlign.center,
                   style: const TextStyle(color: Colors.redAccent)),
             ),
-          TextField(
-            controller: _codeController,
-            keyboardType: TextInputType.number,
-            maxLength: 6,
-            textAlign: TextAlign.center,
-            style: const TextStyle(
-                color: AppTheme.textMainDark, fontSize: 22, letterSpacing: 6),
-            decoration: InputDecoration(
-              hintText: '000000',
-              counterText: '',
-              filled: true,
-              fillColor: AppTheme.surfaceDark,
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-                borderSide: const BorderSide(color: EmergeColors.hexLine),
+          Semantics(
+            textField: true,
+            label: 'Verification code',
+            child: TextField(
+              controller: _codeController,
+              keyboardType: TextInputType.number,
+              maxLength: 6,
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                  color: AppTheme.textMainDark,
+                  fontSize: 22,
+                  letterSpacing: 6),
+              decoration: InputDecoration(
+                hintText: '000000',
+                counterText: '',
+                filled: true,
+                fillColor: AppTheme.surfaceDark,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: const BorderSide(color: EmergeColors.hexLine),
+                ),
               ),
             ),
           ),
