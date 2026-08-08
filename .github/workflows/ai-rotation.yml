@@ -45,7 +45,7 @@ jobs:
           POLLINATIONS_API_KEY: ${{ secrets.POLLINATIONS_API_KEY }}
           FIREBASE_SERVICE_ACCOUNT_JSON: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_TRADEFLASH_L2966 }}
         run: |
-          kilo run --print-logs \
+          kilo run --auto --print-logs \
             "Execute docs/growth/challenge-rotation-runbook.md in CI mode.
 
             1. If scripts/rotation/ does not exist yet, create the files exactly as the runbook specifies.
