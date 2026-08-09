@@ -1,9 +1,18 @@
+import 'package:emerge_app/features/auth/presentation/providers/auth_providers.dart';
+import 'package:emerge_app/features/monetization/data/repositories/paystack_payment_repository.dart';
 import 'package:emerge_app/features/monetization/presentation/providers/subscription_provider.dart';
 import 'package:equatable/equatable.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:purchases_flutter/purchases_flutter.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'paywall_provider.g.dart';
+
+/// Web plan amounts in NGN (matching the old static Payment Page prices).
+const webPlans = <String, double>{
+  'monthly': 2500.0,
+  'yearly': 15000.0,
+};
 
 class PaywallState extends Equatable {
   final bool isLoading;
@@ -38,6 +47,15 @@ class PaywallState extends Equatable {
 
 @riverpod
 class PaywallController extends _$PaywallController {
+  /// Test seam: injected redirect. Production (web) sets window.location.
+  void Function(String url)? redirectTo;
+
+  /// Whether the web (Paystack Payment Page) checkout path applies.
+  /// `kIsWeb` is a compile-time constant (always false under `flutter
+  /// test`), so tests subclass [PaywallController] and force this true to
+  /// exercise the web path.
+  bool get isWeb => kIsWeb;
+
   @override
   PaywallState build() {
     return const PaywallState(isLoading: true);
@@ -102,6 +120,50 @@ class PaywallController extends _$PaywallController {
       state = state.copyWith(
         isLoading: false,
         error: () => 'Failed to restore purchases.',
+      );
+    }
+  }
+
+  /// Web-only: initializes a Paystack transaction and redirects the browser
+  /// to the Payment Page. The webhook flips isPremium on charge.success.
+  Future<void> startWebCheckout({required String planKey}) async {
+    if (!isWeb) return;
+    final amount = webPlans[planKey];
+    if (amount == null) {
+      state = state.copyWith(isLoading: false, error: () => 'Unknown plan.');
+      return;
+    }
+    state = state.copyWith(isLoading: true, error: () => null);
+    try {
+      final authUser = ref.read(authStateChangesProvider).value;
+      if (authUser == null || authUser.email.isEmpty) {
+        state = state.copyWith(
+          isLoading: false,
+          error: () => 'Please sign in before upgrading.',
+        );
+        return;
+      }
+      final repository = ref.read(paystackPaymentRepositoryProvider);
+      // `Uri.base.origin` throws for non-http(s) bases (e.g. `file://` in the
+      // test VM), so only derive the callback origin from real web hosts.
+      final uri = Uri.base;
+      final origin = (uri.scheme == 'http' || uri.scheme == 'https')
+          ? uri.origin
+          : '';
+      final authorizationUrl = await repository.initializeTransaction(
+        amount: amount,
+        email: authUser.email,
+        identityType: planKey,
+        callbackUrl: '$origin/order-confirmed',
+      );
+      state = state.copyWith(isLoading: false, error: () => null);
+      if (redirectTo != null) {
+        redirectTo!(authorizationUrl);
+      }
+    } catch (e) {
+      state = state.copyWith(
+        isLoading: false,
+        error: () => 'Checkout failed. Please try again.',
       );
     }
   }

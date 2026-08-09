@@ -1,12 +1,24 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:emerge_app/features/auth/domain/entities/auth_user.dart';
+import 'package:emerge_app/features/auth/presentation/providers/auth_providers.dart';
+import 'package:emerge_app/features/monetization/data/repositories/paystack_payment_repository.dart';
 import 'package:emerge_app/features/monetization/presentation/providers/paywall_provider.dart';
 import 'package:emerge_app/features/monetization/presentation/providers/subscription_provider.dart';
 import 'package:emerge_app/features/monetization/domain/repositories/monetization_repository.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:mocktail/mocktail.dart';
 import 'package:purchases_flutter/purchases_flutter.dart';
 import 'package:fpdart/fpdart.dart';
 
 // ignore_for_file: unused_element
+
+class MockPaystackPaymentRepository extends Mock
+    implements PaystackPaymentRepository {}
+
+class _WebPaywallController extends PaywallController {
+  @override
+  bool get isWeb => true;
+}
 
 class MockMonetizationRepository implements MonetizationRepository {
   bool _premium = false;
@@ -110,6 +122,93 @@ void main() {
 
       final state = container.read(paywallControllerProvider);
       expect(state.isLoading, false);
+    });
+
+    test('startWebCheckout calls initializeTransaction with plan amount '
+        '+ callback and redirects', () async {
+      final repo = MockPaystackPaymentRepository();
+      when(() => repo.initializeTransaction(
+            amount: any(named: 'amount'),
+            email: any(named: 'email'),
+            identityType: any(named: 'identityType'),
+            callbackUrl: any(named: 'callbackUrl'),
+          )).thenAnswer((_) async => 'https://checkout.paystack.com/abc');
+
+      String? redirectedUrl;
+      final container = ProviderContainer(
+        overrides: [
+          paystackPaymentRepositoryProvider.overrideWithValue(repo),
+          authStateChangesProvider.overrideWithValue(
+            const AsyncValue.data(AuthUser(id: 'u1', email: 'a@b.com')),
+          ),
+          paywallControllerProvider.overrideWith(() => _WebPaywallController()),
+        ],
+      );
+      addTearDown(container.dispose);
+      final notifier = container.read(paywallControllerProvider.notifier);
+      notifier.redirectTo = (url) => redirectedUrl = url;
+
+      await notifier.startWebCheckout(planKey: 'yearly');
+
+      verify(() => repo.initializeTransaction(
+            amount: 15000.0,
+            email: 'a@b.com',
+            identityType: 'yearly',
+            callbackUrl: any(named: 'callbackUrl'),
+          )).called(1);
+      expect(redirectedUrl, 'https://checkout.paystack.com/abc');
+    });
+
+    test('startWebCheckout is a no-op on native (isWeb false)', () async {
+      final repo = MockPaystackPaymentRepository();
+
+      final container = ProviderContainer(
+        overrides: [
+          paystackPaymentRepositoryProvider.overrideWithValue(repo),
+          authStateChangesProvider.overrideWithValue(
+            const AsyncValue.data(AuthUser(id: 'u1', email: 'a@b.com')),
+          ),
+        ],
+      );
+      addTearDown(container.dispose);
+      final notifier = container.read(paywallControllerProvider.notifier);
+
+      await notifier.startWebCheckout(planKey: 'yearly');
+
+      verifyNever(() => repo.initializeTransaction(
+            amount: any(named: 'amount'),
+            email: any(named: 'email'),
+            identityType: any(named: 'identityType'),
+          ));
+    });
+
+    test('startWebCheckout sets error state when the repository throws',
+        () async {
+      final repo = MockPaystackPaymentRepository();
+      when(() => repo.initializeTransaction(
+            amount: any(named: 'amount'),
+            email: any(named: 'email'),
+            identityType: any(named: 'identityType'),
+            callbackUrl: any(named: 'callbackUrl'),
+          )).thenThrow(Exception('network down'));
+
+      final container = ProviderContainer(
+        overrides: [
+          paystackPaymentRepositoryProvider.overrideWithValue(repo),
+          authStateChangesProvider.overrideWithValue(
+            const AsyncValue.data(AuthUser(id: 'u1', email: 'a@b.com')),
+          ),
+          paywallControllerProvider.overrideWith(() => _WebPaywallController()),
+        ],
+      );
+      addTearDown(container.dispose);
+      final notifier = container.read(paywallControllerProvider.notifier);
+
+      await notifier.startWebCheckout(planKey: 'yearly');
+
+      final state = container.read(paywallControllerProvider);
+      expect(state.isLoading, false);
+      expect(state.error, 'Checkout failed. Please try again.');
     });
   });
 
