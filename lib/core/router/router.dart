@@ -33,6 +33,7 @@ import 'package:emerge_app/features/onboarding/presentation/screens/world_reveal
 import 'package:emerge_app/features/onboarding/presentation/screens/endowment_interstitial_screen.dart';
 import 'package:emerge_app/features/settings/presentation/screens/settings_screen.dart';
 import 'package:emerge_app/features/settings/presentation/screens/notification_settings_screen.dart';
+import 'package:emerge_app/features/monetization/presentation/screens/order_confirmed_screen.dart';
 import 'package:emerge_app/features/monetization/presentation/screens/paywall_screen.dart';
 import 'package:emerge_app/features/monetization/presentation/screens/manage_premium_screen.dart';
 
@@ -343,6 +344,12 @@ GoRouter router(Ref ref) {
       GoRoute(
         path: '/paywall',
         builder: (context, state) => const PaywallScreen(),
+      ),
+      GoRoute(
+        path: '/order-confirmed',
+        builder: (context, state) => OrderConfirmedScreen(
+          reference: state.uri.queryParameters['reference'],
+        ),
       ),
       GoRoute(
         path: '/manage-premium',
