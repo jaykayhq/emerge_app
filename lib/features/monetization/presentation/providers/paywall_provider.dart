@@ -1,3 +1,4 @@
+import 'package:emerge_app/core/utils/app_logger.dart';
 import 'package:emerge_app/features/auth/presentation/providers/auth_providers.dart';
 import 'package:emerge_app/features/monetization/data/repositories/paystack_payment_repository.dart';
 import 'package:emerge_app/features/monetization/presentation/providers/subscription_provider.dart';
@@ -145,7 +146,9 @@ class PaywallController extends _$PaywallController {
       }
       final repository = ref.read(paystackPaymentRepositoryProvider);
       // `Uri.base.origin` throws for non-http(s) bases (e.g. `file://` in the
-      // test VM), so only derive the callback origin from real web hosts.
+      // test VM). On web the app is always served over http(s), so the origin
+      // is real there; the empty fallback only affects non-web execution,
+      // where the checkout path is exercised with a dummy callback URL.
       final uri = Uri.base;
       final origin = (uri.scheme == 'http' || uri.scheme == 'https')
           ? uri.origin
@@ -157,10 +160,9 @@ class PaywallController extends _$PaywallController {
         callbackUrl: '$origin/order-confirmed',
       );
       state = state.copyWith(isLoading: false, error: () => null);
-      if (redirectTo != null) {
-        redirectTo!(authorizationUrl);
-      }
+      redirectTo?.call(authorizationUrl);
     } catch (e) {
+      AppLogger.w('Paystack web checkout failed', error: e);
       state = state.copyWith(
         isLoading: false,
         error: () => 'Checkout failed. Please try again.',
