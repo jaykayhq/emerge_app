@@ -1,4 +1,5 @@
 import 'dart:math' as math;
+import 'package:emerge_app/core/platform/web_window.dart';
 import 'package:emerge_app/features/monetization/domain/models/premium_limit.dart';
 import 'package:emerge_app/features/monetization/domain/services/paywall_web_guard.dart';
 import 'package:emerge_app/features/monetization/presentation/providers/paywall_provider.dart';
@@ -34,6 +35,16 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen>
       duration: const Duration(seconds: 4),
     )..repeat();
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (kIsWeb) {
+        // Bind the browser-redirect seam so startWebCheckout actually
+        // navigates; kIsWeb is compile-time false on native so this never
+        // runs there. The webhook flips the live isPremium stream, but
+        // invalidating also covers races where the doc was written between
+        // stream attach and this page load (same intent as the old
+        // post-launch invalidate).
+        ref.read(paywallControllerProvider.notifier).redirectTo = redirectTo;
+        ref.invalidate(isPremiumProvider);
+      }
       // Web uses Paystack pages; RevenueCat is never configured there, so
       // fetching would only surface a 'RevenueCat not configured' error.
       if (shouldFetchOfferings(isWeb: kIsWeb)) {
@@ -274,23 +285,34 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen>
     );
   }
 
-  /// Paystack Payment Page URLs for web checkout.
-  /// These are pre-configured pages — no Cloud Function round-trip needed.
-  static const _monthlyPayUrl = 'https://paystack.shop/pay/y-6hxz3op4';
-  static const _yearlyPayUrl = 'https://paystack.shop/pay/wu6y8f7-di';
-
   Widget _buildPaystackPurchase() {
+    final paywallState = ref.watch(paywallControllerProvider);
+    final busy = paywallState.isLoading;
     return Column(
       children: [
         // Yearly — highlighted as best value
         _GoldShimmerButton(
-          onPressed: () => _openPaystackPage(_yearlyPayUrl),
-          child: const _CtaLabel(price: 'Best Value — ₦15,000/yr'),
+          onPressed: busy
+              ? () {}
+              : () => ref
+                  .read(paywallControllerProvider.notifier)
+                  .startWebCheckout(planKey: 'yearly'),
+          child: busy
+              ? const SizedBox(
+                  width: 24,
+                  height: 24,
+                  child: CircularProgressIndicator(
+                      strokeWidth: 2, color: Colors.black87))
+              : const _CtaLabel(price: 'Best Value — ₦15,000/yr'),
         ),
         const Gap(12),
         // Monthly — secondary option
         InkWell(
-          onTap: () => _openPaystackPage(_monthlyPayUrl),
+          onTap: busy
+              ? null
+              : () => ref
+                  .read(paywallControllerProvider.notifier)
+                  .startWebCheckout(planKey: 'monthly'),
           borderRadius: BorderRadius.circular(16),
           child: Container(
             width: double.infinity,
@@ -319,21 +341,6 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen>
         ),
       ],
     );
-  }
-
-  Future<void> _openPaystackPage(String url) async {
-    final uri = Uri.parse(url);
-    try {
-      if (await canLaunchUrl(uri)) {
-        await launchUrl(uri, mode: LaunchMode.externalApplication);
-      }
-    } finally {
-      // The webhook (`users/{uid}.isPremium`) normally flips the live
-      // Firestore stream within seconds; re-running the provider also
-      // covers races where the doc was written between stream attach and
-      // this return.
-      ref.invalidate(isPremiumProvider);
-    }
   }
 
   Widget _buildCosmicBackground() {
