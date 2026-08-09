@@ -50,6 +50,8 @@ import 'package:emerge_app/core/router/creator_routes.dart';
 import 'package:emerge_app/features/blueprints/data/repositories/blueprint_repository.dart';
 import 'package:emerge_app/features/blueprints/domain/models/blueprint.dart';
 import 'package:emerge_app/core/presentation/widgets/app_error_widget.dart';
+import 'package:emerge_app/features/rating/presentation/screens/feedback_screen.dart';
+import 'package:emerge_app/features/rating/presentation/widgets/rating_prompt_host.dart';
 import 'package:emerge_app/features/social/presentation/screens/social_hub_screen.dart';
 
 import 'package:flutter/material.dart';
@@ -417,11 +419,23 @@ GoRouter router(Ref ref) {
         path: '/challenges',
         builder: (context, state) => const ChallengesScreen(showAppBar: true),
       ),
+      // Low-rating feedback form, pushed by the rating controller when the
+      // user rates 1–3 stars. Query params carry the userId + low rating.
+      GoRoute(
+        path: '/feedback',
+        parentNavigatorKey: _rootNavigatorKey,
+        builder: (context, state) => FeedbackScreen(
+          userId: state.uri.queryParameters['userId'] ?? '',
+          rating: int.tryParse(state.uri.queryParameters['rating'] ?? '') ?? 3,
+        ),
+      ),
       // ShellRoute for Bottom Navigation
       StatefulShellRoute.indexedStack(
         builder: (context, state, navigationShell) {
-          return LevelUpListener(
-            child: ScaffoldWithNavBar(navigationShell: navigationShell),
+          return RatingPromptHost(
+            child: LevelUpListener(
+              child: ScaffoldWithNavBar(navigationShell: navigationShell),
+            ),
           );
         },
         branches: [
