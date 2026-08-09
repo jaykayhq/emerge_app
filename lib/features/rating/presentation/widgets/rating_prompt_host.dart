@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:emerge_app/features/auth/presentation/providers/auth_providers.dart';
 import 'package:emerge_app/features/rating/presentation/providers/rating_prompt_provider.dart';
 import 'package:emerge_app/features/rating/presentation/widgets/rating_prompt_dialog.dart';
@@ -7,8 +9,9 @@ import 'package:go_router/go_router.dart';
 
 /// Attaches the rating controller's UI callbacks for the app's lifetime.
 ///
-/// The controller is a singleton Riverpod provider, so without a resident
-/// widget its `onPromptRequested`/`onOpenFeedback` hooks would never be set.
+/// The controller lives in a plain (auto-dispose) Riverpod provider, so
+/// without a resident widget its `onPromptRequested`/`onOpenFeedback` hooks
+/// would never be set and the instance would be dropped once unwatched.
 /// Mounted at the shell root, this host:
 ///   - keeps the auto-dispose controller alive via [ref.watch] in [build],
 ///   - wires the callbacks after the first frame ([_attach]),
@@ -47,7 +50,7 @@ class _RatingPromptHostState extends ConsumerState<RatingPromptHost> {
         context,
         onRating: (rating) {
           if (rating <= 3) lastLowRating = rating;
-          controller.handleRating(rating);
+          unawaited(controller.handleRating(rating));
         },
         onNotNow: () => controller.notNow(),
       );
@@ -56,6 +59,7 @@ class _RatingPromptHostState extends ConsumerState<RatingPromptHost> {
     controller.onOpenFeedback = () async {
       if (!mounted) return;
       final userId = ref.read(authStateChangesProvider).value?.id ?? '';
+      if (userId.isEmpty) return;
       try {
         context.push('/feedback?userId=$userId&rating=$lastLowRating');
       } catch (_) {

@@ -42,7 +42,7 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.byIcon(Icons.star_border).first);
     await tester.pumpAndSettle();
-    expect(selected, isNotNull);
+    expect(selected, 1);
   });
 
   testWidgets('tapping Not now invokes onNotNow', (tester) async {

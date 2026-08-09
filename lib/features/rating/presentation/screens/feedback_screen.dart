@@ -50,11 +50,7 @@ class _FeedbackScreenState extends ConsumerState<FeedbackScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Thanks — your feedback helps us improve.')),
         );
-        try {
-          context.pop();
-        } catch (_) {
-          Navigator.of(context).pop();
-        }
+        context.pop();
       },
     );
   }

@@ -426,7 +426,9 @@ GoRouter router(Ref ref) {
         parentNavigatorKey: _rootNavigatorKey,
         builder: (context, state) => FeedbackScreen(
           userId: state.uri.queryParameters['userId'] ?? '',
-          rating: int.tryParse(state.uri.queryParameters['rating'] ?? '') ?? 3,
+          rating: (int.tryParse(state.uri.queryParameters['rating'] ?? '') ?? 3)
+              .clamp(1, 5)
+              .toInt(),
         ),
       ),
       // ShellRoute for Bottom Navigation

@@ -17,12 +17,15 @@ Future<void> showRatingPromptDialog(
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: List.generate(5, (i) {
           final star = i + 1;
-          return IconButton(
-            icon: const Icon(Icons.star_border, color: Colors.amber, size: 36),
-            onPressed: () {
-              Navigator.of(context).pop();
-              onRating(star);
-            },
+          return Semantics(
+            label: 'Rate $star stars',
+            child: IconButton(
+              icon: const Icon(Icons.star_border, color: Colors.amber, size: 36),
+              onPressed: () {
+                Navigator.of(context).pop();
+                onRating(star);
+              },
+            ),
           );
         }),
       ),
