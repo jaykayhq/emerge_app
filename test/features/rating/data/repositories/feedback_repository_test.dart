@@ -4,7 +4,11 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
 class _MockFirestore extends Mock implements FirebaseFirestore {}
+
+// ignore: subtype_of_sealed_class
 class _MockCollection extends Mock implements CollectionReference<Map<String, dynamic>> {}
+
+// ignore: subtype_of_sealed_class
 class _MockDoc extends Mock implements DocumentReference<Map<String, dynamic>> {}
 
 void main() {

@@ -16,10 +16,10 @@ class _MockRepo extends Mock implements FeedbackRepository {}
 GoRouter _buildRouter() => GoRouter(
       initialLocation: '/home',
       routes: [
-        GoRoute(path: '/home', builder: (_, __) => const Scaffold()),
+        GoRoute(path: '/home', builder: (_, _) => const Scaffold()),
         GoRoute(
           path: '/feedback',
-          builder: (_, __) => const FeedbackScreen(userId: 'u1', rating: 2),
+          builder: (_, _) => const FeedbackScreen(userId: 'u1', rating: 2),
         ),
       ],
     );

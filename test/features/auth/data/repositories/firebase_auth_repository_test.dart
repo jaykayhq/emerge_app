@@ -19,9 +19,11 @@ class _MockUser extends Mock implements User {}
 
 class _MockUserCredential extends Mock implements UserCredential {}
 
+// ignore: subtype_of_sealed_class
 class _MockCollectionReference extends Mock
     implements CollectionReference<Map<String, dynamic>> {}
 
+// ignore: subtype_of_sealed_class
 class _MockDocumentReference extends Mock
     implements DocumentReference<Map<String, dynamic>> {}
 
