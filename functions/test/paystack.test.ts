@@ -3,6 +3,7 @@ import axios from "axios";
 import {
   initializePaystackTransaction,
   paystackWebhook,
+  validateCallbackUrl,
 } from "../src/payments/paystack";
 import * as crypto from "crypto";
 
@@ -167,5 +168,70 @@ describe("initializePaystackTransaction callbackUrl", () => {
         callbackUrl: "https://evil.example.com/phish",
       })
     ).rejects.toHaveProperty("code", "invalid-argument");
+  });
+
+  it("rejects a non-https callbackUrl", async () => {
+    await expect(
+      runCallable({
+        amount: 1500000,
+        email: "a@b.com",
+        callbackUrl: "http://emerge.web.app/order-confirmed",
+      })
+    ).rejects.toHaveProperty("code", "invalid-argument");
+  });
+
+  it("rejects a malformed callbackUrl", async () => {
+    await expect(
+      runCallable({
+        amount: 1500000,
+        email: "a@b.com",
+        callbackUrl: "not a url",
+      })
+    ).rejects.toHaveProperty("code", "invalid-argument");
+  });
+});
+
+describe("validateCallbackUrl", () => {
+  const allowedHosts = ["emerge.web.app", "emerge.firebaseapp.com"];
+
+  it("returns the validated string for an https allow-listed URL", () => {
+    const url = "https://emerge.web.app/order-confirmed";
+    expect(validateCallbackUrl(url, allowedHosts)).toBe(url);
+  });
+
+  it("throws for a non-string value", () => {
+    expect(() => validateCallbackUrl(42, allowedHosts)).toThrowError(
+      expect.objectContaining({ code: "invalid-argument" })
+    );
+  });
+
+  it("throws for a malformed URL", () => {
+    expect(() => validateCallbackUrl("not a url", allowedHosts)).toThrowError(
+      expect.objectContaining({ code: "invalid-argument" })
+    );
+  });
+
+  it("throws for a non-https URL", () => {
+    expect(() =>
+      validateCallbackUrl("http://emerge.web.app/x", allowedHosts)
+    ).toThrowError(
+      expect.objectContaining({ code: "invalid-argument" })
+    );
+  });
+
+  it("throws for a disallowed host", () => {
+    expect(() =>
+      validateCallbackUrl("https://evil.example.com/x", allowedHosts)
+    ).toThrowError(
+      expect.objectContaining({ code: "invalid-argument" })
+    );
+  });
+
+  it("fails closed when the allow-list is empty", () => {
+    expect(() =>
+      validateCallbackUrl("https://emerge.web.app/x", [])
+    ).toThrowError(
+      expect.objectContaining({ code: "invalid-argument" })
+    );
   });
 });

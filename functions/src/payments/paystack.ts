@@ -16,8 +16,42 @@ const CALLBACK_ALLOWED_HOSTS = (
   "emerge.web.app,emerge.firebaseapp.com"
 )
   .split(",")
-  .map((host) => host.trim())
+  .map((host) => host.trim().toLowerCase())
   .filter(Boolean);
+
+/**
+ * Validates a Paystack checkout callback URL: must be a string, parseable,
+ * https-only, and on an allow-listed host. Returns the original string
+ * unchanged, or throws an HttpsError. Pure — no env/state access — so it can
+ * be unit-tested directly and fails closed if the allow-list is empty.
+ */
+export function validateCallbackUrl(
+  url: unknown,
+  allowedHosts: string[]
+): string {
+  if (typeof url !== "string") {
+    throw new HttpsError("invalid-argument", "callbackUrl must be a string");
+  }
+  let parsed: URL;
+  try {
+    parsed = new URL(url);
+  } catch {
+    throw new HttpsError(
+      "invalid-argument",
+      "callbackUrl must be a valid URL"
+    );
+  }
+  if (parsed.protocol !== "https:") {
+    throw new HttpsError("invalid-argument", "callbackUrl must use https");
+  }
+  if (!allowedHosts.includes(parsed.host)) {
+    throw new HttpsError(
+      "invalid-argument",
+      "callbackUrl host is not allowed"
+    );
+  }
+  return url;
+}
 
 /**
  * Cloud Function to securely initialize a Paystack transaction.
@@ -61,31 +95,10 @@ export const initializePaystackTransaction = onCall(
     // phishing origin.
     let validatedCallbackUrl: string | undefined;
     if (callbackUrl !== undefined) {
-      if (typeof callbackUrl !== "string") {
-        throw new HttpsError(
-          "invalid-argument",
-          "callbackUrl must be a string"
-        );
-      }
-      let parsed: URL;
-      try {
-        parsed = new URL(callbackUrl);
-      } catch {
-        throw new HttpsError(
-          "invalid-argument",
-          "callbackUrl must be a valid URL"
-        );
-      }
-      if (
-        parsed.protocol !== "https:" ||
-        !CALLBACK_ALLOWED_HOSTS.includes(parsed.host)
-      ) {
-        throw new HttpsError(
-          "invalid-argument",
-          "callbackUrl host is not allowed"
-        );
-      }
-      validatedCallbackUrl = callbackUrl;
+      validatedCallbackUrl = validateCallbackUrl(
+        callbackUrl,
+        CALLBACK_ALLOWED_HOSTS
+      );
     }
 
     // 2. Call Paystack API
