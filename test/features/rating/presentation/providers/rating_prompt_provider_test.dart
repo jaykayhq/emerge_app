@@ -87,6 +87,33 @@ void main() {
     expect(store.askedAt, isNotNull);
   });
 
+  test('rating of 3 (the threshold low side) routes to feedback', () async {
+    final store = _FakeStore();
+    final launcher = _FakeLauncher();
+    final controller = RatingPromptController(store: store, launcher: launcher);
+    controller.currentVersion = '1.0.7+12';
+    var openedFeedback = false;
+    controller.onOpenFeedback = () async => openedFeedback = true;
+
+    await controller.handleRating(3);
+
+    expect(openedFeedback, isTrue);
+    expect(launcher.launches, 0);
+    expect(store.askedAt, isNotNull);
+  });
+
+  test('rating of 4 (the threshold high side) launches review', () async {
+    final store = _FakeStore();
+    final launcher = _FakeLauncher();
+    final controller = RatingPromptController(store: store, launcher: launcher);
+    controller.currentVersion = '1.0.7+12';
+
+    await controller.handleRating(4);
+
+    expect(launcher.launches, 1);
+    expect(store.askedAt, isNotNull);
+  });
+
   test('notNow records the ask without reviewing', () async {
     final store = _FakeStore();
     final launcher = _FakeLauncher();

@@ -1,7 +1,9 @@
 import 'package:emerge_app/core/services/web_update_service.dart' show kAppVersion;
+import 'package:emerge_app/core/utils/app_logger.dart';
 import 'package:emerge_app/features/rating/domain/rating_prompt_gate.dart';
 import 'package:emerge_app/features/rating/domain/rating_prompt_store.dart';
 import 'package:emerge_app/features/rating/domain/review_launcher.dart';
+import 'package:flutter/foundation.dart' show visibleForTesting;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 final ratingPromptStoreProvider = Provider<RatingPromptStore>(
@@ -25,6 +27,8 @@ class RatingPromptController {
   final RatingPromptStore _store;
   final ReviewLauncher _launcher;
 
+  /// Injectable in tests to pin the version; production always uses [kAppVersion].
+  @visibleForTesting
   String currentVersion = kAppVersion;
 
   /// Invoked when the gate says the rating dialog should be shown.
@@ -34,31 +38,49 @@ class RatingPromptController {
   Future<void> Function()? onOpenFeedback;
 
   Future<void> notifyMilestone(RatingPromptSignal signal) async {
-    final now = DateTime.now();
-    final shouldAsk = RatingPromptGate.shouldAsk(
-      signal: signal,
-      now: now,
-      lastAskedAt: await _store.lastAskedAt(),
-      versionAskedFor: await _store.versionAskedFor(),
-      dontAskAgain: await _store.dontAskAgain(),
-      currentVersion: currentVersion,
-      cooldown: RatingPromptGate.standardCooldown,
-    );
-    if (!shouldAsk) return;
-    await onPromptRequested?.call();
+    try {
+      final now = DateTime.now();
+      final shouldAsk = RatingPromptGate.shouldAsk(
+        signal: signal,
+        now: now,
+        lastAskedAt: await _store.lastAskedAt(),
+        versionAskedFor: await _store.versionAskedFor(),
+        dontAskAgain: await _store.dontAskAgain(),
+        currentVersion: currentVersion,
+        cooldown: RatingPromptGate.standardCooldown,
+      );
+      if (!shouldAsk) return;
+      await onPromptRequested?.call();
+    } catch (e, s) {
+      // Callers fire-and-forget this; swallow so a store read failure never
+      // becomes an unhandled async error.
+      AppLogger.e('RatingPromptController.notifyMilestone failed', e, s);
+    }
   }
 
   Future<void> handleRating(int rating) async {
-    await _store.recordAsked(DateTime.now(), currentVersion);
-    if (rating >= 4) {
-      await _launcher.launch();
-    } else {
-      await onOpenFeedback?.call();
+    try {
+      await _store.recordAsked(DateTime.now(), currentVersion);
+      if (rating >= 4) {
+        await _launcher.launch();
+      } else {
+        if (onOpenFeedback == null) {
+          AppLogger.w('rating feedback requested but onOpenFeedback not wired');
+          return;
+        }
+        await onOpenFeedback?.call();
+      }
+    } catch (e, s) {
+      AppLogger.e('RatingPromptController.handleRating failed', e, s);
     }
   }
 
   Future<void> notNow() async {
-    await _store.recordAsked(DateTime.now(), currentVersion);
+    try {
+      await _store.recordAsked(DateTime.now(), currentVersion);
+    } catch (e, s) {
+      AppLogger.e('RatingPromptController.notNow failed', e, s);
+    }
   }
 }
 

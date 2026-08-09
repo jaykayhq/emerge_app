@@ -682,8 +682,8 @@ class _ChallengeDetailScreenState extends ConsumerState<ChallengeDetailScreen> {
       ref.invalidate(userStatsStreamProvider);
       ref.invalidate(recapRefreshCounterProvider);
       final isCompleted = newProgress >= challenge.totalDays;
-      // Peak-satisfaction prompt on challenge completion; the gate's version +
-      // cooldown rules make this effectively one-shot per version.
+      // Fires on ANY challenge completion (not just the first); the gate's
+      // version + cooldown rules make it once-per-version, matching the spec.
       if (isCompleted && screenContext.mounted) {
         ref.read(ratingPromptControllerProvider).notifyMilestone(
               RatingPromptSignal.challengeCompleted,
