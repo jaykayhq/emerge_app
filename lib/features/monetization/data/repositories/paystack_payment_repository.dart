@@ -21,6 +21,7 @@ class PaystackPaymentRepository {
     required double amount,
     required String email,
     required String identityType,
+    String? callbackUrl,
   }) async {
     try {
       final callable = _functions.httpsCallable(
@@ -30,6 +31,7 @@ class PaystackPaymentRepository {
         'amount': amount * 100, // Paystack uses kobo/cents
         'email': email,
         'metadata': {'identity_type': identityType},
+        if (callbackUrl != null) 'callbackUrl': callbackUrl,
       });
 
       final data = result.data;
