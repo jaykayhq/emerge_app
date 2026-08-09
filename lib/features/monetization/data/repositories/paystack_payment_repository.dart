@@ -31,7 +31,7 @@ class PaystackPaymentRepository {
         'amount': amount * 100, // Paystack uses kobo/cents
         'email': email,
         'metadata': {'identity_type': identityType},
-        if (callbackUrl != null) 'callbackUrl': callbackUrl,
+        'callbackUrl': ?callbackUrl,
       });
 
       final data = result.data;
