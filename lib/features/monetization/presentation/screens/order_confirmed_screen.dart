@@ -20,7 +20,7 @@ class OrderConfirmedScreen extends StatelessWidget {
       backgroundColor: const Color(0xFF0A0A1A),
       body: SafeArea(
         child: Center(
-          child: Padding(
+          child: SingleChildScrollView(
             padding: const EdgeInsets.all(32),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
