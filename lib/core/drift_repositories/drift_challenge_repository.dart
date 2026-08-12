@@ -15,15 +15,13 @@ class DriftChallengeRepository implements ChallengeRepository {
   final LocalGameLoopEngine _engine;
   final EnhancedSyncEngine _syncEngine;
   final SocialActivityService _socialService;
-  final Challenge? Function(String id) _catalogLookup;
 
   DriftChallengeRepository(
     this._db,
     this._engine,
     this._syncEngine,
-    this._socialService, {
-    Challenge? Function(String id)? catalogLookup,
-  }) : _catalogLookup = catalogLookup ?? ChallengeCatalog.getChallengeById;
+    this._socialService,
+  );
 
   @override
   Future<Either<Failure, Unit>> joinChallenge(
@@ -207,7 +205,7 @@ class DriftChallengeRepository implements ChallengeRepository {
     return all.map((r) {
       // Look up the original template from catalog to get metadata
       // (imageUrl, description, reward, steps) not stored in the DB
-      final template = _catalogLookup(r.challengeId);
+      final template = ChallengeCatalog.getChallengeById(r.challengeId);
       return Challenge(
         id: r.challengeId,
         title: r.title ?? template?.title ?? '',
@@ -227,15 +225,6 @@ class DriftChallengeRepository implements ChallengeRepository {
         steps: template?.steps ?? [],
         archetypeId: template?.archetypeId,
         category: template?.category ?? ChallengeCategory.all,
-        sponsor: template?.sponsor,
-        sponsorLogoUrl: template?.sponsorLogoUrl,
-        isSponsored: template?.isSponsored ?? false,
-        affiliateUrl: template?.affiliateUrl,
-        rewardDescription: template?.rewardDescription,
-        affiliatePartnerId: template?.affiliatePartnerId,
-        affiliateNetwork:
-            template?.affiliateNetwork ?? AffiliateNetwork.none,
-        commissionRate: template?.commissionRate,
       );
     }).toList();
   }

@@ -1,13 +1,10 @@
 rules_version = '2';
 
-// Challenge artwork is public (the app renders these URLs directly);
-// writes stay admin-only (the rotation script uses the Admin SDK).
+// Craft rules based on data in your Firestore database
+// allow write: if firestore.get(
+//    /databases/(default)/documents/users/$(request.auth.uid)).data.isAdmin;
 service firebase.storage {
   match /b/{bucket}/o {
-    match /challenges/{allPaths=**} {
-      allow read: if true;
-      allow write: if false;
-    }
     match /{allPaths=**} {
       allow read, write: if false;
     }

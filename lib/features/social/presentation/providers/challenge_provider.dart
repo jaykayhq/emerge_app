@@ -8,7 +8,6 @@ import 'package:emerge_app/features/social/domain/models/challenge_catalog.dart'
 import 'package:emerge_app/features/social/domain/repositories/challenge_repository.dart';
 import 'package:emerge_app/features/social/presentation/providers/tribes_provider.dart';
 import 'package:emerge_app/core/sync/sync_providers.dart';
-import 'package:emerge_app/features/social/data/services/affiliate_reward_service.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
@@ -20,10 +19,6 @@ final challengeRepositoryProvider = Provider<ChallengeRepository>((ref) {
   final syncEngine = ref.watch(enhancedSyncEngineProvider);
   final socialService = ref.watch(socialActivityServiceProvider);
   return DriftChallengeRepository(db, engine, syncEngine, socialService);
-});
-
-final affiliateRewardServiceProvider = Provider<AffiliateRewardService>((ref) {
-  return AffiliateRewardService();
 });
 
 @Riverpod(keepAlive: true)
@@ -83,12 +78,7 @@ final challengeByIdProvider = FutureProvider.family<Challenge?, String>((
   id,
 ) async {
   final repository = ref.read(challengeRepositoryProvider);
-  final catalog = await repository.getChallengeById(id);
-  if (catalog != null) return catalog;
-  final firestore = ref.read(firestoreProvider);
-  final doc = await firestore.collection('challenges').doc(id).get();
-  if (!doc.exists) return null;
-  return Challenge.fromMap(doc.data()!, id: doc.id);
+  return repository.getChallengeById(id);
 });
 
 final filteredChallengesProvider =
@@ -123,23 +113,6 @@ final tribeChallengesProvider = StreamProvider<List<Challenge>>((ref) {
     loading: () => Stream.value([]),
     error: (_, _) => Stream.value([]),
   );
-});
-
-/// Server-published challenge catalog (public read per Firestore rules).
-/// Only live statuses are surfaced; expired entries are filtered here so the
-/// feed never shows retired challenges.
-final publicChallengesProvider =
-    StreamProvider.autoDispose<List<Challenge>>((ref) {
-  final firestore = ref.watch(firestoreProvider);
-  return firestore.collection('challenges').snapshots().map(
-        (snap) => snap.docs
-            .where((doc) {
-              final status = doc.data()['status'] as String?;
-              return status == 'featured' || status == 'active';
-            })
-            .map((doc) => Challenge.fromMap(doc.data(), id: doc.id))
-            .toList(),
-      );
 });
 
 /// Catalog challenges authored by [uid] (verified creators).

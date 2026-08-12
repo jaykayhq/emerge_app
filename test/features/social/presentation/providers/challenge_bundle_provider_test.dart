@@ -5,7 +5,6 @@ import 'package:emerge_app/features/gamification/presentation/providers/user_sta
 import 'package:emerge_app/features/social/domain/repositories/challenge_repository.dart';
 import 'package:emerge_app/features/social/presentation/providers/challenge_bundle_provider.dart';
 import 'package:emerge_app/features/social/presentation/providers/challenge_provider.dart';
-import 'package:fake_cloud_firestore/fake_cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
@@ -47,15 +46,11 @@ void main() {
               const UserProfile(uid: 'test', archetype: UserArchetype.athlete),
             ),
           ),
-          firestoreProvider.overrideWithValue(FakeFirebaseFirestore()),
         ],
       );
 
-      final subscription = container.listen(challengeBundleProvider, (_, _) {});
-
       final result = await container.read(challengeBundleProvider.future);
       expect(result, isNotNull);
-      subscription.close();
       container.dispose();
     });
   });

@@ -13,10 +13,6 @@ import 'package:emerge_app/features/social/domain/models/challenge.dart';
 import 'package:emerge_app/features/social/presentation/providers/challenge_provider.dart';
 import 'package:emerge_app/features/social/presentation/providers/challenge_bundle_provider.dart';
 import 'package:emerge_app/features/social/presentation/widgets/quest_confirmation_sheet.dart';
-import 'package:emerge_app/features/social/domain/services/affiliate_reward.dart';
-import 'package:emerge_app/features/rating/domain/rating_prompt_gate.dart';
-import 'package:emerge_app/features/rating/presentation/providers/rating_prompt_provider.dart';
-import 'package:emerge_app/features/social/presentation/widgets/sponsor_reward_card.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -35,9 +31,6 @@ class ChallengeDetailScreen extends ConsumerStatefulWidget {
 }
 
 class _ChallengeDetailScreenState extends ConsumerState<ChallengeDetailScreen> {
-  /// Guards against duplicate claim taps (duplicate affiliate click events).
-  bool _claimingReward = false;
-
   @override
   Widget build(BuildContext context) {
     final challenge = widget.challenge;
@@ -86,9 +79,6 @@ class _ChallengeDetailScreenState extends ConsumerState<ChallengeDetailScreen> {
         final progress = challenge.totalDays > 0
             ? (challenge.currentDay / challenge.totalDays).clamp(0.0, 1.0)
             : 0.0;
-
-        final affiliateReward = affiliateRewardFor(challenge);
-        final rewardClaimable = affiliateRewardClaimable(challenge);
 
         return WorldBackground(
           themeOverride: AppWorldTheme.nebula,
@@ -303,18 +293,6 @@ class _ChallengeDetailScreenState extends ConsumerState<ChallengeDetailScreen> {
                                 height: 1.5,
                               ),
                             ).animate().fadeIn(delay: 400.ms),
-                            if (affiliateReward != null) ...[
-                              const Gap(20),
-                              SponsorRewardCard(
-                                reward: affiliateReward,
-                                claimable: rewardClaimable,
-                                onClaim: () => _claimAffiliateReward(
-                                  context,
-                                  challenge,
-                                  affiliateReward,
-                                ),
-                              ),
-                            ],
                             const Gap(32),
 
                             // Progress Section
@@ -682,13 +660,6 @@ class _ChallengeDetailScreenState extends ConsumerState<ChallengeDetailScreen> {
       ref.invalidate(userStatsStreamProvider);
       ref.invalidate(recapRefreshCounterProvider);
       final isCompleted = newProgress >= challenge.totalDays;
-      // Fires on ANY challenge completion (not just the first); the gate's
-      // version + cooldown rules make it once-per-version, matching the spec.
-      if (isCompleted && screenContext.mounted) {
-        ref.read(ratingPromptControllerProvider).notifyMilestone(
-              RatingPromptSignal.challengeCompleted,
-            );
-      }
       _showSuccess(
         screenContext,
         isCompleted
@@ -697,26 +668,6 @@ class _ChallengeDetailScreenState extends ConsumerState<ChallengeDetailScreen> {
       );
       screenContext.pop();
     });
-  }
-
-  Future<void> _claimAffiliateReward(
-    BuildContext screenContext,
-    Challenge challenge,
-    AffiliateReward reward,
-  ) async {
-    if (_claimingReward) return;
-    final user = ref.read(authStateChangesProvider).value;
-    final service = ref.read(affiliateRewardServiceProvider);
-    _claimingReward = true;
-    final launched = await service.claimReward(
-      challenge: challenge,
-      reward: reward,
-      userId: user?.id,
-    );
-    _claimingReward = false;
-    if (!launched && screenContext.mounted) {
-      _showError(screenContext, 'Could not open the reward link. Try again later.');
-    }
   }
 
   void _showError(BuildContext context, String message) {
