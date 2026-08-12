@@ -17,7 +17,7 @@ import 'package:emerge_app/features/social/presentation/providers/challenge_prov
 import 'package:emerge_app/features/social/presentation/providers/creator_invite_provider.dart';
 import 'package:emerge_app/features/social/presentation/providers/creator_provider.dart';
 import 'package:emerge_app/features/social/presentation/providers/tribes_provider.dart';
-import 'package:emerge_app/features/social/presentation/screens/creator/creator_tribe_management_tab.dart';
+import 'package:emerge_app/features/social/presentation/screens/creator/creator_invite_dialog.dart';
 
 class _MockAppDatabase extends Mock implements AppDatabase {}
 class _MockSyncEngine extends Mock implements EnhancedSyncEngine {}
@@ -114,7 +114,7 @@ void main() {
         ),
         challengeRepositoryProvider.overrideWithValue(repo),
       ],
-      child: const MaterialApp(home: CreatorTribeManagementTab()),
+      child: const MaterialApp(home: Scaffold(body: CreatorInviteDialog())),
     );
   }
 
@@ -132,9 +132,6 @@ void main() {
       createTest(functions: functions, repo: FakeChallengeRepository()),
     );
     await tester.pump(const Duration(milliseconds: 100));
-
-    await tester.tap(find.text('Invite Creators'));
-    await tester.pumpAndSettle();
 
     // No auto-generation on open (codes are single-use quota).
     expect(find.text('GENERATE INVITE CODE'), findsOneWidget);
@@ -165,13 +162,34 @@ void main() {
     );
     await tester.pump(const Duration(milliseconds: 100));
 
-    await tester.tap(find.text('Invite Creators'));
-    await tester.pumpAndSettle();
     await tester.tap(find.text('GENERATE INVITE CODE'));
     await tester.pumpAndSettle();
 
-    expect(find.textContaining('Could not generate an invite code'),
-        findsOneWidget);
+    expect(find.textContaining('Only verified creators'), findsOneWidget);
+    expect(find.text('COPY CODE'), findsNothing);
+  });
+
+  testWidgets('resource-exhausted surfaces the outstanding-code cap message',
+      (tester) async {
+    final functions = _MockFunctions();
+    final callable = _MockCallable();
+    when(() => functions.httpsCallable('generateCreatorInviteCode'))
+        .thenReturn(callable);
+    when(() => callable.call(any()))
+        .thenThrow(FirebaseFunctionsException(
+      code: 'resource-exhausted',
+      message: 'Limit reached',
+    ));
+
+    await tester.pumpWidget(
+      createTest(functions: functions, repo: FakeChallengeRepository()),
+    );
+    await tester.pump(const Duration(milliseconds: 100));
+
+    await tester.tap(find.text('GENERATE INVITE CODE'));
+    await tester.pumpAndSettle();
+
+    expect(find.textContaining('10 outstanding'), findsOneWidget);
     expect(find.text('COPY CODE'), findsNothing);
   });
 }
