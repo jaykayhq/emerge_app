@@ -73,15 +73,26 @@ export function generateCode(): string {
   return code;
 }
 
+/**
+ * Whether the account holds the `admin: true` custom claim. Invite-code
+ * generation is an admin-only capability (the default creator account seeded
+ * by seedCreatorAccount carries it) — ordinary verified creators can only
+ * redeem codes, not mint them.
+ */
+export async function isAdminUser(uid: string): Promise<boolean> {
+  const userRecord = await admin.auth().getUser(uid);
+  return userRecord.customClaims?.admin === true;
+}
+
 export const generateCreatorInviteCode = onCall(async (request) => {
   if (!request.auth) {
     throw new HttpsError("unauthenticated", "User must be logged in.");
   }
   const uid = request.auth.uid;
-  if (!(await isVerifiedCreator(uid))) {
+  if (!(await isAdminUser(uid))) {
     throw new HttpsError(
       "permission-denied",
-      "Only verified creators can generate invite codes."
+      "Only the admin creator can generate invite codes."
     );
   }
 

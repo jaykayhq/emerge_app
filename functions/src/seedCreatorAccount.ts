@@ -67,7 +67,7 @@ export async function seedCreatorAccountHandler(
       }
     }
 
-    await auth.setCustomUserClaims(uid, { role: "creator" });
+    await auth.setCustomUserClaims(uid, { role: "creator", admin: true });
 
     await db.collection("creator_profiles").doc(uid).set({
       userId: uid,

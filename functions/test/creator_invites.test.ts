@@ -73,10 +73,13 @@ const CODE_PATTERN = /^[A-Z2-9]{8}$/;
 
 beforeEach(() => {
   jest.clearAllMocks();
-  // Default: u1 is a verified creator; any other uid is a plain user with
-  // no profile (redeem/ensure tests drive non-creator callers).
+  // Default: u1 is the admin creator (role + admin claim); any other uid is a
+  // plain user with no profile (redeem/ensure tests drive non-creator callers).
   getUser.mockImplementation((uid: string) =>
-    Promise.resolve({ customClaims: { role: uid === "u1" ? "creator" : "user" } })
+    Promise.resolve({
+      customClaims:
+        uid === "u1" ? { role: "creator", admin: true } : { role: "user" },
+    })
   );
   docGet.mockImplementation((name: string, id: string) =>
     Promise.resolve(
@@ -109,10 +112,8 @@ describe("generateCreatorInviteCode", () => {
     ).rejects.toHaveProperty("code", "permission-denied");
   });
 
-  it("rejects a creator claim with no verified profile doc", async () => {
-    docGet.mockImplementation(() =>
-      Promise.resolve({ exists: false, data: () => null })
-    );
+  it("rejects a verified creator without the admin claim", async () => {
+    getUser.mockResolvedValue({ customClaims: { role: "creator" } });
     await expect(
       generateCreatorInviteCode.run({ auth: { uid: "u1" }, data: {} })
     ).rejects.toHaveProperty("code", "permission-denied");

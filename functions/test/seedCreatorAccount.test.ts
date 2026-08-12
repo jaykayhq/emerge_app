@@ -105,7 +105,7 @@ describe("seedCreatorAccountHandler", () => {
     );
     expect(setCustomUserClaims).toHaveBeenCalledWith(
       "seed-uid",
-      expect.objectContaining({ role: "creator" })
+      expect.objectContaining({ role: "creator", admin: true })
     );
     expect(docSet).toHaveBeenCalled();
     // Invite code comes from the shared crypto-secure generator
