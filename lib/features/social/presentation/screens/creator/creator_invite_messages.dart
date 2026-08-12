@@ -10,7 +10,7 @@ String inviteCodeErrorMessage(Object error) {
         return 'You have 10 outstanding invite codes — redeem one or wait for '
             'expiry before generating another.';
       case 'permission-denied':
-        return 'Only verified creators can generate invite codes.';
+        return 'Only the admin creator can generate invite codes.';
     }
   }
   return 'Could not generate an invite code. Try again in a moment.';

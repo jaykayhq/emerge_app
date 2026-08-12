@@ -5,6 +5,7 @@ import 'package:gap/gap.dart';
 import 'package:emerge_app/core/theme/emerge_colors.dart';
 import 'package:emerge_app/core/presentation/widgets/emerge_loading_skeleton.dart';
 import 'package:emerge_app/core/presentation/widgets/app_error_widget.dart';
+import 'package:emerge_app/features/auth/presentation/providers/role_provider.dart';
 import 'package:emerge_app/features/social/domain/models/challenge.dart';
 import 'package:emerge_app/features/social/presentation/providers/challenge_provider.dart';
 import 'package:emerge_app/features/social/presentation/providers/creator_provider.dart';
@@ -187,14 +188,15 @@ class _TribeManagementView extends ConsumerWidget {
           ),
         ),
         const Gap(8),
-        _ActionCard(
-          icon: Icons.person_add_alt_1_rounded,
-          title: 'Invite Creators',
-          subtitle: 'Generate a single-use invite code',
-          color: EmergeColors.warmGold,
-          onTap: () => _showInviteCreatorDialog(context, ref),
-        ),
-        const Gap(8),
+        if (ref.watch(isAdminUserProvider).value == true)
+          _ActionCard(
+            icon: Icons.person_add_alt_1_rounded,
+            title: 'Invite Creators',
+            subtitle: 'Generate a single-use invite code',
+            color: EmergeColors.warmGold,
+            onTap: () => _showInviteCreatorDialog(context, ref),
+          ),
+        if (ref.watch(isAdminUserProvider).value == true) const Gap(8),
         _ActionCard(
           icon: Icons.settings_rounded,
           title: 'Tribe Settings',

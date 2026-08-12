@@ -13,13 +13,13 @@ void main() {
     expect(message, contains('expiry'));
   });
 
-  test('maps permission-denied to the verification message', () {
+  test('maps permission-denied to the admin-only message', () {
     final error = FirebaseFunctionsException(
       code: 'permission-denied',
       message: 'denied',
     );
     final message = inviteCodeErrorMessage(error);
-    expect(message, contains('verified creators'));
+    expect(message, contains('admin creator'));
   });
 
   test('falls back to a generic message for unknown errors', () {

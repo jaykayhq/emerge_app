@@ -9,10 +9,12 @@ import 'package:emerge_app/features/gamification/presentation/providers/user_sta
 import 'package:emerge_app/features/blueprints/data/repositories/blueprint_repository.dart';
 import 'package:emerge_app/features/social/presentation/providers/creator_provider.dart';
 import 'package:emerge_app/features/auth/domain/entities/user_extension.dart';
+import 'package:emerge_app/features/auth/presentation/providers/role_provider.dart';
 
-Widget _buildTest() {
+Widget _buildTest({bool isAdmin = true}) {
   return ProviderScope(
     overrides: [
+      isAdminUserProvider.overrideWith((ref) async => isAdmin),
       userStatsStreamProvider.overrideWith(
         (ref) => Stream.value(
           const UserProfile(
@@ -59,5 +61,13 @@ void main() {
     );
 
     expect(find.text('Invite Creators'), findsOneWidget);
+  });
+
+  testWidgets('overview hides Invite Creators from non-admin creators',
+      (tester) async {
+    await tester.pumpWidget(_buildTest(isAdmin: false));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Invite Creators'), findsNothing);
   });
 }

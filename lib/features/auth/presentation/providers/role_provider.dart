@@ -108,6 +108,25 @@ final currentUserRoleProvider = FutureProvider<UserRole?>((ref) async {
   return UserRole.unknown;
 });
 
+/// Whether the current user holds the `admin: true` custom claim.
+///
+/// Only the admin creator can mint invite codes — `generateCreatorInviteCode`
+/// enforces this server-side; the UI gates the invite entry points on the
+/// same claim so non-admin creators never see them.
+///
+/// Reads the ID token directly (no repository chain) so tests that don't
+/// override this provider resolve `false` without initializing Firebase.
+final isAdminUserProvider = FutureProvider<bool>((ref) async {
+  try {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return false;
+    final tokenResult = await user.getIdTokenResult(true);
+    return tokenResult.claims?['admin'] == true;
+  } catch (_) {
+    return false;
+  }
+});
+
 /// Reads the creator onboarding state for the currently-authenticated user.
 /// Returns `null` if the user is not a creator (or not signed in).
 final currentCreatorOnboardingProvider =

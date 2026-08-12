@@ -165,7 +165,7 @@ void main() {
     await tester.tap(find.text('GENERATE INVITE CODE'));
     await tester.pumpAndSettle();
 
-    expect(find.textContaining('Only verified creators'), findsOneWidget);
+    expect(find.textContaining('admin creator'), findsOneWidget);
     expect(find.text('COPY CODE'), findsNothing);
   });
 
