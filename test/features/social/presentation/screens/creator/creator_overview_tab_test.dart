@@ -47,4 +47,17 @@ void main() {
     expect(find.text('Creator Hub'), findsOneWidget);
     expect(find.textContaining('Welcome back'), findsOneWidget);
   });
+
+  testWidgets('overview shows the Invite Creators entry', (tester) async {
+    await tester.pumpWidget(_buildTest());
+    await tester.pumpAndSettle();
+
+    await tester.scrollUntilVisible(
+      find.text('Invite Creators'),
+      200,
+      scrollable: find.byType(Scrollable),
+    );
+
+    expect(find.text('Invite Creators'), findsOneWidget);
+  });
 }

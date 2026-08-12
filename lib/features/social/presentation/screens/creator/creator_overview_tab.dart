@@ -8,6 +8,7 @@ import 'package:emerge_app/core/presentation/widgets/emerge_loading_skeleton.dar
 import 'package:emerge_app/features/blueprints/data/repositories/blueprint_repository.dart';
 import 'package:emerge_app/features/social/presentation/providers/creator_provider.dart';
 import 'package:emerge_app/features/gamification/presentation/providers/user_stats_providers.dart';
+import 'package:emerge_app/features/social/presentation/screens/creator/creator_invite_dialog.dart';
 
 class CreatorOverviewTab extends ConsumerWidget {
   const CreatorOverviewTab({super.key});
@@ -198,6 +199,17 @@ class CreatorOverviewTab extends ConsumerWidget {
                 subtitle: 'Announcements, members, challenges',
                 color: Colors.blue,
                 onTap: () => context.push('/creator/dashboard/tribe'),
+              ),
+              const Gap(10),
+              _NavCard(
+                icon: Icons.card_giftcard_rounded,
+                title: 'Invite Creators',
+                subtitle: 'Generate a single-use invite code',
+                color: EmergeColors.warmGold,
+                onTap: () => showDialog<void>(
+                  context: context,
+                  builder: (ctx) => const CreatorInviteDialog(),
+                ),
               ),
               const Gap(10),
 
