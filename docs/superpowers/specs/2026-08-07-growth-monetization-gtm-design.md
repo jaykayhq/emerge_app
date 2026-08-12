@@ -4,6 +4,8 @@
 **Status:** Approved for planning
 **Companion artifacts:** `docs/growth/notion-tasks.csv` (Notion-importable task DB), `docs/growth/strategy-page.md` (strategy overview)
 
+> **SUPERSEDED 2026-08-12 — Affiliate pivot:** the affiliate-link monetization and server-published challenge feed (Tier-1 items 1-2, §6 P0/P1) were **removed** after evaluation. The product pivoted to **sponsor-first monetization**: flat-fee/CPA sponsored quests with real rewards delivered via voucher API (blueprint §8.2). See the updated `docs/growth/strategy-page.md` and `docs/growth/notion-tasks.csv` (dated from 2026-08-12). The GTM, content-engine, and community-first sections remain valid.
+
 ---
 
 ## 1. Context & Constraints

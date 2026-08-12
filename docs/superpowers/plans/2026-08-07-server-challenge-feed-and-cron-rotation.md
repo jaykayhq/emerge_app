@@ -1,5 +1,7 @@
 # Server Challenge Feed & Cron Rotation Implementation Plan
 
+> **SUPERSEDED 2026-08-12:** the feed-unlock and rotation automation work was executed and then **reverted** (`3b27baa7`) because the rotation introduced server challenges without honoring the existing catalog's expiry lifecycle, and the product pivoted to sponsor-first monetization. The app is restored to the generic static catalog. See the updated `docs/growth/strategy-page.md` for the sponsor-first plan.
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Let the app show server-published challenges (images, affiliate links, sponsorship windows) and rotate them daily/weekly via a GitHub Actions cron + Node script — with **zero Firebase scheduled-function invocations**.

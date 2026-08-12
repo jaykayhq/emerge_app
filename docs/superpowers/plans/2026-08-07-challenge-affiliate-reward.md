@@ -1,5 +1,7 @@
 # Challenge Affiliate Reward Implementation Plan
 
+> **SUPERSEDED 2026-08-12:** this plan was executed (9 commits) and then **reverted** (`3b27baa7`) as part of the pivot away from affiliate-link monetization. The sponsor reward card, affiliate reward service/helper, and their wiring were removed. Kept in git history for reference only.
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Let users claim a sponsor's affiliate reward after completing a sponsored challenge, opening the affiliate URL and firing the `affiliate_link_clicked` analytics event.
