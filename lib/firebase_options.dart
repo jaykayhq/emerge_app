@@ -47,7 +47,9 @@ class DefaultFirebaseOptions {
   }
 
   static const FirebaseOptions web = FirebaseOptions(
-    apiKey: 'AIzaSyAWlSsjpgQN4E_Bt3esMa1hIFJ9nESAEmA',
+    // Dedicated browser key (restricted to the app's referrers) — the web
+    // app no longer shares the Android key (which is Android-restricted).
+    apiKey: 'AIzaSyBXiqmFfdGUmMnYSVQ1kTBDczk-4jbCvOQ',
     appId: '1:359335119695:web:8dc0ac66d6a874ddcb533a',
     messagingSenderId: '359335119695',
     projectId: 'tradeflash-l2966',

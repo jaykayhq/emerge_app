@@ -19,6 +19,7 @@ set -euo pipefail
 
 PROJECT="${PROJECT:-tradeflash-l2966}"
 DEBUG_SHA1="28:6B:40:B7:EF:85:26:F3:73:70:34:BB:15:1D:56:B7:39:25:2A:D2"
+DEBUG_SHA1_UNCOLONED="286b40b7ef8526f3737034bb151d56b739252ad2"
 RELEASE_SHA1="${RELEASE_SHA1:-}"
 
 ANDROID_PACKAGE="com.emerge.emerge_app"
@@ -72,21 +73,23 @@ while read -r name keyvalue; do
 done < <(gcloud services api-keys list --project "$PROJECT" --show-response \
   --format="value(name, restrictions.apiKeyValue)" 2>/dev/null)
 
-# ---------- Android + Web key (shared) ----------
-if [[ -n "$KEY_ANDROID_WEB" ]]; then
-  echo "==> Restricting Android+Web key: $KEY_ANDROID_WEB"
-  cmd=(gcloud services api-keys update "$KEY_ANDROID_WEB"
-    --allowed-referrers="$WEB_REFERRERS")
-  if [[ -n "$RELEASE_SHA1" ]]; then
-    cmd+=(--allowed-application="sha1_fingerprint=$DEBUG_SHA1,package_name=$ANDROID_PACKAGE"
-          --allowed-application="sha1_fingerprint=$RELEASE_SHA1,package_name=$ANDROID_PACKAGE")
-  else
-    echo "WARNING: skipping Android application restriction (release SHA-1 missing) —"
-    echo "         web referrer restriction applied only."
-  fi
-  "${cmd[@]}"
+# ---------- Android key (AIzaSyAWlSsjpgQN4E_Bt3esMa1hIFJ9nESAEmA) ----------
+# NOTE: web previously shared this key; a dedicated browser key was created
+# (b3783a74-92c4-4b4b-b600-b4363bce7260, value AIzaSyBXiqmFfdGUmMnYSVQ1kTBDczk-4jbCvOQ)
+# and lib/firebase_options.dart web.apiKey updated. Android-only here.
+ANDROID_KEY=$(gcloud services api-keys list --project "$PROJECT" --format="value(name)" --filter="displayName='Android key (auto created by Firebase)'" 2>/dev/null | head -1)
+if [[ -n "$ANDROID_KEY" ]]; then
+  echo "==> Restricting Android key: $ANDROID_KEY"
+  gcloud services api-keys update "$ANDROID_KEY" \
+    --allowed-application="sha1_fingerprint=31ff52c2d39b492fe80c339e5c9c55e0625f59e7,package_name=$ANDROID_PACKAGE" \
+    --allowed-application="sha1_fingerprint=06485267caa879f060ab52aa9303bc978f23d795,package_name=$ANDROID_PACKAGE" \
+    --allowed-application="sha1_fingerprint=d7f5bc2e7c67114c76e7e05273d828e6d7abca61,package_name=$ANDROID_PACKAGE" \
+    --allowed-application="sha1_fingerprint=41050fb3f292e1d83a64aaab84cb6b5e16b1d38e,package_name=$ANDROID_PACKAGE" \
+    --allowed-application="sha1_fingerprint=386eb7a9d5a07b82921ecc480de03943206fe9ba,package_name=$ANDROID_PACKAGE" \
+    --allowed-application="sha1_fingerprint=bc224b6631d2c1126936c0663bca407b9244813e,package_name=$ANDROID_PACKAGE" \
+    --allowed-application="sha1_fingerprint=$DEBUG_SHA1_UNCOLONED,package_name=$ANDROID_PACKAGE"
 else
-  echo "!! Android+Web key not found — add it from the Firebase console if needed."
+  echo "!! Android key not found."
 fi
 
 # ---------- iOS key ----------
