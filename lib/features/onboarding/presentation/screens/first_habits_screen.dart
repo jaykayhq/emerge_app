@@ -42,6 +42,7 @@ class _FirstHabitsScreenState extends ConsumerState<FirstHabitsScreen> {
       title: c.title ?? blueprint.title,
       shortCue: c.cue ?? blueprint.shortCue,
       attribute: blueprint.attribute,
+      timerDurationMinutes: blueprint.timerDurationMinutes,
       archetype: blueprint.archetype,
       interestCategories: blueprint.interestCategories,
       clubTags: blueprint.clubTags,
@@ -384,11 +385,28 @@ class _BlueprintCard extends StatelessWidget {
                   size: 16,
                 ),
                 const Gap(6),
+                Expanded(
+                  child: Text(
+                    customCue ?? blueprint.shortCue,
+                    style: GoogleFonts.splineSans(
+                      color: Colors.white70,
+                      fontSize: 14,
+                    ),
+                  ),
+                ),
+                Icon(
+                  Icons.timer_outlined,
+                  color: Colors.white.withValues(alpha: 0.45),
+                  size: 14,
+                ),
+                const Gap(4),
                 Text(
-                  customCue ?? blueprint.shortCue,
+                  '${blueprint.timerDurationMinutes} MIN',
                   style: GoogleFonts.splineSans(
-                    color: Colors.white70,
-                    fontSize: 14,
+                    color: Colors.white.withValues(alpha: 0.55),
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    letterSpacing: 0.5,
                   ),
                 ),
               ],

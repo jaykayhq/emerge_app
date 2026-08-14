@@ -12,6 +12,7 @@ void main() {
         title: '10 squats',
         shortCue: 'After breakfast',
         attribute: HabitAttribute.vitality,
+        timerDurationMinutes: 3,
         archetype: UserArchetype.athlete,
         interestCategories: [],
         clubTags: ['fitness'],
@@ -22,6 +23,7 @@ void main() {
       expect(blueprint.title, '10 squats');
       expect(blueprint.shortCue, 'After breakfast');
       expect(blueprint.attribute, HabitAttribute.vitality);
+      expect(blueprint.timerDurationMinutes, 3);
       expect(blueprint.archetype, UserArchetype.athlete);
       expect(blueprint.clubTags, ['fitness']);
     });
@@ -56,6 +58,13 @@ void main() {
             reason: 'blueprint ${b.id} must have a title');
         expect(b.shortCue.trim().isNotEmpty, isTrue,
             reason: 'blueprint ${b.id} must have a shortCue');
+      }
+    });
+
+    test('every blueprint carries a recommended timer duration', () {
+      for (final b in StarterHabitBlueprint.catalog) {
+        expect(b.timerDurationMinutes, greaterThan(0),
+            reason: 'blueprint ${b.id} must recommend a duration in minutes');
       }
     });
 

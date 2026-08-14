@@ -128,6 +128,14 @@ class FakeAuthRepository implements AuthRepository {
   }
 
   @override
+  Future<Either<Failure, bool>> checkUsernameAvailability(
+    String username,
+  ) async {
+    // No usernames are pre-claimed in the fake, so everything is available.
+    return const Right(true);
+  }
+
+  @override
   Future<Either<Failure, bool>> checkEmailVerified() async {
     if (_currentUser == AuthUser.empty) {
       return const Left(AuthFailure('User not logged in'));

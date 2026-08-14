@@ -79,6 +79,23 @@ void main() {
     await tester.pump(const Duration(seconds: 1));
   }
 
+  testWidgets('starter cards surface the recommended duration',
+      (tester) async {
+    final repo = _CapturingHabitRepository();
+    final c = await container(repo);
+    addTearDown(c.dispose);
+    await pump(tester, c);
+
+    expect(find.byIcon(Icons.timer_outlined), findsWidgets);
+    final durationLabels = tester
+        .widgetList<Text>(find.byType(Text))
+        .map((t) => t.data ?? '')
+        .where((s) => RegExp(r'^\d+ MIN$').hasMatch(s))
+        .toList();
+    expect(durationLabels, isNotEmpty,
+        reason: 'at least one starter card must show a duration');
+  });
+
   testWidgets('CTA disabled until at least one habit is selected',
       (tester) async {
     final repo = _CapturingHabitRepository();

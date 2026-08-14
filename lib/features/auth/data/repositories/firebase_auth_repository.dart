@@ -502,6 +502,32 @@ class FirebaseAuthRepository implements AuthRepository {
     }
   }
 
+  /// Probes whether a username is still free (case-insensitive). The signup
+  /// form calls this before the account exists, so the callable deliberately
+  /// accepts unauthenticated callers.
+  @override
+  Future<Either<Failure, bool>> checkUsernameAvailability(
+    String username,
+  ) async {
+    final usernameError = AppValidators.validateUsername(username);
+    if (usernameError != null) {
+      return Left(AuthFailure(usernameError));
+    }
+    try {
+      final result = await _functions
+          .httpsCallable('checkUsernameAvailability')
+          .call(<String, dynamic>{'username': username.trim()});
+      final available = (result.data as Map?)?['available'] as bool? ?? true;
+      return Right(available);
+    } on FirebaseFunctionsException catch (e) {
+      AppLogger.w('checkUsernameAvailability failed', error: e);
+      return Left(_mapFunctionsError(e));
+    } catch (e, s) {
+      AppLogger.e('checkUsernameAvailability failed', e, s);
+      return Left(ServerFailure(e.toString()));
+    }
+  }
+
   /// Reloads the current user so `emailVerified` reflects a verification link
   /// that was clicked (possibly outside the app) and the user has returned.
   /// Used by the verify screen's "I've verified" action and settings.

@@ -1,3 +1,4 @@
+import 'package:emerge_app/core/services/remote_config_service.dart';
 import 'package:emerge_app/features/auth/domain/entities/auth_user.dart';
 import 'package:emerge_app/features/auth/presentation/providers/auth_providers.dart';
 import 'package:emerge_app/features/blueprints/data/repositories/blueprint_repository.dart';
@@ -13,6 +14,7 @@ import 'package:fpdart/fpdart.dart';
 
 class MockHabitRepository extends Mock implements HabitRepository {}
 class MockBlueprintRepository extends Mock implements BlueprintRepository {}
+class MockRemoteConfigService extends Mock implements RemoteConfigService {}
 
 class TestIsPremium extends IsPremium {
   final bool premium;
@@ -24,6 +26,7 @@ class TestIsPremium extends IsPremium {
 ProviderContainer _makeContainer({
   required HabitRepository habitRepo,
   required BlueprintRepository blueprintRepo,
+  RemoteConfigService? remoteConfig,
   bool premium = false,
   AuthUser? authUser,
 }) {
@@ -34,6 +37,8 @@ ProviderContainer _makeContainer({
       ),
       habitRepositoryProvider.overrideWithValue(habitRepo),
       blueprintRepositoryProvider.overrideWithValue(blueprintRepo),
+      if (remoteConfig != null)
+        remoteConfigServiceProvider.overrideWithValue(remoteConfig),
       isPremiumProvider.overrideWith(() => TestIsPremium(premium)),
       habitsProvider.overrideWith((ref) => Stream.value([])),
     ],
@@ -43,6 +48,7 @@ ProviderContainer _makeContainer({
 void main() {
   late MockHabitRepository mockHabitRepo;
   late MockBlueprintRepository mockBlueprintRepo;
+  late MockRemoteConfigService mockRemoteConfig;
 
   setUpAll(() {
     registerFallbackValue(
@@ -64,6 +70,8 @@ void main() {
   setUp(() {
     mockHabitRepo = MockHabitRepository();
     mockBlueprintRepo = MockBlueprintRepository();
+    mockRemoteConfig = MockRemoteConfigService();
+    when(() => mockRemoteConfig.freeHabitLimit).thenReturn(5);
   });
 
   group('blueprintDetailControllerProvider', () {
@@ -96,6 +104,7 @@ void main() {
       final container = _makeContainer(
         habitRepo: mockHabitRepo,
         blueprintRepo: mockBlueprintRepo,
+        remoteConfig: mockRemoteConfig,
       );
 
       await container.read(blueprintDetailControllerProvider.notifier)

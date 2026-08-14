@@ -35,7 +35,7 @@ jest.mock("firebase-admin", () => ({
 const ft = require("firebase-functions-test")();
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports
-const { claimUsername, validateUsername } = require("../src/usernames");
+const { claimUsername, checkUsernameAvailability, validateUsername } = require("../src/usernames");
 
 beforeEach(() => {
   jest.clearAllMocks();
@@ -140,5 +140,50 @@ describe("claimUsername", () => {
 
     expect(res).toEqual({ ok: true, username: "Aria_Star" });
     expect(updateUser).toHaveBeenCalledWith("u1", { displayName: "Aria_Star" });
+  });
+});
+
+describe("checkUsernameAvailability", () => {
+  it("works without auth so signup can probe before account creation", async () => {
+    docGet.mockImplementation((name: string, id: string) =>
+      Promise.resolve({ exists: false, data: () => null })
+    );
+    const res = await checkUsernameAvailability.run({
+      auth: undefined,
+      data: { username: "Aria_Star" },
+    });
+    expect(res).toEqual({ available: true });
+  });
+
+  it("reports unavailable when the doc-as-lock exists", async () => {
+    docGet.mockImplementation((name: string, id: string) =>
+      Promise.resolve({ exists: true, data: () => ({ uid: "someone-else" }) })
+    );
+    const res = await checkUsernameAvailability.run({
+      auth: undefined,
+      data: { username: "Aria_Star" },
+    });
+    expect(res).toEqual({ available: false });
+  });
+
+  it("normalizes case before checking", async () => {
+    docGet.mockImplementation((name: string, id: string) => {
+      expect(id).toBe("aria_star");
+      return Promise.resolve({ exists: false, data: () => null });
+    });
+    const res = await checkUsernameAvailability.run({
+      auth: undefined,
+      data: { username: "Aria_Star" },
+    });
+    expect(res).toEqual({ available: true });
+  });
+
+  it("rejects invalid usernames instead of probing", async () => {
+    await expect(
+      checkUsernameAvailability.run({
+        auth: undefined,
+        data: { username: "ab" },
+      })
+    ).rejects.toHaveProperty("code", "invalid-argument");
   });
 });

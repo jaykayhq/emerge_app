@@ -1072,6 +1072,52 @@ void main() {
         },
       );
 
+      test(
+        'propagates the recommended timer duration into Drift and the '
+        'Firestore payload',
+        () async {
+          final blueprints =
+              StarterHabitBlueprint.catalog
+                  .where((b) => b.archetype == UserArchetype.athlete)
+                  .take(2)
+                  .toList();
+
+          final result = await repository.createStarterPack(
+            userId: userId,
+            blueprints: blueprints,
+            archetypeName: 'athlete',
+          );
+
+          expect(result.isRight(), true);
+
+          final stored = await db.habitsDao.watchHabits(userId).first;
+          expect(stored, hasLength(2));
+          for (var i = 0; i < stored.length; i++) {
+            expect(stored[i].timerDurationMinutes,
+                blueprints[i].timerDurationMinutes,
+                reason:
+                    'starter habits must keep the blueprint\'s recommended '
+                    'duration instead of the blanket default');
+          }
+
+          final captured = verify(
+            () => mockSyncEngine.enqueueSet(
+              collectionPath: 'habits',
+              documentId: captureAny(named: 'documentId'),
+              data: captureAny(named: 'data'),
+            ),
+          ).captured;
+          for (var i = 1; i < captured.length; i += 2) {
+            final payload = captured[i] as Map<String, dynamic>;
+            expect(
+              payload['timerDurationMinutes'],
+              isA<int>(),
+              reason: 'Firestore payload must carry the duration',
+            );
+          }
+        },
+      );
+
       test('returns empty list and skips writes when given zero blueprints',
           () async {
         final result = await repository.createStarterPack(

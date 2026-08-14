@@ -21,6 +21,10 @@ class StarterHabitBlueprint {
   /// Maps to `HabitAttribute` for gamification (XP routing, attribute radar).
   final HabitAttribute attribute;
 
+  /// Recommended timer duration in minutes for this habit. Surfaced on the
+  /// onboarding card and pre-filled on the created habit's timer.
+  final int timerDurationMinutes;
+
   /// Which archetype this blueprint primarily serves.
   final UserArchetype archetype;
 
@@ -38,6 +42,7 @@ class StarterHabitBlueprint {
     required this.title,
     required this.shortCue,
     required this.attribute,
+    required this.timerDurationMinutes,
     required this.archetype,
     required this.interestCategories,
     required this.clubTags,
@@ -64,6 +69,7 @@ class StarterHabitBlueprint {
       title: '10 squats',
       shortCue: 'After breakfast',
       attribute: HabitAttribute.vitality,
+      timerDurationMinutes: 3,
       archetype: UserArchetype.athlete,
       interestCategories: [InterestCategory.movement],
       clubTags: ['fitness', 'morning'],
@@ -74,6 +80,7 @@ class StarterHabitBlueprint {
       title: '60-second plank',
       shortCue: 'After waking up',
       attribute: HabitAttribute.vitality,
+      timerDurationMinutes: 2,
       archetype: UserArchetype.athlete,
       interestCategories: [InterestCategory.movement],
       clubTags: ['fitness', 'morning'],
@@ -84,6 +91,7 @@ class StarterHabitBlueprint {
       title: '10-minute walk outside',
       shortCue: 'After lunch',
       attribute: HabitAttribute.vitality,
+      timerDurationMinutes: 10,
       archetype: UserArchetype.athlete,
       interestCategories: [
         InterestCategory.movement,
@@ -97,6 +105,7 @@ class StarterHabitBlueprint {
       title: '5 slow breaths before training',
       shortCue: 'Before workout',
       attribute: HabitAttribute.focus,
+      timerDurationMinutes: 2,
       archetype: UserArchetype.athlete,
       interestCategories: [
         InterestCategory.mindfulness,
@@ -110,6 +119,7 @@ class StarterHabitBlueprint {
       title: 'Drink one glass of water',
       shortCue: 'After waking up',
       attribute: HabitAttribute.vitality,
+      timerDurationMinutes: 2,
       archetype: UserArchetype.athlete,
       interestCategories: [
         InterestCategory.nutrition,
@@ -123,6 +133,7 @@ class StarterHabitBlueprint {
       title: '5-minute mobility flow',
       shortCue: 'After waking up',
       attribute: HabitAttribute.vitality,
+      timerDurationMinutes: 5,
       archetype: UserArchetype.athlete,
       interestCategories: [
         InterestCategory.movement,
@@ -138,6 +149,7 @@ class StarterHabitBlueprint {
       title: 'Read 2 pages',
       shortCue: 'Before bed',
       attribute: HabitAttribute.intellect,
+      timerDurationMinutes: 5,
       archetype: UserArchetype.scholar,
       interestCategories: [InterestCategory.learning],
       clubTags: ['reading', 'night-owl', 'learning'],
@@ -148,6 +160,7 @@ class StarterHabitBlueprint {
       title: '10-minute focus sprint',
       shortCue: 'After coffee',
       attribute: HabitAttribute.focus,
+      timerDurationMinutes: 10,
       archetype: UserArchetype.scholar,
       interestCategories: [InterestCategory.learning],
       clubTags: ['productivity', 'focus', 'deep-work'],
@@ -158,6 +171,7 @@ class StarterHabitBlueprint {
       title: 'Write down one question',
       shortCue: 'After waking up',
       attribute: HabitAttribute.intellect,
+      timerDurationMinutes: 3,
       archetype: UserArchetype.scholar,
       interestCategories: [
         InterestCategory.learning,
@@ -171,6 +185,7 @@ class StarterHabitBlueprint {
       title: 'Review yesterday\u0027s notes for 2 minutes',
       shortCue: 'Before bed',
       attribute: HabitAttribute.intellect,
+      timerDurationMinutes: 2,
       archetype: UserArchetype.scholar,
       interestCategories: [InterestCategory.learning],
       clubTags: ['reading', 'night-owl', 'study'],
@@ -181,6 +196,7 @@ class StarterHabitBlueprint {
       title: '5 minutes of language practice',
       shortCue: 'After work',
       attribute: HabitAttribute.intellect,
+      timerDurationMinutes: 5,
       archetype: UserArchetype.scholar,
       interestCategories: [InterestCategory.learning],
       clubTags: ['language', 'learning'],
@@ -191,6 +207,7 @@ class StarterHabitBlueprint {
       title: 'Spend 5 minutes on one curiosity',
       shortCue: 'After lunch',
       attribute: HabitAttribute.intellect,
+      timerDurationMinutes: 5,
       archetype: UserArchetype.scholar,
       interestCategories: [InterestCategory.learning],
       clubTags: ['curiosity', 'learning'],
@@ -203,6 +220,7 @@ class StarterHabitBlueprint {
       title: 'Write 1 sentence',
       shortCue: 'After coffee',
       attribute: HabitAttribute.creativity,
+      timerDurationMinutes: 3,
       archetype: UserArchetype.creator,
       interestCategories: [InterestCategory.creativity],
       clubTags: ['writing', 'morning'],
@@ -213,6 +231,7 @@ class StarterHabitBlueprint {
       title: 'Read for 10 minutes',
       shortCue: 'Before bed',
       attribute: HabitAttribute.creativity,
+      timerDurationMinutes: 10,
       archetype: UserArchetype.creator,
       interestCategories: [
         InterestCategory.creativity,
@@ -226,6 +245,7 @@ class StarterHabitBlueprint {
       title: 'Brainstorm 3 bad ideas for 5 minutes',
       shortCue: 'After lunch',
       attribute: HabitAttribute.creativity,
+      timerDurationMinutes: 5,
       archetype: UserArchetype.creator,
       interestCategories: [InterestCategory.creativity],
       clubTags: ['creativity'],
@@ -236,6 +256,7 @@ class StarterHabitBlueprint {
       title: 'Capture today\u0027s creative idea',
       shortCue: 'After waking up',
       attribute: HabitAttribute.creativity,
+      timerDurationMinutes: 3,
       archetype: UserArchetype.creator,
       interestCategories: [InterestCategory.creativity],
       clubTags: ['writing', 'morning'],
@@ -246,6 +267,7 @@ class StarterHabitBlueprint {
       title: 'Sketch one rough shape',
       shortCue: 'After work',
       attribute: HabitAttribute.creativity,
+      timerDurationMinutes: 2,
       archetype: UserArchetype.creator,
       interestCategories: [InterestCategory.creativity],
       clubTags: ['art', 'creativity'],
@@ -256,6 +278,7 @@ class StarterHabitBlueprint {
       title: '25-minute Pomodoro on one project',
       shortCue: 'After coffee',
       attribute: HabitAttribute.focus,
+      timerDurationMinutes: 25,
       archetype: UserArchetype.creator,
       interestCategories: [
         InterestCategory.creativity,
@@ -271,6 +294,7 @@ class StarterHabitBlueprint {
       title: '2-minute morning journal',
       shortCue: 'After waking up',
       attribute: HabitAttribute.focus,
+      timerDurationMinutes: 2,
       archetype: UserArchetype.stoic,
       interestCategories: [
         InterestCategory.mindfulness,
@@ -284,6 +308,7 @@ class StarterHabitBlueprint {
       title: 'Read one Meditations passage',
       shortCue: 'Before bed',
       attribute: HabitAttribute.intellect,
+      timerDurationMinutes: 5,
       archetype: UserArchetype.stoic,
       interestCategories: [
         InterestCategory.mindfulness,
@@ -297,6 +322,7 @@ class StarterHabitBlueprint {
       title: '60-second evening reflection',
       shortCue: 'Before bed',
       attribute: HabitAttribute.focus,
+      timerDurationMinutes: 2,
       archetype: UserArchetype.stoic,
       interestCategories: [InterestCategory.mindfulness],
       clubTags: ['night-owl', 'stoic'],
@@ -307,6 +333,7 @@ class StarterHabitBlueprint {
       title: '60-second box breath',
       shortCue: 'Before a hard conversation',
       attribute: HabitAttribute.focus,
+      timerDurationMinutes: 2,
       archetype: UserArchetype.stoic,
       interestCategories: [InterestCategory.mindfulness],
       clubTags: ['stoic', 'breathwork'],
@@ -317,6 +344,7 @@ class StarterHabitBlueprint {
       title: 'Note one thing you control today',
       shortCue: 'After waking up',
       attribute: HabitAttribute.focus,
+      timerDurationMinutes: 2,
       archetype: UserArchetype.stoic,
       interestCategories: [InterestCategory.mindfulness],
       clubTags: ['morning', 'stoic'],
@@ -327,6 +355,7 @@ class StarterHabitBlueprint {
       title: 'Pick one virtue to practice today',
       shortCue: 'After waking up',
       attribute: HabitAttribute.spirit,
+      timerDurationMinutes: 2,
       archetype: UserArchetype.stoic,
       interestCategories: [
         InterestCategory.mindfulness,
@@ -342,6 +371,7 @@ class StarterHabitBlueprint {
       title: '2-minute morning prayer',
       shortCue: 'After waking up',
       attribute: HabitAttribute.spirit,
+      timerDurationMinutes: 2,
       archetype: UserArchetype.zealot,
       interestCategories: [
         InterestCategory.faith,
@@ -355,6 +385,7 @@ class StarterHabitBlueprint {
       title: 'Read one short Scripture passage',
       shortCue: 'After waking up',
       attribute: HabitAttribute.spirit,
+      timerDurationMinutes: 5,
       archetype: UserArchetype.zealot,
       interestCategories: [InterestCategory.faith],
       clubTags: ['morning', 'scripture', 'reading'],
@@ -365,6 +396,7 @@ class StarterHabitBlueprint {
       title: 'Write one sentence of gratitude',
       shortCue: 'Before bed',
       attribute: HabitAttribute.spirit,
+      timerDurationMinutes: 2,
       archetype: UserArchetype.zealot,
       interestCategories: [
         InterestCategory.faith,
@@ -378,6 +410,7 @@ class StarterHabitBlueprint {
       title: 'One minute of quiet listening',
       shortCue: 'After work',
       attribute: HabitAttribute.spirit,
+      timerDurationMinutes: 2,
       archetype: UserArchetype.zealot,
       interestCategories: [
         InterestCategory.faith,
@@ -391,6 +424,7 @@ class StarterHabitBlueprint {
       title: 'Share one prayer request with a friend',
       shortCue: 'After waking up',
       attribute: HabitAttribute.spirit,
+      timerDurationMinutes: 5,
       archetype: UserArchetype.zealot,
       interestCategories: [InterestCategory.faith],
       clubTags: ['community', 'prayer'],
@@ -401,6 +435,7 @@ class StarterHabitBlueprint {
       title: 'Read a one-paragraph devotional',
       shortCue: 'Before bed',
       attribute: HabitAttribute.spirit,
+      timerDurationMinutes: 3,
       archetype: UserArchetype.zealot,
       interestCategories: [InterestCategory.faith],
       clubTags: ['night-owl', 'devotional'],

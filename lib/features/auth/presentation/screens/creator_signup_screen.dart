@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:emerge_app/core/presentation/widgets/emerge_branding.dart';
 import 'package:emerge_app/core/presentation/widgets/emerge_app_icon.dart';
 import 'package:emerge_app/core/presentation/widgets/responsive_layout.dart';
@@ -32,8 +34,51 @@ class _CreatorSignUpScreenState extends ConsumerState<CreatorSignUpScreen> {
   bool _obscurePassword = true;
   bool _obscureConfirmPassword = true;
 
+  static const _availabilityDebounce = Duration(milliseconds: 400);
+  Timer? _usernameDebounce;
+  String? _usernameAvailabilityError;
+
+  @override
+  void initState() {
+    super.initState();
+    _usernameController.addListener(_onUsernameChanged);
+  }
+
+  /// Live "username in use" probe — same debounced check as the user signup
+  /// screen. The claim callable remains the authoritative gate on submit.
+  Future<void> _onUsernameChanged() async {
+    _usernameDebounce?.cancel();
+    final value = _usernameController.text.trim();
+    final syntaxError = AppValidators.validateUsername(value);
+    if (syntaxError != null) {
+      if (_usernameAvailabilityError != null) {
+        setState(() => _usernameAvailabilityError = null);
+      }
+      return;
+    }
+    _usernameDebounce = Timer(_availabilityDebounce, () async {
+      if (!mounted) return;
+      final result = await ref
+          .read(authRepositoryProvider)
+          .checkUsernameAvailability(value);
+      if (!mounted) return;
+      result.fold(
+        (_) {},
+        (available) {
+          final nextError =
+              available ? null : 'This username is already taken';
+          if (nextError != _usernameAvailabilityError) {
+            setState(() => _usernameAvailabilityError = nextError);
+          }
+        },
+      );
+    });
+  }
+
   @override
   void dispose() {
+    _usernameDebounce?.cancel();
+    _usernameController.removeListener(_onUsernameChanged);
     _usernameController.dispose();
     _emailController.dispose();
     _passwordController.dispose();
@@ -246,6 +291,16 @@ class _CreatorSignUpScreenState extends ConsumerState<CreatorSignUpScreen> {
                 style: const TextStyle(color: Colors.white),
                 decoration: InputDecoration(
                   labelText: 'Username',
+                  helperText: 'Must be unique — no one else can use it',
+                  helperStyle: TextStyle(
+                    color: Colors.amber.withValues(alpha: 0.7),
+                    fontSize: 11,
+                  ),
+                  errorText: _usernameAvailabilityError,
+                  errorStyle: const TextStyle(
+                    color: Colors.redAccent,
+                    fontSize: 12,
+                  ),
                   labelStyle: const TextStyle(color: Colors.white70),
                   filled: true,
                   fillColor: EmergeColors.background.withValues(alpha: 0.5),

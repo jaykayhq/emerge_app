@@ -67,6 +67,12 @@ class _FakeAuthRepo implements AuthRepository {
       const Right<Failure, void>(null);
 
   @override
+  Future<Either<Failure, bool>> checkUsernameAvailability(
+    String username,
+  ) async =>
+      const Right<Failure, bool>(true);
+
+  @override
   Future<Either<Failure, bool>> checkEmailVerified() async =>
       const Right<Failure, bool>(false);
 }

@@ -42,6 +42,26 @@ export function validateUsername(
   return null;
 }
 
+/**
+ * Public availability probe for the signup form. Deliberately allows
+ * unauthenticated callers: the username is chosen BEFORE the account
+ * exists. Only returns whether the doc-as-lock exists — no user data.
+ */
+export const checkUsernameAvailability = onCall(async (request) => {
+  const data = request.data ?? {};
+  const username =
+    typeof data.username === "string" ? data.username.trim() : "";
+
+  const validationError = validateUsername(username);
+  if (validationError) {
+    throw new HttpsError("invalid-argument", validationError);
+  }
+
+  const normalized = username.toLowerCase();
+  const existing = await db.collection("usernames").doc(normalized).get();
+  return { available: !existing.exists };
+});
+
 export const claimUsername = onCall(async (request) => {
   if (!request.auth) {
     throw new HttpsError("unauthenticated", "User must be logged in.");

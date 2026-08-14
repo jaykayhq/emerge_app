@@ -88,12 +88,41 @@ void main() {
       expect(snap.docs, isNotEmpty);
     });
 
-    test('seedBlueprintsIfEmpty skips seeding when v5 data already exists',
+    test('seedBlueprintsIfEmpty skips seeding when v6 data already exists',
         () async {
       final firestore = FakeFirebaseFirestore();
-      // Pre-seed a v5 document: sentinel doc exists AND carries the
-      // bundled-artwork imageUrl (v4 marker) AND seeded habit slots
-      // (timeOfDay) — the v5 backfill must not re-run.
+      // Pre-seed a v6 document: sentinel doc exists AND carries the
+      // bundled-artwork imageUrl (v4 marker), seeded habit slots
+      // (timeOfDay — v5), and recommended durations (v6) — the backfill
+      // must not re-run.
+      await firestore.collection('blueprints').doc('morning_1').set({
+        'title': 'Existing',
+        'imageUrl': 'assets/images/blueprints/morning_1.webp',
+        'habits': [
+          {
+            'title': 'Wake Up at 6 AM',
+            'timeOfDay': 'Morning',
+            'attribute': 'vitality',
+            'timerDurationMinutes': 1,
+          },
+        ],
+      });
+
+      final repo = BlueprintRepository(firestore);
+      await repo.seedBlueprintsIfEmpty();
+
+      // Only the pre-existing doc should be present.
+      final snap = await firestore.collection('blueprints').get();
+      expect(snap.docs.length, 1);
+      expect(snap.docs.first.data()['title'], 'Existing');
+    });
+
+    test(
+        'seedBlueprintsIfEmpty backfills recommended durations onto v5 docs',
+        () async {
+      final firestore = FakeFirebaseFirestore();
+      // Pre-seed a v5 document: bundled artwork + timeOfDay slots but NO
+      // timerDurationMinutes — the v6 backfill must run and rewrite habits.
       await firestore.collection('blueprints').doc('morning_1').set({
         'title': 'Existing',
         'imageUrl': 'assets/images/blueprints/morning_1.webp',
@@ -109,10 +138,19 @@ void main() {
       final repo = BlueprintRepository(firestore);
       await repo.seedBlueprintsIfEmpty();
 
-      // Only the pre-existing doc should be present.
       final snap = await firestore.collection('blueprints').get();
-      expect(snap.docs.length, 1);
-      expect(snap.docs.first.data()['title'], 'Existing');
+      expect(snap.docs.length, greaterThan(1),
+          reason: 'v5 docs must be backfilled to v6 with durations');
+      final seeded = await firestore
+          .collection('blueprints')
+          .doc('morning_1')
+          .get();
+      final habits = (seeded.data()?['habits'] as List<dynamic>).cast<Map>();
+      expect(habits, isNotEmpty);
+      for (final habit in habits) {
+        expect(habit['timerDurationMinutes'], greaterThan(0),
+            reason: 'every backfilled habit needs a recommended duration');
+      }
     });
 
     test(

@@ -26,6 +26,9 @@ void main() {
   setUp(() {
     mockAuth = MockAuthRepository();
     when(() => mockAuth.user).thenAnswer((_) => const Stream.empty());
+    when(() => mockAuth.checkUsernameAvailability(any())).thenAnswer(
+      (_) async => right<Failure, bool>(true),
+    );
   });
 
   Future<void> setMobileViewport(WidgetTester tester) async {
@@ -48,6 +51,72 @@ void main() {
     expect(find.text('Password'), findsOneWidget);
     expect(find.text('Confirm Password'), findsOneWidget);
     expect(find.text('Sign Up'), findsOneWidget);
+  });
+
+  testWidgets('indicates the username must be unique at signup', (
+    tester,
+  ) async {
+    await setMobileViewport(tester);
+
+    await tester.pumpWidget(_buildTest(mockAuth));
+    await tester.pumpAndSettle();
+
+    expect(
+      find.text('Must be unique — no one else can use it'),
+      findsOneWidget,
+      reason: 'signup must tell users the username is unique per account',
+    );
+  });
+
+  testWidgets('flags a username already in use while typing', (tester) async {
+    await setMobileViewport(tester);
+
+    when(() => mockAuth.checkUsernameAvailability('takenuser'))
+        .thenAnswer((_) async => right<Failure, bool>(false));
+
+    await tester.pumpWidget(_buildTest(mockAuth));
+    await tester.pumpAndSettle();
+
+    await tester.enterText(find.byType(TextFormField).at(0), 'takenuser');
+    await tester.pump();
+    // No error before the debounce window elapses.
+    expect(find.text('This username is already taken'), findsNothing);
+
+    await tester.pump(const Duration(milliseconds: 400));
+    await tester.pumpAndSettle();
+
+    expect(
+      find.text('This username is already taken'),
+      findsOneWidget,
+      reason: 'typing a claimed username must surface the conflict',
+    );
+    verify(() => mockAuth.checkUsernameAvailability('takenuser')).called(1);
+  });
+
+  testWidgets('clears the conflict error once the username is free again', (
+    tester,
+  ) async {
+    await setMobileViewport(tester);
+
+    when(() => mockAuth.checkUsernameAvailability('takenuser'))
+        .thenAnswer((_) async => right<Failure, bool>(false));
+
+    await tester.pumpWidget(_buildTest(mockAuth));
+    await tester.pumpAndSettle();
+
+    await tester.enterText(find.byType(TextFormField).at(0), 'takenuser');
+    await tester.pump(const Duration(milliseconds: 400));
+    await tester.pumpAndSettle();
+    expect(find.text('This username is already taken'), findsOneWidget);
+
+    // Editing the name clears the stale conflict; the new probe says free.
+    when(() => mockAuth.checkUsernameAvailability('takenuser2'))
+        .thenAnswer((_) async => right<Failure, bool>(true));
+    await tester.enterText(find.byType(TextFormField).at(0), 'takenuser2');
+    await tester.pump(const Duration(milliseconds: 400));
+    await tester.pumpAndSettle();
+
+    expect(find.text('This username is already taken'), findsNothing);
   });
 
   testWidgets('shows validation on empty submit', (tester) async {

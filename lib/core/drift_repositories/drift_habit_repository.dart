@@ -745,6 +745,7 @@ class DriftHabitRepository implements HabitRepository {
             identityTags: [...tagSet, blueprint.id],
             frequency: HabitFrequency.daily,
             createdAt: now,
+            timerDurationMinutes: blueprint.timerDurationMinutes,
             timeOfDayPreference: timeOfDayPreferenceFrom(
               timelineSlotKeyForCue(blueprint.shortCue),
             ),
@@ -762,6 +763,7 @@ class DriftHabitRepository implements HabitRepository {
             updatedAt: now.toIso8601String(),
             imageUrl: habit.imageUrl,
             timeOfDayPreference: habit.timeOfDayPreference?.name,
+            timerDurationMinutes: habit.timerDurationMinutes,
           );
 
           created.add(habit);

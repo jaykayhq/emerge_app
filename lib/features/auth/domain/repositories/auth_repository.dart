@@ -39,6 +39,10 @@ abstract class AuthRepository {
   /// Claims a globally-unique (case-insensitive) username for the current user.
   Future<Either<Failure, void>> claimUsername(String username);
 
+  /// Probes whether a username is still free (case-insensitive). Used by the
+  /// signup form to flag "username in use" while the user is typing.
+  Future<Either<Failure, bool>> checkUsernameAvailability(String username);
+
   /// True when the current user's email is verified. Reloads auth state so it
   /// reflects a verification link that was clicked (possibly outside the app)
   /// before the user taps "I've verified".

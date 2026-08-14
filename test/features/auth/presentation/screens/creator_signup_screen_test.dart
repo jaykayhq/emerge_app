@@ -3,9 +3,15 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/misc.dart';
+import 'package:mocktail/mocktail.dart';
+import 'package:fpdart/fpdart.dart';
+import 'package:emerge_app/core/error/failure.dart';
+import 'package:emerge_app/features/auth/domain/repositories/auth_repository.dart';
 import 'package:emerge_app/features/auth/presentation/providers/auth_providers.dart';
 import 'package:emerge_app/features/auth/presentation/screens/creator_signup_screen.dart';
 import 'package:emerge_app/features/auth/presentation/widgets/password_requirement_checklist.dart';
+
+class MockAuthRepository extends Mock implements AuthRepository {}
 
 Widget _buildTest({
   List<Override> overrides = const [],
@@ -80,6 +86,43 @@ void main() {
     expect(find.text('Sign up with Google'), findsOneWidget);
   });
 
+  testWidgets('indicates the username must be unique at signup', (
+    tester,
+  ) async {
+    await setMobileViewport(tester);
+
+    await tester.pumpWidget(_buildTest(router: router));
+    await tester.pumpAndSettle();
+
+    expect(
+      find.text('Must be unique — no one else can use it'),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets('flags a username already in use while typing', (tester) async {
+    await setMobileViewport(tester);
+
+    final mockAuth = MockAuthRepository();
+    when(() => mockAuth.checkUsernameAvailability(any())).thenAnswer(
+      (_) async => right<Failure, bool>(false),
+    );
+
+    await tester.pumpWidget(
+      _buildTest(
+        overrides: [authRepositoryProvider.overrideWithValue(mockAuth)],
+        router: router,
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.enterText(find.byType(TextFormField).at(0), 'takenuser');
+    await tester.pump(const Duration(milliseconds: 400));
+    await tester.pumpAndSettle();
+
+    expect(find.text('This username is already taken'), findsOneWidget);
+  });
+
   testWidgets('shows validation on empty submit', (tester) async {
     await setMobileViewport(tester);
 
@@ -114,9 +157,15 @@ void main() {
   testWidgets('successful email signup navigates to splash', (tester) async {
     await setMobileViewport(tester);
 
+    final mockAuth = MockAuthRepository();
+    when(() => mockAuth.checkUsernameAvailability(any())).thenAnswer(
+      (_) async => right<Failure, bool>(true),
+    );
+
     final overrides = [
       signUpCreatorProvider('test@example.com', 'Str0ngP@sswd!', 'TestUser', 'ABCDEFGH')
           .overrideWith((ref) async {}),
+      authRepositoryProvider.overrideWithValue(mockAuth),
     ];
 
     await tester.pumpWidget(_buildTest(overrides: overrides, router: router));
@@ -138,12 +187,18 @@ void main() {
   testWidgets('failed email signup shows error snackbar', (tester) async {
     await setMobileViewport(tester);
 
+    final mockAuth = MockAuthRepository();
+    when(() => mockAuth.checkUsernameAvailability(any())).thenAnswer(
+      (_) async => right<Failure, bool>(true),
+    );
+
     final overrides = [
       signUpCreatorProvider('test@example.com', 'Str0ngP@sswd!', 'TestUser', 'ABCDEFGH')
           .overrideWith((ref) async {
             await Future.value();
             throw Exception('Sign up failed');
           }),
+      authRepositoryProvider.overrideWithValue(mockAuth),
     ];
 
     await tester.pumpWidget(_buildTest(overrides: overrides, router: router));

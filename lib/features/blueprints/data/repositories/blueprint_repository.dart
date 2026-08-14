@@ -65,27 +65,36 @@ class BlueprintRepository {
   }
 
   /// Current seed version — bump when seed data changes to force re-seed
-  static const int _seedVersion = 5;
+  static const int _seedVersion = 6;
 
   Future<void> seedBlueprintsIfEmpty() async {
     try {
       // Skip only when the sentinel doc exists AND already carries v4
-      // artwork AND the v5 habit slot metadata (timeOfDay). A v4 doc
-      // (bundled artwork, no habit slots) must be backfilled so every
-      // install renders blueprint habits with their time-of-day.
-      final v5Check = await _firestore
+      // artwork, the v5 habit slot metadata (timeOfDay), and the v6
+      // recommended durations. Older docs must be backfilled so every
+      // install renders blueprint habits with their time-of-day and
+      // recommended duration.
+      final v6Check = await _firestore
           .collection('blueprints')
           .doc('morning_1')
           .get();
-      final hasArtwork = v5Check.exists &&
-          (v5Check.data()?['imageUrl'] as String? ?? '')
+      final hasArtwork = v6Check.exists &&
+          (v6Check.data()?['imageUrl'] as String? ?? '')
               .startsWith('assets/images/blueprints/');
+      final habitMaps = hasArtwork
+          ? (v6Check.data()?['habits'] as List<dynamic>? ?? const [])
+                .whereType<Map>()
+                .toList()
+          : <Map>[];
       final hasSlotMetadata = hasArtwork &&
-          (v5Check.data()?['habits'] as List<dynamic>? ?? const [])
-              .whereType<Map>()
-              .any((h) => h['timeOfDay'] != null);
+          habitMaps.any((h) => h['timeOfDay'] != null);
+      final hasDurationMetadata = hasArtwork &&
+          habitMaps.isNotEmpty &&
+          habitMaps.every(
+            (h) => ((h['timerDurationMinutes'] as num?)?.toInt() ?? 0) > 0,
+          );
 
-      if (hasArtwork && hasSlotMetadata) {
+      if (hasArtwork && hasSlotMetadata && hasDurationMetadata) {
         AppLogger.i(
           'BlueprintRepository: Blueprints already seeded (v$_seedVersion).',
         );
@@ -95,7 +104,7 @@ class BlueprintRepository {
       // Backfilling existing docs: merge must not clobber live-doc adoption
       // counts or creation timestamps, so increment(0) is a no-op for
       // counters and createdAt is left untouched on existing docs.
-      final backfilling = v5Check.exists;
+      final backfilling = v6Check.exists;
 
       // Note: Old archetype blueprints (v1) remain in Firestore but are
       // filtered out in the UI by allowed categories list. Server-side
@@ -117,14 +126,14 @@ class BlueprintRepository {
               timeOfDay: 'Morning',
               attribute: HabitAttribute.vitality,
               defaultTime: '06:00',
-              timerDurationMinutes: 0,
+              timerDurationMinutes: 1,
             ),
             (
               title: 'Drink 500ml Water',
               timeOfDay: 'Morning',
               attribute: HabitAttribute.vitality,
               defaultTime: null,
-              timerDurationMinutes: 0,
+              timerDurationMinutes: 2,
             ),
             (
               title: '10 Min Sunlight Exposure',
@@ -150,7 +159,7 @@ class BlueprintRepository {
               timeOfDay: 'Morning',
               attribute: HabitAttribute.strength,
               defaultTime: null,
-              timerDurationMinutes: 0,
+              timerDurationMinutes: 5,
             ),
             (
               title: 'Stretch Routine',
@@ -164,7 +173,7 @@ class BlueprintRepository {
               timeOfDay: 'Morning',
               attribute: HabitAttribute.strength,
               defaultTime: null,
-              timerDurationMinutes: 0,
+              timerDurationMinutes: 15,
             ),
           ],
           recommendedArchetypes: const ['athlete'],
@@ -190,14 +199,14 @@ class BlueprintRepository {
               timeOfDay: 'Morning',
               attribute: HabitAttribute.spirit,
               defaultTime: null,
-              timerDurationMinutes: 0,
+              timerDurationMinutes: 5,
             ),
             (
               title: 'Herbal Tea',
               timeOfDay: 'Morning',
               attribute: HabitAttribute.spirit,
               defaultTime: null,
-              timerDurationMinutes: 0,
+              timerDurationMinutes: 5,
             ),
           ],
           recommendedArchetypes: const ['stoic'],
@@ -216,7 +225,7 @@ class BlueprintRepository {
               timeOfDay: 'Morning',
               attribute: HabitAttribute.vitality,
               defaultTime: '05:00',
-              timerDurationMinutes: 0,
+              timerDurationMinutes: 1,
             ),
             (
               title: 'Deep Work Block',
@@ -263,7 +272,7 @@ class BlueprintRepository {
               timeOfDay: 'Morning',
               attribute: HabitAttribute.vitality,
               defaultTime: null,
-              timerDurationMinutes: 0,
+              timerDurationMinutes: 2,
             ),
           ],
           recommendedArchetypes: const ['athlete'],
@@ -291,14 +300,14 @@ class BlueprintRepository {
               timeOfDay: 'Morning',
               attribute: HabitAttribute.focus,
               defaultTime: null,
-              timerDurationMinutes: 0,
+              timerDurationMinutes: 2,
             ),
             (
               title: 'Task Batching',
               timeOfDay: 'Afternoon',
               attribute: HabitAttribute.focus,
               defaultTime: null,
-              timerDurationMinutes: 0,
+              timerDurationMinutes: 10,
             ),
           ],
           recommendedArchetypes: const ['scholar', 'zealot'],
@@ -318,21 +327,21 @@ class BlueprintRepository {
               timeOfDay: 'Evening',
               attribute: HabitAttribute.focus,
               defaultTime: '21:00',
-              timerDurationMinutes: 0,
+              timerDurationMinutes: 5,
             ),
             (
               title: 'Prioritize by Importance',
               timeOfDay: 'Evening',
               attribute: HabitAttribute.intellect,
               defaultTime: null,
-              timerDurationMinutes: 0,
+              timerDurationMinutes: 5,
             ),
             (
               title: 'Complete One at a Time',
               timeOfDay: 'Morning',
               attribute: HabitAttribute.focus,
               defaultTime: null,
-              timerDurationMinutes: 0,
+              timerDurationMinutes: 25,
             ),
           ],
           recommendedArchetypes: const ['scholar', 'zealot'],
@@ -351,21 +360,21 @@ class BlueprintRepository {
               timeOfDay: 'Evening',
               attribute: HabitAttribute.intellect,
               defaultTime: '21:30',
-              timerDurationMinutes: 0,
+              timerDurationMinutes: 10,
             ),
             (
               title: 'Time Block Calendar',
               timeOfDay: 'Morning',
               attribute: HabitAttribute.intellect,
               defaultTime: '08:00',
-              timerDurationMinutes: 0,
+              timerDurationMinutes: 10,
             ),
             (
               title: 'Review & Reflect',
               timeOfDay: 'Evening',
               attribute: HabitAttribute.focus,
               defaultTime: null,
-              timerDurationMinutes: 0,
+              timerDurationMinutes: 10,
             ),
           ],
           recommendedArchetypes: const ['scholar', 'zealot'],
@@ -384,7 +393,7 @@ class BlueprintRepository {
               timeOfDay: 'Afternoon',
               attribute: HabitAttribute.focus,
               defaultTime: null,
-              timerDurationMinutes: 0,
+              timerDurationMinutes: 10,
             ),
             (
               title: 'Organize Files',
@@ -398,7 +407,7 @@ class BlueprintRepository {
               timeOfDay: 'Evening',
               attribute: HabitAttribute.focus,
               defaultTime: null,
-              timerDurationMinutes: 0,
+              timerDurationMinutes: 15,
             ),
           ],
           recommendedArchetypes: const ['stoic', 'scholar'],
@@ -431,7 +440,7 @@ class BlueprintRepository {
               timeOfDay: 'Afternoon',
               attribute: HabitAttribute.focus,
               defaultTime: null,
-              timerDurationMinutes: 0,
+              timerDurationMinutes: 2,
             ),
           ],
           recommendedArchetypes: const ['scholar', 'athlete'],
@@ -452,14 +461,14 @@ class BlueprintRepository {
               timeOfDay: 'Morning',
               attribute: HabitAttribute.strength,
               defaultTime: null,
-              timerDurationMinutes: 0,
+              timerDurationMinutes: 5,
             ),
             (
               title: 'Bodyweight Squats',
               timeOfDay: 'Morning',
               attribute: HabitAttribute.strength,
               defaultTime: null,
-              timerDurationMinutes: 0,
+              timerDurationMinutes: 5,
             ),
             (
               title: 'Plank Hold',
@@ -551,21 +560,21 @@ class BlueprintRepository {
               timeOfDay: 'Afternoon',
               attribute: HabitAttribute.strength,
               defaultTime: null,
-              timerDurationMinutes: 0,
+              timerDurationMinutes: 30,
             ),
             (
               title: 'Overhead Press',
               timeOfDay: 'Afternoon',
               attribute: HabitAttribute.strength,
               defaultTime: null,
-              timerDurationMinutes: 0,
+              timerDurationMinutes: 20,
             ),
             (
               title: 'Pull-Ups',
               timeOfDay: 'Afternoon',
               attribute: HabitAttribute.strength,
               defaultTime: null,
-              timerDurationMinutes: 0,
+              timerDurationMinutes: 15,
             ),
           ],
           recommendedArchetypes: const ['athlete', 'zealot'],
@@ -598,7 +607,7 @@ class BlueprintRepository {
               timeOfDay: 'Morning',
               attribute: HabitAttribute.vitality,
               defaultTime: null,
-              timerDurationMinutes: 0,
+              timerDurationMinutes: 2,
             ),
           ],
           recommendedArchetypes: const ['athlete', 'stoic'],
@@ -652,7 +661,7 @@ class BlueprintRepository {
               timeOfDay: 'Morning',
               attribute: HabitAttribute.focus,
               defaultTime: null,
-              timerDurationMinutes: 0,
+              timerDurationMinutes: 240,
             ),
             (
               title: 'Nature Walk',
@@ -666,7 +675,7 @@ class BlueprintRepository {
               timeOfDay: 'Evening',
               attribute: HabitAttribute.creativity,
               defaultTime: null,
-              timerDurationMinutes: 0,
+              timerDurationMinutes: 30,
             ),
           ],
           recommendedArchetypes: const ['stoic', 'scholar'],
@@ -685,21 +694,21 @@ class BlueprintRepository {
               timeOfDay: 'Morning',
               attribute: HabitAttribute.spirit,
               defaultTime: null,
-              timerDurationMinutes: 0,
+              timerDurationMinutes: 5,
             ),
             (
               title: 'Thank Someone',
               timeOfDay: 'Afternoon',
               attribute: HabitAttribute.spirit,
               defaultTime: null,
-              timerDurationMinutes: 0,
+              timerDurationMinutes: 5,
             ),
             (
               title: 'Savor a Moment',
               timeOfDay: 'Evening',
               attribute: HabitAttribute.spirit,
               defaultTime: null,
-              timerDurationMinutes: 0,
+              timerDurationMinutes: 3,
             ),
           ],
           recommendedArchetypes: const ['stoic', 'zealot'],
@@ -752,7 +761,7 @@ class BlueprintRepository {
               timeOfDay: 'Evening',
               attribute: HabitAttribute.focus,
               defaultTime: null,
-              timerDurationMinutes: 0,
+              timerDurationMinutes: 30,
             ),
             (
               title: 'Tidy Your Space',
@@ -794,7 +803,7 @@ class BlueprintRepository {
               timeOfDay: 'Evening',
               attribute: HabitAttribute.intellect,
               defaultTime: null,
-              timerDurationMinutes: 0,
+              timerDurationMinutes: 10,
             ),
             (
               title: 'Summarize Key Idea',
@@ -827,7 +836,7 @@ class BlueprintRepository {
               timeOfDay: 'Afternoon',
               attribute: HabitAttribute.focus,
               defaultTime: null,
-              timerDurationMinutes: 0,
+              timerDurationMinutes: 5,
             ),
             (
               title: 'Review Mistakes',
@@ -867,7 +876,7 @@ class BlueprintRepository {
               timeOfDay: 'Afternoon',
               attribute: HabitAttribute.creativity,
               defaultTime: null,
-              timerDurationMinutes: 0,
+              timerDurationMinutes: 10,
             ),
           ],
           recommendedArchetypes: const ['scholar', 'creator'],
@@ -893,7 +902,7 @@ class BlueprintRepository {
               timeOfDay: 'Afternoon',
               attribute: HabitAttribute.intellect,
               defaultTime: null,
-              timerDurationMinutes: 0,
+              timerDurationMinutes: 15,
             ),
             (
               title: 'Active Recall Session',
