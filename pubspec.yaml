@@ -78,7 +78,7 @@ dependencies:
   cached_network_image: ^3.4.1
   web: ^1.1.1
   fast_contacts: ^6.0.0
-  permission_handler: ^11.3.1
+  permission_handler: ^13.0.1
   fl_chart: ^0.70.2
   video_player: ^2.8.0
   in_app_review: ^2.0.12
