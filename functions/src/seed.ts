@@ -334,6 +334,11 @@ async function seedOfficialClubs(): Promise<void> {
     const docRef = db.collection("tribes").doc(club.id);
     batch.set(docRef, {
       ...club,
+      // members/memberCount are server-owned (maintainTribeMembership
+      // trigger + daily recalc). Seeding an empty array keeps the doc
+      // structurally consistent; the fake seeded memberCount collapses to
+      // the real count on the first join/recalc.
+      members: [],
       createdAt: admin.firestore.FieldValue.serverTimestamp(),
     });
   }

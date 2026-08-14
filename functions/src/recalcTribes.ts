@@ -55,7 +55,9 @@ export async function recalcTribesInternal(db: admin.firestore.Firestore): Promi
       .on("error", reject);
   });
 
-  // 3. uid -> xp from user_stats (per-member XP, no archetype bucketing)
+  // 3. uid -> xp from user_stats (per-member XP, no archetype bucketing).
+  //    FALLBACK ONLY: tribes without contributor docs (pre-trigger data)
+  //    fall back to the sum of current members' user_stats.
   const userStatsXp = new Map<string, number>();
 
   console.log("Aggregating XP from user_stats...");
@@ -74,6 +76,35 @@ export async function recalcTribesInternal(db: admin.firestore.Firestore): Promi
         }
 
         userStatsXp.set(doc.id, xp);
+      })
+      .on("end", resolve)
+      .on("error", reject);
+  });
+
+  // 3b. tribeId -> totalXpContributed from the contributors subcollection.
+  //     PRIMARY SOURCE: contributor docs are the historical attribution
+  //     record (XP earned in a tribe stays there after leaving/switching),
+  //     and the maintainTribeXp trigger writes tribe.totalXp from the same
+  //     numbers — so the daily recalc reconciles to exactly the same value.
+  const contributorXpByTribe = new Map<string, number>();
+
+  console.log("Aggregating XP from contributor records...");
+  await new Promise((resolve, reject) => {
+    db.collectionGroup("contributors")
+      .stream()
+      .on("data", (doc: admin.firestore.QueryDocumentSnapshot) => {
+        const ref = doc.ref.path;
+        const parts = ref.split("/");
+        if (parts.length === 4 && parts[0] === "tribes" && parts[2] === "contributors") {
+          const contributed = doc.data().totalXpContributed;
+          if (typeof contributed === "number") {
+            const tribeId = parts[1];
+            contributorXpByTribe.set(
+              tribeId,
+          (contributorXpByTribe.get(tribeId) ?? 0) + contributed,
+            );
+          }
+        }
       })
       .on("end", resolve)
       .on("error", reject);
@@ -105,8 +136,15 @@ export async function recalcTribesInternal(db: admin.firestore.Firestore): Promi
   });
 
   // 5. Pure aggregation: members = explicit membership docs, official-club
-  // fallback for legacy users; XP summed per member.
-  const byTribe = aggregateTribeStats({ membershipMap, archetypeMap, clubMap, userStatsXp });
+  // fallback for legacy users; XP from contributor records (primary) with a
+  // user_stats fallback for tribes that have no contributor docs.
+  const byTribe = aggregateTribeStats({
+    membershipMap,
+    archetypeMap,
+    clubMap,
+    userStatsXp,
+    contributorXpByTribe,
+  });
 
   // 6. Union with the official club ids so clubs with zero members still get
   // their stale memberCount/members/stats reset by the daily recalc.
@@ -161,14 +199,19 @@ export interface TribeAggregationInput {
   archetypeMap: Map<string, string>;
   /** archetype -> official clubId (the 6 official clubs). */
   clubMap: Record<string, string>;
-  /** uid -> user_stats.avatarStats.totalXp. */
+  /** uid -> user_stats.avatarStats.totalXp (fallback only). */
   userStatsXp: Map<string, number>;
+  /** tribeId -> sum of contributors.totalXpContributed (primary source). */
+  contributorXpByTribe: Map<string, number>;
 }
 
 /**
  * Pure SP-G D10 aggregation: members = explicit membership docs, plus the
  * official archetype club as a fallback ONLY for users without explicit
- * membership. XP is summed per member directly (no archetype bucketing).
+ * membership. XP comes from the contributors subcollection (historical
+ * per-tribe attribution — XP earned in a tribe stays there after leaving)
+ * and only falls back to user_stats sums for tribes with no contributor
+ * docs at all.
  */
 export function aggregateTribeStats(
   input: TribeAggregationInput,
@@ -193,5 +236,15 @@ export function aggregateTribeStats(
     entry.members.push(uid);
     entry.totalXp += input.userStatsXp.get(uid) ?? 0;
   }
+
+  // Contributor records win when present — same source as the real-time
+  // maintainTribeXp trigger, so the daily pass reconciles to the same value.
+  for (const [tribeId, entry] of byTribe) {
+    const contributed = input.contributorXpByTribe.get(tribeId);
+    if (contributed !== undefined) {
+      entry.totalXp = contributed;
+    }
+  }
+
   return byTribe;
 }
