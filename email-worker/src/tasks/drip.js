@@ -1,4 +1,4 @@
-import admin from "firebase-admin";
+import { FieldValue } from "firebase-admin/firestore";
 import { buildReengagementHtml } from "../templates.js";
 
 /**
@@ -71,8 +71,7 @@ export async function runDripTask(db, { send, dryRun }) {
         batch.set(
           db.collection("users").doc(doc.id),
           {
-            reengagementEmailSentAt:
-              admin.firestore.FieldValue.serverTimestamp(),
+            reengagementEmailSentAt: FieldValue.serverTimestamp(),
           },
           { merge: true },
         );

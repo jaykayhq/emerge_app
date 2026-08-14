@@ -1,4 +1,4 @@
-import admin from "firebase-admin";
+import { FieldValue } from "firebase-admin/firestore";
 import { buildWelcomeHtml } from "../templates.js";
 
 /**
@@ -64,7 +64,7 @@ export async function runWelcomeTask(db, { send, dryRun }) {
         });
         batch.set(
           db.collection("users").doc(doc.id),
-          { welcomeEmailSentAt: admin.firestore.FieldValue.serverTimestamp() },
+          { welcomeEmailSentAt: FieldValue.serverTimestamp() },
           { merge: true },
         );
         changed++;

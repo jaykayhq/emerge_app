@@ -1,4 +1,6 @@
-import admin from "firebase-admin";
+import { initializeApp, cert } from "firebase-admin";
+import { getFirestore } from "firebase-admin/firestore";
+import { getAuth } from "firebase-admin/auth";
 import fs from "node:fs";
 
 let app;
@@ -25,10 +27,10 @@ export function initDb() {
     );
   }
   if (!app) {
-    app = admin.initializeApp({
-      credential: admin.credential.cert(serviceAccount),
+    app = initializeApp({
+      credential: cert(serviceAccount),
       projectId: serviceAccount.project_id,
     });
   }
-  return { db: admin.firestore(), auth: admin.auth() };
+  return { db: getFirestore(app), auth: getAuth(app) };
 }

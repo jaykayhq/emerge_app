@@ -414,8 +414,10 @@ service cloud.firestore {
     }
 
     // Tribes / Archetype Clubs (fixed, official clubs — not user-created)
-    // Root tribe document is managed by Cloud Functions for memberCount/members.
-    // Clients may only merge-update specific aggregate member fields.
+    // Root tribe document is managed by Cloud Functions (memberCount/members
+    // via the membership trigger, totals via the contributors trigger).
+    // Clients never write the tribe doc; only creators (own tribe) and admins
+    // may update it.
     match /tribes/{tribeId} {
       allow read: if isAuthenticated();
       allow create: if isAuthenticated() && isValidTribe(request.resource.data) &&
@@ -425,24 +427,7 @@ service cloud.firestore {
                      (request.resource.data.type != 'creator' || isVerifiedCreator());
       allow update: if isAuthenticated() && isValidTribe(request.resource.data) && (
         ('createdBy' in resource.data && resource.data.createdBy == request.auth.uid) ||
-        isAdmin() ||
-        // SP-G D9: aggregate membership writes only — keys, ±1 delta, and the
-        // caller's own uid must be the added/removed member.
-        (request.resource.data.diff(resource.data).affectedKeys()
-            .hasOnly(['memberCount', 'members', 'lastStatsSync']) &&
-         'members' in resource.data &&
-         (request.resource.data.memberCount == resource.data.memberCount + 1 ||
-          request.resource.data.memberCount == resource.data.memberCount - 1) &&
-         request.resource.data.memberCount == resource.data.memberCount +
-             (request.resource.data.members.size() - resource.data.members.size()) &&
-          ((request.resource.data.members.size() == resource.data.members.size() + 1 &&
-            request.resource.data.members.hasAll(resource.data.members) &&
-            request.resource.data.members.removeAll(resource.data.members)
-                .hasOnly([request.auth.uid])) ||
-           (request.resource.data.members.size() + 1 == resource.data.members.size() &&
-            resource.data.members.hasAll(request.resource.data.members) &&
-            resource.data.members.removeAll(request.resource.data.members)
-                .hasOnly([request.auth.uid]))))
+        isAdmin()
       );
       allow delete: if isAdmin();
 

@@ -1,4 +1,4 @@
-import admin from "firebase-admin";
+import { FieldValue } from "firebase-admin/firestore";
 
 /**
  * Verification email task — replaces Firebase Auth's default verification
@@ -110,13 +110,12 @@ export async function runVerifyTask(db, auth, { send, dryRun, now = Date.now() }
           html: buildVerificationHtml(link),
         });
         const marker = {
-          verificationEmailSentAt: admin.firestore.FieldValue.serverTimestamp(),
+          verificationEmailSentAt: FieldValue.serverTimestamp(),
         };
         // Only the first send starts the 7-day grace clock — re-sends must
         // not keep pushing the lock deadline out forever.
         if (data.emailVerificationSentAt == null) {
-          marker.emailVerificationSentAt =
-            admin.firestore.FieldValue.serverTimestamp();
+          marker.emailVerificationSentAt = FieldValue.serverTimestamp();
         }
         batch.set(db.collection("users").doc(doc.id), marker, { merge: true });
         changed++;

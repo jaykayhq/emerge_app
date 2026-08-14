@@ -1,0 +1,21 @@
+# Dependabot version updates — keeps the npm worker/functions and Flutter
+# deps patched; security alerts remain handled automatically by GitHub.
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /functions
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 10
+
+  - package-ecosystem: npm
+    directory: /email-worker
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 10
+
+  - package-ecosystem: pub
+    directory: /
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 10

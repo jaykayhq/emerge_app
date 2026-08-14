@@ -1,4 +1,4 @@
-import admin from "firebase-admin";
+import { FieldValue } from "firebase-admin/firestore";
 
 /**
  * Verification grace-period lock — ported verbatim from
@@ -81,7 +81,7 @@ export async function runGraceTask(db, auth, { dryRun }) {
           }
           batch.set(
             db.collection("users").doc(id),
-            { emailLockedAt: admin.firestore.FieldValue.delete() },
+            { emailLockedAt: FieldValue.delete() },
             { merge: true },
           );
           changed++;
@@ -94,7 +94,7 @@ export async function runGraceTask(db, auth, { dryRun }) {
         }
         batch.set(
           db.collection("users").doc(id),
-          { emailLockedAt: admin.firestore.FieldValue.serverTimestamp() },
+          { emailLockedAt: FieldValue.serverTimestamp() },
           { merge: true },
         );
         changed++;
