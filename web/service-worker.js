@@ -23,8 +23,11 @@ self.addEventListener('activate', (event) => {
       // Take control of all open pages immediately
       return self.clients.claim();
     }).then(() => {
-      // Optional: Unregister self after activation to completely remove SW footprint
-      console.log('[SW] Caches purged. Service worker will transition to inactive.');
+      // Unregister self after activation to completely remove the SW
+      // footprint. A stale service worker (from older PWA deploys) can
+      // keep serving mismatched index.html/assets and reproduce the
+      // AssetManifest.bin.json 404 symptom even after a redeploy.
+      return self.registration.unregister();
     })
   );
 });

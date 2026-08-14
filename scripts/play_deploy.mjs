@@ -204,17 +204,28 @@ async function main() {
       }
     : { countries: [], includeRestOfWorld: true };
 
+  // The API only accepts countryTargeting on staged (inProgress) releases; a
+  // completed release inherits the track's existing availability. The console
+  // is required only for the FIRST production release (see fail() 403 branch).
+  if (args.status === 'completed' && args.countries) {
+    throw new Error(
+      `--countries cannot be applied to a ${args.status} release: the API only accepts ` +
+        "country targeting on staged releases, and a completed release inherits the track's " +
+        'existing availability. Use --status inProgress for a staged rollout.',
+    );
+  }
+
   const editId = await createEdit();
   const bundle = await uploadBundle(editId);
 
-  if (args.track === 'production' && args.status === 'completed') {
-    // The FIRST release on a production track cannot be staged, and a completed
-    // release must declare availability: countryTargeting on the completed
-    // release itself is how the first (full) rollout declares its countries.
-    await setTrack(editId, 'completed', countryTargeting, undefined, notes, bundle.versionCode);
-  } else {
-    await setTrack(editId, args.status, null, undefined, notes, bundle.versionCode);
-  }
+  await setTrack(
+    editId,
+    args.status,
+    args.status === 'completed' ? null : countryTargeting,
+    undefined,
+    notes,
+    bundle.versionCode,
+  );
   await commitEdit(editId);
   console.log(
     `Done. versionCode ${bundle.versionCode} live on "${args.track}" ` +

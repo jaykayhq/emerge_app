@@ -27,6 +27,19 @@ node scripts/play_deploy.mjs --track internal --notes "What's new"
 
 `internal`/`alpha`/`beta` go live immediately. `production` goes to review (see "First production release" — the very first one must be done in the console).
 
+## IDX workspace vs a local PC
+
+This runbook was written from a local PC (full signing secrets, 32GB RAM, native Android SDK). The IDX cloud workspace differs — the build config below is IDX-specific, not a repo-wide change:
+
+- **No `key.properties` on IDX** (gitignored secret). `android/app/build.gradle.kts` falls back to the debug keystore for debug builds *only when `key.properties` is absent*, so IDX can compile; a local PC with real secrets keeps using the release key. Release builds still require your actual `key.properties` + `emerge-release.jks` regardless.
+- **Gradle memory** (`android/gradle.properties`) was raised to `-Xmx8192m` on IDX (8 cores / 31GB RAM). Tune per machine.
+- **NDK** `28.2.13676358` was installed on IDX via `sdkmanager` (the Nix-provided SDK only had 27). Check `sdkmanager --list_installed` if "NDK not found" appears.
+- **Env vars** (`ANDROID_HOME`, `JAVA_HOME`) are set in `~/.bashrc` on IDX only; they're not project files. `local.properties` (`sdk.dir=/home/user/.androidsdkroot`) is machine-local and gitignored.
+- **Disk**: IDX `/home` is small (15GB); the gradle cache lives on `/tmp` via a `~/.gradle` symlink. If builds fail with "No space left on device", check `df -h /home /tmp`.
+- **Deps**: run `npm install` once on IDX before `play_deploy.mjs` (the `googleapis` package is declared in `package.json` but node_modules isn't provisioned by default).
+- **Python**: `strip_aab.py` needs a python3 on PATH; IDX has none by default — use `/nix/store/00x3abm7y8j13i6n4sahvbar99irkc7d-python3-3.11.14/bin/python3 scripts/strip_aab.py` (check `ls /nix/store/*/bin/python3` if that hash is gone).
+- **Gradle cache wipes**: clearing `/tmp/gradle-home/caches` also deletes the wrapper distribution (`~/.gradle/wrapper/dists`) — after any manual cache clean, run `cd android && ./gradlew --version` once to re-download gradle-8.14 before building. A build killed by "No space left on device" can also corrupt the transform cache (`Could not deserialize analysis`); fix = stop daemons (`./gradlew --stop`), `rm -rf /tmp/gradle-home/caches`, rebuild.
+
 ## Version bump — update ALL of these
 
 The version lives in 4 places; they must stay in sync:
@@ -76,6 +89,29 @@ The release AAB embeds ~97MB of native/Dart debug symbols plus a ~70MB R8 map un
 - `apksigner verify` **cannot** verify AABs (fails on any Gradle-signed bundle too) — bundletool is the gate.
 - **Don't** strip ABIs from the zip post-build — bundletool rejects it ("Targeted directory ... is empty"); ABI control belongs in the build.
 
+## Release size expectations (1.0.7 numbers)
+
+- **Raw build ≈ 75-76 MB** (that's what `flutter build appbundle` prints). It is NOT the uploaded size — the raw AAB carries ~104 MB of uncompressed `BUNDLE-METADATA` (R8 `proguard.map` ~70 MB + debug `.sym` files ~34 MB).
+- **After `strip_aab.py`: ≈ 56 MB** (1.0.7: 75.8 → 56.3 MB). The last release (1.0.6) was 54 MB — the ~2.3 MB delta was new club/challenge artwork (~1.5 MB) plus code growth, not runaway bloat.
+- Quick audit if size jumps: `unzip -l build/app/outputs/bundle/release/app-release.aab | sort -rn | head` — big `BUNDLE-METADATA/*.sym`/`proguard.map` entries are stripped later anyway; real drivers are `base/lib/*/libapp.so` (Dart AOT), `base/dex/*`, and `flutter_assets`.
+
+## Writing release notes (user-facing)
+
+- Pull the diff since the last version bump: `git log --oneline <prev-release-tag-or-commit>..HEAD` (e.g. `git log --oneline 291292fd..HEAD` for the 1.0.6→1.0.7 gap).
+- Summarize only **user-visible** changes (features, fixes, UX), in plain language, grouped by feature. Ignore `chore`/`docs`/`test`/`refactor` commits.
+- **Hard cap: 500 characters** (Play rejects longer notes with a 403 — see the error table). Bullet style, ~6 lines, fits the cap.
+- Pass with `--notes "..."`. Example (1.0.7):
+  ```
+  What's new in 1.0.7:
+
+  • Coach guide — typed, spotlight-highlighted walkthroughs and milestone updates on your Day Card.
+  • Time-of-day habit slots — habits land in Morning, Afternoon, or Evening; pick the slot when creating.
+  • Habit integrations — link habits to Health Steps or Screen Time Limit.
+  • Starter packs — choose one or more starter habits during onboarding.
+  • Daily insights — new daily insight generator and expanded quest catalog.
+  • Stability and accessibility fixes throughout.
+  ```
+
 ## Asset size optimization (when assets change)
 
 `python scripts/optimize_assets.py` (Pillow) recompresses bundled images by usage evidence (dark overlays mask artifacts; small display sizes tolerate downscaling) and deletes zero-reference assets. `--dry-run` previews. NOTE: `generate_assets.js` (Pollinations) regenerates `assets/worlds` at full size — re-running it undoes compression. `app_icon.png`/`splash_logo_flame.png` are lossless-only (launcher/splash sources).
@@ -95,7 +131,8 @@ So: console → **Release → Production → Create release** → drag `app-rele
 | `Version code N has already been used` | versionCode taken by another track — bump build number, rebuild |
 | `Release in track targeting no countries` | first production release — use the console |
 | `The first release on a track cannot be staged` | same as above |
-| `Country targeting is only supported for staged releases` | don't put countryTargeting on completed releases |
+| `Country targeting is only supported for staged releases` | don't put countryTargeting on completed releases. (1.0.7 fixed `play_deploy.mjs` to omit targeting on completed production releases — production already had vc:11 so the console-first step didn't apply) |
+| `The release created has notes in language en-US with length N, which is too long (max: 500)` | release notes are capped at **500 characters** — trim and retry; the script re-runs cleanly because the edit is re-created each invocation |
 | `IN_PROGRESS release must have fraction` | staged releases need `userFraction` (not exposed by this script) |
 | 403 permission | service account lacks Release manager / API not enabled on the linked project |
 

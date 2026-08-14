@@ -103,8 +103,15 @@ android {
             isMinifyEnabled = false
             isShrinkResources = false
 
-            // IMPORTANT: Use release signing for debug builds to test Google Play Billing locally
-            signingConfig = signingConfigs.getByName("release")
+            // IMPORTANT: Use release signing for debug builds to test Google Play Billing locally.
+            // Fall back to the debug keystore when key.properties (production secrets) is absent.
+            // NOTE: This fallback only kicks in on the IDX workspace (no key.properties present).
+            // On a local PC with key.properties + keystore, debug builds use the release key as before.
+            signingConfig = if (keystorePropertiesFile.exists()) {
+                signingConfigs.getByName("release")
+            } else {
+                signingConfigs.getByName("debug")
+            }
 
             buildConfigField("boolean", "DEBUG_MODE", "true")
             buildConfigField("String", "BUILD_TYPE", "\"debug\"")
