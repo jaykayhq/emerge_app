@@ -1,5 +1,6 @@
 import 'package:emerge_app/core/drift/database.dart';
 import 'package:emerge_app/core/sync/sync_engine_barrel.dart';
+import 'package:emerge_app/core/utils/app_logger.dart';
 import 'package:flutter/foundation.dart';
 
 import 'package:emerge_app/features/social/domain/repositories/leaderboard_repository.dart';
@@ -61,17 +62,25 @@ class SocialActivityService {
     if (lookup == null) return;
     final partnerIds = await lookup(actorId);
     for (final partnerId in partnerIds) {
-      await _syncEngine.enqueueSet(
-        collectionPath: 'users/$partnerId/partner_activity',
-        documentId: eventId,
-        data: {
-          'type': type,
-          'userId': actorId,
-          'userName': actorName,
-          'data': data,
-          'timestamp': timestamp,
-        },
-      );
+      try {
+        await _syncEngine.enqueueSet(
+          collectionPath: 'users/$partnerId/partner_activity',
+          documentId: eventId,
+          data: {
+            'type': type,
+            'userId': actorId,
+            'userName': actorName,
+            'data': data,
+            'timestamp': timestamp,
+          },
+        );
+      } catch (e) {
+        AppLogger.w(
+          'Partner activity fan-out to $partnerId failed',
+          error: e,
+        );
+        rethrow;
+      }
     }
   }
 
@@ -202,7 +211,7 @@ class SocialActivityService {
       // Note: Tribe Aggregate Counters, Contributor Stats, Leaderboard, and User Stats
       // are handled by DriftHabitRepository.completeHabit in the offline-first flow.
     } catch (e) {
-      debugPrint('Error logging habit completion to social activity: $e');
+      AppLogger.w('Error logging habit completion to social activity', error: e);
     }
   }
 
@@ -277,7 +286,7 @@ class SocialActivityService {
       // path in logHabitCompletion is the single write shape (SP-G D7).
       // Writing an absolute score here double-counts the same XP (B7).
     } catch (e) {
-      debugPrint('Error logging level up to social activity: $e');
+      AppLogger.w('Error logging level up to social activity', error: e);
     }
   }
 
@@ -381,7 +390,7 @@ class SocialActivityService {
         isIncrement: true,
       );
     } catch (e) {
-      debugPrint('Error logging challenge completion to social activity: $e');
+      AppLogger.w('Error logging challenge completion to social activity', error: e);
     }
   }
 
@@ -438,7 +447,7 @@ class SocialActivityService {
         eventId: id,
       );
     } catch (e) {
-      debugPrint('Error logging streak milestone to social activity: $e');
+      AppLogger.w('Error logging streak milestone to social activity', error: e);
     }
   }
 
@@ -496,7 +505,7 @@ class SocialActivityService {
         eventId: id,
       );
     } catch (e) {
-      debugPrint('Error logging node claim: $e');
+      AppLogger.w('Error logging node claim', error: e);
     }
   }
 
@@ -554,7 +563,7 @@ class SocialActivityService {
         eventId: id,
       );
     } catch (e) {
-      debugPrint('Error logging badge earned to social activity: $e');
+      AppLogger.w('Error logging badge earned to social activity', error: e);
     }
   }
 
@@ -608,7 +617,7 @@ class SocialActivityService {
         eventId: id,
       );
     } catch (e) {
-      debugPrint('Error logging partner joined: $e');
+      AppLogger.w('Error logging partner joined', error: e);
     }
   }
 
@@ -686,7 +695,7 @@ class SocialActivityService {
         eventId: id,
       );
     } catch (e) {
-      debugPrint('Error logging contract committed: $e');
+      AppLogger.w('Error logging contract committed', error: e);
     }
   }
 }

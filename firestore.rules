@@ -391,6 +391,15 @@ service cloud.firestore {
           request.resource.data.keys().hasAll(['userId', 'habitId', 'localDate', 'mood', 'updatedAt']) &&
           request.resource.data.userId == request.auth.uid;
       }
+
+      // Partner Activity Subcollection (fan-out-on-write feed). The actor
+      // writes into each partner's subcollection (gated on the snapshotted
+      // actor uid); the owner reads their own feed.
+      match /partner_activity/{eventId} {
+        allow read: if isOwner(userId);
+        allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid;
+        allow delete: if isOwner(userId);
+      }
     }
 
     // Habits (Top-level collection) - Enhanced security

@@ -3,7 +3,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
 import 'package:go_router/go_router.dart';
 
+import 'package:emerge_app/core/presentation/widgets/app_error_widget.dart';
 import 'package:emerge_app/core/theme/emerge_colors.dart';
+import 'package:emerge_app/core/utils/app_logger.dart';
 import 'package:emerge_app/features/social/presentation/providers/partner_activity_provider.dart';
 import 'package:emerge_app/features/social/presentation/providers/tribes_provider.dart';
 
@@ -173,12 +175,13 @@ class _PartnersFeed extends ConsumerWidget {
     return activityAsync.when(
       loading: () =>
           const Center(child: CircularProgressIndicator(strokeWidth: 2)),
-      error: (e, _) => Center(
-        child: Text(
-          'Could not load partner activity.',
-          style: TextStyle(color: Colors.white54),
-        ),
-      ),
+      error: (e, _) {
+        AppLogger.w('Could not load partner activity', error: e);
+        return AppErrorWidget(
+          message: 'Could not load partner activity.',
+          onRetry: () => ref.invalidate(partnerActivityProvider),
+        );
+      },
       data: (entries) {
         if (entries.isEmpty) {
           return Center(
