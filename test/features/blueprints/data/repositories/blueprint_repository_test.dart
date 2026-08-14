@@ -88,14 +88,22 @@ void main() {
       expect(snap.docs, isNotEmpty);
     });
 
-    test('seedBlueprintsIfEmpty skips seeding when v4 data already exists',
+    test('seedBlueprintsIfEmpty skips seeding when v5 data already exists',
         () async {
       final firestore = FakeFirebaseFirestore();
-      // Pre-seed a v4 document: sentinel doc exists AND carries the
-      // bundled-artwork imageUrl (v4 marker).
+      // Pre-seed a v5 document: sentinel doc exists AND carries the
+      // bundled-artwork imageUrl (v4 marker) AND seeded habit slots
+      // (timeOfDay) — the v5 backfill must not re-run.
       await firestore.collection('blueprints').doc('morning_1').set({
         'title': 'Existing',
         'imageUrl': 'assets/images/blueprints/morning_1.webp',
+        'habits': [
+          {
+            'title': 'Wake Up at 6 AM',
+            'timeOfDay': 'Morning',
+            'attribute': 'vitality',
+          },
+        ],
       });
 
       final repo = BlueprintRepository(firestore);
@@ -176,6 +184,91 @@ void main() {
               'list',
         );
       }
+    });
+
+    test(
+        'seedBlueprintsIfEmpty writes timeOfDay and attribute on every seeded habit',
+        () async {
+      final firestore = FakeFirebaseFirestore();
+      final repo = BlueprintRepository(firestore);
+
+      await repo.seedBlueprintsIfEmpty();
+
+      final snap = await firestore.collection('blueprints').get();
+      expect(snap.docs.length, _seedBlueprintIds.length);
+      for (final doc in snap.docs) {
+        final habits =
+            (doc.data()['habits'] as List).cast<Map<String, dynamic>>();
+        expect(
+          habits,
+          isNotEmpty,
+          reason: '${doc.id} should carry habits',
+        );
+        for (final habit in habits) {
+          expect(
+            habit['timeOfDay'],
+            isNotNull,
+            reason: '${doc.id} habit "${habit['title']}" should carry a '
+                'timeOfDay',
+          );
+          expect(
+            habit['attribute'],
+            isNotNull,
+            reason: '${doc.id} habit "${habit['title']}" should carry an '
+                'attribute',
+          );
+        }
+      }
+    });
+
+    test('seedBlueprintsIfEmpty writes slot metadata on morning_1 habits',
+        () async {
+      final firestore = FakeFirebaseFirestore();
+      final repo = BlueprintRepository(firestore);
+
+      await repo.seedBlueprintsIfEmpty();
+
+      final snap = await firestore.collection('blueprints').doc('morning_1').get();
+      final habits =
+          (snap.data()?['habits'] as List).cast<Map<String, dynamic>>();
+      final first = habits.first;
+      expect(first['title'], 'Wake Up at 6 AM');
+      expect(first['timeOfDay'], 'Morning');
+      expect(first['attribute'], 'vitality');
+      // BlueprintHabit.toMap serializes the clock time unpadded ('6:0').
+      expect(first['defaultTime'], '6:0');
+    });
+
+    test(
+        'seedBlueprintsIfEmpty backfills habit timeOfDay onto v4 docs without duplicating',
+        () async {
+      final firestore = FakeFirebaseFirestore();
+      // Pre-seed a v4 document: bundled-artwork marker present, but the
+      // habit slots (timeOfDay) are missing — the v5 backfill must fill
+      // them while preserving live data and without creating duplicate docs.
+      await firestore.collection('blueprints').doc('morning_1').set({
+        'title': 'Existing',
+        'adoptionCount': 7,
+        'imageUrl': 'assets/images/blueprints/morning_1.webp',
+        'habits': [
+          {'title': 'Wake Up at 6 AM', 'attribute': 'vitality'},
+        ],
+      });
+
+      final repo = BlueprintRepository(firestore);
+      await repo.seedBlueprintsIfEmpty();
+
+      final snap = await firestore.collection('blueprints').get();
+      expect(snap.docs.length, _seedBlueprintIds.length);
+      final morning1 = snap.docs.firstWhere((d) => d.id == 'morning_1').data();
+      expect(morning1['imageUrl'], 'assets/images/blueprints/morning_1.webp');
+      // Live data survives the merge.
+      expect(morning1['adoptionCount'], 7);
+      // The backfilled habits carry the new slot metadata.
+      final habits =
+          (morning1['habits'] as List).cast<Map<String, dynamic>>();
+      expect(habits.first['title'], 'Wake Up at 6 AM');
+      expect(habits.first['timeOfDay'], 'Morning');
     });
   });
 }

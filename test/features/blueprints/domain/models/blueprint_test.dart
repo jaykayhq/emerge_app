@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:emerge_app/features/blueprints/domain/models/blueprint.dart';
 import 'package:emerge_app/features/habits/domain/entities/habit.dart';
@@ -145,6 +146,29 @@ void main() {
       expect(habit.attribute, HabitAttribute.vitality);
       expect(habit.frequency, 'Daily');
       expect(habit.timeOfDay, isNull);
+    });
+
+    test(
+        'BlueprintHabit round-trips timeOfDay, defaultTime, attribute, and timer',
+        () {
+      const habit = BlueprintHabit(
+        title: 'Wake Up at 6 AM',
+        timeOfDay: 'Morning',
+        defaultTime: TimeOfDay(hour: 6, minute: 0),
+        attribute: HabitAttribute.focus,
+        frequency: 'Daily',
+        timerDurationMinutes: 25,
+      );
+
+      final map = habit.toMap();
+      final restored = BlueprintHabit.fromMap(map);
+
+      expect(restored.title, 'Wake Up at 6 AM');
+      expect(restored.timeOfDay, 'Morning');
+      expect(restored.defaultTime?.hour, 6);
+      expect(restored.defaultTime?.minute, 0);
+      expect(restored.attribute, HabitAttribute.focus);
+      expect(restored.timerDurationMinutes, 25);
     });
   });
 }

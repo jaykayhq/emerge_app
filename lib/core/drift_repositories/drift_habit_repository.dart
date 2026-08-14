@@ -661,9 +661,12 @@ class DriftHabitRepository implements HabitRepository {
           timerDurationMinutes: h.timerDurationMinutes,
           integrationType: h.integrationType,
           integrationTarget: h.integrationTarget,
+          timeOfDayPreference: h.timeOfDay != null
+              ? timeOfDayPreferenceFrom(h.timeOfDay!.toLowerCase())
+              : null,
           reminderTime: reminderTime != null
               ? _parseReminderTime(reminderTime)
-              : null,
+              : h.defaultTime,
           createdAt: DateTime.now(),
         );
 
@@ -678,6 +681,7 @@ class DriftHabitRepository implements HabitRepository {
           reminderTime: habit.reminderTime != null
               ? '${habit.reminderTime!.hour}:${habit.reminderTime!.minute.toString().padLeft(2, '0')}'
               : null,
+          timeOfDayPreference: habit.timeOfDayPreference?.name,
           timerDurationMinutes: habit.timerDurationMinutes,
           integrationType: habit.integrationType.name,
           integrationTarget: habit.integrationTarget,

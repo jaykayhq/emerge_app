@@ -319,6 +319,10 @@ class DashboardStateNotifier extends _$DashboardStateNotifier {
           difficulty: _mapDifficulty(blueprint.difficulty),
           timeOfDayPreference: _mapTimeOfDay(blueprintHabit.timeOfDay),
           frequency: _mapFrequency(blueprintHabit.frequency),
+          attribute: blueprintHabit.attribute,
+          timerDurationMinutes: blueprintHabit.timerDurationMinutes,
+          integrationType: blueprintHabit.integrationType,
+          integrationTarget: blueprintHabit.integrationTarget,
           identityTags: [blueprint.category.toLowerCase(), 'blueprint'],
         );
 

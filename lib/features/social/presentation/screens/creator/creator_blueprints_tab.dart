@@ -8,6 +8,7 @@ import 'package:emerge_app/core/presentation/widgets/app_error_widget.dart';
 import 'package:emerge_app/features/blueprints/data/repositories/blueprint_repository.dart';
 import 'package:emerge_app/features/blueprints/domain/models/blueprint.dart';
 import 'package:emerge_app/features/auth/presentation/providers/auth_providers.dart';
+import 'package:emerge_app/features/social/presentation/widgets/blueprint_card.dart';
 
 /// Streams only the blueprints owned by the currently authenticated creator.
 final _myBlueprintsProvider = StreamProvider.autoDispose<List<Blueprint>>((ref) {
@@ -156,8 +157,65 @@ class _CreatorBlueprintCard extends StatelessWidget {
               '${blueprint.adoptionCount} adopted',
               style: const TextStyle(color: Colors.white38, fontSize: 11),
             ),
+            if (dominantBlueprintTimeOfDay(blueprint) != null ||
+                dominantBlueprintAttribute(blueprint) != null) ...[
+              const Gap(8),
+              Wrap(
+                spacing: 6,
+                runSpacing: 4,
+                children: [
+                  if (dominantBlueprintTimeOfDay(blueprint) != null)
+                    _CreatorInfoChip(
+                      icon: Icons.wb_sunny,
+                      label: dominantBlueprintTimeOfDay(blueprint)!,
+                    ),
+                  if (dominantBlueprintAttribute(blueprint) != null)
+                    _CreatorInfoChip(
+                      icon: Icons.bolt_rounded,
+                      label: blueprintAttributeLabel(
+                        dominantBlueprintAttribute(blueprint)!,
+                      ),
+                    ),
+                ],
+              ),
+            ],
           ],
         ),
+      ),
+    );
+  }
+}
+
+/// Compact teal-tinted chip matching the card's status-chip language.
+class _CreatorInfoChip extends StatelessWidget {
+  final IconData icon;
+  final String label;
+
+  const _CreatorInfoChip({required this.icon, required this.label});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      decoration: BoxDecoration(
+        color: EmergeColors.neonTeal.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 11, color: EmergeColors.neonTeal),
+          const SizedBox(width: 4),
+          Text(
+            label,
+            style: TextStyle(
+              color: EmergeColors.neonTeal,
+              fontSize: 9,
+              fontWeight: FontWeight.bold,
+              letterSpacing: 0.5,
+            ),
+          ),
+        ],
       ),
     );
   }

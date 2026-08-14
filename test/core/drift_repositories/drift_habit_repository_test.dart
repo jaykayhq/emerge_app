@@ -978,5 +978,108 @@ void main() {
       expect(habits, isNotEmpty);
       expect(habits.first.title, 'Wake Up');
     });
+
+    test(
+        'createHabitsFromBlueprint maps timeOfDay to timeOfDayPreference and '
+        'defaultTime to reminderTime', () async {
+      final blueprint = Blueprint(
+        id: 'test_bp_slots',
+        title: 'Test Blueprint',
+        description: 'A test blueprint',
+        category: 'Morning',
+        creatorName: 'Test',
+        creatorUserId: userId,
+        creatorArchetype: 'Scholar',
+        createdAt: DateTime.now(),
+        habits: [
+          BlueprintHabit(
+            title: 'Wake Up at 6 AM',
+            timeOfDay: 'Morning',
+            defaultTime: const TimeOfDay(hour: 6, minute: 0),
+            attribute: HabitAttribute.focus,
+            timerDurationMinutes: 5,
+          ),
+          const BlueprintHabit(title: 'No Slot Habit'),
+        ],
+      );
+
+      final result = await repository.createHabitsFromBlueprint(
+        userId: userId,
+        blueprint: blueprint,
+      );
+
+      expect(result.isRight(), true);
+
+      final rows = await db.habitsDao.watchHabits(userId).first;
+      expect(rows, hasLength(2));
+
+      final slotted = await repository.getHabit(
+        rows.firstWhere((r) => r.title == 'Wake Up at 6 AM').id,
+      );
+      expect(slotted?.timeOfDayPreference, TimeOfDayPreference.morning);
+      expect(slotted?.reminderTime?.hour, 6);
+      expect(slotted?.reminderTime?.minute, 0);
+      expect(slotted?.attribute, HabitAttribute.focus);
+      expect(slotted?.timerDurationMinutes, 5);
+
+      final plain = await repository.getHabit(
+        rows.firstWhere((r) => r.title == 'No Slot Habit').id,
+      );
+      expect(plain?.timeOfDayPreference, isNull);
+      expect(plain?.reminderTime, isNull);
+
+      // The Firestore sync payload carries the preference so the timeline
+      // renders the habit in its slot after sync.
+      final captured = verify(
+        () => mockSyncEngine.enqueueSet(
+          collectionPath: 'habits',
+          documentId: captureAny(named: 'documentId'),
+          data: captureAny(named: 'data'),
+        ),
+      ).captured;
+      final payloads = <Map<String, dynamic>>[
+        for (var i = 1; i < captured.length; i += 2)
+          captured[i] as Map<String, dynamic>,
+      ];
+      final morningPayload =
+          payloads.firstWhere((p) => p['title'] == 'Wake Up at 6 AM');
+      expect(morningPayload['timeOfDayPreference'], 'morning');
+    });
+
+    test(
+        'createHabitsFromBlueprint keeps dialog reminderTime over blueprint defaultTime',
+        () async {
+      final blueprint = Blueprint(
+        id: 'test_bp_reminder',
+        title: 'Test Blueprint',
+        description: 'A test blueprint',
+        category: 'Morning',
+        creatorName: 'Test',
+        creatorUserId: userId,
+        creatorArchetype: 'Scholar',
+        createdAt: DateTime.now(),
+        habits: [
+          BlueprintHabit(
+            title: 'Wake Up at 6 AM',
+            timeOfDay: 'Morning',
+            defaultTime: const TimeOfDay(hour: 6, minute: 0),
+          ),
+        ],
+      );
+
+      final result = await repository.createHabitsFromBlueprint(
+        userId: userId,
+        blueprint: blueprint,
+        reminderTime: '07:30',
+      );
+
+      expect(result.isRight(), true);
+
+      final rows = await db.habitsDao.watchHabits(userId).first;
+      final habit = await repository.getHabit(rows.single.id);
+      expect(habit?.reminderTime?.hour, 7);
+      expect(habit?.reminderTime?.minute, 30);
+      expect(habit?.timeOfDayPreference, TimeOfDayPreference.morning);
+    });
   });
 }

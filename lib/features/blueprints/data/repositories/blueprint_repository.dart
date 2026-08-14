@@ -1,7 +1,19 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:emerge_app/core/utils/app_logger.dart';
 import 'package:emerge_app/features/blueprints/domain/models/blueprint.dart';
+import 'package:emerge_app/features/habits/domain/entities/habit.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+/// One seeded habit spec: title, time-of-day slot, attribute, optional
+/// 'HH:mm' default clock time, and optional timer duration (0 = no timer).
+typedef _SeedHabit = ({
+  String title,
+  String timeOfDay,
+  HabitAttribute attribute,
+  String? defaultTime,
+  int timerDurationMinutes,
+});
 
 class BlueprintRepository {
   final FirebaseFirestore _firestore;
@@ -53,22 +65,27 @@ class BlueprintRepository {
   }
 
   /// Current seed version — bump when seed data changes to force re-seed
-  static const int _seedVersion = 4;
+  static const int _seedVersion = 5;
 
   Future<void> seedBlueprintsIfEmpty() async {
     try {
       // Skip only when the sentinel doc exists AND already carries v4
-      // artwork. A v3 doc (remote Unsplash image) must be backfilled so
-      // every install renders the bundled blueprint images.
-      final v4Check = await _firestore
+      // artwork AND the v5 habit slot metadata (timeOfDay). A v4 doc
+      // (bundled artwork, no habit slots) must be backfilled so every
+      // install renders blueprint habits with their time-of-day.
+      final v5Check = await _firestore
           .collection('blueprints')
           .doc('morning_1')
           .get();
-      final isV4 = v4Check.exists &&
-          (v4Check.data()?['imageUrl'] as String? ?? '')
+      final hasArtwork = v5Check.exists &&
+          (v5Check.data()?['imageUrl'] as String? ?? '')
               .startsWith('assets/images/blueprints/');
+      final hasSlotMetadata = hasArtwork &&
+          (v5Check.data()?['habits'] as List<dynamic>? ?? const [])
+              .whereType<Map>()
+              .any((h) => h['timeOfDay'] != null);
 
-      if (isV4) {
+      if (hasArtwork && hasSlotMetadata) {
         AppLogger.i(
           'BlueprintRepository: Blueprints already seeded (v$_seedVersion).',
         );
@@ -78,7 +95,7 @@ class BlueprintRepository {
       // Backfilling existing docs: merge must not clobber live-doc adoption
       // counts or creation timestamps, so increment(0) is a no-op for
       // counters and createdAt is left untouched on existing docs.
-      final backfilling = v4Check.exists;
+      final backfilling = v5Check.exists;
 
       // Note: Old archetype blueprints (v1) remain in Firestore but are
       // filtered out in the UI by allowed categories list. Server-side
@@ -95,9 +112,27 @@ class BlueprintRepository {
               'assets/images/blueprints/morning_1.webp',
           difficulty: BlueprintDifficulty.beginner,
           habits: [
-            'Wake Up at 6 AM',
-            'Drink 500ml Water',
-            '10 Min Sunlight Exposure',
+            (
+              title: 'Wake Up at 6 AM',
+              timeOfDay: 'Morning',
+              attribute: HabitAttribute.vitality,
+              defaultTime: '06:00',
+              timerDurationMinutes: 0,
+            ),
+            (
+              title: 'Drink 500ml Water',
+              timeOfDay: 'Morning',
+              attribute: HabitAttribute.vitality,
+              defaultTime: null,
+              timerDurationMinutes: 0,
+            ),
+            (
+              title: '10 Min Sunlight Exposure',
+              timeOfDay: 'Morning',
+              attribute: HabitAttribute.vitality,
+              defaultTime: null,
+              timerDurationMinutes: 10,
+            ),
           ],
           recommendedArchetypes: const ['athlete', 'stoic'],
         ),
@@ -109,7 +144,29 @@ class BlueprintRepository {
           image:
               'assets/images/blueprints/morning_2.webp',
           difficulty: BlueprintDifficulty.intermediate,
-          habits: ['Cold Shower', 'Stretch Routine', 'High-Protein Breakfast'],
+          habits: [
+            (
+              title: 'Cold Shower',
+              timeOfDay: 'Morning',
+              attribute: HabitAttribute.strength,
+              defaultTime: null,
+              timerDurationMinutes: 0,
+            ),
+            (
+              title: 'Stretch Routine',
+              timeOfDay: 'Morning',
+              attribute: HabitAttribute.vitality,
+              defaultTime: null,
+              timerDurationMinutes: 10,
+            ),
+            (
+              title: 'High-Protein Breakfast',
+              timeOfDay: 'Morning',
+              attribute: HabitAttribute.strength,
+              defaultTime: null,
+              timerDurationMinutes: 0,
+            ),
+          ],
           recommendedArchetypes: const ['athlete'],
         ),
         _createSeed(
@@ -120,7 +177,29 @@ class BlueprintRepository {
           image:
               'assets/images/blueprints/morning_3.webp',
           difficulty: BlueprintDifficulty.beginner,
-          habits: ['5 Min Meditation', 'Gratitude Journal', 'Herbal Tea'],
+          habits: [
+            (
+              title: '5 Min Meditation',
+              timeOfDay: 'Morning',
+              attribute: HabitAttribute.focus,
+              defaultTime: null,
+              timerDurationMinutes: 5,
+            ),
+            (
+              title: 'Gratitude Journal',
+              timeOfDay: 'Morning',
+              attribute: HabitAttribute.spirit,
+              defaultTime: null,
+              timerDurationMinutes: 0,
+            ),
+            (
+              title: 'Herbal Tea',
+              timeOfDay: 'Morning',
+              attribute: HabitAttribute.spirit,
+              defaultTime: null,
+              timerDurationMinutes: 0,
+            ),
+          ],
           recommendedArchetypes: const ['stoic'],
         ),
         _createSeed(
@@ -131,7 +210,29 @@ class BlueprintRepository {
           image:
               'assets/images/blueprints/morning_4.webp',
           difficulty: BlueprintDifficulty.advanced,
-          habits: ['Wake at 5 AM', 'Deep Work Block', 'No Phone for 1 Hour'],
+          habits: [
+            (
+              title: 'Wake at 5 AM',
+              timeOfDay: 'Morning',
+              attribute: HabitAttribute.vitality,
+              defaultTime: '05:00',
+              timerDurationMinutes: 0,
+            ),
+            (
+              title: 'Deep Work Block',
+              timeOfDay: 'Morning',
+              attribute: HabitAttribute.focus,
+              defaultTime: '05:30',
+              timerDurationMinutes: 90,
+            ),
+            (
+              title: 'No Phone for 1 Hour',
+              timeOfDay: 'Morning',
+              attribute: HabitAttribute.focus,
+              defaultTime: null,
+              timerDurationMinutes: 60,
+            ),
+          ],
           recommendedArchetypes: const ['scholar', 'zealot'],
         ),
         _createSeed(
@@ -142,7 +243,29 @@ class BlueprintRepository {
           image:
               'assets/images/blueprints/morning_5.webp',
           difficulty: BlueprintDifficulty.intermediate,
-          habits: ['Dynamic Stretching', 'Foam Rolling', 'Posture Check'],
+          habits: [
+            (
+              title: 'Dynamic Stretching',
+              timeOfDay: 'Morning',
+              attribute: HabitAttribute.vitality,
+              defaultTime: null,
+              timerDurationMinutes: 10,
+            ),
+            (
+              title: 'Foam Rolling',
+              timeOfDay: 'Morning',
+              attribute: HabitAttribute.vitality,
+              defaultTime: null,
+              timerDurationMinutes: 10,
+            ),
+            (
+              title: 'Posture Check',
+              timeOfDay: 'Morning',
+              attribute: HabitAttribute.vitality,
+              defaultTime: null,
+              timerDurationMinutes: 0,
+            ),
+          ],
           recommendedArchetypes: const ['athlete'],
         ),
 
@@ -155,7 +278,29 @@ class BlueprintRepository {
           image:
               'assets/images/blueprints/productivity_1.webp',
           difficulty: BlueprintDifficulty.advanced,
-          habits: ['90 Min Deep Work', 'Phone on DND', 'Task Batching'],
+          habits: [
+            (
+              title: '90 Min Deep Work',
+              timeOfDay: 'Morning',
+              attribute: HabitAttribute.focus,
+              defaultTime: '09:00',
+              timerDurationMinutes: 90,
+            ),
+            (
+              title: 'Phone on DND',
+              timeOfDay: 'Morning',
+              attribute: HabitAttribute.focus,
+              defaultTime: null,
+              timerDurationMinutes: 0,
+            ),
+            (
+              title: 'Task Batching',
+              timeOfDay: 'Afternoon',
+              attribute: HabitAttribute.focus,
+              defaultTime: null,
+              timerDurationMinutes: 0,
+            ),
+          ],
           recommendedArchetypes: const ['scholar', 'zealot'],
         ),
         _createSeed(
@@ -168,9 +313,27 @@ class BlueprintRepository {
               'assets/images/blueprints/productivity_2.webp',
           difficulty: BlueprintDifficulty.beginner,
           habits: [
-            'Write Top 6 Tasks',
-            'Prioritize by Importance',
-            'Complete One at a Time',
+            (
+              title: 'Write Top 6 Tasks',
+              timeOfDay: 'Evening',
+              attribute: HabitAttribute.focus,
+              defaultTime: '21:00',
+              timerDurationMinutes: 0,
+            ),
+            (
+              title: 'Prioritize by Importance',
+              timeOfDay: 'Evening',
+              attribute: HabitAttribute.intellect,
+              defaultTime: null,
+              timerDurationMinutes: 0,
+            ),
+            (
+              title: 'Complete One at a Time',
+              timeOfDay: 'Morning',
+              attribute: HabitAttribute.focus,
+              defaultTime: null,
+              timerDurationMinutes: 0,
+            ),
           ],
           recommendedArchetypes: const ['scholar', 'zealot'],
         ),
@@ -183,9 +346,27 @@ class BlueprintRepository {
               'assets/images/blueprints/productivity_3.webp',
           difficulty: BlueprintDifficulty.intermediate,
           habits: [
-            'Plan Tomorrow Tonight',
-            'Time Block Calendar',
-            'Review & Reflect',
+            (
+              title: 'Plan Tomorrow Tonight',
+              timeOfDay: 'Evening',
+              attribute: HabitAttribute.intellect,
+              defaultTime: '21:30',
+              timerDurationMinutes: 0,
+            ),
+            (
+              title: 'Time Block Calendar',
+              timeOfDay: 'Morning',
+              attribute: HabitAttribute.intellect,
+              defaultTime: '08:00',
+              timerDurationMinutes: 0,
+            ),
+            (
+              title: 'Review & Reflect',
+              timeOfDay: 'Evening',
+              attribute: HabitAttribute.focus,
+              defaultTime: null,
+              timerDurationMinutes: 0,
+            ),
           ],
           recommendedArchetypes: const ['scholar', 'zealot'],
         ),
@@ -197,7 +378,29 @@ class BlueprintRepository {
           image:
               'assets/images/blueprints/productivity_4.webp',
           difficulty: BlueprintDifficulty.intermediate,
-          habits: ['Unsubscribe from Junk', 'Organize Files', 'App Purge'],
+          habits: [
+            (
+              title: 'Unsubscribe from Junk',
+              timeOfDay: 'Afternoon',
+              attribute: HabitAttribute.focus,
+              defaultTime: null,
+              timerDurationMinutes: 0,
+            ),
+            (
+              title: 'Organize Files',
+              timeOfDay: 'Afternoon',
+              attribute: HabitAttribute.intellect,
+              defaultTime: null,
+              timerDurationMinutes: 30,
+            ),
+            (
+              title: 'App Purge',
+              timeOfDay: 'Evening',
+              attribute: HabitAttribute.focus,
+              defaultTime: null,
+              timerDurationMinutes: 0,
+            ),
+          ],
           recommendedArchetypes: const ['stoic', 'scholar'],
         ),
         _createSeed(
@@ -208,7 +411,29 @@ class BlueprintRepository {
           image:
               'assets/images/blueprints/productivity_5.webp',
           difficulty: BlueprintDifficulty.beginner,
-          habits: ['25 Min Focus Sprint', '5 Min Break', 'Track Pomodoros'],
+          habits: [
+            (
+              title: '25 Min Focus Sprint',
+              timeOfDay: 'Morning',
+              attribute: HabitAttribute.focus,
+              defaultTime: null,
+              timerDurationMinutes: 25,
+            ),
+            (
+              title: '5 Min Break',
+              timeOfDay: 'Morning',
+              attribute: HabitAttribute.vitality,
+              defaultTime: null,
+              timerDurationMinutes: 5,
+            ),
+            (
+              title: 'Track Pomodoros',
+              timeOfDay: 'Afternoon',
+              attribute: HabitAttribute.focus,
+              defaultTime: null,
+              timerDurationMinutes: 0,
+            ),
+          ],
           recommendedArchetypes: const ['scholar', 'athlete'],
         ),
 
@@ -221,7 +446,29 @@ class BlueprintRepository {
           image:
               'assets/images/blueprints/fitness_1.webp',
           difficulty: BlueprintDifficulty.beginner,
-          habits: ['Push-Ups', 'Bodyweight Squats', 'Plank Hold'],
+          habits: [
+            (
+              title: 'Push-Ups',
+              timeOfDay: 'Morning',
+              attribute: HabitAttribute.strength,
+              defaultTime: null,
+              timerDurationMinutes: 0,
+            ),
+            (
+              title: 'Bodyweight Squats',
+              timeOfDay: 'Morning',
+              attribute: HabitAttribute.strength,
+              defaultTime: null,
+              timerDurationMinutes: 0,
+            ),
+            (
+              title: 'Plank Hold',
+              timeOfDay: 'Morning',
+              attribute: HabitAttribute.strength,
+              defaultTime: null,
+              timerDurationMinutes: 1,
+            ),
+          ],
           recommendedArchetypes: const ['athlete'],
         ),
         _createSeed(
@@ -232,7 +479,29 @@ class BlueprintRepository {
           image:
               'assets/images/blueprints/fitness_2.webp',
           difficulty: BlueprintDifficulty.intermediate,
-          habits: ['20 Min Run', 'Jump Rope', 'Cool Down Stretch'],
+          habits: [
+            (
+              title: '20 Min Run',
+              timeOfDay: 'Morning',
+              attribute: HabitAttribute.vitality,
+              defaultTime: null,
+              timerDurationMinutes: 20,
+            ),
+            (
+              title: 'Jump Rope',
+              timeOfDay: 'Afternoon',
+              attribute: HabitAttribute.vitality,
+              defaultTime: null,
+              timerDurationMinutes: 10,
+            ),
+            (
+              title: 'Cool Down Stretch',
+              timeOfDay: 'Evening',
+              attribute: HabitAttribute.vitality,
+              defaultTime: null,
+              timerDurationMinutes: 5,
+            ),
+          ],
           recommendedArchetypes: const ['athlete'],
         ),
         _createSeed(
@@ -243,7 +512,29 @@ class BlueprintRepository {
           image:
               'assets/images/blueprints/fitness_3.webp',
           difficulty: BlueprintDifficulty.beginner,
-          habits: ['Hamstring Stretch', 'Hip Openers', 'Spine Twists'],
+          habits: [
+            (
+              title: 'Hamstring Stretch',
+              timeOfDay: 'Evening',
+              attribute: HabitAttribute.vitality,
+              defaultTime: null,
+              timerDurationMinutes: 5,
+            ),
+            (
+              title: 'Hip Openers',
+              timeOfDay: 'Evening',
+              attribute: HabitAttribute.vitality,
+              defaultTime: null,
+              timerDurationMinutes: 5,
+            ),
+            (
+              title: 'Spine Twists',
+              timeOfDay: 'Evening',
+              attribute: HabitAttribute.vitality,
+              defaultTime: null,
+              timerDurationMinutes: 5,
+            ),
+          ],
           recommendedArchetypes: const ['athlete', 'stoic'],
         ),
         _createSeed(
@@ -254,7 +545,29 @@ class BlueprintRepository {
           image:
               'assets/images/blueprints/fitness_4.webp',
           difficulty: BlueprintDifficulty.advanced,
-          habits: ['Deadlifts', 'Overhead Press', 'Pull-Ups'],
+          habits: [
+            (
+              title: 'Deadlifts',
+              timeOfDay: 'Afternoon',
+              attribute: HabitAttribute.strength,
+              defaultTime: null,
+              timerDurationMinutes: 0,
+            ),
+            (
+              title: 'Overhead Press',
+              timeOfDay: 'Afternoon',
+              attribute: HabitAttribute.strength,
+              defaultTime: null,
+              timerDurationMinutes: 0,
+            ),
+            (
+              title: 'Pull-Ups',
+              timeOfDay: 'Afternoon',
+              attribute: HabitAttribute.strength,
+              defaultTime: null,
+              timerDurationMinutes: 0,
+            ),
+          ],
           recommendedArchetypes: const ['athlete', 'zealot'],
         ),
         _createSeed(
@@ -265,7 +578,29 @@ class BlueprintRepository {
           image:
               'assets/images/blueprints/fitness_5.webp',
           difficulty: BlueprintDifficulty.beginner,
-          habits: ['Brisk Walk', 'Light Yoga', 'Hydration Focus'],
+          habits: [
+            (
+              title: 'Brisk Walk',
+              timeOfDay: 'Afternoon',
+              attribute: HabitAttribute.vitality,
+              defaultTime: null,
+              timerDurationMinutes: 20,
+            ),
+            (
+              title: 'Light Yoga',
+              timeOfDay: 'Evening',
+              attribute: HabitAttribute.spirit,
+              defaultTime: null,
+              timerDurationMinutes: 20,
+            ),
+            (
+              title: 'Hydration Focus',
+              timeOfDay: 'Morning',
+              attribute: HabitAttribute.vitality,
+              defaultTime: null,
+              timerDurationMinutes: 0,
+            ),
+          ],
           recommendedArchetypes: const ['athlete', 'stoic'],
         ),
 
@@ -278,7 +613,29 @@ class BlueprintRepository {
           image:
               'assets/images/blueprints/mindfulness_1.webp',
           difficulty: BlueprintDifficulty.beginner,
-          habits: ['5 Min Breath Focus', 'Body Scan', 'Loving Kindness'],
+          habits: [
+            (
+              title: '5 Min Breath Focus',
+              timeOfDay: 'Morning',
+              attribute: HabitAttribute.focus,
+              defaultTime: null,
+              timerDurationMinutes: 5,
+            ),
+            (
+              title: 'Body Scan',
+              timeOfDay: 'Evening',
+              attribute: HabitAttribute.spirit,
+              defaultTime: null,
+              timerDurationMinutes: 10,
+            ),
+            (
+              title: 'Loving Kindness',
+              timeOfDay: 'Evening',
+              attribute: HabitAttribute.spirit,
+              defaultTime: null,
+              timerDurationMinutes: 5,
+            ),
+          ],
           recommendedArchetypes: const ['stoic'],
         ),
         _createSeed(
@@ -289,7 +646,29 @@ class BlueprintRepository {
           image:
               'assets/images/blueprints/mindfulness_2.webp',
           difficulty: BlueprintDifficulty.advanced,
-          habits: ['No Screens for 4 Hours', 'Nature Walk', 'Analog Activity'],
+          habits: [
+            (
+              title: 'No Screens for 4 Hours',
+              timeOfDay: 'Morning',
+              attribute: HabitAttribute.focus,
+              defaultTime: null,
+              timerDurationMinutes: 0,
+            ),
+            (
+              title: 'Nature Walk',
+              timeOfDay: 'Afternoon',
+              attribute: HabitAttribute.spirit,
+              defaultTime: null,
+              timerDurationMinutes: 30,
+            ),
+            (
+              title: 'Analog Activity',
+              timeOfDay: 'Evening',
+              attribute: HabitAttribute.creativity,
+              defaultTime: null,
+              timerDurationMinutes: 0,
+            ),
+          ],
           recommendedArchetypes: const ['stoic', 'scholar'],
         ),
         _createSeed(
@@ -300,7 +679,29 @@ class BlueprintRepository {
           image:
               'assets/images/blueprints/mindfulness_3.webp',
           difficulty: BlueprintDifficulty.beginner,
-          habits: ['Write 3 Gratitudes', 'Thank Someone', 'Savor a Moment'],
+          habits: [
+            (
+              title: 'Write 3 Gratitudes',
+              timeOfDay: 'Morning',
+              attribute: HabitAttribute.spirit,
+              defaultTime: null,
+              timerDurationMinutes: 0,
+            ),
+            (
+              title: 'Thank Someone',
+              timeOfDay: 'Afternoon',
+              attribute: HabitAttribute.spirit,
+              defaultTime: null,
+              timerDurationMinutes: 0,
+            ),
+            (
+              title: 'Savor a Moment',
+              timeOfDay: 'Evening',
+              attribute: HabitAttribute.spirit,
+              defaultTime: null,
+              timerDurationMinutes: 0,
+            ),
+          ],
           recommendedArchetypes: const ['stoic', 'zealot'],
         ),
         _createSeed(
@@ -311,7 +712,29 @@ class BlueprintRepository {
           image:
               'assets/images/blueprints/mindfulness_4.webp',
           difficulty: BlueprintDifficulty.intermediate,
-          habits: ['Box Breathing', 'Progressive Relaxation', 'Journaling'],
+          habits: [
+            (
+              title: 'Box Breathing',
+              timeOfDay: 'Morning',
+              attribute: HabitAttribute.focus,
+              defaultTime: null,
+              timerDurationMinutes: 5,
+            ),
+            (
+              title: 'Progressive Relaxation',
+              timeOfDay: 'Evening',
+              attribute: HabitAttribute.spirit,
+              defaultTime: null,
+              timerDurationMinutes: 10,
+            ),
+            (
+              title: 'Journaling',
+              timeOfDay: 'Evening',
+              attribute: HabitAttribute.intellect,
+              defaultTime: null,
+              timerDurationMinutes: 15,
+            ),
+          ],
           recommendedArchetypes: const ['stoic'],
         ),
         _createSeed(
@@ -324,9 +747,27 @@ class BlueprintRepository {
               'assets/images/blueprints/mindfulness_5.webp',
           difficulty: BlueprintDifficulty.beginner,
           habits: [
-            'No Screens 30 Min Before Bed',
-            'Tidy Your Space',
-            'Read Fiction',
+            (
+              title: 'No Screens 30 Min Before Bed',
+              timeOfDay: 'Evening',
+              attribute: HabitAttribute.focus,
+              defaultTime: null,
+              timerDurationMinutes: 0,
+            ),
+            (
+              title: 'Tidy Your Space',
+              timeOfDay: 'Evening',
+              attribute: HabitAttribute.focus,
+              defaultTime: null,
+              timerDurationMinutes: 10,
+            ),
+            (
+              title: 'Read Fiction',
+              timeOfDay: 'Evening',
+              attribute: HabitAttribute.intellect,
+              defaultTime: null,
+              timerDurationMinutes: 20,
+            ),
           ],
           recommendedArchetypes: const ['stoic', 'scholar'],
         ),
@@ -340,7 +781,29 @@ class BlueprintRepository {
           image:
               'assets/images/blueprints/learning_1.webp',
           difficulty: BlueprintDifficulty.beginner,
-          habits: ['Read 20 Pages', 'Take Notes', 'Summarize Key Idea'],
+          habits: [
+            (
+              title: 'Read 20 Pages',
+              timeOfDay: 'Evening',
+              attribute: HabitAttribute.intellect,
+              defaultTime: null,
+              timerDurationMinutes: 30,
+            ),
+            (
+              title: 'Take Notes',
+              timeOfDay: 'Evening',
+              attribute: HabitAttribute.intellect,
+              defaultTime: null,
+              timerDurationMinutes: 0,
+            ),
+            (
+              title: 'Summarize Key Idea',
+              timeOfDay: 'Evening',
+              attribute: HabitAttribute.intellect,
+              defaultTime: null,
+              timerDurationMinutes: 10,
+            ),
+          ],
           recommendedArchetypes: const ['scholar'],
         ),
         _createSeed(
@@ -352,9 +815,27 @@ class BlueprintRepository {
               'assets/images/blueprints/learning_2.webp',
           difficulty: BlueprintDifficulty.intermediate,
           habits: [
-            '30 Min Deliberate Practice',
-            'Track Progress',
-            'Review Mistakes',
+            (
+              title: '30 Min Deliberate Practice',
+              timeOfDay: 'Morning',
+              attribute: HabitAttribute.focus,
+              defaultTime: null,
+              timerDurationMinutes: 30,
+            ),
+            (
+              title: 'Track Progress',
+              timeOfDay: 'Afternoon',
+              attribute: HabitAttribute.focus,
+              defaultTime: null,
+              timerDurationMinutes: 0,
+            ),
+            (
+              title: 'Review Mistakes',
+              timeOfDay: 'Evening',
+              attribute: HabitAttribute.intellect,
+              defaultTime: null,
+              timerDurationMinutes: 10,
+            ),
           ],
           recommendedArchetypes: const ['scholar', 'creator'],
         ),
@@ -367,9 +848,27 @@ class BlueprintRepository {
               'assets/images/blueprints/learning_3.webp',
           difficulty: BlueprintDifficulty.beginner,
           habits: [
-            'Watch a Documentary',
-            'Read One Article',
-            'Discuss What You Learned',
+            (
+              title: 'Watch a Documentary',
+              timeOfDay: 'Evening',
+              attribute: HabitAttribute.intellect,
+              defaultTime: null,
+              timerDurationMinutes: 45,
+            ),
+            (
+              title: 'Read One Article',
+              timeOfDay: 'Morning',
+              attribute: HabitAttribute.intellect,
+              defaultTime: null,
+              timerDurationMinutes: 15,
+            ),
+            (
+              title: 'Discuss What You Learned',
+              timeOfDay: 'Afternoon',
+              attribute: HabitAttribute.creativity,
+              defaultTime: null,
+              timerDurationMinutes: 0,
+            ),
           ],
           recommendedArchetypes: const ['scholar', 'creator'],
         ),
@@ -382,9 +881,27 @@ class BlueprintRepository {
               'assets/images/blueprints/learning_4.webp',
           difficulty: BlueprintDifficulty.intermediate,
           habits: [
-            'Review Flashcards',
-            'Teach Someone',
-            'Active Recall Session',
+            (
+              title: 'Review Flashcards',
+              timeOfDay: 'Morning',
+              attribute: HabitAttribute.focus,
+              defaultTime: null,
+              timerDurationMinutes: 10,
+            ),
+            (
+              title: 'Teach Someone',
+              timeOfDay: 'Afternoon',
+              attribute: HabitAttribute.intellect,
+              defaultTime: null,
+              timerDurationMinutes: 0,
+            ),
+            (
+              title: 'Active Recall Session',
+              timeOfDay: 'Evening',
+              attribute: HabitAttribute.focus,
+              defaultTime: null,
+              timerDurationMinutes: 20,
+            ),
           ],
           recommendedArchetypes: const ['scholar'],
         ),
@@ -397,7 +914,29 @@ class BlueprintRepository {
           image:
               'assets/images/blueprints/learning_5.webp',
           difficulty: BlueprintDifficulty.advanced,
-          habits: ['Watch One Lesson', 'Do the Assignment', 'Write Reflection'],
+          habits: [
+            (
+              title: 'Watch One Lesson',
+              timeOfDay: 'Morning',
+              attribute: HabitAttribute.intellect,
+              defaultTime: null,
+              timerDurationMinutes: 30,
+            ),
+            (
+              title: 'Do the Assignment',
+              timeOfDay: 'Afternoon',
+              attribute: HabitAttribute.creativity,
+              defaultTime: null,
+              timerDurationMinutes: 45,
+            ),
+            (
+              title: 'Write Reflection',
+              timeOfDay: 'Evening',
+              attribute: HabitAttribute.intellect,
+              defaultTime: null,
+              timerDurationMinutes: 15,
+            ),
+          ],
           recommendedArchetypes: const ['scholar', 'zealot'],
         ),
       ];
@@ -428,7 +967,7 @@ class BlueprintRepository {
     required String description,
     required String image,
     required BlueprintDifficulty difficulty,
-    required List<String> habits,
+    required List<_SeedHabit> habits,
     required List<String> recommendedArchetypes,
   }) {
     return Blueprint(
@@ -438,13 +977,33 @@ class BlueprintRepository {
       creatorArchetype: 'Emerge',
       title: title,
       description: description,
-      habits: habits.map((h) => BlueprintHabit(title: h)).toList(),
+      habits: habits
+          .map(
+            (h) => BlueprintHabit(
+              title: h.title,
+              timeOfDay: h.timeOfDay,
+              attribute: h.attribute,
+              defaultTime: _parseSeedTime(h.defaultTime),
+              timerDurationMinutes: h.timerDurationMinutes,
+            ),
+          )
+          .toList(),
       createdAt: DateTime.now(),
       imageUrl: image,
       category: category,
       difficulty: difficulty,
       recommendedArchetypes: recommendedArchetypes,
     );
+  }
+
+  static TimeOfDay? _parseSeedTime(String? timeStr) {
+    if (timeStr == null) return null;
+    final parts = timeStr.split(':');
+    if (parts.length != 2) return null;
+    final hour = int.tryParse(parts[0]);
+    final minute = int.tryParse(parts[1]);
+    if (hour == null || minute == null) return null;
+    return TimeOfDay(hour: hour, minute: minute);
   }
 }
 
