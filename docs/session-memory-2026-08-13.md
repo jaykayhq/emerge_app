@@ -33,6 +33,13 @@
 - functions: 3 new/updated modules (`tribe_membership.ts`, `tribe_contributions.ts`, `recalcTribes.ts`), exported in index.ts. Build + 140 tests green.
 - Flutter: 645 focused tests green, `dart analyze` 0 issues, `flutter build web --debug` verified.
 
+## Security state (2026-08-14)
+
+- **Dependabot: 0 vulnerabilities** in `functions/` + `email-worker/` (fixed 25+ alerts). email-worker: nodemailer 9.0.5, firebase-admin 14.2.0 (modular imports), uuid override ^11.1.1. functions: npm audit fix + overrides (uuid ^11.1.1, @types/request.form-data ^2.5.6, firebase-functions-test.ts-deepmerge ^8.0.0). `.github/dependabot.yml` weekly updates added.
+- **Secret scanning: 3 open alerts = the Firebase client API keys** (`AIzaSyAWlSsjpgQN4E_Bt3esMa1hIFJ9nESAEmA` Android, `AIzaSyAhbcUe2s1B-K_qd4w3fmyKef0AQhJtNAg` iOS) in `android/app/google-services.json`, `google-services.json`, `lib/firebase_options.dart`. Public-by-design (embedded in clients), but must be **restricted** in GCP console (owner action): APIs & Services → Credentials → each Firebase API key → Application restrictions (Android package+SHA-1 / iOS bundle / web referrers) + API restrictions (Firebase only). Then mark the alerts resolved in the Security tab. play-publisher SA lacks `apikeys` perms — console only.
+- **Optional hygiene:** the fine-grained PAT (github_pat_...) and Gmail app password were pasted in chat; regenerate/rotate if shared elsewhere, then update the function secret (`functions:secrets:set GITHUB_DISPATCH_TOKEN`) / GH secrets.
+- firebase-admin 14 ESM: namespace import (`import * as admin`) no longer exposes `.firestore` — use modular subpaths (`firebase-admin/firestore`, `firebase-admin/auth`) + `getFirestore(app)`/`getAuth(app)`.
+
 ## Pending manual actions (user)
 
 1. **EMAIL WORKER (2026-08-13):** Cloud email functions replaced by GitHub Actions (`email-worker/` + `.github/workflows/emails.yml`) — SMTP via nodemailer, no Resend. Old functions deleted from prod; full `firebase deploy --only functions` now works WITHOUT the RESEND_API_KEY secret. **User must add repo secrets:** `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS` (+ optional `EMAIL_FROM`, `EMAIL_OVERRIDE_TO` to route all emails to one inbox). `FIREBASE_SERVICE_ACCOUNT_TRADEFLASH_L2966` already exists (hosting workflow). Welcome emails are now a daily batch (7-day lookback marker `welcomeEmailSentAt`) instead of a real-time trigger; grace lock + drip logic ported verbatim. Worker tests: 19 node:test cases.
