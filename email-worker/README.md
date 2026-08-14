@@ -40,6 +40,10 @@ EMAIL_OVERRIDE_TO=you@example.com node src/index.js --task all
 
 `.github/workflows/emails.yml` runs all tasks daily at 04:00 UTC
 (`workflow_dispatch` available for manual runs).
+`.github/workflows/emails-welcome.yml` runs the welcome task every 5 minutes
+for near-real-time delivery (the repo is public → unlimited free Actions
+minutes). Welcome delivery is therefore ≤5 minutes after signup; drip and
+grace remain daily.
 
 Required repo secrets:
 

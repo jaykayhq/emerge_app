@@ -1,0 +1,47 @@
+# Emerge Welcome Email Worker (near-real-time)
+#
+# Runs every 5 minutes (GitHub's minimum cron interval) so welcome emails
+# go out within ~5 minutes of a new signup, instead of the daily batch.
+# The repo is public → GitHub Actions minutes are unlimited (free).
+# Firestore events can't trigger GitHub Actions directly (no Firebase
+# function exists on purpose); a 5-minute poll is the closest free,
+# function-free approximation — the welcome task is idempotent via
+# users/{uid}.welcomeEmailSentAt, so overlapping with the daily run is safe.
+name: Emails (welcome — every 5 min)
+
+on:
+  schedule:
+    - cron: "*/5 * * * *" # every 5 minutes
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  run-welcome-task:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: email-worker/package-lock.json
+
+      - name: Install worker dependencies
+        working-directory: email-worker
+        run: npm ci
+
+      - name: Run welcome task
+        working-directory: email-worker
+        env:
+          FIREBASE_SERVICE_ACCOUNT_JSON: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_TRADEFLASH_L2966 }}
+          SMTP_HOST: ${{ secrets.SMTP_HOST }}
+          SMTP_PORT: ${{ secrets.SMTP_PORT }}
+          SMTP_USER: ${{ secrets.SMTP_USER }}
+          SMTP_PASS: ${{ secrets.SMTP_PASS }}
+          EMAIL_FROM: ${{ secrets.EMAIL_FROM }}
+          EMAIL_OVERRIDE_TO: ${{ secrets.EMAIL_OVERRIDE_TO }}
+        run: node src/index.js --task welcome
