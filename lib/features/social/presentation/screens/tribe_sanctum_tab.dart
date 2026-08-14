@@ -63,27 +63,26 @@ class _TribeSanctumTabState extends ConsumerState<TribeSanctumTab> {
   @override
   Widget build(BuildContext context) {
     final profileAsync = ref.watch(userStatsStreamProvider);
-    final clubsAsync = ref.watch(allArchetypeClubsProvider);
     final activeMembership = ref.watch(activeMembershipProvider).value;
 
-    return clubsAsync.when(
-      data: (clubs) {
-        return profileAsync.when(
-          data: (profile) {
-            final theme = ArchetypeTheme.forArchetype(profile.archetype);
+    return profileAsync.when(
+      data: (profile) {
+        final theme = ArchetypeTheme.forArchetype(profile.archetype);
 
-            if (activeMembership == null) {
-              return const Center(
-                child: Text(
-                  'No active tribe',
-                  style: TextStyle(color: Colors.white70),
-                ),
-              );
-            }
+        if (activeMembership == null) {
+          return const Center(
+            child: Text(
+              'No active tribe',
+              style: TextStyle(color: Colors.white70),
+            ),
+          );
+        }
 
-            final tribeId = activeMembership.tribeId;
-            final userClub = clubs.where((c) => c.id == tribeId).firstOrNull;
-
+        // Membership-aware: creator tribes never appear in the official-only
+        // allArchetypeClubsProvider stream, so resolve via watchUserTribes.
+        final tribeAsync = ref.watch(userTribeProvider(profile.uid));
+        return tribeAsync.when(
+          data: (userClub) {
             if (userClub == null) {
               return const Center(
                 child: Text(
@@ -95,17 +94,17 @@ class _TribeSanctumTabState extends ConsumerState<TribeSanctumTab> {
 
             return _buildSanctumTab(userClub, theme, profile);
           },
-          loading: () => const EmergeLoadingSkeleton(itemCount: 1),
-          error: (error, stack) => AppErrorWidget(
-            message: 'Could not load your profile',
-            onRetry: () => ref.invalidate(userStatsStreamProvider),
+          loading: () => const EmergeLoadingSkeleton(itemCount: 5),
+          error: (error, _) => AppErrorWidget(
+            message: 'Could not load tribes',
+            onRetry: () => ref.invalidate(userTribeProvider(profile.uid)),
           ),
         );
       },
-      loading: () => const EmergeLoadingSkeleton(itemCount: 5),
-      error: (error, _) => AppErrorWidget(
-        message: 'Could not load tribes',
-        onRetry: () => ref.invalidate(allArchetypeClubsProvider),
+      loading: () => const EmergeLoadingSkeleton(itemCount: 1),
+      error: (error, stack) => AppErrorWidget(
+        message: 'Could not load your profile',
+        onRetry: () => ref.invalidate(userStatsStreamProvider),
       ),
     );
   }
@@ -113,7 +112,7 @@ class _TribeSanctumTabState extends ConsumerState<TribeSanctumTab> {
   Widget _buildSanctumTab(Tribe userClub, ArchetypeTheme theme, UserProfile profile) {
     return RefreshIndicator(
       onRefresh: () async {
-        ref.invalidate(allArchetypeClubsProvider);
+        ref.invalidate(userTribeProvider(profile.uid));
         ref.invalidate(userStatsStreamProvider);
       },
       color: EmergeColors.teal,

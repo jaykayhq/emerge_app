@@ -53,7 +53,12 @@ class DriftTribeRepository implements TribeRepository {
 
     Future<void> emitMerged() async {
       final localRows = await _db.tribeStatsDao.getAll();
-      final tribes = localRows.map((row) {
+      // Creator tribes get local rows (created on demand) but must never
+      // surface in the official-clubs stream — filter on archetypeId.
+      final officialRows = localRows
+          .where((row) => row.archetypeId != null)
+          .toList();
+      final tribes = officialRows.map((row) {
         final remote = remoteDocs[row.tribeId];
         final memberCount =
             (remote?['memberCount'] as num?)?.toInt() ?? row.memberCount;

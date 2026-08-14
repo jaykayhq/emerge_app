@@ -50,18 +50,6 @@ final socialActivityServiceProvider = Provider<SocialActivityService>((ref) {
   );
 });
 
-/// Active tribe override — when set, habit completions and XP contribute
-/// to this tribe instead of the archetype-matched one. Null = auto-detect
-/// by archetype.
-class ActiveTribeId extends Notifier<String?> {
-  @override
-  String? build() => null;
-
-  void select(String? tribeId) => state = tribeId;
-}
-
-final activeTribeIdProvider = NotifierProvider<ActiveTribeId, String?>(ActiveTribeId.new);
-
 /// The user's archetype club — auto-joined based on their archetype.
 final userClubProvider = FutureProvider.family<Tribe?, String>((
   ref,
@@ -69,6 +57,17 @@ final userClubProvider = FutureProvider.family<Tribe?, String>((
 ) {
   final repository = ref.watch(tribeRepositoryProvider);
   return repository.getArchetypeClub(archetypeId);
+});
+
+/// The user's tribe, merged from local Drift stats + the remote Firestore
+/// doc. Membership-aware: covers creator tribes, which never appear in
+/// [allArchetypeClubsProvider]'s official-only stream.
+final userTribeProvider = StreamProvider.family<Tribe?, String>((
+  ref,
+  userId,
+) {
+  final repository = ref.watch(tribeRepositoryProvider);
+  return repository.watchUserTribes(userId).map((tribes) => tribes.firstOrNull);
 });
 
 /// All official archetype clubs (Real-time).

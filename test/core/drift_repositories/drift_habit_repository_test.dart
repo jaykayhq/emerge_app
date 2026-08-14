@@ -4,6 +4,7 @@ import 'package:emerge_app/core/deletion/deletion_service.dart';
 import 'package:emerge_app/core/drift/app_database.dart';
 import 'package:emerge_app/core/drift_repositories/drift_habit_repository.dart';
 import 'package:emerge_app/core/game_loop/game_loop_engine.dart';
+import 'package:emerge_app/core/services/event_bus.dart';
 import 'package:emerge_app/features/auth/domain/entities/user_extension.dart';
 import 'package:emerge_app/features/blueprints/domain/models/blueprint.dart';
 import 'package:emerge_app/features/habits/domain/entities/habit.dart';
@@ -440,6 +441,172 @@ void main() {
         ),
       );
     });
+
+    // Seeds a creator-tribe membership (no local tribeStats row — the
+    // production state for user-created tribes, which only ever get a local
+    // row once the fix lands).
+    Future<void> seedCreatorTribeMembership(String tribeId) async {
+      await db.tribeMembershipDao.upsertMembership(
+        UserTribeTableData(
+          userId: userId,
+          tribeId: tribeId,
+          membershipType: 'creator',
+          joinedAt: DateTime.now().toIso8601String(),
+          isActive: true,
+        ),
+      );
+    }
+
+    test(
+      'completeHabit credits a creator-tribe membership when activeTribeId '
+      'is null (no local tribeStats row seeded)',
+      () async {
+        final habit = createTestHabit(difficulty: HabitDifficulty.medium);
+        await repository.createHabit(habit);
+
+        await db.userStatsDao.upsertStats(
+          UserStatsTableCompanion(
+            userId: Value(userId),
+            displayName: Value('Test User'),
+            archetype: Value('athlete'),
+            totalXp: Value(0),
+            level: Value(1),
+            vitalityXp: Value(0),
+          ),
+        );
+
+        await seedCreatorTribeMembership('creator_tribe_1');
+
+        final events = <HabitCompleted>[];
+        final sub = EventBus().on<HabitCompleted>().listen(events.add);
+        addTearDown(sub.cancel);
+
+        final result = await repository.completeHabit(habit.id, DateTime.now());
+        expect(result.isRight(), true);
+
+        // The contributor doc must target the creator tribe — the archetype
+        // lookup would previously find nothing (no local club rows) and the
+        // XP would be dropped entirely.
+        verify(
+          () => mockSyncEngine.enqueueSet(
+            collectionPath: 'tribes/creator_tribe_1/contributors',
+            documentId: userId,
+            data: any(named: 'data'),
+          ),
+        ).called(1);
+
+        // Local stats row is created on demand so leaderboard/display work
+        // for creator tribes too.
+        final stats = await db.tribeStatsDao.getStats('creator_tribe_1');
+        expect(stats, isNotNull);
+        expect(stats!.totalXp, 20); // medium habit: base 20
+        expect(stats.totalHabitsCompleted, 1);
+        expect(stats.archetypeId, isNull);
+
+        // Social logging and the event carry the resolved tribe.
+        verify(
+          () => mockSocialService.logHabitCompletion(
+            userId: userId,
+            userName: any(named: 'userName'),
+            archetype: any(named: 'archetype'),
+            habitId: habit.id,
+            habitTitle: any(named: 'habitTitle'),
+            streakDay: any(named: 'streakDay'),
+            attribute: any(named: 'attribute'),
+            xpGained: any(named: 'xpGained'),
+            currentLevel: any(named: 'currentLevel'),
+            clubId: 'creator_tribe_1',
+          ),
+        ).called(1);
+
+        final completed = events.where((e) => e.userId == userId).toList();
+        expect(completed, isNotEmpty);
+        expect(completed.last.tribeId, 'creator_tribe_1');
+      },
+    );
+
+    test(
+      'completeHabit credits the membership tribe for archetype none '
+      '(XP is not dropped)',
+      () async {
+        final habit = createTestHabit(difficulty: HabitDifficulty.medium);
+        await repository.createHabit(habit);
+
+        await db.userStatsDao.upsertStats(
+          UserStatsTableCompanion(
+            userId: Value(userId),
+            displayName: Value('Test User'),
+            archetype: Value('none'),
+            totalXp: Value(0),
+            level: Value(1),
+            vitalityXp: Value(0),
+          ),
+        );
+
+        await seedCreatorTribeMembership('creator_tribe_2');
+
+        final result = await repository.completeHabit(habit.id, DateTime.now());
+        expect(result.isRight(), true);
+
+        // Previously the archetype-'none' branch skipped XP entirely; the
+        // membership must win over the archetype lookup.
+        verify(
+          () => mockSyncEngine.enqueueSet(
+            collectionPath: 'tribes/creator_tribe_2/contributors',
+            documentId: userId,
+            data: any(named: 'data'),
+          ),
+        ).called(1);
+
+        final stats = await db.tribeStatsDao.getStats('creator_tribe_2');
+        expect(stats, isNotNull);
+        expect(stats!.totalXp, 20);
+      },
+    );
+
+    test(
+      'undo debits the membership tribe contributor doc when activeTribeId '
+      'is null',
+      () async {
+        final habit = createTestHabit(difficulty: HabitDifficulty.easy);
+        await repository.createHabit(habit);
+
+        await db.userStatsDao.upsertStats(
+          UserStatsTableCompanion(
+            userId: Value(userId),
+            displayName: Value('Test User'),
+            archetype: Value('athlete'),
+            totalXp: Value(0),
+            level: Value(1),
+            vitalityXp: Value(0),
+          ),
+        );
+
+        await seedCreatorTribeMembership('creator_tribe_1');
+        final today = DateTime.now();
+
+        await repository.completeHabit(habit.id, today);
+        final result2 = await repository.completeHabit(habit.id, today);
+        expect(result2.isRight(), true);
+        expect(result2.fold((l) => false, (r) => r), false);
+
+        // Easy habit: base 10 XP. The undo must debit the membership tribe's
+        // contributor doc, matching the credit the completion added.
+        verify(
+          () => mockSyncEngine.enqueueUpdate(
+            collectionPath: 'tribes/creator_tribe_1/contributors',
+            documentId: userId,
+            data: any(
+              named: 'data',
+              that: containsPair(
+                'totalXpContributed',
+                {'__type__': 'increment', 'value': -10},
+              ),
+            ),
+          ),
+        ).called(1);
+      },
+    );
 
     test('completeHabit() - returns failure if habit not found', () async {
       final result = await repository.completeHabit(

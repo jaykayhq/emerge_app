@@ -46,7 +46,23 @@ class TribeStatsDao extends DatabaseAccessor<AppDatabase>
     required int challenges,
   }) async {
     final current = await getStats(tribeId);
-    if (current == null) return;
+    // Creator tribes have no local row until the first credit lands — create
+    // one so local leaderboards and the tribe stats stream work for them too.
+    if (current == null) {
+      await upsertStats(
+        TribeStatsTableCompanion(
+          tribeId: Value(tribeId),
+          totalXp: Value(xp),
+          totalHabitsCompleted: Value(habits),
+          totalChallengesCompleted: Value(challenges),
+          userContributionXp: Value(xp),
+          userHabitsCompleted: Value(habits),
+          userChallengesCompleted: Value(challenges),
+          updatedAt: Value(DateTime.now().toIso8601String()),
+        ),
+      );
+      return;
+    }
     await upsertStats(
       TribeStatsTableCompanion(
         tribeId: Value(tribeId),
@@ -67,7 +83,17 @@ class TribeStatsDao extends DatabaseAccessor<AppDatabase>
 
   Future<void> incrementMemberCount(String tribeId, {int delta = 1}) async {
     final current = await getStats(tribeId);
-    if (current == null) return;
+    // Create-on-join for creator tribes, which have no seeded local row.
+    if (current == null) {
+      await upsertStats(
+        TribeStatsTableCompanion(
+          tribeId: Value(tribeId),
+          memberCount: Value(delta.clamp(0, 999999)),
+          updatedAt: Value(DateTime.now().toIso8601String()),
+        ),
+      );
+      return;
+    }
     await upsertStats(
       TribeStatsTableCompanion(
         tribeId: Value(tribeId),

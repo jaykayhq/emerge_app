@@ -184,6 +184,15 @@ class DriftHabitRepository implements HabitRepository {
       final statsRow = await _db.userStatsDao.getStats(habitRow.userId);
       if (statsRow == null) return Left(ServerFailure('User stats not found'));
 
+      // Tribe attribution order: explicit override → local active membership
+      // (covers creator tribes, which have no archetype club row) → the
+      // archetype's official club. Mirrors drift_challenge_repository.
+      final resolvedTribeId = await _resolveTribeIdForXp(
+        userId: statsRow.userId,
+        activeTribeId: activeTribeId,
+        archetype: statsRow.archetype,
+      );
+
       final oldLevel = _engine.computeLevel(statsRow.totalXp);
 
       final lastDate = habitRow.lastCompletedDate != null
@@ -331,9 +340,9 @@ class DriftHabitRepository implements HabitRepository {
           // Tribe totals are NOT debited here (D4 — the server recalc owns
           // them). Only the per-member contributor record is debited, by
           // base XP only, matching what the credit path added.
-          if (activeTribeId != null) {
+          if (resolvedTribeId != null) {
             await _syncEngine.enqueueUpdate(
-              collectionPath: 'tribes/$activeTribeId/contributors',
+              collectionPath: 'tribes/$resolvedTribeId/contributors',
               documentId: statsRow.userId,
               data: {
                 'totalXpContributed': {
@@ -454,31 +463,14 @@ class DriftHabitRepository implements HabitRepository {
         // so local tribe stats, the contributor record, and the leaderboard
         // all agree with the user_stats write below.
         final tribeXp = result.xpGained + challengeXpEarned;
-        if (activeTribeId != null) {
-          final userTribe = await _db.tribeStatsDao.getStats(activeTribeId);
-          if (userTribe != null) {
-            tribeId = userTribe.tribeId;
-            await _db.tribeStatsDao.incrementContribution(
-              userTribe.tribeId,
-              xp: tribeXp,
-              habits: 1,
-              challenges: 0,
-            );
-          }
-        } else if (statsRow.archetype != null && statsRow.archetype != 'none') {
-          final tribeRows = await _db.tribeStatsDao.getAll();
-          final userTribe = tribeRows
-              .where((t) => t.archetypeId == statsRow.archetype)
-              .firstOrNull;
-          if (userTribe != null) {
-            tribeId = userTribe.tribeId;
-            await _db.tribeStatsDao.incrementContribution(
-              userTribe.tribeId,
-              xp: tribeXp,
-              habits: 1,
-              challenges: 0,
-            );
-          }
+        if (resolvedTribeId != null) {
+          tribeId = resolvedTribeId;
+          await _db.tribeStatsDao.incrementContribution(
+            resolvedTribeId,
+            xp: tribeXp,
+            habits: 1,
+            challenges: 0,
+          );
         }
       });
 
@@ -561,7 +553,7 @@ class DriftHabitRepository implements HabitRepository {
         date: date,
         gameLoopResult: result,
         previousLevel: oldLevel,
-        tribeId: activeTribeId,
+        tribeId: tribeId,
         archetype: statsRow.archetype,
         userName: statsRow.displayName ?? habitRow.userId,
       ));
@@ -909,5 +901,30 @@ class DriftHabitRepository implements HabitRepository {
       default:
         return 2.0;
     }
+  }
+
+  /// Resolves the tribe a completion's XP is credited to, in priority order:
+  /// 1. Explicit [activeTribeId] override (callers that opt out of auto-detect).
+  /// 2. The user's local active membership — covers creator tribes, whose
+  ///    tribeId never matches a seeded official-club row.
+  /// 3. The archetype's official club (local seed rows).
+  Future<String?> _resolveTribeIdForXp({
+    required String userId,
+    required String? activeTribeId,
+    required String? archetype,
+  }) async {
+    if (activeTribeId != null) return activeTribeId;
+    final membership = await _db.tribeMembershipDao
+        .watchActiveMembership(userId)
+        .first;
+    if (membership != null) return membership.tribeId;
+    if (archetype != null && archetype != 'none') {
+      final tribeRows = await _db.tribeStatsDao.getAll();
+      final userTribe = tribeRows
+          .where((t) => t.archetypeId == archetype)
+          .firstOrNull;
+      if (userTribe != null) return userTribe.tribeId;
+    }
+    return null;
   }
 }

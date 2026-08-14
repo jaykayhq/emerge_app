@@ -381,6 +381,51 @@ void main() {
       expect(withImages, isNotEmpty,
           reason: 'seeded clubs should expose an imageUrl');
     });
+
+    test(
+      'watchArchetypeClubs() excludes local rows without an archetypeId '
+      'so creator tribes never pollute the official-clubs UI',
+      () async {
+        await db.tribeStatsDao.upsertStats(
+          TribeStatsTableCompanion(
+            tribeId: Value(tribeId),
+            tribeName: Value('Athletes'),
+            archetypeId: Value('athlete'),
+            memberCount: Value(0),
+            totalXp: Value(0),
+            totalHabitsCompleted: Value(0),
+            totalChallengesCompleted: Value(0),
+            userContributionXp: Value(0),
+            userHabitsCompleted: Value(0),
+            userChallengesCompleted: Value(0),
+            updatedAt: Value(DateTime.now().toIso8601String()),
+          ),
+        );
+        // Creator tribe row — archetypeId omitted (null). Created locally by
+        // join/completion credit once the DAO creates rows on demand.
+        await db.tribeStatsDao.upsertStats(
+          TribeStatsTableCompanion(
+            tribeId: Value('creator_tribe_1'),
+            tribeName: Value('Midnight Wolves'),
+            memberCount: Value(1),
+            totalXp: Value(20),
+            totalHabitsCompleted: Value(1),
+            totalChallengesCompleted: Value(0),
+            userContributionXp: Value(20),
+            userHabitsCompleted: Value(1),
+            userChallengesCompleted: Value(0),
+            updatedAt: Value(DateTime.now().toIso8601String()),
+          ),
+        );
+
+        final stream = repository.watchArchetypeClubs().asBroadcastStream();
+        final first = await stream.first;
+
+        final ids = first.map((t) => t.id).toList();
+        expect(ids, contains(tribeId));
+        expect(ids, isNot(contains('creator_tribe_1')));
+      },
+    );
   });
 
   group('joinClub guard', () {
