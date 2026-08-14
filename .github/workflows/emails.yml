@@ -1,0 +1,61 @@
+# Emerge Email Worker (cron)
+#
+# Replaces the Cloud Functions email jobs (sendWelcomeEmail trigger,
+# enforceReengagementDrip + enforceEmailGracePeriod schedules) — GitHub
+# Actions runs them for free, and sending uses SMTP (nodemailer) instead of
+# the Resend API, so no RESEND_API_KEY secret is needed.
+#
+# Schedule: daily 04:00 UTC (the old grace-period cadence). Welcome emails
+# become a daily batch for accounts created in the last 7 days instead of a
+# real-time trigger — see email-worker/README.md.
+#
+# Required repo secrets:
+#   FIREBASE_SERVICE_ACCOUNT_TRADEFLASH_L2966  service-account JSON (already
+#                                              used by the hosting workflow)
+#   SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS  SMTP credentials
+# Optional secrets:
+#   EMAIL_FROM          sender address (default "Emerge <no-reply@emerge.app>")
+#   EMAIL_OVERRIDE_TO   route every email to a single inbox (testing / "send
+#                       everything to my account")
+name: Emails (welcome / re-engagement / verification grace)
+
+on:
+  schedule:
+    - cron: "0 4 * * *" # daily 04:00 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  run-email-tasks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: email-worker/package-lock.json
+
+      - name: Install worker dependencies
+        working-directory: email-worker
+        run: npm ci
+
+      - name: Write Firebase service account
+        run: |
+          echo "${{ secrets.FIREBASE_SERVICE_ACCOUNT_TRADEFLASH_L2966 }}" > /tmp/firebase-sa.json
+
+      - name: Run email tasks
+        working-directory: email-worker
+        env:
+          FIREBASE_SERVICE_ACCOUNT: /tmp/firebase-sa.json
+          SMTP_HOST: ${{ secrets.SMTP_HOST }}
+          SMTP_PORT: ${{ secrets.SMTP_PORT }}
+          SMTP_USER: ${{ secrets.SMTP_USER }}
+          SMTP_PASS: ${{ secrets.SMTP_PASS }}
+          EMAIL_FROM: ${{ secrets.EMAIL_FROM }}
+          EMAIL_OVERRIDE_TO: ${{ secrets.EMAIL_OVERRIDE_TO }}
+        run: node src/index.js --task all
