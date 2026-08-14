@@ -18,7 +18,8 @@ GuideCardPosition guideCardPositionFor({
   required double bottomInset,
 }) {
   const fallback = 24.0;
-  if (targetRect == null) {
+  final viewport = Offset.zero & screenSize;
+  if (targetRect == null || !viewport.overlaps(targetRect)) {
     return (top: null, bottom: fallback + bottomInset);
   }
 

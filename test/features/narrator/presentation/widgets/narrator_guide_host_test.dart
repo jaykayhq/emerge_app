@@ -155,6 +155,91 @@ void main() {
     expect(settings.recorded, contains('habit_create'));
   });
 
+  testWidgets('Next scrolls an offscreen target before showing the next step', (
+    tester,
+  ) async {
+    final settings = _FakeSettings(tutorialsEnabled: true);
+    final firstKey = GlobalKey();
+    final secondKey = GlobalKey();
+
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          localSettingsRepositoryProvider.overrideWithValue(settings),
+        ],
+        child: MaterialApp(
+          home: NarratorGuideHost(
+            nodeId: 'habit_create',
+            targets: {'name_field': firstKey, 'create_button': secondKey},
+            child: CustomScrollView(
+              slivers: [
+                SliverToBoxAdapter(child: SizedBox(key: firstKey, height: 40)),
+                SliverToBoxAdapter(
+                  child: Column(
+                    children: [
+                      const SizedBox(height: 1800),
+                      SizedBox(
+                        key: secondKey,
+                        width: double.infinity,
+                        height: 40,
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pump();
+    await tester.pump(const Duration(seconds: 2));
+
+    await tester.tap(find.text('Next →'));
+    for (var index = 0; index < 10; index++) {
+      await tester.pump(const Duration(milliseconds: 100));
+    }
+
+    final viewport = tester.getRect(find.byType(CustomScrollView));
+    final target = tester.getRect(find.byKey(secondKey));
+    final card = tester.getRect(find.byType(NarratorGuideCard));
+    expect(viewport.overlaps(target), isTrue);
+    expect(viewport.overlaps(card), isTrue);
+    expect(find.textContaining('When it feels real'), findsOneWidget);
+  });
+
+  testWidgets('keeps a card-only step visible when its target is unavailable', (
+    tester,
+  ) async {
+    final settings = _FakeSettings(tutorialsEnabled: true);
+    final firstKey = GlobalKey();
+    final missingKey = GlobalKey();
+
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          localSettingsRepositoryProvider.overrideWithValue(settings),
+        ],
+        child: MaterialApp(
+          home: NarratorGuideHost(
+            nodeId: 'habit_create',
+            targets: {'name_field': firstKey, 'create_button': missingKey},
+            child: SizedBox(key: firstKey, height: 40),
+          ),
+        ),
+      ),
+    );
+    await tester.pump();
+    await tester.pump(const Duration(seconds: 2));
+    await tester.tap(find.text('Next →'));
+    await tester.pump();
+
+    final host = tester.getRect(find.byType(NarratorGuideHost));
+    final card = tester.getRect(find.byType(NarratorGuideCard));
+    expect(host.overlaps(card), isTrue);
+    expect(find.byType(NarratorGuideCard), findsOneWidget);
+  });
+
   testWidgets('the spotlight painter is present with a hole rect', (
     tester,
   ) async {
@@ -174,47 +259,49 @@ void main() {
     expect(painter.holeRect!.contains(targetRect.center), true);
   });
 
-  testWidgets('guide card renders clear of a low target instead of covering it',
-      (tester) async {
-    final targetKey = GlobalKey();
-    await tester.pumpWidget(
-      ProviderScope(
-        overrides: [
-          localSettingsRepositoryProvider.overrideWithValue(
-            _FakeSettings(tutorialsEnabled: true),
-          ),
-        ],
-        child: MaterialApp(
-          home: Scaffold(
-            body: NarratorGuideHost(
-              nodeId: 'habit_create',
-              targets: {'name_field': targetKey},
-              child: Align(
-                alignment: Alignment.bottomCenter,
-                child: Container(
-                  key: targetKey,
-                  width: 120,
-                  height: 60,
-                  color: Colors.red,
+  testWidgets(
+    'guide card renders clear of a low target instead of covering it',
+    (tester) async {
+      final targetKey = GlobalKey();
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            localSettingsRepositoryProvider.overrideWithValue(
+              _FakeSettings(tutorialsEnabled: true),
+            ),
+          ],
+          child: MaterialApp(
+            home: Scaffold(
+              body: NarratorGuideHost(
+                nodeId: 'habit_create',
+                targets: {'name_field': targetKey},
+                child: Align(
+                  alignment: Alignment.bottomCenter,
+                  child: Container(
+                    key: targetKey,
+                    width: 120,
+                    height: 60,
+                    color: Colors.red,
+                  ),
                 ),
               ),
             ),
           ),
         ),
-      ),
-    );
-    await tester.pump(); // post-frame gate resolves, card builds
-    await tester.pump(const Duration(milliseconds: 400)); // typewriter ticks
-    await tester.pump(); // measure callback repositions using the real height
+      );
+      await tester.pump(); // post-frame gate resolves, card builds
+      await tester.pump(const Duration(milliseconds: 400)); // typewriter ticks
+      await tester.pump(); // measure callback repositions using the real height
 
-    final cardFinder = find.byType(NarratorGuideCard);
-    expect(cardFinder, findsOneWidget);
-    final cardBox = tester.getRect(cardFinder);
-    final targetBox = tester.getRect(find.byKey(targetKey));
-    // The card must sit clear of — strictly above — the spotlighted element.
-    expect(cardBox.overlaps(targetBox), isFalse);
-    expect(cardBox.bottom, lessThanOrEqualTo(targetBox.top + 1));
-  });
+      final cardFinder = find.byType(NarratorGuideCard);
+      expect(cardFinder, findsOneWidget);
+      final cardBox = tester.getRect(cardFinder);
+      final targetBox = tester.getRect(find.byKey(targetKey));
+      // The card must sit clear of — strictly above — the spotlighted element.
+      expect(cardBox.overlaps(targetBox), isFalse);
+      expect(cardBox.bottom, lessThanOrEqualTo(targetBox.top + 1));
+    },
+  );
 
   testWidgets(
     'card stays clear of a low target on a phone-width multi-line script',
@@ -252,7 +339,8 @@ void main() {
         ),
       );
       await tester.pump(); // post-frame gate resolves, card builds
-      await tester.pump(); // host settles at the one-line height (hole + measure go quiet)
+      await tester
+          .pump(); // host settles at the one-line height (hole + measure go quiet)
       // Type the script out across frames. The host has no reason to rebuild
       // while the typewriter wraps to extra lines, so without a re-measure
       // the card's bottom creeps past the target.

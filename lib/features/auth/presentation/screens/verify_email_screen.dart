@@ -30,7 +30,57 @@ class _VerifyEmailScreenState extends ConsumerState<VerifyEmailScreen> {
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) => _sendLink());
+    // Deep link: the worker's verification email points straight back to
+    // /verify-email?oobCode=... (handleCodeInApp). Apply the code directly
+    // so the user is verified the moment the link opens the app. Otherwise
+    // the first verification email is sent at signup (non-blocking) — only
+    // auto-send here when no link has ever been sent, so visiting the
+    // screen (banner tap / settings) never re-sends silently.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      // Deep links carry ?oobCode=; guarded because widget-test harnesses
+      // have no GoRouter ancestor.
+      String? oobCode;
+      try {
+        oobCode = GoRouterState.of(context).uri.queryParameters['oobCode'];
+      } catch (_) {}
+      if (oobCode != null && oobCode.isNotEmpty) {
+        _applyOobCode(oobCode);
+      } else {
+        _maybeAutoSend();
+      }
+    });
+  }
+
+  Future<void> _applyOobCode(String oobCode) async {
+    setState(() {
+      _isChecking = true;
+      _error = null;
+      _info = 'Verifying your email…';
+    });
+    final result =
+        await ref.read(authRepositoryProvider).applyVerificationCode(oobCode);
+    if (!mounted) return;
+    result.fold(
+      (failure) => setState(() {
+        _isChecking = false;
+        _error = failure.message;
+        _info = null;
+      }),
+      (_) {
+        // Verified — the auth stream listener navigates once the reloaded
+        // user (emailVerified: true) hits the stream.
+        _cooldownTimer?.cancel();
+        setState(() {
+          _isChecking = false;
+          _info = 'Email verified — taking you to the app.';
+        });
+      },
+    );
+  }
+
+  void _maybeAutoSend() {
+    final sentAt = ref.read(emailVerificationSentAtProvider).value;
+    if (sentAt == null) _sendLink();
   }
 
   @override

@@ -100,13 +100,16 @@ void main() {
           ),
         ).called(1);
 
-        verify(
+        // Tribe doc memberCount/members are server-owned (Cloud Function
+        // trigger). The client must never enqueue a tribe-doc write — it
+        // dead-letters against the rules.
+        verifyNever(
           () => mockSyncEngine.enqueueSet(
             collectionPath: 'tribes',
             documentId: tribeId,
             data: any(named: 'data'),
           ),
-        ).called(1);
+        );
       },
     );
 
@@ -161,13 +164,15 @@ void main() {
         ),
       ).called(1);
 
-      verify(
+      // Tribe doc updates are server-owned; the client only removes the
+      // membership doc.
+      verifyNever(
         () => mockSyncEngine.enqueueSet(
           collectionPath: 'tribes',
           documentId: tribeId,
           data: any(named: 'data'),
         ),
-      ).called(1);
+      );
     });
 
     test('leaveClub() decrements member count', () async {
@@ -447,7 +452,9 @@ void main() {
     test('still joins when no membership exists anywhere', () async {
       await guardRepository.joinClub('user1', 'tribeA');
       final queue = await db.mutationQueueDao.getAllPending();
-      expect(queue.length, 3); // user tribes + contributors + tribe doc
+      // user tribes + contributors only — the tribe doc is server-owned and
+      // must never be enqueued by the client.
+      expect(queue.length, 2);
     });
 
     test('joinClub contributor payload omits zero totals (preserves on rejoin)',

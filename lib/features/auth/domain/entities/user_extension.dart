@@ -116,6 +116,10 @@ class UserAvatarStats {
       'focusXp': focusXp,
       'spiritXp': spiritXp,
       'challengeXp': challengeXp,
+      // Derived field included so full-profile merge-sets never clobber the
+      // server-side avatarStats.totalXp increments with a nested map that
+      // omits it (dotted-path writes replace whole nested maps otherwise).
+      'totalXp': totalXp,
       'level': level,
       'streak': streak,
       'momentumScore': momentumScore,

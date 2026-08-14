@@ -31,6 +31,11 @@ abstract class AuthRepository {
   /// watches `emailVerified` on the auth stream.
   Future<Either<Failure, void>> sendVerificationEmail();
 
+  /// Applies a Firebase Auth oobCode from the verification link the email
+  /// worker sent (deep link back into the app), then reloads the user so
+  /// emailVerified reflects the new state.
+  Future<Either<Failure, void>> applyVerificationCode(String oobCode);
+
   /// Claims a globally-unique (case-insensitive) username for the current user.
   Future<Either<Failure, void>> claimUsername(String username);
 

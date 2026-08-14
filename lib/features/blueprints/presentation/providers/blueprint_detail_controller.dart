@@ -1,6 +1,8 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:emerge_app/core/services/remote_config_service.dart';
 import 'package:emerge_app/features/blueprints/data/repositories/blueprint_repository.dart';
 import 'package:emerge_app/features/blueprints/domain/models/blueprint.dart';
+import 'package:emerge_app/features/habits/domain/services/free_tier_habit_gate.dart';
 import 'package:emerge_app/features/habits/presentation/providers/habit_providers.dart';
 import 'package:emerge_app/features/auth/presentation/providers/auth_providers.dart';
 import 'package:emerge_app/features/monetization/presentation/providers/subscription_provider.dart';
@@ -31,6 +33,25 @@ class BlueprintDetailController extends AsyncNotifier<void> {
       final blueprintTitles = blueprint.habits.map((h) => h.title).toSet();
       if (existingHabits.any((h) => blueprintTitles.contains(h.title))) {
         throw Exception('Already adopted');
+      }
+
+      // Free-tier cap: adopting a blueprint creates several habits at once
+      // (previously bypassed the 5-habit limit entirely). Same gate as
+      // createHabit — active count + blueprint habits must fit the limit
+      // unless premium.
+      final activeHabitCount = existingHabits.where((h) => !h.isArchived).length;
+      final freeHabitLimit = ref.read(remoteConfigServiceProvider).freeHabitLimit;
+      final fitsFreeTier = FreeTierHabitGate.canAddHabits(
+        activeHabitCount: activeHabitCount,
+        habitsToAdd: blueprint.habits.length,
+        freeLimit: freeHabitLimit,
+        isPremium: isPremium,
+      );
+      if (!fitsFreeTier) {
+        throw SubscriptionLimitReachedException(
+          'You have reached the limit of $freeHabitLimit active habits on the '
+          'free tier. Upgrade to Premium for unlimited habits!',
+        );
       }
 
       final repository = ref.read(habitRepositoryProvider);

@@ -82,6 +82,7 @@ dependencies:
   fl_chart: ^0.70.2
   video_player: ^2.8.0
   in_app_review: ^2.0.12
+  app_links: ^7.2.1
 
 dev_dependencies:
   integration_test:
@@ -148,6 +149,38 @@ flutter:
 
   shaders:
     - shaders/cracked_orb.frag
+    - shaders/candle_flame.frag
+
+  # Locally-bundled fonts so text never depends on the runtime asset
+  # manifest or network font fetching (fixes web AssetManifest 404 +
+  # google_fonts load failures on stale builds).
+  fonts:
+    - family: SplineSans
+      fonts:
+        - asset: assets/fonts/SplineSans-Regular.ttf
+          weight: 400
+        - asset: assets/fonts/SplineSans-Medium.ttf
+          weight: 500
+        - asset: assets/fonts/SplineSans-SemiBold.ttf
+          weight: 600
+        - asset: assets/fonts/SplineSans-Bold.ttf
+          weight: 700
+    - family: Outfit
+      fonts:
+        - asset: assets/fonts/Outfit-Regular.ttf
+          weight: 400
+        - asset: assets/fonts/Outfit-Medium.ttf
+          weight: 500
+        - asset: assets/fonts/Outfit-Bold.ttf
+          weight: 700
+    - family: Poppins
+      fonts:
+        - asset: assets/fonts/Poppins-Regular.ttf
+          weight: 400
+        - asset: assets/fonts/Poppins-Medium.ttf
+          weight: 500
+        - asset: assets/fonts/Poppins-Bold.ttf
+          weight: 700
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images

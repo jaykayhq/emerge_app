@@ -196,18 +196,17 @@ String? decideRedirect({
 
   // 6. Normal user branch.
   if (ctx.role == UserRole.user) {
-    // Email verification gate. During the 7-day grace period an unverified
-    // user may finish onboarding and use auth surfaces; once emailLockedAt
-    // is set (past grace) every surface except /verify-email itself is
+    // Email verification gate. During the 7-day grace period (emailLockedAt
+    // not yet set) an unverified user may use the app freely — the top
+    // banner nudges verification instead of blocking. Once emailLockedAt is
+    // set (past grace), every surface except /verify-email itself is
     // blocked — locked users can only verify.
     final unverified = ctx.emailVerified == false;
     final locked = ctx.emailLockedAt != null;
     if (unverified) {
       if (currentPath == '/verify-email') return null;
-      if (isOnAuthPath || isOnNormalOnboardingPath || isOnCreatorOnboardingPath) {
-        return locked ? '/verify-email' : null;
-      }
-      return '/verify-email';
+      if (locked) return '/verify-email';
+      return null;
     }
 
     // Creators-only paths are forbidden here.

@@ -149,7 +149,10 @@ class _HabitOptionsSheetState extends ConsumerState<HabitOptionsSheet> {
   Future<void> _confirmAndDelete() async {
     final confirmed = await showDialog<bool>(
       context: context,
-      builder: (_) => AlertDialog(
+      // Use the dialog's own context, not the sheet State's: the sheet may be
+      // removed from the tree while the dialog is up, and a dead State's
+      // context must never be touched by the dialog's buttons.
+      builder: (dialogContext) => AlertDialog(
         backgroundColor: const Color(0xFF1A1A2E),
         title: const Text(
           'Delete Habit?',
@@ -161,17 +164,17 @@ class _HabitOptionsSheetState extends ConsumerState<HabitOptionsSheet> {
         ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context, false),
+            onPressed: () => Navigator.pop(dialogContext, false),
             child: const Text('Cancel'),
           ),
           TextButton(
-            onPressed: () => Navigator.pop(context, true),
+            onPressed: () => Navigator.pop(dialogContext, true),
             child: const Text('Delete', style: TextStyle(color: Colors.red)),
           ),
         ],
       ),
     );
-    if (confirmed != true) return;
+    if (confirmed != true || !mounted) return;
 
     try {
       await ref.read(habitRepositoryProvider).deleteHabit(widget.habit.id);

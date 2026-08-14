@@ -125,4 +125,25 @@ class MutationQueueDao extends DatabaseAccessor<AppDatabase>
     await (update(mutationQueueTable)..where((t) => t.id.equals(id)))
         .write(MutationQueueTableCompanion(retryCount: Value(count)));
   }
+
+  /// Drops obsolete top-level `tribes` doc mutations.
+  ///
+  /// The tribe doc (members/memberCount) is server-owned since the
+  /// membership trigger; every queued client write to `tribes/{id}` is
+  /// stale (permission-denied under the tightened rules) and would
+  /// otherwise revive-and-die in a 5-attempt loop on every boot — the
+  /// observed 102/103/129/145 dead-letter symptom. Membership/contributor
+  /// subcollection rows (paths with slashes) are untouched.
+  Future<int> purgeTribeDocMutations() async {
+    final rows = await (select(mutationQueueTable)
+          ..where((t) => t.collectionPath.equals('tribes')))
+        .get();
+    var deleted = 0;
+    for (final row in rows) {
+      await (delete(mutationQueueTable)..where((t) => t.id.equals(row.id)))
+          .go();
+      deleted++;
+    }
+    return deleted;
+  }
 }

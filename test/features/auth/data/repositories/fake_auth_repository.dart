@@ -105,6 +105,12 @@ class FakeAuthRepository implements AuthRepository {
   }
 
   @override
+  Future<Either<Failure, void>> applyVerificationCode(String oobCode) async {
+    await Future.delayed(const Duration(milliseconds: 500));
+    return const Right(null);
+  }
+
+  @override
   Future<Either<Failure, void>> claimUsername(String username) async {
     await Future.delayed(const Duration(milliseconds: 500));
     if (_currentUser == AuthUser.empty) {

@@ -4,6 +4,8 @@ import 'package:emerge_app/core/presentation/widgets/world_background.dart';
 import 'package:emerge_app/core/domain/models/app_world_theme.dart';
 import 'package:emerge_app/features/blueprints/domain/models/blueprint.dart';
 import 'package:emerge_app/features/habits/domain/entities/habit.dart';
+import 'package:emerge_app/features/habits/presentation/providers/habit_providers.dart';
+import 'package:emerge_app/features/monetization/presentation/widgets/premium_limit_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
@@ -332,16 +334,25 @@ class BlueprintDetailScreen extends ConsumerWidget {
                   }
                 } catch (e) {
                   if (context.mounted) {
-                    final errorMsg = e.toString().replaceAll('Exception: ', '');
-                    if (errorMsg == 'Premium required') {
-                      context.push('/paywall');
-                    } else {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text(errorMsg),
-                          backgroundColor: Colors.orange,
-                        ),
+                    if (e is SubscriptionLimitReachedException) {
+                      showPremiumLimitDialog(
+                        context,
+                        limitType: PremiumLimitType.habit,
                       );
+                    } else {
+                      final errorMsg = e
+                          .toString()
+                          .replaceAll('Exception: ', '');
+                      if (errorMsg == 'Premium required') {
+                        context.push('/paywall');
+                      } else {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text(errorMsg),
+                            backgroundColor: Colors.orange,
+                          ),
+                        );
+                      }
                     }
                   }
                 }

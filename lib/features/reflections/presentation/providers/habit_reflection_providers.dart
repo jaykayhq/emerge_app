@@ -58,9 +58,14 @@ Future<void> saveHabitReflection(
     mood: mood,
     note: note,
   );
-  ref.invalidate(habitReflectionProvider(
-    userId: userId,
-    habitId: habitId,
-    date: date,
-  ));
+  // The caller may have gone away mid-save (e.g. the options sheet closed),
+  // disposing this auto-dispose provider. Ref is unusable after that, so
+  // skip the invalidation — the next read fetches fresh data anyway.
+  if (ref.mounted) {
+    ref.invalidate(habitReflectionProvider(
+      userId: userId,
+      habitId: habitId,
+      date: date,
+    ));
+  }
 }

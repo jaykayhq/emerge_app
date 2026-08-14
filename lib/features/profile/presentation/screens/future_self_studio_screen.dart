@@ -129,21 +129,21 @@ class _FutureSelfStudioScreenState
             child: CustomScrollView(
               slivers: [
                 // App Bar
-                KeyedSubtree(
-                  key: _studioHeaderKey,
-                  child: SliverAppBar(
-                    backgroundColor: Colors.transparent,
-                    floating: true,
-                    actions: [
-                      IconButton(
-                        icon: const Icon(
-                          Icons.settings,
-                          color: AppTheme.textMainDark,
-                        ),
-                        onPressed: () => context.push('/profile/settings'),
+                SliverAppBar(
+                  backgroundColor: Colors.transparent,
+                  floating: true,
+                  actions: [
+                    IconButton(
+                      icon: const Icon(
+                        Icons.settings,
+                        color: AppTheme.textMainDark,
                       ),
-                    ],
-                    title: Column(
+                      onPressed: () => context.push('/profile/settings'),
+                    ),
+                  ],
+                  title: KeyedSubtree(
+                    key: _studioHeaderKey,
+                    child: Column(
                       children: [
                         Row(
                           mainAxisSize: MainAxisSize.min,
@@ -206,8 +206,8 @@ class _FutureSelfStudioScreenState
                         ),
                       ],
                     ),
-                    centerTitle: true,
                   ),
+                  centerTitle: true,
                 ),
 
                 // Identity header (archetype + level)

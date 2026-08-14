@@ -130,6 +130,11 @@ class WelcomeScreen extends ConsumerWidget {
                       // Google Continue
                       OutlinedButton.icon(
                         onPressed: () async {
+                          // Capture the router before the await: if the user
+                          // leaves this screen while sign-in is in flight,
+                          // this context is defunct and GoRouter.of(context)
+                          // would throw.
+                          final router = GoRouter.of(context);
                           final messenger = ScaffoldMessenger.of(context);
 
                           final result = await ref
@@ -139,10 +144,14 @@ class WelcomeScreen extends ConsumerWidget {
                             // 'redirect_initiated' is not an error — the page
                             // navigates away to Google OAuth on web. Ignore.
                             if (error.message == 'redirect_initiated') return;
+                            if (!context.mounted) return;
                             messenger.showSnackBar(
                               SnackBar(content: Text(error.message)),
                             );
-                          }, (_) => GoRouter.of(context).go('/world-map'));
+                          }, (_) {
+                            if (!context.mounted) return;
+                            router.go('/world-map');
+                          });
                         },
                         style: OutlinedButton.styleFrom(
                           minimumSize: const Size(double.infinity, 56),

@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:emerge_app/core/utils/app_logger.dart';
 import 'package:emerge_app/features/narrator/domain/services/guide_card_placement.dart';
 import 'package:emerge_app/features/narrator/domain/services/narrator_guide_registry.dart';
 import 'package:emerge_app/features/narrator/presentation/providers/narrator_guide_controller.dart';
@@ -41,8 +42,10 @@ class _NarratorGuideHostState extends ConsumerState<NarratorGuideHost> {
   int _step = 0;
   bool _animateHole = false;
   bool _holeAvailable = false;
+  bool _advancing = false;
   final List<ScrollPosition> _scrollPositions = [];
   final GlobalKey _cardKey = GlobalKey();
+  final GlobalKey _hostKey = GlobalKey();
   double? _cardHeight;
   Timer? _measureTimer;
 
@@ -82,7 +85,9 @@ class _NarratorGuideHostState extends ConsumerState<NarratorGuideHost> {
     }
   }
 
-  void _onScroll() => setState(() {}); // re-resolve hole rect next paint
+  void _onScroll() {
+    if (mounted) setState(() {}); // re-resolve hole rect next paint
+  }
 
   @override
   void dispose() {
@@ -97,7 +102,20 @@ class _NarratorGuideHostState extends ConsumerState<NarratorGuideHost> {
     final ctx = widget.targets[targetKey]?.currentContext;
     final box = ctx?.findRenderObject();
     if (box is! RenderBox || !box.attached) return null;
-    return box.localToGlobal(Offset.zero) & box.size;
+    final globalRect = box.localToGlobal(Offset.zero) & box.size;
+    final hostRect = _hostBounds;
+    final rect = hostRect == null
+        ? globalRect
+        : globalRect.shift(-hostRect.topLeft);
+    final viewport =
+        Offset.zero & (hostRect?.size ?? MediaQuery.sizeOf(context));
+    return viewport.overlaps(rect) ? rect : null;
+  }
+
+  Rect? get _hostBounds {
+    final renderObject = _hostKey.currentContext?.findRenderObject();
+    if (renderObject is! RenderBox || !renderObject.attached) return null;
+    return renderObject.localToGlobal(Offset.zero) & renderObject.size;
   }
 
   /// Conservative first-frame estimate of the guide card height (before the
@@ -124,18 +142,55 @@ class _NarratorGuideHostState extends ConsumerState<NarratorGuideHost> {
   }
 
   void _advance() {
+    if (_advancing) return;
     if (_step < _steps.length - 1) {
       setState(() {
         _step++;
-        _animateHole = true;
+        _animateHole = false;
+        _holeAvailable = false;
+        _cardHeight = null;
+        _advancing = true;
+      });
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        unawaited(_revealCurrentStep());
       });
     } else {
       _finish();
     }
   }
 
+  Future<void> _revealCurrentStep() async {
+    if (!mounted || _step >= _steps.length) return;
+
+    final targetContext =
+        widget.targets[_steps[_step].targetKey]?.currentContext;
+    if (targetContext != null) {
+      try {
+        await Scrollable.ensureVisible(
+          targetContext,
+          alignment: 0.45,
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeInOut,
+        );
+      } catch (_) {
+        // The card-only fallback remains usable if a target leaves the tree
+        // while its scrollable is rebuilding.
+        AppLogger.d(
+          'Narrator guide target could not be scrolled; using card fallback',
+        );
+      }
+    }
+
+    if (!mounted) return;
+    setState(() {
+      _advancing = false;
+      _animateHole = true;
+    });
+  }
+
   Future<void> _finish() async {
     _measureTimer?.cancel();
+    _advancing = false;
     try {
       await ref.read(narratorGuideControllerProvider).markSeen(widget.nodeId);
     } catch (_) {
@@ -172,7 +227,9 @@ class _NarratorGuideHostState extends ConsumerState<NarratorGuideHost> {
         }
       });
       if (step != null) {
-        WidgetsBinding.instance.addPostFrameCallback((_) => _measureCardHeight());
+        WidgetsBinding.instance.addPostFrameCallback(
+          (_) => _measureCardHeight(),
+        );
       }
     }
 
@@ -185,6 +242,7 @@ class _NarratorGuideHostState extends ConsumerState<NarratorGuideHost> {
     return Material(
       type: MaterialType.transparency,
       child: Stack(
+        key: _hostKey,
         children: [
           widget.child,
           if (step != null)
@@ -197,17 +255,15 @@ class _NarratorGuideHostState extends ConsumerState<NarratorGuideHost> {
 
   Widget _buildGuideCard(NarratorGuideStep step) {
     final targetRect = _rectFor(step.targetKey);
-    final screenSize = MediaQuery.sizeOf(context);
-    final topInset = MediaQuery.paddingOf(context).top;
-    final bottomInset = MediaQuery.paddingOf(context).bottom;
+    final screenSize = _hostBounds?.size ?? MediaQuery.sizeOf(context);
     final cardHeight = _cardHeight ?? _estimateGuideCardHeight(step.script);
     final position = guideCardPositionFor(
       targetRect: targetRect,
       screenSize: screenSize,
       cardHeight: cardHeight,
       margin: 16,
-      topInset: topInset,
-      bottomInset: bottomInset,
+      topInset: 0,
+      bottomInset: 0,
     );
     return Positioned(
       left: 16,
@@ -253,7 +309,9 @@ class _NarratorGuideHostState extends ConsumerState<NarratorGuideHost> {
           : Duration.zero,
       curve: Curves.easeInOut,
       onEnd: () {
-        if (_animateHole) setState(() => _animateHole = false);
+        if (mounted && _animateHole) {
+          setState(() => _animateHole = false);
+        }
       },
       builder: (context, rect, _) =>
           CustomPaint(painter: SpotlightPainter(holeRect: rect)),

@@ -8,14 +8,17 @@ import 'package:emerge_app/features/companion/presentation/providers/companion_p
 import 'package:emerge_app/features/gamification/presentation/providers/user_stats_providers.dart';
 import 'package:emerge_app/features/habits/presentation/providers/dashboard_state_provider.dart';
 import 'package:emerge_app/features/habits/presentation/providers/habit_providers.dart';
+import 'package:emerge_app/features/habits/domain/entities/habit.dart';
 import 'package:emerge_app/features/monetization/presentation/providers/subscription_provider.dart';
 import 'package:emerge_app/features/narrator/domain/models/narrator_line.dart';
 import 'package:emerge_app/features/narrator/domain/models/narrator_note.dart';
 import 'package:emerge_app/features/narrator/domain/models/narrator_trigger.dart';
 import 'package:emerge_app/features/narrator/presentation/providers/narrator_providers.dart';
 import 'package:emerge_app/features/narrator/presentation/widgets/narrator_guide_card.dart';
+import 'package:emerge_app/features/narrator/presentation/widgets/narrator_card.dart';
 import 'package:emerge_app/features/narrator/presentation/widgets/narrator_milestone_card.dart';
 import 'package:emerge_app/features/onboarding/data/repositories/local_settings_repository.dart';
+import 'package:emerge_app/features/onboarding/presentation/providers/onboarding_provider.dart';
 import 'package:emerge_app/features/timeline/presentation/screens/timeline_screen.dart';
 import 'package:emerge_app/features/world_map/presentation/providers/world_health_provider.dart';
 import 'package:flutter/material.dart';
@@ -31,6 +34,20 @@ class TestIsPremium extends IsPremium {
 }
 
 final _emptyProfile = UserProfile(uid: 'test');
+final _guideHabit = Habit(
+  id: 'guide-habit',
+  userId: 'test',
+  title: 'Guide habit',
+  createdAt: DateTime(2026, 1, 1),
+);
+
+class _TimelineGuideSettings extends LocalSettingsRepository {
+  @override
+  bool isTutorialsEnabled() => true;
+
+  @override
+  Future<bool> getHasSeenNarratorGuide(String nodeId) async => false;
+}
 
 void main() {
   setUp(() async {
@@ -115,6 +132,93 @@ void main() {
       // guide host would surface the card over the timeline.
       await tester.pump(const Duration(milliseconds: 400));
       expect(find.byType(NarratorGuideCard), findsNothing);
+    });
+
+    testWidgets('guide advances to the ring without losing the overlay', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            localSettingsRepositoryProvider.overrideWithValue(
+              _TimelineGuideSettings(),
+            ),
+            dashboardStateProvider.overrideWithValue(DashboardState()),
+            habitsProvider.overrideWith((ref) => const Stream.empty()),
+            userStatsStreamProvider.overrideWith(
+              (ref) => Stream.value(_emptyProfile),
+            ),
+            worldThemeProvider.overrideWith(WorldThemeNotifier.new),
+            worldHealthStreamProvider.overrideWith((ref) => Stream.value(0.5)),
+            worldEntropyStreamProvider.overrideWith((ref) => Stream.value(0.0)),
+            companionRepositoryProvider.overrideWith(
+              (ref) => CompanionRepository(),
+            ),
+            isPremiumProvider.overrideWith(() => TestIsPremium(false)),
+          ],
+          child: const MaterialApp(home: TimelineScreen()),
+        ),
+      );
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 600));
+      await tester.pump(const Duration(seconds: 2));
+
+      await tester.tap(find.text('Next →'));
+      for (var index = 0; index < 10; index++) {
+        await tester.pump(const Duration(milliseconds: 100));
+      }
+      await tester.pump(const Duration(seconds: 2));
+
+      expect(find.byType(NarratorGuideCard), findsOneWidget);
+      expect(
+        find.textContaining("The ring around it is today's score"),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('guide scrolls to the offscreen narrator card', (tester) async {
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            localSettingsRepositoryProvider.overrideWithValue(
+              _TimelineGuideSettings(),
+            ),
+            dashboardStateProvider.overrideWithValue(DashboardState()),
+            habitsProvider.overrideWith((ref) => Stream.value([_guideHabit])),
+            userStatsStreamProvider.overrideWith(
+              (ref) => Stream.value(_emptyProfile),
+            ),
+            worldThemeProvider.overrideWith(WorldThemeNotifier.new),
+            worldHealthStreamProvider.overrideWith((ref) => Stream.value(0.5)),
+            worldEntropyStreamProvider.overrideWith((ref) => Stream.value(0.0)),
+            companionRepositoryProvider.overrideWith(
+              (ref) => CompanionRepository(),
+            ),
+            isPremiumProvider.overrideWith(() => TestIsPremium(false)),
+          ],
+          child: const MaterialApp(home: TimelineScreen()),
+        ),
+      );
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 600));
+      await tester.pump(const Duration(seconds: 2));
+
+      await tester.tap(find.text('Next →'));
+      for (var index = 0; index < 10; index++) {
+        await tester.pump(const Duration(milliseconds: 100));
+      }
+      await tester.pump(const Duration(seconds: 2));
+
+      await tester.tap(find.text('Next →'));
+      for (var index = 0; index < 10; index++) {
+        await tester.pump(const Duration(milliseconds: 100));
+      }
+      await tester.pump(const Duration(seconds: 2));
+
+      final viewport = tester.getRect(find.byType(CustomScrollView));
+      final narratorCard = tester.getRect(find.byType(NarratorCard));
+      expect(viewport.overlaps(narratorCard), isTrue);
+      expect(find.textContaining('This card is me'), findsOneWidget);
     });
 
     testWidgets(

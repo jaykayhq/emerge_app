@@ -23,12 +23,19 @@ class DriftChallengeRepository implements ChallengeRepository {
     this._socialService,
   );
 
+  /// Resolves the tribe id for a user without an explicit membership: their
+  /// archetype's club row in local Drift. Mirrors the habit flow's fallback.
+  Future<String?> _resolveArchetypeTribe(String archetype) async {
+    final tribeRows = await _db.tribeStatsDao.getAll();
+    final row = tribeRows.where((t) => t.archetypeId == archetype).firstOrNull;
+    return row?.tribeId;
+  }
+
   @override
   Future<Either<Failure, Unit>> joinChallenge(
     String userId,
     String challengeId,
-  ) async {
-    try {
+  ) async {    try {
       final template = ChallengeCatalog.getChallengeById(challengeId);
       if (template == null) return Left(ServerFailure('Challenge not found'));
 
@@ -147,6 +154,40 @@ class DriftChallengeRepository implements ChallengeRepository {
             level: newLevel,
             clubId: activeTribeId,
           );
+
+          // Tribe contribution: local Drift stats + Firestore contributor
+          // record, mirroring the habit flow so challenge XP is attributed
+          // to the user's tribe (and to the previous tribe after leaving —
+          // contributor docs survive a leave by design).
+          final tribeId = activeTribeId ??
+              (stats.archetype != null && stats.archetype != 'none'
+                  ? await _resolveArchetypeTribe(stats.archetype!)
+                  : null);
+          if (tribeId != null) {
+            await _db.tribeStatsDao.incrementContribution(
+              tribeId,
+              xp: result.xpReward!,
+              habits: 0,
+              challenges: 1,
+            );
+            await _syncEngine.enqueueSet(
+              collectionPath: 'tribes/$tribeId/contributors',
+              documentId: userId,
+              data: {
+                'totalXpContributed': {
+                  '__type__': 'increment',
+                  'value': result.xpReward!,
+                },
+                'totalChallengesCompleted': {
+                  '__type__': 'increment',
+                  'value': 1,
+                },
+                'contributionCount': {'__type__': 'increment', 'value': 1},
+                'lastContributionAt': {'__type__': 'serverTimestamp'},
+                'lastActivity': nowStr,
+              },
+            );
+          }
         }
       }
 

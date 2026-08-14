@@ -15,6 +15,9 @@ import * as admin from "firebase-admin";
 
 import { recalcTribesInternal } from "./recalcTribes";
 export { fillNarratorSlots } from "./narrator";
+export { maintainTribeMembership } from "./tribe_membership";
+export { maintainTribeXp } from "./tribe_contributions";
+export { dispatchEmailWorkflow } from "./github_dispatch";
 
 // Global configuration for all v2 functions
 setGlobalOptions({
@@ -311,7 +314,6 @@ export * from "./ai_recap";
 export * from "./revenuecat_events";
 export * from "./payments/paystack";
 export * from "./creator_invites";
-export { enforceEmailGracePeriod } from "./email_verification";
 export * from "./usernames";
 export { managePremium } from "./managePremium";
 export * from "./seedCreatorAccount"; // enabled 2026-08-03:
@@ -323,4 +325,3 @@ export { purgeOrphanedUserData } from "./purgeOrphanedUserData";
 export { backfillUsernames } from "./backfill_usernames";
 export { createStarterPack } from "./create_starter_pack";
 export { seedOnboardingCatalog } from "./seed_starter_habits";
-export { sendWelcomeEmail, enforceReengagementDrip } from "./marketing_email";

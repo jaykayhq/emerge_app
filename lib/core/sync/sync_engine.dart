@@ -180,6 +180,15 @@ class EnhancedSyncEngine {
     // that are guaranteed to fail, burning retries on every boot.
     final uid = _currentUserIdFn?.call();
     if (_currentUserIdFn != null && uid == null) return;
+
+    // Stale top-level tribe-doc writes are dropped, not revived: the tribe
+    // doc is server-owned since the membership trigger, so these can never
+    // succeed (and previously looped revive → 5 retries → dead).
+    final purged = await _mutationQueue.purgeTribeDocMutations();
+    if (purged > 0) {
+      AppLogger.d('[SyncEngine] Purged $purged stale tribe-doc mutations');
+    }
+
     final deadMutations = await _mutationQueue.getDeadLetters(userId: uid);
     if (deadMutations.isEmpty) return;
 
@@ -232,10 +241,43 @@ class EnhancedSyncEngine {
       }
       return true;
     } catch (e) {
+      // At-least-once reconciliation: a merge-set that fails with
+      // permission-denied on an EXISTING doc means the rules treated the
+      // re-application as an update to a create-only collection
+      // (user_activity / global_activities / habit_completions / activity
+      // feeds). The doc is already there — an earlier delivery applied it
+      // and the ack was lost. Dropping the row instead of dead-lettering
+      // stops the revive → 5 retries → dead loop that blocks the queue.
+      // A denied write to a doc that does NOT exist is a real problem and
+      // keeps retrying.
+      if (mutation.operation == 'set' && _isPermissionDenied(e)) {
+        try {
+          final existing = await _firestore
+              .collection(mutation.collectionPath)
+              .doc(mutation.documentId)
+              .get();
+          if (existing.exists) {
+            AppLogger.d(
+              '[SyncEngine] Mutation ${mutation.id} already applied; dropping',
+            );
+            return true;
+          }
+        } catch (_) {
+          // Read failed (offline) — fall through to the retry path.
+        }
+      }
       AppLogger.d('SyncEngine: Error applying mutation: $e');
       return false;
     }
   }
+
+  /// Public seam over [_applyMutation] (same instance, same semantics) so
+  /// the reconciliation logic is unit-testable without the queue loop.
+  Future<bool> applyMutation(MutationQueueTableData mutation) =>
+      _applyMutation(mutation);
+
+  static bool _isPermissionDenied(Object e) =>
+      e is FirebaseException && e.code == 'permission-denied';
 
   static const _timestampFields = {
     'createdAt',

@@ -451,9 +451,19 @@ void main() {
       );
     }
 
-    test('unverified normal user on a shell path -> /verify-email', () {
+    test('unverified within grace on a shell path -> stays (banner nudges)', () {
       expect(
         decideRedirect(currentPath: '/timeline', ctx: unverifiedCtx()),
+        isNull,
+      );
+    });
+
+    test('locked (past grace) user on a shell path -> /verify-email', () {
+      expect(
+        decideRedirect(
+          currentPath: '/timeline',
+          ctx: unverifiedCtx(emailLockedAt: DateTime(2026, 1, 8)),
+        ),
         '/verify-email',
       );
     });

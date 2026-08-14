@@ -153,19 +153,7 @@ void main() {
   });
 
   group('sendVerificationEmail', () {
-    test('sends the native verification email via the current user',
-        () async {
-      when(() => auth.currentUser).thenReturn(user);
-      when(() => user.sendEmailVerification()).thenAnswer((_) async {});
-
-      final repo = buildRepo();
-      final result = await repo.sendVerificationEmail();
-
-      expect(result.isRight(), isTrue);
-      verify(() => user.sendEmailVerification()).called(1);
-    });
-
-    test('mirrors emailVerificationSentAt so the grace-lock job can find it',
+    test('requests the verification email via the worker marker',
         () async {
       when(() => auth.currentUser).thenReturn(user);
       when(() => user.sendEmailVerification()).thenAnswer((_) async {});
@@ -179,10 +167,34 @@ void main() {
       final result = await repo.sendVerificationEmail();
 
       expect(result.isRight(), isTrue);
+      // The app no longer sends the Firebase-native email — it writes the
+      // request marker that triggers the GitHub Actions email worker.
+      verifyNever(() => user.sendEmailVerification());
       final data = verify(() => userDoc.set(captureAny(), any()))
           .captured
           .single as Map<String, dynamic>;
-      expect(data.containsKey('emailVerificationSentAt'), isTrue);
+      expect(data.containsKey('verificationRequestedAt'), isTrue);
+    });
+
+    test('does not set the grace anchor client-side (worker owns it)',
+        () async {
+      when(() => auth.currentUser).thenReturn(user);
+      final usersCollection = _MockCollectionReference();
+      final userDoc = _MockDocumentReference();
+      when(() => firestore.collection('users')).thenReturn(usersCollection);
+      when(() => usersCollection.doc('u1')).thenReturn(userDoc);
+      when(() => userDoc.set(any(), any())).thenAnswer((_) async {});
+
+      final repo = buildRepo();
+      final result = await repo.sendVerificationEmail();
+
+      expect(result.isRight(), isTrue);
+      final data = verify(() => userDoc.set(captureAny(), any()))
+          .captured
+          .single as Map<String, dynamic>;
+      // emailVerificationSentAt (the 7-day grace anchor) is written by the
+      // email worker on first send — never by the client.
+      expect(data.containsKey('emailVerificationSentAt'), isFalse);
     });
 
     test('returns Left when no user is signed in', () async {

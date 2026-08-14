@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/misc.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:go_router/go_router.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:fpdart/fpdart.dart';
 import 'package:emerge_app/core/error/failure.dart';
@@ -78,6 +80,35 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.textContaining('Not verified yet'), findsOneWidget);
+  });
+
+  testWidgets('applies the oobCode from a deep link and confirms verification',
+      (tester) async {
+    when(() => mockAuth.applyVerificationCode('abc123'))
+        .thenAnswer((_) async => const Right<Failure, void>(null));
+
+    final router = GoRouter(
+      routes: [
+        GoRoute(
+          path: '/verify-email',
+          builder: (context, state) => const VerifyEmailScreen(),
+        ),
+      ],
+      initialLocation: '/verify-email?oobCode=abc123',
+    );
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          authRepositoryProvider.overrideWithValue(mockAuth),
+        ],
+        child: MaterialApp.router(routerConfig: router),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    verify(() => mockAuth.applyVerificationCode('abc123')).called(1);
+    expect(find.text('Email verified — taking you to the app.'),
+        findsOneWidget);
   });
 
   testWidgets('shows locked variant when past the grace period',

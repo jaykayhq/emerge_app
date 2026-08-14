@@ -18,8 +18,30 @@ import 'package:emerge_app/features/reflections/presentation/widgets/habit_optio
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:fpdart/fpdart.dart';
+import 'package:fpdart/fpdart.dart' hide State;
 import 'package:mocktail/mocktail.dart';
+
+class _SheetHost extends StatefulWidget {
+  const _SheetHost({super.key, required this.habit});
+
+  final Habit habit;
+
+  @override
+  State<_SheetHost> createState() => _SheetHostState();
+}
+
+class _SheetHostState extends State<_SheetHost> {
+  bool _show = true;
+
+  void hide() => setState(() => _show = false);
+
+  @override
+  Widget build(BuildContext context) {
+    return _show
+        ? HabitOptionsSheet(habit: widget.habit, selectedDate: DateTime.now())
+        : const SizedBox.shrink();
+  }
+}
 
 class _MockRemoteDatasource extends Mock
     implements HabitReflectionRemoteDatasource {}
@@ -233,5 +255,40 @@ void main() {
       expect(find.text('Delete Habit?'), findsOneWidget);
       expect(find.text('Cancel'), findsOneWidget);
     });
+
+    testWidgets(
+      'tapping Delete after the sheet was removed does not touch the dead State',
+      (tester) async {
+        // Regression: _confirmAndDelete's dialog used the sheet State's
+        // context. If the sheet was removed from the tree while the dialog
+        // was up (e.g. a sync removed the habit), the tap crashed with
+        // "This widget has been unmounted, so the State no longer has a
+        // context".
+        tester.view.physicalSize = const Size(800, 1400);
+        addTearDown(() => tester.view.resetPhysicalSize());
+
+        final hostKey = GlobalKey<_SheetHostState>();
+        await tester.pumpWidget(
+          buildTestApp(_SheetHost(key: hostKey, habit: habit)),
+        );
+        await tester.pump();
+        await tester.drag(
+          find.byType(SingleChildScrollView),
+          const Offset(0, -600),
+        );
+        await tester.pump();
+        await tester.tap(find.text('Delete Habit'));
+        await tester.pump();
+        expect(find.text('Delete Habit?'), findsOneWidget);
+
+        // The sheet is disposed while its dialog stays on screen.
+        hostKey.currentState!.hide();
+        await tester.pump();
+
+        await tester.tap(find.text('Delete'));
+        await tester.pump();
+        expect(tester.takeException(), isNull);
+      },
+    );
   });
 }

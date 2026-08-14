@@ -161,3 +161,17 @@ final currentEmailLockedAtProvider = FutureProvider<DateTime?>((ref) async {
   if (raw is DateTime) return raw;
   return null;
 });
+
+/// Reads `users/{uid}.emailVerificationSentAt` (client-written when the
+/// verification email is first sent; the server uses it as the 7-day grace
+/// anchor). Null until the first send.
+final emailVerificationSentAtProvider = FutureProvider<DateTime?>((ref) async {
+  final authUser = await ref.watch(authStateChangesProvider.future);
+  if (authUser.isEmpty) return null;
+  final firestore = FirebaseFirestore.instance;
+  final doc = await firestore.collection('users').doc(authUser.id).get();
+  final raw = doc.data()?['emailVerificationSentAt'];
+  if (raw is Timestamp) return raw.toDate();
+  if (raw is DateTime) return raw;
+  return null;
+});

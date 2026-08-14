@@ -18,6 +18,7 @@ import 'package:emerge_app/features/habits/domain/entities/habit.dart';
 import 'package:emerge_app/features/narrator/presentation/widgets/narrator_guide_host.dart';
 import 'package:emerge_app/features/world_map/presentation/widgets/world_state_hud.dart';
 import 'package:emerge_app/features/world_map/presentation/widgets/world_status_panel.dart';
+import 'package:emerge_app/features/world_map/presentation/widgets/world_bonfire.dart';
 
 class WorldMapScreen extends ConsumerStatefulWidget {
   final String? focusAttribute;
@@ -118,6 +119,14 @@ class _WorldMapScreenState extends ConsumerState<WorldMapScreen> {
                       ConstellationLines(
                         center: center,
                         nodePositions: nodePositions,
+                      ),
+                      Center(
+                        child: WorldBonfire(
+                          health: health,
+                          isStatusVisible: _showStatus,
+                          onTap: () =>
+                              setState(() => _showStatus = !_showStatus),
+                        ),
                       ),
                       Center(
                         child: WorldRingLayout(

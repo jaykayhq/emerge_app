@@ -449,14 +449,18 @@ class DriftHabitRepository implements HabitRepository {
           );
         }
 
-        // Update tribe contribution stats
+        // Update tribe contribution stats. Challenge XP earned through a
+        // habit completion counts toward the tribe too — base + challenge
+        // so local tribe stats, the contributor record, and the leaderboard
+        // all agree with the user_stats write below.
+        final tribeXp = result.xpGained + challengeXpEarned;
         if (activeTribeId != null) {
           final userTribe = await _db.tribeStatsDao.getStats(activeTribeId);
           if (userTribe != null) {
             tribeId = userTribe.tribeId;
             await _db.tribeStatsDao.incrementContribution(
               userTribe.tribeId,
-              xp: result.xpGained,
+              xp: tribeXp,
               habits: 1,
               challenges: 0,
             );
@@ -470,7 +474,7 @@ class DriftHabitRepository implements HabitRepository {
             tribeId = userTribe.tribeId;
             await _db.tribeStatsDao.incrementContribution(
               userTribe.tribeId,
-              xp: result.xpGained,
+              xp: tribeXp,
               habits: 1,
               challenges: 0,
             );
@@ -490,7 +494,9 @@ class DriftHabitRepository implements HabitRepository {
         habitTitle: habitRow.title,
         streakDay: result.newStreak,
         attribute: attr,
-        xpGained: result.xpGained,
+        // Full XP (base + challenge) so the tribe leaderboard reflects the
+        // same number the user_stats write carries.
+        xpGained: result.xpGained + challengeXpEarned,
         currentLevel: newLevel,
         clubId: tribeId,
       );
@@ -531,14 +537,15 @@ class DriftHabitRepository implements HabitRepository {
       // client-authoritative.
       if (tribeId != null) {
         // Update per-member contributor subcollection so other users
-        // can see each other's contribution stats in the tribe
+        // can see each other's contribution stats in the tribe. Includes
+        // challenge XP — the server trigger sums these into the tribe doc.
         await _syncEngine.enqueueSet(
           collectionPath: 'tribes/$tribeId/contributors',
           documentId: statsRow.userId,
           data: {
             'totalXpContributed': {
               '__type__': 'increment',
-              'value': result.xpGained,
+              'value': result.xpGained + challengeXpEarned,
             },
             'totalHabitsCompleted': {'__type__': 'increment', 'value': 1},
             'contributionCount': {'__type__': 'increment', 'value': 1},

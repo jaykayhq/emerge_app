@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:fake_cloud_firestore/fake_cloud_firestore.dart';
+import 'package:drift/drift.dart' hide isNull, isNotNull;
 import 'package:drift/native.dart';
 import 'package:emerge_app/core/drift/app_database.dart';
 import 'package:emerge_app/core/sync/sync_engine.dart';
@@ -23,7 +24,8 @@ void main() {
       firestore,
     );
     repository = DriftTribeRepository(db, syncEngine, firestore);
-    service = TribeMembershipService(repository, db.tribeMembershipDao, syncEngine, firestore);
+    service = TribeMembershipService(
+        repository, db.tribeMembershipDao, db.tribeStatsDao, syncEngine, firestore);
 
     // Seed tribe document so transactions can read it
     await firestore.collection('tribes').doc('morning_warriors').set({
@@ -85,14 +87,39 @@ void main() {
     expect((contributor.data()?['totalXpContributed'] as int?) ?? 0, 0);
   });
 
-  test('joinTribe writes membership atomically via transaction', () async {
+  test('joinTribe writes membership atomically; tribe doc is server-owned', () async {
+    await db.tribeStatsDao.upsertStats(TribeStatsTableCompanion(
+      tribeId: const Value('morning_warriors'),
+      tribeName: const Value('Morning Warriors'),
+      archetypeId: const Value('athlete'),
+      memberCount: const Value(0),
+      totalXp: const Value(0),
+      totalHabitsCompleted: const Value(0),
+      totalChallengesCompleted: const Value(0),
+      userContributionXp: const Value(0),
+      userHabitsCompleted: const Value(0),
+      userChallengesCompleted: const Value(0),
+      updatedAt: Value(DateTime.now().toIso8601String()),
+    ));
     await service.joinTribe(userId: 'user1', tribeId: 'morning_warriors', type: 'archetype');
-    final tribe = await firestore.collection('tribes').doc('morning_warriors').get();
-    expect(tribe.data()?['memberCount'], 1);
-    expect(tribe.data()?['members'], <String>['user1']);
+    // The membership + contributor docs are client-written...
     final membership = await firestore
         .collection('users').doc('user1').collection('tribes').doc('morning_warriors').get();
     expect(membership.exists, true);
+    final contributor = await firestore
+        .collection('tribes').doc('morning_warriors').collection('contributors')
+        .doc('user1').get();
+    expect(contributor.exists, true);
+    // ...but the tribe doc memberCount/members are owned by the server
+    // trigger. The client must NOT write them (rules deny it and dead-letter
+    // the mutation).
+    final tribe = await firestore.collection('tribes').doc('morning_warriors').get();
+    expect(tribe.data()?['memberCount'], 0);
+    expect(tribe.data()?['members'], <String>[]);
+    // Local Drift cache reflects the join immediately.
+    final stats = await db.tribeStatsDao.getStats('morning_warriors');
+    expect(stats, isNotNull);
+    expect(stats!.memberCount, 1);
   });
 
   test('leaveTribe deactivates membership', () async {

@@ -2,7 +2,9 @@ import 'package:emerge_app/core/presentation/widgets/emerge_branding.dart';
 import 'package:emerge_app/core/presentation/widgets/emerge_app_icon.dart';
 import 'package:emerge_app/core/presentation/widgets/responsive_layout.dart';
 import 'package:emerge_app/core/theme/app_theme.dart';
+import 'package:emerge_app/core/utils/app_logger.dart';
 import 'package:emerge_app/core/utils/validators.dart';
+import 'package:emerge_app/features/auth/domain/entities/auth_user.dart';
 import 'package:emerge_app/features/auth/presentation/providers/auth_providers.dart';
 import 'package:emerge_app/features/auth/presentation/widgets/password_requirement_checklist.dart';
 import 'package:flutter/material.dart';
@@ -42,6 +44,24 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
     _passwordController.dispose();
     _confirmPasswordController.dispose();
     super.dispose();
+  }
+
+  /// Sends the verification email without blocking the signup flow.
+  ///
+  /// Google-signed-in accounts are already verified and skip the send. The
+  /// failure is logged, never surfaced: the top banner + /verify-email
+  /// screen offer retry paths, and the 7-day grace lock starts on the first
+  /// successful send.
+  Future<void> _sendVerificationEmailBestEffort(AuthUser user) async {
+    if (user.emailVerified) return;
+    final result =
+        await ref.read(authRepositoryProvider).sendVerificationEmail();
+    result.fold(
+      (failure) => AppLogger.w(
+        'Initial verification email failed: ${failure.message}',
+      ),
+      (_) {},
+    );
   }
 
   Future<void> _signUp() async {
@@ -92,12 +112,12 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
         await profileResult.fold(
           (error) => throw Exception('Failed to create profile: $error'),
           (_) async {
+            // Verification must never block onboarding: send the link
+            // best-effort now and route into onboarding regardless. The
+            // top banner nudges the user until the 7-day grace lock.
+            _sendVerificationEmailBestEffort(user);
             if (mounted) {
-              if (user.emailVerified) {
-                context.go('/onboarding/identity-studio');
-              } else {
-                context.go('/verify-email');
-              }
+              context.go('/onboarding/identity-studio');
             }
           },
         );
@@ -192,11 +212,10 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
           await profileRepo.createProfile(profile);
 
           if (mounted) {
-            context.go(
-              user.emailVerified
-                  ? '/onboarding/identity-studio'
-                  : '/verify-email',
-            );
+            // Google accounts are verified at sign-in; email sign-ups get a
+            // best-effort verification link and proceed into onboarding.
+            _sendVerificationEmailBestEffort(user);
+            context.go('/onboarding/identity-studio');
           }
         },
       );

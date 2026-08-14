@@ -15,6 +15,8 @@ import 'package:emerge_app/features/world_map/presentation/widgets/ambient_parti
 import 'package:emerge_app/features/world_map/presentation/widgets/constellation_lines.dart';
 import 'package:emerge_app/features/world_map/presentation/widgets/nebula_background.dart';
 import 'package:emerge_app/features/world_map/presentation/widgets/world_ring_layout.dart';
+import 'package:emerge_app/features/world_map/presentation/widgets/world_bonfire.dart';
+import 'package:emerge_app/features/world_map/presentation/widgets/world_status_panel.dart';
 
 void main() {
   setUp(() async {
@@ -83,8 +85,38 @@ void main() {
       expect(find.byType(WorldMapScreen), findsOneWidget);
       expect(find.byType(NebulaBackground), findsOneWidget);
       expect(find.byType(WorldRingLayout), findsOneWidget);
+      expect(find.byType(WorldBonfire), findsOneWidget);
       expect(find.byType(AmbientParticles), findsOneWidget);
       expect(find.byType(ConstellationLines), findsOneWidget);
+    });
+
+    testWidgets('center flame toggles the world status panel', (tester) async {
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            userStatsStreamProvider.overrideWith((ref) => const Stream.empty()),
+            worldThemeProvider.overrideWith(WorldThemeNotifier.new),
+            worldHealthStreamProvider.overrideWith((ref) => Stream.value(0.5)),
+            worldEntropyStreamProvider.overrideWith((ref) => Stream.value(0.0)),
+            companionRepositoryProvider.overrideWith(
+              (ref) => CompanionRepository(),
+            ),
+          ],
+          child: const MaterialApp(home: WorldMapScreen()),
+        ),
+      );
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 900));
+
+      expect(find.byType(WorldStatusPanel), findsNothing);
+
+      await tester.tap(find.bySemanticsLabel('World health 50 percent'));
+      await tester.pump();
+      expect(find.byType(WorldStatusPanel), findsOneWidget);
+
+      await tester.tap(find.bySemanticsLabel('World health 50 percent'));
+      await tester.pump();
+      expect(find.byType(WorldStatusPanel), findsNothing);
     });
 
     testWidgets('handles first-visit check without crashing when already seen', (

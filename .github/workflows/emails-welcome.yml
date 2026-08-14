@@ -1,24 +1,27 @@
-# Emerge Welcome Email Worker (near-real-time)
+# Emerge Welcome + Verification Email Worker (near-real-time)
 #
-# Runs every 5 minutes (GitHub's minimum cron interval) so welcome emails
-# go out within ~5 minutes of a new signup, instead of the daily batch.
+# Two triggers:
+#   1. repository_dispatch — the tiny Cloud Function webhook bridge
+#      (functions/src/github_dispatch.ts) fires "user-signed-up" on account
+#      creation and "verification-requested" when the app asks for a
+#      verification email. This gives near-instant delivery after signup.
+#   2. schedule */5 — fallback so a failed dispatch never blocks delivery
+#      (the tasks are idempotent via their markers).
 # The repo is public → GitHub Actions minutes are unlimited (free).
-# Firestore events can't trigger GitHub Actions directly (no Firebase
-# function exists on purpose); a 5-minute poll is the closest free,
-# function-free approximation — the welcome task is idempotent via
-# users/{uid}.welcomeEmailSentAt, so overlapping with the daily run is safe.
-name: Emails (welcome — every 5 min)
+name: Emails (welcome & verify — webhook + every 5 min)
 
 on:
+  repository_dispatch:
+    types: [user-signed-up, verification-requested]
   schedule:
-    - cron: "*/5 * * * *" # every 5 minutes
+    - cron: "*/5 * * * *" # every 5 minutes (fallback)
   workflow_dispatch:
 
 permissions:
   contents: read
 
 jobs:
-  run-welcome-task:
+  run-email-tasks:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -34,7 +37,7 @@ jobs:
         working-directory: email-worker
         run: npm ci
 
-      - name: Run welcome task
+      - name: Run welcome + verify tasks
         working-directory: email-worker
         env:
           FIREBASE_SERVICE_ACCOUNT_JSON: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_TRADEFLASH_L2966 }}
@@ -44,4 +47,4 @@ jobs:
           SMTP_PASS: ${{ secrets.SMTP_PASS }}
           EMAIL_FROM: ${{ secrets.EMAIL_FROM }}
           EMAIL_OVERRIDE_TO: ${{ secrets.EMAIL_OVERRIDE_TO }}
-        run: node src/index.js --task welcome
+        run: node src/index.js --task welcome --task verify

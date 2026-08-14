@@ -13,6 +13,7 @@ class TribeMembershipService {
   // ignore: unused_field — injected for future use by consumers
   final TribeRepository _repository;
   final TribeMembershipDao _dao;
+  final TribeStatsDao _tribeStatsDao;
   // ignore: unused_field — kept for constructor compatibility
   final EnhancedSyncEngine _syncEngine;
   final FirebaseFirestore _firestore;
@@ -21,6 +22,7 @@ class TribeMembershipService {
   TribeMembershipService(
     this._repository,
     this._dao,
+    this._tribeStatsDao,
     this._syncEngine,
     this._firestore, [
     this._ref,
@@ -51,6 +53,9 @@ class TribeMembershipService {
 
       // 2. Firestore transaction FIRST (authoritative source of truth).
       //    If this fails, Drift is never written — no ghost membership.
+      //    NOTE: the tribe doc (memberCount/members) is NOT touched here —
+      //    it is server-owned (Cloud Function trigger on the membership
+      //    doc). Client tribe-doc writes dead-letter against the rules.
       await _firestore.runTransaction((transaction) async {
         // All reads before any writes (Firestore transaction constraint).
         final tribeRef = _firestore.collection('tribes').doc(tribeId);
@@ -62,13 +67,6 @@ class TribeMembershipService {
         final contributorRef = _firestore
             .collection('tribes').doc(tribeId).collection('contributors').doc(userId);
         final contributorSnap = await transaction.get(contributorRef);
-
-        final currentCount = (tribeSnap.data()?['memberCount'] as int?) ?? 0;
-        transaction.update(tribeRef, {
-          'memberCount': currentCount + 1,
-          'members': FieldValue.arrayUnion([userId]),
-          'lastStatsSync': FieldValue.serverTimestamp(),
-        });
 
         // Write the user's membership subcollection atomically
         transaction.set(
@@ -111,6 +109,9 @@ class TribeMembershipService {
         joinedAt: Value(DateTime.now().toIso8601String()),
         isActive: const Value(true),
       ));
+      // Reflect the +1 locally until the server trigger's count arrives via
+      // the sync/stream path.
+      await _tribeStatsDao.incrementMemberCount(tribeId, delta: 1);
 
       // 4. Invalidate providers (if Ref available)
       _ref?.invalidate(hasClubProvider);
@@ -135,16 +136,9 @@ class TribeMembershipService {
 
       // 1. Firestore transaction FIRST (authoritative).
       //    If this fails, Drift is never modified — no drift.
+      //    Tribe doc memberCount/members are server-owned — only the
+      //    membership doc is removed here (the trigger decrements).
       await _firestore.runTransaction((transaction) async {
-        final tribeRef = _firestore.collection('tribes').doc(tribeId);
-        final tribeSnap = await transaction.get(tribeRef);
-        if (tribeSnap.exists) {
-          final currentCount = (tribeSnap.data()?['memberCount'] as int?) ?? 0;
-          transaction.update(tribeRef, {
-            'memberCount': (currentCount - 1).clamp(0, 999999),
-            'members': FieldValue.arrayRemove([userId]),
-          });
-        }
         // Remove the user's membership subcollection doc
         transaction.delete(
           _firestore.collection('users').doc(userId).collection('tribes').doc(tribeId),
@@ -153,6 +147,7 @@ class TribeMembershipService {
 
       // 2. Drift AFTER Firestore success (local cache)
       await _dao.deactivateAll(userId);
+      await _tribeStatsDao.incrementMemberCount(tribeId, delta: -1);
 
       _ref?.invalidate(hasClubProvider);
       _ref?.invalidate(discoveryClubsProvider);
@@ -178,6 +173,7 @@ class TribeMembershipService {
 final tribeMembershipServiceProvider = Provider<TribeMembershipService>((ref) {
   final repository = ref.watch(tribeRepositoryProvider);
   final dao = ref.watch(tribeMembershipDaoProvider);
+  final tribeStatsDao = ref.watch(tribeStatsDaoProvider);
   final syncEngine = ref.watch(enhancedSyncEngineProvider);
-  return TribeMembershipService(repository, dao, syncEngine, FirebaseFirestore.instance, ref);
+  return TribeMembershipService(repository, dao, tribeStatsDao, syncEngine, FirebaseFirestore.instance, ref);
 });

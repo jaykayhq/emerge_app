@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:emerge_app/core/theme/archetype_theme.dart';
 import 'package:emerge_app/features/auth/domain/entities/user_extension.dart';
 
@@ -135,12 +134,12 @@ class AppTheme {
         surface: backgroundLight,
         onSurface: textMainLight,
       ),
-      // Spline Sans font with fallback for missing glyphs
-      textTheme: GoogleFonts.splineSansTextTheme(
-        ThemeData.light().textTheme.apply(
-          bodyColor: textMainLight,
-          displayColor: textMainLight,
-        ),
+      // Spline Sans is bundled locally (pubspec fonts:) so text renders
+      // without the runtime asset manifest or network font fetching.
+      textTheme: ThemeData.light().textTheme.apply(
+        fontFamily: 'SplineSans',
+        bodyColor: textMainLight,
+        displayColor: textMainLight,
       ),
       appBarTheme: const AppBarTheme(
         backgroundColor: Colors.transparent,
@@ -195,12 +194,12 @@ class AppTheme {
         surface: surfaceDark,
         onSurface: textMainDark,
       ),
-      // Spline Sans font with fallback for missing glyphs
-      textTheme: GoogleFonts.splineSansTextTheme(
-        ThemeData.dark().textTheme.apply(
-          bodyColor: textMainDark,
-          displayColor: textMainDark,
-        ),
+      // Spline Sans is bundled locally (pubspec fonts:) so text renders
+      // without the runtime asset manifest or network font fetching.
+      textTheme: ThemeData.dark().textTheme.apply(
+        fontFamily: 'SplineSans',
+        bodyColor: textMainDark,
+        displayColor: textMainDark,
       ),
       appBarTheme: const AppBarTheme(
         backgroundColor: Colors.transparent,

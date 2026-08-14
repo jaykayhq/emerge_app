@@ -448,26 +448,12 @@ class DriftTribeRepository implements TribeRepository {
       },
     );
 
-    // Path C: Tribe master document (atomic members and count).
-    // Use a merge-set: `update` fails if the tribe doc doesn't exist
-    // remotely yet (locally-seeded clubs), dead-lettering the mutation.
-    // NOTE: `type` is deliberately NOT written here — it is owned by the
-    // tribe's creator (server seed/admin for official clubs, the creator
-    // flow for creator tribes). A join must never overwrite it: writing
-    // 'official' here would silently re-type a creator tribe joined
-    // through this path.
-    await _syncEngine.enqueueSet(
-      collectionPath: 'tribes',
-      documentId: tribeId,
-      data: {
-        'members': {
-          '__type__': 'arrayUnion',
-          'values': [userId],
-        },
-        'memberCount': {'__type__': 'increment', 'value': 1},
-        'lastStatsSync': {'__type__': 'serverTimestamp'},
-      },
-    );
+    // NOTE: the tribe master doc (members/memberCount) is deliberately NOT
+    // written here. It is server-owned — a Cloud Function trigger on the
+    // membership doc maintains it transactionally. Client tribe-doc writes
+    // dead-letter against the rules (missing `members` array on seeded
+    // clubs, create-vs-update on locally-seeded clubs, replay double-apply),
+    // which is exactly the observed 102/103/129/145 dead-letter symptom.
   }
 
   @override
@@ -484,20 +470,8 @@ class DriftTribeRepository implements TribeRepository {
       operation: 'delete',
     );
 
-    // Path B: Update Tribe master document (atomic remove and decrement).
-    // Merge-set for the same reason as joinClub Path C.
-    await _syncEngine.enqueueSet(
-      collectionPath: 'tribes',
-      documentId: tribeId,
-      data: {
-        'members': {
-          '__type__': 'arrayRemove',
-          'values': [userId],
-        },
-        'memberCount': {'__type__': 'increment', 'value': -1},
-        'lastStatsSync': {'__type__': 'serverTimestamp'},
-      },
-    );
+    // NOTE: no tribe master doc write here — memberCount/members are
+    // server-owned (Cloud Function trigger on the membership doc).
   }
 
   @override

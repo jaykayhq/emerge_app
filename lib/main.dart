@@ -1,6 +1,7 @@
 import 'package:emerge_app/core/init/init_app.dart';
 import 'package:emerge_app/core/data/seed_runner.dart';
 import 'package:emerge_app/core/config/app_config.dart';
+import 'package:emerge_app/core/utils/app_logger.dart';
 import 'package:sentry/sentry.dart';
 import 'package:emerge_app/core/router/router.dart';
 import 'package:emerge_app/core/theme/app_theme.dart';
@@ -8,9 +9,11 @@ import 'package:emerge_app/core/theme/theme_provider.dart';
 import 'package:emerge_app/core/services/notification_service.dart';
 import 'package:emerge_app/core/services/daily_insight_generator.dart';
 import 'package:emerge_app/core/presentation/widgets/offline_banner.dart';
+import 'package:emerge_app/core/presentation/widgets/email_verification_banner.dart';
 import 'package:emerge_app/core/presentation/widgets/web_update_banner.dart';
 import 'package:flutter/material.dart';
 import 'dart:async';
+import 'package:app_links/app_links.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
@@ -137,6 +140,7 @@ class _EmergeAppState extends ConsumerState<EmergeApp>
   /// Last signed-in user id — used to refresh notification schedules (and
   /// thus the daily insight body) when the app returns to the foreground.
   String? _notificationsUserId;
+  StreamSubscription<Uri>? _deepLinkSub;
 
   @override
   void initState() {
@@ -146,12 +150,42 @@ class _EmergeAppState extends ConsumerState<EmergeApp>
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _heavyInitialization();
     });
+    _initDeepLinks();
   }
 
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
+    _deepLinkSub?.cancel();
     super.dispose();
+  }
+
+  /// Listens for mobile deep links (emergeapp://verify-email?oobCode=...)
+  /// delivered by the email worker's verification email, and routes the
+  /// user straight to the verification screen. On web the same flow works
+  /// through the browser URL (query param on /verify-email) — no handler
+  /// needed. Web builds of app_links return no links, so this is
+  /// mobile-only in practice.
+  Future<void> _initDeepLinks() async {
+    try {
+      final appLinks = AppLinks();
+      final initial = await appLinks.getInitialLink();
+      if (initial != null) _routeDeepLink(initial);
+      _deepLinkSub = appLinks.uriLinkStream.listen(_routeDeepLink);
+    } catch (e, s) {
+      AppLogger.w('Deep link listener failed to start', error: e, stackTrace: s);
+    }
+  }
+
+  void _routeDeepLink(Uri uri) {
+    if (uri.host != 'verify-email') return;
+    final oobCode = uri.queryParameters['oobCode'];
+    if (oobCode == null || oobCode.isEmpty) return;
+    try {
+      ref.read(routerProvider).push('/verify-email?oobCode=$oobCode');
+    } catch (e) {
+      AppLogger.w('Deep link routing failed', error: e);
+    }
   }
 
   @override
@@ -281,8 +315,10 @@ class _EmergeAppState extends ConsumerState<EmergeApp>
       routerConfig: router,
       debugShowCheckedModeBanner: false,
       builder: (context, child) {
-        return WebUpdateBanner(
-          child: OfflineBanner(child: child ?? const SizedBox.shrink()),
+        return EmailVerificationBanner(
+          child: WebUpdateBanner(
+            child: OfflineBanner(child: child ?? const SizedBox.shrink()),
+          ),
         );
       },
     );

@@ -3,25 +3,41 @@ import { sendEmail } from "./sender.js";
 import { runWelcomeTask } from "./tasks/welcome.js";
 import { runDripTask } from "./tasks/drip.js";
 import { runGraceTask } from "./tasks/grace.js";
+import { runVerifyTask } from "./tasks/verify.js";
 
 /**
  * Emerge email worker — runs in GitHub Actions (see
  * .github/workflows/emails.yml). Usage:
- *   node src/index.js [--task welcome|drip|grace|all] [--dry-run]
+ *   node src/index.js [--task welcome|drip|grace|verify|all] [--dry-run]
+ *   --task may be repeated: --task welcome --task verify
  *
  * Env:
- *   FIREBASE_SERVICE_ACCOUNT  path to the service-account JSON
+ *   FIREBASE_SERVICE_ACCOUNT  path to the service-account JSON (or
+ *                             FIREBASE_SERVICE_ACCOUNT_JSON inline)
  *   SMTP_HOST/PORT/USER/PASS  SMTP credentials (sender.js)
  *   EMAIL_OVERRIDE_TO         optional: route every email to one inbox
+ *   VERIFICATION_URL          app route the verify link points to
  */
 const args = process.argv.slice(2);
-const taskArg = args.includes("--task")
-  ? args[args.indexOf("--task") + 1]
-  : "all";
 const dryRun = args.includes("--dry-run");
+
+function parseTasks(args) {
+  const requested = [];
+  for (let i = 0; i < args.length; i++) {
+    if (args[i] === "--task" && i + 1 < args.length) {
+      requested.push(args[i + 1]);
+    }
+  }
+  const set = new Set(requested);
+  if (set.has("all") || set.size === 0) {
+    return ["welcome", "verify", "drip", "grace"];
+  }
+  return [...set];
+}
 
 const TASKS = {
   welcome: (db, auth) => runWelcomeTask(db, { send: sendEmail, dryRun }),
+  verify: (db, auth) => runVerifyTask(db, auth, { send: sendEmail, dryRun }),
   drip: (db, auth) => runDripTask(db, { send: sendEmail, dryRun }),
   grace: (db, auth) => runGraceTask(db, auth, { dryRun }),
 };
@@ -32,11 +48,11 @@ async function main() {
   }
   const { db, auth } = initDb();
 
-  const tasks = taskArg === "all" ? Object.keys(TASKS) : [taskArg];
+  const tasks = parseTasks(args);
   const errors = [];
   for (const task of tasks) {
     if (!TASKS[task]) {
-      throw new Error(`Unknown task "${task}" (expected welcome|drip|grace|all)`);
+      throw new Error(`Unknown task "${task}" (expected welcome|verify|drip|grace|all)`);
     }
     try {
       console.log(`--- Running task: ${task} ---`);

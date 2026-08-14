@@ -4,7 +4,7 @@ import 'package:emerge_app/core/utils/validators.dart';
 import 'package:emerge_app/features/auth/domain/entities/auth_user.dart';
 import 'package:emerge_app/features/auth/domain/repositories/auth_repository.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:flutter/foundation.dart' show defaultTargetPlatform, kIsWeb, TargetPlatform;
 import 'package:fpdart/fpdart.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 
@@ -204,6 +204,10 @@ class FirebaseAuthRepository implements AuthRepository {
       final profileMap = userProfile.toMap();
       profileMap['email'] = updatedUser?.email ?? user.email ?? '';
       profileMap['createdAt'] = FieldValue.serverTimestamp();
+      // Platform marker: the email worker uses it to send web users a web
+      // verification link and mobile users a custom-scheme deep link that
+      // opens the app directly.
+      profileMap['platform'] = _platformLabel();
 
       // Remove null values to comply with Firestore security rule type checks
       // (isValidStats rejects null values for fields like photoUrl)
@@ -301,6 +305,8 @@ class FirebaseAuthRepository implements AuthRepository {
         final profileMap = userProfile.toMap();
         profileMap['email'] = user.email ?? '';
         profileMap['createdAt'] = FieldValue.serverTimestamp();
+        // Platform marker — see _platformLabel() (verification link routing).
+        profileMap['platform'] = _platformLabel();
         // Remove null values to comply with Firestore security rule type checks
         profileMap.removeWhere((_, value) => value == null);
         await _firestore.collection('users').doc(user.uid).set(profileMap);
@@ -410,6 +416,22 @@ class FirebaseAuthRepository implements AuthRepository {
     }
   }
 
+  /// Canonical platform label written to users/{uid}.platform at signup.
+  /// The email worker (GitHub Actions) picks the verification link base
+  /// from it: 'web'/'other' → web URL, 'android'/'ios' → custom-scheme
+  /// deep link (emergeapp://verify-email) that opens the app directly.
+  static String _platformLabel() {
+    if (kIsWeb) return 'web';
+    switch (defaultTargetPlatform) {
+      case TargetPlatform.android:
+        return 'android';
+      case TargetPlatform.iOS:
+        return 'ios';
+      default:
+        return 'other';
+    }
+  }
+
   @override
   Future<Either<Failure, void>> sendVerificationEmail() async {
     final user = _firebaseAuth.currentUser;
@@ -417,28 +439,38 @@ class FirebaseAuthRepository implements AuthRepository {
       return const Left(AuthFailure('User not logged in'));
     }
     try {
-      await user.sendEmailVerification();
-      // Record when the verification link was sent so the daily grace-period
-      // lock can find this account and measure the 7-day window from here.
-      try {
-        await _firestore
-            .collection('users')
-            .doc(user.uid)
-            .set(
-              {
-                'emailVerificationSentAt': FieldValue.serverTimestamp(),
-              },
-              SetOptions(merge: true),
-            );
-      } catch (e, s) {
-        AppLogger.w('emailVerificationSentAt mirror failed', error: e, stackTrace: s);
-      }
+      // Verification emails are sent by the email worker (GitHub Actions,
+      // SMTP) — the app never calls Firebase's built-in email. Writing the
+      // request marker triggers the webhook bridge (functions
+      // src/github_dispatch.ts) → repository_dispatch → worker, which
+      // emails a branded link that returns the user straight to the app.
+      // The worker owns emailVerificationSentAt (the 7-day grace anchor).
+      await _firestore.collection('users').doc(user.uid).set(
+            {
+              'verificationRequestedAt': FieldValue.serverTimestamp(),
+            },
+            SetOptions(merge: true),
+          );
+      return const Right(null);
+    } catch (e) {
+      AppLogger.w('sendVerificationEmail (request marker) failed', error: e);
+      return Left(ServerFailure('Could not request the verification email.'));
+    }
+  }
+
+  @override
+  Future<Either<Failure, void>> applyVerificationCode(String oobCode) async {
+    try {
+      await _firebaseAuth.applyActionCode(oobCode);
+      await _firebaseAuth.currentUser?.reload();
       return const Right(null);
     } on FirebaseAuthException catch (e) {
-      AppLogger.w('sendVerificationEmail failed', error: e);
-      return Left(AuthFailure(e.message ?? 'Could not send the verification email.'));
+      AppLogger.w('applyVerificationCode failed', error: e);
+      return Left(
+        AuthFailure(e.message ?? 'Invalid or expired verification link.'),
+      );
     } catch (e, s) {
-      AppLogger.e('sendVerificationEmail failed', e, s);
+      AppLogger.e('applyVerificationCode failed', e, s);
       return Left(ServerFailure(e.toString()));
     }
   }

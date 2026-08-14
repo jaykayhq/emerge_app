@@ -59,4 +59,18 @@ void main() {
     expect(pos.top, isNull);
     expect(pos.bottom, 48);
   });
+
+  test('offscreen target -> falls back to bottom pinned', () {
+    final pos = guideCardPositionFor(
+      targetRect: const Rect.fromLTWH(100, 1200, 200, 50),
+      screenSize: const Size(400, 800),
+      cardHeight: cardHeight,
+      margin: margin,
+      topInset: 0,
+      bottomInset: 24,
+    );
+
+    expect(pos.top, isNull);
+    expect(pos.bottom, 48);
+  });
 }
