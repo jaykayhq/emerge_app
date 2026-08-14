@@ -24,6 +24,14 @@
    - `web/service-worker.js` — now actively `unregister()`s itself after purging caches (stale SW caused the AssetManifest 404 symptom even after redeploys)
    - `web/version.json` → 1.0.7+12; `docs/android-release.md` gained IDX-specific build notes, 1.0.7 size numbers (75.8 → 56.3 MB after strip), release-notes writing guide (500-char cap), and the completed-release error table rows
 
+## Late session (committed `2c30d75c` + live GCP change): web auth + email links/routing
+
+1. **Web Google sign-in root cause = API key referrer restriction.** The dedicated web key (`b3783a74-92c4-4b4b-b600-b4363bce7260` / `AIzaSyBXiqmFfdGUmMnYSVQ1kTBDczk-4jbCvOQ`, restricted this morning in `b107bd26`) allowed ONLY `tradeflash-l2966.web.app` + `emerge-404.web.app`. Verified live: identitytoolkit returns `403 "Requests from referer ... are blocked"` for `localhost` and `emerge.app` referers, while the web.app referer passed. **Fixed via gcloud (owner account `joeukpai55@gmail.com` active):** added `http://localhost/*`, `http://localhost:*/*`, `https://localhost:*/*`, `https://tradeflash-l2966-*.web.app/*` (preview channels). Re-verified live: localhost passes (400 endpoint-reached), parked `emerge.app` still blocked. `scripts/restrict_api_keys.sh` WEB_REFERRERS updated to match. If the user tests web on a custom domain, it must be added too.
+2. **`emerge.app` is a PARKED GoDaddy domain** (redirect script → `/lander`, `LANDER_SYSTEM="PW"` parking) — every email link to it was a dead end. `emerge-404.web.app` also serves nothing (404). Real web app = `tradeflash-l2966.web.app`.
+3. **Email links fixed** (`2c30d75c`): `email-worker/src/templates.js` CTAs → `https://tradeflash-l2966.web.app/timeline`; welcome email adds "Get the app on Google Play" → `https://play.google.com/store/apps/details?id=com.emerge.emerge_app` (verified listing exists, 200). `verify.js` `DEFAULT_VERIFICATION_URL_WEB` → `https://tradeflash-l2966.web.app/verify-email` (mobile keeps `emergeapp://verify-email`). 27/27 worker tests green.
+4. **Owner was receiving every user's email**: `EMAIL_OVERRIDE_TO` secret was wired into BOTH workflows (emails.yml, emails-welcome.yml) → all sends routed to the owner's inbox. Removed the env line from both workflows — real recipients now. Welcome is still one-time per user via the `welcomeEmailSentAt` marker (the perceived recurrence was the override echo). `EMAIL_OVERRIDE_TO` secret still exists but unused — delete in GitHub Settings.
+5. **Recommendation for user:** set `EMAIL_FROM` to a real sending address — the default `no-reply@emerge.app` uses the parked domain and will hurt SMTP deliverability/spam scoring.
+
 ## Security state
 
 - GitHub secrets live: SMTP_HOST/PORT/USER/PASS, EMAIL_FROM, EMAIL_OVERRIDE_TO (added 07:23 today), FIREBASE_SERVICE_ACCOUNT_TRADEFLASH_L2966.
