@@ -21,7 +21,8 @@ export const VERIFY_PAGE_SIZE = 100;
 export const VERIFY_MAX_PAGES = 100;
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-const DEFAULT_VERIFICATION_URL_WEB = "https://emerge.app/verify-email";
+// Real app destinations — emerge.app is a parked domain (no app there).
+const DEFAULT_VERIFICATION_URL_WEB = "https://tradeflash-l2966.web.app/verify-email";
 const DEFAULT_VERIFICATION_URL_APP = "emergeapp://verify-email";
 
 /**

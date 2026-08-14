@@ -12,6 +12,10 @@ const buttonStyles =
   "display:inline-block;margin-top:20px;padding:14px 28px;border-radius:12px;" +
   "background:#2DD4BF;color:#0A0A1A;font-weight:bold;text-decoration:none";
 
+// Real app destinations — emerge.app is a parked domain (no app there).
+const WEB_APP_URL = "https://tradeflash-l2966.web.app/timeline";
+const PLAY_STORE_URL = "https://play.google.com/store/apps/details?id=com.emerge.emerge_app";
+
 function escapeHtml(value) {
   return value
     .replace(/&/g, "&amp;")
@@ -35,9 +39,13 @@ export function buildWelcomeHtml(name) {
         Your journey begins now. Build one small habit, earn XP, and watch
         your avatar evolve into the person you're becoming.
       </p>
-      <a href="https://emerge.app/timeline" style="${buttonStyles}">
+      <a href="${WEB_APP_URL}" style="${buttonStyles}">
         Start exploring
       </a>
+      <p style="font-size:12px;color:#8B8B8B;margin-top:16px;">
+        Prefer your phone? Get the app on
+        <a href="${PLAY_STORE_URL}" style="color:#2DD4BF;text-decoration:underline">Google Play</a>.
+      </p>
       <p style="font-size:12px;color:#8B8B8B;margin-top:28px;">
         Your journey begins now — one habit at a time.
       </p>
@@ -53,7 +61,7 @@ export function buildReengagementHtml(name) {
         Your identity is built in small moments. Even one habit today keeps
         the streak alive — and your avatar keeps evolving.
       </p>
-      <a href="https://emerge.app/timeline" style="${buttonStyles}">
+      <a href="${WEB_APP_URL}" style="${buttonStyles}">
         Coming back
       </a>
       <p style="font-size:12px;color:#8B8B8B;margin-top:28px;">

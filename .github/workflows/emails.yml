@@ -15,8 +15,10 @@
 #   SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS  SMTP credentials
 # Optional secrets:
 #   EMAIL_FROM          sender address (default "Emerge <no-reply@emerge.app>")
-#   EMAIL_OVERRIDE_TO   route every email to a single inbox (testing / "send
-#                       everything to my account")
+#   EMAIL_OVERRIDE_TO   NOT wired in this workflow — emails go to real
+#                       recipients. (sender.js still supports it for local
+#                       testing; it was removed from CI after the owner kept
+#                       receiving every user's emails.)
 name: Emails (welcome / re-engagement / verification grace)
 
 on:
@@ -55,5 +57,4 @@ jobs:
           SMTP_USER: ${{ secrets.SMTP_USER }}
           SMTP_PASS: ${{ secrets.SMTP_PASS }}
           EMAIL_FROM: ${{ secrets.EMAIL_FROM }}
-          EMAIL_OVERRIDE_TO: ${{ secrets.EMAIL_OVERRIDE_TO }}
         run: node src/index.js --task all

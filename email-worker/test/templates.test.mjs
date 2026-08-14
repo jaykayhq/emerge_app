@@ -2,16 +2,19 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { buildWelcomeHtml, buildReengagementHtml } from "../src/templates.js";
 
-test("welcome html includes the display name and CTA", () => {
+test("welcome html includes the display name and CTA to the real web app", () => {
   const html = buildWelcomeHtml("Ada");
   assert.ok(html.includes("Welcome to Emerge, Ada."));
-  assert.ok(html.includes("https://emerge.app/timeline"));
+  assert.ok(html.includes("https://tradeflash-l2966.web.app/timeline"));
+  assert.ok(html.includes("https://play.google.com/store/apps/details?id=com.emerge.emerge_app"));
+  assert.ok(!html.includes("emerge.app/timeline"));
 });
 
-test("reengagement html includes the name and a nudge", () => {
+test("reengagement html includes the name and a nudge to the real web app", () => {
   const html = buildReengagementHtml("Ada");
   assert.ok(html.includes("We miss you, Ada."));
-  assert.ok(html.includes("https://emerge.app/timeline"));
+  assert.ok(html.includes("https://tradeflash-l2966.web.app/timeline"));
+  assert.ok(!html.includes("emerge.app/timeline"));
 });
 
 test("handles a missing name gracefully", () => {

@@ -20,12 +20,12 @@ test("verificationBaseUrl differentiates web and mobile users", () => {
   const env = {};
   assert.equal(
     verificationBaseUrl("web", env),
-    "https://emerge.app/verify-email",
+    "https://tradeflash-l2966.web.app/verify-email",
   );
-  assert.equal(verificationBaseUrl(undefined, env), "https://emerge.app/verify-email");
+  assert.equal(verificationBaseUrl(undefined, env), "https://tradeflash-l2966.web.app/verify-email");
   assert.equal(verificationBaseUrl("android", env), "emergeapp://verify-email");
   assert.equal(verificationBaseUrl("ios", env), "emergeapp://verify-email");
-  assert.equal(verificationBaseUrl("other", env), "https://emerge.app/verify-email");
+  assert.equal(verificationBaseUrl("other", env), "https://tradeflash-l2966.web.app/verify-email");
   // Env overrides win.
   assert.equal(
     verificationBaseUrl("android", { VERIFICATION_URL_APP: "myapp://verify" }),
@@ -49,7 +49,7 @@ test("verify sends a web link to web users", async () => {
   });
 
   assert.equal(count, 1);
-  assert.ok(sender.sent[0].html.includes("https://emerge.app/verify-email?oobCode="));
+  assert.ok(sender.sent[0].html.includes("https://tradeflash-l2966.web.app/verify-email?oobCode="));
   const marker = writes.find((w) => w.op === "set" && w.path === "users/u1");
   assert.equal(marker.data.verificationEmailSentAt.constructor.name, "ServerTimestampTransform");
   assert.equal(marker.data.emailVerificationSentAt.constructor.name, "ServerTimestampTransform");
