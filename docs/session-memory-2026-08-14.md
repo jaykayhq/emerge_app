@@ -2,6 +2,16 @@
 
 **Product:** Emerge (identity-first habit engine). Released, <50 users, Nigeria beachhead, Firebase (Auth/Firestore africa-south1/Functions nodejs22), Riverpod 3 + Drift + go_router 17, fpdart Either.
 
+## 1.0.8 release (committed `33b52596`, `f3eaa696` — deployed web + Play production 2026-08-14)
+
+1. **Tribe XP / partners / leaderboard fixes verified** (commits `2362f66c`, `906d1e53`, `d6b48e64`): focused suites green — tribe XP (55), social/leaderboard (19), blueprints (32+). Fixed a pre-existing test gap in `blueprint_detail_controller_test.dart` (remote-config override for the free-tier gate, `33b52596`).
+2. **Live username availability check** (`33b52596`): new public callable `checkUsernameAvailability` (`functions/src/usernames.ts`) probes the `usernames/{normalized}` doc-as-lock BEFORE account creation; signup + creator signup debounce (400 ms) a field-level "This username is already taken" error while typing. AuthRepository gained `checkUsernameAvailability`. **Deployed to prod** (functions).
+3. **Starter-habit recommended durations** (`33b52596`): `StarterHabitBlueprint` gained required `timerDurationMinutes` (all 30 catalog entries set); `createStarterPack` propagates it (Drift row + Firestore payload); FirstHabitsScreen cards show an "N MIN" chip.
+4. **Blueprint seeds v6** (`33b52596`): all 76 habit specs now carry a recommended duration (0-duration habits eliminated); seed check requires durations so existing Firestore docs backfill.
+5. **Version 1.0.8+13** in all 4 places (pubspec, `kAppVersion`, settings label, `web/version.json`) — bumped BEFORE builds per runbook.
+6. **Deploy record**: functions deployed (`checkUsernameAvailability` created); `flutter clean && flutter build web --release` → hosting live (verified 200 + version.json 1.0.8+13); AAB 76.4 MB → stripped 56.8 MB → bundletool validate OK → **production track live, versionCode 13** (notes ≤500 chars).
+7. **IDX build gotchas hit this release**: gradle wrapper dist gone after cache wipe (re-download via `./gradlew --version`); `android/gradle.properties` had regressed to `-Xmx2048m` → R8 OOM "Java heap space" → restored `-Xmx8192m` (commit `f3eaa696`); `key.properties` recreated from documented creds (`emerge123`/alias `emerge`).
+
 ## Completed this session (committed + pushed `b107bd26..a8163ad3`)
 
 1. **Email Cloud Functions removed** (commit `5d7dc528`, −881 lines). `email.ts`, `email_templates.ts`, `email_verification.ts`, `marketing_email.ts` + their tests deleted — the GH Actions worker (`email-worker/` + `.github/workflows/emails.yml`) is the only email path now. Verified: `tsc --noEmit` clean, no dangling imports, client email verification uses only the Firebase Auth SDK (`sendVerificationEmail` in `firebase_auth_repository.dart:436`). **Deployed to prod** — no email functions remain in the deployment; full `firebase deploy --only functions` works without `RESEND_API_KEY`.
