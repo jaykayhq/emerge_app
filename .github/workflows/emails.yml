@@ -44,14 +44,12 @@ jobs:
         working-directory: email-worker
         run: npm ci
 
-      - name: Write Firebase service account
-        run: |
-          echo "${{ secrets.FIREBASE_SERVICE_ACCOUNT_TRADEFLASH_L2966 }}" > /tmp/firebase-sa.json
-
       - name: Run email tasks
         working-directory: email-worker
         env:
-          FIREBASE_SERVICE_ACCOUNT: /tmp/firebase-sa.json
+          # Secret passed as an env var (not echoed through a shell) so the
+          # multi-line JSON arrives byte-for-byte intact.
+          FIREBASE_SERVICE_ACCOUNT_JSON: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_TRADEFLASH_L2966 }}
           SMTP_HOST: ${{ secrets.SMTP_HOST }}
           SMTP_PORT: ${{ secrets.SMTP_PORT }}
           SMTP_USER: ${{ secrets.SMTP_USER }}

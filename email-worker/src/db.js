@@ -4,19 +4,27 @@ import fs from "node:fs";
 let app;
 
 /**
- * Initializes firebase-admin from the service-account JSON path in
- * `FIREBASE_SERVICE_ACCOUNT` (GitHub Actions writes the secret JSON to a
- * temp file and points this env var at it).
+ * Initializes firebase-admin. The service-account JSON comes from one of:
+ *   FIREBASE_SERVICE_ACCOUNT_JSON  the JSON itself (GitHub Actions passes
+ *                                  secrets via env vars — no shell escaping
+ *                                  or newline mangling)
+ *   FIREBASE_SERVICE_ACCOUNT       path to a service-account JSON file
+ *                                  (local runs)
  */
 export function initDb() {
+  const inline = process.env.FIREBASE_SERVICE_ACCOUNT_JSON;
   const path = process.env.FIREBASE_SERVICE_ACCOUNT;
-  if (!path) {
+  let serviceAccount;
+  if (inline) {
+    serviceAccount = JSON.parse(inline);
+  } else if (path) {
+    serviceAccount = JSON.parse(fs.readFileSync(path, "utf8"));
+  } else {
     throw new Error(
-      "FIREBASE_SERVICE_ACCOUNT env var must point at the service-account JSON file",
+      "FIREBASE_SERVICE_ACCOUNT_JSON (inline JSON) or FIREBASE_SERVICE_ACCOUNT (file path) is required",
     );
   }
   if (!app) {
-    const serviceAccount = JSON.parse(fs.readFileSync(path, "utf8"));
     app = admin.initializeApp({
       credential: admin.credential.cert(serviceAccount),
       projectId: serviceAccount.project_id,

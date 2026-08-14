@@ -21,6 +21,9 @@ SMTP_HOST=... SMTP_PORT=587 SMTP_USER=... SMTP_PASS=... \
 node src/index.js --task all          # or: --task welcome|drip|grace
 ```
 
+(`FIREBASE_SERVICE_ACCOUNT_JSON` with the JSON inline also works — that's how
+GitHub Actions passes it, avoiding shell mangling of the multi-line file.)
+
 ### Dry run (no emails sent, no documents written)
 
 ```bash
