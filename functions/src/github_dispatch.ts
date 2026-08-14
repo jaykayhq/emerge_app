@@ -14,16 +14,20 @@
  * delivery.
  *
  * Env: GITHUB_DISPATCH_TOKEN (a fine-grained PAT with Contents: write for
- * the repo — set via `firebase functions:set-env-vars`); GITHUB_REPO
+ * the repo — managed as a Cloud Function secret via
+ * `firebase functions:secrets:set GITHUB_DISPATCH_TOKEN`); GITHUB_REPO
  * (default "jaykayhq/emerge_app").
  */
 import * as admin from "firebase-admin";
 import { onDocumentWritten } from "firebase-functions/v2/firestore";
+import { defineSecret } from "firebase-functions/params";
 import axios from "axios";
 
 if (admin.apps.length === 0) {
   admin.initializeApp();
 }
+
+export const githubDispatchToken = defineSecret("GITHUB_DISPATCH_TOKEN");
 
 const GITHUB_REPO = process.env.GITHUB_REPO ?? "jaykayhq/emerge_app";
 
@@ -69,16 +73,16 @@ export function decideDispatchEvent(
 }
 
 export const dispatchEmailWorkflow = onDocumentWritten(
-  "users/{uid}",
+  { document: "users/{uid}", secrets: ["GITHUB_DISPATCH_TOKEN"] },
   async (event) => {
-    const token = process.env.GITHUB_DISPATCH_TOKEN;
+    const token = githubDispatchToken.value();
     const eventType = decideDispatchEvent(
       event.data?.before?.data(),
       event.data?.after?.data(),
     );
     if (!eventType) return;
     if (!token) {
-      console.warn("GITHUB_DISPATCH_TOKEN not set — skipping dispatch");
+      console.warn("GITHUB_DISPATCH_TOKEN not configured — skipping dispatch");
       return;
     }
     try {
