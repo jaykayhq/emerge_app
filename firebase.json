@@ -82,6 +82,10 @@
     ],
     "rewrites": [
       {
+        "source": "/",
+        "destination": "/landing.html"
+      },
+      {
         "source": "/app-ads.txt",
         "destination": "/app-ads.txt"
       },
@@ -103,6 +107,24 @@
           {
             "key": "Cache-Control",
             "value": "public, max-age=86400"
+          }
+        ]
+      },
+      {
+        "source": "landing.css",
+        "headers": [
+          {
+            "key": "Cache-Control",
+            "value": "no-cache, no-store, must-revalidate"
+          }
+        ]
+      },
+      {
+        "source": "landing.js",
+        "headers": [
+          {
+            "key": "Cache-Control",
+            "value": "no-cache, no-store, must-revalidate"
           }
         ]
       },
