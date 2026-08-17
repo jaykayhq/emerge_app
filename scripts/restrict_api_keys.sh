@@ -25,8 +25,10 @@ RELEASE_SHA1="${RELEASE_SHA1:-}"
 ANDROID_PACKAGE="com.emerge.emerge_app"
 IOS_BUNDLE_ID="com.emerge.emergeApp"
 # Keep in sync with the live web-key restriction (see session-memory-2026-08-14):
-# production site, localhost dev, and hosting preview channels.
-WEB_REFERRERS="https://tradeflash-l2966.web.app/*,https://emerge-404.web.app/*,http://localhost/*,http://localhost:*/*,https://localhost:*/*,https://tradeflash-l2966-*.web.app/*"
+# production site, localhost dev, hosting preview channels, and the IDX
+# cloudworkstations.dev workspace (added 2026-08-17 after the 403 referer
+# block broke sign-in in the IDX web preview).
+WEB_REFERRERS="https://tradeflash-l2966.web.app/*,https://emerge-404.web.app/*,http://localhost/*,http://localhost:*/*,https://localhost:*/*,https://tradeflash-l2966-*.web.app/*,https://*.cloudworkstations.dev/*"
 
 # Firebase services the app actually calls (for the optional api-targets).
 API_TARGETS=(

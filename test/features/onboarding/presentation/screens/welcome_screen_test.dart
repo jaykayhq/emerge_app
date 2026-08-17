@@ -103,6 +103,23 @@ void main() {
     expect(find.text('Forge Your Identity. Build Your Habits.'), findsOneWidget);
   });
 
+  testWidgets('does not overflow on short viewports (IDX preview pane)',
+      (tester) async {
+    // Regression: the fixed-height Column (title + CTA + Google button +
+    // legal links) overflowed by ~195px in the short IDX web preview pane,
+    // throwing a RenderFlex overflow. The screen must lay out without
+    // overflow at a typical short preview height.
+    tester.view.physicalSize = const Size(400, 360);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.reset);
+
+    await tester.pumpWidget(_buildTest());
+    await tester.pumpAndSettle();
+
+    expect(tester.takeException(), isNull,
+        reason: 'WelcomeScreen overflowed on a short viewport');
+  });
+
   testWidgets('get started button renders and is tappable', (tester) async {
     await tester.pumpWidget(_buildTest());
     await tester.pumpAndSettle();
