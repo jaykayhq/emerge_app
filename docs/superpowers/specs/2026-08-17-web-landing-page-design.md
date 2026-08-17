@@ -53,9 +53,9 @@ Result:
 |---|---|
 | `/` | static `index.html` — the landing page |
 | `/signup`, `/login`, `/welcome`, `/timeline`, `/splash`, deep links (`/blueprint/:id`, `/creators/:id`, `/verify-email`, …) | rewrite → `app.html` (Flutter entry, behaves exactly as the old `index.html`) |
-| `/landing.html` | landing page directly (harmless duplicate) |
+| `/landing.html` | with `cleanUrls: true` this redirects to `/landing` (which rewrites into the app shell) — `/` is the canonical landing URL |
 
-Relative asset resolution in the Flutter entry is unaffected: `flutter_bootstrap.js`, `main.dart.js`, `assets/`, and the `<base href="/">` all resolve from the site root regardless of the file's name or the URL path. The existing catch-all `no-cache` headers apply to `app.html`; landing assets (`landing.css`, `landing.js`) keep explicit `no-cache` rules so the `**/*.@(js|css|…)` immutable rule never pins stale versions.
+Relative asset resolution in the Flutter entry is unaffected: `flutter_bootstrap.js`, `main.dart.js`, `assets/`, and the `<base href="/">` all resolve from the site root regardless of the file's name or the URL path. The existing catch-all `no-cache` headers apply to `app.html`; the landing assets copied by the script are `styles.css` and `script.js`, and they keep explicit `no-cache` rules placed **after** the `**/*.@(js|css|…)` immutable glob (the literal source wins by specificity in production; the ordering keeps the hosting emulator resolving the same way — verified empirically). Redeploys therefore never pin stale landing styles.
 
 The router's existing `decideRedirect` logic continues to drive app entry: signed-in users who enter via the landing CTAs are sent to `/timeline`; signed-out first-timers get the existing welcome flow. No Dart changes.
 

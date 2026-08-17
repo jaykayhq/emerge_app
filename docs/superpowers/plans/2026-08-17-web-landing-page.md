@@ -1238,11 +1238,11 @@ In the `hosting` block, replace the current `rewrites` array (which starts with 
 
 - [ ] **Step 2: Add no-cache headers for the landing assets**
 
-The existing `**/*.@(js|css|...)` rule hands out `Cache-Control: public, max-age=31536000, immutable`. Landing assets are NOT fingerprinted, so a redeploy would serve stale CSS/JS for a year. Add these two rules **above** that catch-all header rule (most-specific match wins, but keep intent visible):
+The existing `**/*.@(js|css|...)` rule hands out `Cache-Control: public, max-age=31536000, immutable`. Landing assets are NOT fingerprinted, so a redeploy would serve stale CSS/JS for a year. Add these two rules **above** that catch-all header rule (most-specific match wins, but keep intent visible). **The asset names are `styles.css` / `script.js`** (what `build_landing.sh` copies) — NOT `landing.css` / `landing.js`:
 
 ```json
       {
-        "source": "landing.css",
+        "source": "styles.css",
         "headers": [
           {
             "key": "Cache-Control",
@@ -1251,7 +1251,7 @@ The existing `**/*.@(js|css|...)` rule hands out `Cache-Control: public, max-age
         ]
       },
       {
-        "source": "landing.js",
+        "source": "script.js",
         "headers": [
           {
             "key": "Cache-Control",
@@ -1261,7 +1261,7 @@ The existing `**/*.@(js|css|...)` rule hands out `Cache-Control: public, max-age
       },
 ```
 
-Note: `landing.css` / `landing.js` literal sources beat the `**/*.@(js|css|...)` glob (most-specific match wins), so the never-expiring cache rule cannot apply to them.
+Literal sources beat the `**/*.@(js|css|...)` glob in production (most-specific match wins). Place these two rules AFTER that glob in the `headers` array — verified empirically that the emulator resolves to `no-cache` then, and production's specificity rules agree.
 
 - [ ] **Step 3: Validate the JSON**
 
