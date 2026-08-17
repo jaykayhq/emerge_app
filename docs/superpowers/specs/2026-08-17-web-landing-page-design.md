@@ -33,15 +33,17 @@ web-landing/
 
 No frameworks, no npm, no external JS. The only external resource is the Spline Sans font via Google Fonts CDN, with a system font fallback stack if the CDN fails.
 
-### 2.2 Hosting rewrite
+### 2.2 Hosting layout (static files beat rewrites — the corrected design)
 
-`firebase.json` → `hosting.rewrites` gains an exact-match `/` rule **before** the existing catch-all:
+Firebase Hosting serves a matching **static file before any rewrite**, and Flutter always emits `index.html` — so a `/` → `landing.html` rewrite could never fire. Instead:
+
+1. `scripts/build_landing.sh` renames the Flutter entry `build/web/index.html` → `build/web/app.html` and stages `web-landing/landing.html` as the new `build/web/index.html`.
+2. `firebase.json` catch-all rewrite targets the renamed entry:
 
 ```json
 "rewrites": [
-  { "source": "/", "destination": "/landing.html" },
   { "source": "/app-ads.txt", "destination": "/app-ads.txt" },
-  { "source": "**", "destination": "/index.html" }
+  { "source": "**", "destination": "/app.html" }
 ]
 ```
 
@@ -49,18 +51,22 @@ Result:
 
 | URL | Served |
 |---|---|
-| `/` | `landing.html` (marketing page) |
-| `/signup`, `/login`, `/welcome`, `/timeline`, `/splash`, deep links (`/blueprint/:id`, `/creators/:id`, `/verify-email`, …) | Flutter `index.html` (unchanged) |
+| `/` | static `index.html` — the landing page |
+| `/signup`, `/login`, `/welcome`, `/timeline`, `/splash`, deep links (`/blueprint/:id`, `/creators/:id`, `/verify-email`, …) | rewrite → `app.html` (Flutter entry, behaves exactly as the old `index.html`) |
+| `/landing.html` | landing page directly (harmless duplicate) |
 
-The router's existing `decideRedirect` logic continues to gate app entry: signed-in users who enter via the landing CTAs are sent to `/timeline`; signed-out first-timers get the existing welcome flow. No Dart changes.
+Relative asset resolution in the Flutter entry is unaffected: `flutter_bootstrap.js`, `main.dart.js`, `assets/`, and the `<base href="/">` all resolve from the site root regardless of the file's name or the URL path. The existing catch-all `no-cache` headers apply to `app.html`; landing assets (`landing.css`, `landing.js`) keep explicit `no-cache` rules so the `**/*.@(js|css|…)` immutable rule never pins stale versions.
+
+The router's existing `decideRedirect` logic continues to drive app entry: signed-in users who enter via the landing CTAs are sent to `/timeline`; signed-out first-timers get the existing welcome flow. No Dart changes.
 
 ### 2.3 Deploy pipeline
 
 New `scripts/build_landing.sh`:
 
 - `mkdir -p build/web`
-- Copy `web-landing/*` → `build/web/` (landing.html, styles.css, script.js)
-- Must run **after** `flutter build web --release` (which wipes `build/web`) and **before** `firebase deploy`.
+- `mv build/web/index.html build/web/app.html` (preserve the Flutter entry)
+- Copy `web-landing/landing.html` → `build/web/index.html` + `styles.css`, `script.js`
+- Must run **after** `flutter build web --release` (which wipes `build/web`) and **before** `firebase deploy`; errors out if `index.html` is missing (i.e. Flutter wasn't built first).
 
 CI: add two steps to both `.github/workflows/firebase-hosting-merge.yml` and `firebase-hosting-pull-request.yml`, immediately after the existing `flutter build web --release` step:
 
@@ -181,8 +187,7 @@ Runs in CI after `build_landing.sh`, and locally: `node scripts/test_landing.mjs
 
 ### 5.2 Hosting-config check
 
-- Local: `firebase emulators:exec --only hosting` then curl — `/` returns `landing.html`, `/timeline` and `/signup` still serve the Flutter `index.html` (grep `flutter_bootstrap`).
-- Guardrail: the `/` rewrite must sit **before** the `**` catch-all in `firebase.json` (Firebase evaluates more-specific sources first, but ordering keeps intent explicit).
+- Local: `firebase emulators:exec --only hosting` then curl — `/` returns the landing (`index.html`, grep `Who do you wish to become?` and assert it does NOT contain `flutter_bootstrap`); `/timeline` and `/signup` serve `app.html` (grep `flutter_bootstrap`). Verified against a stubbed Flutter `index.html`; the same stub becomes `app.html` after the rename.
 - Landing registers no service worker; the app's existing no-op service worker unregisters itself, so no stale-cache surprise.
 
 ### 5.3 Out of scope (explicitly deferred)
@@ -199,7 +204,8 @@ Runs in CI after `build_landing.sh`, and locally: `node scripts/test_landing.mjs
 
 | Risk | Mitigation |
 |---|---|
-| Rewrite catches app routes | `/` is exact-match; everything else keeps `**` → Flutter |
+| Static file at `/` shadows the app | Landing page **is** the static `index.html`; every other path rewrites to `app.html` — no shadowing possible |
+| Flutter entry must survive | renamed `index.html` → `app.html`, catch-all `**` → `/app.html`; `build_landing.sh` errors if Flutter wasn't built |
 | Custom cursor blocks UI | dot/ring are `pointer-events: none`, always |
 | Font flash/CDN failure | system fallback stack; page usable without font |
 | `flutter build` wipes landing | copy runs **after** build in CI and deploy script |

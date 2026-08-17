@@ -1153,6 +1153,8 @@ git commit -m "feat(landing): custom cursor + scripted timeline phone mockup"
 
 ### Task 5: Copy script for the deploy pipeline
 
+> **Rev 2 (implemented):** Firebase Hosting serves static files over rewrites, so `flutter build web`'s `index.html` would shadow any `/` rewrite. The script instead renames the Flutter entry to `app.html` and stages the landing as `index.html`; the `**` catch-all then rewrites to `/app.html` (see Task 6).
+
 **Files:**
 - Create: `scripts/build_landing.sh`
 
@@ -1161,27 +1163,37 @@ git commit -m "feat(landing): custom cursor + scripted timeline phone mockup"
 ```bash
 #!/usr/bin/env bash
 #
-# Copy the static landing page (web-landing/) into the Flutter web build
-# (build/web/). Runs AFTER `flutter build web --release` (which wipes
-# build/web) and BEFORE `firebase deploy`, so the landing is never clobbered.
+# Prepare the Flutter web build (build/web/) so the STATIC LANDING PAGE is
+# served at the site root. Runs AFTER `flutter build web --release` (which
+# wipes build/web) and BEFORE `firebase deploy`.
+#
+# Why this rename: Firebase Hosting serves static files over rewrites, and
+# Flutter always emits index.html — so `/` can only show the landing if the
+# landing IS index.html. The app entry moves to app.html and firebase.json
+# catches every other path with a rewrite to /app.html (the app's own
+# router + decideRedirect handle auth from there, unchanged).
 #
 # Usage: bash scripts/build_landing.sh [dest_dir]   (default: build/web)
 set -euo pipefail
 
 DEST="${1:-build/web}"
 
+if [[ ! -f "$DEST/index.html" ]]; then
+  echo "!! $DEST/index.html not found — run `flutter build web` first." >&2
+  exit 1
+fi
 if [[ ! -f web-landing/landing.html ]]; then
   echo "!! web-landing/landing.html not found — run from the repo root." >&2
   exit 1
 fi
 
-mkdir -p "$DEST"
-cp web-landing/landing.html "$DEST/landing.html"
+mv -f "$DEST/index.html" "$DEST/app.html"
+cp web-landing/landing.html "$DEST/index.html"
 cp web-landing/styles.css "$DEST/styles.css"
 cp web-landing/script.js "$DEST/script.js"
 
-echo "Landing page copied to $DEST:"
-ls -la "$DEST"/landing.html "$DEST"/styles.css "$DEST"/script.js
+echo "Landing page staged at $DEST/index.html; Flutter entry moved to $DEST/app.html:"
+ls -la "$DEST"/index.html "$DEST"/app.html "$DEST"/styles.css "$DEST"/script.js
 ```
 
 - [ ] **Step 2: Make executable and verify**
@@ -1200,31 +1212,29 @@ git commit -m "build(web): script to copy the landing page into build/web"
 
 ### Task 6: Hosting rewrite + cache headers in firebase.json
 
+> **Rev 2:** the catch-all now targets `app.html` (the renamed Flutter entry) — no `/` rewrite is needed because the landing page is the static `index.html`.
+
 **Files:**
 - Modify: `firebase.json` (hosting → rewrites + headers)
 
-- [ ] **Step 1: Edit `firebase.json` — add the `/` rewrite**
+- [ ] **Step 1: Edit `firebase.json` — point the catch-all at `app.html`**
 
-In the `hosting` block, replace the current `rewrites` array (which starts with `app-ads.txt` then `**`):
+In the `hosting` block, replace the current `rewrites` array (which starts with `app-ads.txt` then `**` → `/index.html`) with:
 
 ```json
     "rewrites": [
-      {
-        "source": "/",
-        "destination": "/landing.html"
-      },
       {
         "source": "/app-ads.txt",
         "destination": "/app-ads.txt"
       },
       {
         "source": "**",
-        "destination": "/index.html"
+        "destination": "/app.html"
       }
     ],
 ```
 
-**Ordering contract:** `/` and `/app-ads.txt` MUST remain before the `**` catch-all. Firebase picks the most-specific match, but explicit order documents intent for review.
+`/` is served by the static `index.html` (the landing) — no rewrite required. Every non-file path (`/signup`, `/timeline`, deep links) falls through to `app.html`.
 
 - [ ] **Step 2: Add no-cache headers for the landing assets**
 
@@ -1293,7 +1303,9 @@ firebase emulators:exec --only hosting '
 '
 ```
 
-Expected final line: `ALL_REWRITES_OK` (and `LANDING_OK` / `APP_SIGNUP_OK` / `APP_TIMELINE_OK`). If `flutter_bootstrap` is missing for app routes, you didn't build web (Task 7 Step 1).
+Expected final line: `ALL_REWRITES_OK` (and `LANDING_OK` / `APP_SIGNUP_OK` / `APP_TIMELINE_OK`).
+
+**Rev 2 note:** `build_landing.sh` first renames the Flutter `index.html` → `app.html`, so the app routes must be grepped on the served response (`flutter_bootstrap` — the manifest string the real entry contains), and `/` must return the landing copy and NOT contain `flutter_bootstrap`. This run is valid against a stubbed Flutter `index.html`; run it again after a real `flutter build web --release` for full fidelity. If `flutter_bootstrap` is missing for app routes, you didn't build web (Task 7 Step 1) or the rename failed (Task 5).
 
 - [ ] **Step 3: No commit (verification only)**
 
