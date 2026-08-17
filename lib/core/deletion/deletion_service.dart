@@ -77,7 +77,7 @@ class DeletionService {
         durationMs: sw.elapsedMilliseconds,
       );
       return const Right(unit);
-    } catch (e, _) {
+    } catch (e) {
       _audit.log(
         op: 'deleteHabit',
         target: 'habit',

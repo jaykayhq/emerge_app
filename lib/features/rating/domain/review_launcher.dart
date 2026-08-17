@@ -27,7 +27,7 @@ class DefaultReviewLauncher implements ReviewLauncher {
       }
       // Fall back to the store page when the native prompt is unavailable
       // (simulator, rate-limited, etc.).
-      return launchUrl(Uri.parse(playStoreReviewUrl));
+      return await launchUrl(Uri.parse(playStoreReviewUrl));
     } catch (_) {
       return launchUrl(Uri.parse(playStoreReviewUrl));
     }

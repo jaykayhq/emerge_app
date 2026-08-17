@@ -108,7 +108,7 @@ class DriftHabitRepository implements HabitRepository {
       );
 
       return const Right(unit);
-    } catch (e, _) {
+    } catch (e) {
       return Left(ServerFailure(e.toString()));
     }
   }
@@ -150,7 +150,7 @@ class DriftHabitRepository implements HabitRepository {
       );
 
       return const Right(unit);
-    } catch (e, _) {
+    } catch (e) {
       return Left(ServerFailure(e.toString()));
     }
   }
@@ -166,7 +166,7 @@ class DriftHabitRepository implements HabitRepository {
         userId: existing.userId,
         habitId: habitId,
       );
-    } catch (e, _) {
+    } catch (e) {
       return Left(ServerFailure(e.toString()));
     }
   }
@@ -597,7 +597,7 @@ class DriftHabitRepository implements HabitRepository {
       ));
 
       return const Right(true);
-    } catch (e, _) {
+    } catch (e) {
       return Left(ServerFailure(e.toString()));
     }
   }
@@ -738,7 +738,7 @@ class DriftHabitRepository implements HabitRepository {
       );
 
       return const Right(unit);
-    } catch (e, _) {
+    } catch (e) {
       return Left(ServerFailure(e.toString()));
     }
   }
@@ -830,7 +830,7 @@ class DriftHabitRepository implements HabitRepository {
       );
 
       return Right(created);
-    } catch (e, _) {
+    } catch (e) {
       return Left(ServerFailure(e.toString()));
     }
   }

@@ -28,7 +28,7 @@ class CloudFunctionDeleteBackend implements DeleteAccountBackend {
       return Left(ServerFailure(e.message ?? 'Delete failed'));
     } on PlatformException catch (e) {
       return Left(ServerFailure(e.message ?? 'Delete failed'));
-    } catch (e, _) {
+    } catch (e) {
       return Left(ServerFailure(e.toString()));
     }
   }
