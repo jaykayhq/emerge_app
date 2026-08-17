@@ -6,7 +6,11 @@
 #
 # The app writes users/{uid}.verificationRequestedAt (verify) and
 # email_requests/{id} docs of type password_reset; the 5-minute schedule
-# picks them up, so delivery is ≤5 minutes after the request.
+# picks them up, so delivery is ≤5 minutes after the request. Both tasks
+# are command-driven: verify sends at most ONE email per request (only when
+# verificationRequestedAt is newer than verificationEmailSentAt) and reset
+# sends once per request doc (sentAt marker) — so the schedule never
+# re-sends or spams.
 #
 # The repository_dispatch webhook trigger was removed with the
 # github_dispatch.ts bridge (deleted 2026-08-16).

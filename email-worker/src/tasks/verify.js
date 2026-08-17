@@ -2,21 +2,33 @@ import { FieldValue } from "firebase-admin/firestore";
 
 /**
  * Verification email task — replaces Firebase Auth's default verification
- * email. Triggered near-real-time by the GitHub dispatch webhook (and the
- * 5-minute cron as fallback).
+ * email. Runs on the 5-minute cron, but is strictly command-driven: it sends
+ * at most ONE email per request.
  *
- * For every user who requested verification (`users/{uid}.verificationRequestedAt`
- * set by the app after signup) and has not been emailed within the cooldown:
+ * The app writes `users/{uid}.verificationRequestedAt` (a fresh server
+ * timestamp) every time the user asks for a verification link — at signup
+ * and on every "Resend" click. The task compares that request timestamp
+ * against the last successful send (`verificationEmailSentAt`):
+ *
+ *   - no prior send            → the pending signup request is emailed once
+ *   - request NEWER than send  → a fresh resend command, emailed once
+ *   - request OLDER than send  → already answered, NO re-send
+ *
+ * This is what stops the cron from spamming: `verificationRequestedAt` is a
+ * sticky marker (it never clears), so a cooldown-based gate would re-email
+ * every unverified user on every 5-minute run forever. The timestamp
+ * comparison consumes each command exactly once.
+ *
+ * For each fresh request:
  *   1. Generate the click-to-verify link via the Admin SDK with
  *      handleCodeInApp:true and a custom URL (VERIFICATION_URL) — the link
  *      points straight back at the app's /verify-email route with the oobCode,
  *      so the user returns to the app after clicking (no Firebase hosted page).
  *   2. Send a branded SMTP email with the link.
- *   3. Mark verificationEmailSentAt (cooldown) and — only on the first send —
- *      emailVerificationSentAt (the 7-day grace-clock anchor used by the
- *      grace task; the client no longer writes it).
+ *   3. Mark verificationEmailSentAt (answers the command) and — only on the
+ *      first send — emailVerificationSentAt (the 7-day grace-clock anchor
+ *      used by the grace task; the client no longer writes it).
  */
-export const VERIFY_COOLDOWN_MS = 60 * 1000; // 60s between sends
 export const VERIFY_PAGE_SIZE = 100;
 export const VERIFY_MAX_PAGES = 100;
 
@@ -58,7 +70,6 @@ function buildVerificationHtml(url) {
 }
 
 export async function runVerifyTask(db, auth, { send, dryRun, now = Date.now() }) {
-  const cooldownCutoff = new Date(now - VERIFY_COOLDOWN_MS);
   let lastDoc;
   let sent = 0;
 
@@ -84,10 +95,17 @@ export async function runVerifyTask(db, auth, { send, dryRun, now = Date.now() }
         console.warn(`[verify] skipping ${doc.id}: no valid email`);
         continue;
       }
-      const lastSentAt = data.verificationEmailSentAt;
-      const lastSentMillis = toMillis(lastSentAt);
-      if (lastSentMillis !== 0 && lastSentMillis > cooldownCutoff.getTime()) {
-        continue; // within cooldown — no spam on repeated requests
+      const requestedAt = data.verificationRequestedAt;
+      const requestedMillis = toMillis(requestedAt);
+      if (requestedMillis === 0) {
+        continue; // no request marker
+      }
+      const lastSentMillis = toMillis(data.verificationEmailSentAt);
+      if (lastSentMillis !== 0 && requestedMillis <= lastSentMillis) {
+        // This command was already answered — the sticky request marker is
+        // older than the last send. Do NOT re-send; only a fresh request
+        // (newer timestamp) triggers another email.
+        continue;
       }
       if (dryRun) {
         console.log(`[verify][dry-run] would email ${email} (${doc.id})`);

@@ -14,8 +14,8 @@ Tasks:
 | Task | What it does | Trigger / Idempotency marker |
 |------|--------------|------------------------------|
 | `welcome` | One branded welcome email per account, created in the last 7 days (lookback prevents a retroactive blast to pre-existing accounts) | `users/{uid}.welcomeEmailSentAt` |
-| `verify` | Branded verification email with a link back to the app's `/verify-email` route (oobCode applied in-app — no Firebase hosted page). Cooldown 60s. | App writes `users/{uid}.verificationRequestedAt`; worker marks `verificationEmailSentAt` (+ `emailVerificationSentAt` grace anchor on first send only) |
-| `reset` | Branded password-reset email with a link back to the app's `/reset-password` route. Cooldown 60s per email. | App writes `email_requests/{id}` `{type: 'password_reset', email, requestedAt}`; worker marks `sentAt` |
+| `verify` | Branded verification email with a link back to the app's `/verify-email` route (oobCode applied in-app — no Firebase hosted page). **Command-driven: at most ONE email per request.** Sends only when `verificationRequestedAt` is newer than the last send (`verificationEmailSentAt`) — a fresh request from signup or a "Resend" click. An already-answered request is never re-emailed, so the 5-minute cron can't spam. | App writes `users/{uid}.verificationRequestedAt`; worker marks `verificationEmailSentAt` (+ `emailVerificationSentAt` grace anchor on first send only) |
+| `reset` | Branded password-reset email with a link back to the app's `/reset-password` route. Command-driven: one email per request doc (idempotent `sentAt` marker), with a 60s per-email cooldown to absorb duplicate submissions. | App writes `email_requests/{id}` `{type: 'password_reset', email, requestedAt}`; worker marks `sentAt` |
 | `drip` | Re-engagement nudge: signed up ≥ 3 days ago, still active (lastActivity within 7 days), not dripped | `users/{uid}.reengagementEmailSentAt` |
 | `grace` | Verification grace lock: unverified accounts 7 days after `emailVerificationSentAt` get `users/{uid}.emailLockedAt` (the app router then blocks non-auth surfaces); verified accounts get stale locks cleared. The check uses Firebase Auth's authoritative `emailVerified` flag | state on `users/{uid}.emailLockedAt` |
 
@@ -64,3 +64,22 @@ Required repo secrets:
 ```bash
 npm test   # node --test — no extra test deps
 ```
+
+### E2E: prove the verification + reset links actually work
+
+`scripts/test_email_links.mjs` drives the exact Admin SDK calls the worker
+uses (link generation with `handleCodeInApp: true` + the app URLs) against the
+**Auth emulator**, then redeems the oobCodes the way the Flutter app does:
+
+- verification oobCode → `emailVerified` flips to `true`
+- reset oobCode → old password rejected, sign-in with the new password succeeds
+
+```bash
+firebase emulators:start --only auth &
+FIREBASE_AUTH_EMULATOR_HOST=localhost:9099 \
+  FIREBASE_SERVICE_ACCOUNT=../scripts/service-account-key.json \
+  node scripts/test_email_links.mjs
+```
+
+The script refuses to run without `FIREBASE_AUTH_EMULATOR_HOST` — it must
+never touch production.
