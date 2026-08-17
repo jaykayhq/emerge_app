@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Emerge — Who do you wish to become?</title>
+  <meta name="description" content="Emerge is an identity-first habit engine. Forge your identity, build your habits, and watch your world grow. Get it on Google Play or use it in your browser.">
+  <meta name="theme-color" content="#0A0A1A">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="Emerge — Identity-First Habit Engine">
+  <meta property="og:description" content="Who do you wish to become? Forge your identity. Build your habits.">
+  <meta property="og:image" content="icons/Icon-512.png">
+  <link rel="icon" type="image/png" href="favicon.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <!-- App's font: Spline Sans (bundled in the app, served from CDN for the static page). -->
+  <link href="https://fonts.googleapis.com/css2?family=Spline+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+
+  <!-- Custom cursor layers (hidden until script.js activates them on mouse move). -->
+  <div class="cursor-dot" aria-hidden="true"></div>
+  <div class="cursor-ring" aria-hidden="true"></div>
+
+  <!-- Drifting CSS star field. -->
+  <div class="stars" aria-hidden="true"></div>
+
+  <header class="nav">
+    <a class="brand" href="#top">EMERGE</a>
+    <nav class="nav-links" aria-label="On this page">
+      <a href="#features">Features</a>
+      <a href="#how-it-works">How it works</a>
+      <a href="#faq">FAQ</a>
+      <a href="#access">Get the app</a>
+    </nav>
+    <a class="nav-login" href="/login">Log in</a>
+  </header>
+
+  <main id="main">
+    <!-- ============ HERO ============ -->
+    <section class="hero" id="top">
+      <div class="hero-copy">
+        <p class="eyebrow">An identity-first habit engine</p>
+        <h1>Who do you wish to become?</h1>
+        <p class="sub">Forge Your Identity. Build Your Habits.</p>
+        <div class="hero-ctas">
+          <a class="btn btn-primary" href="https://play.google.com/store/apps/details?id=com.emerge.emerge_app">
+            Get it on Google Play
+          </a>
+          <a class="btn btn-ghost" href="/signup">Continue in Browser →</a>
+        </div>
+      </div>
+
+      <!-- Phone mockup: script.js loops a scripted "timeline in action". -->
+      <div class="phone" id="phone-mockup" aria-hidden="true">
+        <div class="phone-notch" aria-hidden="true"></div>
+        <div class="phone-screen">
+          <div class="screen-top">
+            <span class="screen-day">Day 37</span>
+            <span class="screen-streak">🔥 37</span>
+          </div>
+
+          <div class="habit-list">
+            <div class="habit-card">
+              <span class="h-icon" aria-hidden="true">🏃</span>
+              <div class="h-body">
+                <span class="h-name">Morning run</span>
+                <div class="h-bar"><span class="h-fill"></span></div>
+              </div>
+              <span class="h-check" aria-hidden="true"></span>
+            </div>
+            <div class="habit-card">
+              <span class="h-icon" aria-hidden="true">📖</span>
+              <div class="h-body">
+                <span class="h-name">Read 20 pages</span>
+                <div class="h-bar"><span class="h-fill"></span></div>
+              </div>
+              <span class="h-check" aria-hidden="true"></span>
+            </div>
+            <div class="habit-card">
+              <span class="h-icon" aria-hidden="true">✍️</span>
+              <div class="h-body">
+                <span class="h-name">Deep work</span>
+                <div class="h-bar"><span class="h-fill"></span></div>
+              </div>
+              <span class="h-check" aria-hidden="true"></span>
+            </div>
+            <div class="habit-card">
+              <span class="h-icon" aria-hidden="true">🧘</span>
+              <div class="h-body">
+                <span class="h-name">Evening reflection</span>
+                <div class="h-bar"><span class="h-fill"></span></div>
+              </div>
+              <span class="h-check" aria-hidden="true"></span>
+            </div>
+          </div>
+
+          <div class="xp-row">
+            <span>Explorer · Lv 12</span>
+            <div class="xp-bar"><span class="xp-fill"></span></div>
+            <span class="xp-num">960 / 1,400 XP</span>
+          </div>
+
+          <div class="mini-world">
+            <span class="world-dot" aria-hidden="true"></span>
+            Your world
+          </div>
+
+          <div class="level-toast" aria-hidden="true">LEVEL UP — EXPLORER</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ WHAT IS EMERGE ========= -->
+    <section class="what glass">
+      <p class="eyebrow">The idea</p>
+      <h2>Not a to-do list. A becoming.</h2>
+      <p>
+        Emerge is an <strong>identity-first habit engine</strong> — you choose
+        who you want to become, and the app turns that into habits, streaks,
+        and a world that literally grows with you. It doesn't just track what
+        you do; it shapes who you are.
+      </p>
+    </section>
+
+    <!-- ============ FEATURES ============ -->
+    <section id="features">
+      <h2>Everything you need to become</h2>
+      <div class="card-grid">
+        <article class="card glass">
+          <span class="card-icon" aria-hidden="true">✦</span>
+          <h3>Identity Studio</h3>
+          <p>Pick your archetype and shape your avatar around who you're becoming, not just what you're doing.</p>
+        </article>
+        <article class="card glass">
+          <span class="card-icon" aria-hidden="true">◎</span>
+          <h3>Habit engine</h3>
+          <p>Daily habits with streaks, XP, and a timeline command center built for one-tap completions.</p>
+        </article>
+        <article class="card glass">
+          <span class="card-icon" aria-hidden="true">◈</span>
+          <h3>World Map</h3>
+          <p>A living world that grows as your attributes level up — Strength, Vitality, Focus, Creativity, Spirit, and Intellect.</p>
+        </article>
+        <article class="card glass">
+          <span class="card-icon" aria-hidden="true">∞</span>
+          <h3>Timeline</h3>
+          <p>Your daily command center: see everything at a glance, complete in seconds, stay in flow.</p>
+        </article>
+        <article class="card glass">
+          <span class="card-icon" aria-hidden="true">▲</span>
+          <h3>Tribes & challenges</h3>
+          <p>Team up with your crew, take on challenges, and climb leaderboards together.</p>
+        </article>
+        <article class="card glass">
+          <span class="card-icon" aria-hidden="true">◒</span>
+          <h3>AI Narrator</h3>
+          <p>An ambient coach that recaps your day and nudges you forward — never nagging, always present.</p>
+        </article>
+      </div>
+    </section>
+
+    <!-- ============ HOW IT WORKS ============ -->
+    <section id="how-it-works">
+      <h2>How it works</h2>
+      <div class="steps">
+        <div class="step glass">
+          <span class="step-num">1</span>
+          <h3>Forge your identity</h3>
+          <p>Take the archetype first step and define who you're becoming.</p>
+        </div>
+        <div class="step glass">
+          <span class="step-num">2</span>
+          <h3>Build the habits</h3>
+          <p>Attach 2–3 daily habits with time slots and reminders that fit your life.</p>
+        </div>
+        <div class="step glass">
+          <span class="step-num">3</span>
+          <h3>Watch your world grow</h3>
+          <p>Earn XP, level your attributes, and grow your world — and your crew.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ ACCESS ============ -->
+    <section id="access">
+      <h2>Emerge on every device</h2>
+      <div class="access-grid">
+        <article class="access-card glass">
+          <h3>📱 Android</h3>
+          <p>Carry your journey everywhere. Take habits, streaks, and your world with you.</p>
+          <a class="btn btn-primary" href="https://play.google.com/store/apps/details?id=com.emerge.emerge_app">
+            Get it on Google Play
+          </a>
+        </article>
+        <article class="access-card glass">
+          <h3>🌐 Browser</h3>
+          <p>Open it in any browser — no install. Same journey, same account, anywhere.</p>
+          <a class="btn btn-ghost" href="/signup">Continue in Browser</a>
+        </article>
+      </div>
+      <p class="access-note">Same account on both. Your progress syncs automatically.</p>
+    </section>
+
+    <!-- ============ FAQ ============ -->
+    <section id="faq">
+      <h2>Frequently asked questions</h2>
+      <div class="faq-list">
+        <details>
+          <summary>What is Emerge?</summary>
+          <p>An identity-first habit engine: you don't just track habits — you become who you're building toward. Your world grows as your attributes level up, making progress visible and real.</p>
+        </details>
+        <details>
+          <summary>Is it free?</summary>
+          <p>Free to start. An optional subscription unlocks additional Premium features — see the in-app subscription screen for the current details.</p>
+        </details>
+        <details>
+          <summary>Where can I use it?</summary>
+          <p>On Android via Google Play, and in any browser at this site. Your progress syncs across devices automatically.</p>
+        </details>
+        <details>
+          <summary>Do I need an account?</summary>
+          <p>Yes — a login keeps your data and world synced across devices. Sign in with Google or email in under a minute.</p>
+        </details>
+        <details>
+          <summary>What are archetypes?</summary>
+          <p>Six identity styles — Explorer, Athlete, Scholar, Creator, Stoic, and Zealot. Each one themes your world and guides the habit choices that fit who you're becoming.</p>
+        </details>
+        <details>
+          <summary>What about my privacy?</summary>
+          <p>Your habits and identity data are yours. For details, see our Privacy Policy in the footer.</p>
+        </details>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="footer-brand">
+      <span class="brand">EMERGE</span>
+      <p>Forge Your Identity. Build Your Habits.</p>
+    </div>
+    <div class="footer-links">
+      <a href="https://docs.google.com/document/d/e/2PACX-1vQX-5ydyuD3ZYp_-8b_2rVyyuKW9zF2NaMm1CBxxwE5s1LXASy1P7Plxf8axNGc_TFJw-OnZrULmjgP/pub">Terms of Service</a>
+      <a href="https://docs.google.com/document/d/e/2PACX-1vRt5cCpFS7PLmh_nwhxq3ec9YtRWQZk7mrOqbVN7aThrclpjgYL3q5r-nAqlftQJVkOSWzxnG_FDfjo/pub">Privacy Policy</a>
+    </div>
+    <p class="footer-copy">© 2026 Emerge</p>
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html>
