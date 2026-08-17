@@ -82,16 +82,12 @@
     ],
     "rewrites": [
       {
-        "source": "/",
-        "destination": "/landing.html"
-      },
-      {
         "source": "/app-ads.txt",
         "destination": "/app-ads.txt"
       },
       {
         "source": "**",
-        "destination": "/index.html"
+        "destination": "/app.html"
       }
     ],
     "cleanUrls": true,
@@ -207,7 +203,7 @@
         ]
       },
       {
-        "source": "index.html",
+        "source": "app.html",
         "headers": [
           {
             "key": "Cache-Control",
