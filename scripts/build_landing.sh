@@ -16,7 +16,16 @@ set -euo pipefail
 DEST="${1:-build/web}"
 
 if [[ ! -f "$DEST/index.html" ]]; then
-  echo "!! $DEST/index.html not found — run `flutter build web` first." >&2
+  echo "!! $DEST/index.html not found — run 'flutter build web' first." >&2
+  exit 1
+fi
+# Double-run guard: on a staged build index.html IS the landing (it contains
+# the hero headline), and re-running would clobber app.html with it.
+# NOTE: never use backticks inside these echo strings — command substitution
+# would execute 'flutter build web' as a subprocess.
+if grep -q "Who do you wish to become?" "$DEST/index.html" 2>/dev/null; then
+  echo "!! $DEST/index.html is already the landing page — run 'flutter build web'" >&2
+  echo "   again for a fresh Flutter entry (this script is not idempotent by design)." >&2
   exit 1
 fi
 if [[ ! -f web-landing/landing.html ]]; then
