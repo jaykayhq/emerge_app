@@ -1,3 +1,5 @@
+import 'package:emerge_app/core/theme/attribute_colors.dart';
+import 'package:emerge_app/features/habits/domain/entities/habit.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -27,6 +29,27 @@ void main() {
     expect(find.text('80%'), findsOneWidget);
     expect(find.text('ENTROPY'), findsOneWidget);
     expect(find.text('20%'), findsOneWidget);
+  });
+
+  testWidgets('VITALITY stat uses the canonical vitality color',
+      (tester) async {
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          worldHealthStreamProvider.overrideWith((_) => Stream.value(0.8)),
+          worldEntropyStreamProvider.overrideWith((_) => Stream.value(0.2)),
+        ],
+        child: const MaterialApp(
+          home: Scaffold(body: WorldStateHUD()),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    final percentText = tester.widget<Text>(find.text('80%'));
+    final glow = percentText.style?.shadows?.first;
+    expect(glow, isNotNull);
+    expect(glow!.color, attributeColor(HabitAttribute.vitality));
   });
 
   // ---------------------------------------------------------------------------

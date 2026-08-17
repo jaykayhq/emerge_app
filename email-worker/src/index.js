@@ -4,11 +4,12 @@ import { runWelcomeTask } from "./tasks/welcome.js";
 import { runDripTask } from "./tasks/drip.js";
 import { runGraceTask } from "./tasks/grace.js";
 import { runVerifyTask } from "./tasks/verify.js";
+import { runResetTask } from "./tasks/reset.js";
 
 /**
  * Emerge email worker — runs in GitHub Actions (see
  * .github/workflows/emails.yml). Usage:
- *   node src/index.js [--task welcome|drip|grace|verify|all] [--dry-run]
+ *   node src/index.js [--task welcome|drip|grace|verify|reset|all] [--dry-run]
  *   --task may be repeated: --task welcome --task verify
  *
  * Env:
@@ -17,6 +18,7 @@ import { runVerifyTask } from "./tasks/verify.js";
  *   SMTP_HOST/PORT/USER/PASS  SMTP credentials (sender.js)
  *   EMAIL_OVERRIDE_TO         optional: route every email to one inbox
  *   VERIFICATION_URL          app route the verify link points to
+ *   RESET_URL                 app route the reset link points to
  */
 const args = process.argv.slice(2);
 const dryRun = args.includes("--dry-run");
@@ -30,7 +32,7 @@ function parseTasks(args) {
   }
   const set = new Set(requested);
   if (set.has("all") || set.size === 0) {
-    return ["welcome", "verify", "drip", "grace"];
+    return ["welcome", "verify", "reset", "drip", "grace"];
   }
   return [...set];
 }
@@ -38,6 +40,7 @@ function parseTasks(args) {
 const TASKS = {
   welcome: (db, auth) => runWelcomeTask(db, { send: sendEmail, dryRun }),
   verify: (db, auth) => runVerifyTask(db, auth, { send: sendEmail, dryRun }),
+  reset: (db, auth) => runResetTask(db, auth, { send: sendEmail, dryRun }),
   drip: (db, auth) => runDripTask(db, { send: sendEmail, dryRun }),
   grace: (db, auth) => runGraceTask(db, auth, { dryRun }),
 };

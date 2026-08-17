@@ -65,6 +65,15 @@ class FakeAuthRepository implements AuthRepository {
   }
 
   @override
+  Future<Either<Failure, void>> resetPasswordWithCode({
+    required String oobCode,
+    required String newPassword,
+  }) async {
+    await Future.delayed(const Duration(milliseconds: 500));
+    return const Right(null);
+  }
+
+  @override
   Future<void> signOut() async {
     await Future.delayed(const Duration(milliseconds: 500));
     _currentUser = AuthUser.empty;

@@ -11,8 +11,9 @@ const clubMap: Record<string, string> = {
 
 /**
  * Recalculates tribe statistics for every tribe (official clubs + creator
- * tribes with explicit membership docs) from user_stats and global activities.
- * Uses streams to process large collections efficiently without memory overflow.
+ * tribes with explicit membership docs) from user_stats, contributor docs
+ * and global activities. Uses streams to process large collections
+ * efficiently without memory overflow.
  * Non-transactional by design: a failed run simply reruns at the next 3AM (spec §8).
  */
 export async function recalcTribesInternal(db: admin.firestore.Firestore): Promise<number> {
@@ -88,6 +89,15 @@ export async function recalcTribesInternal(db: admin.firestore.Firestore): Promi
   //     numbers — so the daily recalc reconciles to exactly the same value.
   const contributorXpByTribe = new Map<string, number>();
 
+  // 3c. tribeId -> habit/challenge completion counts from the contributors
+  //     subcollection. PRIMARY SOURCE for totalHabitsCompleted /
+  //     totalChallengesCompleted: the client increments these on every
+  //     completion AND decrements them on undo, so the sum is the exact
+  //     live count. Counting global_activities events instead is wrong —
+  //     the undo path cannot always delete those docs (e.g. after a fresh
+  //     install), leaving the tribe total inflated forever.
+  const contributorCountsByTribe = new Map<string, { habits: number, challenges: number }>();
+
   console.log("Aggregating XP from contributor records...");
   await new Promise((resolve, reject) => {
     db.collectionGroup("contributors")
@@ -96,13 +106,23 @@ export async function recalcTribesInternal(db: admin.firestore.Firestore): Promi
         const ref = doc.ref.path;
         const parts = ref.split("/");
         if (parts.length === 4 && parts[0] === "tribes" && parts[2] === "contributors") {
-          const contributed = doc.data().totalXpContributed;
+          const data = doc.data();
+          const contributed = data.totalXpContributed;
           if (typeof contributed === "number") {
             const tribeId = parts[1];
             contributorXpByTribe.set(
               tribeId,
-          (contributorXpByTribe.get(tribeId) ?? 0) + contributed,
+              (contributorXpByTribe.get(tribeId) ?? 0) + contributed,
             );
+          }
+          const habits = data.totalHabitsCompleted;
+          const challenges = data.totalChallengesCompleted;
+          if (typeof habits === "number" || typeof challenges === "number") {
+            const tribeId = parts[1];
+            const counts = contributorCountsByTribe.get(tribeId) ?? { habits: 0, challenges: 0 };
+            counts.habits += typeof habits === "number" ? habits : 0;
+            counts.challenges += typeof challenges === "number" ? challenges : 0;
+            contributorCountsByTribe.set(tribeId, counts);
           }
         }
       })
@@ -110,7 +130,10 @@ export async function recalcTribesInternal(db: admin.firestore.Firestore): Promi
       .on("error", reject);
   });
 
-  // 4. Aggregate activity counts from global_activities using stream
+  // 4. Aggregate activity counts from global_activities using stream.
+  //    FALLBACK ONLY: tribes without contributor docs (e.g. legacy users
+  //    whose completions predate contributor records, or archetype-club
+  //    completions with no explicit membership) fall back to the feed.
   const tribeActivities = new Map<string, { habits: number, challenges: number }>();
 
   console.log("Aggregating activity counts...");
@@ -161,6 +184,7 @@ export async function recalcTribesInternal(db: admin.firestore.Firestore): Promi
     const entry = byTribe.get(tribeId);
     const members = entry?.members ?? [];
     const totalXp = entry?.totalXp ?? 0;
+    const contributorCounts = contributorCountsByTribe.get(tribeId);
     const activities = tribeActivities.get(tribeId) ?? { habits: 0, challenges: 0 };
 
     const tribeRef = db.collection("tribes").doc(tribeId);
@@ -169,8 +193,8 @@ export async function recalcTribesInternal(db: admin.firestore.Firestore): Promi
       members: members,
       memberCount: members.length,
       totalXp: totalXp,
-      totalHabitsCompleted: activities.habits,
-      totalChallengesCompleted: activities.challenges,
+      totalHabitsCompleted: contributorCounts ? contributorCounts.habits : activities.habits,
+      totalChallengesCompleted: contributorCounts ? contributorCounts.challenges : activities.challenges,
       lastStatsSync: admin.firestore.FieldValue.serverTimestamp()
     }, { merge: true });
 

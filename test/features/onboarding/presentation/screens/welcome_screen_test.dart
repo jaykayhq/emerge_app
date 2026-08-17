@@ -44,6 +44,13 @@ class _FakeAuthRepo implements AuthRepository {
       const Left<Failure, void>(AuthFailure());
 
   @override
+  Future<Either<Failure, void>> resetPasswordWithCode({
+    required String oobCode,
+    required String newPassword,
+  }) async =>
+      const Right<Failure, void>(null);
+
+  @override
   Future<void> signOut() async {}
 
   @override

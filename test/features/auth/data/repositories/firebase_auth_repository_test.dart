@@ -156,7 +156,7 @@ void main() {
     test('requests the verification email via the worker marker',
         () async {
       when(() => auth.currentUser).thenReturn(user);
-      when(() => user.sendEmailVerification()).thenAnswer((_) async {});
+      when(() => user.sendEmailVerification(any())).thenAnswer((_) async {});
       final usersCollection = _MockCollectionReference();
       final userDoc = _MockDocumentReference();
       when(() => firestore.collection('users')).thenReturn(usersCollection);
@@ -167,9 +167,9 @@ void main() {
       final result = await repo.sendVerificationEmail();
 
       expect(result.isRight(), isTrue);
-      // The app no longer sends the Firebase-native email — it writes the
-      // request marker that triggers the GitHub Actions email worker.
-      verifyNever(() => user.sendEmailVerification());
+      // The app never calls the Firebase-native email — it writes the
+      // request marker that the GitHub Actions email worker polls.
+      verifyNever(() => user.sendEmailVerification(any()));
       final data = verify(() => userDoc.set(captureAny(), any()))
           .captured
           .single as Map<String, dynamic>;
@@ -206,6 +206,84 @@ void main() {
       expect(result.isLeft(), isTrue);
       result.fold(
         (failure) => expect(failure.message, contains('logged in')),
+        (_) => fail('expected a failure'),
+      );
+    });
+  });
+
+  group('sendPasswordResetEmail', () {
+    test('enqueues a password_reset request for the email worker',
+        () async {
+      final requestsCollection = _MockCollectionReference();
+      when(() => firestore.collection('email_requests'))
+          .thenReturn(requestsCollection);
+      when(() => requestsCollection.add(any())).thenAnswer(
+        (_) async => _MockDocumentReference(),
+      );
+
+      final repo = buildRepo();
+      final result = await repo.sendPasswordResetEmail('a@b.com');
+
+      expect(result.isRight(), isTrue);
+      final data = verify(() => requestsCollection.add(captureAny()))
+          .captured
+          .single as Map<String, dynamic>;
+      expect(data['type'], 'password_reset');
+      expect(data['email'], 'a@b.com');
+      expect(data.containsKey('requestedAt'), isTrue);
+      // Never calls the Firebase-native reset email — the branded one is
+      // sent by the worker.
+      verifyNever(() => auth.sendPasswordResetEmail(email: any(named: 'email')));
+    });
+
+    test('rejects an invalid email before writing anything', () async {
+      final repo = buildRepo();
+      final result = await repo.sendPasswordResetEmail('not-an-email');
+
+      expect(result.isLeft(), isTrue);
+      verifyNever(() => firestore.collection(any()));
+    });
+  });
+
+  group('resetPasswordWithCode', () {
+    test('confirms the reset with the oobCode and new password',
+        () async {
+      when(() => auth.confirmPasswordReset(
+        code: any(named: 'code'),
+        newPassword: any(named: 'newPassword'),
+      )).thenAnswer((_) async {});
+
+      final repo = buildRepo();
+      final result = await repo.resetPasswordWithCode(
+        oobCode: 'oob123',
+        newPassword: 'Str0ngP@sswd!',
+      );
+
+      expect(result.isRight(), isTrue);
+      verify(() => auth.confirmPasswordReset(
+        code: 'oob123',
+        newPassword: 'Str0ngP@sswd!',
+      )).called(1);
+    });
+
+    test('maps FirebaseAuthException to a Left failure', () async {
+      when(() => auth.confirmPasswordReset(
+        code: any(named: 'code'),
+        newPassword: any(named: 'newPassword'),
+      )).thenThrow(FirebaseAuthException(
+        code: 'expired-action-code',
+        message: 'The action code has expired.',
+      ));
+
+      final repo = buildRepo();
+      final result = await repo.resetPasswordWithCode(
+        oobCode: 'oob123',
+        newPassword: 'Str0ngP@sswd!',
+      );
+
+      expect(result.isLeft(), isTrue);
+      result.fold(
+        (failure) => expect(failure.message, contains('expired')),
         (_) => fail('expected a failure'),
       );
     });

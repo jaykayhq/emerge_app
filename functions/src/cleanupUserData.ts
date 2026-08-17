@@ -25,6 +25,47 @@ async function deleteWhere(collectionPath: string, field: string, value: any): P
 }
 
 /**
+ * Removes a user from every tribe's `members` array with a DERIVED
+ * `memberCount = members.length` write — never a raw increment.
+ *
+ * Why derived (idempotent): the recursiveDelete of `users/{uid}` fires
+ * `maintainTribeMembership` for each `users/{uid}/tribes/*` doc, which ALSO
+ * writes a derived `memberCount: next.length`. A raw `increment(-1)` in the
+ * batch would double-decrement (or race) with the trigger; a derived write
+ * lands on the same value regardless of ordering, and when the trigger
+ * already removed the uid the arrays match and nothing is written at all.
+ *
+ * The trigger covers users WITH membership docs; this batch is the safety
+ * net for users present in `members` without one (e.g. fixTribes-reset
+ * arrays) — the query matches on the array, not the subcollection.
+ */
+export async function removeUserFromTribesInternal(
+  db: admin.firestore.Firestore,
+  uid: string,
+): Promise<void> {
+  const tribesSnap = await db
+    .collection("tribes")
+    .where("members", "array-contains", uid)
+    .get();
+  if (tribesSnap.empty) return;
+
+  const docs = tribesSnap.docs;
+  for (let i = 0; i < docs.length; i += 499) {
+    const chunk = docs.slice(i, i + 499);
+    const batch = db.batch();
+    for (const doc of chunk) {
+      const members: string[] = Array.isArray(doc.data().members)
+        ? doc.data().members
+        : [];
+      const next = members.filter((m) => m !== uid);
+      if (next.length === members.length) continue; // already removed
+      batch.update(doc.ref, { members: next, memberCount: next.length });
+    }
+    await batch.commit();
+  }
+}
+
+/**
  * Callable function: Deletes the calling user's Auth account and
  * ALL associated data across Firestore collections.
  *
@@ -74,27 +115,11 @@ export const deleteMyAccount = onCall(
     ]);
 
     // ── Remove membership from tribes (update, not delete) ──
-    const tribesSnap = await db
-      .collection("tribes")
-      .where("members", "array-contains", uid)
-      .get();
-    if (!tribesSnap.empty) {
-      const tribeDocs = tribesSnap.docs.map(d => d.ref);
-      const tribeChunks: FirebaseFirestore.DocumentReference[][] = [];
-      for (let i = 0; i < tribeDocs.length; i += 499) {
-        tribeChunks.push(tribeDocs.slice(i, i + 499));
-      }
-      for (const chunk of tribeChunks) {
-        const batch = db.batch();
-        chunk.forEach((ref) => {
-          batch.update(ref, {
-            members: admin.firestore.FieldValue.arrayRemove(uid),
-            memberCount: admin.firestore.FieldValue.increment(-1),
-          });
-        });
-        await batch.commit();
-      }
-    }
+    // Derived + idempotent write: the recursiveDelete above already fired
+    // maintainTribeMembership for each membership doc, and this batch is the
+    // safety net for members-in-array without a membership doc. Both write
+    // `memberCount = members.length`, so ordering can never double-decrement.
+    await removeUserFromTribesInternal(db, uid);
 
     // ── Delete the Firebase Auth user last ──
     try {

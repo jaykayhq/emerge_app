@@ -204,9 +204,8 @@ class FirebaseAuthRepository implements AuthRepository {
       final profileMap = userProfile.toMap();
       profileMap['email'] = updatedUser?.email ?? user.email ?? '';
       profileMap['createdAt'] = FieldValue.serverTimestamp();
-      // Platform marker: the email worker uses it to send web users a web
-      // verification link and mobile users a custom-scheme deep link that
-      // opens the app directly.
+      // Platform marker: kept for profile completeness; verification
+      // emails are now sent natively by Firebase Auth via the web action URL.
       profileMap['platform'] = _platformLabel();
 
       // Remove null values to comply with Firestore security rule type checks
@@ -344,13 +343,40 @@ class FirebaseAuthRepository implements AuthRepository {
     }
 
     try {
-      await _firebaseAuth.sendPasswordResetEmail(email: email.trim());
+      // The branded reset email is sent by the email worker (GitHub Actions,
+      // SMTP) — the app never calls Firebase's built-in email. Writing a
+      // request doc triggers the worker's reset task, which emails a branded
+      // link back to the app's /reset-password route with the oobCode.
+      await _firestore.collection('email_requests').add({
+        'type': 'password_reset',
+        'email': email.trim(),
+        'requestedAt': FieldValue.serverTimestamp(),
+      });
+      return const Right(null);
+    } catch (e) {
+      AppLogger.e('Password reset request failed', e);
+      return Left(ServerFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, void>> resetPasswordWithCode({
+    required String oobCode,
+    required String newPassword,
+  }) async {
+    try {
+      await _firebaseAuth.confirmPasswordReset(
+        code: oobCode,
+        newPassword: newPassword,
+      );
       return const Right(null);
     } on FirebaseAuthException catch (e) {
-      AppLogger.e('Password reset failed', e);
-      return Left(AuthFailure(e.message ?? 'Password reset failed'));
+      AppLogger.e('Reset password with code failed', e);
+      return Left(
+        AuthFailure(e.message ?? 'Invalid or expired reset link.'),
+      );
     } catch (e, s) {
-      AppLogger.e('Password reset failed', e, s);
+      AppLogger.e('Reset password with code failed', e, s);
       return Left(ServerFailure(e.toString()));
     }
   }
@@ -417,9 +443,9 @@ class FirebaseAuthRepository implements AuthRepository {
   }
 
   /// Canonical platform label written to users/{uid}.platform at signup.
-  /// The email worker (GitHub Actions) picks the verification link base
-  /// from it: 'web'/'other' → web URL, 'android'/'ios' → custom-scheme
-  /// deep link (emergeapp://verify-email) that opens the app directly.
+  /// Kept for profile completeness (historically the email worker picked
+  /// the verification link base from it; verification emails are now sent
+  /// natively by Firebase Auth via the web action URL).
   static String _platformLabel() {
     if (kIsWeb) return 'web';
     switch (defaultTargetPlatform) {
@@ -441,9 +467,8 @@ class FirebaseAuthRepository implements AuthRepository {
     try {
       // Verification emails are sent by the email worker (GitHub Actions,
       // SMTP) — the app never calls Firebase's built-in email. Writing the
-      // request marker triggers the webhook bridge (functions
-      // src/github_dispatch.ts) → repository_dispatch → worker, which
-      // emails a branded link that returns the user straight to the app.
+      // request marker triggers the worker's verify task, which emails a
+      // branded link back to the app's /verify-email route with the oobCode.
       // The worker owns emailVerificationSentAt (the 7-day grace anchor).
       await _firestore.collection('users').doc(user.uid).set(
             {

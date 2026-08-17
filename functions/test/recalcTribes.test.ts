@@ -252,6 +252,67 @@ describe("recalcTribesInternal", () => {
     expect(creator!.data.members).toEqual(["u1"]);
   });
 
+  it("derives totalHabitsCompleted from contributor docs, not global_activities", async () => {
+    const { db, findWrite } = makeFakeDb({
+      users: [new FakeDoc("u1", { archetype: "athlete" })],
+      tribes: [new FakeDoc("m1", {}, "users/u1/tribes/creator_tribe_42")],
+      userStats: [new FakeDoc("u1", { avatarStats: { totalXp: 300 } })],
+      // Inflated feed: the global_activities events for u1 were never deleted
+      // on undo, so counting them would report 10 habits.
+      globalActivities: [
+        new FakeDoc("g1", { type: "habit_complete", clubId: "creator_tribe_42" }),
+        new FakeDoc("g2", { type: "habit_complete", clubId: "creator_tribe_42" }),
+        new FakeDoc("g3", { type: "habit_complete", clubId: "creator_tribe_42" }),
+        new FakeDoc("g4", { type: "habit_complete", clubId: "creator_tribe_42" }),
+        new FakeDoc("g5", { type: "habit_complete", clubId: "creator_tribe_42" }),
+        new FakeDoc("g6", { type: "habit_complete", clubId: "creator_tribe_42" }),
+        new FakeDoc("g7", { type: "habit_complete", clubId: "creator_tribe_42" }),
+        new FakeDoc("g8", { type: "habit_complete", clubId: "creator_tribe_42" }),
+        new FakeDoc("g9", { type: "habit_complete", clubId: "creator_tribe_42" }),
+        new FakeDoc("g10", { type: "habit_complete", clubId: "creator_tribe_42" }),
+        new FakeDoc("c1", { type: "challenge_complete", clubId: "creator_tribe_42" }),
+        new FakeDoc("c2", { type: "challenge_complete", clubId: "creator_tribe_42" }),
+        new FakeDoc("c3", { type: "challenge_complete", clubId: "creator_tribe_42" }),
+      ],
+      // Contributor docs ARE debited on undo — they are the exact count.
+      contributors: [
+        new FakeDoc("u1", { totalHabitsCompleted: 4, totalChallengesCompleted: 2 },
+          "tribes/creator_tribe_42/contributors/u1"),
+        new FakeDoc("u2", { totalHabitsCompleted: 1, totalChallengesCompleted: 0 },
+          "tribes/creator_tribe_42/contributors/u2"),
+      ],
+    });
+
+    const count = await recalcTribesInternal(db);
+
+    expect(count).toBe(6);
+    const creator = findWrite("tribes/creator_tribe_42");
+    expect(creator).toBeDefined();
+    expect(creator!.data.totalHabitsCompleted).toBe(5);
+    expect(creator!.data.totalChallengesCompleted).toBe(2);
+  });
+
+  it("falls back to global_activities counts for tribes without contributor docs", async () => {
+    const { db, findWrite } = makeFakeDb({
+      users: [new FakeDoc("u1", { archetype: "athlete" })],
+      tribes: [new FakeDoc("m1", {}, "users/u1/tribes/legacy_tribe")],
+      userStats: [new FakeDoc("u1", { avatarStats: { totalXp: 300 } })],
+      globalActivities: [
+        new FakeDoc("g1", { type: "habit_complete", clubId: "legacy_tribe" }),
+        new FakeDoc("g2", { type: "habit_complete", clubId: "legacy_tribe" }),
+        new FakeDoc("c1", { type: "challenge_complete", clubId: "legacy_tribe" }),
+      ],
+      contributors: [],
+    });
+
+    await recalcTribesInternal(db);
+
+    const legacy = findWrite("tribes/legacy_tribe");
+    expect(legacy).toBeDefined();
+    expect(legacy!.data.totalHabitsCompleted).toBe(2);
+    expect(legacy!.data.totalChallengesCompleted).toBe(1);
+  });
+
   it("chunks tribe writes into batches of 500", async () => {
     const tribes: FakeDoc[] = [];
     for (let i = 0; i < 501; i++) {

@@ -17,7 +17,6 @@ import { recalcTribesInternal } from "./recalcTribes";
 export { fillNarratorSlots } from "./narrator";
 export { maintainTribeMembership } from "./tribe_membership";
 export { maintainTribeXp } from "./tribe_contributions";
-export { dispatchEmailWorkflow } from "./github_dispatch";
 
 // Global configuration for all v2 functions
 setGlobalOptions({

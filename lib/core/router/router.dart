@@ -6,6 +6,7 @@ import 'package:emerge_app/features/auth/presentation/providers/role_provider.da
 import 'package:emerge_app/features/auth/presentation/screens/login_screen.dart';
 import 'package:emerge_app/features/auth/presentation/screens/signup_screen.dart';
 import 'package:emerge_app/features/auth/presentation/screens/verify_email_screen.dart';
+import 'package:emerge_app/features/auth/presentation/screens/reset_password_screen.dart';
 import 'package:emerge_app/features/gamification/presentation/providers/user_stats_providers.dart';
 import 'package:emerge_app/features/world_map/presentation/screens/world_map_screen.dart';
 import 'package:emerge_app/features/timeline/presentation/screens/timeline_screen.dart';
@@ -395,6 +396,10 @@ GoRouter router(Ref ref) {
       GoRoute(
         path: '/verify-email',
         builder: (context, state) => const VerifyEmailScreen(),
+      ),
+      GoRoute(
+        path: '/reset-password',
+        builder: (context, state) => const ResetPasswordScreen(),
       ),
       GoRoute(
         path: '/signup',

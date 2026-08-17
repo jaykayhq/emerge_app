@@ -161,11 +161,12 @@ class _EmergeAppState extends ConsumerState<EmergeApp>
   }
 
   /// Listens for mobile deep links (emergeapp://verify-email?oobCode=...)
-  /// delivered by the email worker's verification email, and routes the
-  /// user straight to the verification screen. On web the same flow works
-  /// through the browser URL (query param on /verify-email) — no handler
-  /// needed. Web builds of app_links return no links, so this is
-  /// mobile-only in practice.
+  /// and routes the user straight to the verification screen. On web the
+  /// same flow works through the browser URL (query param on
+  /// /verify-email) — no handler needed. Web builds of app_links return
+  /// no links, so this is mobile-only in practice. Verification emails are
+  /// sent natively by Firebase Auth (web action URL); this handler is a
+  /// fallback for any future custom-scheme link.
   Future<void> _initDeepLinks() async {
     try {
       final appLinks = AppLinks();
@@ -178,13 +179,24 @@ class _EmergeAppState extends ConsumerState<EmergeApp>
   }
 
   void _routeDeepLink(Uri uri) {
-    if (uri.host != 'verify-email') return;
-    final oobCode = uri.queryParameters['oobCode'];
-    if (oobCode == null || oobCode.isEmpty) return;
-    try {
-      ref.read(routerProvider).push('/verify-email?oobCode=$oobCode');
-    } catch (e) {
-      AppLogger.w('Deep link routing failed', error: e);
+    if (uri.host == 'verify-email') {
+      final oobCode = uri.queryParameters['oobCode'];
+      if (oobCode == null || oobCode.isEmpty) return;
+      try {
+        ref.read(routerProvider).push('/verify-email?oobCode=$oobCode');
+      } catch (e) {
+        AppLogger.w('Deep link routing failed', error: e);
+      }
+      return;
+    }
+    if (uri.host == 'reset-password') {
+      final oobCode = uri.queryParameters['oobCode'];
+      if (oobCode == null || oobCode.isEmpty) return;
+      try {
+        ref.read(routerProvider).push('/reset-password?oobCode=$oobCode');
+      } catch (e) {
+        AppLogger.w('Deep link routing failed', error: e);
+      }
     }
   }
 

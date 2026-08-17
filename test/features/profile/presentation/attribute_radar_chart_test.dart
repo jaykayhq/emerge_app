@@ -1,3 +1,5 @@
+import 'package:emerge_app/core/theme/attribute_colors.dart';
+import 'package:emerge_app/features/habits/domain/entities/habit.dart';
 import 'package:emerge_app/features/profile/presentation/widgets/attribute_radar_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -71,6 +73,11 @@ void main() {
       expect(AttributeRadarChart.attributeNames.length, 6);
       expect(AttributeRadarChart.attributeIcons.length, 6);
       expect(AttributeRadarChart.attributeColors.length, 6);
+    });
+
+    test('attributeColors follow the canonical palette in enum order', () {
+      final expected = HabitAttribute.values.map(attributeColor).toList();
+      expect(AttributeRadarChart.attributeColors, expected);
     });
   });
 }

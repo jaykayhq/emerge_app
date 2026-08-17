@@ -90,6 +90,18 @@ void main() {
       ),
     ).thenAnswer((_) async {});
 
+    when(
+      () => mockSocialService.undoHabitCompletion(
+        userId: any(named: 'userId'),
+        userName: any(named: 'userName'),
+        archetype: any(named: 'archetype'),
+        habitId: any(named: 'habitId'),
+        xpToUndo: any(named: 'xpToUndo'),
+        level: any(named: 'level'),
+        clubId: any(named: 'clubId'),
+      ),
+    ).thenAnswer((_) async {});
+
     repository = DriftHabitRepository(
       db: db,
       gameLoopEngine: LocalGameLoopEngine(),
@@ -394,7 +406,7 @@ void main() {
     );
 
     test(
-      'undo debits contributors by base XP only (no challenge XP)',
+      'undo debits contributors by the full credited amount (base + challenge)',
       () async {
         final habit = await seedSameDayUndo(withTribe: true);
         final today = DateTime.now();
@@ -404,8 +416,9 @@ void main() {
         await repository.completeHabit(habit.id, today,
             activeTribeId: 'tribeA');
 
-        // Contributors only ever received the 10 base XP; the undo must
-        // debit exactly that, not the full 15 (base + challenge).
+        // The credit path adds base + challenge XP (10 + 5 = 15) to the
+        // contributor doc; the undo must mirror the identical amount or the
+        // nightly recalc (which sums contributor docs) stays inflated.
         verify(
           () => mockSyncEngine.enqueueUpdate(
             collectionPath: 'tribes/tribeA/contributors',
@@ -414,7 +427,7 @@ void main() {
               named: 'data',
               that: containsPair(
                 'totalXpContributed',
-                {'__type__': 'increment', 'value': -10},
+                {'__type__': 'increment', 'value': -15},
               ),
             ),
           ),

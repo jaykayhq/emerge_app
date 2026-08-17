@@ -1,7 +1,9 @@
 import 'dart:math' as math;
 import 'package:emerge_app/core/theme/app_theme.dart';
-import 'package:flutter/material.dart';
+import 'package:emerge_app/core/theme/attribute_colors.dart';
 import 'package:emerge_app/core/theme/emerge_colors.dart';
+import 'package:emerge_app/features/habits/domain/entities/habit.dart';
+import 'package:flutter/material.dart';
 
 /// Hexagonal radar chart displaying 6 attributes:
 /// Creativity, Focus, Output, Resilience, Vitality, Discipline
@@ -35,13 +37,13 @@ class AttributeRadarChart extends StatefulWidget {
     Icons.schedule,
   ];
 
-  static const List<Color> attributeColors = [
-    Colors.orangeAccent,
-    Colors.blueAccent,
-    Colors.greenAccent,
-    Colors.purpleAccent,
-    Colors.redAccent,
-    Colors.tealAccent,
+  static final List<Color> attributeColors = [
+    attributeColor(HabitAttribute.strength),
+    attributeColor(HabitAttribute.intellect),
+    attributeColor(HabitAttribute.vitality),
+    attributeColor(HabitAttribute.creativity),
+    attributeColor(HabitAttribute.focus),
+    attributeColor(HabitAttribute.spirit),
   ];
 
   @override

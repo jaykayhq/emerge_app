@@ -1,4 +1,5 @@
 import 'dart:math' as math;
+import 'package:emerge_app/core/theme/attribute_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:emerge_app/features/habits/domain/entities/habit.dart';
 
@@ -101,26 +102,9 @@ class _HabitRuneIndicatorState extends State<HabitRuneIndicator>
         (h.anchorHabitId != null && h.anchorHabitId!.isNotEmpty);
   }
 
-  Color _getAttributeColor(HabitAttribute attr) {
-    switch (attr) {
-      case HabitAttribute.strength:
-        return const Color(0xFFFF6B6B);
-      case HabitAttribute.intellect:
-        return const Color(0xFF6C63FF);
-      case HabitAttribute.vitality:
-        return const Color(0xFF2BEE79);
-      case HabitAttribute.creativity:
-        return const Color(0xFFE040FB);
-      case HabitAttribute.focus:
-        return const Color(0xFFFFB74D);
-      case HabitAttribute.spirit:
-        return const Color(0xFF4DD0E1);
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
-    final color = _getAttributeColor(widget.habit.attribute);
+    final color = attributeColor(widget.habit.attribute);
     final forged = _isForged;
 
     if (forged) {

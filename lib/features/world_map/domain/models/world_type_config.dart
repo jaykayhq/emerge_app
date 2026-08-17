@@ -1,4 +1,5 @@
 // lib/features/world_map/domain/models/world_type_config.dart
+import 'package:emerge_app/core/theme/attribute_colors.dart';
 import 'package:emerge_app/features/habits/domain/entities/habit.dart';
 import 'package:flutter/material.dart';
 
@@ -40,11 +41,11 @@ class WorldTypeConfig {
   static WorldTypeConfig forAttribute(HabitAttribute attr) =>
       all.firstWhere((c) => c.attribute == attr);
 
-  static const List<WorldTypeConfig> all = [
+  static final List<WorldTypeConfig> all = [
     WorldTypeConfig(
       attribute: HabitAttribute.strength,
       worldName: 'Forest',
-      primaryColor: Color(0xFF4CAF50),
+      primaryColor: attributeColor(HabitAttribute.strength),
       fallbackIcon: Icons.park,
       iconAssetPath: 'assets/icons/attribute_strength.png',
       stageNames: [
@@ -63,7 +64,7 @@ class WorldTypeConfig {
     WorldTypeConfig(
       attribute: HabitAttribute.intellect,
       worldName: 'City',
-      primaryColor: Color(0xFF2196F3),
+      primaryColor: attributeColor(HabitAttribute.intellect),
       fallbackIcon: Icons.location_city,
       iconAssetPath: 'assets/icons/attribute_intellect.png',
       stageNames: [
@@ -82,7 +83,7 @@ class WorldTypeConfig {
     WorldTypeConfig(
       attribute: HabitAttribute.vitality,
       worldName: 'Volcanic',
-      primaryColor: Color(0xFFFF5722),
+      primaryColor: attributeColor(HabitAttribute.vitality),
       fallbackIcon: Icons.local_fire_department,
       iconAssetPath: 'assets/icons/attribute_vitality.png',
       stageNames: [
@@ -101,7 +102,7 @@ class WorldTypeConfig {
     WorldTypeConfig(
       attribute: HabitAttribute.creativity,
       worldName: 'Oceanic',
-      primaryColor: Color(0xFF00BCD4),
+      primaryColor: attributeColor(HabitAttribute.creativity),
       fallbackIcon: Icons.waves,
       iconAssetPath: 'assets/icons/attribute_creativity.png',
       stageNames: [
@@ -120,7 +121,7 @@ class WorldTypeConfig {
     WorldTypeConfig(
       attribute: HabitAttribute.focus,
       worldName: 'Lightning',
-      primaryColor: Color(0xFFFFC107),
+      primaryColor: attributeColor(HabitAttribute.focus),
       fallbackIcon: Icons.flash_on,
       iconAssetPath: 'assets/icons/attribute_focus.png',
       stageNames: [
@@ -139,7 +140,7 @@ class WorldTypeConfig {
     WorldTypeConfig(
       attribute: HabitAttribute.spirit,
       worldName: 'Celestial',
-      primaryColor: Color(0xFF9C27B0),
+      primaryColor: attributeColor(HabitAttribute.spirit),
       fallbackIcon: Icons.auto_awesome,
       iconAssetPath: 'assets/icons/attribute_spirit.png',
       stageNames: [

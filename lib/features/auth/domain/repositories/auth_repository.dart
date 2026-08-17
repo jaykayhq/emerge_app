@@ -20,6 +20,14 @@ abstract class AuthRepository {
 
   Future<Either<Failure, void>> sendPasswordResetEmail(String email);
 
+  /// Completes a password reset with the oobCode from the reset link the
+  /// native Firebase email sent (deep link back into the app's
+  /// /reset-password screen), then signs the user out of any stale session.
+  Future<Either<Failure, void>> resetPasswordWithCode({
+    required String oobCode,
+    required String newPassword,
+  });
+
   Future<void> signOut();
 
   Future<Either<Failure, void>> updateDisplayName(String displayName);

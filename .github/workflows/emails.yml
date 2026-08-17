@@ -1,13 +1,10 @@
 # Emerge Email Worker (cron)
 #
-# Replaces the Cloud Functions email jobs (sendWelcomeEmail trigger,
-# enforceReengagementDrip + enforceEmailGracePeriod schedules) — GitHub
-# Actions runs them for free, and sending uses SMTP (nodemailer) instead of
-# the Resend API, so no RESEND_API_KEY secret is needed.
-#
-# Schedule: daily 04:00 UTC (the old grace-period cadence). Welcome emails
-# become a daily batch for accounts created in the last 7 days instead of a
-# real-time trigger — see email-worker/README.md.
+# Sends the branded emails (welcome, verification, password reset,
+# re-engagement drip, verification grace lock) via SMTP — Firebase Auth's
+# default emails are not used anywhere. All tasks are idempotent via their
+# markers, so this daily run is a safety net on top of the 5-minute
+# emails-welcome.yml workflow.
 #
 # Required repo secrets:
 #   FIREBASE_SERVICE_ACCOUNT_TRADEFLASH_L2966  service-account JSON (already

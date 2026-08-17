@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:emerge_app/features/habits/domain/entities/habit.dart';
 
 /// Earthy Warmth Theme for Emerge App
 /// Design Philosophy: "Grounded Growth" - habits planted in earth, growing steadily
@@ -35,18 +34,6 @@ class EmergeEarthyColors {
   /// Surface color
   static const Color surface = Color(0xFF16213E);
 
-  // ============ ATTRIBUTE COLORS (Earth-Toned) ============
-
-  /// Map of earthy colors for each habit attribute
-  static const Map<HabitAttribute, Color> attributeColors = {
-    HabitAttribute.strength: Color(0xFFCC5500), // Burnt orange
-    HabitAttribute.intellect: Color(0xFF8B4513), // Saddle brown
-    HabitAttribute.vitality: Color(0xFF2E8B57), // Sea green
-    HabitAttribute.creativity: Color(0xFFD2691E), // Chocolate
-    HabitAttribute.focus: Color(0xFFB8860B), // Dark goldenrod
-    HabitAttribute.spirit: Color(0xFFCD853F), // Peru
-  };
-
   // ============ GRADIENTS ============
 
   /// Terracotta gradient for primary actions
@@ -64,20 +51,6 @@ class EmergeEarthyColors {
   );
 
   // ============ HELPER METHODS ============
-
-  /// Get earthy color for a specific attribute
-  static Color getAttributeColor(HabitAttribute attribute) {
-    return attributeColors[attribute] ?? terracotta;
-  }
-
-  /// Get attribute color by string name
-  static Color getAttributeColorByName(String attributeName) {
-    final attribute = HabitAttribute.values.firstWhere(
-      (attr) => attr.name.toLowerCase() == attributeName.toLowerCase(),
-      orElse: () => HabitAttribute.strength,
-    );
-    return getAttributeColor(attribute);
-  }
 
   /// Apply opacity to color
   static Color withOpacity(Color color, double opacity) {

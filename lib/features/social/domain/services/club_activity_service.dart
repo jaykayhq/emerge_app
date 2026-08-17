@@ -215,6 +215,68 @@ class SocialActivityService {
     }
   }
 
+  /// Reverses the tribe-facing side of an undone habit completion: deletes
+  /// the activity docs the credit path wrote (global feed + tribe feed) and
+  /// negates the leaderboard increment.
+  ///
+  /// The exact activity doc id is recovered from the local activity row —
+  /// its `id` is `'${userId}_${habitId}_${millis}'`, the same id the credit
+  /// path used for both Firestore docs, and its `tribeId` is the tribe the
+  /// credit actually landed on (authoritative even if the user switched
+  /// tribes between credit and undo). When the local row is gone (fresh
+  /// install), the docs can't be reconstructed — the nightly recalc heals
+  /// the tribe totals from contributor docs instead.
+  Future<void> undoHabitCompletion({
+    required String userId,
+    required String userName,
+    required String archetype,
+    required String habitId,
+    required int xpToUndo,
+    required int level,
+    String? clubId,
+  }) async {
+    try {
+      final resolvedClubId = clubId ?? _getClubIdForArchetype(archetype);
+      final row = await _activityDao.getLatestHabitCompletion(
+        userId,
+        habitId,
+      );
+      final targetTribeId = row?.tribeId ?? resolvedClubId;
+
+      if (row != null) {
+        await _syncEngine.enqueueMutation(
+          collectionPath: _kGlobalActivitiesCollection,
+          documentId: row.id,
+          operation: 'delete',
+        );
+        await _syncEngine.enqueueMutation(
+          collectionPath:
+              '$_kTribesCollection/$targetTribeId/$_kActivityCollection',
+          documentId: row.id,
+          operation: 'delete',
+        );
+        await _activityDao.deleteActivity(row.id);
+      }
+
+      if (xpToUndo > 0) {
+        await _leaderboardRepo.updateUserScore(
+          userId,
+          xp: -xpToUndo,
+          level: level,
+          archetype: UserArchetype.values.firstWhere(
+            (e) => e.name.toLowerCase() == archetype.toLowerCase(),
+            orElse: () => UserArchetype.none,
+          ),
+          userName: userName,
+          clubId: targetTribeId,
+          isIncrement: true,
+        );
+      }
+    } catch (e) {
+      AppLogger.w('Error undoing habit completion social activity', error: e);
+    }
+  }
+
   /// Logs a level up to social activity feeds.
   Future<void> logLevelUp({
     required String userId,

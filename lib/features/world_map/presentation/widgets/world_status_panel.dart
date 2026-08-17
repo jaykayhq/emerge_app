@@ -1,6 +1,7 @@
 
 import 'package:emerge_app/core/presentation/widgets/glassmorphism_card.dart';
-import 'package:emerge_app/core/theme/emerge_colors.dart';
+import 'package:emerge_app/core/theme/attribute_colors.dart';
+import 'package:emerge_app/features/habits/domain/entities/habit.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:emerge_app/features/world_map/presentation/providers/world_health_provider.dart';
@@ -23,7 +24,7 @@ class WorldStatusPanel extends ConsumerWidget {
       child: GlassmorphismCard(
         margin: const EdgeInsets.symmetric(horizontal: 32),
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-        glowColor: EmergeColors.teal,
+        glowColor: attributeColor(HabitAttribute.vitality),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -33,7 +34,7 @@ class WorldStatusPanel extends ConsumerWidget {
                 _StatColumn(
                   label: 'VITALITY',
                   value: health,
-                  color: EmergeColors.teal,
+                  color: attributeColor(HabitAttribute.vitality),
                   icon: Icons.favorite_border,
                 ),
                 const SizedBox(width: 24),

@@ -1,5 +1,7 @@
 import 'dart:ui' as ui;
 
+import 'package:emerge_app/core/theme/attribute_colors.dart';
+import 'package:emerge_app/features/habits/domain/entities/habit.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:emerge_app/features/world_map/presentation/providers/world_health_provider.dart';
@@ -33,7 +35,7 @@ class WorldStateHUD extends ConsumerWidget {
           _StatColumn(
             label: 'VITALITY',
             value: health,
-            color: Colors.cyanAccent,
+            color: attributeColor(HabitAttribute.vitality),
             icon: Icons.favorite_border,
           ),
           const SizedBox(width: 24),
@@ -123,7 +125,10 @@ class _HudErrorContent extends StatelessWidget {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        _DashColumn(label: 'VITALITY', color: Colors.cyanAccent),
+        _DashColumn(
+          label: 'VITALITY',
+          color: attributeColor(HabitAttribute.vitality),
+        ),
         const SizedBox(width: 24),
         Container(
           width: 1,

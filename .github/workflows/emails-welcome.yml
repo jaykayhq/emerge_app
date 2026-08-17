@@ -1,20 +1,20 @@
-# Emerge Welcome + Verification Email Worker (near-real-time)
+# Emerge Email Worker (near-real-time)
 #
-# Two triggers:
-#   1. repository_dispatch — the tiny Cloud Function webhook bridge
-#      (functions/src/github_dispatch.ts) fires "user-signed-up" on account
-#      creation and "verification-requested" when the app asks for a
-#      verification email. This gives near-instant delivery after signup.
-#   2. schedule */5 — fallback so a failed dispatch never blocks delivery
-#      (the tasks are idempotent via their markers).
-# The repo is public → GitHub Actions minutes are unlimited (free).
-name: Emails (welcome & verify — webhook + every 5 min)
+# Verification and password-reset emails are sent HERE via SMTP with fully
+# branded templates (see email-worker/src/tasks/verify.js and reset.js) —
+# NOT by Firebase Auth's default email. Welcome is also delivered here.
+#
+# The app writes users/{uid}.verificationRequestedAt (verify) and
+# email_requests/{id} docs of type password_reset; the 5-minute schedule
+# picks them up, so delivery is ≤5 minutes after the request.
+#
+# The repository_dispatch webhook trigger was removed with the
+# github_dispatch.ts bridge (deleted 2026-08-16).
+name: Emails (welcome / verify / reset — every 5 min)
 
 on:
-  repository_dispatch:
-    types: [user-signed-up, verification-requested]
   schedule:
-    - cron: "*/5 * * * *" # every 5 minutes (fallback)
+    - cron: "*/5 * * * *" # every 5 minutes
   workflow_dispatch:
 
 permissions:
@@ -37,7 +37,7 @@ jobs:
         working-directory: email-worker
         run: npm ci
 
-      - name: Run welcome + verify tasks
+      - name: Run welcome + verify + reset tasks
         working-directory: email-worker
         env:
           FIREBASE_SERVICE_ACCOUNT_JSON: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_TRADEFLASH_L2966 }}
@@ -46,4 +46,4 @@ jobs:
           SMTP_USER: ${{ secrets.SMTP_USER }}
           SMTP_PASS: ${{ secrets.SMTP_PASS }}
           EMAIL_FROM: ${{ secrets.EMAIL_FROM }}
-        run: node src/index.js --task welcome --task verify
+        run: node src/index.js --task welcome --task verify --task reset

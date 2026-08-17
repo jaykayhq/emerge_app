@@ -28,6 +28,7 @@
  */
 import { onCall, HttpsError } from "firebase-functions/v2/https";
 import * as admin from "firebase-admin";
+import { removeUserFromTribesInternal } from "./cleanupUserData";
 
 if (admin.apps.length === 0) {
   admin.initializeApp();
@@ -43,6 +44,60 @@ const COLLECTIONS_TO_SCAN = [
   "insight_cache",
   "customers",
 ] as const;
+
+/**
+ * User-keyed collections: docs are matched by a FIELD (not doc id), the same
+ * list deleteMyAccount cleans for a self-deleting user. Without this, an
+ * orphaned account's habits/activity/leaderboard docs survive the purge and
+ * could be picked up again by a stale client cache or a re-claimed doc id.
+ */
+const USER_KEYED_COLLECTIONS: ReadonlyArray<readonly [string, string]> = [
+  ["habits", "userId"],
+  ["user_activity", "userId"],
+  ["global_activities", "userId"],
+  ["club_leaderboards", "userId"],
+  ["challenge_leaderboards", "userId"],
+  ["contracts", "userId"],
+  ["contracts", "partnerId"],
+  ["partner_requests", "senderId"],
+  ["partner_requests", "recipientId"],
+  ["security_logs", "userId"],
+  ["revenuecat_events", "app_user_id"],
+  ["usernames", "uid"],
+];
+
+/**
+ * Deletes every doc in the user-keyed collections whose field matches the
+ * orphaned uid. Dry-run counts without writing. Returns the count.
+ * Exported for tests (the onCall wrapper is exercised via the emulator).
+ */
+export async function purgeUserKeyedData(
+  db: admin.firestore.Firestore,
+  uid: string,
+  dryRun: boolean,
+): Promise<number> {
+  let total = 0;
+  for (const [collectionPath, field] of USER_KEYED_COLLECTIONS) {
+    const snap = await db
+      .collection(collectionPath)
+      .where(field, "==", uid)
+      .get();
+    if (snap.empty) continue;
+
+    const docs = snap.docs.map((d) => d.ref);
+    total += docs.length;
+    if (dryRun) continue;
+
+    for (let i = 0; i < docs.length; i += 400) {
+      const batch = db.batch();
+      for (const ref of docs.slice(i, i + 400)) {
+        batch.delete(ref);
+      }
+      await batch.commit();
+    }
+  }
+  return total;
+}
 
 export const purgeOrphanedUserData = onCall(async (request) => {
   // ── Auth guard: only admins may run this. ──
@@ -111,6 +166,26 @@ export const purgeOrphanedUserData = onCall(async (request) => {
         continue;
       }
 
+      // User docs need recursive delete: the top-level `users/{uid}` delete
+      // can't reach subcollections, and the orphan's `users/{uid}/tribes/*`
+      // membership docs would otherwise survive and keep them counted as a
+      // tribe member (and in the nightly recalc).
+      if (collectionName === "users") {
+        await db.recursiveDelete(db.collection("users").doc(docId));
+        // Derived, idempotent removal from tribe members arrays. Covers
+        // orphans present in `members` without a membership doc (the
+        // membership-doc deletes above fire maintainTribeMembership when
+        // deployed, which writes the same derived value — ordering can
+        // never double-decrement).
+        await removeUserFromTribesInternal(db, docId);
+        // Also purge user-keyed collections (habits, activity, leaderboards,
+        // contracts, usernames...) so a deleted account's data can never
+        // resurface through a stale client cache or re-claimed doc id.
+        await purgeUserKeyedData(db, docId, dryRun);
+        deleted++;
+        continue;
+      }
+
       // Mark for deletion.
       batch.delete(doc.ref);
       batchOps++;
@@ -148,6 +223,6 @@ export const purgeOrphanedUserData = onCall(async (request) => {
     collections: summary,
     note: dryRun
       ? "Dry-run mode — no data was deleted. Call with { dryRun: false } to delete."
-      : "WARNING: Top-level document deletion does not clean subcollections. Orphaned subcollection data must be cleaned up separately.",
+      : "WARNING: users/{uid} docs are recursively deleted (subcollections included). Other collections are top-level deletes only — their subcollection data must be cleaned up separately.",
   };
 });

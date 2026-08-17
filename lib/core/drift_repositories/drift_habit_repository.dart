@@ -266,6 +266,15 @@ class DriftHabitRepository implements HabitRepository {
         // World health reversal is handled by GamificationService via
         // the HabitCompletionUndone event (zone-based model).
 
+        // Recover where the credit actually landed: the local activity row
+        // carries the exact doc id (`${userId}_${habitId}_<millis>`) and the
+        // credit-time tribe, so the undo reverses the same tribe the credit
+        // wrote — even if the user switched tribes in between. Falls back to
+        // the current resolution when the row is missing (fresh install).
+        final activityRow = await _db.tribeActivityDao
+            .getLatestHabitCompletion(statsRow.userId, habitId);
+        final creditTribeId = activityRow?.tribeId ?? resolvedTribeId;
+
         await _db.transaction(() async {
           // Delete every same-day row for this habit, but debit the stats
           // ONCE (from the most recent row below). This is safe because the
@@ -337,17 +346,34 @@ class DriftHabitRepository implements HabitRepository {
             ),
           );
 
-          // Tribe totals are NOT debited here (D4 — the server recalc owns
-          // them). Only the per-member contributor record is debited, by
-          // base XP only, matching what the credit path added.
+          // Tribe-side reversal mirrors the credit exactly:
+          //  - local Drift tribe_stats row: negative deltas of what
+          //    incrementContribution added (base + challenge XP, 1 habit);
+          //  - per-member contributor doc: debited by the same total.
+          // Tribe doc totals (totalHabitsCompleted/memberCount) stay
+          // server-owned — the nightly recalc sums contributor docs, which
+          // ARE debited here, so an undo can never leave them inflated.
           if (resolvedTribeId != null) {
+            // Guard: only debit a row the credit actually created (the undo
+            // path implies one, but a wiped local DB must not mint a
+            // negative-value row via the create-on-first branch).
+            final localTribeRow =
+                await _db.tribeStatsDao.getStats(creditTribeId!);
+            if (localTribeRow != null) {
+              await _db.tribeStatsDao.incrementContribution(
+                creditTribeId,
+                xp: -xpToUndo,
+                habits: -1,
+                challenges: 0,
+              );
+            }
             await _syncEngine.enqueueUpdate(
-              collectionPath: 'tribes/$resolvedTribeId/contributors',
+              collectionPath: 'tribes/$creditTribeId/contributors',
               documentId: statsRow.userId,
               data: {
                 'totalXpContributed': {
                   '__type__': 'increment',
-                  'value': split.tribeDelta,
+                  'value': split.userStatsDelta,
                 },
                 'totalHabitsCompleted': {
                   '__type__': 'increment',
@@ -367,6 +393,18 @@ class DriftHabitRepository implements HabitRepository {
           userId: statsRow.userId,
           attribute: attr,
         ));
+
+        // Reverse the social side: activity docs (global + tribe feeds) and
+        // the leaderboard XP the credit path wrote.
+        await _socialService.undoHabitCompletion(
+          userId: statsRow.userId,
+          userName: statsRow.displayName ?? 'Anonymous',
+          archetype: statsRow.archetype ?? 'none',
+          habitId: habitId,
+          xpToUndo: xpToUndo,
+          level: newLevel,
+          clubId: creditTribeId,
+        );
 
         return const Right(false);
       }

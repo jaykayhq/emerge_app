@@ -331,6 +331,18 @@ service cloud.firestore {
       allow write: if false; // Only Cloud Functions write here
     }
 
+    // Password-reset request queue — written by the app (including from the
+    // signed-out login/signup screens) and drained by the email worker
+    // (GitHub Actions, Admin SDK) which sends the branded reset email and
+    // sets sentAt. Clients may only CREATE well-shaped request docs; they
+    // can never read or modify the queue or its sentAt markers.
+    match /email_requests/{requestId} {
+      allow create: if request.resource.data.type == 'password_reset' &&
+                      request.resource.data.email is string &&
+                      request.resource.data.email.matches('^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$');
+      allow read, update, delete: if false;
+    }
+
     // User Profiles (Archetype, Attributes, etc.)
     // `emailVerified` / `emailLockedAt` are server-owned (written by the
     // email-verification Cloud Functions via Admin SDK). Clients may only

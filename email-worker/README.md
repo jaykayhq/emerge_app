@@ -1,13 +1,21 @@
 # Emerge Email Worker
 
+> **Active** (2026-08): ALL transactional emails — welcome, **verification**,
+> **password reset**, re-engagement drip, verification grace lock — are sent
+> HERE via GitHub Actions + SMTP with fully branded templates. Firebase
+> Auth's built-in emails are never used (the app writes request markers the
+> worker polls instead). No Cloud Functions, no webhook.
+
 Cron email jobs for Emerge, run by **GitHub Actions** (free) instead of Cloud
 Functions, sending via **SMTP** (nodemailer) instead of the Resend API.
 
-Tasks (ported faithfully from the old Cloud Functions):
+Tasks:
 
-| Task | What it does | Idempotency marker |
-|------|--------------|--------------------|
-| `welcome` | One branded welcome email per account, created in the last 7 days (lookback prevents a retroactive blast to pre-existing accounts; the old Firestore trigger never backfilled) | `users/{uid}.welcomeEmailSentAt` |
+| Task | What it does | Trigger / Idempotency marker |
+|------|--------------|------------------------------|
+| `welcome` | One branded welcome email per account, created in the last 7 days (lookback prevents a retroactive blast to pre-existing accounts) | `users/{uid}.welcomeEmailSentAt` |
+| `verify` | Branded verification email with a link back to the app's `/verify-email` route (oobCode applied in-app — no Firebase hosted page). Cooldown 60s. | App writes `users/{uid}.verificationRequestedAt`; worker marks `verificationEmailSentAt` (+ `emailVerificationSentAt` grace anchor on first send only) |
+| `reset` | Branded password-reset email with a link back to the app's `/reset-password` route. Cooldown 60s per email. | App writes `email_requests/{id}` `{type: 'password_reset', email, requestedAt}`; worker marks `sentAt` |
 | `drip` | Re-engagement nudge: signed up ≥ 3 days ago, still active (lastActivity within 7 days), not dripped | `users/{uid}.reengagementEmailSentAt` |
 | `grace` | Verification grace lock: unverified accounts 7 days after `emailVerificationSentAt` get `users/{uid}.emailLockedAt` (the app router then blocks non-auth surfaces); verified accounts get stale locks cleared. The check uses Firebase Auth's authoritative `emailVerified` flag | state on `users/{uid}.emailLockedAt` |
 
@@ -18,7 +26,7 @@ cd email-worker
 npm ci
 FIREBASE_SERVICE_ACCOUNT=/path/to/service-account-key.json \
 SMTP_HOST=... SMTP_PORT=587 SMTP_USER=... SMTP_PASS=... \
-node src/index.js --task all          # or: --task welcome|drip|grace
+node src/index.js --task all          # or: --task welcome|verify|reset|drip|grace
 ```
 
 (`FIREBASE_SERVICE_ACCOUNT_JSON` with the JSON inline also works — that's how
@@ -38,12 +46,11 @@ EMAIL_OVERRIDE_TO=you@example.com node src/index.js --task all
 
 ## GitHub Actions
 
-`.github/workflows/emails.yml` runs all tasks daily at 04:00 UTC
-(`workflow_dispatch` available for manual runs).
-`.github/workflows/emails-welcome.yml` runs the welcome task every 5 minutes
-for near-real-time delivery (the repo is public → unlimited free Actions
-minutes). Welcome delivery is therefore ≤5 minutes after signup; drip and
-grace remain daily.
+`.github/workflows/emails.yml` runs ALL tasks (welcome/verify/reset/drip/
+grace) daily at 04:00 UTC as a safety net (`workflow_dispatch` available for
+manual runs). `.github/workflows/emails-welcome.yml` runs welcome/verify/
+reset every 5 minutes for near-real-time delivery (all tasks are idempotent
+via their markers, so the overlapping runs never double-send).
 
 Required repo secrets:
 

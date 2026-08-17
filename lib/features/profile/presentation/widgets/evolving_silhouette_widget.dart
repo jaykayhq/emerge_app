@@ -1,5 +1,7 @@
 import 'package:emerge_app/core/theme/archetype_theme.dart';
+import 'package:emerge_app/core/theme/attribute_colors.dart';
 import 'package:emerge_app/features/auth/domain/entities/user_extension.dart';
+import 'package:emerge_app/features/habits/domain/entities/habit.dart';
 import 'package:emerge_app/features/profile/domain/models/silhouette_evolution.dart';
 import 'package:emerge_app/features/profile/domain/services/evolution_haptic_service.dart';
 import 'package:emerge_app/features/profile/presentation/widgets/phases/ascended_phase_painter.dart';
@@ -294,13 +296,13 @@ class _AttributeAuraOverlayPainter extends CustomPainter {
     'Creativity': [(0.1, 0.4), (0.9, 0.4)], // Hands
   };
 
-  static const _attributeColors = {
-    'Strength': Color(0xFFf7768e),
-    'Intellect': Color(0xFFbb9af7),
-    'Vitality': Color(0xFF9ece6a),
-    'Focus': Color(0xFF00F0FF),
-    'Resilience': Color(0xFF7aa2f7),
-    'Creativity': Color(0xFFe0af68),
+  static final _attributeColors = {
+    'Strength': attributeColor(HabitAttribute.strength),
+    'Intellect': attributeColor(HabitAttribute.intellect),
+    'Vitality': attributeColor(HabitAttribute.vitality),
+    'Focus': attributeColor(HabitAttribute.focus),
+    'Resilience': const Color(0xFF7aa2f7),
+    'Creativity': attributeColor(HabitAttribute.creativity),
   };
 
   _AttributeAuraOverlayPainter({

@@ -1,4 +1,5 @@
 // test/features/world_map/domain/world_type_config_test.dart
+import 'package:emerge_app/core/theme/attribute_colors.dart';
 import 'package:emerge_app/features/habits/domain/entities/habit.dart';
 import 'package:emerge_app/features/world_map/domain/models/world_type_config.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -9,6 +10,17 @@ void main() {
       final attrs = HabitAttribute.values.toSet();
       final configAttrs = WorldTypeConfig.all.map((c) => c.attribute).toSet();
       expect(configAttrs, equals(attrs));
+    });
+
+    test('primaryColor matches the canonical attribute palette', () {
+      for (final config in WorldTypeConfig.all) {
+        expect(
+          config.primaryColor,
+          attributeColor(config.attribute),
+          reason: '${config.attribute.name} world color must match the '
+              'canonical attribute palette',
+        );
+      }
     });
 
     test('forAttribute returns the correct config', () {
