@@ -25,6 +25,12 @@ jobs:
       - name: Build web
         run: flutter build web --release
 
+      - name: Build landing page
+        run: bash scripts/build_landing.sh
+
+      - name: Test landing page
+        run: node --test scripts/test_landing.mjs
+
       - uses: FirebaseExtended/action-hosting-deploy@v0
         with:
           repoToken: ${{ secrets.GITHUB_TOKEN }}
