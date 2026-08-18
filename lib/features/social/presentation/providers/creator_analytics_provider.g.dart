@@ -171,7 +171,7 @@ final class CreatorAnalyticsProvider
   }
 }
 
-String _$creatorAnalyticsHash() => r'22df5ce959c525e4f52cade5e6ccaa87e9d447e2';
+String _$creatorAnalyticsHash() => r'0e9256e4d2df166c3a21c6e696194ce950de0bce';
 
 /// Full analytics for (uid, tribeId). Refreshes on invalidation
 /// (e.g. after a share action or pull-to-refresh).

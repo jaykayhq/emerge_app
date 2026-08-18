@@ -133,6 +133,12 @@ void main() {
     expect(ids, contains('athlete.hydration.glass'));
     expect(ids, contains('athlete.walk.10min'));
     expect(ids, isNot(contains('athlete.warmup.breath')));
+
+    // The saving flag must not stay stuck: after a finished attempt the CTA
+    // is re-enabled, so back-navigation + re-tap is never a silent no-op.
+    final start = find.widgetWithText(ElevatedButton, 'START MY JOURNEY');
+    await tester.pump(const Duration(seconds: 4));
+    expect(tester.widget<ElevatedButton>(start).enabled, isTrue);
   });
 
   testWidgets('customized title reaches the created pack', (tester) async {

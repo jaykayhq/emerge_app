@@ -68,11 +68,26 @@ class BlueprintDetailController extends AsyncNotifier<void> {
         (failure) async {
           throw Exception(failure.message);
         },
-        (_) async {
-          await ref.read(blueprintRepositoryProvider).incrementAdoptionCount(blueprint.id);
-          state = const AsyncData(null);
-        },
+        (_) async {},
       );
+
+      // Adoption succeeded — flip to success BEFORE the side-effecting
+      // counter write so a Firestore hiccup there can't strand the UI on
+      // AsyncLoading with habits already created.
+      state = const AsyncData(null);
+
+      try {
+        await ref.read(blueprintRepositoryProvider).incrementAdoptionCount(blueprint.id);
+        // The single-doc provider may be cached with the stale pre-increment
+        // count; force a re-fetch so deep-linked detail screens show the
+        // fresh number.
+        ref.invalidate(blueprintByIdProvider(blueprint.id));
+      } catch (e) {
+        debugPrint(
+          'Blueprint adoption counter increment failed (best-effort) for '
+          '${blueprint.id}: $e',
+        );
+      }
     } catch (e, st) {
       state = AsyncError(e, st);
       rethrow;

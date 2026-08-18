@@ -91,17 +91,34 @@ const SYSTEM_PREFIXES = ["creator_"];
 
 /** Removes a uid from every tribe's members array (derived count). */
 async function removeUserFromTribes(uid) {
-  const snap = await db.collectionGroup("tribes").get();
+  // Direct membership query (mirrors removeUserFromTribesInternal in
+  // functions/src/cleanupUserData.ts) instead of one tribeRef.get() per
+  // membership doc — the array-contains filter returns the tribe docs
+  // themselves, so no extra reads are needed to inspect their members.
+  const snap = await db
+    .collectionGroup("tribes")
+    .where("members", "array-contains", uid)
+    .get();
+  if (snap.empty) return;
+
+  // Dedup refs: a group query can surface the same tribe doc once per
+  // matching path — update each tribe only once.
+  const seen = new Set();
+  const updates = [];
   for (const d of snap.docs) {
-    const parts = d.ref.path.split("/");
-    if (parts.length !== 4 || parts[0] !== "users" || parts[2] !== "tribes") continue;
-    const tribeRef = db.collection("tribes").doc(parts[3]);
-    const tribeDoc = await tribeRef.get();
-    if (!tribeDoc.exists) continue;
-    const members = Array.isArray(tribeDoc.data().members) ? tribeDoc.data().members : [];
+    if (seen.has(d.ref.path)) continue;
+    seen.add(d.ref.path);
+    const members = Array.isArray(d.data().members) ? d.data().members : [];
     const next = members.filter((m) => m !== uid);
-    if (next.length === members.length) continue;
-    await tribeRef.update({ members: next, memberCount: next.length });
+    if (next.length === members.length) continue; // already removed
+    updates.push({ ref: d.ref, members: next });
+  }
+  for (let i = 0; i < updates.length; i += 400) {
+    const batch = db.batch();
+    for (const u of updates.slice(i, i + 400)) {
+      batch.update(u.ref, { members: u.members, memberCount: u.members.length });
+    }
+    await batch.commit();
   }
 }
 
@@ -170,24 +187,34 @@ async function main() {
     if (execute) {
       for (const id of orphans) {
         if (colName === "users") {
+          // Remove from tribe members arrays BEFORE the recursive delete: the
+          // `users/{id}/tribes/*` membership docs are how we discover which
+          // tribes this uid is in — deleting them first would hide the
+          // discovery query and leave the orphan in every tribe's members
+          // array until the next manual fix.
+          await removeUserFromTribes(id);
           // Recursive delete covers subcollections (memberships, etc.).
           await db.recursiveDelete(db.collection("users").doc(id));
-          await removeUserFromTribes(id);
           const extra = await purgeUserKeyedData(id);
           console.log(`    users/${id}: recursive delete + ${extra} user-keyed docs`);
           totalDeleted += 1 + extra;
-        } else {
-          // Delete in batches of 400
-          for (let i = 0; i < orphans.length; i += 400) {
-            const batch = db.batch();
-            const chunk = orphans.slice(i, i + 400);
-            for (const id of chunk) {
-              batch.delete(db.collection(colName).doc(id));
-            }
-            await batch.commit();
-          }
-          totalDeleted += orphans.length;
         }
+      }
+      // Non-user collections (user_stats, creator_profiles, insight_cache,
+      // customers): delete every orphan doc in chunks of 400. This loop lives
+      // OUTSIDE the per-id loop — nesting it inside would re-delete the whole
+      // collection's orphans for every single id (O(N²) duplicate deletes).
+      if (colName !== "users") {
+        for (let i = 0; i < orphans.length; i += 400) {
+          const batch = db.batch();
+          const chunk = orphans.slice(i, i + 400);
+          for (const id of chunk) {
+            batch.delete(db.collection(colName).doc(id));
+          }
+          await batch.commit();
+        }
+        // Each orphan doc is deleted exactly once — count once, not per id.
+        totalDeleted += orphans.length;
       }
     }
 

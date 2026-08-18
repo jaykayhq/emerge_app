@@ -60,7 +60,18 @@ class SocialActivityService {
   }) async {
     final lookup = _getPartnerIds;
     if (lookup == null) return;
-    final partnerIds = await lookup(actorId);
+    // Best-effort: a transient lookup failure must not abort the credit
+    // path (leaderboard write). Treat it as zero partners.
+    final List<String> partnerIds;
+    try {
+      partnerIds = await lookup(actorId);
+    } catch (e) {
+      AppLogger.w(
+        'Partner lookup for $actorId failed; treating as no partners',
+        error: e,
+      );
+      return;
+    }
     for (final partnerId in partnerIds) {
       try {
         await _syncEngine.enqueueSet(
@@ -79,7 +90,6 @@ class SocialActivityService {
           'Partner activity fan-out to $partnerId failed',
           error: e,
         );
-        rethrow;
       }
     }
   }
@@ -255,7 +265,7 @@ class SocialActivityService {
           documentId: row.id,
           operation: 'delete',
         );
-        await _activityDao.deleteActivity(row.id);
+        await _activityDao.deleteActivity(row.id, userId);
       }
 
       if (xpToUndo > 0) {

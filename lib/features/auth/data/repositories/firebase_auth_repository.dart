@@ -296,6 +296,25 @@ class FirebaseAuthRepository implements AuthRepository {
         final displayName = user.displayName?.isNotEmpty == true
             ? user.displayName!
             : user.email?.split('@').first ?? 'User';
+
+        // Claim a globally-unique username derived from the Google profile so
+        // Google signups participate in the same `usernames` lock collection
+        // as email signups. Best-effort: a free-form display name that cannot
+        // map to a valid username (or a collision) must not fail the
+        // otherwise-successful sign-in — the display-name fallback below is
+        // unchanged, and a later claim attempt is always possible.
+        final candidate = deriveUsernameCandidate(displayName, user.email);
+        if (candidate != null) {
+          final claim = await claimUsername(candidate);
+          claim.fold(
+            (failure) => AppLogger.w(
+              'Google signup: username claim $candidate skipped '
+              '(${failure.message}) — keeping display-name fallback.',
+            ),
+            (_) {},
+          );
+        }
+
         final userProfile = UserProfile(
           uid: user.uid,
           role: _kRoleUser,
@@ -350,6 +369,9 @@ class FirebaseAuthRepository implements AuthRepository {
       await _firestore.collection('email_requests').add({
         'type': 'password_reset',
         'email': email.trim(),
+        // Attribution only: '' for the signed-out login-screen flow, the uid
+        // for the authenticated settings-screen flow. The rules permit both.
+        'userId': _firebaseAuth.currentUser?.uid ?? '',
         'requestedAt': FieldValue.serverTimestamp(),
       });
       return const Right(null);
@@ -573,4 +595,30 @@ class FirebaseAuthRepository implements AuthRepository {
       return Left(ServerFailure(e.toString()));
     }
   }
+}
+
+/// Derives a claimable username from a Google profile (display name, falling
+/// back to the email prefix) so Google/creator signups can participate in the
+/// same `usernames` lock collection as email signups. Google names are
+/// free-form ("John M. Doe"), which is not a valid username — this normalizes
+/// to the app's username charset (a-z0-9_-), collapsing runs of invalid
+/// characters into a single underscore and enforcing length 3..30.
+///
+/// Returns null when no valid candidate can be formed — callers then keep the
+/// display-name fallback and skip the claim.
+String? deriveUsernameCandidate(String? displayName, String? email) {
+  var raw = displayName?.trim().toLowerCase() ?? '';
+  if (raw.isEmpty) {
+    raw = email?.split('@').first.trim().toLowerCase() ?? '';
+  }
+  if (raw.isEmpty) return null;
+  var candidate = raw
+      .replaceAll(RegExp('[^a-z0-9_-]'), '_')
+      .replaceAll(RegExp('_+'), '_')
+      .replaceAll(RegExp('^[_-]+|[_-]+\$'), '');
+  if (candidate.length > 30) {
+    candidate = candidate.substring(0, 30);
+    candidate = candidate.replaceAll(RegExp('^[_-]+|[_-]+\$'), '');
+  }
+  return candidate.length >= 3 ? candidate : null;
 }

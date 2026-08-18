@@ -43,7 +43,13 @@ class BlueprintHabit extends Equatable {
       if (timeStr == null) return null;
       final parts = timeStr.split(':');
       if (parts.length != 2) return null;
-      return TimeOfDay(hour: int.parse(parts[0]), minute: int.parse(parts[1]));
+      // Defensive against malformed "HH:mm". int.tryParse both tokens and
+      // only build a TimeOfDay when BOTH parse — a mixed-valid/invalid string
+      // ('12:xx') is unset, not a plausible-looking 00:00 default.
+      final hour = int.tryParse(parts[0]);
+      final minute = int.tryParse(parts[1]);
+      if (hour == null || minute == null) return null;
+      return TimeOfDay(hour: hour.clamp(0, 23), minute: minute.clamp(0, 59));
     }
 
     return BlueprintHabit(

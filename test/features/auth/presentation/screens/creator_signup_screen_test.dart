@@ -221,13 +221,21 @@ void main() {
   testWidgets('successful Google signup navigates to splash', (tester) async {
     await setMobileViewport(tester);
 
+    final mockAuth = MockAuthRepository();
+    when(() => mockAuth.checkUsernameAvailability(any())).thenAnswer(
+      (_) async => right<Failure, bool>(true),
+    );
+
     final overrides = [
-      signUpCreatorWithGoogleProvider('ABCDEFGH').overrideWith((ref) async {}),
+      signUpCreatorWithGoogleProvider('ABCDEFGH', 'TestUser')
+          .overrideWith((ref) async {}),
+      authRepositoryProvider.overrideWithValue(mockAuth),
     ];
 
     await tester.pumpWidget(_buildTest(overrides: overrides, router: router));
     await tester.pumpAndSettle();
 
+    await tester.enterText(find.byType(TextFormField).at(0), 'TestUser');
     await tester.enterText(
       find.widgetWithText(TextFormField, 'Invite Code'),
       'ABCDEFGH',
@@ -242,7 +250,8 @@ void main() {
     await setMobileViewport(tester);
 
     final overrides = [
-      signUpCreatorWithGoogleProvider('ABCDEFGH').overrideWith((ref) async {
+      signUpCreatorWithGoogleProvider('ABCDEFGH', '')
+          .overrideWith((ref) async {
         await Future<void>.value();
         throw Exception('Google sign-up failed');
       }),

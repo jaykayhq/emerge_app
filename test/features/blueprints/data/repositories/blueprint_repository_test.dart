@@ -308,5 +308,39 @@ void main() {
       expect(habits.first['title'], 'Wake Up at 6 AM');
       expect(habits.first['timeOfDay'], 'Morning');
     });
+
+    test('getBlueprints skips a malformed doc instead of erroring the stream',
+        () async {
+      final firestore = FakeFirebaseFirestore();
+      await firestore.collection('blueprints').doc('good_1').set({
+        'title': 'Good',
+        'description': '',
+        'category': 'Morning',
+        'creatorName': 'Test',
+        'creatorUserId': 'u1',
+        'creatorArchetype': 'Scholar',
+        'createdAt': DateTime.now(),
+        'habits': [
+          {'title': 'Wake Up', 'attribute': 'vitality'},
+        ],
+      });
+      // Malformed: a non-map habit entry makes BlueprintHabit.fromMap throw.
+      await firestore.collection('blueprints').doc('bad_1').set({
+        'title': 'Bad',
+        'description': '',
+        'category': 'Morning',
+        'creatorName': 'Test',
+        'creatorUserId': 'u1',
+        'creatorArchetype': 'Scholar',
+        'createdAt': DateTime.now(),
+        'habits': [123],
+      });
+
+      final repo = BlueprintRepository(firestore);
+      final result = await repo.getBlueprints().first;
+
+      expect(result, hasLength(1));
+      expect(result.single.id, 'good_1');
+    });
   });
 }

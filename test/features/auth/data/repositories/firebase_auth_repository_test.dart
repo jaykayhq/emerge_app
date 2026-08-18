@@ -2,6 +2,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:emerge_app/features/auth/data/repositories/firebase_auth_repository.dart';
+import 'package:emerge_app/core/utils/validators.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:google_sign_in_platform_interface/google_sign_in_platform_interface.dart';
@@ -66,6 +67,28 @@ class _FakeGoogleSignInPlatform extends GoogleSignInPlatform {
   Future<void> disconnect(DisconnectParams params) async {}
 }
 
+/// Google Sign-In platform that returns a logged-in profile with a
+/// free-form display name — simulates the native (non-web) signup flow.
+class _SignedInGoogleSignInPlatform extends _FakeGoogleSignInPlatform {
+  @override
+  Future<AuthenticationResults> authenticate(AuthenticateParameters params) async {
+    return const AuthenticationResults(
+      user: GoogleSignInUserData(
+        displayName: 'Googler One',
+        email: 'goo@gmail.com',
+        id: 'g1',
+      ),
+      authenticationTokens: AuthenticationTokenData(idToken: 'google-id-token'),
+    );
+  }
+}
+
+// DocumentSnapshot is sealed in the current SDK; noMockedSubtypes of it are
+// forbidden, so we implement the type and suppress the linter instead.
+// ignore: subtype_of_sealed_class
+class _MockDocumentSnapshot extends Mock
+    implements DocumentSnapshot<Map<String, dynamic>> {}
+
 FirebaseFunctionsException _alreadyTaken() => FirebaseFunctionsException(
   // ignore: invalid_use_of_protected_member
   code: 'already-exists',
@@ -73,6 +96,12 @@ FirebaseFunctionsException _alreadyTaken() => FirebaseFunctionsException(
 );
 
 void main() {
+  setUpAll(() {
+    // mocktail needs a concrete AuthCredential to build matchers (`any()`)
+    // for signInWithCredential(FirebaseAuthException-style APIs).
+    registerFallbackValue(GoogleAuthProvider.credential(idToken: 'fallback'));
+  });
+
   late _MockFirebaseAuth auth;
   late _MockFirestore firestore;
   late _MockFunctions functions;
@@ -150,6 +179,144 @@ void main() {
       expect(result.isRight(), isTrue);
       verifyNever(() => user.delete());
     });
+  });
+
+  group('deriveUsernameCandidate', () {
+    test('normalizes a free-form Google display name into a username', () {
+      expect(
+        deriveUsernameCandidate('Googler One', 'goo@gmail.com'),
+        'googler_one',
+      );
+    });
+
+    test('falls back to the email prefix when the display name is empty', () {
+      expect(deriveUsernameCandidate('', 'goo@gmail.com'), 'goo');
+      expect(deriveUsernameCandidate(null, 'mike.smith@example.com'),
+          'mike_smith');
+    });
+
+    test('returns null when nothing can form a 3+ char username', () {
+      expect(deriveUsernameCandidate('ab', 'x@example.com'), isNull);
+      expect(deriveUsernameCandidate('', ''), isNull);
+    });
+
+    test('caps length at 30 and strips leading/trailing separators', () {
+      final long = 'a' * 40;
+      expect(deriveUsernameCandidate(long, 'x@example.com'),
+          'a' * 30);
+      expect(
+        deriveUsernameCandidate('_joe', 'x@example.com'),
+        'joe',
+      );
+    });
+
+    test('normalizes a blocked reserved word but the claim guard rejects it '
+        '(graceful skip, no throw)', () {
+      // A Google display name like "Support" normalizes to a syntactically
+      // valid candidate ('support') that deriveUsernameCandidate happily
+      // returns — the blocklist lives in the claim guard, not here.
+      final candidate = deriveUsernameCandidate('Support', 'x@example.com');
+      expect(candidate, 'support');
+
+      // Pin the full graceful-skip path: validateUsername (the same guard
+      // claimUsername runs before calling the function) rejects the word with
+      // the blocklist message instead of throwing.
+      expect(
+        AppValidators.validateUsername(candidate!),
+        'This username is not allowed',
+      );
+      expect(() => AppValidators.validateUsername(candidate), returnsNormally);
+    });
+  });
+
+  group('signInWithGoogle native username claim', () {
+    test('claims a username derived from the Google display name', () async {
+      when(() => user.displayName).thenReturn('Googler One');
+      when(() => user.email).thenReturn('goo@gmail.com');
+      when(() => user.emailVerified).thenReturn(false);
+      when(() => user.getIdToken(any())).thenAnswer((_) async => 'token');
+      when(() => auth.currentUser).thenReturn(user);
+      when(() => claimCallable.call(any())).thenAnswer(
+        (_) async => _MockHttpsCallableResult(),
+      );
+
+      final usersCollection = _MockCollectionReference();
+      final userDoc = _MockDocumentReference();
+      final snapshot = _MockDocumentSnapshot();
+      when(() => firestore.collection('users')).thenReturn(usersCollection);
+      when(() => usersCollection.doc('u1')).thenReturn(userDoc);
+      when(() => userDoc.get()).thenAnswer((_) async => snapshot);
+      when(() => snapshot.exists).thenReturn(false);
+      when(() => userDoc.set(any())).thenAnswer((_) async {});
+
+      final statsCollection = _MockCollectionReference();
+      final statsDoc = _MockDocumentReference();
+      when(() => firestore.collection('user_stats'))
+          .thenReturn(statsCollection);
+      when(() => statsCollection.doc('u1')).thenReturn(statsDoc);
+      when(() => statsDoc.set(any())).thenAnswer((_) async {});
+
+      final roleCallable = _MockHttpsCallable();
+      when(() => functions.httpsCallable('setUserRole'))
+          .thenReturn(roleCallable);
+      when(() => roleCallable.call(any()))
+          .thenAnswer((_) async => _MockHttpsCallableResult());
+
+      when(
+        () => auth.signInWithCredential(any()),
+      ).thenAnswer((_) async => credential);
+
+      GoogleSignInPlatform.instance = _SignedInGoogleSignInPlatform();
+
+      final repo = buildRepo();
+      final result = await repo.signInWithGoogle();
+
+      expect(result.isRight(), isTrue);
+      verify(() => claimCallable.call({'username': 'googler_one'})).called(1);
+    }, skip: false);
+
+    test('skips the claim (best-effort) when no valid username can be '
+        'derived from the profile', () async {
+      when(() => user.displayName).thenReturn(null);
+      when(() => user.email).thenReturn('x@example.com');
+      when(() => user.emailVerified).thenReturn(false);
+      when(() => user.getIdToken(any())).thenAnswer((_) async => 'token');
+      when(() => auth.currentUser).thenReturn(user);
+
+      final usersCollection = _MockCollectionReference();
+      final userDoc = _MockDocumentReference();
+      final snapshot = _MockDocumentSnapshot();
+      when(() => firestore.collection('users')).thenReturn(usersCollection);
+      when(() => usersCollection.doc('u1')).thenReturn(userDoc);
+      when(() => userDoc.get()).thenAnswer((_) async => snapshot);
+      when(() => snapshot.exists).thenReturn(false);
+      when(() => userDoc.set(any())).thenAnswer((_) async {});
+
+      final statsCollection = _MockCollectionReference();
+      final statsDoc = _MockDocumentReference();
+      when(() => firestore.collection('user_stats'))
+          .thenReturn(statsCollection);
+      when(() => statsCollection.doc('u1')).thenReturn(statsDoc);
+      when(() => statsDoc.set(any())).thenAnswer((_) async {});
+
+      final roleCallable = _MockHttpsCallable();
+      when(() => functions.httpsCallable('setUserRole'))
+          .thenReturn(roleCallable);
+      when(() => roleCallable.call(any()))
+          .thenAnswer((_) async => _MockHttpsCallableResult());
+
+      when(
+        () => auth.signInWithCredential(any()),
+      ).thenAnswer((_) async => credential);
+
+      GoogleSignInPlatform.instance = _SignedInGoogleSignInPlatform();
+
+      final repo = buildRepo();
+      final result = await repo.signInWithGoogle();
+
+      expect(result.isRight(), isTrue);
+      verifyNever(() => claimCallable.call(any()));
+    }, skip: false);
   });
 
   group('sendVerificationEmail', () {

@@ -188,9 +188,23 @@ class EnhancedOnboardingNotifier extends _$EnhancedOnboardingNotifier {
 
     if (profile != null && !isFirstLaunch) {
       final progress = profile.onboardingProgress;
+      // Mirror exactly what _persistToBackend writes so a user killed
+      // mid-flow resumes where they left off instead of repeating steps.
+      final stepNames = ['archetype', 'attributes', 'why', 'anchors', 'stacking'];
+      final skipped = List<bool>.filled(5, false);
+      for (final name in profile.skippedOnboardingSteps) {
+        final idx = stepNames.indexOf(name);
+        if (idx >= 0 && idx < skipped.length) skipped[idx] = true;
+      }
       return EnhancedOnboardingState(
         selectedArchetype: profile.archetype,
+        motive: profile.motive,
         why: profile.why,
+        anchors: profile.anchors,
+        habitStacks: profile.habitStacks,
+        interests: profile.interests,
+        joinedClubId: profile.joinedClubId,
+        skippedMilestones: skipped,
         currentStep: progress,
         isOnboardingActive: progress < 5,
       );

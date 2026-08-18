@@ -186,5 +186,123 @@ void main() {
       // No assertion on getPartnerIds — it simply is never invoked.
       // Just confirms the service completes without throwing.
     });
+
+    test(
+        'a failing partner write is best-effort: the leaderboard still '
+        'updates and remaining partners still receive the write', () async {
+      when(
+        () => mockSyncEngine.enqueueSet(
+          collectionPath: 'users/p1/partner_activity',
+          documentId: any(named: 'documentId'),
+          data: any(named: 'data'),
+        ),
+      ).thenThrow(Exception('boom'));
+
+      final service = SocialActivityService(
+        syncEngine: mockSyncEngine,
+        activityDao: mockActivityDao,
+        leaderboardRepo: mockLeaderboardRepo,
+        getPartnerIds: (userId) async => ['p1', 'p2', 'p3'],
+      );
+
+      await service.logHabitCompletion(
+        userId: 'me',
+        userName: 'Me',
+        archetype: 'athlete',
+        habitId: 'h1',
+        habitTitle: 'Cold Plunge',
+        streakDay: 1,
+        attribute: 'body',
+        xpGained: 10,
+        currentLevel: 2,
+        clubId: 'my_tribe',
+      );
+
+      // The failing partner's write was attempted...
+      verify(
+        () => mockSyncEngine.enqueueSet(
+          collectionPath: 'users/p1/partner_activity',
+          documentId: any(named: 'documentId'),
+          data: any(named: 'data'),
+        ),
+      ).called(1);
+      // ...but the remaining partners still got their fan-out write.
+      verify(
+        () => mockSyncEngine.enqueueSet(
+          collectionPath: 'users/p2/partner_activity',
+          documentId: any(named: 'documentId'),
+          data: any(named: 'data'),
+        ),
+      ).called(1);
+      verify(
+        () => mockSyncEngine.enqueueSet(
+          collectionPath: 'users/p3/partner_activity',
+          documentId: any(named: 'documentId'),
+          data: any(named: 'data'),
+        ),
+      ).called(1);
+
+      // The leaderboard XP credit still executes.
+      verify(
+        () => mockLeaderboardRepo.updateUserScore(
+          'me',
+          xp: 10,
+          level: 2,
+          archetype: any(named: 'archetype'),
+          userName: 'Me',
+          clubId: 'my_tribe',
+          isIncrement: any(named: 'isIncrement'),
+        ),
+      ).called(1);
+    });
+
+    test(
+        'a failing partner lookup is best-effort: the leaderboard still '
+        'updates and no exception escapes', () async {
+      final service = SocialActivityService(
+        syncEngine: mockSyncEngine,
+        activityDao: mockActivityDao,
+        leaderboardRepo: mockLeaderboardRepo,
+        getPartnerIds: (userId) async => throw Exception('lookup boom'),
+      );
+
+      await service.logHabitCompletion(
+        userId: 'me',
+        userName: 'Me',
+        archetype: 'athlete',
+        habitId: 'h1',
+        habitTitle: 'Cold Plunge',
+        streakDay: 1,
+        attribute: 'body',
+        xpGained: 10,
+        currentLevel: 2,
+        clubId: 'my_tribe',
+      );
+
+      // No partner fan-out writes are attempted when the lookup fails.
+      verifyNever(
+        () => mockSyncEngine.enqueueSet(
+          collectionPath: any(
+            that: endsWith('/partner_activity'),
+            named: 'collectionPath',
+          ),
+          documentId: any(named: 'documentId'),
+          data: any(named: 'data'),
+        ),
+      );
+
+      // The leaderboard XP credit still executes.
+      verify(
+        () => mockLeaderboardRepo.updateUserScore(
+          'me',
+          xp: 10,
+          level: 2,
+          archetype: any(named: 'archetype'),
+          userName: 'Me',
+          clubId: 'my_tribe',
+          isIncrement: any(named: 'isIncrement'),
+        ),
+      ).called(1);
+    });
   });
 }

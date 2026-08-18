@@ -540,7 +540,7 @@ final class SignUpCreatorProvider
   }
 }
 
-String _$signUpCreatorHash() => r'8b09a42e3532657bb941682c38645a4fc53c8564';
+String _$signUpCreatorHash() => r'f323c9217183e2b3f4184e71ced0534cefb7a253';
 
 final class SignUpCreatorFamily extends $Family
     with
@@ -579,7 +579,7 @@ final class SignUpCreatorWithGoogleProvider
     with $FutureModifier<void>, $FutureProvider<void> {
   SignUpCreatorWithGoogleProvider._({
     required SignUpCreatorWithGoogleFamily super.from,
-    required String super.argument,
+    required (String, String) super.argument,
   }) : super(
          retry: null,
          name: r'signUpCreatorWithGoogleProvider',
@@ -595,7 +595,7 @@ final class SignUpCreatorWithGoogleProvider
   String toString() {
     return r'signUpCreatorWithGoogleProvider'
         ''
-        '($argument)';
+        '$argument';
   }
 
   @$internal
@@ -605,8 +605,8 @@ final class SignUpCreatorWithGoogleProvider
 
   @override
   FutureOr<void> create(Ref ref) {
-    final argument = this.argument as String;
-    return signUpCreatorWithGoogle(ref, argument);
+    final argument = this.argument as (String, String);
+    return signUpCreatorWithGoogle(ref, argument.$1, argument.$2);
   }
 
   @override
@@ -622,10 +622,10 @@ final class SignUpCreatorWithGoogleProvider
 }
 
 String _$signUpCreatorWithGoogleHash() =>
-    r'05a3bca84f1d3d24fe1639a1a4deea3bc1b2a091';
+    r'8f3bf3e2ee96ca51bc9b2ef4f8a472e41e10c746';
 
 final class SignUpCreatorWithGoogleFamily extends $Family
-    with $FunctionalFamilyOverride<FutureOr<void>, String> {
+    with $FunctionalFamilyOverride<FutureOr<void>, (String, String)> {
   SignUpCreatorWithGoogleFamily._()
     : super(
         retry: null,
@@ -635,8 +635,11 @@ final class SignUpCreatorWithGoogleFamily extends $Family
         isAutoDispose: false,
       );
 
-  SignUpCreatorWithGoogleProvider call(String inviteCode) =>
-      SignUpCreatorWithGoogleProvider._(argument: inviteCode, from: this);
+  SignUpCreatorWithGoogleProvider call(String inviteCode, String username) =>
+      SignUpCreatorWithGoogleProvider._(
+        argument: (inviteCode, username),
+        from: this,
+      );
 
   @override
   String toString() => r'signUpCreatorWithGoogleProvider';

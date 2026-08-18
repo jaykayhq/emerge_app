@@ -147,7 +147,7 @@ export const purgeOrphanedUserData = onCall(async (request) => {
     }
 
     let candidateCount = 0;
-    const batch = db.batch();
+    let batch = db.batch();
     let batchOps = 0;
 
     for (const doc of snap.docs) {
@@ -190,10 +190,14 @@ export const purgeOrphanedUserData = onCall(async (request) => {
       batch.delete(doc.ref);
       batchOps++;
 
-      // Firestore batches are limited to 500 writes.
+      // Firestore batches are limited to 500 writes. A committed batch can
+      // never be reused — a new WriteBatch must be created or every further
+      // delete throws "Cannot modify a WriteBatch that has already been
+      // committed" and aborts the whole purge.
       if (batchOps >= 400) {
         await batch.commit();
         deleted += batchOps;
+        batch = db.batch();
         batchOps = 0;
       }
     }

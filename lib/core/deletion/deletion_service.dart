@@ -34,6 +34,24 @@ class DeletionService {
         return const Left(ServerFailure('Habit not found'));
       }
       if (existing.isArchived == 1) {
+        // A prior attempt may have archived locally but failed at the remote
+        // enqueue, leaving the remote habit doc alive. Re-enqueue the delete
+        // so the retry self-heals; the idempotency key dedupes against a
+        // mutation the first attempt already queued.
+        try {
+          await _syncEngine.enqueueMutation(
+            collectionPath: 'habits',
+            documentId: habitId,
+            operation: 'delete',
+            idempotencyKey: 'del:habit:$habitId',
+          );
+        } catch (e) {
+          // Best-effort: the row is already archived locally, so this is
+          // still an idempotent success.
+          debugPrint(
+            'Failed to re-enqueue delete for archived habit $habitId: $e',
+          );
+        }
         _audit.log(
           op: 'deleteHabit',
           target: 'habit',
@@ -43,14 +61,43 @@ class DeletionService {
         );
         return const Right(unit); // idempotent
       }
-      await _db.transaction(() async {
+      final completions = await _db.transaction(() async {
+        // Capture the ids BEFORE the cascade so they can be mirrored remotely.
+        final rows = await _db.habitCompletionsDao.getByHabitId(
+          habitId,
+          userId,
+        );
         await _db.habitsDao.archiveHabit(habitId);
         await _db.habitCompletionsDao.deleteByHabitId(habitId, userId);
+        return rows;
       });
+      // Mirror the completion cascade remotely FIRST so a failure on the
+      // habit-doc enqueue below cannot strand the remote history: the local
+      // ids are already gone after the archive, so a later retry would be a
+      // no-op. Best-effort: a stale completion doc is a hygiene issue, not a
+      // leak.
+      for (final c in completions) {
+        try {
+          await _syncEngine.enqueueMutation(
+            collectionPath: 'users/$userId/habit_completions',
+            documentId: c.id,
+            operation: 'delete',
+            idempotencyKey: 'del:completion:${c.id}',
+          );
+        } catch (e) {
+          debugPrint(
+            'Failed to enqueue remote deletion of completion ${c.id}: $e',
+          );
+        }
+      }
       try {
         // Habits live in the TOP-LEVEL `habits` collection (see
         // DriftHabitRepository.createHabit) and firestore.rules allows the
         // owner to delete there. A hard delete is idempotent server-side.
+        //
+        // If this throws, the completion mirrors above are already queued, so
+        // a later retry only needs to recover this delete (see the
+        // already-archived branch above, which re-enqueues it).
         await _syncEngine.enqueueMutation(
           collectionPath: 'habits',
           documentId: habitId,

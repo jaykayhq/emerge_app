@@ -4,6 +4,7 @@ import 'package:emerge_app/core/security/app_check_service.dart';
 import 'package:emerge_app/core/services/notification_service.dart';
 import 'package:emerge_app/core/utils/app_logger.dart';
 import 'package:emerge_app/features/auth/domain/entities/user_extension.dart';
+import 'package:emerge_app/features/auth/data/repositories/firebase_auth_repository.dart';
 import 'package:emerge_app/features/onboarding/data/repositories/local_settings_repository.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart' as firebase_auth;
@@ -61,48 +62,97 @@ Future<void> initApp() async {
         final prefs = await SharedPreferences.getInstance();
         final isCreatorSignup = prefs.getBool('pending_creator_signup') ?? false;
         final inviteCode = prefs.getString('pending_creator_invite_code');
-        if (isCreatorSignup) {
+        final typedUsername = prefs.getString('pending_creator_username');
+        try {
+          // Create Firestore profile if this is a first-time sign-in
+          final firestore = FirebaseFirestore.instance;
+          final userDoc = await firestore.collection('users').doc(user.uid).get();
+          final creatorDoc = await firestore.collection('creator_profiles').doc(user.uid).get();
+
+          if (!userDoc.exists && !creatorDoc.exists) {
+            final displayName = user.displayName?.isNotEmpty == true
+                ? user.displayName!
+                : user.email?.split('@').first ?? 'User';
+
+            if (isCreatorSignup) {
+              // SP-E: server-side redemption — the creator_profiles doc, the
+              // isVerifiedCreator flag, and the role claim are all function-owned.
+              // Client-side profile writes are denied by the rules.
+              try {
+                final functions = FirebaseFunctions.instance;
+                // Prefer the username the user typed before the OAuth redirect
+                // (stashed by signUpCreatorWithGoogle); fall back to the Google
+                // display name when the field was left empty.
+                final redeemName =
+                    typedUsername?.trim().isNotEmpty == true
+                        ? typedUsername!.trim()
+                        : displayName;
+
+                // Claim the username so creators are covered by the same
+                // `usernames` lock as everyone else — redeemCreatorInvite has
+                // no claim of its own (checked in functions/src/creator_invites.ts).
+                // Best-effort on the redirect return path: a collision must not
+                // block the redemption or strand the user mid-flow.
+                final candidate = deriveUsernameCandidate(redeemName, user.email);
+                if (candidate != null) {
+                  try {
+                    await functions.httpsCallable('claimUsername').call(
+                      <String, dynamic>{'username': candidate},
+                    );
+                  } catch (claimError) {
+                    debugPrint(
+                        '⚠️ claimUsername failed on creator redirect '
+                        '(non-fatal): $claimError');
+                  }
+                }
+
+                await functions.httpsCallable('redeemCreatorInvite').call(<String, dynamic>{
+                  'code': inviteCode?.trim().toUpperCase() ?? '',
+                  'displayName': redeemName,
+                });
+                await user.getIdToken(true);
+                AppLogger.i('Creator redeemed via invite after Google redirect');
+              } catch (e) {
+                debugPrint('⚠️ redeemCreatorInvite failed on redirect: $e');
+              }
+            } else {
+              // Claim the username derived from the Google profile so web Google
+              // signups participate in the same `usernames` lock collection as
+              // email signups. Best-effort: a display name that cannot map to a
+              // valid username (or a collision) must not fail the redirect
+              // return flow — the profile below keeps the display-name fallback.
+              final candidate = deriveUsernameCandidate(displayName, user.email);
+              if (candidate != null) {
+                try {
+                  await FirebaseFunctions.instance
+                      .httpsCallable('claimUsername')
+                      .call(<String, dynamic>{'username': candidate});
+                } catch (claimError) {
+                  debugPrint('⚠️ claimUsername failed on Google redirect '
+                      '(non-fatal): $claimError');
+                }
+              }
+
+              final profile = UserProfile(uid: user.uid, displayName: displayName);
+              final profileMap = profile.toMap();
+              profileMap['email'] = user.email ?? '';
+              profileMap['createdAt'] = FieldValue.serverTimestamp();
+              await firestore.collection('users').doc(user.uid).set(profileMap);
+              await firestore
+                  .collection('user_stats')
+                  .doc(user.uid)
+                  .set(profileMap);
+              debugPrint('✅ Firestore profile created for Google sign-in user');
+            }
+          }
+        } finally {
+          // Always clear the pending-signup keys — on the normal-user branch,
+          // on the creator branch, AND on any throw. Leaving them behind would
+          // re-trigger an invite redemption for a user who already signed up,
+          // or leak a stale username into a later Google sign-up.
           await prefs.remove('pending_creator_signup');
           await prefs.remove('pending_creator_invite_code');
-        }
-
-        // Create Firestore profile if this is a first-time sign-in
-        final firestore = FirebaseFirestore.instance;
-        final userDoc = await firestore.collection('users').doc(user.uid).get();
-        final creatorDoc = await firestore.collection('creator_profiles').doc(user.uid).get();
-
-        if (!userDoc.exists && !creatorDoc.exists) {
-          final displayName = user.displayName?.isNotEmpty == true
-              ? user.displayName!
-              : user.email?.split('@').first ?? 'User';
-
-          if (isCreatorSignup) {
-            // SP-E: server-side redemption — the creator_profiles doc, the
-            // isVerifiedCreator flag, and the role claim are all function-owned.
-            // Client-side profile writes are denied by the rules.
-            try {
-              final functions = FirebaseFunctions.instance;
-              await functions.httpsCallable('redeemCreatorInvite').call(<String, dynamic>{
-                'code': inviteCode?.trim().toUpperCase() ?? '',
-                'displayName': displayName,
-              });
-              await user.getIdToken(true);
-              AppLogger.i('Creator redeemed via invite after Google redirect');
-            } catch (e) {
-              debugPrint('⚠️ redeemCreatorInvite failed on redirect: $e');
-            }
-          } else {
-            final profile = UserProfile(uid: user.uid, displayName: displayName);
-            final profileMap = profile.toMap();
-            profileMap['email'] = user.email ?? '';
-            profileMap['createdAt'] = FieldValue.serverTimestamp();
-            await firestore.collection('users').doc(user.uid).set(profileMap);
-            await firestore
-                .collection('user_stats')
-                .doc(user.uid)
-                .set(profileMap);
-            debugPrint('✅ Firestore profile created for Google sign-in user');
-          }
+          await prefs.remove('pending_creator_username');
         }
       }
     } catch (e) {

@@ -1,6 +1,7 @@
 import 'package:emerge_app/features/auth/data/repositories/firebase_auth_repository.dart';
 import 'package:emerge_app/features/auth/domain/entities/auth_user.dart';
 import 'package:emerge_app/features/auth/domain/repositories/auth_repository.dart';
+import 'package:emerge_app/core/error/failure.dart';
 import 'package:emerge_app/core/utils/app_logger.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cloud_functions/cloud_functions.dart';
@@ -113,6 +114,23 @@ Future<void> signUpCreator(
 
   await user.updateDisplayName(username.trim());
 
+  // Claim the globally-unique username (same `usernames` lock collection as
+  // the normal-user signup). redeemCreatorInvite does NOT claim it (verified
+  // in functions/src/creator_invites.ts), so this client-side claim is what
+  // keeps creator usernames unique. On collision the freshly-created account
+  // is deleted — no half-registered creator lingers.
+  final claim =
+      await ref.read(authRepositoryProvider).claimUsername(username.trim());
+  final claimFailure = claim.fold<Failure?>((f) => f, (_) => null);
+  if (claimFailure != null) {
+    try {
+      await user.delete();
+    } catch (_) {
+      // Best-effort rollback; deleteMyAccount remains the cleanup path.
+    }
+    throw Exception(claimFailure.message);
+  }
+
   // Server-side redemption creates creator_profiles (isVerifiedCreator: true)
   // and sets the role custom claim. The old client-side profile write and the
   // admin-gated setUserRole call are removed (SP-E).
@@ -125,7 +143,11 @@ Future<void> signUpCreator(
 }
 
 @Riverpod(keepAlive: true)
-Future<void> signUpCreatorWithGoogle(Ref ref, String inviteCode) async {
+Future<void> signUpCreatorWithGoogle(
+  Ref ref,
+  String inviteCode,
+  String username,
+) async {
   final auth = ref.read(firebaseAuthProvider);
   final firestore = ref.read(firestoreProvider);
 
@@ -136,6 +158,12 @@ Future<void> signUpCreatorWithGoogle(Ref ref, String inviteCode) async {
     await prefs.setBool('pending_creator_signup', true);
     // Stashed for the post-redirect redemption in init_app.dart.
     await prefs.setString('pending_creator_invite_code', inviteCode.trim().toUpperCase());
+    // The typed username too — the redirect return path must not silently
+    // swap it for the Google display name (which would discard the name the
+    // user explicitly chose and validated in the form).
+    if (username.trim().isNotEmpty) {
+      await prefs.setString('pending_creator_username', username.trim());
+    }
 
     final googleProvider = firebase_auth.GoogleAuthProvider();
     googleProvider.addScope('email');
@@ -163,12 +191,54 @@ Future<void> signUpCreatorWithGoogle(Ref ref, String inviteCode) async {
     throw Exception('This Google account is already registered as a normal user.');
   }
 
+  // Claim the username the UI collected (falls back to a normalized Google
+  // display name when the field was left empty). Creators are covered by the
+  // same uniqueness rule as normal users; redeemCreatorInvite has no claim,
+  // so this is the enforceable gate. A typed-username collision fails the
+  // sign-up (the form's live availability check already warned); a derived
+  // name that cannot be claimed would just keep the fallback display name.
+  final typedUsername = username.trim();
+  String? effectiveUsername;
+  if (typedUsername.isNotEmpty) {
+    effectiveUsername = typedUsername;
+  } else {
+    effectiveUsername = deriveUsernameCandidate(user.displayName, user.email);
+  }
+  if (effectiveUsername != null) {
+    final claim =
+        await ref.read(authRepositoryProvider).claimUsername(effectiveUsername);
+    final claimFailure = claim.fold<Failure?>((f) => f, (_) => null);
+    if (claimFailure != null) {
+      if (typedUsername.isNotEmpty) {
+        await auth.signOut();
+        if (!kIsWeb) {
+          await GoogleSignIn.instance.signOut();
+        }
+        throw Exception(claimFailure.message);
+      }
+      AppLogger.w(
+        'Creator Google signup: derived username claim skipped '
+        '(${claimFailure.message}) — keeping display-name fallback.',
+      );
+    }
+  } else {
+    AppLogger.w(
+      'Creator Google signup: no username typed and the Google display name '
+      'cannot map to a valid username — keeping display-name fallback.',
+    );
+  }
+
+  final redeemName = effectiveUsername ??
+      (user.displayName?.trim().isNotEmpty == true
+          ? user.displayName!
+          : user.email?.split('@').first ?? 'Creator');
+
   // Server-side redemption (same as email path): the creator_profiles doc,
   // verification flag, and role claim are all function-owned.
   final functions = FirebaseFunctions.instance;
   await functions.httpsCallable('redeemCreatorInvite').call(<String, dynamic>{
     'code': inviteCode.trim().toUpperCase(),
-    'displayName': user.displayName ?? user.email?.split('@').first ?? 'Creator',
+    'displayName': redeemName,
   });
   await user.getIdToken(true);
 }

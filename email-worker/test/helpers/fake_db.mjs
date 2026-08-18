@@ -5,9 +5,10 @@
  */
 export function makeFakeDb(users) {
   const writes = [];
+  const committedRefs = [];
   let committed = false;
 
-  const makeQuery = () => {
+  const makeQuery = (name) => {
     const q = {
       _preds: [],
       _limit: Infinity,
@@ -29,9 +30,18 @@ export function makeFakeDb(users) {
         for (const [field, op, value] of this._preds) {
           docs = docs.filter((d) => {
             const dv = d.data[field];
-            if (dv == null) return false;
-            if (dv instanceof Date && value instanceof Date) {
-              return op === ">=" ? dv >= value : dv <= value;
+            if (op === "==") {
+              // Firestore treats a missing field as null for equality
+              // filters, so `field == null` matches absent and null fields.
+              return value == null ? dv == null : dv === value;
+            }
+            if (op === ">" || op === ">=" || op === "<" || op === "<=") {
+              const a = dv instanceof Date ? dv.getTime() : dv?.toMillis?.() ?? -Infinity;
+              const b = value instanceof Date ? value.getTime() : value?.toMillis?.() ?? -Infinity;
+              if (op === ">") return a > b;
+              if (op === ">=") return a >= b;
+              if (op === "<") return a < b;
+              return a <= b;
             }
             return true;
           });
@@ -42,7 +52,11 @@ export function makeFakeDb(users) {
         docs = docs.slice(0, this._limit);
         return {
           empty: docs.length === 0,
-          docs: docs.map((d) => ({ id: d.id, data: () => ({ ...d.data }) })),
+          docs: docs.map((d) => ({
+            id: d.id,
+            ref: { path: `${name}/${d.id}` },
+            data: () => ({ ...d.data }),
+          })),
         };
       },
     };
@@ -56,20 +70,30 @@ export function makeFakeDb(users) {
           return { id, path: `${name}/${id}` };
         },
         where(field, op, value) {
-          return makeQuery().where(field, op, value);
+          return makeQuery(name).where(field, op, value);
         },
         limit(n) {
-          return makeQuery().limit(n);
+          return makeQuery(name).limit(n);
         },
       };
     },
     batch() {
       const b = {
+        _refs: [],
         set(ref, data, opts) {
-          writes.push({ op: "set", path: ref.path, data, opts });
+          const entry = { op: "set", path: ref.path, data, opts };
+          writes.push(entry);
+          b._refs.push(entry);
+          return b;
+        },
+        delete(ref) {
+          const entry = { op: "delete", path: ref.path, ref };
+          writes.push(entry);
+          b._refs.push(entry);
           return b;
         },
         async commit() {
+          committedRefs.push(...b._refs);
           committed = true;
         },
       };
@@ -80,6 +104,7 @@ export function makeFakeDb(users) {
   return {
     db,
     writes,
+    committedRefs,
     get committed() {
       return committed;
     },

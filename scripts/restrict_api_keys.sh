@@ -8,9 +8,13 @@
 #     gcloud auth login
 #     bash scripts/restrict_api_keys.sh
 #
-# The script first SHOWS the current key restrictions. Firebase-generated
-# keys are often already restricted by the console — if so, stop and just
-# dismiss the GitHub alerts.
+# The script first SHOWS the current key NAMES and restrictions. Firebase-
+# generated keys are often already restricted by the console — if so, stop
+# and just dismiss the GitHub alerts.
+#
+# NOTE: this script never prints API-key VALUES (they would defeat the whole
+# purpose by putting live secrets into CI logs). Keys are matched by their
+# display name, not by value.
 #
 # If you want to set API-target restrictions too (hardening), uncomment the
 # API_TARGETS section below. Application restrictions alone already fix the
@@ -18,17 +22,10 @@
 set -euo pipefail
 
 PROJECT="${PROJECT:-tradeflash-l2966}"
-DEBUG_SHA1="28:6B:40:B7:EF:85:26:F3:73:70:34:BB:15:1D:56:B7:39:25:2A:D2"
 DEBUG_SHA1_UNCOLONED="286b40b7ef8526f3737034bb151d56b739252ad2"
-RELEASE_SHA1="${RELEASE_SHA1:-}"
 
 ANDROID_PACKAGE="com.emerge.emerge_app"
 IOS_BUNDLE_ID="com.emerge.emergeApp"
-# Keep in sync with the live web-key restriction (see session-memory-2026-08-14):
-# production site, localhost dev, hosting preview channels, and the IDX
-# cloudworkstations.dev workspace (added 2026-08-17 after the 403 referer
-# block broke sign-in in the IDX web preview).
-WEB_REFERRERS="https://tradeflash-l2966.web.app/*,https://emerge-404.web.app/*,http://localhost/*,http://localhost:*/*,https://localhost:*/*,https://tradeflash-l2966-*.web.app/*,https://*.cloudworkstations.dev/*"
 
 # Firebase services the app actually calls (for the optional api-targets).
 API_TARGETS=(
@@ -48,8 +45,8 @@ fi
 echo "==> Enabling the API Keys API..."
 gcloud services enable apikeys.googleapis.com --project "$PROJECT" -q
 
-echo "==> Current keys and restrictions:"
-gcloud services api-keys list --project "$PROJECT" --show-response
+echo "==> Current keys and restrictions (values intentionally not printed):"
+gcloud services api-keys list --project "$PROJECT"
 
 echo
 echo "If the two keys already show Android/iOS/web restrictions above,"
@@ -57,7 +54,7 @@ echo "you are done — dismiss the alerts in GitHub and exit."
 read -r -p "Apply restrictions now? (y/N) " ans
 [[ "${ans:-n}" =~ ^[yY] ]] || { echo "Aborted — nothing changed."; exit 0; }
 
-if [[ -z "$RELEASE_SHA1" ]]; then
+if [[ -z "${RELEASE_SHA1:-}" ]]; then
   echo
   echo "RELEASE_SHA1 is not set. The Android restriction needs BOTH the debug"
   echo "and the release signing SHA-1 (restricting to debug only would break"
@@ -67,19 +64,9 @@ if [[ -z "$RELEASE_SHA1" ]]; then
   read -r -p "Release SHA-1 (format AA:BB:...): " RELEASE_SHA1
 fi
 
-KEY_ANDROID_WEB=""
-KEY_IOS=""
-while read -r name keyvalue; do
-  case "$keyvalue" in
-    AIzaSyAWlSsjpgQN4E_Bt3esMa1hIFJ9nESAEmA) KEY_ANDROID_WEB="$name" ;;
-    AIzaSyAhbcUe2s1B-K_qd4w3fmyKef0AQhJtNAg) KEY_IOS="$name" ;;
-  esac
-done < <(gcloud services api-keys list --project "$PROJECT" --show-response \
-  --format="value(name, restrictions.apiKeyValue)" 2>/dev/null)
-
-# ---------- Android key (AIzaSyAWlSsjpgQN4E_Bt3esMa1hIFJ9nESAEmA) ----------
+# ---------- Android key ----------
 # NOTE: web previously shared this key; a dedicated browser key was created
-# (b3783a74-92c4-4b4b-b600-b4363bce7260, value AIzaSyBXiqmFfdGUmMnYSVQ1kTBDczk-4jbCvOQ)
+# (key ID b3783a74-…, value redacted here — see lib/firebase_options.dart web.apiKey)
 # and lib/firebase_options.dart web.apiKey updated. Android-only here.
 ANDROID_KEY=$(gcloud services api-keys list --project "$PROJECT" --format="value(name)" --filter="displayName='Android key (auto created by Firebase)'" 2>/dev/null | head -1)
 if [[ -n "$ANDROID_KEY" ]]; then
@@ -91,21 +78,36 @@ if [[ -n "$ANDROID_KEY" ]]; then
     --allowed-application="sha1_fingerprint=41050fb3f292e1d83a64aaab84cb6b5e16b1d38e,package_name=$ANDROID_PACKAGE" \
     --allowed-application="sha1_fingerprint=386eb7a9d5a07b82921ecc480de03943206fe9ba,package_name=$ANDROID_PACKAGE" \
     --allowed-application="sha1_fingerprint=bc224b6631d2c1126936c0663bca407b9244813e,package_name=$ANDROID_PACKAGE" \
-    --allowed-application="sha1_fingerprint=$DEBUG_SHA1_UNCOLONED,package_name=$ANDROID_PACKAGE"
+    --allowed-application="sha1_fingerprint=$DEBUG_SHA1_UNCOLONED,package_name=$ANDROID_PACKAGE" \
+    --allowed-application="sha1_fingerprint=${RELEASE_SHA1//:/},package_name=$ANDROID_PACKAGE"
 else
   echo "!! Android key not found."
 fi
 
 # ---------- iOS key ----------
+# Looked up by display name (see the "Auto created by Firebase" keys listed
+# above) — key values are never matched against or printed. Read the
+# gcloud listing line-by-line: `--format="value(name, displayName)"` is
+# tab-separated, and the display name contains spaces, so a plain `for
+# entry in $(...)` would word-split each row and break the match.
+KEY_IOS=""
+while IFS=$'\t' read -r name displayname; do
+  if [[ "$displayname" == *"iOS key"* ]]; then
+    KEY_IOS="$name"
+    break
+  fi
+done < <(gcloud services api-keys list --project "$PROJECT" \
+  --format="value(name, displayName)" 2>/dev/null)
 if [[ -n "$KEY_IOS" ]]; then
   echo "==> Restricting iOS key: $KEY_IOS"
   gcloud services api-keys update "$KEY_IOS" --allowed-bundle-ids="$IOS_BUNDLE_ID"
 else
   echo "!! iOS key not found."
+  exit 1
 fi
 
 # ---------- Optional: API-target restrictions (uncomment to enable) ----------
-# for KEY in "$KEY_ANDROID_WEB" "$KEY_IOS"; do
+# for KEY in "$ANDROID_KEY" "$KEY_IOS"; do
 #   [[ -n "$KEY" ]] || continue
 #   args=()
 #   for svc in "${API_TARGETS[@]}"; do
@@ -115,8 +117,8 @@ fi
 # done
 
 echo
-echo "==> Final state:"
-gcloud services api-keys list --project "$PROJECT" --show-response
+echo "==> Final state (values intentionally not printed):"
+gcloud services api-keys list --project "$PROJECT"
 
 echo
 echo "Next: verify the app still works (Google sign-in / App Check on all"

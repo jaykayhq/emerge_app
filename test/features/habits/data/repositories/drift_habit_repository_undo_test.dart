@@ -216,4 +216,79 @@ void main() {
       ),
     ).called(1);
   });
+
+  test('undo debits the credit-time tribe even when the user has no current '
+      'membership at undo time', () async {
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+
+    await seedHabitAndStats();
+    await db.tribeMembershipDao.upsertMembership(
+      UserTribeTableData(
+        userId: 'u1',
+        tribeId: 't1',
+        membershipType: 'creator',
+        joinedAt: now.toIso8601String(),
+        isActive: true,
+      ),
+    );
+
+    final first = await repo.completeHabit('h1', today);
+    expect(first, const Right<Failure, bool>(true));
+
+    final afterCredit = await db.tribeStatsDao.getStats('t1');
+    expect(afterCredit!.totalHabitsCompleted, 1,
+        reason: 'credit must land on tribe t1 via the active membership');
+
+    // THE BUG: the user leaves the tribe BEFORE undoing, so the undo's own
+    // tribe resolution finds no current membership. The debit must still
+    // reverse the tribe the credit actually landed on (carried by the local
+    // activity row), not silently skip it and leave XP inflated.
+    await db.tribeMembershipDao.removeMembership('u1', 't1');
+
+    // Production writes this row inside logHabitCompletion (club_activity
+    // service) — the mock does not, so simulate the credit-time record
+    // exactly as the real service would have left it.
+    await db.tribeActivityDao.insertActivity(
+      TribeActivityTableCompanion(
+        id: Value('u1_h1_${now.millisecondsSinceEpoch}'),
+        userId: const Value('u1'),
+        userName: const Value('Test User'),
+        tribeId: const Value('t1'),
+        type: const Value('habit_complete'),
+        description: const Value('Completed habit: Read'),
+        value: Value(afterCredit.totalXp),
+        timestamp: Value(now.toIso8601String()),
+      ),
+    );
+
+    final second = await repo.completeHabit('h1', today);
+    expect(second, const Right<Failure, bool>(false));
+
+    final afterUndo = await db.tribeStatsDao.getStats('t1');
+    expect(afterUndo!.totalHabitsCompleted, 0,
+        reason: 'undo must debit the credited tribe stats even with no '
+            'current membership');
+    expect(afterUndo.userHabitsCompleted, 0);
+    expect(afterUndo.totalXp, 0,
+        reason: 'the credited tribe XP must be fully reversed');
+    expect(afterUndo.userContributionXp, 0);
+
+    final mutations = await db.mutationQueueDao.getAllPending();
+    final contributorDebits = mutations
+        .where((m) =>
+            m.collectionPath == 'tribes/t1/contributors' &&
+            m.operation == 'update')
+        .toList();
+    expect(contributorDebits, hasLength(1),
+        reason: 'the credited tribe contributor doc must still be debited '
+            'when the user left the tribe');
+    final data = jsonDecode(contributorDebits.single.dataJson!) as Map;
+    expect(data['totalHabitsCompleted'], {
+      '__type__': 'increment',
+      'value': -1,
+    });
+    expect((data['totalXpContributed'] as Map)['value'], -afterCredit.totalXp,
+        reason: 'contributor XP debit must mirror the credited amount');
+  });
 }

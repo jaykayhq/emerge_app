@@ -194,7 +194,6 @@ async function main() {
     console.log('Edit committed.');
   };
 
-  const notes = args.notes ?? pubspecVersion() ?? `Version ${bundle.versionCode}`;
   const countryTargeting = args.countries
     ? {
         countries: args.countries
@@ -217,6 +216,7 @@ async function main() {
 
   const editId = await createEdit();
   const bundle = await uploadBundle(editId);
+  const notes = args.notes ?? pubspecVersion() ?? `Version ${bundle.versionCode}`;
 
   await setTrack(
     editId,

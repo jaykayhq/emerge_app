@@ -88,7 +88,7 @@ void main() {
       when(
         () => mockActivityDao.getLatestHabitCompletion('u1', 'h1'),
       ).thenAnswer((_) async => creditRow);
-      when(() => mockActivityDao.deleteActivity(any())).thenAnswer((_) async {});
+      when(() => mockActivityDao.deleteActivity(any(), any())).thenAnswer((_) async {});
 
       final service = SocialActivityService(
         syncEngine: mockSyncEngine,
@@ -120,15 +120,16 @@ void main() {
           operation: 'delete',
         ),
       ).called(1);
-      verify(() => mockActivityDao.deleteActivity('u1_h1_1710000000000'))
-          .called(1);
+      verify(
+        () => mockActivityDao.deleteActivity('u1_h1_1710000000000', 'u1'),
+      ).called(1);
     });
 
     test('negates the leaderboard XP at the credit-time tribe', () async {
       when(
         () => mockActivityDao.getLatestHabitCompletion('u1', 'h1'),
       ).thenAnswer((_) async => creditRow);
-      when(() => mockActivityDao.deleteActivity(any())).thenAnswer((_) async {});
+      when(() => mockActivityDao.deleteActivity(any(), any())).thenAnswer((_) async {});
       final leaderboardRepo = RecordingLeaderboardRepository();
 
       final service = SocialActivityService(

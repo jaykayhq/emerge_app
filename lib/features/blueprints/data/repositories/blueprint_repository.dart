@@ -28,8 +28,22 @@ class BlueprintRepository {
     }
 
     return query.snapshots().map(
-      (snap) =>
-          snap.docs.map((d) => Blueprint.fromMap(d.id, d.data())).toList(),
+      (snap) => snap.docs
+          .map((d) {
+            try {
+              return Blueprint.fromMap(d.id, d.data());
+            } catch (e) {
+              // One malformed doc must not kill the whole blueprints stream —
+              // skip it so the rest of the catalog still renders.
+              AppLogger.e(
+                'BlueprintRepository: skipping malformed blueprint doc ${d.id}',
+                e,
+              );
+              return null;
+            }
+          })
+          .whereType<Blueprint>()
+          .toList(),
     );
   }
 

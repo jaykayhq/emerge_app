@@ -62,6 +62,44 @@ void main() {
       expect(decideRedirect(currentPath: '/login', ctx: ctx), isNull);
     });
 
+    test(
+        'unauthenticated, on /reset-password?oobCode=... -> stays (oobCode preserved)',
+        () {
+      final ctx = const RedirectContext(
+        isLoggedIn: false,
+        role: null,
+        isFirstLaunch: false,
+        userOnboardingProgress: null,
+        userOnboardingCompletedAt: null,
+        creatorOnboarding: null,
+      );
+      expect(
+        decideRedirect(currentPath: '/reset-password?oobCode=abc', ctx: ctx),
+        isNull,
+        reason: 'signed-out users must reach the password-reset screen so '
+            'the oobCode query param is not discarded',
+      );
+    });
+
+    test(
+        'unauthenticated, on /verify-email?oobCode=... -> stays (oobCode preserved)',
+        () {
+      final ctx = const RedirectContext(
+        isLoggedIn: false,
+        role: null,
+        isFirstLaunch: false,
+        userOnboardingProgress: null,
+        userOnboardingCompletedAt: null,
+        creatorOnboarding: null,
+      );
+      expect(
+        decideRedirect(currentPath: '/verify-email?oobCode=abc', ctx: ctx),
+        isNull,
+        reason: 'signed-out users must reach the email-verification screen so '
+            'the oobCode query param is not discarded',
+      );
+    });
+
     // 2. Splash screen is always allowed.
     test('/splash is always allowed', () {
       final ctx = const RedirectContext(
@@ -561,6 +599,131 @@ void main() {
       expect(
         decideRedirect(currentPath: '/world-map', ctx: ctx),
         '/onboarding/creator/archetype',
+      );
+    });
+  });
+
+  group('signed-in oobCode deep links (no silent code burn)', () {
+    RedirectContext verifiedCtx() {
+      return const RedirectContext(
+        isLoggedIn: true,
+        role: UserRole.user,
+        isFirstLaunch: false,
+        userOnboardingProgress: 4,
+        userOnboardingCompletedAt: null,
+        creatorOnboarding: null,
+        emailVerified: true,
+        emailLockedAt: null,
+      );
+    }
+
+    test('signed-in verified user on /reset-password?oobCode=abc -> stays '
+        '(code consumed by the screen, not the redirect)', () {
+      expect(
+        decideRedirect(
+          currentPath: '/reset-password?oobCode=abc',
+          ctx: verifiedCtx(),
+        ),
+        isNull,
+        reason: 'a signed-in user following a reset link must reach the reset '
+            'screen so confirmPasswordReset can consume the one-shot oobCode',
+      );
+    });
+
+    test('signed-in verified user on /verify-email?oobCode=abc -> stays',
+        () {
+      expect(
+        decideRedirect(
+          currentPath: '/verify-email?oobCode=abc',
+          ctx: verifiedCtx(),
+        ),
+        isNull,
+        reason: 'the verify screen must render for signed-in users so '
+            'applyActionCode can consume the one-shot oobCode',
+      );
+    });
+
+    test('signed-in verified user on /reset-password without a code -> stays '
+        '(screen shows the known-password change form)', () {
+      expect(
+        decideRedirect(currentPath: '/reset-password', ctx: verifiedCtx()),
+        isNull,
+      );
+    });
+
+    test('onboarding-incomplete user on /reset-password?oobCode=abc -> stays '
+        '(auth-path gate allows the form, code untouched in the query)', () {
+      final ctx = const RedirectContext(
+        isLoggedIn: true,
+        role: UserRole.user,
+        isFirstLaunch: false,
+        userOnboardingProgress: 1,
+        userOnboardingCompletedAt: null,
+        creatorOnboarding: null,
+        emailVerified: true,
+        emailLockedAt: null,
+      );
+      expect(
+        decideRedirect(
+          currentPath: '/reset-password?oobCode=abc',
+          ctx: ctx,
+        ),
+        isNull,
+      );
+    });
+
+    test('locked-unverified user on /reset-password?oobCode=abc -> '
+        '/verify-email (gate intact, code not burned)', () {
+      final ctx = RedirectContext(
+        isLoggedIn: true,
+        role: UserRole.user,
+        isFirstLaunch: false,
+        userOnboardingProgress: 4,
+        userOnboardingCompletedAt: null,
+        creatorOnboarding: null,
+        emailVerified: false,
+        emailLockedAt: DateTime(2026, 1, 8),
+      );
+      expect(
+        decideRedirect(
+          currentPath: '/reset-password?oobCode=abc',
+          ctx: ctx,
+        ),
+        '/verify-email',
+        reason: 'the locked gate still forces verification before any other '
+            'action; the redirect must not consume the reset oobCode',
+      );
+    });
+
+    test('creator with completed onboarding on /reset-password?oobCode=abc -> '
+        '/creator/dashboard (creator gate intact, code not burned)', () {
+      final ctx = RedirectContext(
+        isLoggedIn: true,
+        role: UserRole.creator,
+        isFirstLaunch: false,
+        userOnboardingProgress: null,
+        userOnboardingCompletedAt: null,
+        creatorOnboarding: CreatorOnboardingState(
+          progress: 3,
+          isComplete: true,
+        ),
+        emailVerified: true,
+        emailLockedAt: null,
+      );
+      expect(
+        decideRedirect(
+          currentPath: '/reset-password?oobCode=abc',
+          ctx: ctx,
+        ),
+        '/creator/dashboard',
+      );
+    });
+
+    test('signed-in verified user on /login -> /timeline (other auth surfaces '
+        'stay gated)', () {
+      expect(
+        decideRedirect(currentPath: '/login', ctx: verifiedCtx()),
+        '/timeline',
       );
     });
   });

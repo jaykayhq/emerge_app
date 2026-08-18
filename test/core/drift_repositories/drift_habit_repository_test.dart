@@ -1307,5 +1307,72 @@ void main() {
       expect(habit?.reminderTime?.minute, 30);
       expect(habit?.timeOfDayPreference, TimeOfDayPreference.morning);
     });
+
+    test(
+        'createHabitsFromBlueprint rolls back ALL habits on a mid-loop '
+        'failure and a retry succeeds', () async {
+      final blueprint = Blueprint(
+        id: 'test_bp_atomic',
+        title: 'Test Blueprint',
+        description: 'A test blueprint',
+        category: 'Morning',
+        creatorName: 'Test',
+        creatorUserId: userId,
+        creatorArchetype: 'Scholar',
+        createdAt: DateTime.now(),
+        habits: const [
+          BlueprintHabit(title: 'Habit A'),
+          BlueprintHabit(title: 'Habit B'),
+          BlueprintHabit(title: 'Habit C'),
+        ],
+      );
+
+      // Force the sync engine to fail on the second enqueue, inside the
+      // transaction — the already-inserted habits must roll back so no
+      // partial adoption can wedge the duplicate guard in the controller.
+      var enqueueCalls = 0;
+      when(
+        () => mockSyncEngine.enqueueSet(
+          collectionPath: 'habits',
+          documentId: any(named: 'documentId'),
+          data: any(named: 'data'),
+        ),
+      ).thenAnswer((_) async {
+        enqueueCalls++;
+        if (enqueueCalls == 2) {
+          throw Exception('forced mid-loop sync failure');
+        }
+      });
+
+      final failed = await repository.createHabitsFromBlueprint(
+        userId: userId,
+        blueprint: blueprint,
+      );
+      expect(failed.isLeft(), true,
+          reason: 'a mid-loop failure must surface as a failure');
+
+      final afterFailure = await db.habitsDao.watchHabits(userId).first;
+      expect(afterFailure, isEmpty,
+          reason: 'no partial blueprint habits may survive the rollback');
+
+      // Retry succeeds: with no leftover rows, the duplicate guard in
+      // blueprint_detail_controller cannot block the retry.
+      when(
+        () => mockSyncEngine.enqueueSet(
+          collectionPath: 'habits',
+          documentId: any(named: 'documentId'),
+          data: any(named: 'data'),
+        ),
+      ).thenAnswer((_) async {});
+
+      final retry = await repository.createHabitsFromBlueprint(
+        userId: userId,
+        blueprint: blueprint,
+      );
+      expect(retry.isRight(), true);
+
+      final afterRetry = await db.habitsDao.watchHabits(userId).first;
+      expect(afterRetry, hasLength(3));
+    });
   });
 }

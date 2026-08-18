@@ -93,6 +93,18 @@ class HabitCompletionsDao extends DatabaseAccessor<AppDatabase>
             ..where((t) => t.habitId.equals(habitId) & t.userId.equals(userId)))
           .go();
 
+  /// All completions for a habit — used by deletion to mirror a habit delete
+  /// to the remote `users/{userId}/habit_completions` subcollection.
+  Future<List<HabitCompletionsTableData>> getByHabitId(
+    String habitId,
+    String userId,
+  ) {
+    return (select(habitCompletionsTable)..where(
+          (t) => t.habitId.equals(habitId) & t.userId.equals(userId),
+        ))
+        .get();
+  }
+
   /// Delete a single completion row by id (used to undo today's completion).
   Future<int> deleteById(String id, String userId) =>
       (delete(habitCompletionsTable)

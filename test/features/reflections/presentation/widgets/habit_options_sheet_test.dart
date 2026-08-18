@@ -1,4 +1,5 @@
 import 'package:emerge_app/core/error/failure.dart';
+import 'package:emerge_app/core/services/notification_service.dart';
 import 'package:emerge_app/features/auth/domain/entities/auth_user.dart';
 import 'package:emerge_app/features/auth/presentation/providers/auth_providers.dart';
 import 'package:emerge_app/features/blueprints/domain/models/blueprint.dart';
@@ -8,6 +9,7 @@ import 'package:emerge_app/features/habits/domain/models/habit_activity.dart';
 import 'package:emerge_app/features/habits/domain/repositories/habit_repository.dart';
 import 'package:emerge_app/features/onboarding/domain/models/starter_habit_blueprint.dart';
 import 'package:emerge_app/features/habits/presentation/providers/habit_providers.dart';
+import 'package:emerge_app/features/habits/presentation/providers/dashboard_state_provider.dart';
 import 'package:emerge_app/features/reflections/data/datasources/habit_reflection_local_datasource.dart';
 import 'package:emerge_app/features/reflections/data/datasources/habit_reflection_remote_datasource.dart';
 import 'package:emerge_app/features/reflections/data/repositories/habit_reflection_repository.dart';
@@ -43,15 +45,55 @@ class _SheetHostState extends State<_SheetHost> {
   }
 }
 
+/// Hosts the sheet the way the app does: pushed onto its own route, so
+/// `Navigator.pop` closes only the sheet's route and the harness page below
+/// survives (mirrors the real modal-bottom-sheet presentation).
+class _SheetRouteHost extends StatefulWidget {
+  const _SheetRouteHost({required this.habit});
+
+  final Habit habit;
+
+  @override
+  State<_SheetRouteHost> createState() => _SheetRouteHostState();
+}
+
+class _SheetRouteHostState extends State<_SheetRouteHost> {
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: Center(
+        child: TextButton(
+          onPressed: () => HabitOptionsSheet.show(context, widget.habit, DateTime.now()),
+          child: const Text('open sheet'),
+        ),
+      ),
+    );
+  }
+}
+
 class _MockRemoteDatasource extends Mock
     implements HabitReflectionRemoteDatasource {}
 
 class _MockLocalDatasource extends Mock
     implements HabitReflectionLocalDatasource {}
 
+class _MockNotificationService extends Mock implements NotificationService {}
+
+/// Minimal dashboard notifier so the successful delete path does not spin up
+/// Firebase-backed providers (activeMilestones/userStats) under test.
+class _FakeDashboardNotifier extends DashboardStateNotifier {
+  @override
+  DashboardState build() => const DashboardState();
+
+  @override
+  Future<void> deleteHabitOptimistic(String habitId) async {}
+}
+
 /// Fake HabitRepository that captures the last updated habit.
 class _FakeHabitRepo implements HabitRepository {
   Habit _updated = Habit.empty();
+  bool failDelete = false;
+  String? deletedId;
   Habit get updated => _updated;
 
   @override
@@ -67,8 +109,12 @@ class _FakeHabitRepo implements HabitRepository {
       Right(unit);
 
   @override
-  Future<Either<Failure, Unit>> deleteHabit(String habitId) async =>
-      const Right(unit);
+  Future<Either<Failure, Unit>> deleteHabit(String habitId) async {
+    deletedId = habitId;
+    return failDelete
+        ? const Left(ServerFailure('sync queue down'))
+        : const Right(unit);
+  }
 
   @override
   Future<Habit?> getHabit(String habitId) async => null;
@@ -165,16 +211,23 @@ class _FakeReflectionRepo extends HabitReflectionRepository {
 void main() {
   late _FakeHabitRepo habitRepo;
   late _FakeReflectionRepo reflectionRepo;
+  late _MockNotificationService notificationService;
 
   setUp(() {
     habitRepo = _FakeHabitRepo();
     reflectionRepo = _FakeReflectionRepo();
+    notificationService = _MockNotificationService();
+    when(
+      () => notificationService.cancelHabitNotifications(any()),
+    ).thenAnswer((_) async {});
   });
 
   Widget buildTestApp(Widget child) => ProviderScope(
         overrides: [
           habitRepositoryProvider.overrideWithValue(habitRepo),
           habitReflectionRepositoryProvider.overrideWithValue(reflectionRepo),
+          notificationServiceProvider.overrideWithValue(notificationService),
+          dashboardStateProvider.overrideWith(() => _FakeDashboardNotifier()),
           authStateChangesProvider.overrideWithValue(
             const AsyncValue.data(
               AuthUser(id: 'u1', email: 'test@example.com'),
@@ -254,6 +307,68 @@ void main() {
       await tester.pump();
       expect(find.text('Delete Habit?'), findsOneWidget);
       expect(find.text('Cancel'), findsOneWidget);
+    });
+
+    testWidgets('confirming delete removes the habit and reports success',
+        (tester) async {
+      tester.view.physicalSize = const Size(800, 1400);
+      addTearDown(() => tester.view.resetPhysicalSize());
+
+      await tester.pumpWidget(
+        buildTestApp(_SheetRouteHost(habit: habit)),
+      );
+      await tester.tap(find.text('open sheet'));
+      await tester.pumpAndSettle();
+
+      await tester.drag(
+        find.byType(SingleChildScrollView),
+        const Offset(0, -600),
+      );
+      await tester.pump();
+      await tester.tap(find.text('Delete Habit'));
+      await tester.pump();
+      await tester.tap(find.text('Delete'));
+      await tester.pumpAndSettle();
+
+      expect(habitRepo.deletedId, 'h1');
+      expect(find.byType(HabitOptionsSheet), findsNothing, reason: 'sheet closes');
+      expect(find.text('Habit deleted'), findsOneWidget);
+      verify(
+        () => notificationService.cancelHabitNotifications('h1'),
+      ).called(1);
+    });
+
+    testWidgets('failed delete keeps the sheet open and reports the error',
+        (tester) async {
+      tester.view.physicalSize = const Size(800, 1400);
+      addTearDown(() => tester.view.resetPhysicalSize());
+
+      habitRepo.failDelete = true;
+      await tester.pumpWidget(
+        buildTestApp(_SheetRouteHost(habit: habit)),
+      );
+      await tester.tap(find.text('open sheet'));
+      await tester.pumpAndSettle();
+
+      await tester.drag(
+        find.byType(SingleChildScrollView),
+        const Offset(0, -600),
+      );
+      await tester.pump();
+      await tester.tap(find.text('Delete Habit'));
+      await tester.pump();
+      await tester.tap(find.text('Delete'));
+      await tester.pump();
+
+      expect(habitRepo.deletedId, 'h1');
+      expect(find.byType(HabitOptionsSheet), findsOneWidget, reason: 'sheet stays open');
+      expect(find.text('Habit deleted'), findsNothing);
+      expect(find.textContaining('cloud sync failed'), findsOneWidget);
+      // The habit is archived locally even when the remote enqueue fails, so
+      // its notifications must be cancelled on the failure path too.
+      verify(
+        () => notificationService.cancelHabitNotifications('h1'),
+      ).called(1);
     });
 
     testWidgets(

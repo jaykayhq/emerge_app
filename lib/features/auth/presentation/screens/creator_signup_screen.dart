@@ -124,7 +124,10 @@ class _CreatorSignUpScreenState extends ConsumerState<CreatorSignUpScreen> {
     setState(() => _isLoading = true);
     try {
       await ref.read(
-        signUpCreatorWithGoogleProvider(_inviteCodeController.text.trim()).future,
+        signUpCreatorWithGoogleProvider(
+          _inviteCodeController.text.trim(),
+          _usernameController.text.trim(),
+        ).future,
       );
       if (mounted) {
         context.go('/splash');

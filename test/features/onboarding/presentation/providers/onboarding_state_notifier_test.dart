@@ -184,5 +184,60 @@ void main() {
         verify(() => mockLocalSettingsRepo.completeOnboarding()).called(1);
       },
     );
+
+    test(
+      'restores interests, joinedClubId, and other persisted fields on resume',
+      () {
+        final profile = UserProfile(
+          uid: 'test-user',
+          archetype: UserArchetype.athlete,
+          motive: 'Get stronger',
+          why: 'To show up for my family',
+          anchors: const ['morning_walk', 'evening_read'],
+          habitStacks: const [],
+          onboardingProgress: 3,
+          skippedOnboardingSteps: const ['attributes'],
+          interests: const ['movement.walking', 'learning.reading'],
+          joinedClubId: 'deep_work_society',
+        );
+
+        when(() => mockLocalSettingsRepo.isFirstLaunch).thenReturn(false);
+
+        final resumeContainer = ProviderContainer(
+          overrides: [
+            userProfileRepositoryProvider.overrideWithValue(mockUserProfileRepo),
+            userStatsRepositoryProvider.overrideWithValue(mockUserStatsRepo),
+            localSettingsRepositoryProvider.overrideWithValue(
+              mockLocalSettingsRepo,
+            ),
+            appDatabaseProvider.overrideWithValue(mockDb),
+            dashboardStateProvider.overrideWith(() => testDashboardNotifier),
+            tribeRepositoryProvider.overrideWithValue(mockTribeRepo),
+            remoteConfigServiceProvider.overrideWithValue(mockRemoteConfig),
+            authStateChangesProvider.overrideWithValue(
+              AsyncValue.data(
+                const AuthUser(id: 'test-user', email: 'test@example.com'),
+              ),
+            ),
+            userProfileProvider.overrideWithValue(AsyncValue.data(profile)),
+          ],
+        );
+        addTearDown(resumeContainer.dispose);
+
+        final state = resumeContainer.read(enhancedOnboardingProvider);
+
+        expect(state.selectedArchetype, UserArchetype.athlete);
+        expect(state.motive, 'Get stronger');
+        expect(state.why, 'To show up for my family');
+        expect(state.anchors, ['morning_walk', 'evening_read']);
+        expect(state.interests, ['movement.walking', 'learning.reading']);
+        expect(state.joinedClubId, 'deep_work_society');
+        expect(state.currentStep, 3);
+        expect(state.isOnboardingActive, true,
+            reason: 'progress 3 of 5 means onboarding is still active');
+        expect(state.skippedMilestones[1], true,
+            reason: 'skipped "attributes" must be restored as a skipped step');
+      },
+    );
   });
 }

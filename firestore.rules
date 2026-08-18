@@ -342,15 +342,31 @@ service cloud.firestore {
       allow write: if false; // Only Cloud Functions write here
     }
 
-    // Password-reset request queue — written by the app (including from the
-    // signed-out login/signup screens) and drained by the email worker
-    // (GitHub Actions, Admin SDK) which sends the branded reset email and
-    // sets sentAt. Clients may only CREATE well-shaped request docs; they
-    // can never read or modify the queue or its sentAt markers.
+    // Password-reset request queue — written by the app and drained by the
+    // email worker (GitHub Actions, Admin SDK) which sends the branded reset
+    // email and sets sentAt. Clients may only CREATE well-shaped request
+    // docs; they can never read or modify the queue or its sentAt markers.
+    //
+    // The create is deliberately ANONYMOUS: the primary entry point is the
+    // signed-out "forgot password" flow on the login screens, so requiring
+    // auth would kill the feature. Anti-abuse is enforced where it can be
+    // proven (the worker): a per-email 15min cooldown, a 24h request-age
+    // cap, skip-before-send for addresses with no Auth account, and a
+    // per-run email cap. The rule only enforces well-formedness so the
+    // queue cannot carry garbage.
     match /email_requests/{requestId} {
       allow create: if request.resource.data.type == 'password_reset' &&
+                      request.resource.data.userId is string &&
+                      // userId is '' for signed-out flows, the caller's uid
+                      // for the authenticated settings-screen flow.
+                      (request.resource.data.userId == '' ||
+                       request.resource.data.userId == request.auth.uid) &&
+                      request.resource.data.keys().hasOnly(
+                        ['type', 'email', 'userId', 'requestedAt']) &&
                       request.resource.data.email is string &&
-                      request.resource.data.email.matches('^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$');
+                      request.resource.data.email.matches(
+                        '^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$') &&
+                      request.resource.data.requestedAt is timestamp;
       allow read, update, delete: if false;
     }
 
@@ -416,11 +432,31 @@ service cloud.firestore {
       }
 
       // Partner Activity Subcollection (fan-out-on-write feed). The actor
-      // writes into each partner's subcollection (gated on the snapshotted
-      // actor uid); the owner reads their own feed.
+      // (request.auth.uid) writes into each partner's subcollection at
+      // users/{userId}/partner_activity (see _fanOutToPartners in
+      // club_activity_service.dart: `users/$partnerId/partner_activity` with
+      // `userId: actorId`); the owner reads their own feed. The create is
+      // therefore bound to the ACTOR, not the path owner (`userId` here is
+      // the partner the feed belongs to).
       match /partner_activity/{eventId} {
         allow read: if isOwner(userId);
-        allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid;
+        allow create: if isAuthenticated() &&
+          // (a) The doc must be about the signed-in actor — nobody can
+          // impersonate another user in someone's feed.
+          request.resource.data.userId == request.auth.uid &&
+          // (b) The actor must actually be a partner of the feed owner
+          // (mutual friendship records — `addFriend` writes both sides, so
+          // `users/{userId}/friends/{actor}` exists iff they are partners).
+          get(/databases/$(database)/documents/users/$(userId)/friends/$(request.auth.uid))
+            .exists == true &&
+          // (c) Shape whitelist: exactly the 5 keys the client fan-out
+          // writes, with their expected types.
+          request.resource.data.keys().hasOnly(
+            ['type', 'userId', 'userName', 'data', 'timestamp']) &&
+          request.resource.data.type is string &&
+          request.resource.data.userName is string &&
+          request.resource.data.data is map &&
+          request.resource.data.timestamp is string;
         allow delete: if isOwner(userId);
       }
     }
@@ -488,6 +524,9 @@ service cloud.firestore {
       match /activity/{activityId} {
         allow read: if isAuthenticated();
         allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid;
+        // Owner-gated deletes: the undo flow removes the club-side activity
+        // doc it wrote (see undoHabitCompletion in club_activity_service.dart).
+        allow delete: if isAuthenticated() && resource.data.userId == request.auth.uid;
       }
     }
 
@@ -756,7 +795,12 @@ service cloud.firestore {
       // Must allow ordering by arbitrary authenticated users
       allow read: if isAuthenticated();
       allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid;
-      allow update, delete: if false;
+      // Updates stay forbidden (no mutation of the immutable feed), but
+      // owner-gated deletes are required: the app's undo flow removes the
+      // activity doc it wrote (see undoHabitCompletion in
+      // club_activity_service.dart).
+      allow update: if false;
+      allow delete: if isAuthenticated() && resource.data.userId == request.auth.uid;
     }
 
     // RevenueCat Extension (Customer data)

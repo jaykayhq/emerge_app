@@ -106,6 +106,14 @@ String? decideRedirect({
   required String currentPath,
   required RedirectContext ctx,
 }) {
+  // Normalize: the redirect decision only ever inspects the bare path.
+  // GoRouter passes state.uri.path (no query), but email links deep-link as
+  // /verify-email?oobCode=... and /reset-password?oobCode=..., so strip any
+  // query/fragment defensively before the allowlist lookup — otherwise the
+  // oobCode-bearing path would miss the authPaths set and bounce signed-out
+  // users away from the screen that must consume the code.
+  currentPath = currentPath.split('?').first.split('#').first;
+
   // 1. Always allow splash.
   if (currentPath == '/splash') return null;
 
@@ -114,12 +122,24 @@ String? decideRedirect({
     '/welcome',
     '/login',
     '/signup',
+    '/verify-email',
+    '/reset-password',
     '/creator/login',
     '/creator/signup',
     '/onboarding/endowment',
   };
 
+  // Auth surfaces that must stay reachable while signed in: /verify-email and
+  // /reset-password bubble up from deep links with a one-shot oobCode. If the
+  // generic auth-path redirect handled them, a signed-in user would be bounced
+  // to /timeline BEFORE the screen could consume the code — silently burning a
+  // single-use action code with no retry affordance. Carve them out so the
+  // screens render (confirmPasswordReset/applyActionCode are safe while signed
+  // in); everything else in [authPaths] stays gated for authenticated users.
+  const oobCodeSafePaths = {'/verify-email', '/reset-password'};
+
   final isOnAuthPath = authPaths.contains(currentPath);
+  final isOnOobCodeSafePath = oobCodeSafePaths.contains(currentPath);
   final isOnCreatorOnboardingPath =
       currentPath.startsWith('/onboarding/creator/');
   final isOnNormalOnboardingPath =
@@ -244,7 +264,10 @@ String? decideRedirect({
       }
     }
 
-    // Onboarding complete.
+    // Onboarding complete. Signed-in users are generally bounced off auth
+    // surfaces — except the oobCode-bearing ones, which must render so the
+    // single-use action code is consumed (see the carve-out comment above).
+    if (isOnOobCodeSafePath) return null;
     if (isOnAuthPath) return '/timeline';
     return null;
   }

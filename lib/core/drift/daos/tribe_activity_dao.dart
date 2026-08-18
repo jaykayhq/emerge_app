@@ -61,7 +61,10 @@ class TribeActivityDao extends DatabaseAccessor<AppDatabase>
             (t) =>
                 t.userId.equals(userId) &
                 t.type.equals('habit_complete') &
-                t.id.like('${userId}_${habitId}_%'),
+                t.id.like(
+                  '${_escapeLikePattern(userId)}\\_${_escapeLikePattern(habitId)}\\_%',
+                  escapeChar: r'\',
+                ),
           )
           ..orderBy([
             (t) =>
@@ -71,8 +74,10 @@ class TribeActivityDao extends DatabaseAccessor<AppDatabase>
         .getSingleOrNull();
   }
 
-  Future<void> deleteActivity(String id) async {
-    await (delete(tribeActivityTable)..where((t) => t.id.equals(id))).go();
+  Future<void> deleteActivity(String id, String userId) async {
+    await (delete(tribeActivityTable)
+          ..where((t) => t.id.equals(id) & t.userId.equals(userId)))
+        .go();
   }
 
   Future<void> clearSynced() async {
@@ -80,4 +85,11 @@ class TribeActivityDao extends DatabaseAccessor<AppDatabase>
       tribeActivityTable,
     )..where((t) => t.syncedAt.isNotNull())).go();
   }
+
+  /// Escapes SQL LIKE wildcards (`_`, `%`) and the escape char itself so the
+  /// interpolated userId/habitId prefix is matched literally.
+  static String _escapeLikePattern(String value) => value
+      .replaceAll(r'\', r'\\')
+      .replaceAll('%', r'\%')
+      .replaceAll('_', r'\_');
 }

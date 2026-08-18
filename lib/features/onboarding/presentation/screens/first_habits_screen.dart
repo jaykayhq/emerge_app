@@ -105,6 +105,10 @@ class _FirstHabitsScreenState extends ConsumerState<FirstHabitsScreen> {
       );
       await notifier.completeMilestone(3);
       if (!mounted) return;
+      // Reset the saving flag BEFORE navigating: with `push` this screen
+      // stays on the stack, so a user who backs out and taps again must not
+      // hit a silent no-op from a stuck _isSaving == true.
+      setState(() => _isSaving = false);
       context.push('/onboarding/world-reveal');
     } catch (e, s) {
       AppLogger.e('FirstHabitsScreen: failed to save starter pack', e, s);

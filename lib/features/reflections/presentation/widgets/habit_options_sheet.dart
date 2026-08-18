@@ -176,16 +176,37 @@ class _HabitOptionsSheetState extends ConsumerState<HabitOptionsSheet> {
     );
     if (confirmed != true || !mounted) return;
 
+    final result = await ref
+        .read(habitRepositoryProvider)
+        .deleteHabit(widget.habit.id);
+
+    // The habit is archived locally even when the remote enqueue fails, so
+    // its notifications must be cancelled regardless of the outcome —
+    // otherwise a deleted habit keeps firing local alarms.
     try {
-      await ref.read(habitRepositoryProvider).deleteHabit(widget.habit.id);
       await ref
           .read(notificationServiceProvider)
           .cancelHabitNotifications(widget.habit.id);
+    } catch (e, st) {
+      debugPrint('Failed to cancel notifications after delete: $e\n$st');
+    }
 
-      final dashboardNotifier = ref.read(dashboardStateProvider.notifier);
-      await dashboardNotifier.deleteHabitOptimistic(widget.habit.id);
-
-      if (mounted) {
+    if (!mounted) return;
+    result.fold(
+      (_) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Text('Deleted locally, but cloud sync failed'),
+            backgroundColor: Colors.orangeAccent,
+          ),
+        );
+        // Keep the sheet open so the user can retry — the row stays visible
+        // until a successful delete (or the watch stream drops the archive).
+      },
+      (_) async {
+        final dashboardNotifier = ref.read(dashboardStateProvider.notifier);
+        await dashboardNotifier.deleteHabitOptimistic(widget.habit.id);
+        if (!mounted) return;
         Navigator.of(context).pop();
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
@@ -193,17 +214,8 @@ class _HabitOptionsSheetState extends ConsumerState<HabitOptionsSheet> {
             backgroundColor: Color(0xFF2BEE79),
           ),
         );
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Could not delete habit: $e'),
-            backgroundColor: Colors.orangeAccent,
-          ),
-        );
-      }
-    }
+      },
+    );
   }
 
   @override

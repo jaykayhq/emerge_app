@@ -353,12 +353,18 @@ class DriftHabitRepository implements HabitRepository {
           // Tribe doc totals (totalHabitsCompleted/memberCount) stay
           // server-owned — the nightly recalc sums contributor docs, which
           // ARE debited here, so an undo can never leave them inflated.
-          if (resolvedTribeId != null) {
+          //
+          // Guard on the CREDIT-time tribe, not the currently-resolved one:
+          // the credit landed on the tribe stored on the activity row. When
+          // the user left every tribe after the credit, resolvedTribeId is
+          // null but the debit must still reverse the credited tribe or its
+          // local stats + contributor doc stay permanently inflated.
+          if (creditTribeId != null) {
             // Guard: only debit a row the credit actually created (the undo
             // path implies one, but a wiped local DB must not mint a
             // negative-value row via the create-on-first branch).
             final localTribeRow =
-                await _db.tribeStatsDao.getStats(creditTribeId!);
+                await _db.tribeStatsDao.getStats(creditTribeId);
             if (localTribeRow != null) {
               await _db.tribeStatsDao.incrementContribution(
                 creditTribeId,
@@ -674,57 +680,64 @@ class DriftHabitRepository implements HabitRepository {
   }) async {
     try {
       final habits = blueprint.habits;
-      for (int i = 0; i < habits.length; i++) {
-        final h = habits[i];
-        final habitId =
-            '${blueprint.id}_${i}_${DateTime.now().millisecondsSinceEpoch}';
+      // Capture `now` once so habit ids can never collide when two habits
+      // are created within the same millisecond (createStarterPack pattern).
+      final now = DateTime.now();
+      await _db.transaction(() async {
+        for (int i = 0; i < habits.length; i++) {
+          final h = habits[i];
+          final habitId = '${blueprint.id}_${i}_${now.millisecondsSinceEpoch}';
 
-        // Generate a Habit with timer and integration fields from blueprint
-        final habit = Habit(
-          id: habitId,
-          userId: userId,
-          title: h.title,
-          frequency: h.frequency.toLowerCase() == 'weekly'
-              ? HabitFrequency.weekly
-              : HabitFrequency.daily,
-          attribute: h.attribute,
-          timerDurationMinutes: h.timerDurationMinutes,
-          integrationType: h.integrationType,
-          integrationTarget: h.integrationTarget,
-          timeOfDayPreference: h.timeOfDay != null
-              ? timeOfDayPreferenceFrom(h.timeOfDay!.toLowerCase())
-              : null,
-          reminderTime: reminderTime != null
-              ? _parseReminderTime(reminderTime)
-              : h.defaultTime,
-          createdAt: DateTime.now(),
-        );
+          // Generate a Habit with timer and integration fields from blueprint
+          final habit = Habit(
+            id: habitId,
+            userId: userId,
+            title: h.title,
+            frequency: h.frequency.toLowerCase() == 'weekly'
+                ? HabitFrequency.weekly
+                : HabitFrequency.daily,
+            attribute: h.attribute,
+            timerDurationMinutes: h.timerDurationMinutes,
+            integrationType: h.integrationType,
+            integrationTarget: h.integrationTarget,
+            timeOfDayPreference: h.timeOfDay != null
+                ? timeOfDayPreferenceFrom(h.timeOfDay!.toLowerCase())
+                : null,
+            reminderTime: reminderTime != null
+                ? _parseReminderTime(reminderTime)
+                : h.defaultTime,
+            createdAt: now,
+          );
 
-        await _db.habitsDao.insertFromData(
-          id: habit.id,
-          userId: habit.userId,
-          title: habit.title,
-          frequency: habit.frequency.name,
-          attribute: habit.attribute.name,
-          createdAt: habit.createdAt.toIso8601String(),
-          updatedAt: DateTime.now().toIso8601String(),
-          reminderTime: habit.reminderTime != null
-              ? '${habit.reminderTime!.hour}:${habit.reminderTime!.minute.toString().padLeft(2, '0')}'
-              : null,
-          timeOfDayPreference: habit.timeOfDayPreference?.name,
-          timerDurationMinutes: habit.timerDurationMinutes,
-          integrationType: habit.integrationType.name,
-          integrationTarget: habit.integrationTarget,
-          imageUrl: habit.imageUrl,
-        );
+          await _db.habitsDao.insertFromData(
+            id: habit.id,
+            userId: habit.userId,
+            title: habit.title,
+            frequency: habit.frequency.name,
+            attribute: habit.attribute.name,
+            createdAt: habit.createdAt.toIso8601String(),
+            updatedAt: now.toIso8601String(),
+            reminderTime: habit.reminderTime != null
+                ? '${habit.reminderTime!.hour}:${habit.reminderTime!.minute.toString().padLeft(2, '0')}'
+                : null,
+            timeOfDayPreference: habit.timeOfDayPreference?.name,
+            timerDurationMinutes: habit.timerDurationMinutes,
+            integrationType: habit.integrationType.name,
+            integrationTarget: habit.integrationTarget,
+            imageUrl: habit.imageUrl,
+          );
 
-        // Sync to Firestore with all fields
-        await _syncEngine.enqueueSet(
-          collectionPath: 'habits',
-          documentId: habitId,
-          data: habit.toMap(),
-        );
-      }
+          // Sync to Firestore with all fields. Enqueues are Drift-backed
+          // (mutation queue table), so keeping them inside the transaction
+          // means a mid-loop failure rolls back every inserted habit AND its
+          // queued sync — no partial adoption can wedge the duplicate guard.
+          await _syncEngine.enqueueSet(
+            collectionPath: 'habits',
+            documentId: habitId,
+            data: habit.toMap(),
+          );
+        }
+      });
 
       _socialService.logActivity(
         type: 'blueprint_adopted',

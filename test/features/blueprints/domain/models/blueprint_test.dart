@@ -170,5 +170,55 @@ void main() {
       expect(restored.attribute, HabitAttribute.focus);
       expect(restored.timerDurationMinutes, 25);
     });
+
+    group('BlueprintHabit.fromMap malformed defaultTime', () {
+      test('clamps out-of-range hour and minute instead of asserting', () {
+        final habit = BlueprintHabit.fromMap(const {
+          'title': 'Bad time',
+          'defaultTime': '25:99',
+        });
+
+        expect(habit.defaultTime, isNotNull);
+        expect(habit.defaultTime!.hour, 23);
+        expect(habit.defaultTime!.minute, 59);
+      });
+
+      test('treats fully non-numeric parts as unset (not a 00:00 default)',
+          () {
+        final habit = BlueprintHabit.fromMap(const {
+          'title': 'Bad time',
+          'defaultTime': 'ab:cd',
+        });
+
+        expect(habit.defaultTime, isNull);
+      });
+
+      test('treats mixed-valid/invalid pairs as unset (not 00:00)', () {
+        expect(
+          BlueprintHabit.fromMap(const {
+            'title': 'Bad time',
+            'defaultTime': '12:xx',
+          }).defaultTime,
+          isNull,
+        );
+
+        expect(
+          BlueprintHabit.fromMap(const {
+            'title': 'Bad time',
+            'defaultTime': 'xx:30',
+          }).defaultTime,
+          isNull,
+        );
+      });
+
+      test('does not throw on a lone hour with no minutes', () {
+        final habit = BlueprintHabit.fromMap(const {
+          'title': 'Bad time',
+          'defaultTime': '6',
+        });
+
+        expect(habit.defaultTime, isNull);
+      });
+    });
   });
 }
