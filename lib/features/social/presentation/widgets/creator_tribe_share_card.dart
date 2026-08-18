@@ -42,7 +42,7 @@ class CreatorTribeShareCard extends StatelessWidget {
       if (!context.mounted) return;
       final bytes = await ShareableImageExporter.renderPng(context, card);
       if (bytes == null) {
-        _toast(context, 'Could not render the tribe card.');
+        if (context.mounted) _toast(context, 'Could not render the tribe card.');
         return;
       }
       final tempDir = await getTemporaryDirectory();
