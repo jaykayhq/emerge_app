@@ -341,7 +341,7 @@ final class SaveHabitReflectionProvider
 }
 
 String _$saveHabitReflectionHash() =>
-    r'a46060bc7e859b65e6fa20d57a90e9965d4c9f44';
+    r'e99dce8e6ee0573d8d752760e16decd30a9782a3';
 
 /// Saves a per-habit reflection and invalidates [habitReflection].
 

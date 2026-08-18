@@ -48,7 +48,7 @@ final class DashboardStateNotifierProvider
 }
 
 String _$dashboardStateNotifierHash() =>
-    r'dab7498820c7aa7e90230e53c464c799ed549232';
+    r'55fc7a355f34ff37ff61c284ebd9411f59bb7fa0';
 
 /// Central Dashboard State Notifier
 /// Orchestrates all state that affects the dashboard view

@@ -142,7 +142,7 @@ final class SaveCreatorOnboardingProgressProvider
 }
 
 String _$saveCreatorOnboardingProgressHash() =>
-    r'9b0adc6622a9262f4411f71db4923263c40f0c1f';
+    r'db3ce325ce7506a03cde617831181fce46343d21';
 
 /// Persists the current draft to `creator_profiles/{uid}` and updates
 /// `creatorOnboardingProgress` so the router stops redirecting.

@@ -41,7 +41,7 @@ final class HabitCreateStateProvider
   }
 }
 
-String _$habitCreateStateHash() => r'4b69b62812fea3489afcd3144ecb2da3a0f27767';
+String _$habitCreateStateHash() => r'4a56d9c67c268925598ed0f6d13f3317976171fa';
 
 abstract class _$HabitCreateState extends $Notifier<HabitFormData> {
   HabitFormData build();

@@ -80,7 +80,7 @@ final class IsPremiumProvider extends $AsyncNotifierProvider<IsPremium, bool> {
   IsPremium create() => IsPremium();
 }
 
-String _$isPremiumHash() => r'20f7306a8e8b896ff5d018b4ecb0647b34318687';
+String _$isPremiumHash() => r'3081c3782795510263f156588197080e26456d07';
 
 abstract class _$IsPremium extends $AsyncNotifier<bool> {
   FutureOr<bool> build();

@@ -1061,7 +1061,7 @@ void main() {
     addTearDown(container.dispose);
 
     final async = await container
-        .read(creatorAnalyticsProvider(('creator1', 't1')).future);
+        .read(creatorAnalyticsProvider(uid: 'creator1', tribeId: 't1').future);
     expect(async.tribeName, 'The Forge');
     expect(async.memberCount, 1);
   });
@@ -1163,17 +1163,35 @@ git commit -m "feat(analytics): add creatorAnalyticsProvider"
 
 ```dart
 // test/features/social/presentation/screens/creator/creator_analytics_tab_test.dart
+import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_core_platform_interface/test.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:emerge_app/features/social/domain/entities/creator_profile.dart';
 import 'package:emerge_app/features/social/domain/models/creator_analytics.dart';
 import 'package:emerge_app/features/social/presentation/providers/creator_analytics_provider.dart';
+import 'package:emerge_app/features/social/presentation/providers/creator_provider.dart';
 import 'package:emerge_app/features/social/presentation/screens/creator/creator_analytics_tab.dart';
 
-void main() {
-  Widget wrap(Widget child) => ProviderScope(
-    child: MaterialApp(home: child),
+Widget _buildTest({
+  CreatorProfile? profile,
+  required CreatorAnalytics analytics,
+}) {
+  return ProviderScope(
+    overrides: [
+      creatorProfileProvider.overrideWith((ref, uid) => Stream.value(profile)),
+      creatorAnalyticsProvider.overrideWith((ref, arg) async => analytics),
+    ],
+    child: const MaterialApp(home: CreatorAnalyticsTab()),
   );
+}
+
+void main() {
+  setUpAll(() async {
+    setupFirebaseCoreMocks();
+    await Firebase.initializeApp();
+  });
 
   testWidgets('renders KPI values from analytics data', (tester) async {
     final analytics = CreatorAnalytics(
@@ -1197,29 +1215,39 @@ void main() {
       ],
     );
 
-    await tester.pumpWidget(wrap(
-      ProviderScope(overrides: [
-        creatorAnalyticsProvider.overrideWith((ref, arg) async => analytics),
-      ], child: const CreatorAnalyticsTab()),
+    await tester.pumpWidget(_buildTest(
+      profile: const CreatorProfile(userId: 'creator1', tribeId: 't1'),
+      analytics: analytics,
     ));
     await tester.pumpAndSettle();
 
     expect(find.text('12'), findsOneWidget);
     expect(find.text('5.0K'), findsOneWidget); // _formatXp(5000)
     expect(find.text('120'), findsOneWidget);
+
+    // ListView builds lazily — scroll to the lower sections.
+    await tester.scrollUntilVisible(
+      find.text('Morning Stack'),
+      200,
+      scrollable: find.byType(Scrollable),
+    );
     expect(find.text('Morning Stack'), findsOneWidget);
+
+    await tester.scrollUntilVisible(
+      find.text('Ada'),
+      200,
+      scrollable: find.byType(Scrollable),
+    );
     expect(find.text('Ada'), findsOneWidget);
   });
 
-  testWidgets('shows empty state when no tribe data', (tester) async {
-    await tester.pumpWidget(wrap(
-      ProviderScope(overrides: [
-        creatorAnalyticsProvider.overrideWith((ref, arg) async =>
-            const CreatorAnalytics(tribeId: 't1', tribeName: '')),
-      ], child: const CreatorAnalyticsTab()),
+  testWidgets('shows empty state when creator has no tribe', (tester) async {
+    await tester.pumpWidget(_buildTest(
+      profile: const CreatorProfile(userId: 'creator1'), // tribeId null
+      analytics: const CreatorAnalytics(tribeId: 't1', tribeName: ''),
     ));
     await tester.pumpAndSettle();
-    expect(find.textContaining('No analytics'), findsOneWidget);
+    expect(find.text('No Analytics Yet'), findsOneWidget);
   });
 }
 ```
