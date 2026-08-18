@@ -1,5 +1,6 @@
 // lib/features/world_map/presentation/widgets/world_ring_layout.dart
 import 'package:emerge_app/features/habits/domain/entities/habit.dart';
+import 'package:emerge_app/features/world_map/domain/models/archetype_node_state.dart';
 import 'package:emerge_app/features/world_map/presentation/widgets/world_type_node.dart';
 import 'package:emerge_app/features/world_map/utils/ring_layout_geometry.dart';
 import 'package:flutter/material.dart';
@@ -8,12 +9,14 @@ class WorldRingLayout extends StatelessWidget {
   final double radius;
   final ValueChanged<HabitAttribute> onNodeTap;
   final String? focusAttribute;
+  final Map<HabitAttribute, ArchetypeNodeState>? nodeStates;
 
   const WorldRingLayout({
     super.key,
     required this.radius,
     required this.onNodeTap,
     this.focusAttribute,
+    this.nodeStates,
   });
 
   @override
@@ -51,6 +54,7 @@ class WorldRingLayout extends StatelessWidget {
                 child: WorldTypeNode(
                   attribute: attr,
                   isFocused: focusAttribute == attr.name,
+                  nodeState: nodeStates?[attr],
                   onTap: () => onNodeTap(attr),
                 ),
               ),
