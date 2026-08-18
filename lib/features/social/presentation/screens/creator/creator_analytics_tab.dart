@@ -9,6 +9,7 @@ import 'package:emerge_app/core/presentation/widgets/app_error_widget.dart';
 import 'package:emerge_app/core/theme/emerge_colors.dart';
 import 'package:emerge_app/features/social/presentation/providers/creator_analytics_provider.dart';
 import 'package:emerge_app/features/social/presentation/providers/creator_provider.dart';
+import 'package:emerge_app/features/social/presentation/widgets/creator_tribe_share_card.dart';
 import 'package:emerge_app/features/social/domain/models/creator_analytics.dart';
 
 class CreatorAnalyticsTab extends ConsumerWidget {
@@ -106,6 +107,15 @@ class _AnalyticsView extends StatelessWidget {
               ),
             ),
           ],
+        ),
+        const Gap(16),
+        CreatorTribeShareCard(
+          tribeName: analytics.tribeName,
+          creatorName: 'Your Tribe',
+          memberCount: analytics.memberCount,
+          totalXp: analytics.totalXp,
+          totalHabitsCompleted: analytics.totalHabitsCompleted,
+          totalChallengesCompleted: analytics.totalChallengesCompleted,
         ),
         const Gap(24),
 
