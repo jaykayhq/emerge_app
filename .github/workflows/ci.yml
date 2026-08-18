@@ -16,6 +16,10 @@ jobs:
         uses: subosito/flutter-action@v2
         with:
           channel: stable
+          # Pin to the local toolchain (flutter 3.47 / dart 3.13) so the
+          # codegen and format gates are deterministic — a newer stable SDK
+          # changes generated-file hashes and formatter output.
+          flutter-version: 3.47.0
           cache: true
 
       - name: Install dependencies
