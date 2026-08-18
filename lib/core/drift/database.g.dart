@@ -269,6 +269,53 @@ final class TribeStatsDaoProvider
 
 String _$tribeStatsDaoHash() => r'9b037be7882a8e95397b1d54445b98f1fbcc870f';
 
+@ProviderFor(tribeAnalyticsDao)
+final tribeAnalyticsDaoProvider = TribeAnalyticsDaoProvider._();
+
+final class TribeAnalyticsDaoProvider
+    extends
+        $FunctionalProvider<
+          TribeAnalyticsDao,
+          TribeAnalyticsDao,
+          TribeAnalyticsDao
+        >
+    with $Provider<TribeAnalyticsDao> {
+  TribeAnalyticsDaoProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'tribeAnalyticsDaoProvider',
+        isAutoDispose: false,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$tribeAnalyticsDaoHash();
+
+  @$internal
+  @override
+  $ProviderElement<TribeAnalyticsDao> $createElement(
+    $ProviderPointer pointer,
+  ) => $ProviderElement(pointer);
+
+  @override
+  TribeAnalyticsDao create(Ref ref) {
+    return tribeAnalyticsDao(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(TribeAnalyticsDao value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<TribeAnalyticsDao>(value),
+    );
+  }
+}
+
+String _$tribeAnalyticsDaoHash() => r'ca272ee17672fc8dce9583214791be8dabc287c7';
+
 @ProviderFor(leaderboardEntriesDao)
 final leaderboardEntriesDaoProvider = LeaderboardEntriesDaoProvider._();
 

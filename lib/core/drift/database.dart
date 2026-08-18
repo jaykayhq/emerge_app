@@ -52,6 +52,11 @@ TribeStatsDao tribeStatsDao(Ref ref) {
 }
 
 @Riverpod(keepAlive: true)
+TribeAnalyticsDao tribeAnalyticsDao(Ref ref) {
+  return ref.watch(appDatabaseProvider).tribeAnalyticsDao;
+}
+
+@Riverpod(keepAlive: true)
 LeaderboardEntriesDao leaderboardEntriesDao(Ref ref) {
   return ref.watch(appDatabaseProvider).leaderboardEntriesDao;
 }

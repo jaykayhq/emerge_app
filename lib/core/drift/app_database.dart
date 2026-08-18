@@ -7,6 +7,7 @@ import 'tables/habits_table.dart';
 import 'tables/habit_completions_table.dart';
 import 'tables/challenge_progress_table.dart';
 import 'tables/tribe_stats_table.dart';
+import 'tables/tribe_analytics_table.dart';
 import 'tables/leaderboard_entries_table.dart';
 import 'tables/mutation_queue_table.dart';
 import 'tables/tribe_activity_table.dart';
@@ -21,6 +22,7 @@ import 'daos/habits_dao.dart';
 import 'daos/habit_completions_dao.dart';
 import 'daos/challenge_progress_dao.dart';
 import 'daos/tribe_stats_dao.dart';
+import 'daos/tribe_analytics_dao.dart';
 import 'daos/leaderboard_entries_dao.dart';
 import 'daos/mutation_queue_dao.dart';
 import 'daos/tribe_activity_dao.dart';
@@ -39,6 +41,7 @@ part 'app_database.g.dart';
     HabitCompletionsTable,
     ChallengeProgressTable,
     TribeStatsTable,
+    TribeAnalyticsTable,
     LeaderboardEntriesTable,
     MutationQueueTable,
     TribeActivityTable,
@@ -54,6 +57,7 @@ part 'app_database.g.dart';
     HabitCompletionsDao,
     ChallengeProgressDao,
     TribeStatsDao,
+    TribeAnalyticsDao,
     LeaderboardEntriesDao,
     MutationQueueDao,
     TribeActivityDao,
@@ -70,7 +74,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.withExecutor(super.executor);
 
   @override
-  int get schemaVersion => 14;
+  int get schemaVersion => 15;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -145,6 +149,9 @@ class AppDatabase extends _$AppDatabase {
         // Legacy rows keep NULL — they are this device's own pre-migration
         // data and flush for whoever signs in next.
         await m.addColumn(mutationQueueTable, mutationQueueTable.userId);
+      }
+      if (from < 15) {
+        await m.createTable(tribeAnalyticsTable);
       }
     },
     beforeOpen: (details) async {

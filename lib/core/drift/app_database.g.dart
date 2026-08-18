@@ -5313,6 +5313,550 @@ class TribeStatsTableCompanion extends UpdateCompanion<TribeStatsTableData> {
   }
 }
 
+class $TribeAnalyticsTableTable extends TribeAnalyticsTable
+    with TableInfo<$TribeAnalyticsTableTable, TribeAnalyticsTableData> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $TribeAnalyticsTableTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _tribeIdMeta = const VerificationMeta(
+    'tribeId',
+  );
+  @override
+  late final GeneratedColumn<String> tribeId = GeneratedColumn<String>(
+    'tribe_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _dateMeta = const VerificationMeta('date');
+  @override
+  late final GeneratedColumn<String> date = GeneratedColumn<String>(
+    'date',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _memberCountMeta = const VerificationMeta(
+    'memberCount',
+  );
+  @override
+  late final GeneratedColumn<int> memberCount = GeneratedColumn<int>(
+    'member_count',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  static const VerificationMeta _totalXpMeta = const VerificationMeta(
+    'totalXp',
+  );
+  @override
+  late final GeneratedColumn<int> totalXp = GeneratedColumn<int>(
+    'total_xp',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  static const VerificationMeta _totalHabitsCompletedMeta =
+      const VerificationMeta('totalHabitsCompleted');
+  @override
+  late final GeneratedColumn<int> totalHabitsCompleted = GeneratedColumn<int>(
+    'total_habits_completed',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  static const VerificationMeta _totalChallengesCompletedMeta =
+      const VerificationMeta('totalChallengesCompleted');
+  @override
+  late final GeneratedColumn<int> totalChallengesCompleted =
+      GeneratedColumn<int>(
+        'total_challenges_completed',
+        aliasedName,
+        false,
+        type: DriftSqlType.int,
+        requiredDuringInsert: false,
+        defaultValue: const Constant(0),
+      );
+  static const VerificationMeta _activeMembersMeta = const VerificationMeta(
+    'activeMembers',
+  );
+  @override
+  late final GeneratedColumn<int> activeMembers = GeneratedColumn<int>(
+    'active_members',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  static const VerificationMeta _newMembersThisWeekMeta =
+      const VerificationMeta('newMembersThisWeek');
+  @override
+  late final GeneratedColumn<int> newMembersThisWeek = GeneratedColumn<int>(
+    'new_members_this_week',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    tribeId,
+    date,
+    memberCount,
+    totalXp,
+    totalHabitsCompleted,
+    totalChallengesCompleted,
+    activeMembers,
+    newMembersThisWeek,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'tribe_analytics_table';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<TribeAnalyticsTableData> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('tribe_id')) {
+      context.handle(
+        _tribeIdMeta,
+        tribeId.isAcceptableOrUnknown(data['tribe_id']!, _tribeIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_tribeIdMeta);
+    }
+    if (data.containsKey('date')) {
+      context.handle(
+        _dateMeta,
+        date.isAcceptableOrUnknown(data['date']!, _dateMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_dateMeta);
+    }
+    if (data.containsKey('member_count')) {
+      context.handle(
+        _memberCountMeta,
+        memberCount.isAcceptableOrUnknown(
+          data['member_count']!,
+          _memberCountMeta,
+        ),
+      );
+    }
+    if (data.containsKey('total_xp')) {
+      context.handle(
+        _totalXpMeta,
+        totalXp.isAcceptableOrUnknown(data['total_xp']!, _totalXpMeta),
+      );
+    }
+    if (data.containsKey('total_habits_completed')) {
+      context.handle(
+        _totalHabitsCompletedMeta,
+        totalHabitsCompleted.isAcceptableOrUnknown(
+          data['total_habits_completed']!,
+          _totalHabitsCompletedMeta,
+        ),
+      );
+    }
+    if (data.containsKey('total_challenges_completed')) {
+      context.handle(
+        _totalChallengesCompletedMeta,
+        totalChallengesCompleted.isAcceptableOrUnknown(
+          data['total_challenges_completed']!,
+          _totalChallengesCompletedMeta,
+        ),
+      );
+    }
+    if (data.containsKey('active_members')) {
+      context.handle(
+        _activeMembersMeta,
+        activeMembers.isAcceptableOrUnknown(
+          data['active_members']!,
+          _activeMembersMeta,
+        ),
+      );
+    }
+    if (data.containsKey('new_members_this_week')) {
+      context.handle(
+        _newMembersThisWeekMeta,
+        newMembersThisWeek.isAcceptableOrUnknown(
+          data['new_members_this_week']!,
+          _newMembersThisWeekMeta,
+        ),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {tribeId, date};
+  @override
+  TribeAnalyticsTableData map(
+    Map<String, dynamic> data, {
+    String? tablePrefix,
+  }) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return TribeAnalyticsTableData(
+      tribeId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}tribe_id'],
+      )!,
+      date: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}date'],
+      )!,
+      memberCount: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}member_count'],
+      )!,
+      totalXp: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}total_xp'],
+      )!,
+      totalHabitsCompleted: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}total_habits_completed'],
+      )!,
+      totalChallengesCompleted: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}total_challenges_completed'],
+      )!,
+      activeMembers: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}active_members'],
+      )!,
+      newMembersThisWeek: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}new_members_this_week'],
+      )!,
+    );
+  }
+
+  @override
+  $TribeAnalyticsTableTable createAlias(String alias) {
+    return $TribeAnalyticsTableTable(attachedDatabase, alias);
+  }
+}
+
+class TribeAnalyticsTableData extends DataClass
+    implements Insertable<TribeAnalyticsTableData> {
+  final String tribeId;
+  final String date;
+  final int memberCount;
+  final int totalXp;
+  final int totalHabitsCompleted;
+  final int totalChallengesCompleted;
+  final int activeMembers;
+  final int newMembersThisWeek;
+  const TribeAnalyticsTableData({
+    required this.tribeId,
+    required this.date,
+    required this.memberCount,
+    required this.totalXp,
+    required this.totalHabitsCompleted,
+    required this.totalChallengesCompleted,
+    required this.activeMembers,
+    required this.newMembersThisWeek,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['tribe_id'] = Variable<String>(tribeId);
+    map['date'] = Variable<String>(date);
+    map['member_count'] = Variable<int>(memberCount);
+    map['total_xp'] = Variable<int>(totalXp);
+    map['total_habits_completed'] = Variable<int>(totalHabitsCompleted);
+    map['total_challenges_completed'] = Variable<int>(totalChallengesCompleted);
+    map['active_members'] = Variable<int>(activeMembers);
+    map['new_members_this_week'] = Variable<int>(newMembersThisWeek);
+    return map;
+  }
+
+  TribeAnalyticsTableCompanion toCompanion(bool nullToAbsent) {
+    return TribeAnalyticsTableCompanion(
+      tribeId: Value(tribeId),
+      date: Value(date),
+      memberCount: Value(memberCount),
+      totalXp: Value(totalXp),
+      totalHabitsCompleted: Value(totalHabitsCompleted),
+      totalChallengesCompleted: Value(totalChallengesCompleted),
+      activeMembers: Value(activeMembers),
+      newMembersThisWeek: Value(newMembersThisWeek),
+    );
+  }
+
+  factory TribeAnalyticsTableData.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return TribeAnalyticsTableData(
+      tribeId: serializer.fromJson<String>(json['tribeId']),
+      date: serializer.fromJson<String>(json['date']),
+      memberCount: serializer.fromJson<int>(json['memberCount']),
+      totalXp: serializer.fromJson<int>(json['totalXp']),
+      totalHabitsCompleted: serializer.fromJson<int>(
+        json['totalHabitsCompleted'],
+      ),
+      totalChallengesCompleted: serializer.fromJson<int>(
+        json['totalChallengesCompleted'],
+      ),
+      activeMembers: serializer.fromJson<int>(json['activeMembers']),
+      newMembersThisWeek: serializer.fromJson<int>(json['newMembersThisWeek']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'tribeId': serializer.toJson<String>(tribeId),
+      'date': serializer.toJson<String>(date),
+      'memberCount': serializer.toJson<int>(memberCount),
+      'totalXp': serializer.toJson<int>(totalXp),
+      'totalHabitsCompleted': serializer.toJson<int>(totalHabitsCompleted),
+      'totalChallengesCompleted': serializer.toJson<int>(
+        totalChallengesCompleted,
+      ),
+      'activeMembers': serializer.toJson<int>(activeMembers),
+      'newMembersThisWeek': serializer.toJson<int>(newMembersThisWeek),
+    };
+  }
+
+  TribeAnalyticsTableData copyWith({
+    String? tribeId,
+    String? date,
+    int? memberCount,
+    int? totalXp,
+    int? totalHabitsCompleted,
+    int? totalChallengesCompleted,
+    int? activeMembers,
+    int? newMembersThisWeek,
+  }) => TribeAnalyticsTableData(
+    tribeId: tribeId ?? this.tribeId,
+    date: date ?? this.date,
+    memberCount: memberCount ?? this.memberCount,
+    totalXp: totalXp ?? this.totalXp,
+    totalHabitsCompleted: totalHabitsCompleted ?? this.totalHabitsCompleted,
+    totalChallengesCompleted:
+        totalChallengesCompleted ?? this.totalChallengesCompleted,
+    activeMembers: activeMembers ?? this.activeMembers,
+    newMembersThisWeek: newMembersThisWeek ?? this.newMembersThisWeek,
+  );
+  TribeAnalyticsTableData copyWithCompanion(TribeAnalyticsTableCompanion data) {
+    return TribeAnalyticsTableData(
+      tribeId: data.tribeId.present ? data.tribeId.value : this.tribeId,
+      date: data.date.present ? data.date.value : this.date,
+      memberCount: data.memberCount.present
+          ? data.memberCount.value
+          : this.memberCount,
+      totalXp: data.totalXp.present ? data.totalXp.value : this.totalXp,
+      totalHabitsCompleted: data.totalHabitsCompleted.present
+          ? data.totalHabitsCompleted.value
+          : this.totalHabitsCompleted,
+      totalChallengesCompleted: data.totalChallengesCompleted.present
+          ? data.totalChallengesCompleted.value
+          : this.totalChallengesCompleted,
+      activeMembers: data.activeMembers.present
+          ? data.activeMembers.value
+          : this.activeMembers,
+      newMembersThisWeek: data.newMembersThisWeek.present
+          ? data.newMembersThisWeek.value
+          : this.newMembersThisWeek,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('TribeAnalyticsTableData(')
+          ..write('tribeId: $tribeId, ')
+          ..write('date: $date, ')
+          ..write('memberCount: $memberCount, ')
+          ..write('totalXp: $totalXp, ')
+          ..write('totalHabitsCompleted: $totalHabitsCompleted, ')
+          ..write('totalChallengesCompleted: $totalChallengesCompleted, ')
+          ..write('activeMembers: $activeMembers, ')
+          ..write('newMembersThisWeek: $newMembersThisWeek')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    tribeId,
+    date,
+    memberCount,
+    totalXp,
+    totalHabitsCompleted,
+    totalChallengesCompleted,
+    activeMembers,
+    newMembersThisWeek,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is TribeAnalyticsTableData &&
+          other.tribeId == this.tribeId &&
+          other.date == this.date &&
+          other.memberCount == this.memberCount &&
+          other.totalXp == this.totalXp &&
+          other.totalHabitsCompleted == this.totalHabitsCompleted &&
+          other.totalChallengesCompleted == this.totalChallengesCompleted &&
+          other.activeMembers == this.activeMembers &&
+          other.newMembersThisWeek == this.newMembersThisWeek);
+}
+
+class TribeAnalyticsTableCompanion
+    extends UpdateCompanion<TribeAnalyticsTableData> {
+  final Value<String> tribeId;
+  final Value<String> date;
+  final Value<int> memberCount;
+  final Value<int> totalXp;
+  final Value<int> totalHabitsCompleted;
+  final Value<int> totalChallengesCompleted;
+  final Value<int> activeMembers;
+  final Value<int> newMembersThisWeek;
+  final Value<int> rowid;
+  const TribeAnalyticsTableCompanion({
+    this.tribeId = const Value.absent(),
+    this.date = const Value.absent(),
+    this.memberCount = const Value.absent(),
+    this.totalXp = const Value.absent(),
+    this.totalHabitsCompleted = const Value.absent(),
+    this.totalChallengesCompleted = const Value.absent(),
+    this.activeMembers = const Value.absent(),
+    this.newMembersThisWeek = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  TribeAnalyticsTableCompanion.insert({
+    required String tribeId,
+    required String date,
+    this.memberCount = const Value.absent(),
+    this.totalXp = const Value.absent(),
+    this.totalHabitsCompleted = const Value.absent(),
+    this.totalChallengesCompleted = const Value.absent(),
+    this.activeMembers = const Value.absent(),
+    this.newMembersThisWeek = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : tribeId = Value(tribeId),
+       date = Value(date);
+  static Insertable<TribeAnalyticsTableData> custom({
+    Expression<String>? tribeId,
+    Expression<String>? date,
+    Expression<int>? memberCount,
+    Expression<int>? totalXp,
+    Expression<int>? totalHabitsCompleted,
+    Expression<int>? totalChallengesCompleted,
+    Expression<int>? activeMembers,
+    Expression<int>? newMembersThisWeek,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (tribeId != null) 'tribe_id': tribeId,
+      if (date != null) 'date': date,
+      if (memberCount != null) 'member_count': memberCount,
+      if (totalXp != null) 'total_xp': totalXp,
+      if (totalHabitsCompleted != null)
+        'total_habits_completed': totalHabitsCompleted,
+      if (totalChallengesCompleted != null)
+        'total_challenges_completed': totalChallengesCompleted,
+      if (activeMembers != null) 'active_members': activeMembers,
+      if (newMembersThisWeek != null)
+        'new_members_this_week': newMembersThisWeek,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  TribeAnalyticsTableCompanion copyWith({
+    Value<String>? tribeId,
+    Value<String>? date,
+    Value<int>? memberCount,
+    Value<int>? totalXp,
+    Value<int>? totalHabitsCompleted,
+    Value<int>? totalChallengesCompleted,
+    Value<int>? activeMembers,
+    Value<int>? newMembersThisWeek,
+    Value<int>? rowid,
+  }) {
+    return TribeAnalyticsTableCompanion(
+      tribeId: tribeId ?? this.tribeId,
+      date: date ?? this.date,
+      memberCount: memberCount ?? this.memberCount,
+      totalXp: totalXp ?? this.totalXp,
+      totalHabitsCompleted: totalHabitsCompleted ?? this.totalHabitsCompleted,
+      totalChallengesCompleted:
+          totalChallengesCompleted ?? this.totalChallengesCompleted,
+      activeMembers: activeMembers ?? this.activeMembers,
+      newMembersThisWeek: newMembersThisWeek ?? this.newMembersThisWeek,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (tribeId.present) {
+      map['tribe_id'] = Variable<String>(tribeId.value);
+    }
+    if (date.present) {
+      map['date'] = Variable<String>(date.value);
+    }
+    if (memberCount.present) {
+      map['member_count'] = Variable<int>(memberCount.value);
+    }
+    if (totalXp.present) {
+      map['total_xp'] = Variable<int>(totalXp.value);
+    }
+    if (totalHabitsCompleted.present) {
+      map['total_habits_completed'] = Variable<int>(totalHabitsCompleted.value);
+    }
+    if (totalChallengesCompleted.present) {
+      map['total_challenges_completed'] = Variable<int>(
+        totalChallengesCompleted.value,
+      );
+    }
+    if (activeMembers.present) {
+      map['active_members'] = Variable<int>(activeMembers.value);
+    }
+    if (newMembersThisWeek.present) {
+      map['new_members_this_week'] = Variable<int>(newMembersThisWeek.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('TribeAnalyticsTableCompanion(')
+          ..write('tribeId: $tribeId, ')
+          ..write('date: $date, ')
+          ..write('memberCount: $memberCount, ')
+          ..write('totalXp: $totalXp, ')
+          ..write('totalHabitsCompleted: $totalHabitsCompleted, ')
+          ..write('totalChallengesCompleted: $totalChallengesCompleted, ')
+          ..write('activeMembers: $activeMembers, ')
+          ..write('newMembersThisWeek: $newMembersThisWeek, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 class $LeaderboardEntriesTableTable extends LeaderboardEntriesTable
     with TableInfo<$LeaderboardEntriesTableTable, LeaderboardEntriesTableData> {
   @override
@@ -9608,6 +10152,8 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final $TribeStatsTableTable tribeStatsTable = $TribeStatsTableTable(
     this,
   );
+  late final $TribeAnalyticsTableTable tribeAnalyticsTable =
+      $TribeAnalyticsTableTable(this);
   late final $LeaderboardEntriesTableTable leaderboardEntriesTable =
       $LeaderboardEntriesTableTable(this);
   late final $MutationQueueTableTable mutationQueueTable =
@@ -9632,6 +10178,9 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     this as AppDatabase,
   );
   late final TribeStatsDao tribeStatsDao = TribeStatsDao(this as AppDatabase);
+  late final TribeAnalyticsDao tribeAnalyticsDao = TribeAnalyticsDao(
+    this as AppDatabase,
+  );
   late final LeaderboardEntriesDao leaderboardEntriesDao =
       LeaderboardEntriesDao(this as AppDatabase);
   late final MutationQueueDao mutationQueueDao = MutationQueueDao(
@@ -9663,6 +10212,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     habitCompletionsTable,
     challengeProgressTable,
     tribeStatsTable,
+    tribeAnalyticsTable,
     leaderboardEntriesTable,
     mutationQueueTable,
     tribeActivityTable,
@@ -12097,6 +12647,289 @@ typedef $$TribeStatsTableTableProcessedTableManager =
       TribeStatsTableData,
       PrefetchHooks Function()
     >;
+typedef $$TribeAnalyticsTableTableCreateCompanionBuilder =
+    TribeAnalyticsTableCompanion Function({
+      required String tribeId,
+      required String date,
+      Value<int> memberCount,
+      Value<int> totalXp,
+      Value<int> totalHabitsCompleted,
+      Value<int> totalChallengesCompleted,
+      Value<int> activeMembers,
+      Value<int> newMembersThisWeek,
+      Value<int> rowid,
+    });
+typedef $$TribeAnalyticsTableTableUpdateCompanionBuilder =
+    TribeAnalyticsTableCompanion Function({
+      Value<String> tribeId,
+      Value<String> date,
+      Value<int> memberCount,
+      Value<int> totalXp,
+      Value<int> totalHabitsCompleted,
+      Value<int> totalChallengesCompleted,
+      Value<int> activeMembers,
+      Value<int> newMembersThisWeek,
+      Value<int> rowid,
+    });
+
+class $$TribeAnalyticsTableTableFilterComposer
+    extends Composer<_$AppDatabase, $TribeAnalyticsTableTable> {
+  $$TribeAnalyticsTableTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get tribeId => $composableBuilder(
+    column: $table.tribeId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get date => $composableBuilder(
+    column: $table.date,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get memberCount => $composableBuilder(
+    column: $table.memberCount,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get totalXp => $composableBuilder(
+    column: $table.totalXp,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get totalHabitsCompleted => $composableBuilder(
+    column: $table.totalHabitsCompleted,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get totalChallengesCompleted => $composableBuilder(
+    column: $table.totalChallengesCompleted,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get activeMembers => $composableBuilder(
+    column: $table.activeMembers,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get newMembersThisWeek => $composableBuilder(
+    column: $table.newMembersThisWeek,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$TribeAnalyticsTableTableOrderingComposer
+    extends Composer<_$AppDatabase, $TribeAnalyticsTableTable> {
+  $$TribeAnalyticsTableTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get tribeId => $composableBuilder(
+    column: $table.tribeId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get date => $composableBuilder(
+    column: $table.date,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get memberCount => $composableBuilder(
+    column: $table.memberCount,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get totalXp => $composableBuilder(
+    column: $table.totalXp,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get totalHabitsCompleted => $composableBuilder(
+    column: $table.totalHabitsCompleted,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get totalChallengesCompleted => $composableBuilder(
+    column: $table.totalChallengesCompleted,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get activeMembers => $composableBuilder(
+    column: $table.activeMembers,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get newMembersThisWeek => $composableBuilder(
+    column: $table.newMembersThisWeek,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$TribeAnalyticsTableTableAnnotationComposer
+    extends Composer<_$AppDatabase, $TribeAnalyticsTableTable> {
+  $$TribeAnalyticsTableTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get tribeId =>
+      $composableBuilder(column: $table.tribeId, builder: (column) => column);
+
+  GeneratedColumn<String> get date =>
+      $composableBuilder(column: $table.date, builder: (column) => column);
+
+  GeneratedColumn<int> get memberCount => $composableBuilder(
+    column: $table.memberCount,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get totalXp =>
+      $composableBuilder(column: $table.totalXp, builder: (column) => column);
+
+  GeneratedColumn<int> get totalHabitsCompleted => $composableBuilder(
+    column: $table.totalHabitsCompleted,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get totalChallengesCompleted => $composableBuilder(
+    column: $table.totalChallengesCompleted,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get activeMembers => $composableBuilder(
+    column: $table.activeMembers,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get newMembersThisWeek => $composableBuilder(
+    column: $table.newMembersThisWeek,
+    builder: (column) => column,
+  );
+}
+
+class $$TribeAnalyticsTableTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $TribeAnalyticsTableTable,
+          TribeAnalyticsTableData,
+          $$TribeAnalyticsTableTableFilterComposer,
+          $$TribeAnalyticsTableTableOrderingComposer,
+          $$TribeAnalyticsTableTableAnnotationComposer,
+          $$TribeAnalyticsTableTableCreateCompanionBuilder,
+          $$TribeAnalyticsTableTableUpdateCompanionBuilder,
+          (
+            TribeAnalyticsTableData,
+            BaseReferences<
+              _$AppDatabase,
+              $TribeAnalyticsTableTable,
+              TribeAnalyticsTableData
+            >,
+          ),
+          TribeAnalyticsTableData,
+          PrefetchHooks Function()
+        > {
+  $$TribeAnalyticsTableTableTableManager(
+    _$AppDatabase db,
+    $TribeAnalyticsTableTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$TribeAnalyticsTableTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$TribeAnalyticsTableTableOrderingComposer(
+                $db: db,
+                $table: table,
+              ),
+          createComputedFieldComposer: () =>
+              $$TribeAnalyticsTableTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<String> tribeId = const Value.absent(),
+                Value<String> date = const Value.absent(),
+                Value<int> memberCount = const Value.absent(),
+                Value<int> totalXp = const Value.absent(),
+                Value<int> totalHabitsCompleted = const Value.absent(),
+                Value<int> totalChallengesCompleted = const Value.absent(),
+                Value<int> activeMembers = const Value.absent(),
+                Value<int> newMembersThisWeek = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => TribeAnalyticsTableCompanion(
+                tribeId: tribeId,
+                date: date,
+                memberCount: memberCount,
+                totalXp: totalXp,
+                totalHabitsCompleted: totalHabitsCompleted,
+                totalChallengesCompleted: totalChallengesCompleted,
+                activeMembers: activeMembers,
+                newMembersThisWeek: newMembersThisWeek,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String tribeId,
+                required String date,
+                Value<int> memberCount = const Value.absent(),
+                Value<int> totalXp = const Value.absent(),
+                Value<int> totalHabitsCompleted = const Value.absent(),
+                Value<int> totalChallengesCompleted = const Value.absent(),
+                Value<int> activeMembers = const Value.absent(),
+                Value<int> newMembersThisWeek = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => TribeAnalyticsTableCompanion.insert(
+                tribeId: tribeId,
+                date: date,
+                memberCount: memberCount,
+                totalXp: totalXp,
+                totalHabitsCompleted: totalHabitsCompleted,
+                totalChallengesCompleted: totalChallengesCompleted,
+                activeMembers: activeMembers,
+                newMembersThisWeek: newMembersThisWeek,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$TribeAnalyticsTableTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $TribeAnalyticsTableTable,
+      TribeAnalyticsTableData,
+      $$TribeAnalyticsTableTableFilterComposer,
+      $$TribeAnalyticsTableTableOrderingComposer,
+      $$TribeAnalyticsTableTableAnnotationComposer,
+      $$TribeAnalyticsTableTableCreateCompanionBuilder,
+      $$TribeAnalyticsTableTableUpdateCompanionBuilder,
+      (
+        TribeAnalyticsTableData,
+        BaseReferences<
+          _$AppDatabase,
+          $TribeAnalyticsTableTable,
+          TribeAnalyticsTableData
+        >,
+      ),
+      TribeAnalyticsTableData,
+      PrefetchHooks Function()
+    >;
 typedef $$LeaderboardEntriesTableTableCreateCompanionBuilder =
     LeaderboardEntriesTableCompanion Function({
       required String id,
@@ -14357,6 +15190,8 @@ class $AppDatabaseManager {
       );
   $$TribeStatsTableTableTableManager get tribeStatsTable =>
       $$TribeStatsTableTableTableManager(_db, _db.tribeStatsTable);
+  $$TribeAnalyticsTableTableTableManager get tribeAnalyticsTable =>
+      $$TribeAnalyticsTableTableTableManager(_db, _db.tribeAnalyticsTable);
   $$LeaderboardEntriesTableTableTableManager get leaderboardEntriesTable =>
       $$LeaderboardEntriesTableTableTableManager(
         _db,

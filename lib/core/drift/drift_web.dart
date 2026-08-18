@@ -9,6 +9,7 @@ export 'daos/habits_dao.dart';
 export 'daos/habit_completions_dao.dart';
 export 'daos/challenge_progress_dao.dart';
 export 'daos/tribe_stats_dao.dart';
+export 'daos/tribe_analytics_dao.dart';
 export 'daos/leaderboard_entries_dao.dart';
 export 'daos/mutation_queue_dao.dart';
 export 'daos/tribe_activity_dao.dart';
