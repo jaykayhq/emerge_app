@@ -47,6 +47,11 @@ test("isStale: unparseable date -> write", () => {
   assert.equal(isStale("not-a-date", NOW), true);
 });
 
+test("isStale: future-dated snapshot -> write", () => {
+  assert.equal(isStale("2026-08-19", NOW), true); // tomorrow must not suppress today
+  assert.equal(isStale("2030-01-01T00:00:00Z", NOW), true);
+});
+
 test("aggregateContributors sums fields and 7-day windows", () => {
   const docs = [
     {

@@ -1,6 +1,5 @@
 import 'dart:async';
 
-import 'package:emerge_app/core/error/failure.dart';
 import 'package:emerge_app/core/presentation/widgets/emerge_branding.dart';
 import 'package:emerge_app/core/presentation/widgets/emerge_app_icon.dart';
 import 'package:emerge_app/core/presentation/widgets/responsive_layout.dart';
@@ -12,7 +11,6 @@ import 'package:emerge_app/features/auth/presentation/providers/auth_providers.d
 import 'package:emerge_app/features/auth/presentation/widgets/password_requirement_checklist.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:fpdart/fpdart.dart';
 import 'package:gap/gap.dart';
 import 'package:emerge_app/features/auth/domain/entities/user_extension.dart';
 import 'package:emerge_app/features/gamification/presentation/providers/gamification_providers.dart';
@@ -110,27 +108,6 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
         'Initial verification email failed: ${failure.message}',
       ),
       (_) {},
-    );
-  }
-
-  /// Opens the forgot-password dialog. The dialog validates the email and
-  /// calls the repository; the result is folded into snackbar feedback here
-  /// so the dialog stays purely presentational.
-  Future<void> _showForgotPasswordDialog() async {
-    final result = await showDialog<Either<Failure, void>>(
-      context: context,
-      builder: (_) => _ForgotPasswordDialog(
-        initialEmail: _emailController.text.trim(),
-      ),
-    );
-    if (result == null || !mounted) return;
-    result.fold(
-      (failure) => ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(failure.message)),
-      ),
-      (_) => ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Password reset email sent')),
-      ),
     );
   }
 
@@ -457,17 +434,6 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
                         ),
                         validator: AppValidators.validateEmail,
                       ).animate(delay: 250.ms).fadeIn().slideX(begin: 0.02),
-                      const Gap(8),
-                      Align(
-                        alignment: Alignment.centerRight,
-                        child: TextButton(
-                          onPressed: _isLoading ? null : _showForgotPasswordDialog,
-                          child: const Text(
-                            'Forgot Password?',
-                            style: TextStyle(color: EmergeColors.teal),
-                          ),
-                        ),
-                      ),
                       const Gap(16),
 
                       // Password Field
@@ -920,21 +886,6 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
                                       .animate(delay: 250.ms)
                                       .fadeIn()
                                       .slideX(begin: 0.02),
-                                  const Gap(8),
-                                  Align(
-                                    alignment: Alignment.centerRight,
-                                    child: TextButton(
-                                      onPressed: _isLoading
-                                          ? null
-                                          : _showForgotPasswordDialog,
-                                      child: const Text(
-                                        'Forgot Password?',
-                                        style: TextStyle(
-                                          color: EmergeColors.teal,
-                                        ),
-                                      ),
-                                    ),
-                                  ),
                                   const Gap(16),
                                   // Password
                                   TextFormField(
@@ -1105,8 +1056,9 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
                                   ),
                                   const Gap(24),
                                   // Login Link
-                                  Row(
-                                    mainAxisAlignment: MainAxisAlignment.center,
+                                  Wrap(
+                                    alignment: WrapAlignment.center,
+                                    crossAxisAlignment: WrapCrossAlignment.center,
                                     children: [
                                       Text(
                                         'Already have an account?',
@@ -1152,120 +1104,6 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
           ),
         ],
       ),
-    );
-  }
-}
-
-/// Modal for requesting a password reset link from the signup screen.
-///
-/// Validates the email with [AppValidators.validateEmail], performs the
-/// repository call while showing an in-dialog progress state, and pops with
-/// the `Either` result so the screen can fold it into snackbar feedback.
-class _ForgotPasswordDialog extends ConsumerStatefulWidget {
-  const _ForgotPasswordDialog({required this.initialEmail});
-
-  final String initialEmail;
-
-  @override
-  ConsumerState<_ForgotPasswordDialog> createState() =>
-      _ForgotPasswordDialogState();
-}
-
-class _ForgotPasswordDialogState extends ConsumerState<_ForgotPasswordDialog> {
-  late final TextEditingController _emailController = TextEditingController(
-    text: widget.initialEmail,
-  );
-  final _formKey = GlobalKey<FormState>();
-  bool _submitting = false;
-
-  @override
-  void dispose() {
-    _emailController.dispose();
-    super.dispose();
-  }
-
-  Future<void> _sendResetLink() async {
-    if (!(_formKey.currentState?.validate() ?? false)) return;
-    setState(() => _submitting = true);
-    try {
-      final result = await ref
-          .read(authRepositoryProvider)
-          .sendPasswordResetEmail(_emailController.text.trim());
-      if (mounted) Navigator.pop(context, result);
-    } finally {
-      if (mounted) setState(() => _submitting = false);
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return AlertDialog(
-      backgroundColor: AppTheme.surfaceDark,
-      title: const Text(
-        'Forgot Password?',
-        style: TextStyle(color: AppTheme.textMainDark),
-      ),
-      content: Form(
-        key: _formKey,
-        child: TextFormField(
-          controller: _emailController,
-          autofocus: true,
-          keyboardType: TextInputType.emailAddress,
-          style: const TextStyle(color: AppTheme.textMainDark),
-          decoration: InputDecoration(
-            labelText: 'Email',
-            labelStyle: const TextStyle(color: AppTheme.textSecondaryDark),
-            prefixIcon: const Icon(
-              Icons.email_outlined,
-              color: EmergeColors.teal,
-            ),
-            filled: true,
-            fillColor: AppTheme.surfaceDark,
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(color: EmergeColors.hexLine),
-            ),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(color: EmergeColors.hexLine),
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(color: EmergeColors.teal),
-            ),
-          ),
-          validator: AppValidators.validateEmail,
-        ),
-      ),
-      actions: [
-        TextButton(
-          onPressed: _submitting ? null : () => Navigator.pop(context),
-          child: const Text(
-            'Cancel',
-            style: TextStyle(color: AppTheme.textSecondaryDark),
-          ),
-        ),
-        FilledButton(
-          onPressed: _submitting ? null : _sendResetLink,
-          style: FilledButton.styleFrom(backgroundColor: EmergeColors.teal),
-          child: _submitting
-              ? const SizedBox(
-                  height: 18,
-                  width: 18,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2,
-                    color: Colors.black,
-                  ),
-                )
-              : const Text(
-                  'Send reset link',
-                  style: TextStyle(
-                    color: Colors.black,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-        ),
-      ],
     );
   }
 }

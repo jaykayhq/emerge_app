@@ -1,8 +1,7 @@
 // lib/features/gamification/presentation/widgets/recap_share_sheet.dart
-import 'dart:io';
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
-import 'package:path_provider/path_provider.dart';
-import 'package:share_plus/share_plus.dart';
+import 'package:emerge_app/core/presentation/services/share_delivery.dart';
 import 'package:emerge_app/core/presentation/services/shareable_image_exporter.dart';
 import 'package:emerge_app/core/theme/emerge_colors.dart';
 import 'package:emerge_app/features/gamification/domain/entities/weekly_recap.dart';
@@ -14,10 +13,15 @@ class RecapShareSheet extends StatefulWidget {
   final UserWeeklyRecap recap;
   final int currentIndex;
 
+  /// Test seam: replaces the real export+share pipeline with a fake that
+  /// returns whether sharing "succeeded".
+  final Future<bool> Function()? onExportOverride;
+
   const RecapShareSheet({
     super.key,
     required this.recap,
     required this.currentIndex,
+    this.onExportOverride,
   });
 
   @override
@@ -26,55 +30,67 @@ class RecapShareSheet extends StatefulWidget {
 
 class _RecapShareSheetState extends State<RecapShareSheet> {
   bool _busy = false;
+  String? _error;
 
   Future<void> _export({required bool all}) async {
-    setState(() => _busy = true);
+    if (_busy) return;
+    setState(() {
+      _busy = true;
+      _error = null;
+    });
     try {
+      final override = widget.onExportOverride;
+      if (override != null) {
+        if (!mounted) return;
+        final ok = await override();
+        if (!mounted) return;
+        if (ok) {
+          Navigator.of(context).pop();
+        } else {
+          setState(() => _error = 'Could not share the recap image.');
+        }
+        return;
+      }
+
       final cards = recapToShareableCards(widget.recap);
       final selected = all
           ? cards
-          : [
-              cards[(widget.currentIndex).clamp(0, cards.length - 1)],
-            ];
-      final files = <XFile>[];
-      for (final card in selected) {
+          : [cards[widget.currentIndex.clamp(0, cards.length - 1)]];
+      // Render first, share once — one native sheet / one download bundle.
+      // A missing slide aborts the whole batch: silently dropping part of
+      // the recap would look like a harness bug to the recipient.
+      final images = <Uint8List>[];
+      final names = <String>[];
+      final epoch = DateTime.now().microsecondsSinceEpoch;
+      for (var i = 0; i < selected.length; i++) {
         if (!mounted) return;
-        final bytes = await ShareableImageExporter.renderPng(context, card);
-        if (bytes == null) continue;
-        final tempDir = await getTemporaryDirectory();
-        final file = File(
-          '${tempDir.path}/emerge_recap_${DateTime.now().millisecondsSinceEpoch}.png',
-        );
-        await file.writeAsBytes(bytes);
-        files.add(XFile(file.path));
+        final bytes = await ShareableImageExporter.renderPng(context, selected[i]);
+        if (bytes == null) {
+          if (mounted) {
+            setState(() => _error = 'Could not render the recap image.');
+          }
+          return;
+        }
+        images.add(bytes);
+        names.add('emerge_recap_${epoch}_$i.png');
       }
-      if (files.isEmpty) {
-        _toast('Could not render the recap image.');
-        return;
-      }
-      await SharePlus.instance.share(
-        ShareParams(
-          files: files,
-          text: 'My Emerge Weekly Recap 🌟 #EmergeApp',
-        ),
+      final result = await sharePngImages(
+        fileNames: names,
+        images: images,
+        text: 'My Emerge Weekly Recap 🌟 #EmergeApp',
       );
-      if (mounted) Navigator.of(context).pop();
-    } catch (e) {
-      _toast('Sharing failed: $e');
+      if (!mounted) return;
+      switch (result) {
+        case ShareDeliveryResult.success:
+          Navigator.of(context).pop();
+        case ShareDeliveryResult.dismissed:
+          break; // user cancelled — keep the sheet open for a retry
+        case ShareDeliveryResult.failed:
+          setState(() => _error = 'Could not share the recap image.');
+      }
     } finally {
       if (mounted) setState(() => _busy = false);
     }
-  }
-
-  void _toast(String message) {
-    if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        backgroundColor: EmergeColors.coral,
-        behavior: SnackBarBehavior.floating,
-      ),
-    );
   }
 
   @override
@@ -87,7 +103,11 @@ class _RecapShareSheetState extends State<RecapShareSheet> {
           children: [
             const Text(
               'Share your recap',
-              style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+              ),
             ),
             const SizedBox(height: 20),
             _OptionTile(
@@ -103,6 +123,14 @@ class _RecapShareSheetState extends State<RecapShareSheet> {
               subtitle: 'Export the full recap as a set of images',
               onTap: _busy ? null : () => _export(all: true),
             ),
+            if (_error != null) ...[
+              const SizedBox(height: 16),
+              Text(
+                _error!,
+                style: const TextStyle(color: EmergeColors.coral, fontSize: 13),
+                textAlign: TextAlign.center,
+              ),
+            ],
           ],
         ),
       ),
@@ -141,8 +169,18 @@ class _OptionTile extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(title, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14)),
-                    Text(subtitle, style: const TextStyle(color: Colors.white54, fontSize: 12)),
+                    Text(
+                      title,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 14,
+                      ),
+                    ),
+                    Text(
+                      subtitle,
+                      style: const TextStyle(color: Colors.white54, fontSize: 12),
+                    ),
                   ],
                 ),
               ),

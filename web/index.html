@@ -152,6 +152,16 @@
   <script src="flutter_bootstrap.js" async=""></script>
 
   <script>
+    // Remove the HTML splash once the page has loaded. The function is
+    // injected by flutter_native_splash (web). Without this listener the
+    // <picture id="splash"> element and dark body background would persist
+    // behind the Flutter canvas after app start.
+    window.addEventListener("load", function() {
+      removeSplashFromWeb();
+    });
+  </script>
+
+  <script>
     // Safeguard: Unregister any existing service workers if they cause trouble
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.getRegistrations().then(function(registrations) {

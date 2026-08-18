@@ -74,7 +74,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.withExecutor(super.executor);
 
   @override
-  int get schemaVersion => 15;
+  int get schemaVersion => 16;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -151,6 +151,12 @@ class AppDatabase extends _$AppDatabase {
         await m.addColumn(mutationQueueTable, mutationQueueTable.userId);
       }
       if (from < 15) {
+        await m.createTable(tribeAnalyticsTable);
+      }
+      if (from < 16) {
+        // Device-scope the analytics cache (shared-device isolation). The
+        // primary key gains userId, so the table is rebuilt.
+        await m.deleteTable(tribeAnalyticsTable.actualTableName);
         await m.createTable(tribeAnalyticsTable);
       }
     },

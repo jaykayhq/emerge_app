@@ -1,14 +1,12 @@
 // lib/features/social/presentation/widgets/creator_tribe_share_card.dart
-import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:path_provider/path_provider.dart';
-import 'package:share_plus/share_plus.dart';
+import 'package:emerge_app/core/presentation/services/share_delivery.dart';
 import 'package:emerge_app/core/presentation/services/shareable_image_exporter.dart';
 import 'package:emerge_app/core/theme/emerge_colors.dart';
 import 'package:emerge_app/features/social/presentation/services/tribe_to_shareable_card.dart';
 
 /// Exports the creator's tribe stats as a branded 9:16 card and shares it.
-class CreatorTribeShareCard extends StatelessWidget {
+class CreatorTribeShareCard extends StatefulWidget {
   final String tribeName;
   final String creatorName;
   final int memberCount;
@@ -28,38 +26,50 @@ class CreatorTribeShareCard extends StatelessWidget {
     this.onExport,
   });
 
-  Future<void> _export(BuildContext context) async {
-    if (onExport != null) return onExport!();
+  @override
+  State<CreatorTribeShareCard> createState() => _CreatorTribeShareCardState();
+}
+
+class _CreatorTribeShareCardState extends State<CreatorTribeShareCard> {
+  bool _busy = false;
+
+  Future<void> _export() async {
+    if (_busy) return;
+    final onExport = widget.onExport;
+    if (onExport != null) return onExport();
+
+    setState(() => _busy = true);
     try {
       final card = tribeToShareableCard(
-        tribeName: tribeName,
-        creatorName: creatorName,
-        memberCount: memberCount,
-        totalXp: totalXp,
-        totalHabitsCompleted: totalHabitsCompleted,
-        totalChallengesCompleted: totalChallengesCompleted,
+        tribeName: widget.tribeName,
+        creatorName: widget.creatorName,
+        memberCount: widget.memberCount,
+        totalXp: widget.totalXp,
+        totalHabitsCompleted: widget.totalHabitsCompleted,
+        totalChallengesCompleted: widget.totalChallengesCompleted,
       );
-      if (!context.mounted) return;
       final bytes = await ShareableImageExporter.renderPng(context, card);
       if (bytes == null) {
-        if (context.mounted) _toast(context, 'Could not render the tribe card.');
+        if (mounted) _toast('Could not render the tribe card.');
         return;
       }
-      final tempDir = await getTemporaryDirectory();
-      final file = File(
-        '${tempDir.path}/emerge_tribe_${DateTime.now().millisecondsSinceEpoch}.png',
+      final ok = await sharePngBytes(
+        bytes: bytes,
+        fileName: 'emerge_tribe_${DateTime.now().microsecondsSinceEpoch}.png',
+        text: 'Join my tribe on Emerge!',
       );
-      await file.writeAsBytes(bytes);
-      await SharePlus.instance.share(
-        ShareParams(files: [XFile(file.path)], text: 'Join my tribe on Emerge!'),
-      );
-    } catch (e) {
-      if (context.mounted) _toast(context, 'Sharing failed: $e');
+      if (!mounted) return;
+      // A dismissal isn't a failure — the user simply changed their mind.
+      if (ok == ShareDeliveryResult.failed) _toast('Could not share the tribe card.');
+    } catch (_) {
+      if (mounted) _toast('Could not share the tribe card.');
+    } finally {
+      if (mounted) setState(() => _busy = false);
     }
   }
 
-  void _toast(BuildContext context, String message) {
-    if (!context.mounted) return;
+  void _toast(String message) {
+    if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(message),
@@ -75,18 +85,26 @@ class CreatorTribeShareCard extends StatelessWidget {
       color: Colors.white.withValues(alpha: 0.05),
       borderRadius: BorderRadius.circular(12),
       child: InkWell(
-        onTap: () => _export(context),
+        onTap: _busy ? null : _export,
         borderRadius: BorderRadius.circular(12),
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
           child: Row(
             children: [
-              const Icon(Icons.ios_share_rounded, color: EmergeColors.neonTeal, size: 22),
+              const Icon(
+                Icons.ios_share_rounded,
+                color: EmergeColors.neonTeal,
+                size: 22,
+              ),
               const SizedBox(width: 12),
               const Expanded(
                 child: Text(
                   'Share tribe card',
-                  style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14),
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 14,
+                  ),
                 ),
               ),
               const Icon(Icons.chevron_right_rounded, color: Colors.white24),

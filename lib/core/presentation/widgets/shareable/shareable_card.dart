@@ -42,6 +42,8 @@ class ShareableCard extends StatelessWidget {
           // Headline
           Text(
             data.headline,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
             style: const TextStyle(
               color: Colors.white,
               fontSize: 34,
@@ -54,6 +56,8 @@ class ShareableCard extends StatelessWidget {
             const Gap(8),
             Text(
               data.subheadline!,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
               style: const TextStyle(color: Colors.white60, fontSize: 16),
             ),
           ],
@@ -138,15 +142,25 @@ class _StatRow extends StatelessWidget {
           Expanded(
             child: Text(
               stat.label.toUpperCase(),
-              style: const TextStyle(color: Colors.white70, fontSize: 14, letterSpacing: 1),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(
+                color: Colors.white70,
+                fontSize: 14,
+                letterSpacing: 1,
+              ),
             ),
           ),
-          Text(
-            stat.value,
-            style: TextStyle(
-              color: stat.color,
-              fontSize: 30,
-              fontWeight: FontWeight.w800,
+          Flexible(
+            child: Text(
+              stat.value,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                color: stat.color,
+                fontSize: 30,
+                fontWeight: FontWeight.w800,
+              ),
             ),
           ),
         ],

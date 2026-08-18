@@ -3,6 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:fpdart/fpdart.dart';
 import 'package:emerge_app/core/error/failure.dart';
 import 'package:emerge_app/features/social/domain/models/creator_analytics.dart';
+import 'package:emerge_app/features/social/domain/services/tribe_aggregates.dart';
 
 /// Aggregates live creator analytics from rules-compliant Firestore sources.
 ///
@@ -37,14 +38,8 @@ class CreatorAnalyticsService {
               .collection('contributors')
               .get();
 
-      final now = DateTime.now();
-      final weekAgo = now.subtract(const Duration(days: 7));
-
-      int totalXp = 0;
-      int totalHabits = 0;
-      int totalChallenges = 0;
-      int newMembers = 0;
-      int activeMembers = 0;
+      final now = DateTime.now().toUtc();
+      final records = <ContributorRecord>[];
       final memberRows = <MemberStat>[];
 
       for (final doc in contributors.docs) {
@@ -52,17 +47,18 @@ class CreatorAnalyticsService {
         final xp = _int(data['totalXpContributed']);
         final habits = _int(data['totalHabitsCompleted']);
         final challenges = _int(data['totalChallengesCompleted']);
-        totalXp += xp;
-        totalHabits += habits;
-        totalChallenges += challenges;
-
         final joinedAt = _parseDate(data['joinedAt']);
-        if (joinedAt != null && joinedAt.isAfter(weekAgo)) newMembers++;
-
         final lastActivity = _parseDate(data['lastActivity']);
-        if (lastActivity != null && lastActivity.isAfter(weekAgo)) {
-          activeMembers++;
-        }
+
+        records.add(
+          ContributorRecord(
+            totalXpContributed: xp,
+            totalHabitsCompleted: habits,
+            totalChallengesCompleted: challenges,
+            joinedAt: joinedAt,
+            lastActivity: lastActivity,
+          ),
+        );
 
         if (xp > 0 && data['userName'] != null) {
           memberRows.add(MemberStat(
@@ -73,6 +69,16 @@ class CreatorAnalyticsService {
           ));
         }
       }
+      final agg = aggregateTribeContributors(
+        contributors: records,
+        now: now,
+      );
+      final totalXp = agg.totalXp;
+      final totalHabits = agg.totalHabitsCompleted;
+      final totalChallenges = agg.totalChallengesCompleted;
+      final newMembers = agg.newMembers;
+      final activeMembers = agg.activeMembers;
+
       memberRows.sort((a, b) => b.xp.compareTo(a.xp));
       final topMembers = memberRows.take(10).toList();
 

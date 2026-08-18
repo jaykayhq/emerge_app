@@ -2,7 +2,9 @@
 import 'package:drift/drift.dart';
 
 /// Per-tribe-per-day analytics snapshot cache (offline-first render).
+/// Scoped by userId for shared-device isolation (AGENTS.md).
 class TribeAnalyticsTable extends Table {
+  TextColumn get userId => text().withDefault(const Constant(''))();
   TextColumn get tribeId => text()();
   TextColumn get date => text()(); // yyyy-MM-dd
   IntColumn get memberCount => integer().withDefault(const Constant(0))();
@@ -16,5 +18,5 @@ class TribeAnalyticsTable extends Table {
       integer().withDefault(const Constant(0))();
 
   @override
-  Set<Column> get primaryKey => {tribeId, date};
+  Set<Column> get primaryKey => {userId, tribeId, date};
 }

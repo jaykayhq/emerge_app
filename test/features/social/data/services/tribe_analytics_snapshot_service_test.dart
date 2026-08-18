@@ -85,11 +85,57 @@ void main() {
     final result = await service.ensureTodaySnapshot(uid: 'creator1', tribeId: '');
     expect(result.isLeft(), isTrue);
   });
+
+  test('future-dated snapshot does not suppress today\'s write', () async {
+    // A forward-skewed clock (or malicious row) wrote 2026-09-19. The
+    // client backstop must still write today — otherwise every device
+    // suppresses its own snapshot until that date passes.
+    final now = DateTime.utc(2026, 8, 18, 12, 0);
+    service = TribeAnalyticsSnapshotService(
+      firestore: firestore,
+      now: () => now,
+    );
+    await seedTribe();
+    await firestore
+        .collection('tribe_analytics').doc('t1')
+        .collection('daily').doc('2026-09-19')
+        .set({'date': '2026-09-19'});
+
+    final result = await service.ensureTodaySnapshot(uid: 'creator1', tribeId: 't1');
+    expect(result.isRight(), isTrue);
+
+    final today = _dateKey(now);
+    final snap = await firestore
+        .collection('tribe_analytics').doc('t1')
+        .collection('daily').doc(today).get();
+    expect(snap.exists, isTrue);
+  });
+
+  test('dateKey is UTC-based to match the Node snapshot job', () {
+    // These exact strings are mirrored by the Node dateKey test
+    // (scripts/tribe-analytics-snapshot/test/snapshot.test.mjs). On a
+    // non-UTC device the old local-components implementation produced
+    // different keys than the server at the same instant.
+    expect(
+      TribeAnalyticsSnapshotService.dateKey(DateTime.utc(2026, 8, 18, 0, 30)),
+      '2026-08-18',
+    );
+    // A local-flagged instant must key by its UTC calendar in every
+    // timezone — on an east-of-UTC host the old code produced 08-19 here.
+    expect(
+      TribeAnalyticsSnapshotService.dateKey(
+        DateTime.utc(2026, 8, 17, 23, 30).toLocal(),
+      ),
+      '2026-08-17',
+    );
+    // Parity invariant: any instant keyed through its UTC calendar is stable
+    // regardless of the host timezone.
+    final local = DateTime.now();
+    expect(
+      TribeAnalyticsSnapshotService.dateKey(local),
+      TribeAnalyticsSnapshotService.dateKey(local.toUtc()),
+    );
+  });
 }
 
-String _dateKey(DateTime dt) {
-  final y = dt.year.toString().padLeft(4, '0');
-  final m = dt.month.toString().padLeft(2, '0');
-  final d = dt.day.toString().padLeft(2, '0');
-  return '$y-$m-$d';
-}
+String _dateKey(DateTime dt) => TribeAnalyticsSnapshotService.dateKey(dt);

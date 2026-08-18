@@ -277,8 +277,8 @@ void main() {
     expect(find.text('Password looks good'), findsNothing);
   });
 
-  group('forgot password', () {
-    testWidgets('shows a forgot password link on the signup form', (
+  group('no forgot password on signup', () {
+    testWidgets('does not show a forgot password link on the mobile form', (
       tester,
     ) async {
       await setMobileViewport(tester);
@@ -286,107 +286,23 @@ void main() {
       await tester.pumpWidget(_buildTest(mockAuth));
       await tester.pumpAndSettle();
 
-      expect(find.text('Forgot Password?'), findsOneWidget);
+      expect(find.text('Forgot Password?'), findsNothing);
     });
 
-    testWidgets('opens a dialog prefilled with the email typed in the form', (
+    testWidgets('does not show a forgot password link on the tablet form', (
       tester,
     ) async {
-      await setMobileViewport(tester);
+      tester.view.physicalSize = const Size(900, 1200);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(() {
+        tester.view.resetPhysicalSize();
+        tester.view.resetDevicePixelRatio();
+      });
 
       await tester.pumpWidget(_buildTest(mockAuth));
       await tester.pumpAndSettle();
 
-      await tester.enterText(
-        find.byType(TextFormField).at(1),
-        'quest@emerge.com',
-      );
-      await tester.tap(find.text('Forgot Password?'));
-      await tester.pumpAndSettle();
-
-      expect(find.byType(AlertDialog), findsOneWidget);
-      expect(find.text('Send reset link'), findsOneWidget);
-      expect(find.text('Cancel'), findsOneWidget);
-      final dialogField = tester.widget<TextFormField>(
-        find.descendant(
-          of: find.byType(AlertDialog),
-          matching: find.byType(TextFormField),
-        ),
-      );
-      expect(dialogField.controller?.text, 'quest@emerge.com');
-    });
-
-    testWidgets('sends the reset link and confirms with a snackbar', (
-      tester,
-    ) async {
-      await setMobileViewport(tester);
-      when(() => mockAuth.sendPasswordResetEmail('quest@emerge.com'))
-          .thenAnswer((_) async => right<Failure, void>(null));
-
-      await tester.pumpWidget(_buildTest(mockAuth));
-      await tester.pumpAndSettle();
-
-      await tester.enterText(
-        find.byType(TextFormField).at(1),
-        'quest@emerge.com',
-      );
-      await tester.tap(find.text('Forgot Password?'));
-      await tester.pumpAndSettle();
-      await tester.tap(find.text('Send reset link'));
-      await tester.pumpAndSettle();
-
-      verify(() => mockAuth.sendPasswordResetEmail('quest@emerge.com'))
-          .called(1);
-      expect(find.text('Password reset email sent'), findsOneWidget);
-    });
-
-    testWidgets('rejects an invalid email without calling the repository', (
-      tester,
-    ) async {
-      await setMobileViewport(tester);
-
-      await tester.pumpWidget(_buildTest(mockAuth));
-      await tester.pumpAndSettle();
-
-      await tester.tap(find.text('Forgot Password?'));
-      await tester.pumpAndSettle();
-      await tester.enterText(
-        find.descendant(
-          of: find.byType(AlertDialog),
-          matching: find.byType(TextFormField),
-        ),
-        'not-an-email',
-      );
-      await tester.tap(find.text('Send reset link'));
-      await tester.pumpAndSettle();
-
-      expect(find.text('Please enter a valid email address'), findsOneWidget);
-      verifyNever(() => mockAuth.sendPasswordResetEmail(any()));
-    });
-
-    testWidgets('shows the failure message when sending the reset link fails', (
-      tester,
-    ) async {
-      await setMobileViewport(tester);
-      when(() => mockAuth.sendPasswordResetEmail('quest@emerge.com'))
-          .thenAnswer(
-        (_) async =>
-            left(AuthFailure('No account found for this email')),
-      );
-
-      await tester.pumpWidget(_buildTest(mockAuth));
-      await tester.pumpAndSettle();
-
-      await tester.enterText(
-        find.byType(TextFormField).at(1),
-        'quest@emerge.com',
-      );
-      await tester.tap(find.text('Forgot Password?'));
-      await tester.pumpAndSettle();
-      await tester.tap(find.text('Send reset link'));
-      await tester.pumpAndSettle();
-
-      expect(find.text('No account found for this email'), findsOneWidget);
+      expect(find.text('Forgot Password?'), findsNothing);
     });
   });
 }

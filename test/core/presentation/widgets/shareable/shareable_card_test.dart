@@ -54,6 +54,36 @@ void main() {
       expect(find.text('HEADLINE'), findsOneWidget);
       expect(tester.takeException(), isNull);
     });
+
+    testWidgets('long values truncate instead of overflowing', (tester) async {
+      const data = ShareableCardData(
+        headline: 'A VERY LONG HEADLINE THAT WOULD WRAP ONTO MANY LINES',
+        subheadline: 'A very long subheadline that should never push the footer off the card',
+        stats: [
+          ShareableStat(
+            label: 'Long label',
+            value: '12,345,678,901,234,567,890 XP EARNED TOTAL SO FAR',
+            color: Color(0xFF2BEE79),
+          ),
+        ],
+        footer: 'Built with Emerge',
+      );
+      await tester.pumpWidget(
+        const MaterialApp(
+          home: Scaffold(
+            body: Center(
+              child: AspectRatio(
+                aspectRatio: 9 / 16,
+                child: ShareableCard(data: data),
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.pump();
+      expect(find.text('Built with Emerge'), findsOneWidget);
+      expect(tester.takeException(), isNull);
+    });
   });
 
   group('ShareableCardData', () {

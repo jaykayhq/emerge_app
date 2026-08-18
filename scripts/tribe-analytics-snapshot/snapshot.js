@@ -23,6 +23,9 @@ export function isStale(latestDate, now) {
   if (latestDate == null) return true;
   const parsed = Date.parse(latestDate);
   if (Number.isNaN(parsed)) return true;
+  // A future-dated doc must not suppress today's write (a malicious or
+  // badly-clocked earlier write would otherwise disable the backstop).
+  if (parsed > now.getTime()) return true;
   return now.getTime() - parsed > 24 * 60 * 60 * 1000;
 }
 

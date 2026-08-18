@@ -110,14 +110,25 @@ service cloud.firestore {
              (!tribe.keys().hasAny(['description']) || (tribe.description is string && tribe.description.size() <= 500)) &&
              (!tribe.keys().hasAny(['imageUrl']) || tribe.imageUrl == null || tribe.imageUrl is string) &&
              (!tribe.keys().hasAny(['ownerId']) || tribe.ownerId is string) &&
+             (!tribe.keys().hasAny(['createdBy']) || tribe.createdBy is string) &&
              (!tribe.keys().hasAny(['tags']) || tribe.tags is list) &&
              (!tribe.keys().hasAny(['levelRequirement']) || tribe.levelRequirement is number) &&
              (!tribe.keys().hasAny(['rank']) || tribe.rank is number) &&
-             (!tribe.keys().hasAny(['totalXp']) || tribe.totalXp is number) &&
-             (!tribe.keys().hasAny(['memberCount']) || tribe.memberCount is number) &&
+             (!tribe.keys().hasAny(['totalXp']) || (tribe.totalXp is number && tribe.totalXp >= 0)) &&
+             (!tribe.keys().hasAny(['memberCount']) || (tribe.memberCount is number && tribe.memberCount >= 0)) &&
              (!tribe.keys().hasAny(['isVerified']) || tribe.isVerified is bool) &&
              (!tribe.keys().hasAny(['createdAt']) || tribe.createdAt is timestamp) &&
              (!tribe.keys().hasAny(['members']) || tribe.members is list);
+    }
+
+    // True when the authenticated user owns the tribe (has a matching,
+    // non-null string createdBy). Official/brand tribes have no createdBy
+    // and fail closed — they are handled by the admin/server instead.
+    function isTribeCreator(tribeId, uid) {
+      return get(/databases/$(database)/documents/tribes/$(tribeId)).data
+        .createdBy is string &&
+        get(/databases/$(database)/documents/tribes/$(tribeId)).data
+          .createdBy == uid;
     }
 
     // Helper function to validate creator-profile data.
@@ -445,9 +456,17 @@ service cloud.firestore {
                      hasConsistentMemberCount(request.resource.data) &&
                      request.resource.data.type != 'official' &&
                      request.resource.data.type != 'brand' &&
+                     // Ownership is bound to the authenticator at creation.
+                     request.resource.data.createdBy == request.auth.uid &&
                      (request.resource.data.type != 'creator' || isVerifiedCreator());
       allow update: if isAuthenticated() && isValidTribe(request.resource.data) && (
-        ('createdBy' in resource.data && resource.data.createdBy == request.auth.uid) ||
+        // Owner edits: immutable ownership, but partial updates that omit
+        // createdBy are allowed (they can't change it by omission).
+        ('createdBy' in resource.data &&
+           resource.data.createdBy == request.auth.uid &&
+           (!request.resource.data.keys().hasAny(['createdBy']) ||
+              (request.resource.data.createdBy is string &&
+               request.resource.data.createdBy == resource.data.createdBy))) ||
         isAdmin()
       );
       allow delete: if isAdmin();
@@ -479,16 +498,36 @@ service cloud.firestore {
       match /daily/{date} {
         allow read: if isAuthenticated();
         allow create, update: if isAuthenticated() &&
-          get(/databases/$(database)/documents/tribes/$(tribeId)).data.createdBy
-            == request.auth.uid &&
+          isTribeCreator(tribeId, request.auth.uid) &&
+          request.resource.data.keys().size() == 9 &&
+          request.resource.data.keys().hasAll([
+            'tribeId', 'date', 'memberCount', 'totalXp',
+            'totalHabitsCompleted', 'totalChallengesCompleted',
+            'activeMembers', 'newMembersThisWeek', 'createdAt',
+          ]) &&
           request.resource.data.tribeId == tribeId &&
           request.resource.data.date == date &&
+          request.resource.data.date.matches(
+              '^20[0-9]{2}-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])$'
+          ) &&
           request.resource.data.memberCount is number &&
+          request.resource.data.memberCount >= 0 &&
+          request.resource.data.memberCount % 1 == 0 &&
           request.resource.data.totalXp is number &&
+          request.resource.data.totalXp >= 0 &&
+          request.resource.data.totalXp % 1 == 0 &&
           request.resource.data.totalHabitsCompleted is number &&
+          request.resource.data.totalHabitsCompleted >= 0 &&
+          request.resource.data.totalHabitsCompleted % 1 == 0 &&
           request.resource.data.totalChallengesCompleted is number &&
+          request.resource.data.totalChallengesCompleted >= 0 &&
+          request.resource.data.totalChallengesCompleted % 1 == 0 &&
           request.resource.data.activeMembers is number &&
-          request.resource.data.newMembersThisWeek is number;
+          request.resource.data.activeMembers >= 0 &&
+          request.resource.data.activeMembers % 1 == 0 &&
+          request.resource.data.newMembersThisWeek is number &&
+          request.resource.data.newMembersThisWeek >= 0 &&
+          request.resource.data.newMembersThisWeek % 1 == 0;
         allow delete: if false;
       }
     }

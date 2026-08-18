@@ -5319,6 +5319,16 @@ class $TribeAnalyticsTableTable extends TribeAnalyticsTable
   final GeneratedDatabase attachedDatabase;
   final String? _alias;
   $TribeAnalyticsTableTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _userIdMeta = const VerificationMeta('userId');
+  @override
+  late final GeneratedColumn<String> userId = GeneratedColumn<String>(
+    'user_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(''),
+  );
   static const VerificationMeta _tribeIdMeta = const VerificationMeta(
     'tribeId',
   );
@@ -5411,6 +5421,7 @@ class $TribeAnalyticsTableTable extends TribeAnalyticsTable
   );
   @override
   List<GeneratedColumn> get $columns => [
+    userId,
     tribeId,
     date,
     memberCount,
@@ -5432,6 +5443,12 @@ class $TribeAnalyticsTableTable extends TribeAnalyticsTable
   }) {
     final context = VerificationContext();
     final data = instance.toColumns(true);
+    if (data.containsKey('user_id')) {
+      context.handle(
+        _userIdMeta,
+        userId.isAcceptableOrUnknown(data['user_id']!, _userIdMeta),
+      );
+    }
     if (data.containsKey('tribe_id')) {
       context.handle(
         _tribeIdMeta,
@@ -5503,7 +5520,7 @@ class $TribeAnalyticsTableTable extends TribeAnalyticsTable
   }
 
   @override
-  Set<GeneratedColumn> get $primaryKey => {tribeId, date};
+  Set<GeneratedColumn> get $primaryKey => {userId, tribeId, date};
   @override
   TribeAnalyticsTableData map(
     Map<String, dynamic> data, {
@@ -5511,6 +5528,10 @@ class $TribeAnalyticsTableTable extends TribeAnalyticsTable
   }) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
     return TribeAnalyticsTableData(
+      userId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}user_id'],
+      )!,
       tribeId: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}tribe_id'],
@@ -5554,6 +5575,7 @@ class $TribeAnalyticsTableTable extends TribeAnalyticsTable
 
 class TribeAnalyticsTableData extends DataClass
     implements Insertable<TribeAnalyticsTableData> {
+  final String userId;
   final String tribeId;
   final String date;
   final int memberCount;
@@ -5563,6 +5585,7 @@ class TribeAnalyticsTableData extends DataClass
   final int activeMembers;
   final int newMembersThisWeek;
   const TribeAnalyticsTableData({
+    required this.userId,
     required this.tribeId,
     required this.date,
     required this.memberCount,
@@ -5575,6 +5598,7 @@ class TribeAnalyticsTableData extends DataClass
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
+    map['user_id'] = Variable<String>(userId);
     map['tribe_id'] = Variable<String>(tribeId);
     map['date'] = Variable<String>(date);
     map['member_count'] = Variable<int>(memberCount);
@@ -5588,6 +5612,7 @@ class TribeAnalyticsTableData extends DataClass
 
   TribeAnalyticsTableCompanion toCompanion(bool nullToAbsent) {
     return TribeAnalyticsTableCompanion(
+      userId: Value(userId),
       tribeId: Value(tribeId),
       date: Value(date),
       memberCount: Value(memberCount),
@@ -5605,6 +5630,7 @@ class TribeAnalyticsTableData extends DataClass
   }) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return TribeAnalyticsTableData(
+      userId: serializer.fromJson<String>(json['userId']),
       tribeId: serializer.fromJson<String>(json['tribeId']),
       date: serializer.fromJson<String>(json['date']),
       memberCount: serializer.fromJson<int>(json['memberCount']),
@@ -5623,6 +5649,7 @@ class TribeAnalyticsTableData extends DataClass
   Map<String, dynamic> toJson({ValueSerializer? serializer}) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return <String, dynamic>{
+      'userId': serializer.toJson<String>(userId),
       'tribeId': serializer.toJson<String>(tribeId),
       'date': serializer.toJson<String>(date),
       'memberCount': serializer.toJson<int>(memberCount),
@@ -5637,6 +5664,7 @@ class TribeAnalyticsTableData extends DataClass
   }
 
   TribeAnalyticsTableData copyWith({
+    String? userId,
     String? tribeId,
     String? date,
     int? memberCount,
@@ -5646,6 +5674,7 @@ class TribeAnalyticsTableData extends DataClass
     int? activeMembers,
     int? newMembersThisWeek,
   }) => TribeAnalyticsTableData(
+    userId: userId ?? this.userId,
     tribeId: tribeId ?? this.tribeId,
     date: date ?? this.date,
     memberCount: memberCount ?? this.memberCount,
@@ -5658,6 +5687,7 @@ class TribeAnalyticsTableData extends DataClass
   );
   TribeAnalyticsTableData copyWithCompanion(TribeAnalyticsTableCompanion data) {
     return TribeAnalyticsTableData(
+      userId: data.userId.present ? data.userId.value : this.userId,
       tribeId: data.tribeId.present ? data.tribeId.value : this.tribeId,
       date: data.date.present ? data.date.value : this.date,
       memberCount: data.memberCount.present
@@ -5682,6 +5712,7 @@ class TribeAnalyticsTableData extends DataClass
   @override
   String toString() {
     return (StringBuffer('TribeAnalyticsTableData(')
+          ..write('userId: $userId, ')
           ..write('tribeId: $tribeId, ')
           ..write('date: $date, ')
           ..write('memberCount: $memberCount, ')
@@ -5696,6 +5727,7 @@ class TribeAnalyticsTableData extends DataClass
 
   @override
   int get hashCode => Object.hash(
+    userId,
     tribeId,
     date,
     memberCount,
@@ -5709,6 +5741,7 @@ class TribeAnalyticsTableData extends DataClass
   bool operator ==(Object other) =>
       identical(this, other) ||
       (other is TribeAnalyticsTableData &&
+          other.userId == this.userId &&
           other.tribeId == this.tribeId &&
           other.date == this.date &&
           other.memberCount == this.memberCount &&
@@ -5721,6 +5754,7 @@ class TribeAnalyticsTableData extends DataClass
 
 class TribeAnalyticsTableCompanion
     extends UpdateCompanion<TribeAnalyticsTableData> {
+  final Value<String> userId;
   final Value<String> tribeId;
   final Value<String> date;
   final Value<int> memberCount;
@@ -5731,6 +5765,7 @@ class TribeAnalyticsTableCompanion
   final Value<int> newMembersThisWeek;
   final Value<int> rowid;
   const TribeAnalyticsTableCompanion({
+    this.userId = const Value.absent(),
     this.tribeId = const Value.absent(),
     this.date = const Value.absent(),
     this.memberCount = const Value.absent(),
@@ -5742,6 +5777,7 @@ class TribeAnalyticsTableCompanion
     this.rowid = const Value.absent(),
   });
   TribeAnalyticsTableCompanion.insert({
+    this.userId = const Value.absent(),
     required String tribeId,
     required String date,
     this.memberCount = const Value.absent(),
@@ -5754,6 +5790,7 @@ class TribeAnalyticsTableCompanion
   }) : tribeId = Value(tribeId),
        date = Value(date);
   static Insertable<TribeAnalyticsTableData> custom({
+    Expression<String>? userId,
     Expression<String>? tribeId,
     Expression<String>? date,
     Expression<int>? memberCount,
@@ -5765,6 +5802,7 @@ class TribeAnalyticsTableCompanion
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
+      if (userId != null) 'user_id': userId,
       if (tribeId != null) 'tribe_id': tribeId,
       if (date != null) 'date': date,
       if (memberCount != null) 'member_count': memberCount,
@@ -5781,6 +5819,7 @@ class TribeAnalyticsTableCompanion
   }
 
   TribeAnalyticsTableCompanion copyWith({
+    Value<String>? userId,
     Value<String>? tribeId,
     Value<String>? date,
     Value<int>? memberCount,
@@ -5792,6 +5831,7 @@ class TribeAnalyticsTableCompanion
     Value<int>? rowid,
   }) {
     return TribeAnalyticsTableCompanion(
+      userId: userId ?? this.userId,
       tribeId: tribeId ?? this.tribeId,
       date: date ?? this.date,
       memberCount: memberCount ?? this.memberCount,
@@ -5808,6 +5848,9 @@ class TribeAnalyticsTableCompanion
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
+    if (userId.present) {
+      map['user_id'] = Variable<String>(userId.value);
+    }
     if (tribeId.present) {
       map['tribe_id'] = Variable<String>(tribeId.value);
     }
@@ -5843,6 +5886,7 @@ class TribeAnalyticsTableCompanion
   @override
   String toString() {
     return (StringBuffer('TribeAnalyticsTableCompanion(')
+          ..write('userId: $userId, ')
           ..write('tribeId: $tribeId, ')
           ..write('date: $date, ')
           ..write('memberCount: $memberCount, ')
@@ -12649,6 +12693,7 @@ typedef $$TribeStatsTableTableProcessedTableManager =
     >;
 typedef $$TribeAnalyticsTableTableCreateCompanionBuilder =
     TribeAnalyticsTableCompanion Function({
+      Value<String> userId,
       required String tribeId,
       required String date,
       Value<int> memberCount,
@@ -12661,6 +12706,7 @@ typedef $$TribeAnalyticsTableTableCreateCompanionBuilder =
     });
 typedef $$TribeAnalyticsTableTableUpdateCompanionBuilder =
     TribeAnalyticsTableCompanion Function({
+      Value<String> userId,
       Value<String> tribeId,
       Value<String> date,
       Value<int> memberCount,
@@ -12681,6 +12727,11 @@ class $$TribeAnalyticsTableTableFilterComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
+  ColumnFilters<String> get userId => $composableBuilder(
+    column: $table.userId,
+    builder: (column) => ColumnFilters(column),
+  );
+
   ColumnFilters<String> get tribeId => $composableBuilder(
     column: $table.tribeId,
     builder: (column) => ColumnFilters(column),
@@ -12731,6 +12782,11 @@ class $$TribeAnalyticsTableTableOrderingComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
+  ColumnOrderings<String> get userId => $composableBuilder(
+    column: $table.userId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<String> get tribeId => $composableBuilder(
     column: $table.tribeId,
     builder: (column) => ColumnOrderings(column),
@@ -12781,6 +12837,9 @@ class $$TribeAnalyticsTableTableAnnotationComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
+  GeneratedColumn<String> get userId =>
+      $composableBuilder(column: $table.userId, builder: (column) => column);
+
   GeneratedColumn<String> get tribeId =>
       $composableBuilder(column: $table.tribeId, builder: (column) => column);
 
@@ -12859,6 +12918,7 @@ class $$TribeAnalyticsTableTableTableManager
               ),
           updateCompanionCallback:
               ({
+                Value<String> userId = const Value.absent(),
                 Value<String> tribeId = const Value.absent(),
                 Value<String> date = const Value.absent(),
                 Value<int> memberCount = const Value.absent(),
@@ -12869,6 +12929,7 @@ class $$TribeAnalyticsTableTableTableManager
                 Value<int> newMembersThisWeek = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => TribeAnalyticsTableCompanion(
+                userId: userId,
                 tribeId: tribeId,
                 date: date,
                 memberCount: memberCount,
@@ -12881,6 +12942,7 @@ class $$TribeAnalyticsTableTableTableManager
               ),
           createCompanionCallback:
               ({
+                Value<String> userId = const Value.absent(),
                 required String tribeId,
                 required String date,
                 Value<int> memberCount = const Value.absent(),
@@ -12891,6 +12953,7 @@ class $$TribeAnalyticsTableTableTableManager
                 Value<int> newMembersThisWeek = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => TribeAnalyticsTableCompanion.insert(
+                userId: userId,
                 tribeId: tribeId,
                 date: date,
                 memberCount: memberCount,

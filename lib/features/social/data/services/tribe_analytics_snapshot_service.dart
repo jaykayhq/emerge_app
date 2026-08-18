@@ -3,6 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:fpdart/fpdart.dart';
 import 'package:emerge_app/core/error/failure.dart';
 import 'package:emerge_app/features/social/domain/models/creator_analytics.dart';
+import 'package:emerge_app/features/social/domain/services/tribe_aggregates.dart';
 
 /// Writes one daily snapshot per tribe and reads trend history.
 ///
@@ -11,14 +12,22 @@ import 'package:emerge_app/features/social/domain/models/creator_analytics.dart'
 /// accumulates as creators open the app.
 class TribeAnalyticsSnapshotService {
   final FirebaseFirestore _firestore;
+  final DateTime Function() _now;
 
-  TribeAnalyticsSnapshotService({FirebaseFirestore? firestore})
-    : _firestore = firestore ?? FirebaseFirestore.instance;
+  TribeAnalyticsSnapshotService({
+    FirebaseFirestore? firestore,
+    DateTime Function()? now,
+  }) : _firestore = firestore ?? FirebaseFirestore.instance,
+       _now = now ?? DateTime.now;
 
+  /// yyyy-MM-dd of [dt] in UTC — must match the Node snapshot job's dateKey
+  /// (scripts/tribe-analytics-snapshot/snapshot.js) so client and server
+  /// write identical doc ids regardless of the device timezone.
   static String dateKey(DateTime dt) {
-    final y = dt.year.toString().padLeft(4, '0');
-    final m = dt.month.toString().padLeft(2, '0');
-    final d = dt.day.toString().padLeft(2, '0');
+    final t = dt.toUtc();
+    final y = t.year.toString().padLeft(4, '0');
+    final m = t.month.toString().padLeft(2, '0');
+    final d = t.day.toString().padLeft(2, '0');
     return '$y-$m-$d';
   }
 
@@ -44,11 +53,26 @@ class TribeAnalyticsSnapshotService {
       return const Left(ServerFailure('Missing creator or tribe'));
     }
     try {
+      final now = _now();
       final latest = await _latestSnapshot(tribeId);
       if (latest != null) {
         final latestDate = DateTime.tryParse(latest['date'] as String? ?? '');
-        if (latestDate != null &&
-            DateTime.now().difference(latestDate).inHours < 24) {
+        final nowUtc = now.toUtc();
+        final isFresh = latestDate != null &&
+            // A future-dated doc (bad clock or malicious write) must never
+            // suppress today's write — mirror the Node backstop's guard.
+            !latestDate.isAfter(nowUtc) &&
+            nowUtc
+                    .difference(
+                      DateTime.utc(
+                        latestDate.year,
+                        latestDate.month,
+                        latestDate.day,
+                      ),
+                    )
+                    .inHours <=
+                24;
+        if (isFresh) {
           return const Right(unit);
         }
       }
@@ -65,26 +89,19 @@ class TribeAnalyticsSnapshotService {
               .collection('contributors')
               .get();
 
-      final now = DateTime.now();
-      final weekAgo = now.subtract(const Duration(days: 7));
-      int totalXp = 0, totalHabits = 0, totalChallenges = 0;
-      int newMembers = 0, activeMembers = 0;
-
-      for (final doc in contributors.docs) {
-        final data = doc.data();
-        totalXp += (data['totalXpContributed'] as num?)?.toInt() ?? 0;
-        totalHabits += (data['totalHabitsCompleted'] as num?)?.toInt() ?? 0;
-        totalChallenges +=
-            (data['totalChallengesCompleted'] as num?)?.toInt() ?? 0;
-
-        final joinedAt = _parseDate(data['joinedAt']);
-        if (joinedAt != null && joinedAt.isAfter(weekAgo)) newMembers++;
-
-        final lastActivity = _parseDate(data['lastActivity']);
-        if (lastActivity != null && lastActivity.isAfter(weekAgo)) {
-          activeMembers++;
-        }
-      }
+      final records = contributors.docs.map(
+        (doc) => ContributorRecord(
+          totalXpContributed:
+              (doc.data()['totalXpContributed'] as num?)?.toInt() ?? 0,
+          totalHabitsCompleted:
+              (doc.data()['totalHabitsCompleted'] as num?)?.toInt() ?? 0,
+          totalChallengesCompleted:
+              (doc.data()['totalChallengesCompleted'] as num?)?.toInt() ?? 0,
+          joinedAt: _parseDate(doc.data()['joinedAt']),
+          lastActivity: _parseDate(doc.data()['lastActivity']),
+        ),
+      );
+      final agg = aggregateTribeContributors(contributors: records, now: now);
 
       final today = dateKey(now);
       await _firestore
@@ -96,11 +113,11 @@ class TribeAnalyticsSnapshotService {
             'tribeId': tribeId,
             'date': today,
             'memberCount': memberCount,
-            'totalXp': totalXp,
-            'totalHabitsCompleted': totalHabits,
-            'totalChallengesCompleted': totalChallenges,
-            'activeMembers': activeMembers,
-            'newMembersThisWeek': newMembers,
+            'totalXp': agg.totalXp,
+            'totalHabitsCompleted': agg.totalHabitsCompleted,
+            'totalChallengesCompleted': agg.totalChallengesCompleted,
+            'activeMembers': agg.activeMembers,
+            'newMembersThisWeek': agg.newMembers,
             'createdAt': FieldValue.serverTimestamp(),
           });
       return const Right(unit);
