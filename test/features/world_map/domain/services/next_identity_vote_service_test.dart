@@ -1,6 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:emerge_app/features/habits/domain/entities/habit.dart';
-import 'package:emerge_app/features/world_map/domain/models/next_identity_vote.dart';
 import 'package:emerge_app/features/world_map/domain/services/next_identity_vote_service.dart';
 
 void main() {

@@ -2,7 +2,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:emerge_app/features/habits/domain/entities/habit.dart';
 import 'package:emerge_app/features/habits/presentation/providers/habit_providers.dart';
-import 'package:emerge_app/features/world_map/domain/models/next_identity_vote.dart';
 import 'package:emerge_app/features/world_map/domain/services/next_identity_vote_service.dart';
 import 'package:emerge_app/features/world_map/presentation/providers/next_identity_vote_provider.dart';
 import 'package:emerge_app/features/world_map/presentation/providers/world_health_provider.dart';
