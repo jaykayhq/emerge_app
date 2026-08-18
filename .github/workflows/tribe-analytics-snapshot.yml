@@ -1,0 +1,53 @@
+# Emerge Tribe Analytics Snapshot (daily)
+#
+# Server-side backstop to the client-side daily snapshot
+# (TribeAnalyticsSnapshotService): guarantees every creator tribe has today's
+# doc in tribe_analytics/{tribeId}/daily/{date} even when no creator opened
+# the app that day, so the 30-day trend charts always have data.
+#
+# Idempotent: same doc id per tribe+date, and the job skips tribes whose
+# latest snapshot is under 24h old — so re-runs and the client-side writer
+# never conflict or duplicate.
+#
+# Required repo secret:
+#   FIREBASE_SERVICE_ACCOUNT_TRADEFLASH_L2966  service-account JSON (already
+#                                              used by the hosting + email
+#                                              workflows)
+name: Tribe analytics snapshot (daily)
+
+on:
+  schedule:
+    - cron: "0 3 * * *" # daily 03:00 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  run-snapshot:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: scripts/tribe-analytics-snapshot/package-lock.json
+
+      - name: Install dependencies
+        working-directory: scripts/tribe-analytics-snapshot
+        run: npm ci
+
+      - name: Run tests
+        working-directory: scripts/tribe-analytics-snapshot
+        run: npm test
+
+      - name: Write daily snapshots
+        working-directory: scripts/tribe-analytics-snapshot
+        env:
+          # Secret passed as an env var (not echoed through a shell) so the
+          # multi-line JSON arrives byte-for-byte intact.
+          FIREBASE_SERVICE_ACCOUNT_JSON: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_TRADEFLASH_L2966 }}
+        run: node index.js

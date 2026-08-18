@@ -1,0 +1,20 @@
+{
+  "name": "emerge-tribe-analytics-snapshot",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Daily tribe-analytics snapshot job for Emerge — runs in GitHub Actions via the Admin SDK (server-side backstop to the client-side daily snapshot).",
+  "type": "module",
+  "engines": {
+    "node": "22"
+  },
+  "scripts": {
+    "start": "node index.js",
+    "test": "node --test test/"
+  },
+  "dependencies": {
+    "firebase-admin": "^14.2.0"
+  },
+  "overrides": {
+    "uuid": "^11.1.1"
+  }
+}
